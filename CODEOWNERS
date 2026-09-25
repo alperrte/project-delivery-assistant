@@ -1,0 +1,9 @@
+# PDA teknik planında belirtilen çekirdek ekibin GitHub hesapları.
+# CODEOWNERS onay zorunluluğu için branch protection/ruleset ayrıca yapılandırılmalıdır.
+* @alperrte @HmzT270
+
+# İki alanın da çekirdek ekip tarafından gözden geçirilmesi.
+/backend/ @alperrte @HmzT270
+/frontend/ @alperrte @HmzT270
+/docs/ @alperrte @HmzT270
+/.github/ @alperrte @HmzT270
