@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./docs/**)",
+      "Read(./assets/**)",
+      "Read(./backend/target/**)",
+      "Read(./backend/HELP.md)",
+      "Read(./backend/mvnw)",
+      "Read(./backend/mvnw.cmd)",
+      "Read(./.git/**)",
+      "Read(./.vscode/**)",
+      "Read(./LICENSE)",
+      "Read(./README_EN.md)",
+      "Read(**/node_modules/**)",
+      "Read(**/*.log)",
+      "Read(**/*.class)",
+      "Read(**/*.jar)",
+      "Read(**/*.docx)",
+      "Read(**/*.pdf)",
+      "Read(**/*.jpeg)",
+      "Read(**/*.jpg)",
+      "Read(**/*.png)"
+    ]
+  }
+}
