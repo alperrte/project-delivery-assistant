@@ -97,7 +97,7 @@ README aynı zamanda projenin yüksek seviyeli ilerleme durumunu gösterecek şe
 | Aşama | Durum |
 |---|---|
 | Teknik planlama | ✅ Tamamlandı |
-| Marka / README / açık kaynak repo temeli | 🟡 Devam ediyor |
+| Marka / README / açık kaynak repo temeli | ✅ Tamamlandı |
 | Backend scaffold | ⏳ Sırada |
 | Authentication & Security | ⏳ Planlandı |
 | Project / Role / Squad modülleri | ⏳ Planlandı |
