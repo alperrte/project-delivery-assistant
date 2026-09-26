@@ -50,16 +50,17 @@ public class SecurityBaselineConfiguration {
                         authorize.requestMatchers(HttpMethod.GET, "/swagger-ui.html", "/swagger-ui/**",
                                 "/v3/api-docs", "/v3/api-docs/**", "/v3/api-docs.yaml").permitAll();
                     }
-                    // Only the bare health status (no details) is public, for Docker/pre-push smoke checks.
-                    authorize.requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
-                            .requestMatchers(HttpMethod.GET, "/api/v1/auth/csrf").permitAll()
+                    authorize.requestMatchers(HttpMethod.GET, "/actuator/health", "/api/v1/auth/csrf").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/auth/register",
-                                    "/api/v1/auth/login", "/api/v1/auth/refresh",
-                                    "/api/v1/auth/logout").permitAll()
-                            .requestMatchers(HttpMethod.GET, "/api/v1/auth/me", "/api/v1/auth/sessions")
-                            .authenticated()
-                            .requestMatchers(HttpMethod.POST, "/api/v1/auth/sessions/*/revoke",
-                                    "/api/v1/auth/sessions/revoke-others").authenticated()
+                                    "/api/v1/auth/login", "/api/v1/auth/logout").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/v1/auth/me").authenticated()
+                            .requestMatchers(HttpMethod.GET, "/api/v1/projects", "/api/v1/projects/**",
+                                    "/api/v1/organizations", "/api/v1/organizations/**").authenticated()
+                            .requestMatchers(HttpMethod.POST, "/api/v1/projects",
+                                    "/api/v1/projects/*/archive", "/api/v1/organizations",
+                                    "/api/v1/organizations/*/archive").authenticated()
+                            .requestMatchers(HttpMethod.PUT, "/api/v1/projects/*",
+                                    "/api/v1/organizations/*").authenticated()
                             .anyRequest().denyAll();
                 })
                 .build();
@@ -83,11 +84,15 @@ public class SecurityBaselineConfiguration {
         }
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(origin.toString()));
-        configuration.setAllowedMethods(List.of("GET", "POST", "OPTIONS"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Content-Type", "X-XSRF-TOKEN"));
         configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/v1/auth/**", configuration);
+        source.registerCorsConfiguration("/api/v1/projects", configuration);
+        source.registerCorsConfiguration("/api/v1/projects/**", configuration);
+        source.registerCorsConfiguration("/api/v1/organizations", configuration);
+        source.registerCorsConfiguration("/api/v1/organizations/**", configuration);
         return source;
     }
 
