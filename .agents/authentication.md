@@ -8,6 +8,12 @@
 
 `POST /api/v1/auth/verify-email` ve `/resend-verification` public değildir. `GET /api/v1/auth/csrf` okunabilir `XSRF-TOKEN` cookie'si üretir; public POST istekleri bu değeri `X-XSRF-TOKEN` header'ında göndermelidir. `POST /api/v1/auth/login` email/BCrypt şifreyi doğrular; `ACTIVE/PENDING` hesaplar geçiş döneminde giriş yapabilir, `DISABLED` hesaplar yapamaz. Access ve refresh JWT'leri yalnız `PDA_ACCESS` ve `PDA_REFRESH` HttpOnly cookie'lerinde taşınır. Refresh hash'i UserSession'da saklanır. `POST /api/v1/auth/logout` session'ı revoke edip cookie'leri temizler; `GET /api/v1/auth/me` geçerli access cookie ve aktif session gerektirir. CORS yalnız `FRONTEND_URL` origin'ine izin verir. Register ve login ayrı ayrı IP başına 10 dakikada beş istekle sınırlıdır. Diğer API endpoint'leri deny-all kalır; `API_DOCS_ENABLED=true` yalnız Swagger/OpenAPI GET yollarını açar.
 
+## Uygulanan Faz 4: refresh rotation ve aktif oturumlar
+
+`POST /api/v1/auth/refresh` public'tir (CSRF zorunlu) ve `PDA_REFRESH` cookie'sini doğrular: refresh JWT'si geçerli, kullanıcı `ACTIVE/PENDING` ve session aktif olmalıdır. Başarıda aynı session için yeni refresh + access token üretilir (sliding 7 gün); DB'de yalnız yeni SHA-256 hash tutulur, eski hash `previous_refresh_token_hash` alanına taşınır. Eski refresh token tekrar sunulursa (reuse/replay) session revoke edilir, cookie'ler temizlenir, 401 döner ve yalnız sessionId/userId loglanır. Logout ile revoke edilmiş, bilinmeyen veya süresi dolmuş token 401 verir. Refresh, IP başına 10 dakikada 30 istekle sınırlıdır (register/login 5). Bilinen sınır: iki sekmenin aynı anda refresh yapması replay gibi görünüp session'ı düşürebilir.
+
+Aktif oturumlar (hepsi access cookie ister, yalnız çağıranın kendi oturumları): `GET /api/v1/auth/sessions`, `POST /api/v1/auth/sessions/{sessionId}/revoke`, `POST /api/v1/auth/sessions/revoke-others`. Başkasının veya pasif session'ı 404 döner. Session'da yalnız `user_agent` (en fazla 255 karakter, temizlenmiş) saklanır; IP saklanmaz.
+
 ## Kimlik akışı
 
 V1 signup, login, logout ve access/refresh akışını kapsar. Spring Security backend'de kimlik ve yetki denetimini uygular. Şifreler persistence öncesinde BCrypt ile hashlenir; plaintext şifre veya hash değeri loglanmaz. Access ve refresh JWT'leri `HttpOnly` cookie içinde tutulur. Auth tokenları/verileri `localStorage` veya `sessionStorage` içinde saklanmaz.

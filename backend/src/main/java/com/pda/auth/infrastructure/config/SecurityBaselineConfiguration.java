@@ -38,10 +38,11 @@ public class SecurityBaselineConfiguration {
                         UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(errors -> errors
                         .authenticationEntryPoint((request, response, failure) -> {
-                            boolean protectedMe = "GET".equals(request.getMethod())
-                                    && "/api/v1/auth/me".equals(request.getRequestURI()
-                                            .substring(request.getContextPath().length()));
-                            writeProblem(response, protectedMe ? 401 : 403);
+                            String path = request.getRequestURI().substring(request.getContextPath().length());
+                            boolean unauthenticated = "GET".equals(request.getMethod())
+                                    && "/api/v1/auth/me".equals(path)
+                                    || path.startsWith("/api/v1/auth/sessions");
+                            writeProblem(response, unauthenticated ? 401 : 403);
                         })
                         .accessDeniedHandler((request, response, failure) -> writeProblem(response, 403)))
                 .authorizeHttpRequests(authorize -> {

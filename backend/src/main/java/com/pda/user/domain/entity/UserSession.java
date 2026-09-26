@@ -19,6 +19,8 @@ import java.util.UUID;
 @Table(name = "user_sessions")
 public class UserSession {
 
+    static final int MAX_USER_AGENT_LENGTH = 255;
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
@@ -28,6 +30,12 @@ public class UserSession {
 
     @Column(name = "refresh_token_hash", nullable = false, length = 64)
     private String refreshTokenHash;
+
+    @Column(name = "previous_refresh_token_hash", length = 64)
+    private String previousRefreshTokenHash;
+
+    @Column(name = "user_agent", length = MAX_USER_AGENT_LENGTH)
+    private String userAgent;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -46,13 +54,29 @@ public class UserSession {
     }
 
     public static UserSession open(UUID userId, String refreshToken, Instant expiresAt) {
+        return open(userId, refreshToken, expiresAt, null);
+    }
+
+    public static UserSession open(UUID userId, String refreshToken, Instant expiresAt, String userAgent) {
         Objects.requireNonNull(userId, "userId");
         Objects.requireNonNull(expiresAt, "expiresAt");
         UserSession session = new UserSession();
         session.userId = userId;
         session.refreshTokenHash = hashRefreshToken(refreshToken);
         session.expiresAt = expiresAt;
+        session.userAgent = sanitizeUserAgent(userAgent);
         return session;
+    }
+
+    private static String sanitizeUserAgent(String userAgent) {
+        if (userAgent == null) {
+            return null;
+        }
+        String cleaned = userAgent.replaceAll("\\p{Cntrl}", " ").strip();
+        if (cleaned.isEmpty()) {
+            return null;
+        }
+        return cleaned.length() > MAX_USER_AGENT_LENGTH ? cleaned.substring(0, MAX_USER_AGENT_LENGTH) : cleaned;
     }
 
     public boolean isActive(Instant now) {
@@ -62,6 +86,12 @@ public class UserSession {
     public boolean matchesRefreshToken(String refreshToken) {
         return refreshToken != null && MessageDigest.isEqual(
                 refreshTokenHash.getBytes(StandardCharsets.US_ASCII),
+                hashRefreshToken(refreshToken).getBytes(StandardCharsets.US_ASCII));
+    }
+
+    public boolean matchesPreviousRefreshToken(String refreshToken) {
+        return refreshToken != null && previousRefreshTokenHash != null && MessageDigest.isEqual(
+                previousRefreshTokenHash.getBytes(StandardCharsets.US_ASCII),
                 hashRefreshToken(refreshToken).getBytes(StandardCharsets.US_ASCII));
     }
 
@@ -76,6 +106,7 @@ public class UserSession {
         if (nextHash.equals(refreshTokenHash)) {
             throw new IllegalArgumentException("Refresh token must change");
         }
+        previousRefreshTokenHash = refreshTokenHash;
         refreshTokenHash = nextHash;
         expiresAt = nextExpiresAt;
         lastUsedAt = now;
@@ -107,6 +138,7 @@ public class UserSession {
 
     public UUID getId() { return id; }
     public UUID getUserId() { return userId; }
+    public String getUserAgent() { return userAgent; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getExpiresAt() { return expiresAt; }
     public Instant getRevokedAt() { return revokedAt; }

@@ -654,7 +654,7 @@ entegrasyon testi geçmeli.
 
 ## FAZ 3 — Local Login + Logout + JWT
 
-**Mevcut kod durumu:** `ALP-AUTH-08`–`11` backend'de uygulanmıştır; JWT access/refresh HttpOnly cookie, aktif session kontrolü ve logout revoke entegrasyon testleri vardır. Refresh endpoint/rotation ve active session UI Faz 4 ve Faz 9 işleridir. Production domain topolojisi ayrıca doğrulanmalıdır.
+**Mevcut kod durumu:** `ALP-AUTH-08`–`11` backend'de uygulanmıştır; JWT access/refresh HttpOnly cookie, aktif session kontrolü ve logout revoke entegrasyon testleri vardır. `ALP-AUTH-12`–`14` (Faz 4: refresh rotation, reuse/replay koruması, aktif oturum API'leri) 27 Eylül 2026'da backend'de tamamlanmıştır; kayıt: `docs/compliation/2026-09-27-auth-faz-4.md`. Active session UI Faz 9 işidir. Production domain topolojisi ayrıca doğrulanmalıdır.
 
 ### ALP-AUTH-08 — Login API
 
