@@ -8,7 +8,14 @@ import com.pda.user.UserAccounts;
 import com.pda.user.UserSessions;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestCustomizers;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
+import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -24,12 +31,53 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration(proxyBeanMethods = false)
 public class SecurityBaselineConfiguration {
 
+    private static final String OAUTH_AUTHORIZATION_BASE = "/api/v1/auth/oauth2/authorization";
+    private static final String OAUTH_CALLBACK_PATTERN = "/api/v1/auth/oauth2/callback/*";
+
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http, UrlBasedCorsConfigurationSource corsSource,
                                            JwtTokens tokens, AuthCookies cookies, UserAccounts users,
                                            UserSessions sessions, Clock clock,
+                                           ObjectProvider<ClientRegistrationRepository> oauthRegistrations,
+                                           ObjectProvider<OAuthLoginHandlers> oauthHandlers,
                                            @Value("${API_DOCS_ENABLED:false}") boolean apiDocsEnabled)
             throws Exception {
+        ClientRegistrationRepository registrations = oauthRegistrations.getIfAvailable();
+        OAuthLoginHandlers handlers = oauthHandlers.getIfAvailable();
+        boolean oauthEnabled = registrations != null && handlers != null;
+        if (oauthEnabled) {
+            LinkAwareAuthorizationRequestRepository requestRepository = new LinkAwareAuthorizationRequestRepository();
+            DefaultOAuth2AuthorizationRequestResolver pkceResolver =
+                    new DefaultOAuth2AuthorizationRequestResolver(registrations, OAUTH_AUTHORIZATION_BASE);
+            pkceResolver.setAuthorizationRequestCustomizer(OAuth2AuthorizationRequestCustomizers.withPkce());
+            // Only the Google start URL is a flow; any other id falls through to deny-by-default (403).
+            OAuth2AuthorizationRequestResolver resolver = new OAuth2AuthorizationRequestResolver() {
+                @Override
+                public OAuth2AuthorizationRequest resolve(HttpServletRequest request) {
+                    return isGoogleStart(request) ? pkceResolver.resolve(request) : null;
+                }
+
+                @Override
+                public OAuth2AuthorizationRequest resolve(HttpServletRequest request, String registrationId) {
+                    return "google".equals(registrationId) && isGoogleStart(request)
+                            ? pkceResolver.resolve(request, registrationId) : null;
+                }
+
+                private boolean isGoogleStart(HttpServletRequest request) {
+                    return (request.getContextPath() + OAUTH_AUTHORIZATION_BASE + "/google")
+                            .equals(request.getRequestURI());
+                }
+            };
+            http.oauth2Login(login -> login
+                    // No generated HTML login page: unauthenticated flows end in the failure handler instead.
+                    .loginPage("/api/v1/auth/oauth/unavailable")
+                    .authorizationEndpoint(endpoint -> endpoint.baseUri(OAUTH_AUTHORIZATION_BASE)
+                            .authorizationRequestResolver(resolver)
+                            .authorizationRequestRepository(requestRepository))
+                    .redirectionEndpoint(endpoint -> endpoint.baseUri(OAUTH_CALLBACK_PATTERN))
+                    .successHandler(handlers::success)
+                    .failureHandler(handlers::failure));
+        }
         return http
                 .cors(cors -> cors.configurationSource(corsSource))
                 .csrf(csrf -> csrf.spa())
@@ -41,7 +89,8 @@ public class SecurityBaselineConfiguration {
                             String path = request.getRequestURI().substring(request.getContextPath().length());
                             boolean unauthenticated = "GET".equals(request.getMethod())
                                     && "/api/v1/auth/me".equals(path)
-                                    || path.startsWith("/api/v1/auth/sessions");
+                                    || path.startsWith("/api/v1/auth/sessions")
+                                    || path.startsWith("/api/v1/auth/oauth/");
                             writeProblem(response, unauthenticated ? 401 : 403);
                         })
                         .accessDeniedHandler((request, response, failure) -> writeProblem(response, 403)))
@@ -50,14 +99,21 @@ public class SecurityBaselineConfiguration {
                         authorize.requestMatchers(HttpMethod.GET, "/swagger-ui.html", "/swagger-ui/**",
                                 "/v3/api-docs", "/v3/api-docs/**", "/v3/api-docs.yaml").permitAll();
                     }
+                    if (oauthEnabled) {
+                        authorize.requestMatchers(HttpMethod.GET, OAUTH_AUTHORIZATION_BASE + "/google",
+                                OAUTH_CALLBACK_PATTERN).permitAll();
+                    }
                     authorize.requestMatchers(HttpMethod.GET, "/actuator/health", "/api/v1/auth/csrf").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/v1/auth/oauth/identities").authenticated()
+                            .requestMatchers(HttpMethod.POST, "/api/v1/auth/oauth/google/link",
+                                    "/api/v1/auth/oauth/google/unlink").authenticated()
                             .requestMatchers(HttpMethod.POST, "/api/v1/auth/register",
-                                    "/api/v1/auth/login", "/api/v1/auth/logout",
-                                    "/api/v1/auth/refresh").permitAll()
-                            .requestMatchers(HttpMethod.GET, "/api/v1/auth/me",
-                                    "/api/v1/auth/sessions").authenticated()
-                            .requestMatchers(HttpMethod.POST, "/api/v1/auth/sessions/revoke-others",
-                                    "/api/v1/auth/sessions/*/revoke").authenticated()
+                                    "/api/v1/auth/login", "/api/v1/auth/refresh",
+                                    "/api/v1/auth/logout").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/v1/auth/me", "/api/v1/auth/sessions")
+                            .authenticated()
+                            .requestMatchers(HttpMethod.POST, "/api/v1/auth/sessions/*/revoke",
+                                    "/api/v1/auth/sessions/revoke-others").authenticated()
                             .requestMatchers(HttpMethod.GET, "/api/v1/projects", "/api/v1/projects/**",
                                     "/api/v1/organizations", "/api/v1/organizations/**").authenticated()
                             .requestMatchers(HttpMethod.POST, "/api/v1/projects",
