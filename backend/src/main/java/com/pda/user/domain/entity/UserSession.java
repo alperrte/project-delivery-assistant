@@ -50,7 +50,7 @@ public class UserSession {
         Objects.requireNonNull(expiresAt, "expiresAt");
         UserSession session = new UserSession();
         session.userId = userId;
-        session.refreshTokenHash = hash(refreshToken);
+        session.refreshTokenHash = hashRefreshToken(refreshToken);
         session.expiresAt = expiresAt;
         return session;
     }
@@ -62,7 +62,7 @@ public class UserSession {
     public boolean matchesRefreshToken(String refreshToken) {
         return refreshToken != null && MessageDigest.isEqual(
                 refreshTokenHash.getBytes(StandardCharsets.US_ASCII),
-                hash(refreshToken).getBytes(StandardCharsets.US_ASCII));
+                hashRefreshToken(refreshToken).getBytes(StandardCharsets.US_ASCII));
     }
 
     public void rotate(String currentRefreshToken, String nextRefreshToken, Instant nextExpiresAt, Instant now) {
@@ -72,7 +72,7 @@ public class UserSession {
         if (!nextExpiresAt.isAfter(now)) {
             throw new IllegalArgumentException("Expiry must be in the future");
         }
-        String nextHash = hash(nextRefreshToken);
+        String nextHash = hashRefreshToken(nextRefreshToken);
         if (nextHash.equals(refreshTokenHash)) {
             throw new IllegalArgumentException("Refresh token must change");
         }
@@ -93,7 +93,7 @@ public class UserSession {
         createdAt = Instant.now();
     }
 
-    private static String hash(String token) {
+    public static String hashRefreshToken(String token) {
         if (token == null || token.isBlank()) {
             throw new IllegalArgumentException("Refresh token is required");
         }
