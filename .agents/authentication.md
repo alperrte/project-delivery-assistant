@@ -14,6 +14,12 @@
 
 Aktif oturumlar (hepsi access cookie ister, yalnız çağıranın kendi oturumları): `GET /api/v1/auth/sessions`, `POST /api/v1/auth/sessions/{sessionId}/revoke`, `POST /api/v1/auth/sessions/revoke-others`. Başkasının veya pasif session'ı 404 döner. Session'da yalnız `user_agent` (en fazla 255 karakter, temizlenmiş) saklanır; IP saklanmaz.
 
+## Uygulanan Faz 5: Google OAuth login ve hesap bağlama
+
+Spring Security `oauth2Login` (`spring-boot-starter-security-oauth2-client`) yalnız `GOOGLE_CLIENT_ID` ve `GOOGLE_CLIENT_SECRET` birlikte doluysa etkinleşir; ikisi de boşsa OAuth yolları deny-all kalır, yalnız biri doluysa uygulama başlamaz. Akış: `GET /api/v1/auth/oauth2/authorization/google` → Google (OIDC, `state`, `nonce`, PKCE) → `GET /api/v1/auth/oauth2/callback/google`. Yetkilendirme isteği kısa ömürlü HttpSession'da tutulur ve callback sonrası session geçersiz kılınır. Başarıda PDA kendi `UserSession`'ını açar ve `PDA_ACCESS`/`PDA_REFRESH` cookie'lerini yazar; Google token'ları saklanmaz veya loglanmaz. Yönlendirme yalnız `FRONTEND_URL`'e yapılır (`/` veya `/login?oauth_error=<kod>`).
+
+Kimlik modeli: V6 `user_oauth_identities` (`UNIQUE(provider, provider_subject)`, `UNIQUE(user_id, provider)`); eşleştirme Google `sub` ile yapılır, email ile değil. Yeni hesap yalnız doğrulanmış Google emaili ile açılır (şifresiz, `ACTIVE`, email `VERIFIED`, rol `USER`). Aynı email'e sahip mevcut hesap varsa otomatik birleştirme yapılmaz, `account_exists` döner. Bağlama: giriş yapmış kullanıcı `POST /api/v1/auth/oauth/google/link` çağırır, dönen URL'ye gider; niyet OAuth `state`'ine bağlı istekte saklanır. Bağlantı kaldırma: şifresi olmayan hesapta tek giriş yöntemi ise `409`.
+
 ## Kimlik akışı
 
 V1 signup, login, logout ve access/refresh akışını kapsar. Spring Security backend'de kimlik ve yetki denetimini uygular. Şifreler persistence öncesinde BCrypt ile hashlenir; plaintext şifre veya hash değeri loglanmaz. Access ve refresh JWT'leri `HttpOnly` cookie içinde tutulur. Auth tokenları/verileri `localStorage` veya `sessionStorage` içinde saklanmaz.

@@ -96,6 +96,22 @@ public class User {
         return user;
     }
 
+    /** Account created through an external provider that already verified the email; it has no password. */
+    public static User registerOAuth(String email, String nickname) {
+        User user = new User();
+        user.email = email;
+        user.nickname = nickname;
+        user.accountStatus = AccountStatus.ACTIVE;
+        user.emailVerificationStatus = EmailVerificationStatus.VERIFIED;
+        user.emailVerifiedAt = Instant.now();
+        user.globalRole = GlobalRole.USER;
+        return user;
+    }
+
+    public boolean hasPassword() {
+        return passwordHash != null;
+    }
+
     public boolean matchesPassword(String rawPassword, BCryptPasswordEncoder passwordEncoder) {
         return passwordHash != null && rawPassword != null
                 && passwordEncoder.matches(rawPassword, passwordHash);

@@ -262,6 +262,20 @@ Swagger check path: `/swagger-ui/index.html` with `API_DOCS_ENABLED=true`; call 
 | `POST /api/v1/auth/sessions/{sessionId}/revoke` | Access cookie + CSRF; own sessions only | `sessionId` UUID path | `200` (auth cookies cleared if it is the current session) | `401`, `403` CSRF, `404` not owned or inactive |
 | `POST /api/v1/auth/sessions/revoke-others` | Access cookie + CSRF | No body | `200`, `{"revoked": 1}` | `401`, `403` CSRF |
 
+### Auth Faz 5 endpoints (Google OAuth login and account linking)
+
+Google login is optional: with `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` empty the two redirect routes are not registered and stay deny-by-default (`403`), and link start returns `404`. Setting only one variable stops startup. Authorized redirect URI to register at Google: `http://localhost:8080/api/v1/auth/oauth2/callback/google`. Swagger cannot run the redirect flow: open `http://localhost:8080/api/v1/auth/oauth2/authorization/google` in the browser; the result lands on `FRONTEND_URL` as `/` (cookies set) or `/login?oauth_error=<code>`. Use Swagger for `identities`, `link`, `unlink` after logging in.
+
+| Endpoint | Auth / scope | Input | Success | Important errors |
+| --- | --- | --- | --- | --- |
+| `GET /api/v1/auth/oauth2/authorization/google` | Public (only when Google is configured) | Optional `intent=link` (only honoured after `POST .../google/link` in the same HTTP session) | `302` to `accounts.google.com` with `state`, `nonce`, PKCE `code_challenge` | `403` disabled or unknown provider, `429` IP limit (30/10 min) |
+| `GET /api/v1/auth/oauth2/callback/google` | Public, called by Google; needs the state-bound HTTP session | `code`, `state` | `302` to `FRONTEND_URL/` with PDA cookies, or `/?oauth_link=<code>` in link mode | `302` to `/login?oauth_error=` `email_not_verified`, `account_exists`, `access_denied`, `provider_error`; `429` |
+| `GET /api/v1/auth/oauth/identities` | Access cookie, own identities only | No body | `200`, `[{provider, email, linkedAt}]` | `401` |
+| `POST /api/v1/auth/oauth/google/link` | Access cookie + CSRF | No body | `200`, `{authorizationUrl}` to navigate the browser to | `401`, `403` CSRF, `404` Google not configured |
+| `POST /api/v1/auth/oauth/google/unlink` | Access cookie + CSRF | No body | `200` | `401`, `403` CSRF, `404` not linked, `409` Google is the only login method |
+
+Rules: no automatic account merge (an existing email returns `account_exists`); provider tokens are never stored or logged; new accounts need a verified provider email; the provider-side HTTP session is invalidated after the callback and PDA issues its own cookies; redirects go only to `FRONTEND_URL`.
+
 ---
 
 ## 12. Error Handling
