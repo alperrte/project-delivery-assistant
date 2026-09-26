@@ -1,6 +1,12 @@
 # Kimlik doğrulama ve yetkilendirme
 
-> Durum: teknik planda onaylanan güvenlik ilkeleri. Cookie isimleri, auth endpoint yolları, CSRF token taşıma yöntemi ve domain topolojisi uygulama sırasında netleşecektir.
+> Durum: Auth planı ve mevcut geçiş uygulaması. Access/refresh cookie isimleri ve CSRF taşıma yöntemi belirlenmiştir; production domain topolojisi ayrıca doğrulanacaktır.
+
+## Uygulanan Faz 2 kayıt akışı
+
+27 Eylül 2026 geçiş kararıyla `POST /api/v1/auth/register` email, nickname, 8–128 karakter şifre ve eşleşen doğrulama şifresi alır; hesap doğrudan `ACTIVE`, email durumu `PENDING` olur. Register mail göndermez veya `EMAIL_VERIFICATION_HMAC_KEY` istemez. Email ve nickname yazıldığı biçime duyarlı benzersizdir. Doğrulama kodu/backend hazırlığı ve V3 şeması ilerisi için saklanır; doğrulama akışı frontend auth fazında yeniden etkinleştirilecektir. Register, login ve logout başarılı isteklerde `200 OK` döner.
+
+`POST /api/v1/auth/verify-email` ve `/resend-verification` public değildir. `GET /api/v1/auth/csrf` okunabilir `XSRF-TOKEN` cookie'si üretir; public POST istekleri bu değeri `X-XSRF-TOKEN` header'ında göndermelidir. `POST /api/v1/auth/login` email/BCrypt şifreyi doğrular; `ACTIVE/PENDING` hesaplar geçiş döneminde giriş yapabilir, `DISABLED` hesaplar yapamaz. Access ve refresh JWT'leri yalnız `PDA_ACCESS` ve `PDA_REFRESH` HttpOnly cookie'lerinde taşınır. Refresh hash'i UserSession'da saklanır. `POST /api/v1/auth/logout` session'ı revoke edip cookie'leri temizler; `GET /api/v1/auth/me` geçerli access cookie ve aktif session gerektirir. CORS yalnız `FRONTEND_URL` origin'ine izin verir. Register ve login ayrı ayrı IP başına 10 dakikada beş istekle sınırlıdır. Diğer API endpoint'leri deny-all kalır; `API_DOCS_ENABLED=true` yalnız Swagger/OpenAPI GET yollarını açar.
 
 ## Kimlik akışı
 

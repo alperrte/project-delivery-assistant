@@ -6,6 +6,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.pda.auth.infrastructure.config.SecurityBaselineConfiguration;
+import com.pda.auth.application.service.RegistrationWorkflow;
+import com.pda.auth.application.service.JwtTokens;
+import com.pda.auth.infrastructure.config.AuthCookies;
+import com.pda.user.UserAccounts;
+import com.pda.user.UserSessions;
+import java.time.Clock;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -13,13 +19,22 @@ import org.springframework.context.annotation.Import;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-@WebMvcTest
+@WebMvcTest(AuthRegistrationController.class)
 @Import(SecurityBaselineConfiguration.class)
+@TestPropertySource(properties = "FRONTEND_URL=http://localhost:3000")
 class SecurityBaselineTest {
 
     @Autowired MockMvc mvc;
     @Autowired SecurityFilterChain filterChain;
+    @MockitoBean RegistrationWorkflow workflow;
+    @MockitoBean JwtTokens tokens;
+    @MockitoBean AuthCookies cookies;
+    @MockitoBean UserAccounts users;
+    @MockitoBean UserSessions sessions;
+    @MockitoBean Clock clock;
 
     @Test
     void protectedRequestsAreDeniedAndCsrfFilterIsPresent() throws Exception {

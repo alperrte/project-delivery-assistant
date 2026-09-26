@@ -89,6 +89,13 @@ public class User {
         return user;
     }
 
+    public static User registerLocalActive(String email, String nickname, String rawPassword,
+                                           BCryptPasswordEncoder passwordEncoder) {
+        User user = registerLocal(email, nickname, rawPassword, passwordEncoder);
+        user.accountStatus = AccountStatus.ACTIVE;
+        return user;
+    }
+
     public boolean matchesPassword(String rawPassword, BCryptPasswordEncoder passwordEncoder) {
         return passwordHash != null && rawPassword != null
                 && passwordEncoder.matches(rawPassword, passwordHash);
