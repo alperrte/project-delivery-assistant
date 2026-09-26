@@ -24,12 +24,19 @@ final class AuthRateLimitFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI().substring(request.getContextPath().length());
+        if ("GET".equals(request.getMethod())) {
+            return !isOAuthRedirect(path);
+        }
         if (!"POST".equals(request.getMethod())) {
             return true;
         }
-        String path = request.getRequestURI().substring(request.getContextPath().length());
         return !"/api/v1/auth/register".equals(path) && !"/api/v1/auth/login".equals(path)
                 && !REFRESH_PATH.equals(path);
+    }
+
+    private static boolean isOAuthRedirect(String path) {
+        return path.startsWith("/api/v1/auth/oauth2/authorization/") || path.startsWith("/api/v1/auth/oauth2/callback/");
     }
 
     @Override
@@ -37,7 +44,7 @@ final class AuthRateLimitFilter extends OncePerRequestFilter {
                                     FilterChain chain) throws ServletException, IOException {
         String key = request.getRequestURI() + ":" + request.getRemoteAddr();
         String path = request.getRequestURI().substring(request.getContextPath().length());
-        int limit = REFRESH_PATH.equals(path) ? MAX_REFRESH_REQUESTS : MAX_REQUESTS;
+        int limit = REFRESH_PATH.equals(path) || isOAuthRedirect(path) ? MAX_REFRESH_REQUESTS : MAX_REQUESTS;
         if (!allow(key, limit, System.currentTimeMillis())) {
             response.setStatus(429);
             response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
