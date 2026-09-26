@@ -1,6 +1,7 @@
 package com.pda.project.domain.entity;
 
 import com.pda.project.domain.enums.ProjectRole;
+import com.pda.project.domain.enums.MembershipStatus;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -46,17 +47,29 @@ public class ProjectMembership {
     @Column(name = "role", nullable = false, length = 40)
     private Set<ProjectRole> roles = new HashSet<>();
 
-    @Column(name = "joined_at", nullable = false, updatable = false)
+    @Column(name = "joined_at", nullable = false)
     private Instant joinedAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private MembershipStatus status;
+
+    @Column(name = "removed_at")
+    private Instant removedAt;
 
     protected ProjectMembership() {
     }
 
     public static ProjectMembership initialManager(UUID projectId, UUID userId) {
+        return active(projectId, userId, Set.of(ProjectRole.PROJECT_MANAGER));
+    }
+
+    public static ProjectMembership active(UUID projectId, UUID userId, Set<ProjectRole> roles) {
         ProjectMembership membership = new ProjectMembership();
         membership.projectId = Objects.requireNonNull(projectId, "projectId is required");
         membership.userId = Objects.requireNonNull(userId, "userId is required");
-        membership.roles.add(ProjectRole.PROJECT_MANAGER);
+        membership.roles.addAll(requireRoles(roles));
+        membership.status = MembershipStatus.ACTIVE;
         return membership;
     }
 
@@ -66,7 +79,61 @@ public class ProjectMembership {
     }
 
     public boolean hasRole(ProjectRole role) {
-        return roles.contains(role);
+        return status == MembershipStatus.ACTIVE && roles.contains(role);
+    }
+
+    public void addRole(ProjectRole role) {
+        requireActive();
+        roles.add(Objects.requireNonNull(role, "role is required"));
+    }
+
+    public void replaceRoles(Set<ProjectRole> roles) {
+        requireActive();
+        Set<ProjectRole> checked = Set.copyOf(requireRoles(roles));
+        this.roles.clear();
+        this.roles.addAll(checked);
+    }
+
+    public void removeRole(ProjectRole role) {
+        requireActive();
+        if (!roles.contains(Objects.requireNonNull(role, "role is required"))) {
+            throw new IllegalArgumentException("role is not assigned");
+        }
+        if (roles.size() == 1) {
+            throw new IllegalArgumentException("membership must retain a role");
+        }
+        roles.remove(role);
+    }
+
+    public void remove() {
+        requireActive();
+        status = MembershipStatus.REMOVED;
+        removedAt = Instant.now();
+        roles.clear();
+    }
+
+    public void reactivate(Set<ProjectRole> roles) {
+        if (status != MembershipStatus.REMOVED) {
+            throw new IllegalStateException("membership is already active");
+        }
+        this.roles.addAll(requireRoles(roles));
+        status = MembershipStatus.ACTIVE;
+        joinedAt = Instant.now();
+        removedAt = null;
+    }
+
+    private void requireActive() {
+        if (status != MembershipStatus.ACTIVE) {
+            throw new IllegalStateException("membership is removed");
+        }
+    }
+
+    private static Set<ProjectRole> requireRoles(Set<ProjectRole> roles) {
+        Objects.requireNonNull(roles, "roles are required");
+        if (roles.isEmpty() || roles.stream().anyMatch(Objects::isNull)) {
+            throw new IllegalArgumentException("at least one valid role is required");
+        }
+        return roles;
     }
 
     public UUID getId() { return id; }
@@ -74,4 +141,6 @@ public class ProjectMembership {
     public UUID getUserId() { return userId; }
     public Set<ProjectRole> getRoles() { return Set.copyOf(roles); }
     public Instant getJoinedAt() { return joinedAt; }
+    public MembershipStatus getStatus() { return status; }
+    public Instant getRemovedAt() { return removedAt; }
 }
