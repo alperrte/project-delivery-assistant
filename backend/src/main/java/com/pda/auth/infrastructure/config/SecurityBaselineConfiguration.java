@@ -38,10 +38,11 @@ public class SecurityBaselineConfiguration {
                         UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(errors -> errors
                         .authenticationEntryPoint((request, response, failure) -> {
-                            boolean protectedMe = "GET".equals(request.getMethod())
-                                    && "/api/v1/auth/me".equals(request.getRequestURI()
-                                            .substring(request.getContextPath().length()));
-                            writeProblem(response, protectedMe ? 401 : 403);
+                            String path = request.getRequestURI().substring(request.getContextPath().length());
+                            boolean unauthenticated = "GET".equals(request.getMethod())
+                                    && "/api/v1/auth/me".equals(path)
+                                    || path.startsWith("/api/v1/auth/sessions");
+                            writeProblem(response, unauthenticated ? 401 : 403);
                         })
                         .accessDeniedHandler((request, response, failure) -> writeProblem(response, 403)))
                 .authorizeHttpRequests(authorize -> {
@@ -49,10 +50,16 @@ public class SecurityBaselineConfiguration {
                         authorize.requestMatchers(HttpMethod.GET, "/swagger-ui.html", "/swagger-ui/**",
                                 "/v3/api-docs", "/v3/api-docs/**", "/v3/api-docs.yaml").permitAll();
                     }
-                    authorize.requestMatchers(HttpMethod.GET, "/api/v1/auth/csrf").permitAll()
+                    // Only the bare health status (no details) is public, for Docker/pre-push smoke checks.
+                    authorize.requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/v1/auth/csrf").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/auth/register",
-                                    "/api/v1/auth/login", "/api/v1/auth/logout").permitAll()
-                            .requestMatchers(HttpMethod.GET, "/api/v1/auth/me").authenticated()
+                                    "/api/v1/auth/login", "/api/v1/auth/refresh",
+                                    "/api/v1/auth/logout").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/v1/auth/me", "/api/v1/auth/sessions")
+                            .authenticated()
+                            .requestMatchers(HttpMethod.POST, "/api/v1/auth/sessions/*/revoke",
+                                    "/api/v1/auth/sessions/revoke-others").authenticated()
                             .anyRequest().denyAll();
                 })
                 .build();
