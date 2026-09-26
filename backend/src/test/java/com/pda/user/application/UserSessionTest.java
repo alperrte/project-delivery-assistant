@@ -14,6 +14,16 @@ import org.junit.jupiter.api.Test;
 class UserSessionTest {
 
     @Test
+    void userAgentIsSanitizedAndTruncated() {
+        Instant expiry = Instant.now().plus(7, ChronoUnit.DAYS);
+        UserSession session = UserSession.open(UUID.randomUUID(), "t1", expiry,
+                "Agent\r\nInjected " + "x".repeat(400));
+        assertEquals(255, session.getUserAgent().length());
+        assertFalse(session.getUserAgent().contains("\n"));
+        assertEquals(null, UserSession.open(UUID.randomUUID(), "t2", expiry, "  ").getUserAgent());
+    }
+
+    @Test
     void rotationInvalidatesOldTokenAndRevocationStopsSession() {
         Instant now = Instant.now();
         String firstToken = UUID.randomUUID().toString();
@@ -31,6 +41,8 @@ class UserSessionTest {
         assertFalse(session.matchesRefreshToken(firstToken));
         assertTrue(session.matchesRefreshToken(secondToken));
         assertEquals(now, session.getLastUsedAt());
+        assertTrue(session.matchesPreviousRefreshToken(firstToken));
+        assertFalse(session.matchesPreviousRefreshToken(secondToken));
 
         session.revoke(now);
         assertFalse(session.isActive(now));
