@@ -1072,6 +1072,8 @@ package'larının gerçek kod mu placeholder mı olduğu raporlanmalıdır; yeni
 
 ### HMZ-PROJ-03 — Project/Organization Flyway migration
 
+- Project Service migration'ları için `V21`–`V40` aralığını kullan. `V1`–`V20` Alper/Auth tarafına ayrılmıştır; mevcut `V1__spring_modulith_event_publication.sql` ortak altyapı migration'ı olarak yerinde kalır.
+- `V21` uygulanmadan önce gerekli düşük numaralı Auth migration'larının hazır ve uygulanmış olduğunu doğrula; daha sonra `V2`–`V20` eklemek Flyway sırasını bozabilir.
 - Mevcut son migration'ı doğrula
 - Alper'in paralel auth migration'larıyla numara conflict'i kontrol et
 - PostgreSQL/Flyway standardına uy
@@ -1769,6 +1771,7 @@ shared/** ortak alandır; Project domain kodunu oraya taşıma ve gereksiz deği
 10. .agents/decisions/0002-postgresql.md
 11. docs/compliation/ içindeki ilgili önceki teslimler
 12. hamza.md
+13. alper.md
 
 Plan dosyalarını uygulanmış kod sanma. Önce gerçek repo tree'sini ve mevcut kodu incele. Doğru dosya yollarını kendin bul. Var olmayan path, class veya config uydurma.
 
