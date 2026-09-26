@@ -12,7 +12,7 @@
 - `backend/src/main/resources/application.properties` datasource, Flyway, JPA validate ve Swagger ayarlarını içeriyor. SecurityFilterChain, BCrypt encoder, CSRF/CORS, cookie veya ProblemDetail implementasyonu yok. Spring Security dependency'si mevcut olduğundan framework varsayılanları geçerli; istenen PDA auth davranışı henüz uygulanmış değil.
 - `backend/pom.xml` içinde Spring Security, Validation, JPA, Mail, Testcontainers PostgreSQL, Spring Security Test, JJWT ve Springdoc var. Spring OAuth2 client dependency'si yok. Google/GitHub login safhasında dependency ve provider config kararı gerekecek; Faz 0'da değiştirilmedi.
 - `com.pda.mail` ve `com.pda.shared` yalnız `.gitkeep` barındırıyor. Mail transport abstraction/adapter yok. Email verification için Spring Mail dependency'si var, çalışan gönderim akışı yok.
-- `.env.example` anahtar adlarında `JWT_SECRET` ve SMTP alanları mevcut. `ADMIN_EMAIL`, `ADMIN_INITIAL_PASSWORD`, OAuth client bilgileri, access/refresh TTL, `ALLOWED_ORIGINS` ve `API_DOCS_ENABLED` örnek sözleşmede yok. `application.properties`, `API_DOCS_ENABLED` için varsayılan `true` kullanıyor; production'da varsayılan kapalı olma güvenlik hedefi karşılanmıyor. Bu alanlarda değişiklik yapılmadan önce açık onay gerekli.
+- `.env.example` içinde `JWT_SECRET`, SMTP alanları, `ADMIN_EMAIL`, `ADMIN_INITIAL_PASSWORD`, `MAIL_ENABLED`, `MAIL_PROVIDER`, `MAIL_FROM` ve `API_DOCS_ENABLED` anahtarları mevcut. OAuth client bilgileri, access/refresh TTL ve `ALLOWED_ORIGINS` örnek sözleşmede yok. `application.properties`, `API_DOCS_ENABLED` için varsayılan `true` kullanıyor; production'da varsayılan kapalı olma güvenlik hedefi karşılanmıyor. Bu alanlarda değişiklik yapılmadan önce açık onay gerekli. **27 Eylül düzeltmesi:** Bu satırın ilk sürümü mevcut admin/mail/API docs anahtarlarını yanlışlıkla eksik raporlamıştı.
 - `docs/compliation` içinde bu kayıt öncesinde yalnız README vardı; önceki Auth teslimi yok. Git çalışma ağacı keşif öncesinde temizdi.
 
 ## Kararlar, bağımlılıklar ve riskler
@@ -21,7 +21,7 @@
 - Hamza `project`/`squad` ve ProjectMembership persistence sahibidir. Bu alanlarda henüz gerçek Java kodu yok. Auth'un project rollerini tanımlaması, üyeliği kendi tablosunda tutacağı anlamına gelmez. User arama ve project authorization için public contract gerekecek; başka modülün entity/repository'sine doğrudan erişilmeyecek.
 - İlk Auth migration numarası, Hamza'nın paralel Project migration sırasıyla çakışabilir. Migration yazma task'ında ortak sıra koordine edilmeli.
 - `pom.xml`, application bootstrap/config, `.env.example`, global security ve frontend ortak API client yüksek conflict alanları. `.env`/`.env.example`, yeni ENV/secret, OAuth config, güvenlik mimarisi veya shared/high-conflict dosya değişikliği önceden raporlanıp onaylanmalı.
-- Admin bootstrap ve OAuth giriş, mevcut ENV sözleşmesiyle uygulanamaz. Bu durum Faz 0'ın keşif çıktısıdır; eksik secret veya config uydurulmadı.
+- Admin bootstrap için ENV anahtarları mevcut olsa da uygulama kodu yoktur. OAuth giriş için provider ENV sözleşmesi ve kodu yoktur; eksik secret veya config uydurulmadı. **27 Eylül düzeltmesi:** İlk sürüm admin ENV anahtarlarının bulunmadığını ima ediyordu.
 
 ## ALP-AUTH-01 handoff
 

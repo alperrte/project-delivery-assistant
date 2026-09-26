@@ -33,6 +33,9 @@ import org.springframework.test.context.DynamicPropertySource;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class UserPersistenceTest {
 
+    private static final byte[] JWT_KEY = new byte[32];
+    static { new java.security.SecureRandom().nextBytes(JWT_KEY); }
+
     @Container
     static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:17-alpine");
 
@@ -41,6 +44,8 @@ class UserPersistenceTest {
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
+        registry.add("FRONTEND_URL", () -> "http://localhost:3000");
+        registry.add("JWT_SECRET", () -> java.util.Base64.getEncoder().encodeToString(JWT_KEY));
     }
 
     @Autowired UserRepository users;

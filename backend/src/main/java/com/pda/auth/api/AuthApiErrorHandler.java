@@ -1,0 +1,64 @@
+package com.pda.auth.api;
+
+import com.pda.auth.application.service.VerificationMailUnavailableException;
+import com.pda.auth.application.service.InvalidCredentialsException;
+import com.pda.user.UserRegistrationConflictException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import java.util.List;
+
+@RestControllerAdvice(basePackages = "com.pda.auth.api")
+public class AuthApiErrorHandler {
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    ResponseEntity<ProblemDetail> invalidFields(MethodArgumentNotValidException exception) {
+        List<String> fields = exception.getBindingResult().getFieldErrors().stream()
+                .map(error -> error.getField())
+                .distinct()
+                .sorted()
+                .toList();
+        ProblemDetail body = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Invalid request fields");
+        body.setProperty("invalidFields", fields);
+        return ResponseEntity.badRequest().header("Cache-Control", "no-store").body(body);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    ResponseEntity<ProblemDetail> invalidBody() {
+        return problem(HttpStatus.BAD_REQUEST, "Invalid request body");
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    ResponseEntity<ProblemDetail> invalidArgument() {
+        return problem(HttpStatus.BAD_REQUEST, "Invalid request fields");
+    }
+
+    @ExceptionHandler(PasswordConfirmationMismatchException.class)
+    ResponseEntity<ProblemDetail> passwordConfirmationMismatch() {
+        return problem(HttpStatus.BAD_REQUEST, "Password confirmation does not match");
+    }
+
+    @ExceptionHandler(UserRegistrationConflictException.class)
+    ResponseEntity<ProblemDetail> conflict() {
+        return problem(HttpStatus.CONFLICT, "Account identity is unavailable");
+    }
+
+    @ExceptionHandler(VerificationMailUnavailableException.class)
+    ResponseEntity<ProblemDetail> mailUnavailable() {
+        return problem(HttpStatus.SERVICE_UNAVAILABLE, "Verification mail is temporarily unavailable");
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    ResponseEntity<ProblemDetail> invalidCredentials() {
+        return problem(HttpStatus.UNAUTHORIZED, "Invalid credentials");
+    }
+
+    private static ResponseEntity<ProblemDetail> problem(HttpStatus status, String detail) {
+        ProblemDetail body = ProblemDetail.forStatusAndDetail(status, detail);
+        return ResponseEntity.status(status).header("Cache-Control", "no-store").body(body);
+    }
+}

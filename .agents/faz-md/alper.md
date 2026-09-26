@@ -18,7 +18,8 @@ Bu dosya aşağıdaki konularda önceki planın ilgili kısımlarını güncelle
 - Auth/User/UserSession backend sahipliği artık **Alper**'dedir.
 - `admin`, `auth` ve `user` paketleri Alper'in ana çalışma alanıdır.
 - Local login/register yanında **Google Login** ve **GitHub Login** eklenecektir.
-- Register akışında e-posta doğrulaması zorunludur.
+- 27 Eylül 2026 geçiş kararı: register ve local login doğrudan çalışır; e-posta doğrulaması frontend auth fazına ertelenmiştir. Hesap `ACTIVE`, e-posta durumu `PENDING` kalır.
+- 27 Eylül 2026 API kararı: register, login ve logout başarılı olduğunda `200 OK` döner; local register şifresi 8–128 karakterdir.
 - Rol modeli aşağıda tanımlanan yeni yapıya göre uygulanacaktır.
 - Admin, Auth Service kapsamına alınmıştır.
 
@@ -47,7 +48,7 @@ backend/src/main/java/com/pda/
 ### Authentication
 
 - Local register
-- E-posta doğrulaması
+- E-posta doğrulaması (frontend auth fazında etkinleştirilecek)
 - Local login
 - Logout
 - Google ile giriş
@@ -138,7 +139,7 @@ Confirm Password
 
 `Confirm Password` yalnız request/UI doğrulaması içindir; persistence alanı değildir.
 
-Kayıt başarılı olduğunda hesap doğrudan tam aktif sayılmaz.
+Geçiş döneminde kayıt başarılı olduğunda hesap doğrudan `ACTIVE` olur; doğrulanmamış e-posta `PENDING` olarak kalır. Login bu dönemde email verification istemez. Bu karar email'i `VERIFIED` işaretlemez.
 
 Akış:
 
@@ -147,18 +148,12 @@ REGISTER
    ↓
 User oluştur
    ↓
-Email verification bekleniyor
-   ↓
-Doğrulama kodu mail'e gönder
-   ↓
-Kullanıcı kodu doğrular
-   ↓
-Account ACTIVE
+Account ACTIVE, email verification PENDING
    ↓
 Login yapılabilir
 ```
 
-### E-posta doğrulama için başlangıç standardı
+### Frontend auth fazına ertelenen e-posta doğrulama standardı
 
 Aşağıdaki değerler implementation başlangıç varsayımıdır; kodlama sırasında ürün ihtiyacı değişirse ayrıca karar verilebilir:
 
@@ -170,13 +165,13 @@ Aşağıdaki değerler implementation başlangıç varsayımıdır; kodlama sır
 - Kullanılmış/expired kod tekrar kullanılamaz
 - Endpoint rate limit uygulanır
 
-> Bu akış **register e-posta doğrulamasıdır**. Her login sırasında mail OTP istemek V1 için zorunlu değildir.
+> Bu akış frontend auth fazında backend verify/resend API ve UI birlikte hazır olduğunda yeniden etkinleştirilir. Geçiş döneminde register mail göndermez, verify/resend public değildir. Her login sırasında mail OTP istenmez.
 
 ## 3.2 Local login
 
 - Email + password ile giriş
 - Password BCrypt ile doğrulanır
-- Doğrulanmamış hesap login olamaz
+- Geçiş döneminde `ACTIVE` ve email durumu `PENDING` olan local hesap login olabilir; `VERIFIED` yalnız gerçek doğrulama sonrası yazılır
 - Disabled/blocked hesap login olamaz
 - Başarılı login sonrası access + refresh token üretimi
 - Tokenlar HttpOnly cookie ile taşınır
@@ -469,8 +464,8 @@ Mail ayrı deploy edilen servis yapılmayacaktır.
 
 Auth Service aşağıdaki mail use-case'lerini sahiplenir:
 
-- Register email verification
-- Verification code resend
+- Frontend auth fazında register email verification
+- Frontend auth fazında verification code resend
 - Güvenlik açısından gerekli hesap bildirimleri
 - İleride password reset eklenirse ilgili mail akışı
 
@@ -595,7 +590,9 @@ Schema değişiklikleri yalnız gerçek mevcut migration dizisi incelendikten so
 
 ---
 
-## FAZ 2 — Register + Email Verification
+## FAZ 2 — Doğrudan Register (27 Eylül 2026 kararı)
+
+**Mevcut kod durumu:** `ALP-AUTH-04` yeni doğrudan kayıt davranışıyla uygulanmıştır. `ALP-AUTH-05`–`07` backend hazırlığı ve `V3` migration'ı korunur; verify/resend public değildir. `V4` migration'ı önceki sürümde oluşmuş pending local hesapları email durumunu değiştirmeden aktif yapar. Kodun varlığı email doğrulamanın şu anda kullanıcıdan istendiği anlamına gelmez.
 
 ### ALP-AUTH-04 — Register API
 
@@ -607,9 +604,12 @@ Schema değişiklikleri yalnız gerçek mevcut migration dizisi incelendikten so
 - Confirm password request validation
 - BCrypt
 - Duplicate kullanıcı kontrolü
-- Account pending verification
+- Account doğrudan `ACTIVE`; email verification status `PENDING`
+- Register sırasında mail veya doğrulama kodu zorunlu değil
 
 ### ALP-AUTH-05 — Verification code lifecycle
+
+**Durum:** Backend hazırlığı saklanır; public akış frontend auth fazına ertelendi.
 
 **Kapsam:**
 
@@ -622,6 +622,8 @@ Schema değişiklikleri yalnız gerçek mevcut migration dizisi incelendikten so
 
 ### ALP-AUTH-06 — Verification mail integration
 
+**Durum:** Backend hazırlığı saklanır; register sırasında çağrılmaz. Entegrasyon frontend auth fazında etkinleştirilir.
+
 **Kapsam:**
 
 - Mail port/interface
@@ -630,6 +632,8 @@ Schema değişiklikleri yalnız gerçek mevcut migration dizisi incelendikten so
 - Secret loglama yok
 
 ### ALP-AUTH-07 — Verify / resend API
+
+**Durum:** Public endpoint'ler kapalıdır; frontend auth fazında yeniden etkinleştirilir.
 
 **Kapsam:**
 
@@ -641,7 +645,7 @@ Schema değişiklikleri yalnız gerçek mevcut migration dizisi incelendikten so
 **FAZ 2 Gate:**
 
 ```text
-register → verification mail → verify → ACTIVE user
+register → ACTIVE user (email verification PENDING) → doğrudan local login
 ```
 
 entegrasyon testi geçmeli.
@@ -650,11 +654,13 @@ entegrasyon testi geçmeli.
 
 ## FAZ 3 — Local Login + Logout + JWT
 
+**Mevcut kod durumu:** `ALP-AUTH-08`–`11` backend'de uygulanmıştır; JWT access/refresh HttpOnly cookie, aktif session kontrolü ve logout revoke entegrasyon testleri vardır. Refresh endpoint/rotation ve active session UI Faz 4 ve Faz 9 işleridir. Production domain topolojisi ayrıca doğrulanmalıdır.
+
 ### ALP-AUTH-08 — Login API
 
 - Email/password authentication
 - BCrypt verification
-- Email verified kontrolü
+- `ACTIVE` hesap kontrolü; geçiş döneminde email verification `PENDING` login'i engellemez
 - Disabled user kontrolü
 - Başarılı/başarısız login
 
@@ -672,7 +678,7 @@ entegrasyon testi geçmeli.
 - Refresh cookie
 - HttpOnly
 - Production Secure=true
-- SameSite deployment kararıyla uyumlu
+- Geçiş sözleşmesi: `SameSite=Lax`, host-only; HTTP local dev `Secure=false`, HTTPS/production `Secure=true`. Domain topolojisi kesinleşince tekrar doğrula
 - Token browser storage'a yazılmaz
 
 ### ALP-AUTH-11 — Logout
@@ -684,7 +690,7 @@ entegrasyon testi geçmeli.
 **FAZ 3 Gate:**
 
 ```text
-verified user → login → authenticated request → logout → session revoked
+ACTIVE local user (email PENDING) → login → authenticated request → logout → session revoked
 ```
 
 ---
@@ -864,6 +870,9 @@ Auth modülü Project repository/entity'sine doğrudan erişmez.
 
 ### ALP-AUTH-29 — Email verification UI
 
+- Önce ertelenen `ALP-AUTH-05`–`07` backend verify/resend akışını tekrar etkinleştir ve güvenlik testlerini güncelle
+- Yeni register hesaplarına doğrulama zorunluluğunun ne zaman uygulanacağını ve mevcut `ACTIVE/PENDING` hesapların geçişini açık kararla belirle
+
 - Code input
 - Countdown
 - Resend
@@ -924,7 +933,8 @@ Auth modülü Project repository/entity'sine doğrudan erişmez.
 Minimum gerçek akışlar:
 
 ```text
-Register → Verify Email → Login → Protected Route → Refresh → Logout
+Geçiş dönemi: Register → Login → Protected Route → Refresh → Logout
+Frontend auth fazı sonrası: Register → Verify Email → Login → Protected Route → Refresh → Logout
 Login → Active Sessions → Revoke Session
 Google Login → PDA Session
 GitHub Login → PDA Session
@@ -1081,7 +1091,7 @@ Plan dosyalarını uygulanmış kod sanma. Önce gerçek repo tree'sini ve mevcu
 YENİ KİLİTLİ AUTH KARARLARI:
 - Auth Service = auth + user + admin.
 - Local register: email + nickname + password + confirm password.
-- Register sonrası email verification zorunlu.
+- Geçiş döneminde register doğrudan `ACTIVE`, email durumu `PENDING`; login mail doğrulaması istemez. Email verification frontend auth fazına ertelendi.
 - Local login/logout olacak.
 - Google Login olacak.
 - GitHub Login olacak.
@@ -1197,7 +1207,7 @@ Henüz kod değiştirme.
 Auth Service tamamlandı denebilmesi için minimum:
 
 - [ ] Local register çalışıyor
-- [ ] Email verification çalışıyor
+- [ ] Email verification frontend auth fazında yeniden etkinleştirildi ve mevcut `ACTIVE/PENDING` hesap geçişi kararlaştırıldı
 - [ ] Local login/logout çalışıyor
 - [ ] Access + refresh HttpOnly cookie çalışıyor
 - [ ] Refresh rotation/revocation testli
