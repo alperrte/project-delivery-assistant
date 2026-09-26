@@ -251,6 +251,17 @@ The developer may then verify the completed API through Swagger.
 
 Swagger examples must never contain real passwords, JWTs, cookies, API keys, production emails used as secrets, or other sensitive data.
 
+### Auth Faz 4 endpoints (refresh rotation and active sessions)
+
+Swagger check path: `/swagger-ui/index.html` with `API_DOCS_ENABLED=true`; call `GET /api/v1/auth/csrf` first, then login, refresh, sessions, revoke. All POSTs require `X-XSRF-TOKEN`; errors are `ProblemDetail`; responses are `Cache-Control: no-store`.
+
+| Endpoint | Auth / scope | Input | Success | Important errors |
+| --- | --- | --- | --- | --- |
+| `POST /api/v1/auth/refresh` | Public route; needs valid `PDA_REFRESH` cookie + CSRF | No body | `200`, new `PDA_ACCESS`/`PDA_REFRESH` cookies | `401` invalid/expired/logged-out/reused token (cookies cleared; reuse revokes the session), `403` CSRF, `429` IP limit (30/10 min) |
+| `GET /api/v1/auth/sessions` | Access cookie; USER/ADMIN, own sessions only | No body | `200`, list of `{id, createdAt, lastUsedAt, expiresAt, userAgent, current}` | `401` no/invalid access cookie |
+| `POST /api/v1/auth/sessions/{sessionId}/revoke` | Access cookie + CSRF; own sessions only | `sessionId` UUID path | `200` (auth cookies cleared if it is the current session) | `401`, `403` CSRF, `404` not owned or inactive |
+| `POST /api/v1/auth/sessions/revoke-others` | Access cookie + CSRF | No body | `200`, `{"revoked": 1}` | `401`, `403` CSRF |
+
 ---
 
 ## 12. Error Handling
