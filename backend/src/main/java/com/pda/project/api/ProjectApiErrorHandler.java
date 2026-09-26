@@ -1,5 +1,6 @@
 package com.pda.project.api;
 
+import com.pda.project.application.service.MembershipConflictException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -48,6 +49,11 @@ public class ProjectApiErrorHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     ResponseEntity<ProblemDetail> conflict() {
         return problem(HttpStatus.CONFLICT, "Resource conflicts with existing data");
+    }
+
+    @ExceptionHandler({MembershipConflictException.class, IllegalStateException.class})
+    ResponseEntity<ProblemDetail> membershipConflict() {
+        return problem(HttpStatus.CONFLICT, "Membership change conflicts with project rules");
     }
 
     private static ResponseEntity<ProblemDetail> problem(HttpStatus status, String detail) {
