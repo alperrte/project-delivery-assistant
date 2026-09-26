@@ -2,6 +2,7 @@ package com.pda.project.application.service;
 
 import com.pda.project.domain.entity.Project;
 import com.pda.project.domain.entity.ProjectMembership;
+import com.pda.project.domain.enums.MembershipStatus;
 import com.pda.project.domain.enums.ProjectPriority;
 import com.pda.project.domain.enums.ProjectRole;
 import com.pda.project.infrastructure.repository.ProjectMembershipRepository;
@@ -101,7 +102,7 @@ public class ProjectService {
     private ProjectMembership requireMember(UUID actorId, UUID projectId) {
         Objects.requireNonNull(actorId, "actorId is required");
         Objects.requireNonNull(projectId, "projectId is required");
-        return memberships.findByProjectIdAndUserId(projectId, actorId)
+        return memberships.findByProjectIdAndUserIdAndStatus(projectId, actorId, MembershipStatus.ACTIVE)
                 .orElseThrow(() -> new AccessDeniedException("Project access denied"));
     }
 

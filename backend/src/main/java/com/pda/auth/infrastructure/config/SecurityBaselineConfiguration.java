@@ -52,15 +52,23 @@ public class SecurityBaselineConfiguration {
                     }
                     authorize.requestMatchers(HttpMethod.GET, "/actuator/health", "/api/v1/auth/csrf").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/auth/register",
-                                    "/api/v1/auth/login", "/api/v1/auth/logout").permitAll()
-                            .requestMatchers(HttpMethod.GET, "/api/v1/auth/me").authenticated()
+                                    "/api/v1/auth/login", "/api/v1/auth/logout",
+                                    "/api/v1/auth/refresh").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/v1/auth/me",
+                                    "/api/v1/auth/sessions").authenticated()
+                            .requestMatchers(HttpMethod.POST, "/api/v1/auth/sessions/revoke-others",
+                                    "/api/v1/auth/sessions/*/revoke").authenticated()
                             .requestMatchers(HttpMethod.GET, "/api/v1/projects", "/api/v1/projects/**",
                                     "/api/v1/organizations", "/api/v1/organizations/**").authenticated()
                             .requestMatchers(HttpMethod.POST, "/api/v1/projects",
                                     "/api/v1/projects/*/archive", "/api/v1/organizations",
-                                    "/api/v1/organizations/*/archive").authenticated()
+                                    "/api/v1/organizations/*/archive",
+                                    "/api/v1/projects/*/members/*/roles").authenticated()
                             .requestMatchers(HttpMethod.PUT, "/api/v1/projects/*",
-                                    "/api/v1/organizations/*").authenticated()
+                                    "/api/v1/organizations/*",
+                                    "/api/v1/projects/*/members/*/roles").authenticated()
+                            .requestMatchers(HttpMethod.DELETE, "/api/v1/projects/*/members/*",
+                                    "/api/v1/projects/*/members/*/roles/*").authenticated()
                             .anyRequest().denyAll();
                 })
                 .build();
@@ -84,7 +92,7 @@ public class SecurityBaselineConfiguration {
         }
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(origin.toString()));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "OPTIONS"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Content-Type", "X-XSRF-TOKEN"));
         configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
