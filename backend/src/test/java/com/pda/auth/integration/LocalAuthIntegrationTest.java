@@ -123,6 +123,70 @@ class LocalAuthIntegrationTest {
     }
 
     @Test
+    void refreshRotatesTokensAndRejectsOldRefreshToken() throws Exception {
+        String email = UUID.randomUUID() + "@example.test";
+        String password = UUID.randomUUID().toString();
+        User user = users.saveAndFlush(User.registerLocalActive(email,
+                "u" + UUID.randomUUID().toString().replace("-", "").substring(0, 20), password, encoder));
+        Cookie csrf = csrfCookie();
+
+        var login = mvc.perform(post("/api/v1/auth/login").cookie(csrf)
+                        .header("X-XSRF-TOKEN", csrf.getValue()).header("User-Agent", "IntegrationTest/1.0")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"" + email + "\",\"password\":\"" + password + "\"}"))
+                .andExpect(status().isOk()).andReturn().getResponse();
+        Cookie oldRefresh = cookie(login.getHeaders(HttpHeaders.SET_COOKIE), "PDA_REFRESH");
+        assertEquals("IntegrationTest/1.0", jdbc.queryForObject(
+                "SELECT user_agent FROM user_sessions WHERE user_id = ?", String.class, user.getId()));
+
+        var refreshed = mvc.perform(post("/api/v1/auth/refresh").cookie(csrf, oldRefresh)
+                        .header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isOk()).andReturn().getResponse();
+        Cookie newAccess = cookie(refreshed.getHeaders(HttpHeaders.SET_COOKIE), "PDA_ACCESS");
+        Cookie newRefresh = cookie(refreshed.getHeaders(HttpHeaders.SET_COOKIE), "PDA_REFRESH");
+        assertFalse(newRefresh.getValue().equals(oldRefresh.getValue()));
+        assertTrue(refreshed.getHeaders(HttpHeaders.SET_COOKIE).stream().allMatch(value ->
+                value.contains("HttpOnly") && value.contains("SameSite=Lax")));
+        assertEquals(1, jdbc.queryForObject(
+                "SELECT count(*) FROM user_sessions WHERE user_id = ?", Integer.class, user.getId()));
+        String storedHash = jdbc.queryForObject(
+                "SELECT refresh_token_hash FROM user_sessions WHERE user_id = ?", String.class, user.getId());
+        assertTrue(storedHash.matches("[0-9a-f]{64}"));
+        assertFalse(storedHash.equals(newRefresh.getValue()));
+
+        mvc.perform(get("/api/v1/auth/me").cookie(newAccess))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.email").value(email));
+        mvc.perform(post("/api/v1/auth/refresh").cookie(csrf, oldRefresh)
+                        .header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(post("/api/v1/auth/refresh").cookie(csrf, new Cookie("PDA_REFRESH", newRefresh.getValue() + "x"))
+                        .header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(post("/api/v1/auth/refresh").cookie(csrf).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(post("/api/v1/auth/refresh").cookie(newRefresh))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void disabledAccountCannotRefresh() throws Exception {
+        String email = UUID.randomUUID() + "@example.test";
+        String password = UUID.randomUUID().toString();
+        User user = users.saveAndFlush(User.registerLocalActive(email,
+                "u" + UUID.randomUUID().toString().replace("-", "").substring(0, 20), password, encoder));
+        Cookie csrf = csrfCookie();
+        var login = mvc.perform(post("/api/v1/auth/login").cookie(csrf)
+                        .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"" + email + "\",\"password\":\"" + password + "\"}"))
+                .andExpect(status().isOk()).andReturn().getResponse();
+        Cookie refresh = cookie(login.getHeaders(HttpHeaders.SET_COOKIE), "PDA_REFRESH");
+        user.disable();
+        users.saveAndFlush(user);
+        mvc.perform(post("/api/v1/auth/refresh").cookie(csrf, refresh).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void wrongPasswordCannotLogInAndVerificationRoutesAreClosed() throws Exception {
         Cookie csrf = csrfCookie();
         mvc.perform(post("/api/v1/auth/login").cookie(csrf)
