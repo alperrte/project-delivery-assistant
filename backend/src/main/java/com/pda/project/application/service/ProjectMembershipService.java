@@ -1,0 +1,148 @@
+package com.pda.project.application.service;
+
+import com.pda.project.domain.entity.ProjectMembership;
+import com.pda.project.domain.enums.MembershipStatus;
+import com.pda.project.domain.enums.ProjectRole;
+import com.pda.project.infrastructure.repository.ProjectMembershipRepository;
+import com.pda.project.infrastructure.repository.ProjectRepository;
+import com.pda.user.UserAccounts;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
+
+@Service
+public class ProjectMembershipService {
+
+    private final ProjectRepository projects;
+    private final ProjectMembershipRepository memberships;
+    private final UserAccounts users;
+
+    public ProjectMembershipService(ProjectRepository projects, ProjectMembershipRepository memberships,
+                                    UserAccounts users) {
+        this.projects = projects;
+        this.memberships = memberships;
+        this.users = users;
+    }
+
+    /** Internal onboarding entry point for the later invitation flow. No direct HTTP add-member route. */
+    @Transactional
+    public MemberSummary addMember(UUID actorId, UUID projectId, UUID userId, Set<ProjectRole> roles) {
+        lockForManager(actorId, projectId);
+        Objects.requireNonNull(userId, "userId is required");
+        if (users.findActiveById(userId).isEmpty()) {
+            throw new NoSuchElementException("Active user not found");
+        }
+        ProjectMembership membership = memberships.findByProjectIdAndUserId(projectId, userId)
+                .map(existing -> {
+                    if (existing.getStatus() == MembershipStatus.ACTIVE) {
+                        throw new MembershipConflictException("User is already a project member");
+                    }
+                    existing.reactivate(roles);
+                    return existing;
+                })
+                .orElseGet(() -> ProjectMembership.active(projectId, userId, roles));
+        return MemberSummary.from(memberships.saveAndFlush(membership));
+    }
+
+    @Transactional(readOnly = true)
+    public Page<MemberSummary> list(UUID actorId, UUID projectId, Pageable pageable) {
+        requireMember(actorId, projectId);
+        activeProject(projectId);
+        return memberships.findByProjectIdAndStatus(projectId, MembershipStatus.ACTIVE, pageable)
+                .map(MemberSummary::from);
+    }
+
+    @Transactional(readOnly = true)
+    public MemberSummary detail(UUID actorId, UUID projectId, UUID userId) {
+        requireMember(actorId, projectId);
+        activeProject(projectId);
+        return MemberSummary.from(activeMember(projectId, userId));
+    }
+
+    @Transactional
+    public MemberSummary addRole(UUID actorId, UUID projectId, UUID userId, ProjectRole role) {
+        lockForManager(actorId, projectId);
+        ProjectMembership member = activeMember(projectId, userId);
+        member.addRole(role);
+        return MemberSummary.from(memberships.saveAndFlush(member));
+    }
+
+    @Transactional
+    public MemberSummary replaceRoles(UUID actorId, UUID projectId, UUID userId, Set<ProjectRole> roles) {
+        lockForManager(actorId, projectId);
+        ProjectMembership member = activeMember(projectId, userId);
+        if (roles == null || roles.isEmpty()) {
+            throw new IllegalArgumentException("at least one role is required");
+        }
+        if (member.hasRole(ProjectRole.PROJECT_MANAGER) && !roles.contains(ProjectRole.PROJECT_MANAGER)) {
+            requireAnotherManager(projectId);
+        }
+        member.replaceRoles(roles);
+        return MemberSummary.from(memberships.saveAndFlush(member));
+    }
+
+    @Transactional
+    public MemberSummary removeRole(UUID actorId, UUID projectId, UUID userId, ProjectRole role) {
+        lockForManager(actorId, projectId);
+        ProjectMembership member = activeMember(projectId, userId);
+        if (role == ProjectRole.PROJECT_MANAGER && member.hasRole(role)) {
+            requireAnotherManager(projectId);
+        }
+        member.removeRole(role);
+        return MemberSummary.from(memberships.saveAndFlush(member));
+    }
+
+    @Transactional
+    public void removeMember(UUID actorId, UUID projectId, UUID userId) {
+        lockForManager(actorId, projectId);
+        ProjectMembership member = activeMember(projectId, userId);
+        if (member.hasRole(ProjectRole.PROJECT_MANAGER)) {
+            requireAnotherManager(projectId);
+        }
+        member.remove();
+        memberships.saveAndFlush(member);
+    }
+
+    private void requireAnotherManager(UUID projectId) {
+        if (memberships.countWithRole(projectId, MembershipStatus.ACTIVE, ProjectRole.PROJECT_MANAGER) <= 1) {
+            throw new MembershipConflictException("The last Project Manager must remain assigned");
+        }
+    }
+
+    private void lockForManager(UUID actorId, UUID projectId) {
+        requireManager(actorId, projectId);
+        Objects.requireNonNull(projectId, "projectId is required");
+        projects.lockActive(projectId).orElseThrow(() -> new NoSuchElementException("Project not found"));
+        requireManager(actorId, projectId);
+    }
+
+    private void activeProject(UUID projectId) {
+        projects.findByIdAndArchivedAtIsNull(projectId)
+                .orElseThrow(() -> new NoSuchElementException("Project not found"));
+    }
+
+    private ProjectMembership requireMember(UUID actorId, UUID projectId) {
+        Objects.requireNonNull(actorId, "actorId is required");
+        return memberships.findByProjectIdAndUserIdAndStatus(projectId, actorId, MembershipStatus.ACTIVE)
+                .orElseThrow(() -> new AccessDeniedException("Project access denied"));
+    }
+
+    private void requireManager(UUID actorId, UUID projectId) {
+        if (!requireMember(actorId, projectId).hasRole(ProjectRole.PROJECT_MANAGER)) {
+            throw new AccessDeniedException("Project management denied");
+        }
+    }
+
+    private ProjectMembership activeMember(UUID projectId, UUID userId) {
+        Objects.requireNonNull(userId, "userId is required");
+        return memberships.findByProjectIdAndUserIdAndStatus(projectId, userId, MembershipStatus.ACTIVE)
+                .orElseThrow(() -> new NoSuchElementException("Project member not found"));
+    }
+}

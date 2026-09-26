@@ -2,6 +2,10 @@ package com.pda.project.integration;
 
 import com.jayway.jsonpath.JsonPath;
 import com.pda.BackendApplication;
+import com.pda.project.ProjectAccess;
+import com.pda.project.application.service.MembershipConflictException;
+import com.pda.project.application.service.ProjectMembershipService;
+import com.pda.project.domain.enums.ProjectRole;
 import com.pda.project.infrastructure.repository.ProjectRepository;
 import com.pda.user.UserAccounts;
 import jakarta.servlet.http.Cookie;
@@ -22,14 +26,21 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 
 import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -60,6 +71,8 @@ class ProjectApiIntegrationTest {
     @Autowired MockMvc mvc;
     @Autowired UserAccounts users;
     @Autowired ProjectRepository projects;
+    @Autowired ProjectMembershipService memberships;
+    @Autowired ProjectAccess projectAccess;
     @Autowired JdbcTemplate jdbc;
 
     @Test
@@ -114,6 +127,8 @@ class ProjectApiIntegrationTest {
         mvc.perform(get("/api/v1/projects").cookie(manager.access()))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(0));
         assertNotNull(projects.findById(projectId).orElseThrow().getArchivedAt());
+        assertFalse(projectAccess.isMember(projectId, manager.id()));
+        assertTrue(projectAccess.rolesForUserInProject(projectId, manager.id()).isEmpty());
         mvc.perform(delete("/api/v1/projects/" + projectId).cookie(csrf, manager.access())
                         .header("X-XSRF-TOKEN", csrf.getValue()))
                 .andExpect(status().isForbidden());
@@ -176,7 +191,170 @@ class ProjectApiIntegrationTest {
                 .andExpect(status().isBadRequest());
         mvc.perform(get("/v3/api-docs")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.paths['/api/v1/projects'].post.responses['201']").exists())
-                .andExpect(jsonPath("$.paths['/api/v1/organizations'].post.responses['201']").exists());
+                .andExpect(jsonPath("$.paths['/api/v1/organizations'].post.responses['201']").exists())
+                .andExpect(jsonPath("$.paths['/api/v1/projects/{projectId}/members'].get").exists());
+    }
+
+    @Test
+    void managerCanAssignRolesWhileModeratorAndContributorCannotManageMembers() throws Exception {
+        Cookie csrf = csrfCookie();
+        Account manager = account("rolemanager");
+        Account moderator = account("moderator");
+        Account contributor = account("contributor");
+        UUID projectId = createProject(manager, csrf, "Membership roles");
+        memberships.addMember(manager.id(), projectId, moderator.id(), Set.of(ProjectRole.MODERATOR));
+        memberships.addMember(manager.id(), projectId, contributor.id(),
+                Set.of(ProjectRole.BACKEND_DEVELOPER, ProjectRole.TESTER));
+        UUID otherProjectId = createProject(manager, csrf, "Other membership project");
+
+        assertTrue(projectAccess.isMember(projectId, moderator.id()));
+        assertEquals(Set.of("BACKEND_DEVELOPER", "TESTER"),
+                projectAccess.rolesForUserInProject(projectId, contributor.id()));
+        mvc.perform(get("/api/v1/projects/" + projectId + "/members").cookie(moderator.access()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(3));
+        mvc.perform(get("/api/v1/projects/" + projectId + "/members/" + contributor.id())
+                        .cookie(contributor.access()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.userId").value(contributor.id().toString()));
+        mvc.perform(get("/api/v1/projects/" + otherProjectId + "/members").cookie(moderator.access()))
+                .andExpect(status().isForbidden());
+        assertFalse(projectAccess.canAccessProject(otherProjectId, moderator.id()));
+        mvc.perform(post("/api/v1/projects/" + projectId + "/members/" + contributor.id() + "/roles")
+                        .cookie(csrf, moderator.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"role\":\"PROJECT_MANAGER\"}"))
+                .andExpect(status().isForbidden());
+        mvc.perform(put("/api/v1/projects/" + projectId + "/members/" + contributor.id() + "/roles")
+                        .cookie(csrf, contributor.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"roles\":[\"PROJECT_MANAGER\"]}"))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/api/v1/projects/" + projectId + "/members/" + contributor.id() + "/roles")
+                        .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"role\":\"ANALYST\"}"))
+                .andExpect(status().isOk());
+        assertTrue(projectAccess.rolesForUserInProject(projectId, contributor.id()).contains("ANALYST"));
+        mvc.perform(put("/api/v1/projects/" + projectId + "/members/" + contributor.id() + "/roles")
+                        .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"roles\":[\"TESTER\"]}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.roles[0]").value("TESTER"));
+        mvc.perform(post("/api/v1/projects/" + projectId + "/members/" + contributor.id() + "/roles")
+                        .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"role\":\"UNKNOWN\"}"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(put("/api/v1/projects/" + projectId + "/members/" + contributor.id() + "/roles")
+                        .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"roles\":[]}"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(delete("/api/v1/projects/" + projectId + "/members/" + contributor.id()
+                        + "/roles/TESTER").cookie(csrf, manager.access())
+                        .header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isBadRequest());
+        mvc.perform(post("/api/v1/projects/" + projectId + "/members/" + contributor.id() + "/roles")
+                        .cookie(manager.access()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"role\":\"ANALYST\"}"))
+                .andExpect(status().isForbidden());
+        mvc.perform(delete("/api/v1/projects/" + projectId + "/members/" + contributor.id())
+                        .cookie(csrf, moderator.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isForbidden());
+        mvc.perform(delete("/api/v1/projects/" + projectId + "/members/" + contributor.id())
+                        .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isNoContent());
+        assertEquals("REMOVED", jdbc.queryForObject("SELECT status FROM project_memberships "
+                + "WHERE project_id = ? AND user_id = ?", String.class, projectId, contributor.id()));
+        assertFalse(projectAccess.canAccessProject(projectId, contributor.id()));
+        mvc.perform(get("/api/v1/projects/" + projectId).cookie(contributor.access()))
+                .andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/projects").cookie(contributor.access()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(0));
+        mvc.perform(options("/api/v1/projects/" + projectId + "/members/" + contributor.id())
+                        .header(HttpHeaders.ORIGIN, "http://localhost:3000")
+                        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "DELETE"))
+                .andExpect(status().isOk())
+                .andExpect(result -> assertEquals("http://localhost:3000",
+                        result.getResponse().getHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN)));
+        assertThrows(MembershipConflictException.class,
+                () -> memberships.addMember(manager.id(), projectId, moderator.id(), Set.of(ProjectRole.TESTER)));
+        memberships.addMember(manager.id(), projectId, contributor.id(), Set.of(ProjectRole.TESTER));
+        assertTrue(projectAccess.isMember(projectId, contributor.id()));
+        assertEquals("ACTIVE", jdbc.queryForObject("SELECT status FROM project_memberships "
+                + "WHERE project_id = ? AND user_id = ?", String.class, projectId, contributor.id()));
+        for (ProjectRole role : ProjectRole.values()) {
+            memberships.addRole(manager.id(), projectId, contributor.id(), role);
+        }
+        assertEquals(ProjectRole.values().length,
+                projectAccess.rolesForUserInProject(projectId, contributor.id()).size());
+    }
+
+    @Test
+    void lastManagerCannotLeaveOrLoseRole() throws Exception {
+        Cookie csrf = csrfCookie();
+        Account manager = account("lastmanager");
+        Account second = account("secondmanager");
+        UUID projectId = createProject(manager, csrf, "Last manager rule");
+        String memberPath = "/api/v1/projects/" + projectId + "/members/" + manager.id();
+
+        mvc.perform(put(memberPath + "/roles").cookie(csrf, manager.access())
+                        .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"roles\":[\"MODERATOR\"]}"))
+                .andExpect(status().isConflict());
+        mvc.perform(delete(memberPath).cookie(csrf, manager.access())
+                        .header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isConflict());
+        mvc.perform(post(memberPath + "/roles").cookie(csrf, manager.access())
+                        .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"role\":\"MODERATOR\"}"))
+                .andExpect(status().isOk());
+        mvc.perform(delete(memberPath + "/roles/PROJECT_MANAGER").cookie(csrf, manager.access())
+                        .header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isConflict());
+
+        memberships.addMember(manager.id(), projectId, second.id(), Set.of(ProjectRole.PROJECT_MANAGER));
+        mvc.perform(delete(memberPath + "/roles/PROJECT_MANAGER").cookie(csrf, manager.access())
+                        .header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.roles[0]").value("MODERATOR"));
+        mvc.perform(delete("/api/v1/projects/" + projectId + "/members/" + second.id())
+                        .cookie(csrf, second.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isConflict());
+        assertEquals(Set.of("PROJECT_MANAGER"), projectAccess.rolesForUserInProject(projectId, second.id()));
+    }
+
+    @Test
+    void concurrentManagerRemovalsLeaveOneManager() throws Exception {
+        Cookie csrf = csrfCookie();
+        Account first = account("concurrentfirst");
+        Account second = account("concurrentsecond");
+        UUID projectId = createProject(first, csrf, "Concurrent managers");
+        memberships.addMember(first.id(), projectId, second.id(), Set.of(ProjectRole.PROJECT_MANAGER));
+
+        CountDownLatch start = new CountDownLatch(1);
+        try (var executor = Executors.newFixedThreadPool(2)) {
+            Future<String> firstResult = executor.submit(() -> removeSelfAfterStart(start, first.id(), projectId));
+            Future<String> secondResult = executor.submit(() -> removeSelfAfterStart(start, second.id(), projectId));
+            start.countDown();
+            assertEquals(Set.of("removed", "blocked"), Set.of(
+                    firstResult.get(10, TimeUnit.SECONDS), secondResult.get(10, TimeUnit.SECONDS)));
+        }
+        assertEquals(1, jdbc.queryForObject("SELECT count(*) FROM project_membership_roles r "
+                + "JOIN project_memberships m ON m.id = r.membership_id "
+                + "WHERE m.project_id = ? AND m.status = 'ACTIVE' AND r.role = 'PROJECT_MANAGER'",
+                Long.class, projectId));
+    }
+
+    private String removeSelfAfterStart(CountDownLatch start, UUID actorId, UUID projectId)
+            throws InterruptedException {
+        start.await();
+        try {
+            memberships.removeMember(actorId, projectId, actorId);
+            return "removed";
+        } catch (MembershipConflictException exception) {
+            return "blocked";
+        }
+    }
+
+    private UUID createProject(Account actor, Cookie csrf, String name) throws Exception {
+        var response = mvc.perform(post("/api/v1/projects").cookie(csrf, actor.access())
+                        .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"" + name + "\"}"))
+                .andExpect(status().isCreated()).andReturn().getResponse();
+        return UUID.fromString(JsonPath.read(response.getContentAsString(), "$.id"));
     }
 
     private Account account(String prefix) throws Exception {
@@ -186,6 +364,7 @@ class ProjectApiIntegrationTest {
         UUID id = users.registerLocal(email, "u" + suffix, password);
         Cookie csrf = csrfCookie();
         var login = mvc.perform(post("/api/v1/auth/login").cookie(csrf)
+                        .with(request -> { request.setRemoteAddr("test-" + suffix); return request; })
                         .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"email\":\"" + email + "\",\"password\":\"" + password + "\"}"))
                 .andExpect(status().isOk()).andReturn().getResponse();
