@@ -42,4 +42,12 @@ class SecurityBaselineTest {
         mvc.perform(get("/api/v1/users")).andExpect(status().isForbidden());
         mvc.perform(post("/api/v1/users")).andExpect(status().isForbidden());
     }
+
+    @Test
+    void onlyHealthActuatorEndpointIsPublic() throws Exception {
+        // No actuator in this slice: a permitted path reaches routing (404), a denied one stops at 403.
+        mvc.perform(get("/actuator/health")).andExpect(status().isNotFound());
+        mvc.perform(get("/actuator/env")).andExpect(status().isForbidden());
+        mvc.perform(get("/actuator/health/liveness")).andExpect(status().isForbidden());
+    }
 }
