@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.pda.BackendApplication;
+import com.pda.user.UserAccounts;
 import com.pda.user.domain.entity.User;
 import com.pda.user.domain.entity.UserSession;
 import com.pda.user.infrastructure.repository.UserRepository;
@@ -14,6 +15,7 @@ import com.pda.user.infrastructure.repository.UserSessionRepository;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +52,7 @@ class UserPersistenceTest {
 
     @Autowired UserRepository users;
     @Autowired UserSessionRepository sessions;
+    @Autowired UserAccounts accounts;
     @Autowired JdbcTemplate jdbc;
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
@@ -113,5 +116,27 @@ class UserPersistenceTest {
 
         User user = users.findById(id).orElseThrow();
         assertFalse(user.matchesPassword("any-password", passwordEncoder));
+    }
+
+    @Test
+    void searchActiveUsersMatchesNicknameSubstringOrExactEmailAndHidesInactive() {
+        String suffix = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
+        User active = users.saveAndFlush(User.registerLocalActive(
+                "searchable_" + suffix + "@example.test", "search_target_" + suffix, "sample-password", passwordEncoder));
+        users.saveAndFlush(User.registerLocal(
+                "pending_" + suffix + "@example.test", "search_pending_" + suffix, "sample-password", passwordEncoder));
+
+        List<UserAccounts.UserSearchResult> byNickname = accounts.searchActiveUsers("search_target_" + suffix, 20);
+        assertEquals(1, byNickname.size());
+        assertEquals(active.getId(), byNickname.get(0).userId());
+
+        List<UserAccounts.UserSearchResult> byUpperCaseNickname =
+                accounts.searchActiveUsers(("SEARCH_TARGET_" + suffix).toUpperCase(), 20);
+        assertEquals(1, byUpperCaseNickname.size());
+
+        assertEquals(1, accounts.searchActiveUsers("searchable_" + suffix + "@example.test", 20).size());
+        assertTrue(accounts.searchActiveUsers("search_pending_" + suffix, 20).isEmpty());
+        assertTrue(accounts.searchActiveUsers("a", 20).isEmpty());
+        assertTrue(accounts.searchActiveUsers(null, 20).isEmpty());
     }
 }

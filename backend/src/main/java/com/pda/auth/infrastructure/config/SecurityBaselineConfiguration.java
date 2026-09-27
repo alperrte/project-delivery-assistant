@@ -132,12 +132,17 @@ public class SecurityBaselineConfiguration {
                             .requestMatchers(HttpMethod.POST, "/api/v1/projects",
                                     "/api/v1/projects/*/archive", "/api/v1/organizations",
                                     "/api/v1/organizations/*/archive",
-                                    "/api/v1/projects/*/members/*/roles").authenticated()
+                                    "/api/v1/projects/*/members/*/roles",
+                                    "/api/v1/projects/*/invitations",
+                                    "/api/v1/projects/*/invitations/*/resend",
+                                    "/api/v1/projects/*/invitations/*/accept",
+                                    "/api/v1/projects/*/invitations/*/reject").authenticated()
                             .requestMatchers(HttpMethod.PUT, "/api/v1/projects/*",
                                     "/api/v1/organizations/*",
                                     "/api/v1/projects/*/members/*/roles").authenticated()
                             .requestMatchers(HttpMethod.DELETE, "/api/v1/projects/*/members/*",
-                                    "/api/v1/projects/*/members/*/roles/*").authenticated()
+                                    "/api/v1/projects/*/members/*/roles/*",
+                                    "/api/v1/projects/*/invitations/*").authenticated()
                             .anyRequest().denyAll();
                 })
                 .build();

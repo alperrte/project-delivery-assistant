@@ -1,5 +1,6 @@
 package com.pda.project.api;
 
+import com.pda.project.application.service.InvitationConflictException;
 import com.pda.project.application.service.MembershipConflictException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -8,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -31,7 +33,7 @@ public class ProjectApiErrorHandler {
     }
 
     @ExceptionHandler({HttpMessageNotReadableException.class, MethodArgumentTypeMismatchException.class,
-            IllegalArgumentException.class})
+            MissingServletRequestParameterException.class, IllegalArgumentException.class})
     ResponseEntity<ProblemDetail> invalidInput() {
         return problem(HttpStatus.BAD_REQUEST, "Invalid request");
     }
@@ -54,6 +56,11 @@ public class ProjectApiErrorHandler {
     @ExceptionHandler({MembershipConflictException.class, IllegalStateException.class})
     ResponseEntity<ProblemDetail> membershipConflict() {
         return problem(HttpStatus.CONFLICT, "Membership change conflicts with project rules");
+    }
+
+    @ExceptionHandler(InvitationConflictException.class)
+    ResponseEntity<ProblemDetail> invitationConflict() {
+        return problem(HttpStatus.CONFLICT, "Invitation conflicts with existing project rules");
     }
 
     private static ResponseEntity<ProblemDetail> problem(HttpStatus status, String detail) {

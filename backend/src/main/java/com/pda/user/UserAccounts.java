@@ -30,7 +30,17 @@ public interface UserAccounts {
 
     List<LinkedOAuthIdentity> listOAuthIdentities(UUID userId);
 
+    /**
+     * Safe search for authenticated flows such as a project's "add member" lookup: nickname substring match
+     * (case-insensitive) or an exact email match when the query contains "@". ACTIVE users only; queries shorter
+     * than 2 characters return an empty list. Email is never returned in results. Result size is capped at 20
+     * regardless of the requested limit.
+     */
+    List<UserSearchResult> searchActiveUsers(String query, int limit);
+
     record AuthenticatedUser(UUID id, String email, String nickname, String globalRole) {}
+
+    record UserSearchResult(UUID userId, String nickname) {}
 
     record LinkedOAuthIdentity(OAuthProvider provider, String email, Instant linkedAt) {}
 

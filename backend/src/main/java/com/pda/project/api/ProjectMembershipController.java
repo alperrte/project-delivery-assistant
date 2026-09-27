@@ -4,6 +4,7 @@ import com.pda.project.api.dto.request.ReplaceRolesRequest;
 import com.pda.project.api.dto.request.RoleRequest;
 import com.pda.project.api.dto.response.MemberResponse;
 import com.pda.project.api.dto.response.PageResponse;
+import com.pda.project.api.dto.response.UserSearchResponse;
 import com.pda.project.application.service.ProjectMembershipService;
 import com.pda.user.ProjectRole;
 import com.pda.user.UserAccounts;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -44,6 +46,16 @@ public class ProjectMembershipController {
                                             @RequestParam(defaultValue = "20") int size) {
         return PageResponse.from(memberships.list(AuthenticatedActor.id(principal), projectId,
                 pageRequest(page, size)), MemberResponse::from);
+    }
+
+    @GetMapping("/search")
+    @Operation(summary = "Search active users to add as a project member",
+            description = "PROJECT_MANAGER only. Nickname substring match, or exact email match when the query "
+                    + "contains '@'. Queries shorter than 2 characters return an empty list.")
+    public List<UserSearchResponse> search(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
+                                          @PathVariable UUID projectId, @RequestParam String query) {
+        return memberships.searchAddableUsers(AuthenticatedActor.id(principal), projectId, query).stream()
+                .map(UserSearchResponse::from).toList();
     }
 
     @GetMapping("/{userId}")
