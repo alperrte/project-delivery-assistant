@@ -16,7 +16,6 @@
       "Read(**/*.jar)",
       "Read(**/*.docx)",
       "Read(**/*.pdf)",
-      "Read(**/*.jpeg)",
       "Read(**/*.jpg)",
       "Read(**/*.png)"
     ]
