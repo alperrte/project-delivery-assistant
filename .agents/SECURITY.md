@@ -339,6 +339,16 @@ Swagger check path: `/swagger-ui/index.html` with `API_DOCS_ENABLED=true`: `GET 
 
 Rules: the bootstrapped admin is blocked (`403 password_change_required`) everywhere except `me`, `password/change`, `logout`, `refresh`, `csrf` until the password is changed; the initial password gives no authority afterwards. An administrator cannot disable self or the last active administrator (row lock prevents two admins disabling each other). Disabling revokes every session. The project overview is aggregate metadata, not an access path: an admin who is not a member still gets `403` on project endpoints. Admin actions are logged with actor/target ids only.
 
+### HMZ-PROJ Faz 7 endpoints (Project Home aggregate)
+
+New read-only aggregate endpoint; no new ENV key, dependency or migration. Composes only data that already has a safe source inside the Project module (own entities/repositories, `OrganizationService.requireActive`) — never reaches into another module's internals. A GitHub failure on the repository card never fails the whole response; it surfaces as `repository.githubUnavailable: true` instead. Task counts and recent activity are intentionally absent (Work Service and Activity modules expose no public contract yet); squad count is intentionally absent (Squad already depends on Project via `ProjectAccess`, so the reverse direction would create a module cycle — callers get the squad count from the existing squad list endpoint's pagination total instead).
+
+Swagger check path: `/swagger-ui/index.html` with `API_DOCS_ENABLED=true`: `GET /api/v1/auth/csrf`, log in, call `GET /api/v1/projects` to get a `projectId`, then the endpoint below.
+
+| Endpoint | Auth / scope | Input | Success | Important errors |
+| --- | --- | --- | --- | --- |
+| `GET /api/v1/projects/{projectId}/home` | `PROJECT_VIEW` in that project | UUID path | `200`, `{id,name,slug,status,priority,startDate,targetEndDate,organization\|null,managers[],teamMemberCount,criteriaProgress:{completed,total},repository:{connected,provider,repositoryOwner,repositoryName,defaultBranch,lastCommit\|null,githubUnavailable},createdAt,updatedAt}` | `401` no/invalid access cookie, `403` not a member, `404` project archived/not found |
+
 ---
 
 ## 12. Error Handling

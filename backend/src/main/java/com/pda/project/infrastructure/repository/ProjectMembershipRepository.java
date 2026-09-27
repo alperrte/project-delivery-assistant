@@ -34,4 +34,12 @@ public interface ProjectMembershipRepository extends JpaRepository<ProjectMember
             + "and m.status = :status and role = :role")
     long countWithRole(@Param("projectId") UUID projectId, @Param("status") MembershipStatus status,
                        @Param("role") ProjectRole role);
+
+    long countByProjectIdAndStatus(UUID projectId, MembershipStatus status);
+
+    @Query("select m from ProjectMembership m join m.roles role where m.projectId = :projectId "
+            + "and m.status = :status and role = :role")
+    List<ProjectMembership> findByProjectIdAndStatusAndRole(@Param("projectId") UUID projectId,
+                                                            @Param("status") MembershipStatus status,
+                                                            @Param("role") ProjectRole role);
 }
