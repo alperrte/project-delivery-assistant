@@ -20,6 +20,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 
 /**
  * Finishes the provider redirect. The provider session is throw-away: PDA issues its own cookies (or links the
@@ -84,13 +85,25 @@ public final class OAuthLoginHandlers {
     }
 
     private static Profile profile(Authentication authentication) {
-        if (!(authentication instanceof OAuth2AuthenticationToken token)
-                || !(token.getPrincipal() instanceof OidcUser oidc)
-                || !"google".equals(token.getAuthorizedClientRegistrationId())) {
+        if (!(authentication instanceof OAuth2AuthenticationToken token)) {
             throw new OAuthLoginException(FailureReason.PROVIDER_ERROR);
         }
-        return new Profile(OAuthProvider.GOOGLE, oidc.getSubject(), oidc.getEmail(),
-                Boolean.TRUE.equals(oidc.getEmailVerified()), oidc.getFullName());
+        String registrationId = token.getAuthorizedClientRegistrationId();
+        if ("google".equals(registrationId) && token.getPrincipal() instanceof OidcUser oidc) {
+            return new Profile(OAuthProvider.GOOGLE, oidc.getSubject(), oidc.getEmail(),
+                    Boolean.TRUE.equals(oidc.getEmailVerified()), oidc.getFullName());
+        }
+        if ("github".equals(registrationId)) {
+            // GitHubOAuth2UserService only sets a non-null email for GitHub's primary, verified address.
+            OAuth2User user = token.getPrincipal();
+            Object id = user.getAttribute("id");
+            Object name = user.getAttribute("name");
+            Object login = user.getAttribute("login");
+            return new Profile(OAuthProvider.GITHUB, id == null ? null : String.valueOf(id),
+                    user.getAttribute("email"), Boolean.TRUE.equals(user.getAttribute("email_verified")),
+                    name instanceof String text && !text.isBlank() ? text : login instanceof String text ? text : null);
+        }
+        throw new OAuthLoginException(FailureReason.PROVIDER_ERROR);
     }
 
     private static String linkCode(LinkOutcome outcome) {

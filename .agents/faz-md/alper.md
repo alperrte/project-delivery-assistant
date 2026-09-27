@@ -773,6 +773,8 @@ Google ile aynı güvenlik modeli:
 
 **FAZ 6 Gate:** GitHub login ve account linking senaryoları testli.
 
+**Durum (27 Eylül 2026):** Backend tamamlandı, testli (91 test). Gerçek GitHub OAuth App ile doğrulama kullanıcı kontrolü bekliyor. Kayıt: `docs/compliation/2026-09-27-auth-faz-6.md`.
+
 ---
 
 ## FAZ 7 — Role / Permission Authorization
