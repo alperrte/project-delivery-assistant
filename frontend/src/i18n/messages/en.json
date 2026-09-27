@@ -1,0 +1,99 @@
+{
+  "common": {
+    "appName": "Project Delivery Assistant",
+    "loading": "Loading",
+    "theme": {
+      "label": "Theme",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    },
+    "language": {
+      "label": "Language",
+      "tr": "Türkçe",
+      "en": "English",
+      "de": "Deutsch"
+    }
+  },
+  "errors": {
+    "network": "Could not reach the server. Check your connection and try again.",
+    "generic": "Something went wrong. Please try again.",
+    "tooManyRequests": "Too many attempts. Please wait a moment and try again.",
+    "invalidCredentials": "Incorrect email or password.",
+    "conflict": "This email or username is already in use.",
+    "invalidFields": "Please check the information you entered.",
+    "passwordMismatch": "Passwords do not match.",
+    "forbidden": "You do not have permission to do this."
+  },
+  "oauth": {
+    "google": "Continue with Google",
+    "github": "Continue with GitHub",
+    "divider": "or with email",
+    "errors": {
+      "access_denied": "Sign-in permission was not granted.",
+      "email_not_verified": "The email address at the provider is not verified.",
+      "account_exists": "An account with this email already exists. Sign in with your email and password, then connect the provider in your account settings.",
+      "provider_error": "Sign-in with the provider could not be completed. Please try again.",
+      "unknown": "Sign-in could not be completed. Please try again."
+    }
+  },
+  "login": {
+    "title": "Welcome back",
+    "subtitle": "Sign in to your account.",
+    "email": "Email",
+    "password": "Password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "submit": "Sign in",
+    "submitting": "Signing in",
+    "noAccount": "Don't have an account?",
+    "toRegister": "Create one",
+    "emailPlaceholder": "you@company.com",
+    "passwordPlaceholder": "Enter your password"
+  },
+  "register": {
+    "title": "Create your account",
+    "subtitle": "Get started with a few details.",
+    "email": "Email",
+    "nickname": "Username",
+    "nicknameHint": "3-32 characters: letters, digits or underscore.",
+    "password": "Password",
+    "passwordHint": "At least 8 characters.",
+    "confirmPassword": "Confirm password",
+    "submit": "Create account",
+    "submitting": "Creating account",
+    "success": "Your account is ready. You can sign in now.",
+    "haveAccount": "Already have an account?",
+    "toLogin": "Sign in",
+    "emailPlaceholder": "you@company.com",
+    "nicknamePlaceholder": "username",
+    "passwordPlaceholder": "Create a password",
+    "confirmPasswordPlaceholder": "Repeat your password"
+  },
+  "validation": {
+    "required": "This field is required.",
+    "email": "Enter a valid email address.",
+    "nickname": "3-32 characters; letters, digits and underscore only.",
+    "passwordMin": "Password must be at least 8 characters.",
+    "passwordMax": "Password can be at most 128 characters.",
+    "passwordMatch": "Passwords do not match."
+  },
+  "story": {
+    "welcome": "Welcome to PDA",
+    "intro": "Project Delivery Assistant helps your team deliver projects from start to finish.",
+    "scenes": {
+      "track": {
+        "title": "Delivery in one place",
+        "body": "Follow projects, tasks and progress with your team on the same screen."
+      },
+      "roles": {
+        "title": "The right person, the right access",
+        "body": "Roles keep it clear who can see and change what."
+      },
+      "secure": {
+        "title": "Deliver with confidence",
+        "body": "Your sessions are protected and your account always stays under your control."
+      }
+    }
+  }
+}
