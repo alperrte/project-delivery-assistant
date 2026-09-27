@@ -823,6 +823,8 @@ Auth modülü Project repository/entity'sine doğrudan erişmez.
 
 **FAZ 7 Gate:** Her hassas endpointin açık authorization kuralı vardır.
 
+**Durum (27 Eylül 2026):** Backend tamamlandı, testli (99 test). ADMIN kararı: platform operatörü, proje yetkisi yok. Kayıt: `docs/compliation/2026-09-27-auth-faz-7.md`.
+
 ---
 
 ## FAZ 8 — Admin Backend

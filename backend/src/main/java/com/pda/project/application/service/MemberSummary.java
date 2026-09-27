@@ -1,7 +1,7 @@
 package com.pda.project.application.service;
 
 import com.pda.project.domain.entity.ProjectMembership;
-import com.pda.project.domain.enums.ProjectRole;
+import com.pda.user.ProjectRole;
 
 import java.time.Instant;
 import java.util.Set;
