@@ -122,6 +122,9 @@ log/
 tmp/
 temp/
 
+# Temporary mirror clone kept until GitHub Contributors refreshes.
+/pda-temiz.git/
+
 
 # ============================================================
 # Operating System
