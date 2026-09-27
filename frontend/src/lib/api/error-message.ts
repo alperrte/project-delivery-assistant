@@ -11,6 +11,8 @@ export function errorKey(err: unknown): string {
       return "invalidCredentials";
     case 403:
       return "forbidden";
+    case 404:
+      return "notFound";
     case 409:
       return "conflict";
     case 429:
