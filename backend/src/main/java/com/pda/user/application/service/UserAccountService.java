@@ -12,12 +12,18 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class UserAccountService implements UserAccounts {
+
+    private static final int MIN_SEARCH_QUERY_LENGTH = 2;
+    private static final int MAX_SEARCH_RESULTS = 20;
 
     private final UserRepository users;
     private final UserOAuthIdentityRepository identities;
@@ -174,6 +180,24 @@ public class UserAccountService implements UserAccounts {
                 .map(identity -> new LinkedOAuthIdentity(identity.getProvider(), identity.getProviderEmail(),
                         identity.getCreatedAt()))
                 .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<UserSearchResult> searchActiveUsers(String query, int limit) {
+        if (query == null) {
+            return List.of();
+        }
+        String trimmed = query.strip();
+        if (trimmed.length() < MIN_SEARCH_QUERY_LENGTH) {
+            return List.of();
+        }
+        int cappedLimit = Math.max(1, Math.min(limit, MAX_SEARCH_RESULTS));
+        Pageable page = PageRequest.of(0, cappedLimit, Sort.by("nickname").ascending());
+        List<User> matches = trimmed.contains("@")
+                ? users.findByEmailAndAccountStatus(trimmed, AccountStatus.ACTIVE).map(List::of).orElseGet(List::of)
+                : users.findByAccountStatusAndNicknameContainingIgnoreCase(AccountStatus.ACTIVE, trimmed, page);
+        return matches.stream().map(user -> new UserSearchResult(user.getId(), user.getNickname())).toList();
     }
 
     /** Derives a valid, unused nickname from the provider display name (or email) without trusting its shape. */
