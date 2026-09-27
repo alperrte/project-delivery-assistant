@@ -4,9 +4,9 @@ import com.pda.BackendApplication;
 import com.pda.project.application.service.ProjectMembershipService;
 import com.pda.project.application.service.ProjectService;
 import com.pda.squad.application.service.SquadConflictException;
+import com.pda.squad.application.service.SquadMemberSummary;
 import com.pda.squad.application.service.SquadService;
 import com.pda.squad.domain.entity.Squad;
-import com.pda.squad.domain.entity.SquadMembership;
 import com.pda.user.ProjectRole;
 import com.pda.user.UserAccounts;
 import org.junit.jupiter.api.Test;
@@ -99,9 +99,9 @@ class SquadServiceTest {
         assertThrows(NoSuchElementException.class,
                 () -> squadService.addMember(manager, projectId, squadId, outsider));
 
-        SquadMembership added = squadService.addMember(manager, projectId, squadId, member);
-        assertEquals(member, added.getUserId());
-        assertEquals(manager, added.getAddedBy());
+        SquadMemberSummary added = squadService.addMember(manager, projectId, squadId, member);
+        assertEquals(member, added.userId());
+        assertEquals(manager, added.addedBy());
         assertEquals(1, squadService.listMembers(member, projectId, squadId, PageRequest.of(0, 10))
                 .getTotalElements());
 
@@ -130,9 +130,9 @@ class SquadServiceTest {
         assertThrows(AccessDeniedException.class,
                 () -> squadService.addMember(contributor, projectId, squadId, target));
         assertFalse(squadService.listMembers(manager, projectId, squadId, PageRequest.of(0, 10))
-                .getContent().stream().anyMatch(m -> m.getUserId().equals(target)));
+                .getContent().stream().anyMatch(m -> m.userId().equals(target)));
 
-        assertTrue(squadService.addMember(manager, projectId, squadId, target).getUserId().equals(target));
+        assertTrue(squadService.addMember(manager, projectId, squadId, target).userId().equals(target));
     }
 
     private UUID registerUser(String prefix) {

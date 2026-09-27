@@ -174,9 +174,9 @@ public class ProjectInvitationService {
         if (invitation.getInvitedUserId() != null && !invitation.getInvitedUserId().equals(actorId)) {
             throw new AccessDeniedException("This invitation is not addressed to you");
         }
-        if (users.findActiveById(actorId).isEmpty()) {
-            throw new NoSuchElementException("Active user not found");
-        }
+        String nickname = users.findActiveById(actorId)
+                .map(UserAccounts.AuthenticatedUser::nickname)
+                .orElseThrow(() -> new NoSuchElementException("Active user not found"));
         ProjectMembership membership = memberships.findByProjectIdAndUserId(projectId, actorId)
                 .map(existing -> {
                     if (existing.getStatus() == MembershipStatus.ACTIVE) {
@@ -189,7 +189,7 @@ public class ProjectInvitationService {
         ProjectMembership saved = memberships.saveAndFlush(membership);
         invitation.accept(clock.instant());
         invitations.saveAndFlush(invitation);
-        return MemberSummary.from(saved);
+        return MemberSummary.from(saved, nickname);
     }
 
     private ProjectInvitation requireMatchingPendingInvitation(UUID projectId, UUID invitationId, String rawToken) {
