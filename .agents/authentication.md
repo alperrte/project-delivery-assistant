@@ -41,7 +41,7 @@ Tarayıcı ile backend farklı origin'lerdeyse izinli origin'leri açıkça tan�
 
 ## Yetki modeli
 
-`ADMIN` instance genelinde yetkilidir. Proje üyelikleri `PROJECT_MANAGER`, `BACKEND_ENGINEER`, `FRONTEND_ENGINEER`, `FULL_STACK_DEVELOPER`, `TESTER`, `UI_DESIGNER` rollerinden bir veya birkaçını taşıyabilir. Aynı kullanıcının başka projedeki rolleri farklı olabilir. V1'de custom rol ve granular permission matrix yoktur. Her use-case, hem global hem proje kapsamını backend'de denetlemelidir.
+`ADMIN` instance genelinde platform operatörüdür (kullanıcı, oturum ve denetim yönetimi: `PlatformPermission`); proje üyeliği değildir ve proje verisinde örtük yetkisi yoktur. Proje üyelikleri `PROJECT_MANAGER`, `BACKEND_DEVELOPER`, `FRONTEND_DEVELOPER`, `FULL_STACK_DEVELOPER`, `AI_ML_DEVELOPER`, `UI_UX_DEVELOPER`, `TESTER`, `ANALYST` rollerinden bir veya birkaçını taşıyabilir. Aynı kullanıcının başka projedeki rolleri farklı olabilir. Roller yalnız etikettir: yetki `RolePolicy` ile rol→`ProjectPermission` eşlemesinden gelir (deny-by-default, custom rol yok). Her use-case, hem global hem proje kapsamını backend'de denetlemelidir. Proje modülü `ProjectAccess` facade'ı ile `projectId + userId` için üyelik/permission bilgisini sunar; Auth Project entity/repository'sine erişmez.
 
 ## Admin bootstrap
 

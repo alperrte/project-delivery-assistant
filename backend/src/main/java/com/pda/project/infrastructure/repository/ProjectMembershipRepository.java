@@ -2,7 +2,7 @@ package com.pda.project.infrastructure.repository;
 
 import com.pda.project.domain.entity.ProjectMembership;
 import com.pda.project.domain.enums.MembershipStatus;
-import com.pda.project.domain.enums.ProjectRole;
+import com.pda.user.ProjectRole;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
