@@ -5,7 +5,7 @@ import com.pda.project.domain.entity.ProjectInvitation;
 import com.pda.project.domain.entity.ProjectMembership;
 import com.pda.project.domain.enums.InvitationStatus;
 import com.pda.project.domain.enums.MembershipStatus;
-import com.pda.project.domain.enums.ProjectRole;
+import com.pda.user.ProjectRole;
 import com.pda.project.infrastructure.repository.ProjectInvitationRepository;
 import com.pda.project.infrastructure.repository.ProjectMembershipRepository;
 import com.pda.project.infrastructure.repository.ProjectRepository;

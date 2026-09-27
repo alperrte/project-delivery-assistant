@@ -330,7 +330,7 @@ class ProjectApiIntegrationTest {
         Account manager = account("searchmanager");
         Account moderator = account("searchmoderator");
         UUID projectId = createProject(manager, csrf, "Search project");
-        memberships.addMember(manager.id(), projectId, moderator.id(), Set.of(ProjectRole.MODERATOR));
+        memberships.addMember(manager.id(), projectId, moderator.id(), Set.of(ProjectRole.TESTER));
         String suffix = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
         UUID targetId = users.registerLocal("findable_" + suffix + "@example.test", "findable_" + suffix,
                 UUID.randomUUID().toString());

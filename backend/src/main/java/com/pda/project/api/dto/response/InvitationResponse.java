@@ -2,7 +2,7 @@ package com.pda.project.api.dto.response;
 
 import com.pda.project.application.service.InvitationSummary;
 import com.pda.project.domain.enums.InvitationStatus;
-import com.pda.project.domain.enums.ProjectRole;
+import com.pda.user.ProjectRole;
 
 import java.time.Instant;
 import java.util.Set;
