@@ -284,6 +284,40 @@ class ProjectApiIntegrationTest {
     }
 
     @Test
+    void managerCanSearchAddableUsersWhileOthersCannot() throws Exception {
+        Cookie csrf = csrfCookie();
+        Account manager = account("searchmanager");
+        Account moderator = account("searchmoderator");
+        UUID projectId = createProject(manager, csrf, "Search project");
+        memberships.addMember(manager.id(), projectId, moderator.id(), Set.of(ProjectRole.MODERATOR));
+        String suffix = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+        UUID targetId = users.registerLocal("findable_" + suffix + "@example.test", "findable_" + suffix,
+                UUID.randomUUID().toString());
+
+        mvc.perform(get("/api/v1/projects/" + projectId + "/members/search?query=findable_" + suffix))
+                .andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/projects/" + projectId + "/members/search?query=findable_" + suffix)
+                        .cookie(moderator.access()))
+                .andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/projects/" + projectId + "/members/search?query=findable_" + suffix)
+                        .cookie(manager.access()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].userId").value(targetId.toString()))
+                .andExpect(jsonPath("$[0].nickname").value("findable_" + suffix))
+                .andExpect(jsonPath("$[0].email").doesNotExist());
+        mvc.perform(get("/api/v1/projects/" + projectId + "/members/search?query=findable_" + suffix.toUpperCase())
+                        .cookie(manager.access()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$[0].userId").value(targetId.toString()));
+        mvc.perform(get("/api/v1/projects/" + projectId + "/members/search?query=findable_"
+                        + suffix + "@example.test").cookie(manager.access()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$[0].userId").value(targetId.toString()));
+        mvc.perform(get("/api/v1/projects/" + projectId + "/members/search?query=a").cookie(manager.access()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$").isEmpty());
+        mvc.perform(get("/api/v1/projects/" + projectId + "/members/search").cookie(manager.access()))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void lastManagerCannotLeaveOrLoseRole() throws Exception {
         Cookie csrf = csrfCookie();
         Account manager = account("lastmanager");

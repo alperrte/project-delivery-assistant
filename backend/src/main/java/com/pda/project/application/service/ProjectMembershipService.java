@@ -12,6 +12,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
@@ -64,6 +65,14 @@ public class ProjectMembershipService {
         requireMember(actorId, projectId);
         activeProject(projectId);
         return MemberSummary.from(activeMember(projectId, userId));
+    }
+
+    /** PROJECT_MANAGER-only lookup for the "add member" flow; delegates to the User module's public search contract. */
+    @Transactional(readOnly = true)
+    public List<UserAccounts.UserSearchResult> searchAddableUsers(UUID actorId, UUID projectId, String query) {
+        requireManager(actorId, projectId);
+        activeProject(projectId);
+        return users.searchActiveUsers(query, 20);
     }
 
     @Transactional
