@@ -99,6 +99,7 @@ frontend/coverage/
 frontend/playwright-report/
 frontend/test-results/
 frontend/.nyc_output/
+frontend/e2e/.auth/
 
 
 # ============================================================
