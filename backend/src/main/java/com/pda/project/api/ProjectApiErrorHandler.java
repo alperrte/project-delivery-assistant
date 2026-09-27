@@ -1,5 +1,6 @@
 package com.pda.project.api;
 
+import com.pda.project.application.service.GitHubIntegrationException;
 import com.pda.project.application.service.InvitationConflictException;
 import com.pda.project.application.service.MembershipConflictException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -61,6 +62,16 @@ public class ProjectApiErrorHandler {
     @ExceptionHandler(InvitationConflictException.class)
     ResponseEntity<ProblemDetail> invitationConflict() {
         return problem(HttpStatus.CONFLICT, "Invitation conflicts with existing project rules");
+    }
+
+    /** Never forwards GitHub's own response body/message; only the safe, pre-classified reason. */
+    @ExceptionHandler(GitHubIntegrationException.class)
+    ResponseEntity<ProblemDetail> gitHubIntegration(GitHubIntegrationException exception) {
+        return switch (exception.getReason()) {
+            case NOT_FOUND -> problem(HttpStatus.NOT_FOUND, "GitHub repository not found");
+            case RATE_LIMITED -> problem(HttpStatus.TOO_MANY_REQUESTS, "GitHub rate limit reached");
+            case UNAVAILABLE -> problem(HttpStatus.SERVICE_UNAVAILABLE, "GitHub is currently unavailable");
+        };
     }
 
     private static ResponseEntity<ProblemDetail> problem(HttpStatus status, String detail) {
