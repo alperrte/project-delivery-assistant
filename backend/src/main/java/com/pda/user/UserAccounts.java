@@ -31,6 +31,12 @@ public interface UserAccounts {
     List<LinkedOAuthIdentity> listOAuthIdentities(UUID userId);
 
     /**
+     * Replaces the password of an ACTIVE account after verifying the current one. The new password must differ
+     * from the current one. A successful change also ends a forced first-login change.
+     */
+    PasswordChangeOutcome changePassword(UUID userId, String currentPassword, String newPassword);
+
+    /**
      * Safe search for authenticated flows such as a project's "add member" lookup: nickname substring match
      * (case-insensitive) or an exact email match when the query contains "@". ACTIVE users only; queries shorter
      * than 2 characters return an empty list. Email is never returned in results. Result size is capped at 20
@@ -38,13 +44,15 @@ public interface UserAccounts {
      */
     List<UserSearchResult> searchActiveUsers(String query, int limit);
 
-    record AuthenticatedUser(UUID id, String email, String nickname, String globalRole) {}
+    record AuthenticatedUser(UUID id, String email, String nickname, String globalRole, boolean mustChangePassword) {}
 
     record UserSearchResult(UUID userId, String nickname) {}
 
     record LinkedOAuthIdentity(OAuthProvider provider, String email, Instant linkedAt) {}
 
     enum LinkOutcome { LINKED, ALREADY_LINKED, IDENTITY_USED_BY_OTHER_ACCOUNT, PROVIDER_HAS_OTHER_IDENTITY, ACCOUNT_UNAVAILABLE }
+
+    enum PasswordChangeOutcome { CHANGED, WRONG_CURRENT_PASSWORD, SAME_PASSWORD, ACCOUNT_UNAVAILABLE }
 
     enum UnlinkOutcome { UNLINKED, NOT_LINKED, LAST_LOGIN_METHOD }
 }

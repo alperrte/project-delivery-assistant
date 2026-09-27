@@ -156,6 +156,24 @@ public class UserAccountService implements UserAccounts {
     }
 
     @Override
+    @Transactional
+    public PasswordChangeOutcome changePassword(UUID userId, String currentPassword, String newPassword) {
+        Optional<User> found = users.findById(userId).filter(user -> user.getAccountStatus() == AccountStatus.ACTIVE);
+        if (found.isEmpty()) {
+            return PasswordChangeOutcome.ACCOUNT_UNAVAILABLE;
+        }
+        User user = found.get();
+        if (!user.matchesPassword(currentPassword, passwordEncoder)) {
+            return PasswordChangeOutcome.WRONG_CURRENT_PASSWORD;
+        }
+        if (user.matchesPassword(newPassword, passwordEncoder)) {
+            return PasswordChangeOutcome.SAME_PASSWORD;
+        }
+        user.changePassword(newPassword, passwordEncoder);
+        return PasswordChangeOutcome.CHANGED;
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public List<LinkedOAuthIdentity> listOAuthIdentities(UUID userId) {
         return identities.findByUserIdOrderByCreatedAtAsc(userId).stream()
@@ -201,6 +219,7 @@ public class UserAccountService implements UserAccounts {
     }
 
     private static AuthenticatedUser summary(User user) {
-        return new AuthenticatedUser(user.getId(), user.getEmail(), user.getNickname(), user.getGlobalRole().name());
+        return new AuthenticatedUser(user.getId(), user.getEmail(), user.getNickname(), user.getGlobalRole().name(),
+                user.isMustChangePassword());
     }
 }
