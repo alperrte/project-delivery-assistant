@@ -10,6 +10,8 @@ public enum ProjectPermission {
     PROJECT_ARCHIVE,
     /** Invite/remove members, assign or change project roles (including Project Manager). */
     MEMBER_MANAGE,
+    /** Create, edit, archive a squad and manage its membership; a squad grants no permission by itself. */
+    SQUAD_MANAGE,
     /** Create, edit, assign, schedule, prioritise, move, block and close tasks; attach existing labels. */
     TASK_MANAGE,
     /** Create and change labels and milestones themselves. */

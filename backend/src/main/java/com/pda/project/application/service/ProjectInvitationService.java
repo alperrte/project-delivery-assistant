@@ -5,7 +5,9 @@ import com.pda.project.domain.entity.ProjectInvitation;
 import com.pda.project.domain.entity.ProjectMembership;
 import com.pda.project.domain.enums.InvitationStatus;
 import com.pda.project.domain.enums.MembershipStatus;
+import com.pda.user.ProjectPermission;
 import com.pda.user.ProjectRole;
+import com.pda.user.RolePolicy;
 import com.pda.project.infrastructure.repository.ProjectInvitationRepository;
 import com.pda.project.infrastructure.repository.ProjectMembershipRepository;
 import com.pda.project.infrastructure.repository.ProjectRepository;
@@ -226,7 +228,7 @@ public class ProjectInvitationService {
         ProjectMembership membership = memberships.findByProjectIdAndUserIdAndStatus(projectId, actorId,
                         MembershipStatus.ACTIVE)
                 .orElseThrow(() -> new AccessDeniedException("Project access denied"));
-        if (!membership.hasRole(ProjectRole.PROJECT_MANAGER)) {
+        if (!RolePolicy.allows(membership.getRoles(), ProjectPermission.MEMBER_MANAGE)) {
             throw new AccessDeniedException("Project management denied");
         }
         return project;
