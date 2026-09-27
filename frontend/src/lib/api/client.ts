@@ -1,0 +1,109 @@
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/api/v1";
+
+export class ApiError extends Error {
+  constructor(
+    public readonly status: number,
+    public readonly code?: string,
+    public readonly invalidFields?: Record<string, string>,
+  ) {
+    super(code ?? `http_${status}`);
+    this.name = "ApiError";
+  }
+
+  get isNetwork() {
+    return this.status === 0;
+  }
+}
+
+type CsrfState = { headerName: string } | null;
+let csrf: CsrfState = null;
+let refreshing: Promise<boolean> | null = null;
+
+function readCookie(name: string): string | undefined {
+  if (typeof document === "undefined") return undefined;
+  return document.cookie
+    .split("; ")
+    .find((row) => row.startsWith(`${name}=`))
+    ?.slice(name.length + 1);
+}
+
+async function ensureCsrf(force = false): Promise<{ headerName: string; token: string }> {
+  if (force || !csrf || !readCookie("XSRF-TOKEN")) {
+    const res = await fetch(`${API_URL}/auth/csrf`, { credentials: "include" });
+    if (!res.ok) throw new ApiError(res.status);
+    csrf = (await res.json()) as { headerName: string };
+  }
+  return { headerName: csrf!.headerName, token: decodeURIComponent(readCookie("XSRF-TOKEN") ?? "") };
+}
+
+async function toApiError(res: Response): Promise<ApiError> {
+  let body: { code?: string; invalidFields?: Record<string, string> | { field: string; message: string }[] } = {};
+  try {
+    body = await res.json();
+  } catch {
+    /* body is optional */
+  }
+  let fields: Record<string, string> | undefined;
+  if (Array.isArray(body.invalidFields)) {
+    fields = Object.fromEntries(body.invalidFields.map((f) => [f.field, f.message]));
+  } else if (body.invalidFields) {
+    fields = body.invalidFields;
+  }
+  return new ApiError(res.status, body.code, fields);
+}
+
+async function send(path: string, init: RequestInit, method: string): Promise<Response> {
+  const headers = new Headers(init.headers);
+  if (init.body) headers.set("Content-Type", "application/json");
+  if (method !== "GET") {
+    const { headerName, token } = await ensureCsrf();
+    headers.set(headerName, token);
+  }
+  try {
+    return await fetch(`${API_URL}${path}`, { ...init, method, headers, credentials: "include" });
+  } catch {
+    throw new ApiError(0);
+  }
+}
+
+function refreshSession(): Promise<boolean> {
+  refreshing ??= send("/auth/refresh", {}, "POST")
+    .then((res) => res.ok)
+    .catch(() => false)
+    .finally(() => {
+      refreshing = null;
+    });
+  return refreshing;
+}
+
+const NO_REFRESH = ["/auth/login", "/auth/register", "/auth/refresh", "/auth/logout"];
+
+export async function apiRequest<T = void>(
+  path: string,
+  options: { method?: "GET" | "POST"; body?: unknown } = {},
+): Promise<T> {
+  const method = options.method ?? "GET";
+  const init: RequestInit = options.body === undefined ? {} : { body: JSON.stringify(options.body) };
+
+  let res = await send(path, init, method);
+
+  if (res.status === 403 && method !== "GET") {
+    const err = await toApiError(res.clone());
+    if (!err.code) {
+      // Most likely a stale CSRF token; fetch a new one and retry once.
+      await ensureCsrf(true);
+      res = await send(path, init, method);
+    }
+  }
+
+  if (res.status === 401 && !NO_REFRESH.includes(path) && (await refreshSession())) {
+    res = await send(path, init, method);
+  }
+
+  if (!res.ok) throw await toApiError(res);
+  if (res.status === 204 || res.headers.get("content-length") === "0") return undefined as T;
+  const text = await res.text();
+  return (text ? JSON.parse(text) : undefined) as T;
+}
+
+export const apiUrl = (path: string) => `${API_URL}${path}`;
