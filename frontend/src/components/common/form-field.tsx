@@ -31,16 +31,16 @@ export function FormField({ label, error, hint, password, className, ...props }:
           aria-describedby={describedBy}
           {...props}
           type={password ? (visible ? "text" : "password") : props.type}
-          className={cn("h-11 px-3.5", password && "pr-11", className)}
+          className={cn("h-11 rounded-lg bg-card px-3.5 text-sm transition-[border-color,box-shadow] duration-200 hover:border-ring/50 focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20 dark:bg-input/30", password && "pr-11", className)}
         />
         {password && (
           <button
             type="button"
             onClick={() => setVisible((v) => !v)}
             aria-label={visible ? t("hidePassword") : t("showPassword")}
-            className="absolute inset-y-0 right-0 grid w-11 place-items-center text-muted-foreground transition-colors hover:text-foreground"
+            className="absolute inset-y-0 right-0 grid w-11 place-items-center rounded-r-lg text-muted-foreground opacity-70 transition-opacity hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            {visible ? <EyeSlash size={20} /> : <Eye size={20} />}
+            {visible ? <EyeSlash size={18} /> : <Eye size={18} />}
           </button>
         )}
       </div>

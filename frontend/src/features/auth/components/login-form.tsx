@@ -1,20 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CircleNotch } from "@phosphor-icons/react";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/common/submit-button";
 import { FormField } from "@/components/common/form-field";
 import { errorKey } from "@/lib/api/error-message";
 import { authApi } from "../api";
 import { loginSchema, type LoginValues } from "../schemas";
 import { useShake } from "./use-shake";
 
-export function LoginForm() {
+export function LoginForm({ children }: { children?: ReactNode }) {
   const t = useTranslations("login");
   const tv = useTranslations("validation");
   const te = useTranslations("errors");
@@ -42,6 +41,7 @@ export function LoginForm() {
   return (
     <div>
       <form ref={scope} onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+        <fieldset disabled={isSubmitting} className="contents">
         <FormField
           label={t("email")}
           placeholder={t("emailPlaceholder")}
@@ -65,13 +65,13 @@ export function LoginForm() {
           </p>
         )}
 
-        <Button type="submit" disabled={isSubmitting} className="h-11 w-full text-[0.95rem] active:scale-[0.98]">
-          {isSubmitting && <CircleNotch size={18} className="animate-spin" />}
-          {isSubmitting ? t("submitting") : t("submit")}
-        </Button>
+        <SubmitButton pending={isSubmitting}>{isSubmitting ? t("submitting") : t("submit")}</SubmitButton>
+        </fieldset>
       </form>
 
-      <p className="mt-6 text-center text-sm text-muted-foreground">
+      {children && <div className="mt-6">{children}</div>}
+
+      <p className="mt-8 text-center text-sm text-muted-foreground">
         {t("noAccount")}{" "}
         <Link href="/register" className="font-medium text-primary underline-offset-4 hover:underline">
           {t("toRegister")}
