@@ -12,10 +12,9 @@ export default async function LoginPage() {
       <Suspense>
         <OAuthErrorNotice />
       </Suspense>
-      <OAuthButtons />
-      <div className="mt-4">
-        <LoginForm />
-      </div>
+      <LoginForm>
+        <OAuthButtons />
+      </LoginForm>
     </AuthCard>
   );
 }
