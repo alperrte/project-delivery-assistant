@@ -1,0 +1,99 @@
+{
+  "common": {
+    "appName": "Project Delivery Assistant",
+    "loading": "Wird geladen",
+    "theme": {
+      "label": "Design",
+      "light": "Hell",
+      "dark": "Dunkel",
+      "system": "System"
+    },
+    "language": {
+      "label": "Sprache",
+      "tr": "Türkçe",
+      "en": "English",
+      "de": "Deutsch"
+    }
+  },
+  "errors": {
+    "network": "Der Server ist nicht erreichbar. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
+    "generic": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+    "tooManyRequests": "Zu viele Versuche. Bitte warten Sie einen Moment und versuchen Sie es erneut.",
+    "invalidCredentials": "E-Mail oder Passwort ist falsch.",
+    "conflict": "Diese E-Mail oder dieser Benutzername wird bereits verwendet.",
+    "invalidFields": "Bitte prüfen Sie Ihre Eingaben.",
+    "passwordMismatch": "Die Passwörter stimmen nicht überein.",
+    "forbidden": "Dafür fehlt Ihnen die Berechtigung."
+  },
+  "oauth": {
+    "google": "Weiter mit Google",
+    "github": "Weiter mit GitHub",
+    "divider": "oder mit E-Mail",
+    "errors": {
+      "access_denied": "Die Anmeldeberechtigung wurde nicht erteilt.",
+      "email_not_verified": "Die E-Mail-Adresse beim Anbieter ist nicht bestätigt.",
+      "account_exists": "Mit dieser E-Mail existiert bereits ein Konto. Melden Sie sich mit E-Mail und Passwort an und verknüpfen Sie den Anbieter danach in den Kontoeinstellungen.",
+      "provider_error": "Die Anmeldung beim Anbieter konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut.",
+      "unknown": "Die Anmeldung konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut."
+    }
+  },
+  "login": {
+    "title": "Willkommen zurück",
+    "subtitle": "Melden Sie sich bei Ihrem Konto an.",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "showPassword": "Passwort anzeigen",
+    "hidePassword": "Passwort verbergen",
+    "submit": "Anmelden",
+    "submitting": "Anmeldung läuft",
+    "noAccount": "Noch kein Konto?",
+    "toRegister": "Registrieren",
+    "emailPlaceholder": "sie@firma.de",
+    "passwordPlaceholder": "Passwort eingeben"
+  },
+  "register": {
+    "title": "Konto erstellen",
+    "subtitle": "Starten Sie mit wenigen Angaben.",
+    "email": "E-Mail",
+    "nickname": "Benutzername",
+    "nicknameHint": "3-32 Zeichen: Buchstaben, Ziffern oder Unterstrich.",
+    "password": "Passwort",
+    "passwordHint": "Mindestens 8 Zeichen.",
+    "confirmPassword": "Passwort bestätigen",
+    "submit": "Konto erstellen",
+    "submitting": "Konto wird erstellt",
+    "success": "Ihr Konto wurde erstellt. Sie können sich jetzt anmelden.",
+    "haveAccount": "Bereits ein Konto?",
+    "toLogin": "Anmelden",
+    "emailPlaceholder": "sie@firma.de",
+    "nicknamePlaceholder": "benutzername",
+    "passwordPlaceholder": "Passwort erstellen",
+    "confirmPasswordPlaceholder": "Passwort wiederholen"
+  },
+  "validation": {
+    "required": "Dieses Feld ist erforderlich.",
+    "email": "Geben Sie eine gültige E-Mail-Adresse ein.",
+    "nickname": "3-32 Zeichen; nur Buchstaben, Ziffern und Unterstrich.",
+    "passwordMin": "Das Passwort muss mindestens 8 Zeichen lang sein.",
+    "passwordMax": "Das Passwort darf höchstens 128 Zeichen lang sein.",
+    "passwordMatch": "Die Passwörter stimmen nicht überein."
+  },
+  "story": {
+    "welcome": "Willkommen bei PDA",
+    "intro": "Der Project Delivery Assistant hilft Ihrem Team, Projekte von Anfang bis Ende zu liefern.",
+    "scenes": {
+      "track": {
+        "title": "Lieferung an einem Ort",
+        "body": "Verfolgen Sie Projekte, Aufgaben und Fortschritt gemeinsam mit Ihrem Team."
+      },
+      "roles": {
+        "title": "Die richtige Person, der richtige Zugriff",
+        "body": "Rollen legen klar fest, wer was sehen und ändern darf."
+      },
+      "secure": {
+        "title": "Sicher liefern",
+        "body": "Ihre Sitzungen sind geschützt und Ihr Konto bleibt immer unter Ihrer Kontrolle."
+      }
+    }
+  }
+}
