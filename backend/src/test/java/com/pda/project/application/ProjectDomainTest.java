@@ -56,4 +56,36 @@ class ProjectDomainTest {
         assertThrows(IllegalStateException.class, () -> project.updateDetails("New", null,
                 ProjectPriority.MEDIUM, null, null, null, null, null));
     }
+
+    @Test
+    void changeStatusMovesBetweenOperationalStatusesButNeverToArchived() {
+        Project project = Project.create("PDA", "pda", null, creatorId);
+        assertEquals(ProjectStatus.PLANNING, project.getStatus());
+
+        project.changeStatus(ProjectStatus.ACTIVE);
+        assertEquals(ProjectStatus.ACTIVE, project.getStatus());
+
+        project.changeStatus(ProjectStatus.ON_HOLD);
+        assertEquals(ProjectStatus.ON_HOLD, project.getStatus());
+
+        project.changeStatus(ProjectStatus.COMPLETED);
+        assertEquals(ProjectStatus.COMPLETED, project.getStatus());
+
+        // Reopening a completed project is allowed; only archive() may set ARCHIVED.
+        project.changeStatus(ProjectStatus.ACTIVE);
+        assertEquals(ProjectStatus.ACTIVE, project.getStatus());
+
+        assertThrows(IllegalArgumentException.class, () -> project.changeStatus(ProjectStatus.ARCHIVED));
+        assertThrows(NullPointerException.class, () -> project.changeStatus(null));
+        assertEquals(ProjectStatus.ACTIVE, project.getStatus());
+    }
+
+    @Test
+    void changeStatusIsRejectedOnceArchived() {
+        Project project = Project.create("PDA", "pda", null, creatorId);
+        project.archive();
+
+        assertThrows(IllegalStateException.class, () -> project.changeStatus(ProjectStatus.ACTIVE));
+        assertEquals(ProjectStatus.ARCHIVED, project.getStatus());
+    }
 }

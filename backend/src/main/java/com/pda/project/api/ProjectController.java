@@ -75,7 +75,7 @@ public class ProjectController {
                                   @PathVariable UUID projectId,
                                   @Valid @RequestBody UpdateProjectRequest request) {
         return ProjectResponse.from(projects.update(AuthenticatedActor.id(principal), projectId,
-                request.name(), request.description(), request.priority(), request.startDate(),
+                request.name(), request.description(), request.priority(), request.status(), request.startDate(),
                 request.targetEndDate(), request.projectGoal(), request.techStack(), request.organizationId()));
     }
 

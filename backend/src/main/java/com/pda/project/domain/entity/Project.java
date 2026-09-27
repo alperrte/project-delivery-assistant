@@ -139,6 +139,22 @@ public class Project {
         }
     }
 
+    /**
+     * Moves between the operational statuses (PLANNING/ACTIVE/ON_HOLD/COMPLETED). ARCHIVED is reached only through
+     * {@link #archive()}, never through this method, so archiving always carries its own {@code archivedAt} and
+     * stays the one well-defined path out of the operational lifecycle (V1 has no un-archiving).
+     */
+    public void changeStatus(ProjectStatus newStatus) {
+        if (archivedAt != null) {
+            throw new IllegalStateException("Archived projects cannot be changed");
+        }
+        Objects.requireNonNull(newStatus, "status is required");
+        if (newStatus == ProjectStatus.ARCHIVED) {
+            throw new IllegalArgumentException("Use archive() to archive a project");
+        }
+        this.status = newStatus;
+    }
+
     @PrePersist
     private void beforeInsert() {
         createdAt = Instant.now();

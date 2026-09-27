@@ -4,6 +4,7 @@ import com.pda.project.domain.entity.Project;
 import com.pda.project.domain.entity.ProjectMembership;
 import com.pda.project.domain.enums.MembershipStatus;
 import com.pda.project.domain.enums.ProjectPriority;
+import com.pda.project.domain.enums.ProjectStatus;
 import com.pda.user.ProjectPermission;
 import com.pda.user.RolePolicy;
 import com.pda.project.infrastructure.repository.ProjectMembershipRepository;
@@ -68,12 +69,15 @@ public class ProjectService {
 
     @Transactional
     public Project update(UUID actorId, UUID projectId, String name, String description,
-                          ProjectPriority priority, LocalDate startDate, LocalDate targetEndDate,
-                          String projectGoal, String techStack, UUID organizationId) {
+                          ProjectPriority priority, ProjectStatus status, LocalDate startDate,
+                          LocalDate targetEndDate, String projectGoal, String techStack, UUID organizationId) {
         require(actorId, projectId, ProjectPermission.PROJECT_UPDATE);
         Project project = activeProject(projectId);
         if (organizationId != null) {
             organizations.detail(actorId, organizationId);
+        }
+        if (status != null && status != project.getStatus()) {
+            project.changeStatus(status);
         }
         project.updateDetails(name, description, priority, startDate, targetEndDate,
                 projectGoal, techStack, organizationId);

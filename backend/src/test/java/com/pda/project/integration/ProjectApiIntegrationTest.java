@@ -5,6 +5,7 @@ import com.pda.BackendApplication;
 import com.pda.project.ProjectAccess;
 import com.pda.project.application.service.MembershipConflictException;
 import com.pda.project.application.service.ProjectMembershipService;
+import com.pda.project.domain.enums.ProjectStatus;
 import com.pda.user.ProjectPermission;
 import com.pda.user.ProjectRole;
 import com.pda.project.infrastructure.repository.ProjectRepository;
@@ -110,7 +111,7 @@ class ProjectApiIntegrationTest {
                 .andExpect(status().isForbidden());
         mvc.perform(put("/api/v1/projects/" + projectId).cookie(csrf, outsider.access())
                         .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"Taken\",\"priority\":\"HIGH\"}"))
+                        .content("{\"name\":\"Taken\",\"priority\":\"HIGH\",\"status\":\"PLANNING\"}"))
                 .andExpect(status().isForbidden());
         mvc.perform(get("/api/v1/projects/by-slug/" + JsonPath.read(created.getContentAsString(), "$.slug"))
                         .cookie(manager.access()))
@@ -118,11 +119,11 @@ class ProjectApiIntegrationTest {
 
         mvc.perform(put("/api/v1/projects/" + projectId).cookie(csrf, manager.access())
                         .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"Updated\",\"priority\":\"HIGH\"}"))
+                        .content("{\"name\":\"Updated\",\"priority\":\"HIGH\",\"status\":\"PLANNING\"}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.priority").value("HIGH"));
         mvc.perform(put("/api/v1/projects/" + projectId).cookie(manager.access())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"Unprotected\",\"priority\":\"HIGH\"}"))
+                        .content("{\"name\":\"Unprotected\",\"priority\":\"HIGH\",\"status\":\"PLANNING\"}"))
                 .andExpect(status().isForbidden());
         mvc.perform(post("/api/v1/projects/" + projectId + "/archive").cookie(csrf, manager.access())
                         .header("X-XSRF-TOKEN", csrf.getValue()))
@@ -199,6 +200,36 @@ class ProjectApiIntegrationTest {
     }
 
     @Test
+    void statusTransitionsWorkThroughUpdateButArchivedIsRejected() throws Exception {
+        Cookie csrf = csrfCookie();
+        Account manager = account("statusmanager");
+        UUID projectId = createProject(manager, csrf, "Status project");
+
+        mvc.perform(put("/api/v1/projects/" + projectId).cookie(csrf, manager.access())
+                        .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Status project\",\"priority\":\"MEDIUM\",\"status\":\"ACTIVE\"}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("ACTIVE"));
+        mvc.perform(put("/api/v1/projects/" + projectId).cookie(csrf, manager.access())
+                        .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Status project\",\"priority\":\"MEDIUM\",\"status\":\"COMPLETED\"}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("COMPLETED"));
+        // Archiving only ever happens through the dedicated archive action, never via a settings update.
+        mvc.perform(put("/api/v1/projects/" + projectId).cookie(csrf, manager.access())
+                        .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Status project\",\"priority\":\"MEDIUM\",\"status\":\"ARCHIVED\"}"))
+                .andExpect(status().isBadRequest());
+        assertEquals(ProjectStatus.COMPLETED, projects.findById(projectId).orElseThrow().getStatus());
+
+        mvc.perform(post("/api/v1/projects/" + projectId + "/archive").cookie(csrf, manager.access())
+                        .header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isNoContent());
+        mvc.perform(put("/api/v1/projects/" + projectId).cookie(csrf, manager.access())
+                        .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Status project\",\"priority\":\"MEDIUM\",\"status\":\"ACTIVE\"}"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void projectPermissionsFollowRolesPerProjectAndAnalystCannotManageTheProject() throws Exception {
         Cookie csrf = csrfCookie();
         Account manager = account("permmanager");
@@ -226,7 +257,7 @@ class ProjectApiIntegrationTest {
         for (Account denied : List.of(analyst, tester, developer)) {
             mvc.perform(put("/api/v1/projects/" + projectId).cookie(csrf, denied.access())
                             .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"name\":\"Hijacked\",\"priority\":\"HIGH\"}"))
+                            .content("{\"name\":\"Hijacked\",\"priority\":\"HIGH\",\"status\":\"PLANNING\"}"))
                     .andExpect(status().isForbidden());
             mvc.perform(post("/api/v1/projects/" + projectId + "/archive").cookie(csrf, denied.access())
                             .header("X-XSRF-TOKEN", csrf.getValue()))
