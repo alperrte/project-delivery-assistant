@@ -6,9 +6,8 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CircleNotch } from "@phosphor-icons/react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/common/submit-button";
 import { FormField } from "@/components/common/form-field";
 import { ApiError } from "@/lib/api/client";
 import { errorKey } from "@/lib/api/error-message";
@@ -94,10 +93,7 @@ export function RegisterForm() {
           </p>
         )}
 
-        <Button type="submit" disabled={isSubmitting} className="h-11 w-full text-[0.95rem] active:scale-[0.98]">
-          {isSubmitting && <CircleNotch size={18} className="animate-spin" />}
-          {isSubmitting ? t("submitting") : t("submit")}
-        </Button>
+        <SubmitButton pending={isSubmitting}>{isSubmitting ? t("submitting") : t("submit")}</SubmitButton>
       </form>
 
       <p className="mt-6 text-center text-sm text-muted-foreground">

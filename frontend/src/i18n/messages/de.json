@@ -45,10 +45,10 @@
     "showPassword": "Passwort anzeigen",
     "hidePassword": "Passwort verbergen",
     "submit": "Anmelden",
-    "submitting": "Anmeldung läuft",
+    "submitting": "Anmeldung läuft...",
     "noAccount": "Noch kein Konto?",
     "toRegister": "Registrieren",
-    "emailPlaceholder": "sie@firma.de",
+    "emailPlaceholder": "beispiel@gmail.com",
     "passwordPlaceholder": "Passwort eingeben"
   },
   "register": {
@@ -65,8 +65,8 @@
     "success": "Ihr Konto wurde erstellt. Sie können sich jetzt anmelden.",
     "haveAccount": "Bereits ein Konto?",
     "toLogin": "Anmelden",
-    "emailPlaceholder": "sie@firma.de",
-    "nicknamePlaceholder": "benutzername",
+    "emailPlaceholder": "beispiel@gmail.com",
+    "nicknamePlaceholder": "pda_assistant",
     "passwordPlaceholder": "Passwort erstellen",
     "confirmPasswordPlaceholder": "Passwort wiederholen"
   },
@@ -79,21 +79,45 @@
     "passwordMatch": "Die Passwörter stimmen nicht überein."
   },
   "story": {
-    "welcome": "Willkommen bei PDA",
-    "intro": "Der Project Delivery Assistant hilft Ihrem Team, Projekte von Anfang bis Ende zu liefern.",
-    "scenes": {
-      "track": {
-        "title": "Lieferung an einem Ort",
-        "body": "Verfolgen Sie Projekte, Aufgaben und Fortschritt gemeinsam mit Ihrem Team."
-      },
-      "roles": {
-        "title": "Die richtige Person, der richtige Zugriff",
-        "body": "Rollen legen klar fest, wer was sehen und ändern darf."
-      },
-      "secure": {
-        "title": "Sicher liefern",
-        "body": "Ihre Sitzungen sind geschützt und Ihr Konto bleibt immer unter Ihrer Kontrolle."
-      }
+    "skip": "Zum Inhalt springen",
+    "headline": "Projekt planen. Arbeit verteilen. Lieferung verfolgen.",
+    "intro": "PDA hilft kleinen Teams, Projekte, Aufgaben und Lieferung in einem gemeinsamen Arbeitsbereich zu steuern.",
+    "badge": "Open Source • Self-hosted • Für kleine Teams",
+    "pillars": {
+      "assign": "Mehrfach-Zuweisung",
+      "history": "Aktivitätsverlauf",
+      "roles": "Rollenbasierter Zugriff"
+    },
+    "trust": {
+      "languages": "TR / EN / DE",
+      "themes": "Hell / Dunkel / System",
+      "session": "Sichere Sitzung",
+      "open": "Open-Source-Architektur"
     }
+  },
+  "preview": {
+    "projects": "Projekte",
+    "members": "{count} Teammitglieder",
+    "progress": "Fortschritt",
+    "tasks": "Aufgaben",
+    "activity": "Aktivität",
+    "delivered": "Lieferung bereit",
+    "status": {
+      "todo": "Offen",
+      "inProgress": "In Arbeit",
+      "inReview": "In Prüfung",
+      "done": "Erledigt"
+    },
+    "t39": "Backend-Authentifizierung",
+    "t40": "Datenbankschema",
+    "t41": "API-Integration",
+    "t42": "Login neu gestalten",
+    "deadline": "Termin aktualisiert",
+    "assigned": "{user} hat {task} zugewiesen",
+    "moved": "{user} hat {task} auf „{status}“ gesetzt",
+    "due": "Fällig 24. Dez",
+    "milestone": "Beta-Release",
+    "daysLeft": "Noch {count} Tage",
+    "notification": "{user} hat dir {task} zugewiesen"
   }
 }

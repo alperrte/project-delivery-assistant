@@ -45,10 +45,10 @@
     "showPassword": "Show password",
     "hidePassword": "Hide password",
     "submit": "Sign in",
-    "submitting": "Signing in",
+    "submitting": "Signing in...",
     "noAccount": "Don't have an account?",
     "toRegister": "Create one",
-    "emailPlaceholder": "you@company.com",
+    "emailPlaceholder": "example@gmail.com",
     "passwordPlaceholder": "Enter your password"
   },
   "register": {
@@ -65,8 +65,8 @@
     "success": "Your account is ready. You can sign in now.",
     "haveAccount": "Already have an account?",
     "toLogin": "Sign in",
-    "emailPlaceholder": "you@company.com",
-    "nicknamePlaceholder": "username",
+    "emailPlaceholder": "example@gmail.com",
+    "nicknamePlaceholder": "pda_assistant",
     "passwordPlaceholder": "Create a password",
     "confirmPasswordPlaceholder": "Repeat your password"
   },
@@ -79,21 +79,45 @@
     "passwordMatch": "Passwords do not match."
   },
   "story": {
-    "welcome": "Welcome to PDA",
-    "intro": "Project Delivery Assistant helps your team deliver projects from start to finish.",
-    "scenes": {
-      "track": {
-        "title": "Delivery in one place",
-        "body": "Follow projects, tasks and progress with your team on the same screen."
-      },
-      "roles": {
-        "title": "The right person, the right access",
-        "body": "Roles keep it clear who can see and change what."
-      },
-      "secure": {
-        "title": "Deliver with confidence",
-        "body": "Your sessions are protected and your account always stays under your control."
-      }
+    "skip": "Skip to content",
+    "headline": "Plan the project. Assign the work. Track the delivery.",
+    "intro": "PDA lets small teams manage projects, tasks and delivery in a single workspace.",
+    "badge": "Open source • Self-hosted • For small teams",
+    "pillars": {
+      "assign": "Multi-assignee tasks",
+      "history": "Activity history",
+      "roles": "Role-based access"
+    },
+    "trust": {
+      "languages": "TR / EN / DE",
+      "themes": "Light / Dark / System",
+      "session": "Secure sessions",
+      "open": "Open source architecture"
     }
+  },
+  "preview": {
+    "projects": "Projects",
+    "members": "{count} team members",
+    "progress": "Progress",
+    "tasks": "Tasks",
+    "activity": "Activity",
+    "delivered": "Delivery ready",
+    "status": {
+      "todo": "To do",
+      "inProgress": "In progress",
+      "inReview": "In review",
+      "done": "Done"
+    },
+    "t39": "Backend auth",
+    "t40": "Database schema",
+    "t41": "API integration",
+    "t42": "Login redesign",
+    "deadline": "Deadline updated",
+    "assigned": "{user} assigned {task}",
+    "moved": "{user} moved {task} to “{status}”",
+    "due": "Due Dec 24",
+    "milestone": "Beta release",
+    "daysLeft": "{count} days left",
+    "notification": "{user} assigned {task} to you"
   }
 }

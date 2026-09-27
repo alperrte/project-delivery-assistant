@@ -45,10 +45,10 @@
     "showPassword": "Şifreyi göster",
     "hidePassword": "Şifreyi gizle",
     "submit": "Giriş yap",
-    "submitting": "Giriş yapılıyor",
+    "submitting": "Giriş yapılıyor...",
     "noAccount": "Hesabınız yok mu?",
     "toRegister": "Kayıt olun",
-    "emailPlaceholder": "ornek@sirket.com",
+    "emailPlaceholder": "ornek@gmail.com",
     "passwordPlaceholder": "Şifrenizi girin"
   },
   "register": {
@@ -65,35 +65,59 @@
     "success": "Hesabınız oluşturuldu. Şimdi giriş yapabilirsiniz.",
     "haveAccount": "Zaten hesabınız var mı?",
     "toLogin": "Giriş yapın",
-    "emailPlaceholder": "ornek@sirket.com",
-    "nicknamePlaceholder": "kullanici_adi",
+    "emailPlaceholder": "ornek@gmail.com",
+    "nicknamePlaceholder": "pda_assistant",
     "passwordPlaceholder": "Şifrenizi oluşturun",
     "confirmPasswordPlaceholder": "Şifrenizi tekrar girin"
   },
   "validation": {
     "required": "Bu alan zorunlu.",
-    "email": "Geçerli bir e-posta girin.",
+    "email": "Geçerli bir e-posta adresi girin.",
     "nickname": "3-32 karakter; yalnız harf, rakam ve alt çizgi.",
     "passwordMin": "Şifre en az 8 karakter olmalı.",
     "passwordMax": "Şifre en fazla 128 karakter olabilir.",
     "passwordMatch": "Şifreler eşleşmiyor."
   },
   "story": {
-    "welcome": "PDA'ya hoş geldiniz",
-    "intro": "Project Delivery Assistant, ekibinizin projeleri baştan sona teslim etmesine yardım eder.",
-    "scenes": {
-      "track": {
-        "title": "Teslimat tek yerde",
-        "body": "Projeleri, görevleri ve ilerlemeyi ekibinizle aynı ekranda takip edin."
-      },
-      "roles": {
-        "title": "Doğru kişi, doğru yetki",
-        "body": "Roller sayesinde kimin neyi görüp değiştirebileceği net kalır."
-      },
-      "secure": {
-        "title": "Güvenle teslim edin",
-        "body": "Oturumlarınız korunur ve hesabınız her zaman sizin kontrolünüzde kalır."
-      }
+    "skip": "İçeriğe geç",
+    "headline": "Projeyi planla. İşi dağıt. Teslimatı takip et.",
+    "intro": "PDA, küçük ekiplerin proje, görev ve teslimat sürecini tek bir çalışma alanında yönetmesini sağlar.",
+    "badge": "Açık kaynak • Self-hosted • Küçük ekipler için",
+    "pillars": {
+      "assign": "Çoklu görev atama",
+      "history": "Aktivite geçmişi",
+      "roles": "Rol bazlı erişim"
+    },
+    "trust": {
+      "languages": "TR / EN / DE",
+      "themes": "Açık / Koyu / Sistem",
+      "session": "Güvenli oturum",
+      "open": "Açık kaynak mimari"
     }
+  },
+  "preview": {
+    "projects": "Projeler",
+    "members": "{count} ekip üyesi",
+    "progress": "İlerleme",
+    "tasks": "Görevler",
+    "activity": "Etkinlik",
+    "delivered": "Teslimat hazır",
+    "status": {
+      "todo": "Yapılacak",
+      "inProgress": "Devam ediyor",
+      "inReview": "İncelemede",
+      "done": "Tamamlandı"
+    },
+    "t39": "Backend kimlik doğrulama",
+    "t40": "Veritabanı şeması",
+    "t41": "API entegrasyonu",
+    "t42": "Login ekranını yenile",
+    "deadline": "Teslim tarihi güncellendi",
+    "assigned": "{user}, {task} görevini atadı",
+    "moved": "{user}, {task} durumunu “{status}” yaptı",
+    "due": "Teslim 24 Ara",
+    "milestone": "Beta sürümü",
+    "daysLeft": "{count} gün kaldı",
+    "notification": "{user}, {task} görevini sana atadı"
   }
 }
