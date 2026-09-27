@@ -7,6 +7,7 @@ import jakarta.persistence.LockModeType;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -25,4 +26,8 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     @Query("select u from User u where u.globalRole = com.pda.user.GlobalRole.ADMIN "
             + "and u.accountStatus = com.pda.user.domain.enums.AccountStatus.ACTIVE")
     List<User> lockActiveAdmins();
+
+    Optional<User> findByEmailAndAccountStatus(String email, AccountStatus accountStatus);
+    List<User> findByAccountStatusAndNicknameContainingIgnoreCase(AccountStatus accountStatus, String nickname,
+                                                                   Pageable pageable);
 }
