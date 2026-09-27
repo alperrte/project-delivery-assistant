@@ -40,6 +40,7 @@ public class SecurityBaselineConfiguration {
                                            UserSessions sessions, Clock clock,
                                            ObjectProvider<ClientRegistrationRepository> oauthRegistrations,
                                            ObjectProvider<OAuthLoginHandlers> oauthHandlers,
+                                           ObjectProvider<GitHubOAuth2UserService> gitHubUsers,
                                            @Value("${API_DOCS_ENABLED:false}") boolean apiDocsEnabled)
             throws Exception {
         ClientRegistrationRepository registrations = oauthRegistrations.getIfAvailable();
@@ -50,22 +51,24 @@ public class SecurityBaselineConfiguration {
             DefaultOAuth2AuthorizationRequestResolver pkceResolver =
                     new DefaultOAuth2AuthorizationRequestResolver(registrations, OAUTH_AUTHORIZATION_BASE);
             pkceResolver.setAuthorizationRequestCustomizer(OAuth2AuthorizationRequestCustomizers.withPkce());
-            // Only the Google start URL is a flow; any other id falls through to deny-by-default (403).
+            // Only configured providers have a start URL; any other id falls through to deny-by-default (403).
             OAuth2AuthorizationRequestResolver resolver = new OAuth2AuthorizationRequestResolver() {
                 @Override
                 public OAuth2AuthorizationRequest resolve(HttpServletRequest request) {
-                    return isGoogleStart(request) ? pkceResolver.resolve(request) : null;
+                    return isProviderStart(request) ? pkceResolver.resolve(request) : null;
                 }
 
                 @Override
                 public OAuth2AuthorizationRequest resolve(HttpServletRequest request, String registrationId) {
-                    return "google".equals(registrationId) && isGoogleStart(request)
-                            ? pkceResolver.resolve(request, registrationId) : null;
+                    return registrationId != null && registrations.findByRegistrationId(registrationId) != null
+                            && isProviderStart(request) ? pkceResolver.resolve(request, registrationId) : null;
                 }
 
-                private boolean isGoogleStart(HttpServletRequest request) {
-                    return (request.getContextPath() + OAUTH_AUTHORIZATION_BASE + "/google")
-                            .equals(request.getRequestURI());
+                private boolean isProviderStart(HttpServletRequest request) {
+                    String uri = request.getRequestURI();
+                    String prefix = request.getContextPath() + OAUTH_AUTHORIZATION_BASE + "/";
+                    return uri.startsWith(prefix)
+                            && registrations.findByRegistrationId(uri.substring(prefix.length())) != null;
                 }
             };
             http.oauth2Login(login -> login
@@ -75,6 +78,12 @@ public class SecurityBaselineConfiguration {
                             .authorizationRequestResolver(resolver)
                             .authorizationRequestRepository(requestRepository))
                     .redirectionEndpoint(endpoint -> endpoint.baseUri(OAUTH_CALLBACK_PATTERN))
+                    .userInfoEndpoint(userInfo -> {
+                        GitHubOAuth2UserService github = gitHubUsers.getIfAvailable();
+                        if (github != null) {
+                            userInfo.userService(github);
+                        }
+                    })
                     .successHandler(handlers::success)
                     .failureHandler(handlers::failure));
         }
@@ -100,13 +109,17 @@ public class SecurityBaselineConfiguration {
                                 "/v3/api-docs", "/v3/api-docs/**", "/v3/api-docs.yaml").permitAll();
                     }
                     if (oauthEnabled) {
-                        authorize.requestMatchers(HttpMethod.GET, OAUTH_AUTHORIZATION_BASE + "/google",
-                                OAUTH_CALLBACK_PATTERN).permitAll();
+                        for (String provider : List.of("google", "github")) {
+                            if (registrations.findByRegistrationId(provider) != null) {
+                                authorize.requestMatchers(HttpMethod.GET, OAUTH_AUTHORIZATION_BASE + "/" + provider,
+                                        OAUTH_CALLBACK_PATTERN.replace("*", provider)).permitAll();
+                            }
+                        }
                     }
                     authorize.requestMatchers(HttpMethod.GET, "/actuator/health", "/api/v1/auth/csrf").permitAll()
                             .requestMatchers(HttpMethod.GET, "/api/v1/auth/oauth/identities").authenticated()
-                            .requestMatchers(HttpMethod.POST, "/api/v1/auth/oauth/google/link",
-                                    "/api/v1/auth/oauth/google/unlink").authenticated()
+                            .requestMatchers(HttpMethod.POST, "/api/v1/auth/oauth/*/link",
+                                    "/api/v1/auth/oauth/*/unlink").authenticated()
                             .requestMatchers(HttpMethod.POST, "/api/v1/auth/register",
                                     "/api/v1/auth/login", "/api/v1/auth/refresh",
                                     "/api/v1/auth/logout").permitAll()
