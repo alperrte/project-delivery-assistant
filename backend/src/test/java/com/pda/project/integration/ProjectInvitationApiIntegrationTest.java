@@ -3,7 +3,7 @@ package com.pda.project.integration;
 import com.jayway.jsonpath.JsonPath;
 import com.pda.BackendApplication;
 import com.pda.project.application.service.ProjectMembershipService;
-import com.pda.project.domain.enums.ProjectRole;
+import com.pda.user.ProjectRole;
 import com.pda.user.UserAccounts;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
@@ -112,7 +112,7 @@ class ProjectInvitationApiIntegrationTest {
         Account moderator = account("invmoderator2");
         Account target = account("invtarget2");
         UUID projectId = createProject(manager, csrf, "Invite auth project");
-        memberships.addMember(manager.id(), projectId, moderator.id(), Set.of(ProjectRole.MODERATOR));
+        memberships.addMember(manager.id(), projectId, moderator.id(), Set.of(ProjectRole.TESTER));
 
         mvc.perform(post("/api/v1/projects/" + projectId + "/invitations")
                         .contentType(MediaType.APPLICATION_JSON)

@@ -11,7 +11,7 @@ import com.pda.project.application.service.MemberSummary;
 import com.pda.project.domain.entity.ProjectInvitation;
 import com.pda.project.domain.enums.InvitationStatus;
 import com.pda.project.domain.enums.MembershipStatus;
-import com.pda.project.domain.enums.ProjectRole;
+import com.pda.user.ProjectRole;
 import com.pda.project.infrastructure.repository.ProjectInvitationRepository;
 import com.pda.project.infrastructure.repository.ProjectMembershipRepository;
 import com.pda.user.UserAccounts;
@@ -117,7 +117,7 @@ class ProjectInvitationServiceTest {
         UUID moderator = registerUser("moderator3");
         UUID target = registerUser("target3");
         UUID projectId = projectService.create(manager, "Authorization invite project", null, null).getId();
-        membershipService.addMember(manager, projectId, moderator, Set.of(ProjectRole.MODERATOR));
+        membershipService.addMember(manager, projectId, moderator, Set.of(ProjectRole.TESTER));
 
         assertThrows(AccessDeniedException.class, () -> invitationService.inviteRegisteredUser(moderator, projectId,
                 target, Set.of(ProjectRole.TESTER)));
