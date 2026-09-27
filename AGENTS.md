@@ -18,3 +18,11 @@ Belgeler çelişirse önce mevcut kodu ve kabul edilmiş ADR'leri karşılaştı
 Bir faz, servis veya bağımsız teslim gerçekten tamamlandığında `docs/compliation/YYYY-MM-DD-kisa-ad.md` dosyası oluştur. İçine kapsamı, değişen önemli dosyaları, doğrulama komutları ve sonuçlarını, açık kalan konuları ve kullanıcı kontrol adımlarını yaz. Kısmi ilerlemeyi tamamlandı diye kaydetme. API tamamlandıysa `.agents/SECURITY.md` bölüm 11'deki endpoint bilgilerini ve Swagger ile kontrol yolunu ekle. Son mesajda kullanıcıya bu kaydı incelemesini açıkça söyle ve bağlantısını ver. Kayıt biçimi için `docs/compliation/README.md` dosyasını kullan.
 
 `.agents/SECURITY.md` içindeki `.env`/`.env.example` ve güvenlik mimarisi onay kurallarına uy. Git push, merge, yayın veya repo ayarı işlemlerini yalnız o işlem için açık yetki varsa yap.
+
+## Frontend işleri
+
+Frontend, UI veya UX ile ilgili anlamlı bir geliştirme başlamadan önce
+`.agents/FRONTEND_WORKFLOW.md` dosyasını oku ve oradaki workflow'u uygula.
+
+İlgili global Claude Code skill ve plugin'lerini görev gerektiriyorsa kullan.
+Küçük stil veya tek satırlık değişikliklerde gereksiz tam audit pipeline'ı çalıştırma.
