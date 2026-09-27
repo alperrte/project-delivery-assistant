@@ -2,7 +2,7 @@ package com.pda.user.domain.entity;
 
 import com.pda.user.domain.enums.AccountStatus;
 import com.pda.user.domain.enums.EmailVerificationStatus;
-import com.pda.user.domain.enums.GlobalRole;
+import com.pda.user.GlobalRole;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

@@ -1,6 +1,6 @@
 package com.pda.project.api.dto.request;
 
-import com.pda.project.domain.enums.ProjectRole;
+import com.pda.user.ProjectRole;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 

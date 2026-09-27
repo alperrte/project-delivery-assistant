@@ -1,7 +1,7 @@
 package com.pda.project.api.dto.response;
 
 import com.pda.project.application.service.MemberSummary;
-import com.pda.project.domain.enums.ProjectRole;
+import com.pda.user.ProjectRole;
 
 import java.time.Instant;
 import java.util.Set;

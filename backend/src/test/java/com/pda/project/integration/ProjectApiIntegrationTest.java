@@ -5,7 +5,8 @@ import com.pda.BackendApplication;
 import com.pda.project.ProjectAccess;
 import com.pda.project.application.service.MembershipConflictException;
 import com.pda.project.application.service.ProjectMembershipService;
-import com.pda.project.domain.enums.ProjectRole;
+import com.pda.user.ProjectPermission;
+import com.pda.user.ProjectRole;
 import com.pda.project.infrastructure.repository.ProjectRepository;
 import com.pda.user.UserAccounts;
 import jakarta.servlet.http.Cookie;
@@ -26,6 +27,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 
 import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
@@ -36,6 +38,7 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -196,30 +199,68 @@ class ProjectApiIntegrationTest {
     }
 
     @Test
-    void managerCanAssignRolesWhileModeratorAndContributorCannotManageMembers() throws Exception {
+    void projectPermissionsFollowRolesPerProjectAndAnalystCannotManageTheProject() throws Exception {
+        Cookie csrf = csrfCookie();
+        Account manager = account("permmanager");
+        Account analyst = account("permanalyst");
+        Account tester = account("permtester");
+        Account developer = account("permdeveloper");
+        UUID projectId = createProject(manager, csrf, "Permission project");
+        UUID otherProjectId = createProject(manager, csrf, "Other permission project");
+        memberships.addMember(manager.id(), projectId, analyst.id(), Set.of(ProjectRole.ANALYST));
+        memberships.addMember(manager.id(), projectId, tester.id(), Set.of(ProjectRole.TESTER));
+        memberships.addMember(manager.id(), projectId, developer.id(), Set.of(ProjectRole.FULL_STACK_DEVELOPER));
+
+        assertTrue(projectAccess.hasPermission(projectId, manager.id(), ProjectPermission.MEMBER_MANAGE));
+        assertTrue(projectAccess.hasPermission(projectId, analyst.id(), ProjectPermission.TASK_WORK));
+        assertFalse(projectAccess.hasPermission(projectId, analyst.id(), ProjectPermission.PROJECT_UPDATE));
+        assertTrue(projectAccess.hasPermission(projectId, tester.id(), ProjectPermission.TEST_REPORT_WRITE));
+        assertFalse(projectAccess.hasPermission(projectId, developer.id(), ProjectPermission.TEST_REPORT_WRITE));
+        assertFalse(projectAccess.hasPermission(projectId, developer.id(), ProjectPermission.TASK_MANAGE));
+        // A role in one project grants nothing in another one, and unknown input is denied.
+        assertFalse(projectAccess.hasPermission(otherProjectId, analyst.id(), ProjectPermission.PROJECT_VIEW));
+        assertTrue(projectAccess.permissionsForUserInProject(otherProjectId, tester.id()).isEmpty());
+        assertFalse(projectAccess.hasPermission(projectId, UUID.randomUUID(), ProjectPermission.PROJECT_VIEW));
+        assertFalse(projectAccess.hasPermission(projectId, manager.id(), null));
+
+        for (Account denied : List.of(analyst, tester, developer)) {
+            mvc.perform(put("/api/v1/projects/" + projectId).cookie(csrf, denied.access())
+                            .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"name\":\"Hijacked\",\"priority\":\"HIGH\"}"))
+                    .andExpect(status().isForbidden());
+            mvc.perform(post("/api/v1/projects/" + projectId + "/archive").cookie(csrf, denied.access())
+                            .header("X-XSRF-TOKEN", csrf.getValue()))
+                    .andExpect(status().isForbidden());
+        }
+        mvc.perform(get("/api/v1/projects/" + projectId).cookie(developer.access())).andExpect(status().isOk());
+        assertNull(projects.findById(projectId).orElseThrow().getArchivedAt());
+    }
+
+    @Test
+    void managerCanAssignRolesWhileAnalystAndContributorCannotManageMembers() throws Exception {
         Cookie csrf = csrfCookie();
         Account manager = account("rolemanager");
-        Account moderator = account("moderator");
+        Account analyst = account("analyst");
         Account contributor = account("contributor");
         UUID projectId = createProject(manager, csrf, "Membership roles");
-        memberships.addMember(manager.id(), projectId, moderator.id(), Set.of(ProjectRole.MODERATOR));
+        memberships.addMember(manager.id(), projectId, analyst.id(), Set.of(ProjectRole.ANALYST));
         memberships.addMember(manager.id(), projectId, contributor.id(),
                 Set.of(ProjectRole.BACKEND_DEVELOPER, ProjectRole.TESTER));
         UUID otherProjectId = createProject(manager, csrf, "Other membership project");
 
-        assertTrue(projectAccess.isMember(projectId, moderator.id()));
+        assertTrue(projectAccess.isMember(projectId, analyst.id()));
         assertEquals(Set.of("BACKEND_DEVELOPER", "TESTER"),
                 projectAccess.rolesForUserInProject(projectId, contributor.id()));
-        mvc.perform(get("/api/v1/projects/" + projectId + "/members").cookie(moderator.access()))
+        mvc.perform(get("/api/v1/projects/" + projectId + "/members").cookie(analyst.access()))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(3));
         mvc.perform(get("/api/v1/projects/" + projectId + "/members/" + contributor.id())
                         .cookie(contributor.access()))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.userId").value(contributor.id().toString()));
-        mvc.perform(get("/api/v1/projects/" + otherProjectId + "/members").cookie(moderator.access()))
+        mvc.perform(get("/api/v1/projects/" + otherProjectId + "/members").cookie(analyst.access()))
                 .andExpect(status().isForbidden());
-        assertFalse(projectAccess.canAccessProject(otherProjectId, moderator.id()));
+        assertFalse(projectAccess.canAccessProject(otherProjectId, analyst.id()));
         mvc.perform(post("/api/v1/projects/" + projectId + "/members/" + contributor.id() + "/roles")
-                        .cookie(csrf, moderator.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .cookie(csrf, analyst.access()).header("X-XSRF-TOKEN", csrf.getValue())
                         .contentType(MediaType.APPLICATION_JSON).content("{\"role\":\"PROJECT_MANAGER\"}"))
                 .andExpect(status().isForbidden());
         mvc.perform(put("/api/v1/projects/" + projectId + "/members/" + contributor.id() + "/roles")
@@ -252,7 +293,7 @@ class ProjectApiIntegrationTest {
                         .content("{\"role\":\"ANALYST\"}"))
                 .andExpect(status().isForbidden());
         mvc.perform(delete("/api/v1/projects/" + projectId + "/members/" + contributor.id())
-                        .cookie(csrf, moderator.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                        .cookie(csrf, analyst.access()).header("X-XSRF-TOKEN", csrf.getValue()))
                 .andExpect(status().isForbidden());
         mvc.perform(delete("/api/v1/projects/" + projectId + "/members/" + contributor.id())
                         .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue()))
@@ -271,7 +312,7 @@ class ProjectApiIntegrationTest {
                 .andExpect(result -> assertEquals("http://localhost:3000",
                         result.getResponse().getHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN)));
         assertThrows(MembershipConflictException.class,
-                () -> memberships.addMember(manager.id(), projectId, moderator.id(), Set.of(ProjectRole.TESTER)));
+                () -> memberships.addMember(manager.id(), projectId, analyst.id(), Set.of(ProjectRole.TESTER)));
         memberships.addMember(manager.id(), projectId, contributor.id(), Set.of(ProjectRole.TESTER));
         assertTrue(projectAccess.isMember(projectId, contributor.id()));
         assertEquals("ACTIVE", jdbc.queryForObject("SELECT status FROM project_memberships "
@@ -293,14 +334,14 @@ class ProjectApiIntegrationTest {
 
         mvc.perform(put(memberPath + "/roles").cookie(csrf, manager.access())
                         .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"roles\":[\"MODERATOR\"]}"))
+                        .content("{\"roles\":[\"ANALYST\"]}"))
                 .andExpect(status().isConflict());
         mvc.perform(delete(memberPath).cookie(csrf, manager.access())
                         .header("X-XSRF-TOKEN", csrf.getValue()))
                 .andExpect(status().isConflict());
         mvc.perform(post(memberPath + "/roles").cookie(csrf, manager.access())
                         .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"role\":\"MODERATOR\"}"))
+                        .content("{\"role\":\"ANALYST\"}"))
                 .andExpect(status().isOk());
         mvc.perform(delete(memberPath + "/roles/PROJECT_MANAGER").cookie(csrf, manager.access())
                         .header("X-XSRF-TOKEN", csrf.getValue()))
@@ -309,7 +350,7 @@ class ProjectApiIntegrationTest {
         memberships.addMember(manager.id(), projectId, second.id(), Set.of(ProjectRole.PROJECT_MANAGER));
         mvc.perform(delete(memberPath + "/roles/PROJECT_MANAGER").cookie(csrf, manager.access())
                         .header("X-XSRF-TOKEN", csrf.getValue()))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.roles[0]").value("MODERATOR"));
+                .andExpect(status().isOk()).andExpect(jsonPath("$.roles[0]").value("ANALYST"));
         mvc.perform(delete("/api/v1/projects/" + projectId + "/members/" + second.id())
                         .cookie(csrf, second.access()).header("X-XSRF-TOKEN", csrf.getValue()))
                 .andExpect(status().isConflict());

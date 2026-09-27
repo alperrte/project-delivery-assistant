@@ -1,6 +1,6 @@
 package com.pda.project.domain.entity;
 
-import com.pda.project.domain.enums.ProjectRole;
+import com.pda.user.ProjectRole;
 import com.pda.project.domain.enums.MembershipStatus;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;

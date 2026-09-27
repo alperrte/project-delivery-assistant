@@ -3,3 +3,17 @@ mail kontrolü alt yapısı kuruldu enabled olmayı ve mail ile 2 aşamalı doğ
 google alt yapısı faz 5 de kuruldu env içerisinde google id lerin güncellenmesini bekliyor
 
 
+
+
+ROL YETKİLERİ (Hamza — unutma): Faz 7 ile proje rolü/yetki matrisi Alper tarafından geçici olarak kuruldu; nihai rol→yetki eşlemesini Hamza düzenleyecek.
+Mevcut proje rolleri (9 idi, MODERATOR kaldırıldı → 8): PROJECT_MANAGER, BACKEND_DEVELOPER, FRONTEND_DEVELOPER, FULL_STACK_DEVELOPER, AI_ML_DEVELOPER, UI_UX_DEVELOPER, TESTER, ANALYST.
+Mevcut eşleme: PROJECT_MANAGER = tüm yetkiler; developer türleri + ANALYST = PROJECT_VIEW, TASK_WORK, ISSUE_PARTICIPATE; TESTER = bunlar + TEST_REPORT_WRITE.
+Yetkiler (ProjectPermission): PROJECT_VIEW, PROJECT_UPDATE, PROJECT_ARCHIVE, MEMBER_MANAGE, TASK_MANAGE, LABEL_MANAGE, TASK_WORK, ISSUE_PARTICIPATE, ISSUE_MANAGE, TEST_REPORT_WRITE.
+Düzenlenecek dosyalar:
+- backend/src/main/java/com/pda/user/RolePolicy.java (rol→yetki eşlemesinin tek kaynağı)
+- backend/src/main/java/com/pda/user/ProjectRole.java (rol ekle/çıkar)
+- backend/src/main/java/com/pda/user/ProjectPermission.java (yetki ekle/çıkar)
+- backend/src/main/resources/db/migration/V23__project_membership_lifecycle_roles.sql (rol CHECK kısıtı; MODERATOR hâlâ listede, rol listesi değişirse YENİ migration ile güncelle, V23 dosyasını düzenleme)
+- Testler: backend/src/test/java/com/pda/user/application/RolePolicyTest.java ve backend/src/test/java/com/pda/project/integration/ProjectApiIntegrationTest.java
+- Belgeler: .agents/SECURITY.md (§11 Faz 7 rol matrisi), .agents/api.md, .agents/authentication.md
+Kural: rol adına değil yetkiye bakılır; ADMIN proje rolü değildir (platform rolü, GlobalRole). Değişiklikten sonra backend içinde .\mvnw.cmd test çalıştır.

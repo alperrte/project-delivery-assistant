@@ -5,7 +5,7 @@ import com.pda.project.api.dto.request.RoleRequest;
 import com.pda.project.api.dto.response.MemberResponse;
 import com.pda.project.api.dto.response.PageResponse;
 import com.pda.project.application.service.ProjectMembershipService;
-import com.pda.project.domain.enums.ProjectRole;
+import com.pda.user.ProjectRole;
 import com.pda.user.UserAccounts;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
