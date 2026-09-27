@@ -94,17 +94,97 @@
       "created": "Project created."
     },
     "detail": {
-      "tabs": { "overview": "Overview", "members": "Members", "invitations": "Invitations", "squads": "Squads" }
+      "tabs": {
+        "overview": "Overview",
+        "criteria": "Criteria",
+        "members": "Members",
+        "invitations": "Invitations",
+        "squads": "Squads",
+        "repository": "Repository",
+        "settings": "Settings"
+      }
     },
     "overview": {
-      "organization": "Organization",
-      "noOrganization": "No organization",
-      "managers": "Project Managers",
-      "teamMembers": "Team members",
+      "statusValues": {
+        "PLANNING": "Planning",
+        "ACTIVE": "Active",
+        "ON_HOLD": "On hold",
+        "COMPLETED": "Completed",
+        "ARCHIVED": "Archived"
+      },
+      "priorityValues": { "LOW": "Low", "MEDIUM": "Medium", "HIGH": "High", "CRITICAL": "Critical" },
+      "teamMembers": "{count, plural, one {# member} other {# members}}",
+      "managedBy": "Managed by {names}",
+      "due": "Due {date}",
       "criteriaProgress": "Success criteria",
       "repository": "Repository",
       "noRepository": "No repository connected",
       "githubUnavailable": "GitHub is temporarily unavailable"
+    },
+    "settings": {
+      "title": "Project settings",
+      "archive": "Archive",
+      "archiveConfirmTitle": "Archive this project?",
+      "archiveConfirmDescription": "Archived projects no longer accept changes and are hidden from active lists. This cannot be undone.",
+      "cancel": "Cancel",
+      "saved": "Settings saved.",
+      "archived": "Project archived.",
+      "name": "Name",
+      "description": "Description",
+      "status": "Status",
+      "statusValues": { "PLANNING": "Planning", "ACTIVE": "Active", "ON_HOLD": "On hold", "COMPLETED": "Completed" },
+      "priority": "Priority",
+      "priorityValues": { "LOW": "Low", "MEDIUM": "Medium", "HIGH": "High", "CRITICAL": "Critical" },
+      "startDate": "Start date",
+      "targetEndDate": "Target end date",
+      "organization": "Organization",
+      "organizationNone": "No organization",
+      "goal": "Project goal",
+      "techStack": "Tech stack",
+      "save": "Save changes"
+    }
+  },
+  "criteria": {
+    "title": "Success criteria",
+    "create": "New criterion",
+    "emptyTitle": "No criteria yet",
+    "emptyDescription": "Add the milestones that define this project's success.",
+    "progressLabel": "Progress",
+    "progressCount": "{completed}/{total} done",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "delete": "Delete",
+    "deleteConfirmTitle": "Delete this criterion?",
+    "cancel": "Cancel",
+    "form": {
+      "createTitle": "New criterion",
+      "editTitle": "Edit criterion",
+      "titleLabel": "Title",
+      "descriptionLabel": "Description",
+      "cancel": "Cancel",
+      "create": "Create",
+      "save": "Save",
+      "created": "Criterion created.",
+      "updated": "Criterion updated."
+    }
+  },
+  "repository": {
+    "title": "Repository",
+    "description": "Connect a public GitHub repository to show recent activity on the project home.",
+    "noneTitle": "No repository connected",
+    "noneDescription": "Connect a public GitHub repository to see its latest commits here.",
+    "connect": "Connect repository",
+    "connected": "Repository connected.",
+    "disconnect": "Disconnect",
+    "disconnected": "Repository disconnected.",
+    "disconnectConfirmTitle": "Disconnect this repository?",
+    "cancel": "Cancel",
+    "urlLabel": "GitHub repository URL",
+    "defaultBranch": "Default branch: {branch}",
+    "commits": {
+      "title": "Latest commits",
+      "refresh": "Refresh",
+      "emptyTitle": "No commits found"
     }
   },
   "members": {
@@ -223,7 +303,9 @@
     "passwordMin": "Password must be at least 8 characters.",
     "passwordMax": "Password can be at most 128 characters.",
     "passwordMatch": "Passwords do not match.",
-    "maxLength": "This value is too long."
+    "maxLength": "This value is too long.",
+    "dateOrder": "Target end date cannot be before the start date.",
+    "githubUrl": "Enter a public GitHub repository URL, e.g. https://github.com/owner/repo."
   },
   "story": {
     "skip": "Skip to content",
