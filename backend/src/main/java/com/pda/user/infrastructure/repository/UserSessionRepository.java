@@ -24,4 +24,5 @@ public interface UserSessionRepository extends JpaRepository<UserSession, UUID> 
     Optional<UserSession> findForReplayCheckByPreviousRefreshTokenHash(@Param("hash") String hash);
 
     List<UserSession> findByUserIdAndRevokedAtIsNullAndExpiresAtAfterOrderByCreatedAtDesc(UUID userId, Instant now);
+    long countByUserIdAndRevokedAtIsNullAndExpiresAtAfter(UUID userId, Instant now);
 }

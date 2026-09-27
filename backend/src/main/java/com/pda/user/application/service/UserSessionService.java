@@ -99,6 +99,18 @@ public class UserSessionService implements UserSessions {
 
     @Override
     @Transactional
+    public int revokeAll(UUID userId, Instant now) {
+        return revokeOthers(userId, null, now);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countActive(UUID userId, Instant now) {
+        return sessions.countByUserIdAndRevokedAtIsNullAndExpiresAtAfter(userId, now);
+    }
+
+    @Override
+    @Transactional
     public int revokeOthers(UUID userId, UUID currentSessionId, Instant now) {
         List<UserSession> others = sessions.findByUserIdAndRevokedAtIsNullAndExpiresAtAfter(userId, now).stream()
                 .filter(session -> !session.getId().equals(currentSessionId))

@@ -292,7 +292,7 @@ Link result codes on `/?oauth_link=`: `linked`, `already_linked`, `linked_to_ano
 
 ### Auth Faz 7 (roles and permissions; no new endpoints)
 
-Faz 7 adds no HTTP endpoint, ENV key, dependency or migration. Roles are labels; what they may do is defined only in `com.pda.user.RolePolicy` (deny by default, unknown/empty/`null` input grants nothing, no custom roles). `ADMIN` is a platform operator (`GlobalRole`): it holds `PlatformPermission` (`USER_MANAGE`, `SESSION_MANAGE`, `AUDIT_VIEW`, used by Faz 8) and has **no** implicit project authority; it is never a project membership. A project role grants no platform permission.
+Faz 7 adds no HTTP endpoint, ENV key, dependency or migration. Roles are labels; what they may do is defined only in `com.pda.user.RolePolicy` (deny by default, unknown/empty/`null` input grants nothing, no custom roles). `ADMIN` is a platform operator (`GlobalRole`): it holds `PlatformPermission` (`USER_MANAGE`, `SESSION_MANAGE`, `AUDIT_VIEW`, `SYSTEM_VIEW`; enforced from Faz 8) and has **no** implicit project authority; it is never a project membership. A project role grants no platform permission.
 
 | Project role | Project permissions |
 | --- | --- |
@@ -316,6 +316,28 @@ Authorization rule of every sensitive endpoint that exists today:
 | `/api/v1/organizations/**` | organization owner rules (not project roles) |
 | `/api/v1/auth/**` | public entries listed above; everything else own-account only |
 | everything else | denied |
+
+### Auth Faz 8 endpoints (admin backend, password change)
+
+New migration `V7__user_must_change_password.sql` (`users.must_change_password`, default false). No new ENV keys (`ADMIN_EMAIL`, `ADMIN_INITIAL_PASSWORD` already exist). Admin routes are `hasRole("ADMIN")` at the URL layer **and** re-checked in the service with `RolePolicy` (`AdminAuthorization`); unauthenticated admin calls return `401`, non-admins `403`. All responses are `Cache-Control: no-store`, errors are `ProblemDetail`, all POSTs need `X-XSRF-TOKEN`.
+
+Swagger check path: `/swagger-ui/index.html` with `API_DOCS_ENABLED=true`: `GET /api/v1/auth/csrf`, log in as the bootstrapped admin, call `POST /api/v1/auth/password/change`, log in again with the new password, then use the admin endpoints below.
+
+| Endpoint | Auth / scope | Input | Success | Important errors |
+| --- | --- | --- | --- | --- |
+| `POST /api/v1/auth/password/change` | Access cookie + CSRF (also allowed while a forced change is pending) | `{currentPassword, newPassword (8-128), confirmNewPassword}` | `200`; other sessions revoked, forced-change flag cleared | `400` wrong current / same password / mismatch / invalid, `401`, `403` CSRF, `429` IP limit (5/10 min) |
+| `GET /api/v1/admin/users?page&size` | ADMIN (`USER_MANAGE`) | size clamped 1..100 | `200` page of `{id,email,nickname,accountStatus,emailVerificationStatus,globalRole,mustChangePassword,createdAt}` | `401`, `403` |
+| `GET /api/v1/admin/users/{id}` | ADMIN | UUID path | `200` user + linked providers + active session count | `400` bad UUID, `404` |
+| `POST /api/v1/admin/users/{id}/disable` | ADMIN + CSRF | none | `200`; revokes all target sessions | `404`, `409` self or last active admin |
+| `POST /api/v1/admin/users/{id}/enable` | ADMIN + CSRF | none | `200` | `404` |
+| `GET /api/v1/admin/users/{id}/sessions` | ADMIN (`SESSION_MANAGE`) | none | `200` active sessions (no token material) | `404` |
+| `POST /api/v1/admin/users/{id}/sessions/revoke-all` | ADMIN + CSRF | none | `200 {"revoked": n}` | `404` |
+| `POST /api/v1/admin/users/{id}/sessions/{sessionId}/revoke` | ADMIN + CSRF | UUID paths | `200` | `404` |
+| `GET /api/v1/admin/overview` | ADMIN (`SYSTEM_VIEW`) | none | `200` user counts + project counts | `401`, `403` |
+| `GET /api/v1/admin/projects?page&size` | ADMIN (`SYSTEM_VIEW`) | paging | `200` `{id,name,slug,status,archived,activeMembers,createdAt}` only | `401`, `403` |
+| `GET /api/v1/admin/system/status` | ADMIN (`SYSTEM_VIEW`) | none | `200` `{status,database,googleLoginConfigured,githubLoginConfigured,mailEnabled,apiDocsEnabled}` booleans only | `401`, `403` |
+
+Rules: the bootstrapped admin is blocked (`403 password_change_required`) everywhere except `me`, `password/change`, `logout`, `refresh`, `csrf` until the password is changed; the initial password gives no authority afterwards. An administrator cannot disable self or the last active administrator (row lock prevents two admins disabling each other). Disabling revokes every session. The project overview is aggregate metadata, not an access path: an admin who is not a member still gets `403` on project endpoints. Admin actions are logged with actor/target ids only.
 
 ---
 
