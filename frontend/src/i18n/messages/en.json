@@ -13,6 +13,12 @@
       "tr": "Türkçe",
       "en": "English",
       "de": "Deutsch"
+    },
+    "pagination": {
+      "total": "{count, plural, one {# item} other {# items}}",
+      "previous": "Previous",
+      "next": "Next",
+      "pageOf": "Page {page} of {totalPages}"
     }
   },
   "errors": {
@@ -20,10 +26,150 @@
     "generic": "Something went wrong. Please try again.",
     "tooManyRequests": "Too many attempts. Please wait a moment and try again.",
     "invalidCredentials": "Incorrect email or password.",
-    "conflict": "This email or username is already in use.",
+    "conflict": "This could not be completed because of a conflict (for example, the last manager cannot be removed).",
     "invalidFields": "Please check the information you entered.",
     "passwordMismatch": "Passwords do not match.",
-    "forbidden": "You do not have permission to do this."
+    "forbidden": "You do not have permission to do this.",
+    "notFound": "This could not be found."
+  },
+  "app": {
+    "nav": {
+      "projects": "Projects",
+      "organizations": "Organizations",
+      "logout": "Log out"
+    }
+  },
+  "roles": {
+    "PROJECT_MANAGER": "Project Manager",
+    "BACKEND_DEVELOPER": "Backend Developer",
+    "FRONTEND_DEVELOPER": "Frontend Developer",
+    "FULL_STACK_DEVELOPER": "Full-Stack Developer",
+    "AI_ML_DEVELOPER": "AI/ML Developer",
+    "UI_UX_DEVELOPER": "UI/UX Developer",
+    "TESTER": "Tester",
+    "ANALYST": "Analyst"
+  },
+  "organizations": {
+    "title": "Organizations",
+    "description": "Group your projects under an organization, or keep them standalone.",
+    "create": "New organization",
+    "edit": "Edit",
+    "archive": "Archive",
+    "cancel": "Cancel",
+    "archiveConfirmTitle": "Archive this organization?",
+    "archiveConfirmDescription": "Archived organizations no longer accept new projects. This cannot be undone.",
+    "archivedBadge": "Archived",
+    "projectsHeading": "Projects",
+    "noProjects": "This organization has no projects yet.",
+    "emptyTitle": "No organizations yet",
+    "emptyDescription": "Create one to group related projects together.",
+    "columns": { "name": "Name", "status": "Status" },
+    "form": {
+      "createTitle": "New organization",
+      "editTitle": "Edit organization",
+      "name": "Name",
+      "description": "Description",
+      "cancel": "Cancel",
+      "create": "Create",
+      "save": "Save",
+      "created": "Organization created.",
+      "updated": "Organization updated."
+    }
+  },
+  "projects": {
+    "title": "Projects",
+    "description": "Projects you are a member of.",
+    "create": "New project",
+    "emptyTitle": "No projects yet",
+    "emptyDescription": "Create your first project to get started.",
+    "columns": { "name": "Name", "status": "Status", "priority": "Priority" },
+    "form": {
+      "createTitle": "New project",
+      "name": "Name",
+      "description": "Description",
+      "organization": "Organization",
+      "organizationNone": "No organization",
+      "cancel": "Cancel",
+      "create": "Create",
+      "created": "Project created."
+    },
+    "detail": {
+      "tabs": { "overview": "Overview", "members": "Members", "invitations": "Invitations", "squads": "Squads" }
+    },
+    "overview": {
+      "organization": "Organization",
+      "noOrganization": "No organization",
+      "managers": "Project Managers",
+      "teamMembers": "Team members",
+      "criteriaProgress": "Success criteria",
+      "repository": "Repository",
+      "noRepository": "No repository connected",
+      "githubUnavailable": "GitHub is temporarily unavailable"
+    }
+  },
+  "members": {
+    "emptyTitle": "No members yet",
+    "columns": { "member": "Member", "roles": "Roles", "actions": "Actions" },
+    "editRolesTitle": "Edit roles",
+    "remove": "Remove",
+    "removeConfirmTitle": "Remove this member?",
+    "removeConfirmDescription": "They will lose access to this project immediately.",
+    "cancel": "Cancel",
+    "save": "Save",
+    "rolesUpdated": "Roles updated."
+  },
+  "invitations": {
+    "pendingTitle": "Pending invitations",
+    "invite": "Invite member",
+    "emptyTitle": "No invitations yet",
+    "columns": { "target": "Invited", "status": "Status", "actions": "Actions" },
+    "resend": "Resend",
+    "resent": "Invitation resent.",
+    "cancel": "Cancel",
+    "cancelled": "Invitation cancelled.",
+    "sent": "Invitation sent.",
+    "inviteTitle": "Invite a member",
+    "searchLabel": "Find a person",
+    "searchPlaceholder": "Search by nickname or email",
+    "change": "Change",
+    "noResults": "No matching users found.",
+    "rolesLabel": "Initial roles",
+    "send": "Send invite",
+    "respond": {
+      "missingToken": "This invitation link is missing its token.",
+      "prompt": "You have been invited to join this project.",
+      "accept": "Accept",
+      "reject": "Decline",
+      "acceptedMessage": "You have joined the project.",
+      "rejectedMessage": "You declined the invitation.",
+      "goToProjects": "Go to projects"
+    }
+  },
+  "squads": {
+    "title": "Squads",
+    "create": "New squad",
+    "emptyTitle": "No squads yet",
+    "archive": "Archive",
+    "archiveConfirmTitle": "Archive this squad?",
+    "cancel": "Cancel",
+    "columns": { "name": "Name", "actions": "Actions" },
+    "form": {
+      "createTitle": "New squad",
+      "editTitle": "Edit squad",
+      "name": "Name",
+      "description": "Description",
+      "cancel": "Cancel",
+      "create": "Create",
+      "save": "Save",
+      "created": "Squad created.",
+      "updated": "Squad updated."
+    },
+    "members": {
+      "title": "{name} members",
+      "searchPlaceholder": "Search project members",
+      "emptyTitle": "No members in this squad yet",
+      "remove": "Remove"
+    }
   },
   "oauth": {
     "google": "Continue with Google",
@@ -76,7 +222,8 @@
     "nickname": "3-32 characters; letters, digits and underscore only.",
     "passwordMin": "Password must be at least 8 characters.",
     "passwordMax": "Password can be at most 128 characters.",
-    "passwordMatch": "Passwords do not match."
+    "passwordMatch": "Passwords do not match.",
+    "maxLength": "This value is too long."
   },
   "story": {
     "skip": "Skip to content",

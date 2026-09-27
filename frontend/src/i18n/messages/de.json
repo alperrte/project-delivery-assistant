@@ -13,6 +13,12 @@
       "tr": "Türkçe",
       "en": "English",
       "de": "Deutsch"
+    },
+    "pagination": {
+      "total": "{count, plural, one {# Eintrag} other {# Einträge}}",
+      "previous": "Zurück",
+      "next": "Weiter",
+      "pageOf": "Seite {page} von {totalPages}"
     }
   },
   "errors": {
@@ -20,10 +26,150 @@
     "generic": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
     "tooManyRequests": "Zu viele Versuche. Bitte warten Sie einen Moment und versuchen Sie es erneut.",
     "invalidCredentials": "E-Mail oder Passwort ist falsch.",
-    "conflict": "Diese E-Mail oder dieser Benutzername wird bereits verwendet.",
+    "conflict": "Dies konnte aufgrund eines Konflikts nicht abgeschlossen werden (z. B. kann der letzte Manager nicht entfernt werden).",
     "invalidFields": "Bitte prüfen Sie Ihre Eingaben.",
     "passwordMismatch": "Die Passwörter stimmen nicht überein.",
-    "forbidden": "Dafür fehlt Ihnen die Berechtigung."
+    "forbidden": "Dafür fehlt Ihnen die Berechtigung.",
+    "notFound": "Dies wurde nicht gefunden."
+  },
+  "app": {
+    "nav": {
+      "projects": "Projekte",
+      "organizations": "Organisationen",
+      "logout": "Abmelden"
+    }
+  },
+  "roles": {
+    "PROJECT_MANAGER": "Projektleiter",
+    "BACKEND_DEVELOPER": "Backend-Entwickler",
+    "FRONTEND_DEVELOPER": "Frontend-Entwickler",
+    "FULL_STACK_DEVELOPER": "Full-Stack-Entwickler",
+    "AI_ML_DEVELOPER": "KI/ML-Entwickler",
+    "UI_UX_DEVELOPER": "UI/UX-Entwickler",
+    "TESTER": "Tester",
+    "ANALYST": "Analyst"
+  },
+  "organizations": {
+    "title": "Organisationen",
+    "description": "Gruppieren Sie Ihre Projekte unter einer Organisation oder lassen Sie sie eigenständig.",
+    "create": "Neue Organisation",
+    "edit": "Bearbeiten",
+    "archive": "Archivieren",
+    "cancel": "Abbrechen",
+    "archiveConfirmTitle": "Diese Organisation archivieren?",
+    "archiveConfirmDescription": "Archivierte Organisationen akzeptieren keine neuen Projekte mehr. Dies kann nicht rückgängig gemacht werden.",
+    "archivedBadge": "Archiviert",
+    "projectsHeading": "Projekte",
+    "noProjects": "Diese Organisation hat noch keine Projekte.",
+    "emptyTitle": "Noch keine Organisationen",
+    "emptyDescription": "Erstellen Sie eine, um verwandte Projekte zu gruppieren.",
+    "columns": { "name": "Name", "status": "Status" },
+    "form": {
+      "createTitle": "Neue Organisation",
+      "editTitle": "Organisation bearbeiten",
+      "name": "Name",
+      "description": "Beschreibung",
+      "cancel": "Abbrechen",
+      "create": "Erstellen",
+      "save": "Speichern",
+      "created": "Organisation erstellt.",
+      "updated": "Organisation aktualisiert."
+    }
+  },
+  "projects": {
+    "title": "Projekte",
+    "description": "Projekte, in denen Sie Mitglied sind.",
+    "create": "Neues Projekt",
+    "emptyTitle": "Noch keine Projekte",
+    "emptyDescription": "Erstellen Sie Ihr erstes Projekt, um zu beginnen.",
+    "columns": { "name": "Name", "status": "Status", "priority": "Priorität" },
+    "form": {
+      "createTitle": "Neues Projekt",
+      "name": "Name",
+      "description": "Beschreibung",
+      "organization": "Organisation",
+      "organizationNone": "Keine Organisation",
+      "cancel": "Abbrechen",
+      "create": "Erstellen",
+      "created": "Projekt erstellt."
+    },
+    "detail": {
+      "tabs": { "overview": "Übersicht", "members": "Mitglieder", "invitations": "Einladungen", "squads": "Teams" }
+    },
+    "overview": {
+      "organization": "Organisation",
+      "noOrganization": "Keine Organisation",
+      "managers": "Projektleiter",
+      "teamMembers": "Teammitglieder",
+      "criteriaProgress": "Erfolgskriterien",
+      "repository": "Repository",
+      "noRepository": "Kein Repository verbunden",
+      "githubUnavailable": "GitHub ist vorübergehend nicht verfügbar"
+    }
+  },
+  "members": {
+    "emptyTitle": "Noch keine Mitglieder",
+    "columns": { "member": "Mitglied", "roles": "Rollen", "actions": "Aktionen" },
+    "editRolesTitle": "Rollen bearbeiten",
+    "remove": "Entfernen",
+    "removeConfirmTitle": "Dieses Mitglied entfernen?",
+    "removeConfirmDescription": "Diese Person verliert sofort den Zugriff auf das Projekt.",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "rolesUpdated": "Rollen aktualisiert."
+  },
+  "invitations": {
+    "pendingTitle": "Ausstehende Einladungen",
+    "invite": "Mitglied einladen",
+    "emptyTitle": "Noch keine Einladungen",
+    "columns": { "target": "Eingeladen", "status": "Status", "actions": "Aktionen" },
+    "resend": "Erneut senden",
+    "resent": "Einladung erneut gesendet.",
+    "cancel": "Stornieren",
+    "cancelled": "Einladung storniert.",
+    "sent": "Einladung gesendet.",
+    "inviteTitle": "Mitglied einladen",
+    "searchLabel": "Person finden",
+    "searchPlaceholder": "Nach Benutzername oder E-Mail suchen",
+    "change": "Ändern",
+    "noResults": "Keine passenden Benutzer gefunden.",
+    "rolesLabel": "Anfangsrollen",
+    "send": "Einladung senden",
+    "respond": {
+      "missingToken": "Diesem Einladungslink fehlt das Token.",
+      "prompt": "Sie wurden eingeladen, diesem Projekt beizutreten.",
+      "accept": "Annehmen",
+      "reject": "Ablehnen",
+      "acceptedMessage": "Sie sind dem Projekt beigetreten.",
+      "rejectedMessage": "Sie haben die Einladung abgelehnt.",
+      "goToProjects": "Zu den Projekten"
+    }
+  },
+  "squads": {
+    "title": "Teams",
+    "create": "Neues Team",
+    "emptyTitle": "Noch keine Teams",
+    "archive": "Archivieren",
+    "archiveConfirmTitle": "Dieses Team archivieren?",
+    "cancel": "Abbrechen",
+    "columns": { "name": "Name", "actions": "Aktionen" },
+    "form": {
+      "createTitle": "Neues Team",
+      "editTitle": "Team bearbeiten",
+      "name": "Name",
+      "description": "Beschreibung",
+      "cancel": "Abbrechen",
+      "create": "Erstellen",
+      "save": "Speichern",
+      "created": "Team erstellt.",
+      "updated": "Team aktualisiert."
+    },
+    "members": {
+      "title": "Mitglieder von {name}",
+      "searchPlaceholder": "Projektmitglieder durchsuchen",
+      "emptyTitle": "Noch keine Mitglieder in diesem Team",
+      "remove": "Entfernen"
+    }
   },
   "oauth": {
     "google": "Weiter mit Google",
@@ -76,7 +222,8 @@
     "nickname": "3-32 Zeichen; nur Buchstaben, Ziffern und Unterstrich.",
     "passwordMin": "Das Passwort muss mindestens 8 Zeichen lang sein.",
     "passwordMax": "Das Passwort darf höchstens 128 Zeichen lang sein.",
-    "passwordMatch": "Die Passwörter stimmen nicht überein."
+    "passwordMatch": "Die Passwörter stimmen nicht überein.",
+    "maxLength": "Dieser Wert ist zu lang."
   },
   "story": {
     "skip": "Zum Inhalt springen",

@@ -13,6 +13,12 @@
       "tr": "Türkçe",
       "en": "English",
       "de": "Deutsch"
+    },
+    "pagination": {
+      "total": "{count, plural, one {# kayıt} other {# kayıt}}",
+      "previous": "Önceki",
+      "next": "Sonraki",
+      "pageOf": "Sayfa {page} / {totalPages}"
     }
   },
   "errors": {
@@ -20,10 +26,150 @@
     "generic": "Bir şeyler ters gitti. Lütfen tekrar deneyin.",
     "tooManyRequests": "Çok fazla deneme yaptınız. Biraz bekleyip tekrar deneyin.",
     "invalidCredentials": "E-posta veya şifre hatalı.",
-    "conflict": "Bu e-posta veya kullanıcı adı zaten kullanılıyor.",
+    "conflict": "Bir çakışma nedeniyle bu işlem tamamlanamadı (örneğin son yönetici kaldırılamaz).",
     "invalidFields": "Girdiğiniz bilgileri kontrol edin.",
     "passwordMismatch": "Şifreler eşleşmiyor.",
-    "forbidden": "Bu işlem için yetkiniz yok."
+    "forbidden": "Bu işlem için yetkiniz yok.",
+    "notFound": "Bu kayıt bulunamadı."
+  },
+  "app": {
+    "nav": {
+      "projects": "Projeler",
+      "organizations": "Organizasyonlar",
+      "logout": "Çıkış yap"
+    }
+  },
+  "roles": {
+    "PROJECT_MANAGER": "Proje Yöneticisi",
+    "BACKEND_DEVELOPER": "Backend Geliştirici",
+    "FRONTEND_DEVELOPER": "Frontend Geliştirici",
+    "FULL_STACK_DEVELOPER": "Full-Stack Geliştirici",
+    "AI_ML_DEVELOPER": "AI/ML Geliştirici",
+    "UI_UX_DEVELOPER": "UI/UX Geliştirici",
+    "TESTER": "Test Uzmanı",
+    "ANALYST": "Analist"
+  },
+  "organizations": {
+    "title": "Organizasyonlar",
+    "description": "Projelerinizi bir organizasyon altında gruplayın veya bağımsız tutun.",
+    "create": "Yeni organizasyon",
+    "edit": "Düzenle",
+    "archive": "Arşivle",
+    "cancel": "Vazgeç",
+    "archiveConfirmTitle": "Bu organizasyon arşivlensin mi?",
+    "archiveConfirmDescription": "Arşivlenen organizasyonlar yeni proje kabul etmez. Bu işlem geri alınamaz.",
+    "archivedBadge": "Arşivlendi",
+    "projectsHeading": "Projeler",
+    "noProjects": "Bu organizasyonun henüz projesi yok.",
+    "emptyTitle": "Henüz organizasyon yok",
+    "emptyDescription": "İlişkili projeleri bir arada tutmak için bir tane oluşturun.",
+    "columns": { "name": "Ad", "status": "Durum" },
+    "form": {
+      "createTitle": "Yeni organizasyon",
+      "editTitle": "Organizasyonu düzenle",
+      "name": "Ad",
+      "description": "Açıklama",
+      "cancel": "Vazgeç",
+      "create": "Oluştur",
+      "save": "Kaydet",
+      "created": "Organizasyon oluşturuldu.",
+      "updated": "Organizasyon güncellendi."
+    }
+  },
+  "projects": {
+    "title": "Projeler",
+    "description": "Üyesi olduğunuz projeler.",
+    "create": "Yeni proje",
+    "emptyTitle": "Henüz proje yok",
+    "emptyDescription": "Başlamak için ilk projenizi oluşturun.",
+    "columns": { "name": "Ad", "status": "Durum", "priority": "Öncelik" },
+    "form": {
+      "createTitle": "Yeni proje",
+      "name": "Ad",
+      "description": "Açıklama",
+      "organization": "Organizasyon",
+      "organizationNone": "Organizasyon yok",
+      "cancel": "Vazgeç",
+      "create": "Oluştur",
+      "created": "Proje oluşturuldu."
+    },
+    "detail": {
+      "tabs": { "overview": "Genel Bakış", "members": "Üyeler", "invitations": "Davetler", "squads": "Ekipler" }
+    },
+    "overview": {
+      "organization": "Organizasyon",
+      "noOrganization": "Organizasyon yok",
+      "managers": "Proje Yöneticileri",
+      "teamMembers": "Ekip üyeleri",
+      "criteriaProgress": "Başarı kriterleri",
+      "repository": "Depo",
+      "noRepository": "Bağlı depo yok",
+      "githubUnavailable": "GitHub geçici olarak erişilemez durumda"
+    }
+  },
+  "members": {
+    "emptyTitle": "Henüz üye yok",
+    "columns": { "member": "Üye", "roles": "Roller", "actions": "İşlemler" },
+    "editRolesTitle": "Rolleri düzenle",
+    "remove": "Çıkar",
+    "removeConfirmTitle": "Bu üye çıkarılsın mı?",
+    "removeConfirmDescription": "Bu kişi projeye erişimini hemen kaybeder.",
+    "cancel": "Vazgeç",
+    "save": "Kaydet",
+    "rolesUpdated": "Roller güncellendi."
+  },
+  "invitations": {
+    "pendingTitle": "Bekleyen davetler",
+    "invite": "Üye davet et",
+    "emptyTitle": "Henüz davet yok",
+    "columns": { "target": "Davet edilen", "status": "Durum", "actions": "İşlemler" },
+    "resend": "Yeniden gönder",
+    "resent": "Davet yeniden gönderildi.",
+    "cancel": "İptal et",
+    "cancelled": "Davet iptal edildi.",
+    "sent": "Davet gönderildi.",
+    "inviteTitle": "Üye davet et",
+    "searchLabel": "Kişi bul",
+    "searchPlaceholder": "Kullanıcı adı veya e-posta ile ara",
+    "change": "Değiştir",
+    "noResults": "Eşleşen kullanıcı bulunamadı.",
+    "rolesLabel": "Başlangıç rolleri",
+    "send": "Davet gönder",
+    "respond": {
+      "missingToken": "Bu davet bağlantısında token eksik.",
+      "prompt": "Bu projeye davet edildiniz.",
+      "accept": "Kabul et",
+      "reject": "Reddet",
+      "acceptedMessage": "Projeye katıldınız.",
+      "rejectedMessage": "Daveti reddettiniz.",
+      "goToProjects": "Projelere git"
+    }
+  },
+  "squads": {
+    "title": "Ekipler",
+    "create": "Yeni ekip",
+    "emptyTitle": "Henüz ekip yok",
+    "archive": "Arşivle",
+    "archiveConfirmTitle": "Bu ekip arşivlensin mi?",
+    "cancel": "Vazgeç",
+    "columns": { "name": "Ad", "actions": "İşlemler" },
+    "form": {
+      "createTitle": "Yeni ekip",
+      "editTitle": "Ekibi düzenle",
+      "name": "Ad",
+      "description": "Açıklama",
+      "cancel": "Vazgeç",
+      "create": "Oluştur",
+      "save": "Kaydet",
+      "created": "Ekip oluşturuldu.",
+      "updated": "Ekip güncellendi."
+    },
+    "members": {
+      "title": "{name} üyeleri",
+      "searchPlaceholder": "Proje üyelerinde ara",
+      "emptyTitle": "Bu ekipte henüz üye yok",
+      "remove": "Çıkar"
+    }
   },
   "oauth": {
     "google": "Google ile devam et",
@@ -76,7 +222,8 @@
     "nickname": "3-32 karakter; yalnız harf, rakam ve alt çizgi.",
     "passwordMin": "Şifre en az 8 karakter olmalı.",
     "passwordMax": "Şifre en fazla 128 karakter olabilir.",
-    "passwordMatch": "Şifreler eşleşmiyor."
+    "passwordMatch": "Şifreler eşleşmiyor.",
+    "maxLength": "Bu değer çok uzun."
   },
   "story": {
     "skip": "İçeriğe geç",

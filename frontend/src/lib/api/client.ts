@@ -80,7 +80,7 @@ const NO_REFRESH = ["/auth/login", "/auth/register", "/auth/refresh", "/auth/log
 
 export async function apiRequest<T = void>(
   path: string,
-  options: { method?: "GET" | "POST"; body?: unknown } = {},
+  options: { method?: "GET" | "POST" | "PUT" | "DELETE"; body?: unknown } = {},
 ): Promise<T> {
   const method = options.method ?? "GET";
   const init: RequestInit = options.body === undefined ? {} : { body: JSON.stringify(options.body) };
