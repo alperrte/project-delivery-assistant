@@ -289,6 +289,34 @@ GitHub uses the same model and the same handlers as Google. It is optional: with
 
 Link result codes on `/?oauth_link=`: `linked`, `already_linked`, `linked_to_another_account`, `provider_already_linked`, `account_unavailable`. `GET /api/v1/auth/oauth/identities` lists both providers.
 
+
+### Auth Faz 7 (roles and permissions; no new endpoints)
+
+Faz 7 adds no HTTP endpoint, ENV key, dependency or migration. Roles are labels; what they may do is defined only in `com.pda.user.RolePolicy` (deny by default, unknown/empty/`null` input grants nothing, no custom roles). `ADMIN` is a platform operator (`GlobalRole`): it holds `PlatformPermission` (`USER_MANAGE`, `SESSION_MANAGE`, `AUDIT_VIEW`, used by Faz 8) and has **no** implicit project authority; it is never a project membership. A project role grants no platform permission.
+
+| Project role | Project permissions |
+| --- | --- |
+| `PROJECT_MANAGER` | all: `PROJECT_VIEW`, `PROJECT_UPDATE`, `PROJECT_ARCHIVE`, `MEMBER_MANAGE`, `TASK_MANAGE`, `LABEL_MANAGE`, `TASK_WORK`, `ISSUE_PARTICIPATE`, `ISSUE_MANAGE`, `TEST_REPORT_WRITE` |
+| `BACKEND_DEVELOPER`, `FRONTEND_DEVELOPER`, `FULL_STACK_DEVELOPER`, `AI_ML_DEVELOPER`, `UI_UX_DEVELOPER`, `ANALYST` | `PROJECT_VIEW`, `TASK_WORK`, `ISSUE_PARTICIPATE` (identical contributor rights) |
+| `TESTER` | contributor rights + `TEST_REPORT_WRITE` |
+
+Several roles in one project combine by union. Project creation is open to any authenticated user, who becomes the first `PROJECT_MANAGER`. Task, label and test-report endpoints do not exist yet; their permissions are defined so those services enforce them with `ProjectAccess.hasPermission(projectId, userId, permission)`.
+
+Authorization rule of every sensitive endpoint that exists today:
+
+| Endpoint | Rule |
+| --- | --- |
+| `POST /api/v1/projects` | authenticated user; becomes `PROJECT_MANAGER` |
+| `GET /api/v1/projects`, `GET /api/v1/organizations/{id}/projects` | authenticated; only projects the caller is a member of |
+| `GET /api/v1/projects/{id}`, `/by-slug/{slug}` | `PROJECT_VIEW` in that project (else `403`) |
+| `PUT /api/v1/projects/{id}` | `PROJECT_UPDATE` |
+| `POST /api/v1/projects/{id}/archive` | `PROJECT_ARCHIVE` |
+| `GET /api/v1/projects/{id}/members`, `/members/{userId}` | `PROJECT_VIEW` |
+| `POST|PUT|DELETE .../members/**` (roles, remove member) | `MEMBER_MANAGE`; the last Project Manager cannot be removed |
+| `/api/v1/organizations/**` | organization owner rules (not project roles) |
+| `/api/v1/auth/**` | public entries listed above; everything else own-account only |
+| everything else | denied |
+
 ---
 
 ## 12. Error Handling

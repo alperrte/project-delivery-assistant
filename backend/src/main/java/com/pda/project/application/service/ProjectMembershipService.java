@@ -2,7 +2,9 @@ package com.pda.project.application.service;
 
 import com.pda.project.domain.entity.ProjectMembership;
 import com.pda.project.domain.enums.MembershipStatus;
-import com.pda.project.domain.enums.ProjectRole;
+import com.pda.user.ProjectPermission;
+import com.pda.user.ProjectRole;
+import com.pda.user.RolePolicy;
 import com.pda.project.infrastructure.repository.ProjectMembershipRepository;
 import com.pda.project.infrastructure.repository.ProjectRepository;
 import com.pda.user.UserAccounts;
@@ -53,7 +55,7 @@ public class ProjectMembershipService {
 
     @Transactional(readOnly = true)
     public Page<MemberSummary> list(UUID actorId, UUID projectId, Pageable pageable) {
-        requireMember(actorId, projectId);
+        require(actorId, projectId, ProjectPermission.PROJECT_VIEW);
         activeProject(projectId);
         return memberships.findByProjectIdAndStatus(projectId, MembershipStatus.ACTIVE, pageable)
                 .map(MemberSummary::from);
@@ -61,7 +63,7 @@ public class ProjectMembershipService {
 
     @Transactional(readOnly = true)
     public MemberSummary detail(UUID actorId, UUID projectId, UUID userId) {
-        requireMember(actorId, projectId);
+        require(actorId, projectId, ProjectPermission.PROJECT_VIEW);
         activeProject(projectId);
         return MemberSummary.from(activeMember(projectId, userId));
     }
@@ -134,10 +136,14 @@ public class ProjectMembershipService {
                 .orElseThrow(() -> new AccessDeniedException("Project access denied"));
     }
 
-    private void requireManager(UUID actorId, UUID projectId) {
-        if (!requireMember(actorId, projectId).hasRole(ProjectRole.PROJECT_MANAGER)) {
-            throw new AccessDeniedException("Project management denied");
+    private void require(UUID actorId, UUID projectId, ProjectPermission permission) {
+        if (!RolePolicy.allows(requireMember(actorId, projectId).getRoles(), permission)) {
+            throw new AccessDeniedException("Project permission denied");
         }
+    }
+
+    private void requireManager(UUID actorId, UUID projectId) {
+        require(actorId, projectId, ProjectPermission.MEMBER_MANAGE);
     }
 
     private ProjectMembership activeMember(UUID projectId, UUID userId) {

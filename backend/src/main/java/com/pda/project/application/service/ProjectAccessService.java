@@ -4,6 +4,8 @@ import com.pda.project.ProjectAccess;
 import com.pda.project.domain.enums.MembershipStatus;
 import com.pda.project.infrastructure.repository.ProjectMembershipRepository;
 import com.pda.project.infrastructure.repository.ProjectRepository;
+import com.pda.user.ProjectPermission;
+import com.pda.user.RolePolicy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,5 +48,22 @@ public class ProjectAccessService implements ProjectAccess {
     @Transactional(readOnly = true)
     public boolean canAccessProject(UUID projectId, UUID userId) {
         return isMember(projectId, userId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Set<ProjectPermission> permissionsForUserInProject(UUID projectId, UUID userId) {
+        if (projectId == null || userId == null || projects.findByIdAndArchivedAtIsNull(projectId).isEmpty()) {
+            return Set.of();
+        }
+        return memberships.findByProjectIdAndUserIdAndStatus(projectId, userId, MembershipStatus.ACTIVE)
+                .map(member -> RolePolicy.permissions(member.getRoles()))
+                .orElseGet(Set::of);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean hasPermission(UUID projectId, UUID userId, ProjectPermission permission) {
+        return permission != null && permissionsForUserInProject(projectId, userId).contains(permission);
     }
 }

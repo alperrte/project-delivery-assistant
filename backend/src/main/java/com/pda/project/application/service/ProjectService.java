@@ -4,7 +4,8 @@ import com.pda.project.domain.entity.Project;
 import com.pda.project.domain.entity.ProjectMembership;
 import com.pda.project.domain.enums.MembershipStatus;
 import com.pda.project.domain.enums.ProjectPriority;
-import com.pda.project.domain.enums.ProjectRole;
+import com.pda.user.ProjectPermission;
+import com.pda.user.RolePolicy;
 import com.pda.project.infrastructure.repository.ProjectMembershipRepository;
 import com.pda.project.infrastructure.repository.ProjectRepository;
 import com.pda.project.organization.application.OrganizationService;
@@ -53,7 +54,7 @@ public class ProjectService {
 
     @Transactional(readOnly = true)
     public Project detail(UUID actorId, UUID projectId) {
-        requireMember(actorId, projectId);
+        require(actorId, projectId, ProjectPermission.PROJECT_VIEW);
         return activeProject(projectId);
     }
 
@@ -61,7 +62,7 @@ public class ProjectService {
     public Project detailBySlug(UUID actorId, String slug) {
         Project project = projects.findBySlugAndArchivedAtIsNull(slug)
                 .orElseThrow(() -> new NoSuchElementException("Project not found"));
-        requireMember(actorId, project.getId());
+        require(actorId, project.getId(), ProjectPermission.PROJECT_VIEW);
         return project;
     }
 
@@ -69,7 +70,7 @@ public class ProjectService {
     public Project update(UUID actorId, UUID projectId, String name, String description,
                           ProjectPriority priority, LocalDate startDate, LocalDate targetEndDate,
                           String projectGoal, String techStack, UUID organizationId) {
-        requireManager(actorId, projectId);
+        require(actorId, projectId, ProjectPermission.PROJECT_UPDATE);
         Project project = activeProject(projectId);
         if (organizationId != null) {
             organizations.detail(actorId, organizationId);
@@ -81,7 +82,7 @@ public class ProjectService {
 
     @Transactional
     public void archive(UUID actorId, UUID projectId) {
-        requireManager(actorId, projectId);
+        require(actorId, projectId, ProjectPermission.PROJECT_ARCHIVE);
         Project project = activeProject(projectId);
         project.archive();
         projects.save(project);
@@ -106,9 +107,9 @@ public class ProjectService {
                 .orElseThrow(() -> new AccessDeniedException("Project access denied"));
     }
 
-    private void requireManager(UUID actorId, UUID projectId) {
-        if (!requireMember(actorId, projectId).hasRole(ProjectRole.PROJECT_MANAGER)) {
-            throw new AccessDeniedException("Project management denied");
+    private void require(UUID actorId, UUID projectId, ProjectPermission permission) {
+        if (!RolePolicy.allows(requireMember(actorId, projectId).getRoles(), permission)) {
+            throw new AccessDeniedException("Project permission denied");
         }
     }
 }
