@@ -99,6 +99,8 @@ public class SecurityBaselineConfiguration {
                             boolean unauthenticated = "GET".equals(request.getMethod())
                                     && "/api/v1/auth/me".equals(path)
                                     || path.startsWith("/api/v1/auth/sessions")
+                                    || path.startsWith("/api/v1/admin/")
+                                    || "/api/v1/auth/password/change".equals(path)
                                     || path.startsWith("/api/v1/auth/oauth/");
                             writeProblem(response, unauthenticated ? 401 : 403);
                         })
@@ -127,6 +129,10 @@ public class SecurityBaselineConfiguration {
                             .authenticated()
                             .requestMatchers(HttpMethod.POST, "/api/v1/auth/sessions/*/revoke",
                                     "/api/v1/auth/sessions/revoke-others").authenticated()
+                            .requestMatchers(HttpMethod.POST, "/api/v1/auth/password/change").authenticated()
+                            // Platform administration: ADMIN only; the services re-check the platform permission.
+                            .requestMatchers(HttpMethod.GET, "/api/v1/admin/**").hasRole("ADMIN")
+                            .requestMatchers(HttpMethod.POST, "/api/v1/admin/**").hasRole("ADMIN")
                             .requestMatchers(HttpMethod.GET, "/api/v1/projects", "/api/v1/projects/**",
                                     "/api/v1/organizations", "/api/v1/organizations/**").authenticated()
                             .requestMatchers(HttpMethod.POST, "/api/v1/projects",
@@ -171,6 +177,7 @@ public class SecurityBaselineConfiguration {
         configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/v1/auth/**", configuration);
+        source.registerCorsConfiguration("/api/v1/admin/**", configuration);
         source.registerCorsConfiguration("/api/v1/projects", configuration);
         source.registerCorsConfiguration("/api/v1/projects/**", configuration);
         source.registerCorsConfiguration("/api/v1/organizations", configuration);
