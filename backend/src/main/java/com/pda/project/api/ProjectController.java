@@ -3,7 +3,9 @@ package com.pda.project.api;
 import com.pda.project.api.dto.request.CreateProjectRequest;
 import com.pda.project.api.dto.request.UpdateProjectRequest;
 import com.pda.project.api.dto.response.PageResponse;
+import com.pda.project.api.dto.response.ProjectHomeResponse;
 import com.pda.project.api.dto.response.ProjectResponse;
+import com.pda.project.application.service.ProjectHomeService;
 import com.pda.project.application.service.ProjectService;
 import com.pda.user.UserAccounts;
 import io.swagger.v3.oas.annotations.Operation;
@@ -30,9 +32,11 @@ import java.util.UUID;
 public class ProjectController {
 
     private final ProjectService projects;
+    private final ProjectHomeService projectHome;
 
-    public ProjectController(ProjectService projects) {
+    public ProjectController(ProjectService projects, ProjectHomeService projectHome) {
         this.projects = projects;
+        this.projectHome = projectHome;
     }
 
     @PostMapping
@@ -60,6 +64,16 @@ public class ProjectController {
     public ProjectResponse detail(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
                                   @PathVariable UUID projectId) {
         return ProjectResponse.from(projects.detail(AuthenticatedActor.id(principal), projectId));
+    }
+
+    @GetMapping("/{projectId}/home")
+    @Operation(summary = "Get the Project Home aggregate", description = "Project-only data: header, "
+            + "status/priority, organization, managers, team/squad counts, success-criteria progress and "
+            + "repository summary. Task counts and recent activity are out of scope until Work Service and "
+            + "Activity expose their own contracts. Requires membership in this project.")
+    public ProjectHomeResponse home(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
+                                    @PathVariable UUID projectId) {
+        return ProjectHomeResponse.from(projectHome.summary(AuthenticatedActor.id(principal), projectId));
     }
 
     @GetMapping("/by-slug/{slug}")
