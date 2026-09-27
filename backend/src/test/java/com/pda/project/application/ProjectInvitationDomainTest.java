@@ -2,7 +2,7 @@ package com.pda.project.application;
 
 import com.pda.project.domain.entity.ProjectInvitation;
 import com.pda.project.domain.enums.InvitationStatus;
-import com.pda.project.domain.enums.ProjectRole;
+import com.pda.user.ProjectRole;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;

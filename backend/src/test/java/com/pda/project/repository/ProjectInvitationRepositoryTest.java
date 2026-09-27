@@ -4,7 +4,7 @@ import com.pda.BackendApplication;
 import com.pda.project.domain.entity.Project;
 import com.pda.project.domain.entity.ProjectInvitation;
 import com.pda.project.domain.enums.InvitationStatus;
-import com.pda.project.domain.enums.ProjectRole;
+import com.pda.user.ProjectRole;
 import com.pda.project.infrastructure.repository.ProjectInvitationRepository;
 import com.pda.project.infrastructure.repository.ProjectRepository;
 import jakarta.persistence.EntityManager;
