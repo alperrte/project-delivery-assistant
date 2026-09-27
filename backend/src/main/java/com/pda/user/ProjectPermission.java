@@ -12,6 +12,8 @@ public enum ProjectPermission {
     MEMBER_MANAGE,
     /** Create, edit, archive a squad and manage its membership; a squad grants no permission by itself. */
     SQUAD_MANAGE,
+    /** Create, edit, delete, reorder and complete/uncomplete a project's success criteria. */
+    CRITERIA_MANAGE,
     /** Create, edit, assign, schedule, prioritise, move, block and close tasks; attach existing labels. */
     TASK_MANAGE,
     /** Create and change labels and milestones themselves. */
