@@ -30,11 +30,19 @@ public interface UserAccounts {
 
     List<LinkedOAuthIdentity> listOAuthIdentities(UUID userId);
 
-    record AuthenticatedUser(UUID id, String email, String nickname, String globalRole) {}
+    /**
+     * Replaces the password of an ACTIVE account after verifying the current one. The new password must differ
+     * from the current one. A successful change also ends a forced first-login change.
+     */
+    PasswordChangeOutcome changePassword(UUID userId, String currentPassword, String newPassword);
+
+    record AuthenticatedUser(UUID id, String email, String nickname, String globalRole, boolean mustChangePassword) {}
 
     record LinkedOAuthIdentity(OAuthProvider provider, String email, Instant linkedAt) {}
 
     enum LinkOutcome { LINKED, ALREADY_LINKED, IDENTITY_USED_BY_OTHER_ACCOUNT, PROVIDER_HAS_OTHER_IDENTITY, ACCOUNT_UNAVAILABLE }
+
+    enum PasswordChangeOutcome { CHANGED, WRONG_CURRENT_PASSWORD, SAME_PASSWORD, ACCOUNT_UNAVAILABLE }
 
     enum UnlinkOutcome { UNLINKED, NOT_LINKED, LAST_LOGIN_METHOD }
 }

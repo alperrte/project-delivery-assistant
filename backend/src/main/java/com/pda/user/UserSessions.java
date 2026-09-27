@@ -27,5 +27,10 @@ public interface UserSessions {
     /** Revokes every active session of the user except {@code currentSessionId}; returns the revoked count. */
     int revokeOthers(UUID userId, UUID currentSessionId, Instant now);
 
+    /** Revokes every active session of the user; returns the revoked count. */
+    int revokeAll(UUID userId, Instant now);
+
+    long countActive(UUID userId, Instant now);
+
     record SessionView(UUID id, Instant createdAt, Instant lastUsedAt, Instant expiresAt, String userAgent) {}
 }

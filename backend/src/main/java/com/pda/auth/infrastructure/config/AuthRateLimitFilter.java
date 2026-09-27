@@ -14,6 +14,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 final class AuthRateLimitFilter extends OncePerRequestFilter {
 
+    private static final String PASSWORD_CHANGE_PATH = "/api/v1/auth/password/change";
     private static final String REFRESH_PATH = "/api/v1/auth/refresh";
     private static final long WINDOW_MILLIS = Duration.ofMinutes(10).toMillis();
     private static final int MAX_REQUESTS = 5;
@@ -32,7 +33,7 @@ final class AuthRateLimitFilter extends OncePerRequestFilter {
             return true;
         }
         return !"/api/v1/auth/register".equals(path) && !"/api/v1/auth/login".equals(path)
-                && !REFRESH_PATH.equals(path);
+                && !REFRESH_PATH.equals(path) && !PASSWORD_CHANGE_PATH.equals(path);
     }
 
     private static boolean isOAuthRedirect(String path) {

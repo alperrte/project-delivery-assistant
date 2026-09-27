@@ -1,7 +1,6 @@
 {
   "permissions": {
     "deny": [
-      "Read(./docs/**)",
       "Read(./assets/**)",
       "Read(./backend/target/**)",
       "Read(./backend/HELP.md)",

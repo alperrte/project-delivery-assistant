@@ -16,6 +16,8 @@ public interface ProjectRepository extends JpaRepository<Project, UUID> {
 
     boolean existsBySlug(String slug);
 
+    long countByArchivedAtIsNull();
+
     Optional<Project> findBySlugAndArchivedAtIsNull(String slug);
 
     Optional<Project> findByIdAndArchivedAtIsNull(UUID id);
