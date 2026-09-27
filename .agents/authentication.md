@@ -20,6 +20,10 @@ Spring Security `oauth2Login` (`spring-boot-starter-security-oauth2-client`) yal
 
 Kimlik modeli: V6 `user_oauth_identities` (`UNIQUE(provider, provider_subject)`, `UNIQUE(user_id, provider)`); eşleştirme Google `sub` ile yapılır, email ile değil. Yeni hesap yalnız doğrulanmış Google emaili ile açılır (şifresiz, `ACTIVE`, email `VERIFIED`, rol `USER`). Aynı email'e sahip mevcut hesap varsa otomatik birleştirme yapılmaz, `account_exists` döner. Bağlama: giriş yapmış kullanıcı `POST /api/v1/auth/oauth/google/link` çağırır, dönen URL'ye gider; niyet OAuth `state`'ine bağlı istekte saklanır. Bağlantı kaldırma: şifresi olmayan hesapta tek giriş yöntemi ise `409`.
 
+## Uygulanan Faz 6: GitHub OAuth login ve hesap bağlama
+
+GitHub, Google ile aynı modeli ve aynı handler'ları kullanır; yalnız `GITHUB_CLIENT_ID` ve `GITHUB_CLIENT_SECRET` birlikte doluysa etkinleşir (ikisi boş: yollar deny-all, yalnız biri dolu: başlangıç hatası). GitHub OIDC değildir ve profil emaili opsiyonel/doğrulanmamıştır; bu yüzden `user:email` scope'uyla token değişiminden sonra `GET https://api.github.com/user/emails` bir kez çağrılır ve yalnız primary ve verified adres kabul edilir, yoksa `email_not_verified`. Eşleştirme GitHub sayısal `id`'siyle yapılır (email değişse de aynı hesap). Otomatik birleştirme yoktur (`account_exists`). Bağlama/çözme genelleştirildi: `POST /api/v1/auth/oauth/{provider}/link|unlink` (`google` veya `github`; bilinmeyen ya da yapılandırılmamış provider `404`). Başka hesaba bağlı kimlik `/?oauth_link=linked_to_another_account` döner. Yeni migration yoktur (V6 `GITHUB` değerini zaten kabul eder).
+
 ## Kimlik akışı
 
 V1 signup, login, logout ve access/refresh akışını kapsar. Spring Security backend'de kimlik ve yetki denetimini uygular. Şifreler persistence öncesinde BCrypt ile hashlenir; plaintext şifre veya hash değeri loglanmaz. Access ve refresh JWT'leri `HttpOnly` cookie içinde tutulur. Auth tokenları/verileri `localStorage` veya `sessionStorage` içinde saklanmaz.
