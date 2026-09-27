@@ -2,16 +2,18 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { errorKey } from "@/lib/api/error-message";
 import { MemberList } from "@/features/projects/components/members/member-list";
 import { InvitationsPanel } from "@/features/invitations/components/invitations-panel";
 import { SquadList } from "@/features/squads/components/squad-list";
+import { CriteriaList } from "@/features/criteria/components/criteria-list";
+import { RepositorySettings } from "@/features/repository/components/repository-settings";
 import { projectsApi } from "../api";
 import { useCurrentMember } from "../hooks/use-current-member";
 import { ProjectOverview } from "./project-overview";
+import { ProjectSettingsForm } from "./project-settings-form";
 
 export function ProjectDetail({ slug }: { slug: string }) {
   const t = useTranslations("projects.detail");
@@ -30,22 +32,22 @@ export function ProjectDetail({ slug }: { slug: string }) {
 
   return (
     <div>
-      <div className="mb-6 flex flex-wrap items-center gap-3">
-        <h1 className="font-heading text-xl font-semibold text-foreground">{project.name}</h1>
-        <Badge variant="outline">{project.status}</Badge>
-        <Badge variant="secondary">{project.priority}</Badge>
-      </div>
-
       <Tabs defaultValue="overview">
         <TabsList>
           <TabsTrigger value="overview">{t("tabs.overview")}</TabsTrigger>
+          <TabsTrigger value="criteria">{t("tabs.criteria")}</TabsTrigger>
           <TabsTrigger value="members">{t("tabs.members")}</TabsTrigger>
           {isManager && <TabsTrigger value="invitations">{t("tabs.invitations")}</TabsTrigger>}
           <TabsTrigger value="squads">{t("tabs.squads")}</TabsTrigger>
+          <TabsTrigger value="repository">{t("tabs.repository")}</TabsTrigger>
+          {isManager && <TabsTrigger value="settings">{t("tabs.settings")}</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="overview" className="pt-4">
-          <ProjectOverview projectId={project.id} />
+          <ProjectOverview project={project} />
+        </TabsContent>
+        <TabsContent value="criteria" className="pt-4">
+          <CriteriaList projectId={project.id} isManager={isManager} />
         </TabsContent>
         <TabsContent value="members" className="pt-4">
           <MemberList projectId={project.id} isManager={isManager} />
@@ -58,6 +60,14 @@ export function ProjectDetail({ slug }: { slug: string }) {
         <TabsContent value="squads" className="pt-4">
           <SquadList projectId={project.id} isManager={isManager} />
         </TabsContent>
+        <TabsContent value="repository" className="pt-4">
+          <RepositorySettings projectId={project.id} isManager={isManager} />
+        </TabsContent>
+        {isManager && (
+          <TabsContent value="settings" className="pt-4">
+            <ProjectSettingsForm project={project} />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

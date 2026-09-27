@@ -94,17 +94,97 @@
       "created": "Projekt erstellt."
     },
     "detail": {
-      "tabs": { "overview": "Übersicht", "members": "Mitglieder", "invitations": "Einladungen", "squads": "Teams" }
+      "tabs": {
+        "overview": "Übersicht",
+        "criteria": "Kriterien",
+        "members": "Mitglieder",
+        "invitations": "Einladungen",
+        "squads": "Teams",
+        "repository": "Repository",
+        "settings": "Einstellungen"
+      }
     },
     "overview": {
-      "organization": "Organisation",
-      "noOrganization": "Keine Organisation",
-      "managers": "Projektleiter",
-      "teamMembers": "Teammitglieder",
+      "statusValues": {
+        "PLANNING": "Planung",
+        "ACTIVE": "Aktiv",
+        "ON_HOLD": "Pausiert",
+        "COMPLETED": "Abgeschlossen",
+        "ARCHIVED": "Archiviert"
+      },
+      "priorityValues": { "LOW": "Niedrig", "MEDIUM": "Mittel", "HIGH": "Hoch", "CRITICAL": "Kritisch" },
+      "teamMembers": "{count, plural, one {# Mitglied} other {# Mitglieder}}",
+      "managedBy": "Geleitet von {names}",
+      "due": "Fällig am {date}",
       "criteriaProgress": "Erfolgskriterien",
       "repository": "Repository",
       "noRepository": "Kein Repository verbunden",
       "githubUnavailable": "GitHub ist vorübergehend nicht verfügbar"
+    },
+    "settings": {
+      "title": "Projekteinstellungen",
+      "archive": "Archivieren",
+      "archiveConfirmTitle": "Dieses Projekt archivieren?",
+      "archiveConfirmDescription": "Archivierte Projekte können nicht mehr geändert werden und werden aus aktiven Listen ausgeblendet. Dies kann nicht rückgängig gemacht werden.",
+      "cancel": "Abbrechen",
+      "saved": "Einstellungen gespeichert.",
+      "archived": "Projekt archiviert.",
+      "name": "Name",
+      "description": "Beschreibung",
+      "status": "Status",
+      "statusValues": { "PLANNING": "Planung", "ACTIVE": "Aktiv", "ON_HOLD": "Pausiert", "COMPLETED": "Abgeschlossen" },
+      "priority": "Priorität",
+      "priorityValues": { "LOW": "Niedrig", "MEDIUM": "Mittel", "HIGH": "Hoch", "CRITICAL": "Kritisch" },
+      "startDate": "Startdatum",
+      "targetEndDate": "Geplantes Enddatum",
+      "organization": "Organisation",
+      "organizationNone": "Keine Organisation",
+      "goal": "Projektziel",
+      "techStack": "Tech-Stack",
+      "save": "Änderungen speichern"
+    }
+  },
+  "criteria": {
+    "title": "Erfolgskriterien",
+    "create": "Neues Kriterium",
+    "emptyTitle": "Noch keine Kriterien",
+    "emptyDescription": "Fügen Sie die Meilensteine hinzu, die den Erfolg dieses Projekts definieren.",
+    "progressLabel": "Fortschritt",
+    "progressCount": "{completed}/{total} erledigt",
+    "moveUp": "Nach oben",
+    "moveDown": "Nach unten",
+    "delete": "Löschen",
+    "deleteConfirmTitle": "Dieses Kriterium löschen?",
+    "cancel": "Abbrechen",
+    "form": {
+      "createTitle": "Neues Kriterium",
+      "editTitle": "Kriterium bearbeiten",
+      "titleLabel": "Titel",
+      "descriptionLabel": "Beschreibung",
+      "cancel": "Abbrechen",
+      "create": "Erstellen",
+      "save": "Speichern",
+      "created": "Kriterium erstellt.",
+      "updated": "Kriterium aktualisiert."
+    }
+  },
+  "repository": {
+    "title": "Repository",
+    "description": "Verbinden Sie ein öffentliches GitHub-Repository, um die letzte Aktivität auf der Projektstartseite anzuzeigen.",
+    "noneTitle": "Kein Repository verbunden",
+    "noneDescription": "Verbinden Sie ein öffentliches GitHub-Repository, um die neuesten Commits hier zu sehen.",
+    "connect": "Repository verbinden",
+    "connected": "Repository verbunden.",
+    "disconnect": "Trennen",
+    "disconnected": "Repository-Verbindung getrennt.",
+    "disconnectConfirmTitle": "Dieses Repository trennen?",
+    "cancel": "Abbrechen",
+    "urlLabel": "GitHub-Repository-URL",
+    "defaultBranch": "Standard-Branch: {branch}",
+    "commits": {
+      "title": "Neueste Commits",
+      "refresh": "Aktualisieren",
+      "emptyTitle": "Keine Commits gefunden"
     }
   },
   "members": {
@@ -223,7 +303,9 @@
     "passwordMin": "Das Passwort muss mindestens 8 Zeichen lang sein.",
     "passwordMax": "Das Passwort darf höchstens 128 Zeichen lang sein.",
     "passwordMatch": "Die Passwörter stimmen nicht überein.",
-    "maxLength": "Dieser Wert ist zu lang."
+    "maxLength": "Dieser Wert ist zu lang.",
+    "dateOrder": "Das geplante Enddatum darf nicht vor dem Startdatum liegen.",
+    "githubUrl": "Geben Sie eine öffentliche GitHub-Repository-URL ein, z. B. https://github.com/owner/repo."
   },
   "story": {
     "skip": "Zum Inhalt springen",
