@@ -7,8 +7,8 @@ import java.time.Instant;
 import java.util.Set;
 import java.util.UUID;
 
-public record MemberResponse(UUID userId, Set<ProjectRole> roles, Instant joinedAt) {
+public record MemberResponse(UUID userId, String nickname, Set<ProjectRole> roles, Instant joinedAt) {
     public static MemberResponse from(MemberSummary summary) {
-        return new MemberResponse(summary.userId(), summary.roles(), summary.joinedAt());
+        return new MemberResponse(summary.userId(), summary.nickname(), summary.roles(), summary.joinedAt());
     }
 }

@@ -6,6 +6,7 @@ import com.pda.squad.domain.entity.SquadMembership;
 import com.pda.squad.infrastructure.repository.SquadMembershipRepository;
 import com.pda.squad.infrastructure.repository.SquadRepository;
 import com.pda.user.ProjectPermission;
+import com.pda.user.UserAccounts;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
@@ -29,12 +30,14 @@ public class SquadService {
     private final ProjectAccess projectAccess;
     private final SquadRepository squads;
     private final SquadMembershipRepository squadMembers;
+    private final UserAccounts users;
 
     public SquadService(ProjectAccess projectAccess, SquadRepository squads,
-                        SquadMembershipRepository squadMembers) {
+                        SquadMembershipRepository squadMembers, UserAccounts users) {
         this.projectAccess = projectAccess;
         this.squads = squads;
         this.squadMembers = squadMembers;
+        this.users = users;
     }
 
     @Transactional
@@ -72,15 +75,15 @@ public class SquadService {
     }
 
     @Transactional(readOnly = true)
-    public Page<SquadMembership> listMembers(UUID actorId, UUID projectId, UUID squadId, Pageable pageable) {
+    public Page<SquadMemberSummary> listMembers(UUID actorId, UUID projectId, UUID squadId, Pageable pageable) {
         requireMember(actorId, projectId);
         activeSquadIn(projectId, squadId);
-        return squadMembers.findBySquadId(squadId, pageable);
+        return squadMembers.findBySquadId(squadId, pageable).map(this::toSummary);
     }
 
     /** Only a currently active member of the project may be added; membership carries no role by itself. */
     @Transactional
-    public SquadMembership addMember(UUID actorId, UUID projectId, UUID squadId, UUID userId) {
+    public SquadMemberSummary addMember(UUID actorId, UUID projectId, UUID squadId, UUID userId) {
         requireSquadManager(actorId, projectId);
         activeSquadIn(projectId, squadId);
         Objects.requireNonNull(userId, "userId is required");
@@ -90,7 +93,14 @@ public class SquadService {
         if (squadMembers.existsBySquadIdAndUserId(squadId, userId)) {
             throw new SquadConflictException("User is already a squad member");
         }
-        return squadMembers.saveAndFlush(SquadMembership.add(squadId, userId, actorId));
+        return toSummary(squadMembers.saveAndFlush(SquadMembership.add(squadId, userId, actorId)));
+    }
+
+    private SquadMemberSummary toSummary(SquadMembership membership) {
+        String nickname = users.findActiveById(membership.getUserId())
+                .map(UserAccounts.AuthenticatedUser::nickname)
+                .orElse(null);
+        return SquadMemberSummary.from(membership, nickname);
     }
 
     @Transactional

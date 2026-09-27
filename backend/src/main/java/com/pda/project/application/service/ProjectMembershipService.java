@@ -51,7 +51,7 @@ public class ProjectMembershipService {
                     return existing;
                 })
                 .orElseGet(() -> ProjectMembership.active(projectId, userId, roles));
-        return MemberSummary.from(memberships.saveAndFlush(membership));
+        return toSummary(memberships.saveAndFlush(membership));
     }
 
     @Transactional(readOnly = true)
@@ -59,14 +59,14 @@ public class ProjectMembershipService {
         require(actorId, projectId, ProjectPermission.PROJECT_VIEW);
         activeProject(projectId);
         return memberships.findByProjectIdAndStatus(projectId, MembershipStatus.ACTIVE, pageable)
-                .map(MemberSummary::from);
+                .map(this::toSummary);
     }
 
     @Transactional(readOnly = true)
     public MemberSummary detail(UUID actorId, UUID projectId, UUID userId) {
         require(actorId, projectId, ProjectPermission.PROJECT_VIEW);
         activeProject(projectId);
-        return MemberSummary.from(activeMember(projectId, userId));
+        return toSummary(activeMember(projectId, userId));
     }
 
     /** PROJECT_MANAGER-only lookup for the "add member" flow; delegates to the User module's public search contract. */
@@ -82,7 +82,7 @@ public class ProjectMembershipService {
         lockForManager(actorId, projectId);
         ProjectMembership member = activeMember(projectId, userId);
         member.addRole(role);
-        return MemberSummary.from(memberships.saveAndFlush(member));
+        return toSummary(memberships.saveAndFlush(member));
     }
 
     @Transactional
@@ -96,7 +96,7 @@ public class ProjectMembershipService {
             requireAnotherManager(projectId);
         }
         member.replaceRoles(roles);
-        return MemberSummary.from(memberships.saveAndFlush(member));
+        return toSummary(memberships.saveAndFlush(member));
     }
 
     @Transactional
@@ -107,7 +107,7 @@ public class ProjectMembershipService {
             requireAnotherManager(projectId);
         }
         member.removeRole(role);
-        return MemberSummary.from(memberships.saveAndFlush(member));
+        return toSummary(memberships.saveAndFlush(member));
     }
 
     @Transactional
@@ -153,6 +153,13 @@ public class ProjectMembershipService {
 
     private void requireManager(UUID actorId, UUID projectId) {
         require(actorId, projectId, ProjectPermission.MEMBER_MANAGE);
+    }
+
+    private MemberSummary toSummary(ProjectMembership membership) {
+        String nickname = users.findActiveById(membership.getUserId())
+                .map(UserAccounts.AuthenticatedUser::nickname)
+                .orElse(null);
+        return MemberSummary.from(membership, nickname);
     }
 
     private ProjectMembership activeMember(UUID projectId, UUID userId) {
