@@ -10,7 +10,10 @@ import com.pda.user.UserAccounts;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpStatus;
@@ -18,6 +21,7 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -56,40 +60,50 @@ public class AuthOAuthController {
         return ResponseEntity.ok().header("Cache-Control", "no-store").body(body);
     }
 
-    @PostMapping("/google/link")
-    @Operation(summary = "Start connecting Google to my account",
+    @PostMapping("/{provider}/link")
+    @Operation(summary = "Start connecting a provider (google, github) to my account",
             description = "Requires a valid access cookie and CSRF. Returns the URL the browser must navigate to; "
                     + "the result comes back to the frontend as `oauth_link` in the query string.")
     @ApiResponse(responseCode = "200", description = "Authorization URL to navigate to")
-    @ApiResponse(responseCode = "404", description = "Google login is not configured")
-    public ResponseEntity<Object> startLink(HttpServletRequest request) {
-        if (registrations.getIfAvailable() == null) {
+    @ApiResponse(responseCode = "404", description = "Unknown provider or provider login is not configured")
+    public ResponseEntity<Object> startLink(@PathVariable String provider, HttpServletRequest request) {
+        ClientRegistrationRepository repository = registrations.getIfAvailable();
+        if (parse(provider).isEmpty() || repository == null || repository.findByRegistrationId(provider) == null) {
             return notFound();
         }
         UUID userId = identity(request).userId();
         request.getSession(true).setAttribute(LinkAwareAuthorizationRequestRepository.SESSION_LINK_USER,
                 userId.toString());
         String url = ServletUriComponentsBuilder.fromContextPath(request)
-                .path("/api/v1/auth/oauth2/authorization/google").queryParam("intent", "link")
+                .path("/api/v1/auth/oauth2/authorization/" + provider).queryParam("intent", "link")
                 .build().toUriString();
         return ResponseEntity.ok().header("Cache-Control", "no-store").body(new OAuthLinkStartResponse(url));
     }
 
-    @PostMapping("/google/unlink")
-    @Operation(summary = "Disconnect Google from my account",
-            description = "Requires a valid access cookie and CSRF. Refused when Google is the only way to sign in.")
-    @ApiResponse(responseCode = "200", description = "Google disconnected")
-    @ApiResponse(responseCode = "404", description = "Google is not connected")
-    @ApiResponse(responseCode = "409", description = "Google is the only login method of this account")
-    public ResponseEntity<Object> unlink(HttpServletRequest request) {
-        UserAccounts.UnlinkOutcome outcome = users.unlinkOAuth(identity(request).userId(), OAuthProvider.GOOGLE);
+    @PostMapping("/{provider}/unlink")
+    @Operation(summary = "Disconnect a provider (google, github) from my account",
+            description = "Requires a valid access cookie and CSRF. Refused when the provider is the only way to sign in.")
+    @ApiResponse(responseCode = "200", description = "Provider disconnected")
+    @ApiResponse(responseCode = "404", description = "Unknown provider or not connected")
+    @ApiResponse(responseCode = "409", description = "The provider is the only login method of this account")
+    public ResponseEntity<Object> unlink(@PathVariable String provider, HttpServletRequest request) {
+        Optional<OAuthProvider> parsed = parse(provider);
+        if (parsed.isEmpty()) {
+            return notFound();
+        }
+        UserAccounts.UnlinkOutcome outcome = users.unlinkOAuth(identity(request).userId(), parsed.get());
         return switch (outcome) {
             case UNLINKED -> ResponseEntity.ok().header("Cache-Control", "no-store").build();
             case NOT_LINKED -> notFound();
             case LAST_LOGIN_METHOD -> ResponseEntity.status(HttpStatus.CONFLICT).header("Cache-Control", "no-store")
                     .body(ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,
-                            "Google is the only login method of this account"));
+                            "This provider is the only login method of this account"));
         };
+    }
+
+    private static Optional<OAuthProvider> parse(String provider) {
+        return Arrays.stream(OAuthProvider.values())
+                .filter(candidate -> candidate.name().toLowerCase(Locale.ROOT).equals(provider)).findFirst();
     }
 
     private static ResponseEntity<Object> notFound() {

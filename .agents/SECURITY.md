@@ -276,6 +276,19 @@ Google login is optional: with `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` empty t
 
 Rules: no automatic account merge (an existing email returns `account_exists`); provider tokens are never stored or logged; new accounts need a verified provider email; the provider-side HTTP session is invalidated after the callback and PDA issues its own cookies; redirects go only to `FRONTEND_URL`.
 
+### Auth Faz 6 endpoints (GitHub OAuth login and account linking)
+
+GitHub uses the same model and the same handlers as Google. It is optional: with `GITHUB_CLIENT_ID`/`GITHUB_CLIENT_SECRET` empty its two redirect routes are not registered (`403`) and link start returns `404`; setting only one variable stops startup. Register an OAuth App at GitHub with the callback URL `http://localhost:8080/api/v1/auth/oauth2/callback/github`. Scopes: `read:user`, `user:email`. GitHub is plain OAuth2 (no ID token) and its profile email is optional and unverified, so after the token exchange the backend calls `GET https://api.github.com/user/emails` once and accepts only the primary, verified address; otherwise login is rejected with `email_not_verified`. The token is never stored or logged. Login start is `http://localhost:8080/api/v1/auth/oauth2/authorization/github` in the browser.
+
+| Endpoint | Auth / scope | Input | Success | Important errors |
+| --- | --- | --- | --- | --- |
+| `GET /api/v1/auth/oauth2/authorization/github` | Public (only when GitHub is configured) | Optional `intent=link` (honoured only after `POST .../github/link` in the same HTTP session) | `302` to `github.com` with `state`, PKCE `code_challenge` | `403` disabled or unknown provider, `429` |
+| `GET /api/v1/auth/oauth2/callback/github` | Public, called by GitHub; needs the state-bound HTTP session | `code`, `state` | `302` to `FRONTEND_URL/` with PDA cookies, or `/?oauth_link=<code>` | `302` to `/login?oauth_error=` `email_not_verified`, `account_exists`, `access_denied`, `provider_error`; `429` |
+| `POST /api/v1/auth/oauth/{provider}/link` (`google` or `github`) | Access cookie + CSRF | No body | `200`, `{authorizationUrl}` | `401`, `403` CSRF, `404` unknown or unconfigured provider |
+| `POST /api/v1/auth/oauth/{provider}/unlink` (`google` or `github`) | Access cookie + CSRF | No body | `200` | `401`, `403` CSRF, `404` unknown or not linked, `409` last login method |
+
+Link result codes on `/?oauth_link=`: `linked`, `already_linked`, `linked_to_another_account`, `provider_already_linked`, `account_unavailable`. `GET /api/v1/auth/oauth/identities` lists both providers.
+
 ---
 
 ## 12. Error Handling
