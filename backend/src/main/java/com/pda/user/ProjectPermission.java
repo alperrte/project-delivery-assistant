@@ -14,6 +14,8 @@ public enum ProjectPermission {
     SQUAD_MANAGE,
     /** Create, edit, delete, reorder and complete/uncomplete a project's success criteria. */
     CRITERIA_MANAGE,
+    /** Connect, update or disconnect a project's public GitHub repository link. */
+    REPOSITORY_MANAGE,
     /** Create, edit, assign, schedule, prioritise, move, block and close tasks; attach existing labels. */
     TASK_MANAGE,
     /** Create and change labels and milestones themselves. */
