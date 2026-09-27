@@ -1,0 +1,99 @@
+{
+  "common": {
+    "appName": "Project Delivery Assistant",
+    "loading": "Yükleniyor",
+    "theme": {
+      "label": "Tema",
+      "light": "Açık",
+      "dark": "Koyu",
+      "system": "Sistem"
+    },
+    "language": {
+      "label": "Dil",
+      "tr": "Türkçe",
+      "en": "English",
+      "de": "Deutsch"
+    }
+  },
+  "errors": {
+    "network": "Sunucuya ulaşılamadı. Bağlantınızı kontrol edip tekrar deneyin.",
+    "generic": "Bir şeyler ters gitti. Lütfen tekrar deneyin.",
+    "tooManyRequests": "Çok fazla deneme yaptınız. Biraz bekleyip tekrar deneyin.",
+    "invalidCredentials": "E-posta veya şifre hatalı.",
+    "conflict": "Bu e-posta veya kullanıcı adı zaten kullanılıyor.",
+    "invalidFields": "Girdiğiniz bilgileri kontrol edin.",
+    "passwordMismatch": "Şifreler eşleşmiyor.",
+    "forbidden": "Bu işlem için yetkiniz yok."
+  },
+  "oauth": {
+    "google": "Google ile devam et",
+    "github": "GitHub ile devam et",
+    "divider": "veya e-posta ile",
+    "errors": {
+      "access_denied": "Giriş izni verilmedi.",
+      "email_not_verified": "Sağlayıcıdaki e-posta adresiniz doğrulanmamış.",
+      "account_exists": "Bu e-posta ile zaten bir hesap var. E-posta ve şifrenizle giriş yapın, sonra hesap ayarlarından bağlayın.",
+      "provider_error": "Sağlayıcı ile giriş tamamlanamadı. Lütfen tekrar deneyin.",
+      "unknown": "Giriş tamamlanamadı. Lütfen tekrar deneyin."
+    }
+  },
+  "login": {
+    "title": "Tekrar hoş geldiniz",
+    "subtitle": "Hesabınıza giriş yapın.",
+    "email": "E-posta",
+    "password": "Şifre",
+    "showPassword": "Şifreyi göster",
+    "hidePassword": "Şifreyi gizle",
+    "submit": "Giriş yap",
+    "submitting": "Giriş yapılıyor",
+    "noAccount": "Hesabınız yok mu?",
+    "toRegister": "Kayıt olun",
+    "emailPlaceholder": "ornek@sirket.com",
+    "passwordPlaceholder": "Şifrenizi girin"
+  },
+  "register": {
+    "title": "Hesap oluşturun",
+    "subtitle": "Birkaç bilgiyle başlayın.",
+    "email": "E-posta",
+    "nickname": "Kullanıcı adı",
+    "nicknameHint": "3-32 karakter: harf, rakam veya alt çizgi.",
+    "password": "Şifre",
+    "passwordHint": "En az 8 karakter.",
+    "confirmPassword": "Şifre tekrarı",
+    "submit": "Kayıt ol",
+    "submitting": "Kaydediliyor",
+    "success": "Hesabınız oluşturuldu. Şimdi giriş yapabilirsiniz.",
+    "haveAccount": "Zaten hesabınız var mı?",
+    "toLogin": "Giriş yapın",
+    "emailPlaceholder": "ornek@sirket.com",
+    "nicknamePlaceholder": "kullanici_adi",
+    "passwordPlaceholder": "Şifrenizi oluşturun",
+    "confirmPasswordPlaceholder": "Şifrenizi tekrar girin"
+  },
+  "validation": {
+    "required": "Bu alan zorunlu.",
+    "email": "Geçerli bir e-posta girin.",
+    "nickname": "3-32 karakter; yalnız harf, rakam ve alt çizgi.",
+    "passwordMin": "Şifre en az 8 karakter olmalı.",
+    "passwordMax": "Şifre en fazla 128 karakter olabilir.",
+    "passwordMatch": "Şifreler eşleşmiyor."
+  },
+  "story": {
+    "welcome": "PDA'ya hoş geldiniz",
+    "intro": "Project Delivery Assistant, ekibinizin projeleri baştan sona teslim etmesine yardım eder.",
+    "scenes": {
+      "track": {
+        "title": "Teslimat tek yerde",
+        "body": "Projeleri, görevleri ve ilerlemeyi ekibinizle aynı ekranda takip edin."
+      },
+      "roles": {
+        "title": "Doğru kişi, doğru yetki",
+        "body": "Roller sayesinde kimin neyi görüp değiştirebileceği net kalır."
+      },
+      "secure": {
+        "title": "Güvenle teslim edin",
+        "body": "Oturumlarınız korunur ve hesabınız her zaman sizin kontrolünüzde kalır."
+      }
+    }
+  }
+}
