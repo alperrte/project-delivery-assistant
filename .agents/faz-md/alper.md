@@ -829,6 +829,8 @@ Auth modülü Project repository/entity'sine doğrudan erişmez.
 
 ## FAZ 8 — Admin Backend
 
+**Durum (27 Eylül 2026):** Backend tamamlandı, testli (107 test). Kayıt: `docs/compliation/2026-09-27-auth-faz-8.md`.
+
 ### ALP-AUTH-24 — Admin bootstrap
 
 - ADMIN_EMAIL

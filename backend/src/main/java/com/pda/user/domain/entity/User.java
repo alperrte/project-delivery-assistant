@@ -63,6 +63,9 @@ public class User {
     @Column(name = "email_verified_at")
     private Instant emailVerifiedAt;
 
+    @Column(name = "must_change_password", nullable = false)
+    private boolean mustChangePassword;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -108,6 +111,26 @@ public class User {
         return user;
     }
 
+    /** Platform administrator created from the operator-provided bootstrap credentials; must rotate the password. */
+    public static User bootstrapAdmin(String email, String nickname, String rawPassword,
+                                      BCryptPasswordEncoder passwordEncoder) {
+        User user = registerLocalActive(email, nickname, rawPassword, passwordEncoder);
+        user.emailVerificationStatus = EmailVerificationStatus.VERIFIED;
+        user.emailVerifiedAt = Instant.now();
+        user.globalRole = GlobalRole.ADMIN;
+        user.mustChangePassword = true;
+        return user;
+    }
+
+    /** Replaces the password hash and ends any pending forced change. */
+    public void changePassword(String rawPassword, BCryptPasswordEncoder passwordEncoder) {
+        if (rawPassword == null || rawPassword.isBlank()) {
+            throw new IllegalArgumentException("Password is required");
+        }
+        passwordHash = passwordEncoder.encode(rawPassword);
+        mustChangePassword = false;
+    }
+
     public boolean hasPassword() {
         return passwordHash != null;
     }
@@ -129,6 +152,13 @@ public class User {
         accountStatus = AccountStatus.DISABLED;
     }
 
+    /** Re-enables a disabled account; other statuses are unchanged. */
+    public void enable() {
+        if (accountStatus == AccountStatus.DISABLED) {
+            accountStatus = AccountStatus.ACTIVE;
+        }
+    }
+
     @PrePersist
     void onCreate() {
         Instant now = Instant.now();
@@ -148,6 +178,7 @@ public class User {
     public EmailVerificationStatus getEmailVerificationStatus() { return emailVerificationStatus; }
     public GlobalRole getGlobalRole() { return globalRole; }
     public Instant getEmailVerifiedAt() { return emailVerifiedAt; }
+    public boolean isMustChangePassword() { return mustChangePassword; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
 }

@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -23,6 +25,10 @@ public interface ProjectMembershipRepository extends JpaRepository<ProjectMember
 
     Page<ProjectMembership> findByProjectIdAndStatus(UUID projectId, MembershipStatus status,
                                                      Pageable pageable);
+
+    @Query("select m.projectId, count(m) from ProjectMembership m where m.projectId in :projectIds "
+            + "and m.status = com.pda.project.domain.enums.MembershipStatus.ACTIVE group by m.projectId")
+    List<Object[]> countActiveByProjectIds(@Param("projectIds") Collection<UUID> projectIds);
 
     @Query("select count(m) from ProjectMembership m join m.roles role where m.projectId = :projectId "
             + "and m.status = :status and role = :role")

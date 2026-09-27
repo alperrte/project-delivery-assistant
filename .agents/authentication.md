@@ -45,6 +45,8 @@ Tarayıcı ile backend farklı origin'lerdeyse izinli origin'leri açıkça tan�
 
 ## Admin bootstrap
 
+**Durum: Faz 8'de uygulandı.** `AdminBootstrapRunner` (admin modülü) startup'ta çalışır; `ADMIN_EMAIL` geçersizse veya `ADMIN_INITIAL_PASSWORD` 12 karakterden kısaysa (`.env.example` yer tutucusu `change_me` dahil) uyarı loglayıp atlar, e-posta/şifre asla loglanmaz. Aynı e-postaya sahip mevcut ADMIN olmayan hesap terfi ettirilmez veya değiştirilmez. Hesap ACTIVE + e-posta VERIFIED oluşur ve `must_change_password=true` taşır. Bu bayrak açıkken `JwtCookieAuthenticationFilter` yalnız `/api/v1/auth/{me,password/change,logout,refresh,csrf}` yollarına izin verir; diğerleri `403` + `code: password_change_required` döner. `POST /api/v1/auth/password/change` bayrağı kaldırır ve diğer oturumları iptal eder.
+
 İlk startup'ta yönetici yoksa `ADMIN_EMAIL` ve `ADMIN_INITIAL_PASSWORD` ile global `ADMIN` hesabı oluşturulur. Başlangıç şifresi BCrypt ile hashlenir. Yönetici zaten varsa restart bu hesabı yeniden oluşturmaz veya şifreyi değiştirmez. İlk login'de şifre değişimi zorunludur; sonrasında bootstrap şifresi hesap üzerinde yetki sağlamaz. Secret'ları Git'e koymayın.
 
 ## Güvenlik kontrolleri ve testler
