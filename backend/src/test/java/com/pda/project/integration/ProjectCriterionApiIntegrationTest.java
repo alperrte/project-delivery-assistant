@@ -160,6 +160,56 @@ class ProjectCriterionApiIntegrationTest {
                         .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
                         .contentType(MediaType.APPLICATION_JSON).content("{\"title\":\"Cross project\"}"))
                 .andExpect(status().isNotFound());
+
+        // An authenticated user who is not a member of this project (not just "no cookie at all") is denied too.
+        Account outsider = account("critoutsider2");
+        mvc.perform(get("/api/v1/projects/" + projectId + "/criteria").cookie(outsider.access()))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/api/v1/projects/" + projectId + "/criteria")
+                        .cookie(csrf, outsider.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"title\":\"Not my project\"}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void everyContributorRoleIsDeniedEveryCriteriaMutation() throws Exception {
+        Cookie csrf = csrfCookie();
+        Account manager = account("critmanager3");
+        UUID projectId = createProject(manager, csrf, "Criteria role matrix project");
+
+        var created = mvc.perform(post("/api/v1/projects/" + projectId + "/criteria")
+                        .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"title\":\"Matrix criterion\"}"))
+                .andExpect(status().isCreated()).andReturn().getResponse();
+        UUID criterionId = UUID.fromString(JsonPath.read(created.getContentAsString(), "$.id"));
+
+        for (ProjectRole role : ProjectRole.values()) {
+            if (role == ProjectRole.PROJECT_MANAGER) {
+                continue;
+            }
+            Account holder = account("critrole" + role.name().toLowerCase());
+            memberships.addMember(manager.id(), projectId, holder.id(), Set.of(role));
+
+            mvc.perform(post("/api/v1/projects/" + projectId + "/criteria")
+                            .cookie(csrf, holder.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                            .contentType(MediaType.APPLICATION_JSON).content("{\"title\":\"Denied\"}"))
+                    .andExpect(status().isForbidden());
+            mvc.perform(put("/api/v1/projects/" + projectId + "/criteria/" + criterionId)
+                            .cookie(csrf, holder.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                            .contentType(MediaType.APPLICATION_JSON).content("{\"title\":\"Denied\"}"))
+                    .andExpect(status().isForbidden());
+            mvc.perform(post("/api/v1/projects/" + projectId + "/criteria/" + criterionId + "/complete")
+                            .cookie(csrf, holder.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                    .andExpect(status().isForbidden());
+            mvc.perform(post("/api/v1/projects/" + projectId + "/criteria/reorder")
+                            .cookie(csrf, holder.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"orderedCriterionIds\":[\"" + criterionId + "\"]}"))
+                    .andExpect(status().isForbidden());
+            mvc.perform(delete("/api/v1/projects/" + projectId + "/criteria/" + criterionId)
+                            .cookie(csrf, holder.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                    .andExpect(status().isForbidden());
+        }
     }
 
     private UUID createProject(Account actor, Cookie csrf, String name) throws Exception {

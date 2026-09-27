@@ -172,6 +172,44 @@ class SquadApiIntegrationTest {
                 .andExpect(status().isNotFound());
     }
 
+    @Test
+    void everyContributorRoleIsDeniedEverySquadMutation() throws Exception {
+        Cookie csrf = csrfCookie();
+        Account manager = account("sqhttpmanager3");
+        UUID projectId = createProject(manager, csrf, "Squad role matrix project");
+
+        var created = mvc.perform(post("/api/v1/projects/" + projectId + "/squads")
+                        .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Matrix Squad\"}"))
+                .andExpect(status().isCreated()).andReturn().getResponse();
+        UUID squadId = UUID.fromString(JsonPath.read(created.getContentAsString(), "$.id"));
+
+        for (ProjectRole role : ProjectRole.values()) {
+            if (role == ProjectRole.PROJECT_MANAGER) {
+                continue;
+            }
+            Account holder = account("sqrole" + role.name().toLowerCase());
+            memberships.addMember(manager.id(), projectId, holder.id(), Set.of(role));
+
+            mvc.perform(post("/api/v1/projects/" + projectId + "/squads")
+                            .cookie(csrf, holder.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                            .contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Denied Squad\"}"))
+                    .andExpect(status().isForbidden());
+            mvc.perform(put("/api/v1/projects/" + projectId + "/squads/" + squadId)
+                            .cookie(csrf, holder.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                            .contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Denied Rename\"}"))
+                    .andExpect(status().isForbidden());
+            mvc.perform(post("/api/v1/projects/" + projectId + "/squads/" + squadId + "/members")
+                            .cookie(csrf, holder.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"userId\":\"" + holder.id() + "\"}"))
+                    .andExpect(status().isForbidden());
+            mvc.perform(post("/api/v1/projects/" + projectId + "/squads/" + squadId + "/archive")
+                            .cookie(csrf, holder.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                    .andExpect(status().isForbidden());
+        }
+    }
+
     private UUID createProject(Account actor, Cookie csrf, String name) throws Exception {
         var response = mvc.perform(post("/api/v1/projects").cookie(csrf, actor.access())
                         .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)

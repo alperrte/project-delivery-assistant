@@ -339,6 +339,10 @@ Swagger check path: `/swagger-ui/index.html` with `API_DOCS_ENABLED=true`: `GET 
 
 Rules: the bootstrapped admin is blocked (`403 password_change_required`) everywhere except `me`, `password/change`, `logout`, `refresh`, `csrf` until the password is changed; the initial password gives no authority afterwards. An administrator cannot disable self or the last active administrator (row lock prevents two admins disabling each other). Disabling revokes every session. The project overview is aggregate metadata, not an access path: an admin who is not a member still gets `403` on project endpoints. Admin actions are logged with actor/target ids only.
 
+### HMZ-PROJ Faz 10 (authorization/security hardening; one new mechanism, no new endpoint)
+
+No new endpoint, ENV key, dependency or migration. `POST /api/v1/projects/{projectId}/invitations`, `.../invitations/{id}/resend`, `.../accept`, `.../reject` are now rate-limited: 10 requests per 10 minutes per IP per exact path (`ProjectInvitationRateLimitFilter`, same sliding-window pattern as `AuthRateLimitFilter`, registered in `SecurityBaselineConfiguration`). A comprehensive authorization-matrix and `ProblemDetail`-shape test pass was added across Project/Membership/Invitation/Criterion/Repository/Squad controllers; no behavior changed, only test coverage.
+
 ### HMZ-PROJ Faz 7 endpoints (Project Home aggregate)
 
 New read-only aggregate endpoint; no new ENV key, dependency or migration. Composes only data that already has a safe source inside the Project module (own entities/repositories, `OrganizationService.requireActive`) — never reaches into another module's internals. A GitHub failure on the repository card never fails the whole response; it surfaces as `repository.githubUnavailable: true` instead. Task counts and recent activity are intentionally absent (Work Service and Activity modules expose no public contract yet); squad count is intentionally absent (Squad already depends on Project via `ProjectAccess`, so the reverse direction would create a module cycle — callers get the squad count from the existing squad list endpoint's pagination total instead).

@@ -455,6 +455,48 @@ class ProjectApiIntegrationTest {
         }
     }
 
+    @Test
+    void everyContributorRoleIsDeniedMemberManagementAndMutationIsScopedToItsOwnProject() throws Exception {
+        Cookie csrf = csrfCookie();
+        Account manager = account("memmanager");
+        Account target = account("memtarget");
+        UUID projectId = createProject(manager, csrf, "Member role matrix project");
+        UUID otherProjectId = createProject(manager, csrf, "Other member project");
+        memberships.addMember(manager.id(), projectId, target.id(), Set.of(ProjectRole.TESTER));
+
+        for (ProjectRole role : ProjectRole.values()) {
+            if (role == ProjectRole.PROJECT_MANAGER) {
+                continue;
+            }
+            Account holder = account("memrole" + role.name().toLowerCase());
+            memberships.addMember(manager.id(), projectId, holder.id(), Set.of(role));
+
+            mvc.perform(post("/api/v1/projects/" + projectId + "/members/" + target.id() + "/roles")
+                            .cookie(csrf, holder.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                            .contentType(MediaType.APPLICATION_JSON).content("{\"role\":\"ANALYST\"}"))
+                    .andExpect(status().isForbidden());
+            mvc.perform(put("/api/v1/projects/" + projectId + "/members/" + target.id() + "/roles")
+                            .cookie(csrf, holder.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                            .contentType(MediaType.APPLICATION_JSON).content("{\"roles\":[\"ANALYST\"]}"))
+                    .andExpect(status().isForbidden());
+            mvc.perform(delete("/api/v1/projects/" + projectId + "/members/" + target.id())
+                            .cookie(csrf, holder.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                    .andExpect(status().isForbidden());
+            mvc.perform(get("/api/v1/projects/" + projectId + "/members/search?query=me")
+                            .cookie(holder.access()))
+                    .andExpect(status().isForbidden());
+        }
+
+        // Manager of project A is not a manager of project B: mutation is rejected, not just misrouted.
+        mvc.perform(post("/api/v1/projects/" + otherProjectId + "/members/" + target.id() + "/roles")
+                        .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"role\":\"ANALYST\"}"))
+                .andExpect(status().isNotFound());
+        mvc.perform(delete("/api/v1/projects/" + otherProjectId + "/members/" + target.id())
+                        .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isNotFound());
+    }
+
     private UUID createProject(Account actor, Cookie csrf, String name) throws Exception {
         var response = mvc.perform(post("/api/v1/projects").cookie(csrf, actor.access())
                         .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
