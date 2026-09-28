@@ -89,9 +89,11 @@
   --auth-link-hover: #075c83;
   --auth-accent-from: #09a8cf;
   --auth-accent-to: #1b74d6;
-  --auth-charge: #0aa3d4;
-  --auth-charge-glow: rgb(20 190 240 / 0.55);
-  --auth-spark: #0fc6f2;
+  /* Glossy sheen band: deep cyan edges around a brighter cyan core. Not
+     white: on the light sky a white core made the letters disappear. */
+  --auth-sheen: rgb(8 160 215 / 0.9);
+  --auth-sheen-core: rgb(55 200 245 / 0.95);
+  --auth-sheen-glow: rgb(20 180 235 / 0.45);
   /* Frosted like the dark card: the scene shows through, blurred. */
   --auth-card: rgb(255 255 255 / 0.52);
   --auth-card-edge: rgb(255 255 255 / 0.8);
@@ -140,9 +142,11 @@
   --auth-link-hover: #8fe5f9;
   --auth-accent-from: #3fd7f5;
   --auth-accent-to: #2aa6f0;
-  --auth-charge: #7fe9ff;
-  --auth-charge-glow: rgb(63 215 245 / 0.75);
-  --auth-spark: #e6fdff;
+  /* On white letters a light band vanishes, so dark uses saturated cyan
+     with a stronger halo; cyan stays readable on the dark scene. */
+  --auth-sheen: rgb(34 190 240 / 0.9);
+  --auth-sheen-core: rgb(120 230 255 / 0.9);
+  --auth-sheen-glow: rgb(47 208 245 / 0.75);
   --auth-card: rgb(13 18 25 / 0.72);
   --auth-card-edge: rgb(186 198 212 / 0.22);
   --auth-card-ring: rgb(0 0 0 / 0.4);
@@ -199,85 +203,52 @@
  */
 
 /*
- * Slogan: ink text with an electric current (login-hero.tsx splits it into
- * one span per letter, index --i, count --n on the h1). Every cycle:
- * - a spark runs once around each letter's outline, starting at the first
- *   letter and handing over to the next every --slogan-step; the spark is a
- *   stroke-only copy of the letter (::after), masked to a comet by a conic
- *   gradient turning around the letter's centre, and flickering;
- * - each letter turns cyan as its spark passes, then settles back to ink;
- * - once the last letter is done, the whole line flashes (color + glow, with
- *   a flicker), then everything rests until the cycle comes round again.
- * All three share one cycle length, so they never drift apart.
+ * Slogan: ink text with a glossy sheen, like light gliding over a shiny
+ * sticker. A copy of the text (::after, from data-text, left out of the
+ * accessible name) is painted only where a slanted light band is; the band
+ * sweeps from left to right, a thin second glint trailing it, then rests
+ * until the next pass.
  */
-@property --spark {
-  syntax: "<angle>";
-  inherits: false;
-  initial-value: 0deg;
-}
 .auth-slogan {
-  --slogan-cycle: 7s;
-  --slogan-start: 1.6s;
-  --slogan-step: 80ms;
-  color: var(--auth-ink);
-  animation: slogan-flash var(--slogan-cycle) linear
-    calc(var(--slogan-start) + var(--n) * var(--slogan-step) + 0.45s) infinite;
-}
-.slogan-ch {
   position: relative;
-  animation: slogan-charge var(--slogan-cycle) linear
-    calc(var(--slogan-start) + var(--i) * var(--slogan-step)) infinite;
+  color: var(--auth-ink);
 }
-.slogan-ch::after {
-  content: attr(data-ch) / "";
+.auth-slogan::after {
+  content: attr(data-text) / "";
   position: absolute;
-  left: 0;
-  top: 0;
-  line-height: normal;
+  inset: 0;
   pointer-events: none;
   color: transparent;
-  -webkit-text-stroke: 0.045em var(--auth-spark);
-  text-shadow: none;
-  filter: drop-shadow(0 0 0.12em var(--glow));
-  mask-image: conic-gradient(
-    from var(--spark) at 50% 58%,
-    transparent 0deg 190deg,
-    rgb(0 0 0 / 0.35) 290deg,
-    #000 345deg 358deg,
-    transparent 360deg
+  -webkit-text-fill-color: transparent;
+  background-image: linear-gradient(
+    135deg,
+    transparent 44%,
+    var(--auth-sheen) 46.2%,
+    var(--auth-sheen-core) 48%,
+    var(--auth-sheen) 49.8%,
+    transparent 52%,
+    transparent 53.2%,
+    var(--auth-sheen) 53.9%,
+    transparent 54.6%
   );
-  opacity: 0;
-  animation: slogan-spark var(--slogan-cycle) linear
-    calc(var(--slogan-start) + var(--i) * var(--slogan-step)) infinite;
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  background-position: 125% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  filter: drop-shadow(0 0 0.14em var(--auth-sheen-glow));
+  animation: slogan-sheen 8s cubic-bezier(0.3, 0, 0.7, 1) 1.6s infinite;
 }
-/* One turn in ~0.6s (9% of 7s), flickering like a spark. */
-@keyframes slogan-spark {
-  0% { --spark: 0deg; opacity: 0; }
-  0.5% { opacity: 1; }
-  2.5% { opacity: 0.45; }
-  3.5% { opacity: 1; }
-  6% { opacity: 0.6; }
-  7% { opacity: 1; }
-  9% { --spark: 400deg; opacity: 1; }
-  10.5%, 100% { --spark: 400deg; opacity: 0; }
-}
-/* Outside this short blink the letter follows the h1's colour (inherit), so
-   the closing flash reaches every letter. */
-@keyframes slogan-charge {
-  1.5% { color: var(--auth-charge); }
-  6% { color: inherit; }
-}
-@keyframes slogan-flash {
-  0% { color: var(--auth-ink); text-shadow: 0 0 0 transparent, 0 0 0 transparent; }
-  1.5% { color: var(--auth-charge); text-shadow: 0 0 0.12em var(--auth-charge-glow), 0 0 0.5em var(--auth-charge-glow); }
-  2.5% { color: var(--auth-ink); text-shadow: 0 0 0 transparent, 0 0 0 transparent; }
-  3.5%, 12% { color: var(--auth-charge); text-shadow: 0 0 0.12em var(--auth-charge-glow), 0 0 0.6em var(--auth-charge-glow); }
-  22%, 100% { color: var(--auth-ink); text-shadow: 0 0 0 transparent, 0 0 0 transparent; }
+/* One unhurried pass in 4.2s (about 2.3s of it over the text), then the band
+   waits past the right edge. The band is slanted at 45°, so the positions
+   overshoot 0-100% far enough for it to start and end outside the text. */
+@keyframes slogan-sheen {
+  0% { background-position: 125% 0; }
+  52.5%, 100% { background-position: -25% 0; }
 }
 @media (forced-colors: active) {
-  .auth-slogan,
-  .slogan-ch { animation: none; color: CanvasText; }
-  .slogan-ch::after { display: none; }
+  .auth-slogan { color: CanvasText; }
+  .auth-slogan::after { display: none; }
 }
 
 /*
@@ -351,9 +322,7 @@
   animation: auth-drop-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.95s backwards;
 }
 [data-entrance="initial"] .auth-slogan {
-  animation:
-    slogan-reveal 1s cubic-bezier(0.22, 1, 0.36, 1) 0.45s backwards,
-    slogan-flash var(--slogan-cycle) linear calc(var(--slogan-start) + var(--n) * var(--slogan-step) + 0.45s) infinite;
+  animation: slogan-reveal 1s cubic-bezier(0.22, 1, 0.36, 1) 0.45s backwards;
 }
 [data-entrance="initial"] .auth-subtitle {
   animation: auth-rise 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.7s backwards;
@@ -447,9 +416,7 @@ html.theme-reveal::view-transition-new(root) {
     transition-duration: 0.01ms !important;
   }
   /* Ambient loops simply stay at rest. */
-  .auth-slogan,
-  .slogan-ch,
-  .slogan-ch::after,
+  .auth-slogan::after,
   .auth-neon-band {
     animation: none !important;
   }
