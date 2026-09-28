@@ -16,17 +16,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
-type ViewTransitionDocument = Document & {
-  startViewTransition?: (callback: () => void) => unknown;
-};
+import { playThemeTransition } from "./theme-transition";
 
 const subscribe = () => () => {};
 const OPTIONS = ["system", "light", "dark"] as const;
 
 /**
  * Theme state that is safe to render: the stored value only shows after
- * mount, so server and client markup match. `selectTheme` crossfades through
- * a view transition where supported instead of snapping.
+ * mount, so server and client markup match. When the visible scheme actually
+ * changes, `selectTheme` plays the sun/moon transition (theme-transition.tsx)
+ * where view transitions are supported, and snaps otherwise or under reduced
+ * motion.
  */
 export function useThemeSelection() {
   const { theme, resolvedTheme, setTheme } = useTheme();
@@ -34,12 +34,16 @@ export function useThemeSelection() {
   const reduce = useReducedMotion();
 
   function selectTheme(next: string) {
-    const doc = document as ViewTransitionDocument;
-    if (reduce || typeof doc.startViewTransition !== "function") {
-      setTheme(next);
-      return;
-    }
-    doc.startViewTransition(() => flushSync(() => setTheme(next)));
+    const from = resolvedTheme === "dark" ? "dark" : "light";
+    const to =
+      next === "system" ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : next;
+    const animated =
+      !reduce &&
+      from !== to &&
+      (to === "light" || to === "dark") &&
+      "startViewTransition" in document &&
+      playThemeTransition(from, to, () => flushSync(() => setTheme(next)));
+    if (!animated) setTheme(next);
   }
 
   return {

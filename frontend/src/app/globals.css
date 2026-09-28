@@ -89,13 +89,14 @@
   --auth-link-hover: #075c83;
   --auth-accent-from: #09a8cf;
   --auth-accent-to: #1b74d6;
-  --auth-card: rgb(255 255 255 / 0.8);
-  --auth-card-edge: rgb(255 255 255 / 0.95);
+  /* Frosted like the dark card: the scene shows through, blurred. */
+  --auth-card: rgb(255 255 255 / 0.52);
+  --auth-card-edge: rgb(255 255 255 / 0.8);
   --auth-card-ring: rgb(15 23 42 / 0.07);
   --auth-card-shadow: 0 30px 60px -28px rgb(30 41 59 / 0.28), 0 2px 6px -2px rgb(30 41 59 / 0.08);
-  --auth-field: #ffffff;
-  --auth-field-border: #d6dde6;
-  --auth-control: rgb(255 255 255 / 0.78);
+  --auth-field: rgb(255 255 255 / 0.62);
+  --auth-field-border: rgb(15 23 42 / 0.14);
+  --auth-control: rgb(255 255 255 / 0.6);
   --auth-control-border: rgb(15 23 42 / 0.08);
   --auth-cta: #141b25;
   --auth-cta-top: #2a3441;
@@ -186,6 +187,151 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+/*
+ * Auth screens: motion. Entrances fill backwards only, so once they finish
+ * nothing is left animated (no lingering filter or transform on the page).
+ */
+
+/* Slogan: ink text; a cyan highlight crosses it left to right, then rests. */
+.auth-slogan {
+  color: transparent;
+  background-image: linear-gradient(
+    100deg,
+    var(--auth-ink) 0 40%,
+    var(--auth-accent-from) 46%,
+    var(--auth-accent-to) 50%,
+    var(--auth-accent-from) 54%,
+    var(--auth-ink) 60% 100%
+  );
+  background-size: 250% 100%;
+  background-position: 100% 0;
+  background-clip: text;
+  -webkit-background-clip: text;
+  animation: slogan-sweep 6.5s cubic-bezier(0.45, 0, 0.25, 1) 1.8s infinite;
+}
+@keyframes slogan-sweep {
+  0% { background-position: 100% 0; }
+  50%, 100% { background-position: 0% 0; }
+}
+@media (forced-colors: active) {
+  .auth-slogan { color: CanvasText; background: none; }
+}
+
+/* Logo: its blue glows (a filtered copy of the file, see logo.tsx) breathe. */
+.logo-glow {
+  opacity: 0.25;
+  animation: logo-glow 4.2s ease-in-out 1.2s infinite;
+}
+.dark .logo-glow {
+  mix-blend-mode: plus-lighter;
+}
+@keyframes logo-glow {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 1; }
+}
+
+/*
+ * Scene: a light runs along the neon strips. Inside an isolated group the
+ * filtered strips (on black) are multiplied by a wide black band with one soft
+ * white stripe, so they only light up where the stripe is; the group is
+ * screened onto the photo, where black changes nothing. Only the band's
+ * transform animates. The stripe sits at 50% of the 300%-wide band, so
+ * translateX -60% .. -6.7% carries it from 30% left of the screen to 30% past
+ * its right edge.
+ */
+.auth-neon {
+  position: absolute;
+  inset: 0;
+  isolation: isolate;
+  mix-blend-mode: screen;
+  background: #000;
+}
+.auth-neon-band {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 300%;
+  background: linear-gradient(100deg, #000 44%, #3a4247 47.5%, #fff 50%, #3a4247 52.5%, #000 56%);
+  mix-blend-mode: multiply;
+  transform: translateX(-60%);
+  animation: neon-sweep 9s cubic-bezier(0.45, 0, 0.3, 1) 2.2s infinite;
+}
+@keyframes neon-sweep {
+  0% { transform: translateX(-60%); }
+  48%, 100% { transform: translateX(-6.7%); }
+}
+
+/* First visit: scene, logo, headline, card and corner controls in turn. */
+.auth-enter-scene {
+  animation: auth-scene-in 1.6s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.auth-enter-logo {
+  animation: auth-logo-in 1.1s cubic-bezier(0.22, 1, 0.36, 1) 0.15s backwards;
+}
+.auth-enter-controls {
+  animation: auth-drop-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.95s backwards;
+}
+[data-entrance="initial"] .auth-slogan {
+  animation:
+    slogan-reveal 1s cubic-bezier(0.22, 1, 0.36, 1) 0.45s backwards,
+    slogan-sweep 6.5s cubic-bezier(0.45, 0, 0.25, 1) 1.8s infinite;
+}
+[data-entrance="initial"] .auth-subtitle {
+  animation: auth-rise 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.7s backwards;
+}
+[data-entrance="initial"] .auth-card-surface {
+  animation: auth-rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.85s backwards;
+}
+/* Later moves between auth pages: a soft fade, lift and unblur. */
+[data-entrance="soft"] > * {
+  animation: auth-soft-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+[data-entrance="soft"] > * + * {
+  animation-delay: 0.07s;
+}
+@keyframes auth-scene-in {
+  from { opacity: 0; transform: scale(1.05); }
+}
+@keyframes auth-logo-in {
+  from { opacity: 0; transform: scale(0.92); filter: blur(14px); }
+}
+@keyframes auth-drop-in {
+  from { opacity: 0; transform: translateY(-10px); }
+}
+@keyframes auth-rise {
+  from { opacity: 0; transform: translateY(18px); }
+}
+@keyframes slogan-reveal {
+  from { clip-path: inset(-20% 100% -20% -5%); filter: blur(6px); }
+  to { clip-path: inset(-20% -5% -20% -5%); filter: blur(0); }
+}
+@keyframes auth-soft-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.985); filter: blur(6px); }
+}
+
+/*
+ * Theme switch (theme-transition.tsx): the new theme opens as a circle from
+ * the centre, where the sun/moon overlay plays. The overlay has its own
+ * view-transition name, so it stays live above both snapshots.
+ */
+html.theme-reveal::view-transition-old(root) {
+  animation: none;
+}
+html.theme-reveal::view-transition-new(root) {
+  mix-blend-mode: normal;
+  animation: theme-reveal 0.8s cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+@keyframes theme-reveal {
+  from { clip-path: circle(0% at 50% 50%); }
+  to { clip-path: circle(72% at 50% 50%); }
+}
+::view-transition-group(theme-orb),
+::view-transition-new(theme-orb) {
+  animation: none;
+}
+::view-transition-old(theme-orb) {
+  display: none;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -233,7 +379,14 @@
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+  /* Ambient loops simply stay at rest. */
+  .auth-slogan,
+  .logo-glow,
+  .auth-neon-band {
+    animation: none !important;
   }
 }
