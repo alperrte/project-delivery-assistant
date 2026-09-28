@@ -16,7 +16,7 @@ Before changing UI:
 
 If useful for design-system direction, use:
 
-- `ui-ux-pro-max`
+- `ui-ux-pro-max:ui-ux-pro-max`
 - `awesome-design`
 
 Use Awesome Design primarily for reference and inspiration,
@@ -26,9 +26,9 @@ not for blindly copying another product.
 
 For meaningful visual work, use the relevant installed design skills:
 
-- `frontend-design`
-- `taste-skill:design-taste-frontend`
-- `ui-ux-pro-max`
+- `frontend-design:frontend-design`
+- `taste-skill:taste-skill`
+- `ui-ux-pro-max:ui-ux-pro-max`
 
 Prioritize:
 
@@ -57,7 +57,7 @@ Avoid generic AI-slop patterns such as:
 When the user provides a screenshot, mockup, reference image,
 Figma export, or visual reference, use:
 
-`taste-skill:image-to-code`
+`taste-skill:image-to-code-skill`
 
 Analyze:
 

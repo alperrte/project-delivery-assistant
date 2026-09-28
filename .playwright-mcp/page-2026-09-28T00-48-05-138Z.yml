@@ -1,0 +1,56 @@
+- generic [ref=f2e1]:
+  - generic [ref=f2e2]:
+    - link "Skip to content" [ref=f2e81] [cursor=pointer]:
+      - /url: "#main"
+    - banner [ref=f2e4]:
+      - button "Language" [active] [ref=f2e82] [cursor=pointer]:
+        - img "English"
+        - generic [ref=f2e6]: en
+      - group "Theme" [ref=f2e83]:
+        - button "Light" [ref=f2e84] [cursor=pointer]
+        - button "Dark" [pressed] [ref=f2e85] [cursor=pointer]
+    - main [ref=f2e14]:
+      - link "PDA · Project Delivery Assistant" [ref=f2e15] [cursor=pointer]:
+        - /url: /login
+        - img "PDA · Project Delivery Assistant" [ref=f2e70]
+      - generic [ref=f2e19]:
+        - generic [ref=f2e20]:
+          - heading "Manage your projects with confidence." [level=1] [ref=f2e86]
+          - paragraph [ref=f2e22]: A clear, capable and modern workspace for tasks, teams and delivery.
+        - region [ref=f2e87]:
+          - generic [ref=f2e24]:
+            - heading "Sign in to your account" [level=2] [ref=f2e88]
+            - paragraph [ref=f2e26]: Enter your email and password to continue.
+          - generic [ref=f2e27]:
+            - group [ref=f2e29]:
+              - generic [ref=f2e30]:
+                - generic [ref=f2e31] [cursor=pointer]: Email
+                - textbox "Email" [ref=f2e89]:
+                  - /placeholder: example@gmail.com
+              - generic [ref=f2e34]:
+                - generic [ref=f2e35] [cursor=pointer]: Password
+                - generic [ref=f2e36]:
+                  - textbox "Password" [ref=f2e90]:
+                    - /placeholder: Enter your password
+                  - button "Show password" [ref=f2e91] [cursor=pointer]
+              - generic [ref=f2e41]:
+                - generic [ref=f2e42] [cursor=pointer]:
+                  - checkbox "Remember me" [ref=f2e92]
+                  - generic [ref=f2e45]: Remember me
+                - link "Forgot password?" [ref=f2e93] [cursor=pointer]:
+                  - /url: /forgot-password
+              - button "Sign in" [ref=f2e94] [cursor=pointer]
+            - generic [ref=f2e49]:
+              - generic [ref=f2e50]: or
+              - generic [ref=f2e53]:
+                - link "Continue with Google" [ref=f2e95] [cursor=pointer]:
+                  - /url: http://localhost:8080/api/v1/auth/oauth2/authorization/google
+                - link "Continue with GitHub" [ref=f2e96] [cursor=pointer]:
+                  - /url: http://localhost:8080/api/v1/auth/oauth2/authorization/github
+            - paragraph [ref=f2e56]:
+              - text: Don't have an account?
+              - link "Create one" [ref=f2e97] [cursor=pointer]:
+                - /url: /register
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=f2e63] [cursor=pointer]
+  - alert [ref=f2e68]: Sign in · PDA

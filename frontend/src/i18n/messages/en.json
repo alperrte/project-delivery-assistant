@@ -19,7 +19,9 @@
       "previous": "Previous",
       "next": "Next",
       "pageOf": "Page {page} of {totalPages}"
-    }
+    },
+    "showPassword": "Show password",
+    "hidePassword": "Hide password"
   },
   "errors": {
     "network": "Could not reach the server. Check your connection and try again.",
@@ -30,7 +32,13 @@
     "invalidFields": "Please check the information you entered.",
     "passwordMismatch": "Passwords do not match.",
     "forbidden": "You do not have permission to do this.",
-    "notFound": "This could not be found."
+    "notFound": "This could not be found.",
+    "resetCodeInvalid": "That code is incorrect. Please try again.",
+    "resetCodeExpired": "That code has expired. Please request a new one.",
+    "mailUnavailable": "The mail system is temporarily unavailable. Please try again later.",
+    "currentPasswordIncorrect": "Your current password is incorrect.",
+    "passwordUnchanged": "The new password cannot be the same as your current password.",
+    "accountUnavailable": "Your account is currently unavailable."
   },
   "app": {
     "nav": {
@@ -261,21 +269,27 @@
       "account_exists": "An account with this email already exists. Sign in with your email and password, then connect the provider in your account settings.",
       "provider_error": "Sign-in with the provider could not be completed. Please try again.",
       "unknown": "Sign-in could not be completed. Please try again."
-    }
+    },
+    "or": "or"
   },
   "login": {
-    "title": "Welcome back",
-    "subtitle": "Sign in to your account.",
+    "title": "Sign in to your account",
+    "subtitle": "Enter your email and password to continue.",
     "email": "Email",
     "password": "Password",
-    "showPassword": "Show password",
-    "hidePassword": "Hide password",
     "submit": "Sign in",
     "submitting": "Signing in...",
     "noAccount": "Don't have an account?",
     "toRegister": "Create one",
+    "forgotPassword": "Forgot password?",
     "emailPlaceholder": "example@gmail.com",
-    "passwordPlaceholder": "Enter your password"
+    "passwordPlaceholder": "Enter your password",
+    "metaTitle": "Sign in",
+    "rememberMe": "Remember me",
+    "hero": {
+      "title": "Plan. Manage. <accent>Deliver.</accent>",
+      "subtitle": "A clear, capable and modern workspace for tasks, teams and delivery."
+    }
   },
   "register": {
     "title": "Create your account",
@@ -300,6 +314,7 @@
     "required": "This field is required.",
     "email": "Enter a valid email address.",
     "nickname": "3-32 characters; letters, digits and underscore only.",
+    "code": "Enter the 6-digit code.",
     "passwordMin": "Password must be at least 8 characters.",
     "passwordMax": "Password can be at most 128 characters.",
     "passwordMatch": "Passwords do not match.",
@@ -307,46 +322,46 @@
     "dateOrder": "Target end date cannot be before the start date.",
     "githubUrl": "Enter a public GitHub repository URL, e.g. https://github.com/owner/repo."
   },
-  "story": {
-    "skip": "Skip to content",
-    "headline": "Plan the project. Assign the work. Track the delivery.",
-    "intro": "PDA lets small teams manage projects, tasks and delivery in a single workspace.",
-    "badge": "Open source • Self-hosted • For small teams",
-    "pillars": {
-      "assign": "Multi-assignee tasks",
-      "history": "Activity history",
-      "roles": "Role-based access"
-    },
-    "trust": {
-      "languages": "TR / EN / DE",
-      "themes": "Light / Dark / System",
-      "session": "Secure sessions",
-      "open": "Open source architecture"
-    }
+  "forgotPassword": {
+    "title": "Forgot your password?",
+    "subtitle": "Enter your email address and, if you have an account, we'll send you a code.",
+    "email": "Email",
+    "emailPlaceholder": "example@gmail.com",
+    "sendCode": "Send code",
+    "sending": "Sending...",
+    "codeSentTitle": "Check your code",
+    "codeSentSubtitle": "If you have an account, we sent a 6-digit code to {email}.",
+    "code": "Verification code",
+    "codePlaceholder": "000000",
+    "newPassword": "New password",
+    "newPasswordPlaceholder": "Create your new password",
+    "confirmPassword": "Confirm new password",
+    "confirmPasswordPlaceholder": "Repeat your new password",
+    "reset": "Reset password",
+    "resetting": "Resetting...",
+    "resend": "Resend code",
+    "resending": "Sending...",
+    "resent": "Code resent.",
+    "changeEmail": "Change email",
+    "success": "Your password has been updated. You can sign in now.",
+    "backToLogin": "Back to sign in"
   },
-  "preview": {
-    "projects": "Projects",
-    "members": "{count} team members",
-    "progress": "Progress",
-    "tasks": "Tasks",
-    "activity": "Activity",
-    "delivered": "Delivery ready",
-    "status": {
-      "todo": "To do",
-      "inProgress": "In progress",
-      "inReview": "In review",
-      "done": "Done"
-    },
-    "t39": "Backend auth",
-    "t40": "Database schema",
-    "t41": "API integration",
-    "t42": "Login redesign",
-    "deadline": "Deadline updated",
-    "assigned": "{user} assigned {task}",
-    "moved": "{user} moved {task} to “{status}”",
-    "due": "Due Dec 24",
-    "milestone": "Beta release",
-    "daysLeft": "{count} days left",
-    "notification": "{user} assigned {task} to you"
+  "changePassword": {
+    "title": "Update your password",
+    "subtitleRequired": "You need to change your password before continuing.",
+    "subtitle": "Change your account password.",
+    "currentPassword": "Current password",
+    "currentPasswordPlaceholder": "Enter your current password",
+    "newPassword": "New password",
+    "newPasswordPlaceholder": "Create your new password",
+    "confirmNewPassword": "Confirm new password",
+    "confirmNewPasswordPlaceholder": "Repeat your new password",
+    "submit": "Update password",
+    "submitting": "Updating...",
+    "success": "Your password has been updated."
+  },
+  "brand": {
+    "skip": "Skip to content",
+    "wordmark": "PDA"
   }
 }

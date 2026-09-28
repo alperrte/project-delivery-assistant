@@ -4,7 +4,7 @@
 
 ## Local development
 
-Planlanan Docker Compose düzeni üç servisten oluşur: Next.js `frontend`, Spring Boot `backend` ve PostgreSQL `postgres`. Uygulama container'ları Dockerfile ile üretilir. Gerçek ayarlar commit edilen YAML'a yazılmadan `.env` üzerinden verilir. Compose dosyası, Dockerfile'lar ve `.env.example` repoda hazır olduğunda başlangıç akışı:
+Docker Compose yalnız iki servis çalıştırır: Spring Boot `backend` ve PostgreSQL `postgres`. Next.js frontend Docker dışında, doğrudan Node.js ile çalışır (`frontend/Dockerfile` ileride production imajı için duruyor, compose'da kullanılmıyor). Gerçek ayarlar commit edilen YAML'a yazılmadan `.env` üzerinden verilir. Başlangıç akışı:
 
 ```sh
 cp .env.example .env
@@ -12,7 +12,13 @@ cp .env.example .env
 docker compose --env-file .env up --build -d
 docker compose ps
 docker compose logs --follow backend
+
+cd frontend
+npm install
+npm run dev   # http://localhost:3000
 ```
+
+Frontend API adresini `NEXT_PUBLIC_API_URL` ile alır; tanımlı değilse `http://localhost:8080/api/v1` kullanılır. Kök `.env` dosyası Next.js tarafından okunmaz; farklı bir adres gerekirse `frontend/.env.local` kullanılır. `INTERNAL_API_URL` ve `FRONTEND_PORT` compose'da artık kullanılmıyor.
 
 Windows PowerShell'de ilk komut için `Copy-Item .env.example .env` kullanılabilir. Compose portları ve health check tanımları gerçek dosyadan okunmalıdır; bu planda henüz sabitlenmemiştir. Durdurmak için `docker compose down` kullanın. Veri silinmesi istenmiyorsa volume silme seçeneğini eklemeyin.
 

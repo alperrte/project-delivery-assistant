@@ -1,0 +1,80 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - link "Skip to content" [ref=e3] [cursor=pointer]:
+      - /url: "#main"
+    - generic [ref=e7]:
+      - generic [ref=e8]: PDA
+      - generic [ref=e10]:
+        - heading "Plan the project, assign the work, track the delivery." [level=1] [ref=e11]: Plan the project, assign the work,track the delivery.
+        - paragraph [ref=e12]: A self-hosted assistant that brings project, task and delivery tracking into one workspace for small teams.
+      - generic [ref=e14]:
+        - generic [ref=e15]:
+          - generic [ref=e16]:
+            - paragraph [ref=e17]: Mobile App v2
+            - paragraph [ref=e18]: Atlas Software
+          - generic [ref=e19]: Active
+        - generic [ref=e22]:
+          - generic "Ada K" [ref=e23]: AK
+          - generic "Mert T" [ref=e24]: MT
+          - generic "Selin Y" [ref=e25]: SY
+        - generic [ref=e27]:
+          - generic [ref=e28]: Success criteria
+          - generic [ref=e29]: 6/9
+      - list [ref=e32]:
+        - listitem [ref=e33]:
+          - generic [ref=e37]:
+            - paragraph [ref=e38]: Planning
+            - paragraph [ref=e39]: Set the scope and the timeline.
+        - listitem [ref=e40]:
+          - generic [ref=e44]:
+            - paragraph [ref=e45]: Team and tasks
+            - paragraph [ref=e46]: Split the work, own each part.
+        - listitem [ref=e47]:
+          - generic [ref=e51]:
+            - paragraph [ref=e52]: Delivery tracking
+            - paragraph [ref=e53]: Lock the release, share it with the team.
+      - paragraph [ref=e54]: Open source · Self-hosted
+    - generic [ref=e55]:
+      - banner [ref=e56]:
+        - generic [ref=e58]:
+          - paragraph [ref=e59]: PDA
+          - paragraph [ref=e60]: Project Delivery Assistant
+        - generic [ref=e61]:
+          - button "Language" [ref=e62] [cursor=pointer]:
+            - img "English"
+            - generic [ref=e63]: en
+          - button "Theme" [ref=e64] [cursor=pointer]
+      - main [ref=e65]:
+        - generic [ref=e68]:
+          - generic [ref=e69]:
+            - heading "Welcome back" [level=2] [ref=e70]
+            - paragraph [ref=e71]: Sign in to your account.
+          - generic [ref=e72]:
+            - group [ref=e74]:
+              - generic [ref=e75]:
+                - generic [ref=e76] [cursor=pointer]: Email
+                - textbox "Email" [ref=e78]:
+                  - /placeholder: example@gmail.com
+              - generic [ref=e79]:
+                - generic [ref=e80] [cursor=pointer]: Password
+                - generic [ref=e81]:
+                  - textbox "Password" [ref=e82]:
+                    - /placeholder: Enter your password
+                  - button "Show password" [ref=e83] [cursor=pointer]
+              - paragraph [ref=e86]:
+                - link "Forgot your password?" [ref=e87] [cursor=pointer]:
+                  - /url: /forgot-password
+              - button "Sign in" [ref=e88] [cursor=pointer]
+            - generic [ref=e90]:
+              - generic [ref=e91]: or with email
+              - generic [ref=e94]:
+                - link "Continue with Google" [ref=e95] [cursor=pointer]:
+                  - /url: http://localhost:8080/api/v1/auth/oauth2/authorization/google
+                - link "Continue with GitHub" [ref=e96] [cursor=pointer]:
+                  - /url: http://localhost:8080/api/v1/auth/oauth2/authorization/github
+            - paragraph [ref=e97]:
+              - text: Don't have an account?
+              - link "Create one" [ref=e98] [cursor=pointer]:
+                - /url: /register
+  - region "Notifications alt+T"
+  - alert [ref=e99]

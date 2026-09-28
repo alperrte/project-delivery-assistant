@@ -21,6 +21,19 @@ export const authApi = {
   }) => apiRequest("/auth/register", { method: "POST", body }),
   me: () => apiRequest<AuthenticatedUser>("/auth/me"),
   logout: () => apiRequest("/auth/logout", { method: "POST" }),
+  forgotPassword: (body: { email: string }) =>
+    apiRequest("/auth/password/forgot", { method: "POST", body }),
+  resetPassword: (body: {
+    email: string;
+    code: string;
+    newPassword: string;
+    confirmPassword: string;
+  }) => apiRequest("/auth/password/reset", { method: "POST", body }),
+  changePassword: (body: {
+    currentPassword: string;
+    newPassword: string;
+    confirmNewPassword: string;
+  }) => apiRequest("/auth/password/change", { method: "POST", body }),
 };
 
 /** OAuth login is a full-page navigation; the backend redirects back to /login. */

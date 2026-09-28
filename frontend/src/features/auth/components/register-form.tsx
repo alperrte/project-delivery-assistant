@@ -13,6 +13,7 @@ import { ApiError } from "@/lib/api/client";
 import { errorKey } from "@/lib/api/error-message";
 import { authApi } from "../api";
 import { registerSchema, type RegisterValues } from "../schemas";
+import { authCtaClass } from "./auth-card";
 import { useShake } from "./use-shake";
 
 const SERVER_FIELDS = ["email", "nickname", "password", "confirmPassword"] as const;
@@ -93,7 +94,7 @@ export function RegisterForm() {
           </p>
         )}
 
-        <SubmitButton pending={isSubmitting}>{isSubmitting ? t("submitting") : t("submit")}</SubmitButton>
+        <SubmitButton pending={isSubmitting} className={authCtaClass}>{isSubmitting ? t("submitting") : t("submit")}</SubmitButton>
       </form>
 
       <p className="mt-6 text-center text-sm text-muted-foreground">

@@ -1,0 +1,56 @@
+- generic [active] [ref=f4e1]:
+  - generic [ref=f4e2]:
+    - link "Zum Inhalt springen" [ref=f4e3] [cursor=pointer]:
+      - /url: "#main"
+    - banner [ref=f4e4]:
+      - button "Sprache" [ref=f4e5] [cursor=pointer]:
+        - img "Deutsch"
+        - generic [ref=f4e6]: de
+      - group "Design" [ref=f4e7]:
+        - button "Hell" [pressed] [ref=f4e8] [cursor=pointer]
+        - button "Dunkel" [ref=f4e11] [cursor=pointer]
+    - main [ref=f4e14]:
+      - link "PDA · Project Delivery Assistant" [ref=f4e15] [cursor=pointer]:
+        - /url: /login
+        - img "PDA · Project Delivery Assistant" [ref=f4e17]
+      - generic [ref=f4e19]:
+        - generic [ref=f4e20]:
+          - heading "Projekte sicher steuern." [level=1] [ref=f4e21]
+          - paragraph [ref=f4e22]: Ein klarer, moderner Arbeitsbereich für Aufgaben, Teams und Auslieferung.
+        - region [ref=f4e23]:
+          - generic [ref=f4e24]:
+            - heading "Bei Ihrem Konto anmelden" [level=2] [ref=f4e25]
+            - paragraph [ref=f4e26]: Melden Sie sich mit E-Mail und Passwort an.
+          - generic [ref=f4e27]:
+            - group [ref=f4e29]:
+              - generic [ref=f4e30]:
+                - generic [ref=f4e31] [cursor=pointer]: E-Mail
+                - textbox "E-Mail" [ref=f4e33]:
+                  - /placeholder: beispiel@gmail.com
+              - generic [ref=f4e34]:
+                - generic [ref=f4e35] [cursor=pointer]: Passwort
+                - generic [ref=f4e36]:
+                  - textbox "Passwort" [ref=f4e37]:
+                    - /placeholder: Passwort eingeben
+                  - button "Passwort anzeigen" [ref=f4e38] [cursor=pointer]
+              - generic [ref=f4e41]:
+                - generic [ref=f4e42] [cursor=pointer]:
+                  - checkbox "Angemeldet bleiben" [ref=f4e44]
+                  - generic [ref=f4e45]: Angemeldet bleiben
+                - link "Passwort vergessen?" [ref=f4e46] [cursor=pointer]:
+                  - /url: /forgot-password
+              - button "Anmelden" [ref=f4e47] [cursor=pointer]
+            - generic [ref=f4e49]:
+              - generic [ref=f4e50]: oder
+              - generic [ref=f4e53]:
+                - link "Weiter mit Google" [ref=f4e54] [cursor=pointer]:
+                  - /url: http://localhost:8080/api/v1/auth/oauth2/authorization/google
+                - link "Weiter mit GitHub" [ref=f4e55] [cursor=pointer]:
+                  - /url: http://localhost:8080/api/v1/auth/oauth2/authorization/github
+            - paragraph [ref=f4e56]:
+              - text: Noch kein Konto?
+              - link "Registrieren" [ref=f4e57] [cursor=pointer]:
+                - /url: /register
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=f4e63] [cursor=pointer]
+  - alert [ref=f4e68]

@@ -36,6 +36,16 @@ public interface UserAccounts {
      */
     PasswordChangeOutcome changePassword(UUID userId, String currentPassword, String newPassword);
 
+    /** ACTIVE user id for that email (case-sensitive, matching {@code authenticateLocal}), or empty otherwise. */
+    Optional<UUID> findActiveByEmail(String email);
+
+    /**
+     * Replaces the password of an ACTIVE account WITHOUT checking the current one — reserved for flows that
+     * already proved identity another way (an emailed reset code). Also ends a pending forced change. False
+     * when the account is not ACTIVE.
+     */
+    boolean resetPassword(UUID userId, String newPassword);
+
     /**
      * Safe search for authenticated flows such as a project's "add member" lookup: nickname substring match
      * (case-insensitive) or an exact email match when the query contains "@". ACTIVE users only; queries shorter

@@ -5,14 +5,15 @@ import { usePathname } from "next/navigation";
 import { motion, useReducedMotion } from "motion/react";
 
 /**
- * A template remounts on every navigation, so the card enters afresh. The
- * direction follows the journey: heading to /register slides in from the
- * right, returning to /login from the left. Logo and story stay put.
+ * A template remounts on every navigation, so the card enters afresh. /login
+ * is the one anchor route: leaving it (to register, forgot- or
+ * change-password) slides in from the right, returning to it slides in from
+ * the left. The scene, logo and corner controls live in the layout and stay put.
  */
 export default function AuthTemplate({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const reduce = useReducedMotion();
-  const from = pathname.startsWith("/register") ? 28 : -28;
+  const from = pathname.startsWith("/login") ? -28 : 28;
 
   return (
     <motion.div

@@ -341,9 +341,10 @@ Arayüz tasarımı en baştan **mobil, tablet, laptop ve masaüstü** için haz�
 ### Gereksinimler
 
 - Git
-- Docker Desktop **veya** Docker Engine + Docker Compose
+- Docker Desktop **veya** Docker Engine + Docker Compose (backend ve PostgreSQL için)
+- Node.js (frontend için)
 
-Java, Node.js ve PostgreSQL'i host makineye ayrı ayrı kurmak ana Docker akışı için zorunlu olmayacaktır.
+Java ve PostgreSQL'i host makineye ayrı ayrı kurmak gerekmez; frontend Docker dışında çalışır.
 
 ### 1. Repoyu klonlayın
 
@@ -406,21 +407,25 @@ ADMIN_INITIAL_PASSWORD=
 
 > Gerçek `.env` dosyası hiçbir zaman Git'e commit edilmemelidir.
 
-### 4. Servisleri başlatın
+### 4. Backend ve PostgreSQL'i başlatın
 
 ```bash
-docker compose up --build
+docker compose up --build -d
 ```
 
-Development ortamında hedef servisler:
+### 5. Frontend'i başlatın
 
-```text
-Frontend
-Backend
-PostgreSQL
+```bash
+cd frontend
+npm install
+npm run dev
 ```
 
-### 5. Servisleri durdurun
+Frontend `http://localhost:3000` adresinde açılır ve `http://localhost:8080/api/v1` üzerindeki backend'e bağlanır.
+
+### 6. Servisleri durdurun
+
+Frontend'i terminalde `Ctrl+C` ile, backend ve PostgreSQL'i şu komutla durdurun:
 
 ```bash
 docker compose down

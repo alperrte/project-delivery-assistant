@@ -1,0 +1,57 @@
+- generic [active] [ref=f9e1]:
+  - generic [ref=f9e2]:
+    - link "İçeriğe geç" [ref=f9e3] [cursor=pointer]:
+      - /url: "#main"
+    - banner [ref=f9e4]:
+      - button "Dil" [ref=f9e5] [cursor=pointer]:
+        - img "Türkçe"
+        - generic [ref=f9e6]: tr
+      - group "Tema" [ref=f9e7]:
+        - button "Açık" [ref=f9e8] [cursor=pointer]
+        - button "Koyu" [ref=f9e11] [cursor=pointer]
+    - main [ref=f9e14]:
+      - link "PDA · Project Delivery Assistant" [ref=f9e15] [cursor=pointer]:
+        - /url: /login
+        - img "PDA · Project Delivery Assistant" [ref=f9e17]
+      - region [ref=f9e20]:
+        - generic [ref=f9e21]:
+          - heading "Hesap oluşturun" [level=1] [ref=f9e22]
+          - paragraph [ref=f9e23]: Birkaç bilgiyle başlayın.
+        - generic [ref=f9e24]:
+          - generic [ref=f9e25]:
+            - link "Google ile devam et" [ref=f9e26] [cursor=pointer]:
+              - /url: http://localhost:8080/api/v1/auth/oauth2/authorization/google
+            - link "GitHub ile devam et" [ref=f9e27] [cursor=pointer]:
+              - /url: http://localhost:8080/api/v1/auth/oauth2/authorization/github
+          - generic [ref=f9e28]: veya e-posta ile
+        - generic [ref=f9e32]:
+          - generic [ref=f9e33]:
+            - generic [ref=f9e34]:
+              - generic [ref=f9e35] [cursor=pointer]: E-posta
+              - textbox "E-posta" [ref=f9e37]:
+                - /placeholder: ornek@gmail.com
+            - generic [ref=f9e38]:
+              - generic [ref=f9e39] [cursor=pointer]: Kullanıcı adı
+              - textbox "Kullanıcı adı" [ref=f9e41]:
+                - /placeholder: pda_assistant
+              - paragraph [ref=f9e42]: "3-32 karakter: harf, rakam veya alt çizgi."
+            - generic [ref=f9e43]:
+              - generic [ref=f9e44] [cursor=pointer]: Şifre
+              - generic [ref=f9e45]:
+                - textbox "Şifre" [ref=f9e46]:
+                  - /placeholder: Şifrenizi oluşturun
+                - button "Şifreyi göster" [ref=f9e47] [cursor=pointer]
+              - paragraph [ref=f9e50]: En az 8 karakter.
+            - generic [ref=f9e51]:
+              - generic [ref=f9e52] [cursor=pointer]: Şifre tekrarı
+              - generic [ref=f9e53]:
+                - textbox "Şifre tekrarı" [ref=f9e54]:
+                  - /placeholder: Şifrenizi tekrar girin
+                - button "Şifreyi göster" [ref=f9e55] [cursor=pointer]
+            - button "Kayıt ol" [ref=f9e58] [cursor=pointer]
+          - paragraph [ref=f9e59]:
+            - text: Zaten hesabınız var mı?
+            - link "Giriş yapın" [ref=f9e60] [cursor=pointer]:
+              - /url: /login
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=f9e66] [cursor=pointer]

@@ -5,9 +5,9 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
-  --font-heading: var(--font-outfit), var(--font-figtree), ui-sans-serif, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-space-grotesk), var(--font-manrope), ui-sans-serif, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -25,12 +25,13 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-success: var(--success);
+  --color-warning: var(--warning);
   --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-brand: var(--brand);
-  --color-brand-soft: var(--brand-soft);
-  --color-navy: var(--navy);
+  --color-surface-2: var(--surface-2);
+  --color-live: var(--live);
 
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
@@ -41,62 +42,136 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 
   --animate-shake: shake 0.42s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
-  --animate-orbit: orbit 24s linear infinite;
-  --animate-pulse-ring: pulse-ring 3.2s ease-out infinite;
+  --animate-fade-up: fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-/* PDA palette: one clean blue on a cool slate base. Primary is reserved for actions, selection and progress. */
+/*
+ * One accent (electric blue), used identically everywhere it appears. Cyan
+ * ("--live") is reserved for a single real semantic signal — an active/online
+ * state — never for decoration. No warm-paper/brass palette, no purple glow.
+ */
 :root {
   --radius: 0.625rem;
-  --background: #fafbfc;
-  --foreground: #0f1729;
+  --background: #f4f6f9;
+  --foreground: #10131a;
   --card: #ffffff;
-  --card-foreground: #0f1729;
+  --card-foreground: #10131a;
   --popover: #ffffff;
-  --popover-foreground: #0f1729;
-  --primary: #2563eb;
+  --popover-foreground: #10131a;
+  --primary: #1b5fe0;
+  --primary-hover: #164fbd;
   --primary-foreground: #ffffff;
-  --secondary: #f1f3f7;
-  --secondary-foreground: #1e293b;
-  --muted: #f1f3f7;
-  --muted-foreground: #5b6578;
-  --accent: #eef2fb;
-  --accent-foreground: #1e293b;
-  --destructive: #c8342b;
-  --success: #15803d;
-  --border: #e2e6ed;
-  --input: #cfd5df;
-  --ring: #2563eb;
-  --brand: #2563eb;
-  --brand-soft: #dbe6fd;
-  --navy: #080d16;
-  --shadow-tint: 222 40% 20%;
+  --secondary: #e8ecf2;
+  --secondary-foreground: #10131a;
+  --muted: #e8ecf2;
+  --muted-foreground: #5b6472;
+  --accent: #e8ecf2;
+  --accent-foreground: #10131a;
+  --destructive: #c8323a;
+  --success: #147a52;
+  --warning: #a4660b;
+  --border: #d8dee8;
+  --border-strong: #b8c2d1;
+  --input: #d8dee8;
+  --ring: #1b5fe0;
+  --surface-2: #e8ecf2;
+  --live: #0e8f9e;
+  --shadow-tint: 220 30% 25%;
+
+  /*
+   * Auth pages only (over the background photos): one soft cyan light.
+   * Scoped names so the app shell keeps its single electric-blue accent.
+   */
+  --glow: #3fd3f2;
+  --auth-ink: #0d1219;
+  --auth-muted: #525c69;
+  --auth-link: #0a73a3;
+  --auth-link-hover: #075c83;
+  --auth-accent-from: #09a8cf;
+  --auth-accent-to: #1b74d6;
+  --auth-card: rgb(255 255 255 / 0.8);
+  --auth-card-edge: rgb(255 255 255 / 0.95);
+  --auth-card-ring: rgb(15 23 42 / 0.07);
+  --auth-card-shadow: 0 30px 60px -28px rgb(30 41 59 / 0.28), 0 2px 6px -2px rgb(30 41 59 / 0.08);
+  --auth-field: #ffffff;
+  --auth-field-border: #d6dde6;
+  --auth-control: rgb(255 255 255 / 0.78);
+  --auth-control-border: rgb(15 23 42 / 0.08);
+  --auth-cta: #141b25;
+  --auth-cta-top: #2a3441;
+  --auth-cta-ink: #ffffff;
 }
 
 .dark {
-  --background: #07111f;
-  --foreground: #f8fafc;
-  --card: #0d1a2b;
-  --card-foreground: #e6ebf3;
-  --popover: #101f34;
-  --popover-foreground: #e6ebf3;
-  --primary: #4f8cff;
-  --primary-foreground: #07111f;
-  --secondary: #14243b;
-  --secondary-foreground: #e6ebf3;
-  --muted: #0b1730;
-  --muted-foreground: #94a3b8;
-  --accent: #142643;
-  --accent-foreground: #e6ebf3;
-  --destructive: #f0716a;
-  --success: #4ade80;
-  --border: rgb(148 163 184 / 0.16);
-  --input: rgb(148 163 184 / 0.24);
-  --ring: #4f8cff;
-  --brand: #4f8cff;
-  --brand-soft: #1b2a4a;
-  --navy: #07111f;
-  --shadow-tint: 222 80% 3%;
+  --background: #0b0e14;
+  --foreground: #e7ebf2;
+  --card: #12161f;
+  --card-foreground: #e7ebf2;
+  --popover: #12161f;
+  --popover-foreground: #e7ebf2;
+  --primary: #4c8dff;
+  --primary-hover: #6fa3ff;
+  --primary-foreground: #071022;
+  --secondary: #1a2029;
+  --secondary-foreground: #e7ebf2;
+  --muted: #1a2029;
+  --muted-foreground: #8a93a6;
+  --accent: #1a2029;
+  --accent-foreground: #e7ebf2;
+  --destructive: #ff6b72;
+  --success: #3dd598;
+  --warning: #f5b942;
+  --border: #262d3a;
+  --border-strong: #374152;
+  --input: #262d3a;
+  --ring: #4c8dff;
+  --surface-2: #1a2029;
+  --live: #3ad4e6;
+  --shadow-tint: 222 60% 3%;
+
+  --glow: #2fd0f5;
+  --auth-ink: #eef2f7;
+  --auth-muted: #a3adbb;
+  --auth-link: #5cd8f5;
+  --auth-link-hover: #8fe5f9;
+  --auth-accent-from: #3fd7f5;
+  --auth-accent-to: #2aa6f0;
+  --auth-card: rgb(13 18 25 / 0.72);
+  --auth-card-edge: rgb(186 198 212 / 0.22);
+  --auth-card-ring: rgb(0 0 0 / 0.4);
+  --auth-card-shadow: 0 30px 70px -24px rgb(0 0 0 / 0.75), 0 0 0 1px rgb(47 208 245 / 0.04);
+  --auth-field: rgb(255 255 255 / 0.03);
+  --auth-field-border: rgb(186 198 212 / 0.2);
+  --auth-control: rgb(13 18 25 / 0.66);
+  --auth-control-border: rgb(186 198 212 / 0.2);
+  --auth-cta: #0a7fa9;
+  --auth-cta-top: #19b4dc;
+  --auth-cta-ink: #ffffff;
+}
+
+/*
+ * Inside the auth card the shared form primitives (FormField, Button, links)
+ * pick up the scene palette by remapping the semantic tokens they already use.
+ */
+.auth-scope {
+  --foreground: var(--auth-ink);
+  --muted-foreground: var(--auth-muted);
+  --card: var(--auth-field);
+  --input: var(--auth-field-border);
+  --border: var(--auth-field-border);
+  --ring: var(--glow);
+  --primary: var(--auth-link);
+  --primary-foreground: #ffffff;
+}
+
+/* Primary action on the auth screens: ink-black in light, lit cyan in dark. */
+@utility auth-cta {
+  color: var(--auth-cta-ink);
+  background-image: linear-gradient(180deg, var(--auth-cta-top), var(--auth-cta));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.14),
+    inset 0 -1px 0 color-mix(in oklab, var(--glow) 70%, transparent),
+    0 10px 24px -12px color-mix(in oklab, var(--glow) 60%, transparent);
 }
 
 @keyframes shake {
@@ -106,13 +181,9 @@
   40%, 60% { transform: translateX(4px); }
 }
 
-@keyframes orbit {
-  to { transform: rotate(360deg); }
-}
-
-@keyframes pulse-ring {
-  0% { transform: scale(0.85); opacity: 0.55; }
-  100% { transform: scale(1.6); opacity: 0; }
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @layer base {
@@ -127,11 +198,35 @@
     color-scheme: dark;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply overflow-x-hidden bg-background text-foreground;
   }
   h1, h2, h3, h4 {
     font-family: var(--font-heading);
-    letter-spacing: -0.02em;
+    letter-spacing: -0.01em;
+  }
+  /* Every clickable surface shows a pointer, disabled ones never do. */
+  button:not(:disabled), a[href], [role="button"]:not([aria-disabled="true"]), select, summary, label[for] {
+    cursor: pointer;
+  }
+  button:disabled, [aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+  /* Soft, non-jarring theme switch: colors cross-fade instead of snapping. */
+  html.theme-transitioning,
+  html.theme-transitioning *,
+  html.theme-transitioning *::before,
+  html.theme-transitioning *::after {
+    transition:
+      background-color 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+      color 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+      fill 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+      stroke 0.45s cubic-bezier(0.22, 1, 0.36, 1) !important;
+  }
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.45s;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
   }
 }
 

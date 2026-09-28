@@ -1,0 +1,30 @@
+- generic [active] [ref=f11e1]:
+  - generic [ref=f11e2]:
+    - link "İçeriğe geç" [ref=f11e3] [cursor=pointer]:
+      - /url: "#main"
+    - banner [ref=f11e4]:
+      - button "Dil" [ref=f11e5] [cursor=pointer]:
+        - img "Türkçe"
+        - generic [ref=f11e6]: tr
+      - group "Tema" [ref=f11e7]:
+        - button "Açık" [ref=f11e8] [cursor=pointer]
+        - button "Koyu" [ref=f11e11] [cursor=pointer]
+    - main [ref=f11e14]:
+      - link "PDA · Project Delivery Assistant" [ref=f11e15] [cursor=pointer]:
+        - /url: /login
+        - img "PDA · Project Delivery Assistant" [ref=f11e17]
+      - region [ref=f11e20]:
+        - generic [ref=f11e21]:
+          - heading "Şifrenizi mi unuttunuz?" [level=1] [ref=f11e22]
+          - paragraph [ref=f11e23]: E-posta adresinizi girin, hesabınız varsa bir kod gönderelim.
+        - group [ref=f11e25]:
+          - generic [ref=f11e26]:
+            - generic [ref=f11e27] [cursor=pointer]: E-posta
+            - textbox "E-posta" [ref=f11e29]:
+              - /placeholder: ornek@gmail.com
+          - button "Kod gönder" [ref=f11e30] [cursor=pointer]
+        - paragraph [ref=f11e31]:
+          - link "Girişe dön" [ref=f11e32] [cursor=pointer]:
+            - /url: /login
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=f11e38] [cursor=pointer]

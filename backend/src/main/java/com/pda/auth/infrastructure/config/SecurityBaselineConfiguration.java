@@ -125,7 +125,8 @@ public class SecurityBaselineConfiguration {
                                     "/api/v1/auth/oauth/*/unlink").authenticated()
                             .requestMatchers(HttpMethod.POST, "/api/v1/auth/register",
                                     "/api/v1/auth/login", "/api/v1/auth/refresh",
-                                    "/api/v1/auth/logout").permitAll()
+                                    "/api/v1/auth/logout", "/api/v1/auth/password/forgot",
+                                    "/api/v1/auth/password/reset").permitAll()
                             .requestMatchers(HttpMethod.GET, "/api/v1/auth/me", "/api/v1/auth/sessions")
                             .authenticated()
                             .requestMatchers(HttpMethod.POST, "/api/v1/auth/sessions/*/revoke",
