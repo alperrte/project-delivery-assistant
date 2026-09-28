@@ -1,7 +1,7 @@
 import { chromium } from "@playwright/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { registerUser, login, uniqueUser } from "./helpers";
+import { registerUser, uniqueUser } from "./helpers";
 
 export const AUTH_DIR = path.join(__dirname, ".auth");
 export const MANAGER_STORAGE = path.join(AUTH_DIR, "manager.json");
@@ -26,7 +26,6 @@ export default async function globalSetup() {
   const page = await context.newPage();
 
   await registerUser(page, manager);
-  await login(page, manager.email, manager.password);
 
   await context.storageState({ path: MANAGER_STORAGE });
   writeFileSync(MANAGER_USER_FILE, JSON.stringify(manager));

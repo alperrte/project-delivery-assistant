@@ -343,6 +343,7 @@
     "submit": "Kayıt ol",
     "submitting": "Kaydediliyor",
     "success": "Hesabınız oluşturuldu. Şimdi giriş yapabilirsiniz.",
+    "welcome": "Hesabınız oluşturuldu, hoş geldiniz!",
     "haveAccount": "Zaten hesabınız var mı?",
     "toLogin": "Giriş yapın",
     "emailPlaceholder": "ornek@gmail.com",
