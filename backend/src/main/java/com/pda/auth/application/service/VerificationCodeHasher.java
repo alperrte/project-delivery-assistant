@@ -38,7 +38,18 @@ public class VerificationCodeHasher {
         return String.format(java.util.Locale.ROOT, "%06d", random.nextInt(1_000_000));
     }
 
+    /** Hashes an email-verification code. Domain-separated from {@link #hashResetCode} under the same key. */
     public String hash(UUID userId, String code) {
+        return hmac("email-verify", userId, code);
+    }
+
+    /** Hashes a password-reset code. Reuses {@code EMAIL_VERIFICATION_HMAC_KEY} with a distinct domain prefix
+     * so a reset code and a verification code for the same user/digits never hash to the same value. */
+    public String hashResetCode(UUID userId, String code) {
+        return hmac("pwd-reset", userId, code);
+    }
+
+    private String hmac(String domain, UUID userId, String code) {
         if (key == null) {
             throw new IllegalStateException("Email verification is unavailable");
         }
@@ -48,7 +59,8 @@ public class VerificationCodeHasher {
         try {
             Mac mac = Mac.getInstance("HmacSHA256");
             mac.init(key);
-            return HexFormat.of().formatHex(mac.doFinal((userId + ":" + code).getBytes(StandardCharsets.US_ASCII)));
+            return HexFormat.of().formatHex(
+                    mac.doFinal((domain + ":" + userId + ":" + code).getBytes(StandardCharsets.US_ASCII)));
         } catch (java.security.GeneralSecurityException exception) {
             throw new IllegalStateException("Email verification hashing is unavailable", exception);
         }

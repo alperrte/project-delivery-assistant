@@ -1,0 +1,80 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - link "İçeriğe geç" [ref=e3] [cursor=pointer]:
+      - /url: "#main"
+    - generic [ref=e7]:
+      - generic [ref=e8]: PDA
+      - generic [ref=e10]:
+        - heading "Projeyi planla, işi dağıt, teslimatı takip et." [level=1] [ref=e11]: Projeyi planla, işi dağıt,teslimatı takip et.
+        - paragraph [ref=e12]: Küçük ekipler için proje, görev ve teslim sürecini tek çalışma alanında toplayan self-hosted bir asistan.
+      - generic [ref=e14]:
+        - generic [ref=e15]:
+          - generic [ref=e16]:
+            - paragraph [ref=e17]: Mobil Uygulama v2
+            - paragraph [ref=e18]: Atlas Yazılım
+          - generic [ref=e19]: Aktif
+        - generic [ref=e22]:
+          - generic "Ada K" [ref=e23]: AK
+          - generic "Mert T" [ref=e24]: MT
+          - generic "Selin Y" [ref=e25]: SY
+        - generic [ref=e27]:
+          - generic [ref=e28]: Başarı kriterleri
+          - generic [ref=e29]: 6/9
+      - list [ref=e32]:
+        - listitem [ref=e33]:
+          - generic [ref=e37]:
+            - paragraph [ref=e38]: Planlama
+            - paragraph [ref=e39]: Kapsamı ve zaman çizelgesini kur.
+        - listitem [ref=e40]:
+          - generic [ref=e44]:
+            - paragraph [ref=e45]: Ekip ve görevler
+            - paragraph [ref=e46]: İşi böl, sorumluluğu netleştir.
+        - listitem [ref=e47]:
+          - generic [ref=e51]:
+            - paragraph [ref=e52]: Teslimat takibi
+            - paragraph [ref=e53]: Sürümü kilitle, ekiple paylaş.
+      - paragraph [ref=e54]: Açık kaynak · Self-hosted
+    - generic [ref=e55]:
+      - banner [ref=e56]:
+        - generic [ref=e58]:
+          - paragraph [ref=e59]: PDA
+          - paragraph [ref=e60]: Project Delivery Assistant
+        - generic [ref=e61]:
+          - button "Dil" [ref=e62] [cursor=pointer]:
+            - img "Türkçe"
+            - generic [ref=e63]: tr
+          - button "Tema" [ref=e64] [cursor=pointer]
+      - main [ref=e65]:
+        - generic [ref=e68]:
+          - generic [ref=e69]:
+            - heading "Tekrar hoş geldiniz" [level=2] [ref=e70]
+            - paragraph [ref=e71]: Hesabınıza giriş yapın.
+          - generic [ref=e72]:
+            - group [ref=e74]:
+              - generic [ref=e75]:
+                - generic [ref=e76] [cursor=pointer]: E-posta
+                - textbox "E-posta" [ref=e78]:
+                  - /placeholder: ornek@gmail.com
+              - generic [ref=e79]:
+                - generic [ref=e80] [cursor=pointer]: Şifre
+                - generic [ref=e81]:
+                  - textbox "Şifre" [ref=e82]:
+                    - /placeholder: Şifrenizi girin
+                  - button "Şifreyi göster" [ref=e83] [cursor=pointer]
+              - paragraph [ref=e86]:
+                - link "Şifrenizi mi unuttunuz?" [ref=e87] [cursor=pointer]:
+                  - /url: /forgot-password
+              - button "Giriş yap" [ref=e88] [cursor=pointer]
+            - generic [ref=e90]:
+              - generic [ref=e91]: veya e-posta ile
+              - generic [ref=e94]:
+                - link "Google ile devam et" [ref=e95] [cursor=pointer]:
+                  - /url: http://localhost:8080/api/v1/auth/oauth2/authorization/google
+                - link "GitHub ile devam et" [ref=e96] [cursor=pointer]:
+                  - /url: http://localhost:8080/api/v1/auth/oauth2/authorization/github
+            - paragraph [ref=e97]:
+              - text: Hesabınız yok mu?
+              - link "Kayıt olun" [ref=e98] [cursor=pointer]:
+                - /url: /register
+  - region "Notifications alt+T"
+  - alert [ref=e99]

@@ -39,7 +39,10 @@ public class AuthApiErrorHandler {
 
     @ExceptionHandler(PasswordConfirmationMismatchException.class)
     ResponseEntity<ProblemDetail> passwordConfirmationMismatch() {
-        return problem(HttpStatus.BAD_REQUEST, "Password confirmation does not match");
+        ProblemDetail body =
+                ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Password confirmation does not match");
+        body.setProperty("code", "password_confirmation_mismatch");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).header("Cache-Control", "no-store").body(body);
     }
 
     @ExceptionHandler(UserRegistrationConflictException.class)

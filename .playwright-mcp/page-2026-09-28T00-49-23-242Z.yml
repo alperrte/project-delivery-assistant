@@ -1,0 +1,65 @@
+- generic [active] [ref=f5e1]:
+  - generic [ref=f5e2]:
+    - link "İçeriğe geç" [ref=f5e3] [cursor=pointer]:
+      - /url: "#main"
+    - banner [ref=f5e4]:
+      - button "Dil" [ref=f5e5] [cursor=pointer]:
+        - img "Türkçe"
+        - generic [ref=f5e6]: tr
+      - group "Tema" [ref=f5e7]:
+        - button "Açık" [ref=f5e8] [cursor=pointer]
+        - button "Koyu" [pressed] [ref=f5e11] [cursor=pointer]
+    - main [ref=f5e15]:
+      - link "PDA · Project Delivery Assistant" [ref=f5e16] [cursor=pointer]:
+        - /url: /login
+        - img "PDA · Project Delivery Assistant" [ref=f5e18]
+      - generic [ref=f5e20]:
+        - generic [ref=f5e21]:
+          - heading "Projelerinizi güvenle yönetin." [level=1] [ref=f5e22]
+          - paragraph [ref=f5e23]: Görevler, ekipler ve teslim süreçleri için sade, güçlü ve modern bir çalışma alanı.
+        - region [ref=f5e24]:
+          - generic [ref=f5e25]:
+            - heading "Hesabınıza giriş yapın" [level=2] [ref=f5e26]
+            - paragraph [ref=f5e27]: Devam etmek için e-posta adresiniz ve şifrenizle giriş yapın.
+          - generic [ref=f5e28]:
+            - group [ref=f5e30]:
+              - generic [ref=f5e31]:
+                - generic [ref=f5e32] [cursor=pointer]: E-posta
+                - textbox "E-posta" [ref=f5e34]:
+                  - /placeholder: ornek@gmail.com
+                  - text: ali@ornek.com
+              - generic [ref=f5e35]:
+                - generic [ref=f5e36] [cursor=pointer]: Şifre
+                - generic [ref=f5e37]:
+                  - textbox "Şifre" [ref=f5e38]:
+                    - /placeholder: Şifrenizi girin
+                  - button "Şifreyi göster" [ref=f5e39] [cursor=pointer]
+              - generic [ref=f5e42]:
+                - generic [ref=f5e43] [cursor=pointer]:
+                  - checkbox "Beni hatırla" [checked] [ref=f5e45]
+                  - generic [ref=f5e46]: Beni hatırla
+                - link "Şifremi unuttum?" [ref=f5e47] [cursor=pointer]:
+                  - /url: /forgot-password
+              - button "Giriş yap" [ref=f5e48] [cursor=pointer]
+            - generic [ref=f5e50]:
+              - generic [ref=f5e51]: veya
+              - generic [ref=f5e54]:
+                - link "Google ile devam et" [ref=f5e55] [cursor=pointer]:
+                  - /url: http://localhost:8080/api/v1/auth/oauth2/authorization/google
+                - link "GitHub ile devam et" [ref=f5e56] [cursor=pointer]:
+                  - /url: http://localhost:8080/api/v1/auth/oauth2/authorization/github
+            - paragraph [ref=f5e57]:
+              - text: Hesabınız yok mu?
+              - link "Kayıt olun" [ref=f5e58] [cursor=pointer]:
+                - /url: /register
+  - region "Notifications alt+T"
+  - generic [ref=f5e63] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=f5e64]
+    - generic [ref=f5e68]:
+      - button "Open issues overlay" [ref=f5e69]:
+        - generic [ref=f5e70]:
+          - generic [aria-hidden] [ref=f5e71]: "0"
+          - generic [ref=f5e72]: "1"
+        - generic [ref=f5e73]: Issue
+      - button "Collapse issues badge" [ref=f5e74]
+  - alert [ref=f5e77]

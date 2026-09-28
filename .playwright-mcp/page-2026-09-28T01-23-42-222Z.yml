@@ -1,0 +1,55 @@
+- generic [active] [ref=f6e1]:
+  - generic [ref=f6e2]:
+    - link "İçeriğe geç" [ref=f6e3] [cursor=pointer]:
+      - /url: "#main"
+    - banner [ref=f6e4]:
+      - button "Dil" [ref=f6e5] [cursor=pointer]:
+        - img "Türkçe"
+        - generic [ref=f6e6]: tr
+      - group "Tema" [ref=f6e7]:
+        - button "Açık" [ref=f6e8] [cursor=pointer]
+        - button "Koyu" [ref=f6e11] [cursor=pointer]
+    - main [ref=f6e14]:
+      - link "PDA · Project Delivery Assistant" [ref=f6e15] [cursor=pointer]:
+        - /url: /login
+        - img "PDA · Project Delivery Assistant" [ref=f6e16]
+      - generic [ref=f6e18]:
+        - generic [ref=f6e19]:
+          - heading "Projelerinizi güvenle yönetin." [level=1] [ref=f6e20]
+          - paragraph [ref=f6e21]: Görevler, ekipler ve teslim süreçleri için sade, güçlü ve modern bir çalışma alanı.
+        - region [ref=f6e22]:
+          - generic [ref=f6e23]:
+            - heading "Hesabınıza giriş yapın" [level=2] [ref=f6e24]
+            - paragraph [ref=f6e25]: Devam etmek için e-posta adresiniz ve şifrenizle giriş yapın.
+          - generic [ref=f6e26]:
+            - group [ref=f6e28]:
+              - generic [ref=f6e29]:
+                - generic [ref=f6e30] [cursor=pointer]: E-posta
+                - textbox "E-posta" [ref=f6e32]:
+                  - /placeholder: ornek@gmail.com
+              - generic [ref=f6e33]:
+                - generic [ref=f6e34] [cursor=pointer]: Şifre
+                - generic [ref=f6e35]:
+                  - textbox "Şifre" [ref=f6e36]:
+                    - /placeholder: Şifrenizi girin
+                  - button "Şifreyi göster" [ref=f6e37] [cursor=pointer]
+              - generic [ref=f6e40]:
+                - generic [ref=f6e41] [cursor=pointer]:
+                  - checkbox "Beni hatırla" [ref=f6e43]
+                  - generic [ref=f6e44]: Beni hatırla
+                - link "Şifremi unuttum?" [ref=f6e45] [cursor=pointer]:
+                  - /url: /forgot-password
+              - button "Giriş yap" [ref=f6e46] [cursor=pointer]
+            - generic [ref=f6e48]:
+              - generic [ref=f6e49]: veya
+              - generic [ref=f6e52]:
+                - link "Google ile devam et" [ref=f6e53] [cursor=pointer]:
+                  - /url: http://localhost:8080/api/v1/auth/oauth2/authorization/google
+                - link "GitHub ile devam et" [ref=f6e54] [cursor=pointer]:
+                  - /url: http://localhost:8080/api/v1/auth/oauth2/authorization/github
+            - paragraph [ref=f6e55]:
+              - text: Hesabınız yok mu?
+              - link "Kayıt olun" [ref=f6e56] [cursor=pointer]:
+                - /url: /register
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=f6e62] [cursor=pointer]

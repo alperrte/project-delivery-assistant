@@ -175,6 +175,25 @@ public class UserAccountService implements UserAccounts {
 
     @Override
     @Transactional(readOnly = true)
+    public Optional<UUID> findActiveByEmail(String email) {
+        return users.findByEmail(email)
+                .filter(user -> user.getAccountStatus() == AccountStatus.ACTIVE)
+                .map(User::getId);
+    }
+
+    @Override
+    @Transactional
+    public boolean resetPassword(UUID userId, String newPassword) {
+        Optional<User> found = users.findById(userId).filter(user -> user.getAccountStatus() == AccountStatus.ACTIVE);
+        if (found.isEmpty()) {
+            return false;
+        }
+        found.get().changePassword(newPassword, passwordEncoder);
+        return true;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<LinkedOAuthIdentity> listOAuthIdentities(UUID userId) {
         return identities.findByUserIdOrderByCreatedAtAsc(userId).stream()
                 .map(identity -> new LinkedOAuthIdentity(identity.getProvider(), identity.getProviderEmail(),

@@ -19,7 +19,9 @@
       "previous": "Önceki",
       "next": "Sonraki",
       "pageOf": "Sayfa {page} / {totalPages}"
-    }
+    },
+    "showPassword": "Şifreyi göster",
+    "hidePassword": "Şifreyi gizle"
   },
   "errors": {
     "network": "Sunucuya ulaşılamadı. Bağlantınızı kontrol edip tekrar deneyin.",
@@ -30,7 +32,13 @@
     "invalidFields": "Girdiğiniz bilgileri kontrol edin.",
     "passwordMismatch": "Şifreler eşleşmiyor.",
     "forbidden": "Bu işlem için yetkiniz yok.",
-    "notFound": "Bu kayıt bulunamadı."
+    "notFound": "Bu kayıt bulunamadı.",
+    "resetCodeInvalid": "Kod hatalı. Lütfen tekrar deneyin.",
+    "resetCodeExpired": "Kodun süresi doldu. Yeni bir kod isteyin.",
+    "mailUnavailable": "Posta sistemi şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.",
+    "currentPasswordIncorrect": "Mevcut şifreniz hatalı.",
+    "passwordUnchanged": "Yeni şifre mevcut şifreyle aynı olamaz.",
+    "accountUnavailable": "Hesabınız şu anda kullanılamıyor."
   },
   "app": {
     "nav": {
@@ -181,21 +189,27 @@
       "account_exists": "Bu e-posta ile zaten bir hesap var. E-posta ve şifrenizle giriş yapın, sonra hesap ayarlarından bağlayın.",
       "provider_error": "Sağlayıcı ile giriş tamamlanamadı. Lütfen tekrar deneyin.",
       "unknown": "Giriş tamamlanamadı. Lütfen tekrar deneyin."
-    }
+    },
+    "or": "veya"
   },
   "login": {
-    "title": "Tekrar hoş geldiniz",
-    "subtitle": "Hesabınıza giriş yapın.",
+    "title": "Hesabınıza giriş yapın",
+    "subtitle": "Devam etmek için e-posta adresiniz ve şifrenizle giriş yapın.",
     "email": "E-posta",
     "password": "Şifre",
-    "showPassword": "Şifreyi göster",
-    "hidePassword": "Şifreyi gizle",
     "submit": "Giriş yap",
     "submitting": "Giriş yapılıyor...",
     "noAccount": "Hesabınız yok mu?",
     "toRegister": "Kayıt olun",
+    "forgotPassword": "Şifremi unuttum?",
     "emailPlaceholder": "ornek@gmail.com",
-    "passwordPlaceholder": "Şifrenizi girin"
+    "passwordPlaceholder": "Şifrenizi girin",
+    "metaTitle": "Giriş yap",
+    "rememberMe": "Beni hatırla",
+    "hero": {
+      "title": "Planlayın. Yönetin. <accent>Teslim edin.</accent>",
+      "subtitle": "Görevler, ekipler ve teslim süreçleri için sade, güçlü ve modern bir çalışma alanı."
+    }
   },
   "register": {
     "title": "Hesap oluşturun",
@@ -220,51 +234,52 @@
     "required": "Bu alan zorunlu.",
     "email": "Geçerli bir e-posta adresi girin.",
     "nickname": "3-32 karakter; yalnız harf, rakam ve alt çizgi.",
+    "code": "6 haneli kodu girin.",
     "passwordMin": "Şifre en az 8 karakter olmalı.",
     "passwordMax": "Şifre en fazla 128 karakter olabilir.",
     "passwordMatch": "Şifreler eşleşmiyor.",
     "maxLength": "Bu değer çok uzun."
   },
-  "story": {
-    "skip": "İçeriğe geç",
-    "headline": "Projeyi planla. İşi dağıt. Teslimatı takip et.",
-    "intro": "PDA, küçük ekiplerin proje, görev ve teslimat sürecini tek bir çalışma alanında yönetmesini sağlar.",
-    "badge": "Açık kaynak • Self-hosted • Küçük ekipler için",
-    "pillars": {
-      "assign": "Çoklu görev atama",
-      "history": "Aktivite geçmişi",
-      "roles": "Rol bazlı erişim"
-    },
-    "trust": {
-      "languages": "TR / EN / DE",
-      "themes": "Açık / Koyu / Sistem",
-      "session": "Güvenli oturum",
-      "open": "Açık kaynak mimari"
-    }
+  "forgotPassword": {
+    "title": "Şifrenizi mi unuttunuz?",
+    "subtitle": "E-posta adresinizi girin, hesabınız varsa bir kod gönderelim.",
+    "email": "E-posta",
+    "emailPlaceholder": "ornek@gmail.com",
+    "sendCode": "Kod gönder",
+    "sending": "Gönderiliyor...",
+    "codeSentTitle": "Kodunuzu kontrol edin",
+    "codeSentSubtitle": "Hesabınız varsa {email} adresine 6 haneli bir kod gönderdik.",
+    "code": "Doğrulama kodu",
+    "codePlaceholder": "000000",
+    "newPassword": "Yeni şifre",
+    "newPasswordPlaceholder": "Yeni şifrenizi oluşturun",
+    "confirmPassword": "Yeni şifre tekrarı",
+    "confirmPasswordPlaceholder": "Yeni şifrenizi tekrar girin",
+    "reset": "Şifreyi sıfırla",
+    "resetting": "Sıfırlanıyor...",
+    "resend": "Kodu tekrar gönder",
+    "resending": "Gönderiliyor...",
+    "resent": "Kod tekrar gönderildi.",
+    "changeEmail": "E-postayı değiştir",
+    "success": "Şifreniz güncellendi. Şimdi giriş yapabilirsiniz.",
+    "backToLogin": "Girişe dön"
   },
-  "preview": {
-    "projects": "Projeler",
-    "members": "{count} ekip üyesi",
-    "progress": "İlerleme",
-    "tasks": "Görevler",
-    "activity": "Etkinlik",
-    "delivered": "Teslimat hazır",
-    "status": {
-      "todo": "Yapılacak",
-      "inProgress": "Devam ediyor",
-      "inReview": "İncelemede",
-      "done": "Tamamlandı"
-    },
-    "t39": "Backend kimlik doğrulama",
-    "t40": "Veritabanı şeması",
-    "t41": "API entegrasyonu",
-    "t42": "Login ekranını yenile",
-    "deadline": "Teslim tarihi güncellendi",
-    "assigned": "{user}, {task} görevini atadı",
-    "moved": "{user}, {task} durumunu “{status}” yaptı",
-    "due": "Teslim 24 Ara",
-    "milestone": "Beta sürümü",
-    "daysLeft": "{count} gün kaldı",
-    "notification": "{user}, {task} görevini sana atadı"
+  "changePassword": {
+    "title": "Şifrenizi güncelleyin",
+    "subtitleRequired": "Devam etmeden önce şifrenizi değiştirmeniz gerekiyor.",
+    "subtitle": "Hesabınızın şifresini değiştirin.",
+    "currentPassword": "Mevcut şifre",
+    "currentPasswordPlaceholder": "Mevcut şifrenizi girin",
+    "newPassword": "Yeni şifre",
+    "newPasswordPlaceholder": "Yeni şifrenizi oluşturun",
+    "confirmNewPassword": "Yeni şifre tekrarı",
+    "confirmNewPasswordPlaceholder": "Yeni şifrenizi tekrar girin",
+    "submit": "Şifreyi güncelle",
+    "submitting": "Güncelleniyor...",
+    "success": "Şifreniz güncellendi."
+  },
+  "brand": {
+    "skip": "İçeriğe geç",
+    "wordmark": "PDA"
   }
 }

@@ -8,7 +8,7 @@ export default async function RegisterPage() {
   return (
     <AuthCard title={t("title")} subtitle={t("subtitle")}>
       <OAuthButtons />
-      <div className="mt-4">
+      <div className="mt-5">
         <RegisterForm />
       </div>
     </AuthCard>

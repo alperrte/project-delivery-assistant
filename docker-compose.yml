@@ -32,22 +32,7 @@ services:
       postgres:
         condition: service_healthy
 
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
-    restart: unless-stopped
-    env_file:
-      - .env
-    environment:
-      INTERNAL_API_URL: ${INTERNAL_API_URL}
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
-    ports:
-      - "${FRONTEND_PORT:-3000}:3000"
-    depends_on:
-      - backend
+# The frontend runs outside Docker: `cd frontend && npm run dev` (port 3000).
 
 volumes:
   pda_postgres_data:

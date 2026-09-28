@@ -1,0 +1,39 @@
+- generic [active] [ref=f10e1]:
+  - generic [ref=f10e2]:
+    - link "İçeriğe geç" [ref=f10e3] [cursor=pointer]:
+      - /url: "#main"
+    - banner [ref=f10e4]:
+      - button "Dil" [ref=f10e5] [cursor=pointer]:
+        - img "Türkçe"
+        - generic [ref=f10e6]: tr
+      - group "Tema" [ref=f10e7]:
+        - button "Açık" [pressed] [ref=f10e8] [cursor=pointer]
+        - button "Koyu" [ref=f10e12] [cursor=pointer]
+    - main [ref=f10e15]:
+      - link "PDA · Project Delivery Assistant" [ref=f10e16] [cursor=pointer]:
+        - /url: /login
+        - img "PDA · Project Delivery Assistant" [ref=f10e18]
+      - region [ref=f10e21]:
+        - generic [ref=f10e22]:
+          - heading "Şifrenizi mi unuttunuz?" [level=1] [ref=f10e23]
+          - paragraph [ref=f10e24]: E-posta adresinizi girin, hesabınız varsa bir kod gönderelim.
+        - group [ref=f10e26]:
+          - generic [ref=f10e27]:
+            - generic [ref=f10e28] [cursor=pointer]: E-posta
+            - textbox "E-posta" [ref=f10e30]:
+              - /placeholder: ornek@gmail.com
+          - button "Kod gönder" [ref=f10e31] [cursor=pointer]
+        - paragraph [ref=f10e32]:
+          - link "Girişe dön" [ref=f10e33] [cursor=pointer]:
+            - /url: /login
+  - region "Notifications alt+T"
+  - generic [ref=f10e38] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=f10e39]
+    - generic [ref=f10e43]:
+      - button "Open issues overlay" [ref=f10e44]:
+        - generic [ref=f10e45]:
+          - generic [aria-hidden] [ref=f10e46]: "0"
+          - generic [ref=f10e47]: "1"
+        - generic [ref=f10e48]: Issue
+      - button "Collapse issues badge" [ref=f10e49]
+  - alert [ref=f10e52]

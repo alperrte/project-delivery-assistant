@@ -74,6 +74,24 @@ public class SmtpVerificationMailAdapter implements VerificationMailPort {
         }
     }
 
+    @Override
+    public void sendPasswordResetCode(String recipientEmail, String code) {
+        if (sender == null) {
+            throw new VerificationMailUnavailableException();
+        }
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(fromAddress);
+        message.setTo(recipientEmail);
+        message.setSubject("PDA password reset code");
+        message.setText("Your PDA password reset code is " + code + ". It expires in 10 minutes. "
+                + "If you did not request this, you can ignore this email.");
+        try {
+            sender.send(message);
+        } catch (MailException exception) {
+            throw new VerificationMailUnavailableException();
+        }
+    }
+
     private static String required(Environment environment, String key) {
         String value = environment.getProperty(key);
         if (value == null || value.isBlank()) {
