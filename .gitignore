@@ -90,6 +90,10 @@ pnpm-debug.log*
 
 .pnpm-store/
 
+.impeccable
+
+.playwright-mcp
+
 
 # ============================================================
 # Frontend Testing / Coverage
