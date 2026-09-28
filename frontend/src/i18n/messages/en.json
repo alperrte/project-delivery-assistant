@@ -58,6 +58,13 @@
     "ANALYST": "Analyst"
   },
   "organizations": {
+    "cardLabel": "ORGANIZATION",
+    "cardNoDescription": "No description added yet.",
+    "cardOpen": "Open workspace",
+    "cardCreated": "Created: {date}",
+    "backToOrganizations": "All organizations",
+    "projectsLabel": "Workspace",
+    "statusValues": { "ACTIVE": "Active", "ARCHIVED": "Archived" },
     "title": "Organizations",
     "description": "Group your projects under an organization, or keep them standalone.",
     "create": "New organization",
@@ -85,6 +92,10 @@
     }
   },
   "projects": {
+    "cardLabel": "PROJECT",
+    "cardNoDescription": "No description added yet.",
+    "cardGoal": "Goal",
+    "cardUpdated": "Updated: {date}",
     "title": "Projects",
     "description": "Projects you are a member of.",
     "create": "New project",
@@ -102,6 +113,9 @@
       "created": "Project created."
     },
     "detail": {
+      "backToProjects": "All projects",
+      "eyebrow": "Project workspace",
+      "navigation": "Project menu",
       "tabs": {
         "overview": "Overview",
         "criteria": "Criteria",
@@ -113,6 +127,24 @@
       }
     },
     "overview": {
+      "noCriteriaTitle": "Define what success looks like.",
+      "noCriteriaDescription": "Add the first criterion to start tracking progress here.",
+      "defineCriteria": "Define criteria",
+      "editProjectProfile": "Edit project details",
+      "progressCount": "{completed} of {total} criteria completed",
+      "viewCriteria": "View criteria",
+      "viewMembers": "View members",
+      "projectProfile": "Project profile",
+      "goal": "Project goal",
+      "noGoal": "No goal has been set for this project yet.",
+      "techStack": "Technology stack",
+      "timeline": "Target date",
+      "notSpecified": "Not specified",
+      "viewRepository": "View repository",
+      "connectRepository": "Connect repository",
+      "sectionLabel": "Overview",
+      "heading": "Project summary",
+      "team": "Project team",
       "statusValues": {
         "PLANNING": "Planning",
         "ACTIVE": "Active",
@@ -196,6 +228,8 @@
     }
   },
   "members": {
+    "title": "Project members",
+    "emptyDescription": "People who join this project and their roles will appear here.",
     "emptyTitle": "No members yet",
     "columns": { "member": "Member", "roles": "Roles", "actions": "Actions" },
     "editRolesTitle": "Edit roles",
@@ -207,6 +241,8 @@
     "rolesUpdated": "Roles updated."
   },
   "invitations": {
+    "statusValues": { "PENDING": "Pending", "ACCEPTED": "Accepted", "REJECTED": "Rejected", "CANCELLED": "Cancelled", "EXPIRED": "Expired" },
+    "emptyDescription": "Invite a project member to grow your team.",
     "pendingTitle": "Pending invitations",
     "invite": "Invite member",
     "emptyTitle": "No invitations yet",
@@ -224,6 +260,7 @@
     "rolesLabel": "Initial roles",
     "send": "Send invite",
     "respond": {
+      "eyebrow": "Project invitation",
       "missingToken": "This invitation link is missing its token.",
       "prompt": "You have been invited to join this project.",
       "accept": "Accept",
@@ -234,6 +271,9 @@
     }
   },
   "squads": {
+    "manageMembers": "Members",
+    "edit": "Edit",
+    "emptyDescription": "Organize project members into teams that work together.",
     "title": "Squads",
     "create": "New squad",
     "emptyTitle": "No squads yet",

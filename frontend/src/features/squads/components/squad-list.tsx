@@ -49,7 +49,7 @@ export function SquadList({ projectId, isManager }: { projectId: string; isManag
 
       {isLoading && <Skeleton className="h-32 w-full" />}
       {isError && <p className="text-sm text-destructive">{te(errorKey(error))}</p>}
-      {data && data.content.length === 0 && <EmptyState title={t("emptyTitle")} />}
+      {data && data.content.length === 0 && <EmptyState title={t("emptyTitle")} description={t("emptyDescription")} />}
 
       {data && data.content.length > 0 && (
         <>
@@ -71,8 +71,9 @@ export function SquadList({ projectId, isManager }: { projectId: string; isManag
                         squad={squad}
                         isManager={isManager}
                         trigger={
-                          <Button variant="ghost" size="icon-sm" aria-label={t("members.title", { name: squad.name })}>
+                          <Button variant="outline" size="sm" aria-label={t("members.title", { name: squad.name })}>
                             <Users size={16} />
+                            {t("manageMembers")}
                           </Button>
                         }
                       />
@@ -82,15 +83,17 @@ export function SquadList({ projectId, isManager }: { projectId: string; isManag
                             projectId={projectId}
                             squad={squad}
                             trigger={
-                              <Button variant="ghost" size="icon-sm" aria-label={t("form.editTitle")}>
+                              <Button variant="ghost" size="sm" aria-label={t("form.editTitle")}>
                                 <PencilSimple size={16} />
+                                {t("edit")}
                               </Button>
                             }
                           />
                           <ConfirmDialog
                             trigger={
-                              <Button variant="ghost" size="icon-sm" aria-label={t("archive")}>
+                              <Button variant="ghost" size="sm" aria-label={t("archive")}>
                                 <Archive size={16} />
+                                {t("archive")}
                               </Button>
                             }
                             title={t("archiveConfirmTitle")}

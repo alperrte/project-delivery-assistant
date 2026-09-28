@@ -66,7 +66,7 @@ export function InvitationsPanel({ projectId }: { projectId: string }) {
 
       {isLoading && <Skeleton className="h-32 w-full" />}
       {isError && <p className="text-sm text-destructive">{te(errorKey(error))}</p>}
-      {data && data.content.length === 0 && <EmptyState title={t("emptyTitle")} />}
+      {data && data.content.length === 0 && <EmptyState title={t("emptyTitle")} description={t("emptyDescription")} />}
 
       {data && data.content.length > 0 && (
         <>
@@ -84,27 +84,29 @@ export function InvitationsPanel({ projectId }: { projectId: string }) {
                   <TableCell className="font-medium">{invitation.email ?? invitation.invitedUserId}</TableCell>
                   <TableCell>
                     <Badge variant={invitation.status === "PENDING" ? "default" : "secondary"}>
-                      {invitation.status}
+                      {t(`statusValues.${invitation.status}`)}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
                     {invitation.status === "PENDING" && (
                       <div className="flex justify-end gap-1.5">
                         <Button
-                          variant="ghost"
-                          size="icon-sm"
+                          variant="outline"
+                          size="sm"
                           aria-label={t("resend")}
                           onClick={() => resend.mutate(invitation.id)}
                         >
                           <ArrowClockwise size={16} />
+                          {t("resend")}
                         </Button>
                         <Button
                           variant="ghost"
-                          size="icon-sm"
+                          size="sm"
                           aria-label={t("cancel")}
                           onClick={() => cancel.mutate(invitation.id)}
                         >
                           <X size={16} />
+                          {t("cancel")}
                         </Button>
                       </div>
                     )}

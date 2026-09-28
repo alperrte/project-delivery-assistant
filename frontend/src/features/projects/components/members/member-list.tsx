@@ -6,6 +6,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { PencilSimple, UserMinus } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/common/empty-state";
+import { PageHeader } from "@/components/common/page-header";
 import { PaginationBar } from "@/components/common/pagination-bar";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { Badge } from "@/components/ui/badge";
@@ -32,10 +33,11 @@ export function MemberList({ projectId, isManager }: { projectId: string; isMana
   if (isError) return <p className="text-sm text-destructive">{te(errorKey(error))}</p>;
   if (!data) return null;
 
-  if (data.content.length === 0) return <EmptyState title={t("emptyTitle")} />;
-
   return (
     <div>
+      <PageHeader title={t("title")} />
+      {data.content.length === 0 ? <EmptyState title={t("emptyTitle")} description={t("emptyDescription")} /> : (
+      <>
       <Table>
         <TableHeader>
           <TableRow>
@@ -64,15 +66,17 @@ export function MemberList({ projectId, isManager }: { projectId: string; isMana
                       projectId={projectId}
                       member={member}
                       trigger={
-                        <Button variant="ghost" size="icon-sm" aria-label={t("editRolesTitle")}>
+                        <Button variant="outline" size="sm" aria-label={t("editRolesTitle")}>
                           <PencilSimple size={16} />
+                          {t("editRolesTitle")}
                         </Button>
                       }
                     />
                     <ConfirmDialog
                       trigger={
-                        <Button variant="ghost" size="icon-sm" aria-label={t("remove")}>
+                        <Button variant="ghost" size="sm" aria-label={t("remove")}>
                           <UserMinus size={16} />
+                          {t("remove")}
                         </Button>
                       }
                       title={t("removeConfirmTitle")}
@@ -98,6 +102,8 @@ export function MemberList({ projectId, isManager }: { projectId: string; isMana
         </TableBody>
       </Table>
       <PaginationBar page={data.page} totalPages={data.totalPages} totalElements={data.totalElements} onPageChange={setPage} />
+      </>
+      )}
     </div>
   );
 }

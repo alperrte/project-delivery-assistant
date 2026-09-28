@@ -58,6 +58,13 @@
     "ANALYST": "Analist"
   },
   "organizations": {
+    "cardLabel": "ORGANİZASYON",
+    "cardNoDescription": "Henüz açıklama eklenmedi.",
+    "cardOpen": "Çalışma alanını aç",
+    "cardCreated": "Oluşturulma: {date}",
+    "backToOrganizations": "Tüm organizasyonlar",
+    "projectsLabel": "Çalışma alanı",
+    "statusValues": { "ACTIVE": "Aktif", "ARCHIVED": "Arşivlendi" },
     "title": "Organizasyonlar",
     "description": "Projelerinizi bir organizasyon altında gruplayın veya bağımsız tutun.",
     "create": "Yeni organizasyon",
@@ -85,6 +92,10 @@
     }
   },
   "projects": {
+    "cardLabel": "PROJE",
+    "cardNoDescription": "Henüz açıklama eklenmedi.",
+    "cardGoal": "Hedef",
+    "cardUpdated": "Son güncelleme: {date}",
     "title": "Projeler",
     "description": "Üyesi olduğunuz projeler.",
     "create": "Yeni proje",
@@ -102,6 +113,9 @@
       "created": "Proje oluşturuldu."
     },
     "detail": {
+      "backToProjects": "Tüm projeler",
+      "eyebrow": "Proje çalışma alanı",
+      "navigation": "Proje menüsü",
       "tabs": {
         "overview": "Genel Bakış",
         "criteria": "Kriterler",
@@ -113,6 +127,24 @@
       }
     },
     "overview": {
+      "noCriteriaTitle": "Başarı ölçütlerini birlikte belirleyin.",
+      "noCriteriaDescription": "İlk kriteri eklediğinizde projenin ilerleyişi burada görünür.",
+      "defineCriteria": "Kriterleri tanımla",
+      "editProjectProfile": "Proje bilgilerini düzenle",
+      "progressCount": "{total} kriterin {completed} tanesi tamamlandı",
+      "viewCriteria": "Kriterleri görüntüle",
+      "viewMembers": "Üyeleri görüntüle",
+      "projectProfile": "Proje profili",
+      "goal": "Proje hedefi",
+      "noGoal": "Bu proje için henüz hedef belirtilmedi.",
+      "techStack": "Teknoloji yığını",
+      "timeline": "Hedef tarih",
+      "notSpecified": "Belirtilmedi",
+      "viewRepository": "Depoyu görüntüle",
+      "connectRepository": "Depo bağla",
+      "sectionLabel": "Genel bakış",
+      "heading": "Proje özeti",
+      "team": "Proje ekibi",
       "statusValues": {
         "PLANNING": "Planlama",
         "ACTIVE": "Aktif",
@@ -196,6 +228,8 @@
     }
   },
   "members": {
+    "title": "Proje üyeleri",
+    "emptyDescription": "Projeye katılan kişiler ve rolleri burada görünecek.",
     "emptyTitle": "Henüz üye yok",
     "columns": { "member": "Üye", "roles": "Roller", "actions": "İşlemler" },
     "editRolesTitle": "Rolleri düzenle",
@@ -207,6 +241,8 @@
     "rolesUpdated": "Roller güncellendi."
   },
   "invitations": {
+    "statusValues": { "PENDING": "Bekliyor", "ACCEPTED": "Kabul edildi", "REJECTED": "Reddedildi", "CANCELLED": "İptal edildi", "EXPIRED": "Süresi doldu" },
+    "emptyDescription": "Ekibinizi büyütmek için bir proje üyesi davet edin.",
     "pendingTitle": "Bekleyen davetler",
     "invite": "Üye davet et",
     "emptyTitle": "Henüz davet yok",
@@ -224,6 +260,7 @@
     "rolesLabel": "Başlangıç rolleri",
     "send": "Davet gönder",
     "respond": {
+      "eyebrow": "Proje daveti",
       "missingToken": "Bu davet bağlantısında token eksik.",
       "prompt": "Bu projeye davet edildiniz.",
       "accept": "Kabul et",
@@ -234,6 +271,9 @@
     }
   },
   "squads": {
+    "manageMembers": "Üyeler",
+    "edit": "Düzenle",
+    "emptyDescription": "Proje üyelerini birlikte çalışacakları ekiplerde düzenleyin.",
     "title": "Ekipler",
     "create": "Yeni ekip",
     "emptyTitle": "Henüz ekip yok",

@@ -95,7 +95,9 @@ export function ProjectCreateDialog({ trigger }: { trigger: ReactNode }) {
                 render={({ field }) => (
                   <Select value={field.value ?? ""} onValueChange={field.onChange}>
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder={t("organizationNone")} />
+                      <SelectValue placeholder={t("organizationNone")}>
+                        {(value: string) => organizations.content.find((org) => org.id === value)?.name ?? t("organizationNone")}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {organizations.content.map((org) => (

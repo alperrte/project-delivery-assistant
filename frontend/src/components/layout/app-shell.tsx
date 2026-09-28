@@ -57,20 +57,21 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-[100dvh]">
-      <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80">
-        <div className="mx-auto flex h-14 max-w-6xl items-center gap-4 px-4 sm:px-6">
-          <Link href="/projects" className="flex items-center gap-2">
-            <Logo variant="emblem" size={28} />
+      <header className="sticky top-0 z-40 border-b bg-card/95 backdrop-blur supports-backdrop-filter:bg-card/80">
+        <div className="mx-auto flex max-w-[1720px] flex-wrap items-center gap-x-7 gap-y-2 px-5 py-2 sm:h-17 sm:flex-nowrap sm:px-8 sm:py-0 xl:px-12">
+          <Link href="/projects" className="flex shrink-0 items-center gap-2.5" aria-label="PDA">
+            <Logo variant="emblem" size={32} />
+            <span className="hidden font-heading text-lg font-semibold tracking-tight text-foreground sm:inline">PDA</span>
           </Link>
 
-          <nav className="flex items-center gap-1">
+          <nav className="order-last flex w-full items-center gap-1 sm:order-none sm:w-auto">
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "rounded-md px-2.5 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
-                  pathname.startsWith(link.href) && "bg-muted text-foreground",
+                  "rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+                  pathname.startsWith(link.href) && "bg-primary/10 text-primary",
                 )}
               >
                 {t(`nav.${link.key}`)}
@@ -78,14 +79,14 @@ export function AppShell({ children }: { children: ReactNode }) {
             ))}
           </nav>
 
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex min-w-0 items-center gap-1 sm:gap-2">
             <LocaleSwitcher />
             <ThemeSwitcher />
             <DropdownMenu>
               <DropdownMenuTrigger
                 render={
-                  <Button variant="ghost" size="sm" className="gap-1.5">
-                    {user?.nickname}
+                  <Button variant="ghost" size="sm" className="max-w-28 min-w-0 gap-1.5 sm:max-w-40">
+                    <span className="truncate">{user?.nickname}</span>
                   </Button>
                 }
               />
@@ -104,7 +105,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6">{children}</main>
+      <main className="mx-auto max-w-[1720px] px-5 py-8 sm:px-8 sm:py-10 xl:px-12">{children}</main>
     </div>
   );
 }
