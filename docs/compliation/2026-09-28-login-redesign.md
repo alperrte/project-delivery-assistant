@@ -21,11 +21,11 @@
 - **Animasyon paketi:**
   - **İlk açılış:** Sahne hafif yakınlaşarak belirir, logo netleşerek gelir, slogan soldan sağa açılır, ardından alt metin ve kart yükselir, en son dil/tema kontrolleri iner. Yalnız ilk ziyarette oynar ([template.tsx](../../frontend/src/app/(auth)/template.tsx) `data-entrance="initial"`); animasyonlar CSS ile yürür, JS beklemez.
   - **Sayfa geçişleri:** Giriş yap / Kayıt olun / Şifremi unuttum arasında içerik yumuşakça (saydamlık + hafif yükselme + bulanıklıktan netleşme) gelir (`data-entrance="soft"`). Kartın cam efekti (`backdrop-filter`) geçiş sırasında da korunur; bu yüzden animasyon sarmalayıcıya değil kartın kendisine uygulanır.
-  - **Tema geçişi:** [theme-transition.tsx](../../frontend/src/components/layout/theme-transition.tsx) — ekranın ortasında mevcut temanın gök cismi (güneş/ay) batar, yenisi dönerek doğar; bu sırada yeni tema ortadan büyüyen bir daire ile açılır (View Transitions API). Destek olmayan tarayıcılarda tema anında değişir.
+  - **Tema geçişi:** [theme-transition.tsx](../../frontend/src/components/layout/theme-transition.tsx) — tıklamadan hemen sonra yeni tema ortadan büyüyen bir daire ile açılır (View Transitions API, 0.75 sn). Dairenin ortasında küçük (48px), yumuşak ışıklı bir güneş/ay geçer: eskisi dönerek küçülüp kaybolur, yenisi dönerek gelir ve daire ekranı kaplarken söner; ekranda bekleyen bir öğe yoktur (toplam ≈0.85 sn). Destek olmayan tarayıcılarda tema anında değişir.
   - **Dil geçişi:** [locale-switcher.tsx](../../frontend/src/components/layout/locale-switcher.tsx) — bulanık bir perdenin üzerinde mevcut dilin bayrağı kart gibi dönüp seçilen dilin bayrağına dönüşür; dil adı dönüşün ortasında değişir. Perde sayfa yenilenene ve dönüş bitene kadar kalır.
   - **Logo elektronları:** P, D ve A harflerinin kenar çizgileri boyunca, kuyruklu ikişer ışık elektron gibi dolaşır (D ters yönde ve daha hızlı). Önceki nokta nokta yanıp sönen parlama kaldırıldı. Yeni görsel dosyası üretilmedi; harflerin kenar çizgisi çalışma anında bir SVG filtresiyle (`#pda-logo-current`) logodan çıkarılır, ışıklar dönen bir maskeyle (`.logo-current`, `--pda-orbit`) gösterilir.
   - **Arka plan ışıkları:** Arka plandaki neon şeritler üzerinde soldan sağa kayan bir ışık geçer. Yine SVG filtresi (`#pda-scene-neon`) yalnız neon alanları ayıklar; gökyüzü ve metal yüzeyler etkilenmez. Yalnız `transform` animasyonu kullanıldığı için GPU'da çalışır.
-  - **Hareket azaltma:** İşletim sisteminde "hareketi azalt" açıksa döngüsel animasyonlar (slogan vurgusu, neon ışığı) durur, logo elektronları gizlenir, giriş animasyonları beklemesiz tamamlanır, tema ve dil geçişlerinde güneş/ay ve bayrak animasyonu oynamaz.
+  - **Hareket azaltma:** İşletim sisteminde "hareketi azalt" açıksa döngüsel animasyonlar (slogan vurgusu, neon ışığı) durur, logo elektronları gizlenir, giriş animasyonları beklemesiz tamamlanır, tema geçişinde güneş/ay ve dil geçişinde bayrak animasyonu oynamaz, tema anında değişir.
 - **Açık temada yarı saydam kart:** Açık temadaki giriş kartı, alanlar ve kontroller koyu temadaki gibi buzlu cam görünümünde; arka plan kartın ardından görünür (`--auth-card`, `--auth-field`, `--auth-control` token'ları).
 - **Silinenler:** Eski tasarıma ait, artık kullanılmayan `brand-story-panel.tsx`, `animated-logo.tsx`, `hero-landing-panel.tsx`, `animated-task-flow.tsx`, `product-preview.tsx`, `value-pillars.tsx`.
 
@@ -47,10 +47,10 @@
 | Playwright — koyu temada kare farkı | Değişen pikseller yalnız neon şeritlerde (kayan ışık) ve logoda; gökyüzü ve metal sabit |
 | Playwright — logo elektronları (2x çözünürlük, açık + koyu) | Kenar çizgisi iki logoda da temiz çıkıyor; her harfte ışık yayları farklı konumlarda, alt yazı etkilenmiyor |
 | Playwright — slogan elektrik akımı (açık, koyu, 390px mobil; animasyon durdurulup 1.85 / 2.5 / 3.2 / 4.67 / 6.87 sn karelerine gidildi) | Kıvılcım P'den başlayıp harf harf ilerliyor, kontur kopyası harfle hizalı; son harften sonra satır parlıyor, sonra mürekkep rengine dönüyor; mobilde iki satır, taşma yok; başlığın erişilebilir adı "Planlayın. Yönetin. Teslim edin." (harf harf değil); hareketi azalt açıkken animasyon yok; konsolda hata yok |
-| Playwright — tema geçişi | Güneş batıyor, ay doğuyor, yeni tema daire şeklinde açılıyor; hale kenarı yumuşak |
+| Playwright — tema geçişi (açık → koyu → açık) | 200. ms'de daire açılmaya başlıyor, 470. ms'de küçük ay dairenin ortasında, 720. ms'de daire ekranı kaplamış ve ay neredeyse sönmüş; geçişten sonra katman DOM'da kalmıyor; konsolda hata yok |
 | Playwright — dil geçişi TR → EN | TR bayrağı dönüp İngiltere bayrağına dönüşüyor, ad değişiyor; başlık "Plan. Manage. Deliver." |
 | Playwright — `/login` → `/register` | Yumuşak geçiş oynuyor, kartın `backdrop-filter: blur(24px)` korunuyor; konsolda hata yok |
-| Playwright — hareket azaltma | Döngüsel animasyonlar kapalı, logo elektronları gizli, kart hemen görünür, tema geçişinde güneş/ay yok |
+| Playwright — hareket azaltma | Döngüsel animasyonlar kapalı, logo elektronları gizli, kart hemen görünür, tema anında değişiyor |
 
 Not: Doğrulama önce `next dev -p 3001` ile yapıldı; ardından frontend Docker Compose'dan çıkarıldı ve 3000 portunda `npm run dev` ile çalışıyor. Ekran görüntüsü alınırken hidrasyon anına denk gelen bir `caret-color` uyuşmazlık uyarısı Playwright'ın kendi imleç gizleme stilinden kaynaklanıyor; normal yüklemede konsol temiz.
 
@@ -67,9 +67,9 @@ Yok. Mevcut `POST /api/auth/login`, `GET /api/auth/me` ve OAuth başlatma uçlar
 ## 6. Kullanıcı kontrolü
 
 1. `frontend` klasöründe `npm run dev` çalıştırın, `http://localhost:3000/login` açın (frontend artık Docker'da değil). **Beklenen:** sahne, logo, slogan, kart ve kontroller sırayla belirir; sloganda "P" harfinden başlayan bir elektrik kıvılcımı harfleri sırayla dolaşır, sona gelince tüm satır parlar, birkaç saniye bekleyip baştan başlar, logonun harf kenarlarında elektron ışıkları dolaşır, arka plandaki neon şeritlerde ışık kayar. Açık temada kartın arkasından arka plan görünür.
-2. Sağ üstteki ay ikonuna tıklayın. **Beklenen:** ortada güneş batar, ay doğar ve koyu tema ortadan daire şeklinde açılır; camgöbeği birincil buton; sayfayı yenileyince koyu kalır.
+2. Sağ üstteki ay ikonuna tıklayın. **Beklenen:** koyu tema ortadan daire şeklinde açılır, ortada küçük bir ay kısa bir an görünüp kaybolur (takılı kalmaz); camgöbeği birincil buton; sayfayı yenileyince koyu kalır.
 3. Sol üstteki dil menüsünden English, sonra Deutsch seçin. **Beklenen:** ekranda mevcut dilin bayrağı dönerek seçilen dilin bayrağına dönüşür; ardından tüm metinler ve tarayıcı sekme başlığı değişir.
 4. "Beni hatırla" işaretli olarak giriş yapın, çıkış yapıp `/login`'e dönün. **Beklenen:** e-posta alanı dolu, kutucuk işaretli; şifre boş.
 5. "Kayıt olun" ve "Şifremi unuttum?" bağlantılarını açın. **Beklenen:** aynı arka plan ve kart stili; içerik bulanıklıktan netleşerek yumuşakça gelir, arka plan ve logo yeniden animasyon oynatmaz.
 6. Tarayıcıyı 390px genişliğe daraltın. **Beklenen:** yatay kaydırma yok, tüm öğeler tek sütunda.
-7. İşletim sisteminde "hareketi azalt" ayarını açıp sayfayı yenileyin. **Beklenen:** içerik beklemeden görünür, döngüsel ışık animasyonları durur, tema değişince güneş/ay çıkmaz.
+7. İşletim sisteminde "hareketi azalt" ayarını açıp sayfayı yenileyin. **Beklenen:** içerik beklemeden görünür, döngüsel ışık animasyonları durur, tema değişince geçiş animasyonu oynamaz, tema anında değişir.

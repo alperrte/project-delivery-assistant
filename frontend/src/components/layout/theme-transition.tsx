@@ -8,10 +8,11 @@ import { Moon, Sun } from "@phosphor-icons/react";
 type Scheme = "light" | "dark";
 type Run = { id: number; from: Scheme; to: Scheme };
 
-// Timeline (ms): the overlay appears, the old body starts to set, and the new
-// theme opens as a circle from the centre while the new body rises.
-const SWAP_AT = 300;
-const CLEAR_AT = 1400;
+// Timeline (ms): the new theme starts opening as a circle almost at once; a
+// small sun/moon crosses over in the centre and is gone by the time the
+// circle has covered the screen.
+const SWAP_AT = 60;
+const CLEAR_AT = 600;
 
 let current: Run | null = null;
 let seq = 0;
@@ -53,22 +54,23 @@ export function playThemeTransition(from: Scheme, to: Scheme, swap: () => void) 
 const BODIES = {
   light: {
     Icon: Sun,
-    className: "text-amber-300 drop-shadow-[0_0_28px_rgb(251_191_36/0.85)]",
-    halo: "rgb(251 191 36 / 0.45)",
+    className: "text-amber-300 drop-shadow-[0_0_14px_rgb(251_191_36/0.55)]",
+    halo: "rgb(251 191 36 / 0.28)",
   },
   dark: {
     Icon: Moon,
-    className: "text-sky-100 drop-shadow-[0_0_28px_rgb(47_208_245/0.9)]",
-    halo: "rgb(47 208 245 / 0.4)",
+    className: "text-sky-100 drop-shadow-[0_0_14px_rgb(47_208_245/0.6)]",
+    halo: "rgb(47 208 245 / 0.26)",
   },
 } as const;
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 /**
- * The overlay itself, mounted once in Providers: the current theme's body
- * sets below a soft horizon while the next one rises in its place. Purely
- * decorative; the toggles announce the change themselves.
+ * The overlay itself, mounted once in Providers: a small sun/moon in the
+ * centre of the opening circle. The old body turns away and fades while the
+ * new one turns in, then the whole thing fades out; nothing holds still.
+ * Purely decorative; the toggles announce the change themselves.
  */
 export function ThemeTransitionOverlay() {
   const run = useSyncExternalStore(subscribe, () => current, () => null);
@@ -80,36 +82,26 @@ export function ThemeTransitionOverlay() {
         <motion.div
           key={run.id}
           aria-hidden
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0, scale: 1.15 }}
-          transition={{ duration: 0.35, ease: EASE }}
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 1.1 }}
+          transition={{ duration: 0.25, ease: EASE }}
           style={{ viewTransitionName: "theme-orb" }}
-          className="pointer-events-none fixed left-1/2 top-1/2 z-200 -ml-32 -mt-32 size-64"
+          className="pointer-events-none fixed left-1/2 top-1/2 z-200 -ml-16 -mt-16 grid size-32 place-items-center"
         >
-          {/* Halos as gradients, not blur: the view-transition capture would cut a blur off square. */}
-          <Halo color={BODIES[run.from].halo} leaving />
-          <Halo color={BODIES[run.to].halo} />
-          <div className="absolute inset-0 grid place-items-center [mask-image:linear-gradient(to_bottom,#000_72%,transparent_94%)]">
-            <Body scheme={run.from} leaving />
-            <Body scheme={run.to} />
-          </div>
+          {/* Halo as a gradient, not blur: the view-transition capture would cut a blur off square. */}
+          <motion.span
+            className="absolute inset-0"
+            initial={{ background: `radial-gradient(closest-side, ${BODIES[run.from].halo}, transparent)` }}
+            animate={{ background: `radial-gradient(closest-side, ${BODIES[run.to].halo}, transparent)` }}
+            transition={{ duration: 0.4, ease: EASE }}
+          />
+          <Body scheme={run.from} leaving />
+          <Body scheme={run.to} />
         </motion.div>
       )}
     </AnimatePresence>,
     document.body,
-  );
-}
-
-function Halo({ color, leaving }: { color: string; leaving?: boolean }) {
-  return (
-    <motion.span
-      className="absolute inset-0"
-      style={{ background: `radial-gradient(closest-side, ${color}, transparent)` }}
-      initial={{ opacity: 0, scale: 0.6 }}
-      animate={leaving ? { opacity: [0, 1, 0], scale: [0.6, 1, 0.8] } : { opacity: [0, 0, 1], scale: [0.6, 0.6, 1] }}
-      transition={{ duration: 0.9, times: leaving ? [0, 0.3, 1] : [0, 0.35, 1], ease: EASE }}
-    />
   );
 }
 
@@ -119,19 +111,11 @@ function Body({ scheme, leaving }: { scheme: Scheme; leaving?: boolean }) {
   return (
     <motion.span
       className={`col-start-1 row-start-1 ${className}`}
-      initial={leaving ? { opacity: 0, scale: 0.6, y: 0, rotate: 0 } : { opacity: 0, y: 90, rotate: turn }}
-      animate={
-        leaving
-          ? { opacity: [0, 1, 1, 0], scale: [0.6, 1, 1, 0.9], y: [0, 0, 0, 90], rotate: [0, 0, 0, -turn] }
-          : { opacity: [0, 0, 1], y: [90, 90, 0], rotate: [turn, turn, 0] }
-      }
-      transition={
-        leaving
-          ? { duration: 0.85, times: [0, 0.25, 0.4, 1], ease: EASE }
-          : { duration: 1, times: [0, 0.35, 1], ease: EASE }
-      }
+      initial={leaving ? { opacity: 1, scale: 1, rotate: 0 } : { opacity: 0, scale: 0.6, rotate: turn }}
+      animate={leaving ? { opacity: 0, scale: 0.6, rotate: -turn } : { opacity: 1, scale: 1, rotate: 0 }}
+      transition={leaving ? { duration: 0.3, ease: EASE } : { delay: 0.12, duration: 0.4, ease: EASE }}
     >
-      <Icon size={112} weight="fill" />
+      <Icon size={48} weight="fill" />
     </motion.span>
   );
 }
