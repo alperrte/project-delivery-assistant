@@ -109,7 +109,7 @@ class AuthRegistrationHttpTest {
 
     @Test
     void loginLimitCountsRequestsRejectedByCsrf() throws Exception {
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 30; i++) {
             mvc.perform(post("/api/v1/auth/login").with(request -> {
                         request.setRemoteAddr("203.0.113.10");
                         return request;

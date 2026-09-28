@@ -303,6 +303,7 @@
     "submit": "Create account",
     "submitting": "Creating account",
     "success": "Your account is ready. You can sign in now.",
+    "welcome": "Your account is ready. Welcome aboard!",
     "haveAccount": "Already have an account?",
     "toLogin": "Sign in",
     "emailPlaceholder": "example@gmail.com",

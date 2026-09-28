@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { SubmitButton } from "@/components/common/submit-button";
 import { FormField } from "@/components/common/form-field";
@@ -13,6 +14,7 @@ import { ApiError } from "@/lib/api/client";
 import { errorKey } from "@/lib/api/error-message";
 import { authApi } from "../api";
 import { registerSchema, type RegisterValues } from "../schemas";
+import { sessionQueryKey } from "../hooks/use-session";
 import { authCtaClass } from "./auth-card";
 import { useShake } from "./use-shake";
 
@@ -23,6 +25,7 @@ export function RegisterForm() {
   const tv = useTranslations("validation");
   const te = useTranslations("errors");
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [formError, setFormError] = useState<string | null>(null);
   const [scope, shake] = useShake<HTMLFormElement>();
 
@@ -37,8 +40,6 @@ export function RegisterForm() {
     setFormError(null);
     try {
       await authApi.register(values);
-      toast.success(t("success"));
-      router.replace("/login");
     } catch (err) {
       // Field-level 400s from the server surface next to the offending input.
       if (err instanceof ApiError && err.invalidFields) {
@@ -48,6 +49,22 @@ export function RegisterForm() {
       }
       setFormError(te(errorKey(err)));
       shake();
+      return;
+    }
+
+    // Sign the new account straight in with the same credentials; the backend
+    // sets the HttpOnly session cookies exactly as for a normal login.
+    try {
+      await authApi.login({ email: values.email, password: values.password });
+      const me = await authApi.me();
+      queryClient.setQueryData(sessionQueryKey, me);
+      toast.success(t("welcome"));
+      router.replace(me.mustChangePassword ? "/change-password" : "/projects");
+    } catch {
+      // The account exists; only the sign-in failed (e.g. rate limit), so the
+      // login page is the way forward.
+      toast.success(t("success"));
+      router.replace("/login");
     }
   }
 
