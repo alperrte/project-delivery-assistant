@@ -1,27 +1,25 @@
 "use client";
 
-import type { ReactNode } from "react";
-import { usePathname } from "next/navigation";
-import { motion, useReducedMotion } from "motion/react";
+import { useEffect, useState, type ReactNode } from "react";
+
+// Set after the first auth page has mounted in this tab. Only ever written in an
+// effect, so the server (and the hydrating first render) always see `false`.
+let hasEntered = false;
 
 /**
- * A template remounts on every navigation, so the card enters afresh. /login
- * is the one anchor route: leaving it (to register, forgot- or
- * change-password) slides in from the right, returning to it slides in from
- * the left. The scene, logo and corner controls live in the layout and stay put.
+ * A template remounts on every navigation, so each page's content enters
+ * afresh. The first page of a visit plays the staggered entrance (headline,
+ * then card; see `[data-entrance="initial"]` in globals.css) together with the
+ * shell's own; moving between login, register and forgot-password afterwards
+ * is a soft fade, lift and unblur. Both are CSS, so they start with the server
+ * HTML and need no JavaScript. The scene, logo and corner controls live in the
+ * layout and stay put.
  */
 export default function AuthTemplate({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
-  const reduce = useReducedMotion();
-  const from = pathname.startsWith("/login") ? -28 : 28;
+  const [initial] = useState(() => !hasEntered);
+  useEffect(() => {
+    hasEntered = true;
+  }, []);
 
-  return (
-    <motion.div
-      initial={reduce ? { opacity: 0 } : { opacity: 0, x: from, filter: "blur(4px)" }}
-      animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
-      transition={{ type: "spring", duration: 0.5, bounce: 0 }}
-    >
-      {children}
-    </motion.div>
-  );
+  return <div data-entrance={initial ? "initial" : "soft"}>{children}</div>;
 }

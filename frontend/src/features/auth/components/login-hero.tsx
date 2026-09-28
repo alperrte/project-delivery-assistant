@@ -5,7 +5,10 @@ import { cn } from "@/lib/utils";
 // The slogan's display face; loaded here so only the login page downloads it.
 const exo2 = Exo_2({ subsets: ["latin", "latin-ext"], display: "swap" });
 
-/** Headline above the login card. The accent word carries the one gradient on the page. */
+/**
+ * Headline above the login card: plain ink, with a cyan highlight that
+ * sweeps across it left to right (`auth-slogan` in globals.css).
+ */
 export async function LoginHero() {
   const t = await getTranslations("login.hero");
   return (
@@ -13,18 +16,12 @@ export async function LoginHero() {
       <h1
         className={cn(
           exo2.className,
-          "text-balance text-[clamp(2rem,4.2vw,3.4rem)] font-bold leading-[1.08] tracking-[-0.01em]",
+          "auth-slogan text-balance text-[clamp(2rem,4.2vw,3.4rem)] font-bold leading-[1.08] tracking-[-0.01em]",
         )}
       >
-        {t.rich("title", {
-          accent: (chunks) => (
-            <span className="bg-linear-to-r from-(--auth-accent-from) to-(--auth-accent-to) bg-clip-text text-transparent">
-              {chunks}
-            </span>
-          ),
-        })}
+        {t("title")}
       </h1>
-      <p className="mx-auto mt-3 max-w-3xl text-pretty text-[clamp(1rem,1.3vw,1.125rem)] leading-relaxed text-(--auth-muted)">
+      <p className="auth-subtitle mx-auto mt-3 max-w-3xl text-pretty text-[clamp(1rem,1.3vw,1.125rem)] leading-relaxed text-(--auth-muted)">
         {t("subtitle")}
       </p>
     </div>

@@ -6,8 +6,10 @@ export const authCtaClass =
 
 /**
  * The single framed surface on the auth screens: frosted over the chrome
- * scene, with a bright top edge. Entrance motion lives in the (auth)
- * template, so the card itself is static.
+ * scene, with a bright top edge. Entrance motion is CSS keyed off the (auth)
+ * template's `data-entrance`; the card animates itself rather than a wrapper,
+ * because an ancestor's opacity or filter would cut its backdrop blur off
+ * from the scene.
  */
 export function AuthCard({
   title,
@@ -25,7 +27,7 @@ export function AuthCard({
   return (
     <section
       aria-labelledby="auth-card-title"
-      className="auth-scope relative mx-auto w-full max-w-[30rem] rounded-[1.25rem] border border-(--auth-card-edge) bg-(--auth-card) p-6 text-(--auth-ink) shadow-(--auth-card-shadow) ring-1 ring-(--auth-card-ring) backdrop-blur-xl sm:p-9"
+      className="auth-scope auth-card-surface relative mx-auto w-full max-w-[30rem] rounded-[1.25rem] border border-(--auth-card-edge) bg-(--auth-card) p-6 text-(--auth-ink) shadow-(--auth-card-shadow) ring-1 ring-(--auth-card-ring) backdrop-blur-xl sm:p-9"
     >
       <span
         aria-hidden
