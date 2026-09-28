@@ -329,6 +329,11 @@
     "hero": {
       "title": "Plan. Manage. Deliver.",
       "subtitle": "A clear, capable and modern workspace for tasks, teams and delivery."
+    },
+    "footer": {
+      "copyright": "© 2026 PDA — Project Delivery Assistant",
+      "github": "GitHub",
+      "license": "Apache 2.0"
     }
   },
   "register": {
