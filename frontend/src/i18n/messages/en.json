@@ -114,6 +114,8 @@
     },
     "detail": {
       "backToProjects": "All projects",
+      "createdAt": "Created: {date}",
+      "edit": "Edit",
       "eyebrow": "Project workspace",
       "navigation": "Project menu",
       "tabs": {
@@ -127,6 +129,22 @@
       }
     },
     "overview": {
+      "progressLabel": "Project progress",
+      "completedCriteria": "Completed criteria",
+      "completedCount": "{count} completed",
+      "squadCount": "{count} squads",
+      "squads": "Squads",
+      "viewSquads": "View squads",
+      "invitations": "Invitations",
+      "allInvitations": "Total invitations",
+      "connected": "Connected",
+      "criteriaSnapshot": "Criteria status",
+      "viewAll": "View all",
+      "done": "Completed",
+      "inProgress": "In progress",
+      "manager": "Manager",
+      "quickActions": "Quick actions",
+      "viewInvitations": "Open invitations",
       "noCriteriaTitle": "Define what success looks like.",
       "noCriteriaDescription": "Add the first criterion to start tracking progress here.",
       "defineCriteria": "Define criteria",
@@ -186,6 +204,10 @@
   },
   "criteria": {
     "title": "Success criteria",
+    "description": "Manage the project's success criteria and completion status.",
+    "filters": { "label": "Criteria filter", "all": "All", "completed": "Completed", "remaining": "Remaining" },
+    "search": "Search criteria...",
+    "noResults": "No criteria match your search.",
     "create": "New criterion",
     "emptyTitle": "No criteria yet",
     "emptyDescription": "Add the milestones that define this project's success.",
@@ -229,9 +251,10 @@
   },
   "members": {
     "title": "Project members",
+    "description": "View the people in this project, their roles and join dates.",
     "emptyDescription": "People who join this project and their roles will appear here.",
     "emptyTitle": "No members yet",
-    "columns": { "member": "Member", "roles": "Roles", "actions": "Actions" },
+    "columns": { "member": "Member", "roles": "Roles", "joinedAt": "Joined", "actions": "Actions" },
     "editRolesTitle": "Edit roles",
     "remove": "Remove",
     "removeConfirmTitle": "Remove this member?",
@@ -243,10 +266,11 @@
   "invitations": {
     "statusValues": { "PENDING": "Pending", "ACCEPTED": "Accepted", "REJECTED": "Rejected", "CANCELLED": "Cancelled", "EXPIRED": "Expired" },
     "emptyDescription": "Invite a project member to grow your team.",
-    "pendingTitle": "Pending invitations",
+    "pendingTitle": "Project invitations",
+    "description": "Manage sent invitations, roles and statuses.",
     "invite": "Invite member",
     "emptyTitle": "No invitations yet",
-    "columns": { "target": "Invited", "status": "Status", "actions": "Actions" },
+    "columns": { "target": "Invited", "roles": "Roles", "sentAt": "Invited on", "status": "Status", "actions": "Actions" },
     "resend": "Resend",
     "resent": "Invitation resent.",
     "cancel": "Cancel",
@@ -271,6 +295,8 @@
     }
   },
   "squads": {
+    "description": "Create and manage teams working together on this project.",
+    "noDescription": "No description has been added for this team.",
     "manageMembers": "Members",
     "edit": "Edit",
     "emptyDescription": "Organize project members into teams that work together.",

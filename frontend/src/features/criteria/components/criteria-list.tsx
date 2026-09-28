@@ -1,13 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plus, PencilSimple, Trash, CaretUp, CaretDown } from "@phosphor-icons/react";
+import { Plus, PencilSimple, Trash, CaretUp, CaretDown, MagnifyingGlass } from "@phosphor-icons/react";
 import { PageHeader } from "@/components/common/page-header";
 import { EmptyState } from "@/components/common/empty-state";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress, ProgressTrack, ProgressIndicator } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -19,13 +21,18 @@ export function CriteriaList({ projectId, isManager }: { projectId: string; isMa
   const t = useTranslations("criteria");
   const te = useTranslations("errors");
   const queryClient = useQueryClient();
+  const [filter, setFilter] = useState<"all" | "completed" | "remaining">("all");
+  const [search, setSearch] = useState("");
 
   const { data: criteria, isLoading, isError, error } = useQuery({
     queryKey: ["projects", projectId, "criteria"],
     queryFn: () => criteriaApi.list(projectId),
   });
 
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["projects", projectId, "criteria"] });
+  const invalidate = () => Promise.all([
+    queryClient.invalidateQueries({ queryKey: ["projects", projectId, "criteria"] }),
+    queryClient.invalidateQueries({ queryKey: ["projects", projectId, "home"] }),
+  ]);
 
   const toggle = useMutation({
     mutationFn: (vars: { id: string; completed: boolean }) =>
@@ -62,11 +69,16 @@ export function CriteriaList({ projectId, isManager }: { projectId: string; isMa
   const completed = criteria.filter((c) => c.completed).length;
   const total = criteria.length;
   const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
+  const visibleCriteria = criteria.filter((criterion) =>
+    (filter === "all" || (filter === "completed" ? criterion.completed : !criterion.completed)) &&
+    criterion.title.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()),
+  );
 
   return (
     <div>
       <PageHeader
         title={t("title")}
+        description={t("description")}
         action={
           isManager && (
             <CriterionFormDialog
@@ -83,9 +95,9 @@ export function CriteriaList({ projectId, isManager }: { projectId: string; isMa
       />
 
       {total > 0 && (
-        <div className="mb-6 space-y-3 rounded-2xl border bg-card p-5 shadow-sm sm:p-6">
+        <div className="mb-5 space-y-3 rounded-xl border bg-card p-5 shadow-sm sm:p-6">
           <Progress value={percent}>
-            <div className="flex items-baseline justify-between text-sm">
+            <div className="flex w-full items-baseline justify-between text-sm">
               <span className="font-medium text-foreground">{t("progressLabel")}</span>
               <span className="tabular-nums text-muted-foreground">
                 {t("progressCount", { completed, total })}
@@ -101,8 +113,24 @@ export function CriteriaList({ projectId, isManager }: { projectId: string; isMa
       {total === 0 && <EmptyState title={t("emptyTitle")} description={t("emptyDescription")} />}
 
       {total > 0 && (
-        <ul className="divide-y overflow-hidden rounded-2xl border bg-card shadow-sm">
-          {criteria.map((criterion, index) => (
+        <>
+        <div className="mb-4 flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap gap-1.5" role="group" aria-label={t("filters.label")}>
+            {(["all", "completed", "remaining"] as const).map((value) => (
+              <Button key={value} type="button" variant={filter === value ? "default" : "outline"} size="sm" onClick={() => setFilter(value)} aria-pressed={filter === value}>
+                {t(`filters.${value}`)} <span className="opacity-70">{value === "all" ? total : value === "completed" ? completed : total - completed}</span>
+              </Button>
+            ))}
+          </div>
+          <div className="relative w-full sm:ml-auto sm:w-56">
+            <MagnifyingGlass size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+            <Input aria-label={t("search")} placeholder={t("search")} value={search} onChange={(event) => setSearch(event.target.value)} className="pl-9" />
+          </div>
+        </div>
+        {visibleCriteria.length === 0 ? <EmptyState title={t("noResults")} /> : <ul className="divide-y overflow-hidden rounded-xl border bg-card shadow-sm">
+          {visibleCriteria.map((criterion) => {
+            const index = criteria.findIndex((item) => item.id === criterion.id);
+            return (
             <li key={criterion.id} className="flex flex-wrap items-start gap-3 p-4 transition-colors hover:bg-muted/25 sm:p-5">
               <label className="flex min-w-0 flex-1 items-start gap-3 has-disabled:cursor-not-allowed">
                 <Checkbox
@@ -126,7 +154,7 @@ export function CriteriaList({ projectId, isManager }: { projectId: string; isMa
                     variant="ghost"
                     size="icon-sm"
                     aria-label={t("moveUp")}
-                    disabled={index === 0 || reorder.isPending}
+                    disabled={filter !== "all" || !!search || index === 0 || reorder.isPending}
                     onClick={() => move(index, -1)}
                   >
                     <CaretUp size={14} />
@@ -135,7 +163,7 @@ export function CriteriaList({ projectId, isManager }: { projectId: string; isMa
                     variant="ghost"
                     size="icon-sm"
                     aria-label={t("moveDown")}
-                    disabled={index === criteria.length - 1 || reorder.isPending}
+                    disabled={filter !== "all" || !!search || index === criteria.length - 1 || reorder.isPending}
                     onClick={() => move(index, 1)}
                   >
                     <CaretDown size={14} />
@@ -164,8 +192,9 @@ export function CriteriaList({ projectId, isManager }: { projectId: string; isMa
                 </div>
               )}
             </li>
-          ))}
-        </ul>
+          ); })}
+        </ul>}
+        </>
       )}
     </div>
   );

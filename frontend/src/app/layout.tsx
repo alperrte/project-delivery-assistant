@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Exo_2, Inter, JetBrains_Mono } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale } from "next-intl/server";
 import { Providers } from "@/components/providers";
@@ -9,6 +9,12 @@ import "./globals.css";
 // Variable font: every weight from one file.
 const inter = Inter({
   variable: "--font-inter",
+  subsets: ["latin", "latin-ext"],
+  display: "swap",
+});
+
+const exo2 = Exo_2({
+  variable: "--font-exo2",
   subsets: ["latin", "latin-ext"],
   display: "swap",
 });
@@ -48,7 +54,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   return (
     <html
       lang={locale}
-      className={`${inter.variable} ${jetbrainsMono.variable}`}
+      className={`${inter.variable} ${exo2.variable} ${jetbrainsMono.variable}`}
       suppressHydrationWarning
     >
       <body className="min-h-[100dvh]">

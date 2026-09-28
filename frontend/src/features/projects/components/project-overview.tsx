@@ -1,23 +1,33 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { useTranslations, useLocale } from "next-intl";
-import { ArrowRight, ArrowUpRight, CalendarBlank, GithubLogo, UsersThree } from "@phosphor-icons/react";
-import { Button } from "@/components/ui/button";
-import { Progress, ProgressTrack, ProgressIndicator } from "@/components/ui/progress";
+import { useLocale, useTranslations } from "next-intl";
+import {
+  ArrowRight, ArrowUpRight, CalendarBlank, CheckCircle, CircleDashed,
+  Code, EnvelopeSimple, GearSix, GithubLogo, Plus, Stack, Target, UsersThree,
+} from "@phosphor-icons/react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { errorKey } from "@/lib/api/error-message";
+import { criteriaApi } from "@/features/criteria/api";
+import { invitationsApi } from "@/features/invitations/api";
+import { squadsApi } from "@/features/squads/api";
 import { projectsApi } from "../api";
 import type { Project } from "../types";
 
-type OverviewSection = "criteria" | "members" | "repository" | "settings";
+type OverviewSection = "criteria" | "members" | "invitations" | "squads" | "repository" | "settings";
 
-export function ProjectOverview({
-  project,
-  isManager,
-  onNavigate,
-}: {
+function Action({ children, onClick, primary = false }: { children: ReactNode; onClick: () => void; primary?: boolean }) {
+  return (
+    <button type="button" onClick={onClick}
+      className={`flex min-h-10 w-full items-center justify-between gap-3 rounded-lg border px-3.5 text-left text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${primary ? "workspace-primary-action border-transparent" : "border-border bg-background/35 text-foreground hover:border-primary/45 hover:bg-primary/10"}`}>
+      {children}<ArrowRight size={16} aria-hidden="true" />
+    </button>
+  );
+}
+
+export function ProjectOverview({ project, isManager, onNavigate }: {
   project: Project;
   isManager: boolean;
   onNavigate: (section: OverviewSection) => void;
@@ -25,121 +35,118 @@ export function ProjectOverview({
   const t = useTranslations("projects.overview");
   const te = useTranslations("errors");
   const locale = useLocale();
-
   const { data: home, isLoading, isError, error } = useQuery({
     queryKey: ["projects", project.id, "home"],
     queryFn: () => projectsApi.home(project.id),
   });
+  const { data: criteria } = useQuery({
+    queryKey: ["projects", project.id, "criteria"],
+    queryFn: () => criteriaApi.list(project.id),
+  });
+  const { data: squads } = useQuery({
+    queryKey: ["projects", project.id, "squads", 0],
+    queryFn: () => squadsApi.list(project.id, 0),
+  });
+  const { data: invitations } = useQuery({
+    queryKey: ["projects", project.id, "invitations", 0],
+    queryFn: () => invitationsApi.list(project.id, 0),
+    enabled: isManager,
+  });
 
-  if (isLoading) return <Skeleton className="h-96 w-full rounded-3xl" />;
+  if (isLoading) return <Skeleton className="h-96 w-full rounded-xl" />;
   if (isError) return <p className="text-sm text-destructive">{te(errorKey(error))}</p>;
   if (!home) return null;
 
-  const progressPercent = home.criteriaProgress.total === 0
-    ? 0
-    : Math.round((home.criteriaProgress.completed / home.criteriaProgress.total) * 100);
+  const progress = home.criteriaProgress.total === 0 ? 0 : Math.round(home.criteriaProgress.completed / home.criteriaProgress.total * 100);
   const date = new Intl.DateTimeFormat(locale, { dateStyle: "medium" });
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-end justify-between gap-4 pb-2">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">{t("sectionLabel")}</p>
-          <h2 className="mt-1 font-heading text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">{t("heading")}</h2>
-        </div>
-        {home.organization && (
-          <Link href={`/organizations/${home.organization.id}`} className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">
-            {home.organization.name}<ArrowUpRight size={16} aria-hidden="true" />
-          </Link>
-        )}
-      </div>
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-5">
+        <button type="button" onClick={() => onNavigate("criteria")} className="workspace-panel col-span-2 flex min-h-36 items-center gap-3 p-4 text-left transition-colors hover:border-primary/55 xl:col-span-1">
+          <span className="grid size-18 shrink-0 place-items-center rounded-full p-1" style={{ background: `conic-gradient(var(--primary) ${progress}%, var(--border) 0)` }}>
+            <span className="grid size-full place-items-center rounded-full bg-card font-heading text-lg font-bold text-foreground">{progress}%</span>
+          </span>
+          <span className="min-w-0">
+            <span className="block text-xs font-medium text-muted-foreground">{t("progressLabel")}</span>
+            <span className="mt-1 block font-heading text-base font-semibold text-foreground">{home.criteriaProgress.completed} / {home.criteriaProgress.total}</span>
+            <span className="mt-1 block text-xs text-muted-foreground">{t("completedCriteria")}</span>
+          </span>
+        </button>
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.55fr)_minmax(19rem,.85fr)]">
-        <section className="relative flex min-h-84 flex-col justify-between overflow-hidden rounded-3xl border border-primary/25 bg-[linear-gradient(135deg,#102d56_0%,#0c1d35_68%,#142a4c_100%)] p-7 text-white shadow-[0_24px_70px_-42px_rgb(27_96_216/0.7)] sm:p-9" aria-label={t("criteriaProgress")}>
-          <div className="pointer-events-none absolute -top-36 -right-24 size-80 rounded-full border border-white/10" aria-hidden="true" />
-          <div className="pointer-events-none absolute -top-20 -right-8 size-52 rounded-full border border-white/10" aria-hidden="true" />
-          <div className="relative">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-200">{t("criteriaProgress")}</p>
-            {home.criteriaProgress.total > 0 ? (
-              <>
-                <div className="mt-5 flex items-end gap-4">
-                  <span className="font-heading text-7xl font-semibold leading-none tracking-tight sm:text-8xl">{progressPercent}<span className="text-4xl text-blue-200">%</span></span>
-                </div>
-                <p className="mt-4 text-sm text-blue-100">{t("progressCount", { completed: home.criteriaProgress.completed, total: home.criteriaProgress.total })}</p>
-                <Progress value={progressPercent} className="mt-7">
-                  <ProgressTrack className="h-2 bg-white/15"><ProgressIndicator className="bg-white" /></ProgressTrack>
-                </Progress>
-              </>
-            ) : (
-              <>
-                <h3 className="mt-7 max-w-lg font-heading text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{t("noCriteriaTitle")}</h3>
-                <p className="mt-4 max-w-md text-sm leading-6 text-blue-100">{t("noCriteriaDescription")}</p>
-              </>
-            )}
-          </div>
-          <button type="button" onClick={() => onNavigate("criteria")} className="relative mt-8 inline-flex w-fit cursor-pointer items-center gap-2 rounded-lg border border-white/30 bg-white/10 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
-            {home.criteriaProgress.total === 0 && isManager ? t("defineCriteria") : t("viewCriteria")}<ArrowRight size={16} aria-hidden="true" />
+        <button type="button" onClick={() => onNavigate("criteria")} className="workspace-panel group flex min-h-36 flex-col justify-between p-4 text-left transition-colors hover:border-primary/55">
+          <span className="flex items-start justify-between"><span className="rounded-lg bg-primary/15 p-2 text-primary"><Target size={22} aria-hidden="true" /></span><ArrowUpRight size={17} className="text-muted-foreground group-hover:text-primary" aria-hidden="true" /></span>
+          <span><span className="block text-xs font-medium text-muted-foreground">{t("criteriaProgress")}</span><span className="mt-1 block font-heading text-2xl font-bold text-foreground">{home.criteriaProgress.total}</span><span className="text-xs text-muted-foreground">{t("completedCount", { count: home.criteriaProgress.completed })}</span></span>
+        </button>
+
+        <button type="button" onClick={() => onNavigate("members")} className="workspace-panel group flex min-h-36 flex-col justify-between p-4 text-left transition-colors hover:border-primary/55">
+          <span className="flex items-start justify-between"><span className="rounded-lg bg-primary/15 p-2 text-primary"><UsersThree size={22} aria-hidden="true" /></span><ArrowUpRight size={17} className="text-muted-foreground group-hover:text-primary" aria-hidden="true" /></span>
+          <span><span className="block text-xs font-medium text-muted-foreground">{t("team")}</span><span className="mt-1 block font-heading text-2xl font-bold text-foreground">{home.teamMemberCount}</span><span className="text-xs text-muted-foreground">{squads ? t("squadCount", { count: squads.totalElements }) : t("teamMembers", { count: home.teamMemberCount })}</span></span>
+        </button>
+
+        {isManager ? (
+          <button type="button" onClick={() => onNavigate("invitations")} className="workspace-panel group flex min-h-36 flex-col justify-between p-4 text-left transition-colors hover:border-primary/55">
+            <span className="flex items-start justify-between"><span className="rounded-lg bg-warning/15 p-2 text-warning"><EnvelopeSimple size={22} aria-hidden="true" /></span><ArrowUpRight size={17} className="text-muted-foreground group-hover:text-primary" aria-hidden="true" /></span>
+            <span><span className="block text-xs font-medium text-muted-foreground">{t("invitations")}</span><span className="mt-1 block font-heading text-2xl font-bold text-foreground">{invitations?.totalElements ?? "—"}</span><span className="text-xs text-muted-foreground">{t("allInvitations")}</span></span>
           </button>
-        </section>
+        ) : (
+          <button type="button" onClick={() => onNavigate("squads")} className="workspace-panel group flex min-h-36 flex-col justify-between p-4 text-left transition-colors hover:border-primary/55">
+            <span className="flex items-start justify-between"><span className="rounded-lg bg-primary/15 p-2 text-primary"><Stack size={22} aria-hidden="true" /></span><ArrowUpRight size={17} className="text-muted-foreground group-hover:text-primary" aria-hidden="true" /></span>
+            <span><span className="block text-xs font-medium text-muted-foreground">{t("squads")}</span><span className="mt-1 block font-heading text-2xl font-bold text-foreground">{squads?.totalElements ?? "—"}</span><span className="text-xs text-muted-foreground">{t("viewSquads")}</span></span>
+          </button>
+        )}
 
-        <section className="flex min-h-84 flex-col rounded-3xl border bg-card p-7 shadow-sm sm:p-9" aria-label={t("team")}>
-          <UsersThree size={28} className="text-primary" aria-hidden="true" />
-          <p className="mt-6 text-sm font-medium text-muted-foreground">{t("team")}</p>
-          <p className="mt-2 font-heading text-6xl font-semibold tracking-tight text-foreground">{home.teamMemberCount}</p>
-          <p className="mt-2 text-sm text-muted-foreground">{t("teamMembers", { count: home.teamMemberCount })}</p>
-          {home.managers.length > 0 && (
-            <p className="mt-7 border-t pt-5 text-sm text-muted-foreground">{t("managedBy", { names: home.managers.map((manager) => manager.nickname).join(", ") })}</p>
-          )}
-          <Button variant="outline" className="mt-auto w-fit" onClick={() => onNavigate("members")}>
-            {t("viewMembers")}<ArrowRight size={16} aria-hidden="true" />
-          </Button>
-        </section>
+        <button type="button" onClick={() => onNavigate("repository")} className="workspace-panel group flex min-h-36 flex-col justify-between p-4 text-left transition-colors hover:border-primary/55">
+          <span className="flex items-start justify-between"><span className="rounded-lg bg-primary/15 p-2 text-primary"><GithubLogo size={22} aria-hidden="true" /></span><ArrowUpRight size={17} className="text-muted-foreground group-hover:text-primary" aria-hidden="true" /></span>
+          <span><span className="block text-xs font-medium text-muted-foreground">{t("repository")}</span><span className="mt-2 block truncate text-sm font-semibold text-foreground">{home.repository.connected ? `${home.repository.repositoryOwner}/${home.repository.repositoryName}` : t("noRepository")}</span><span className="text-xs text-muted-foreground">{home.repository.connected ? t("connected") : isManager ? t("connectRepository") : t("viewRepository")}</span></span>
+        </button>
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-2">
-        <section className="flex flex-col rounded-3xl border bg-card p-7 shadow-sm sm:p-8" aria-label={t("projectProfile")}>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">{t("projectProfile")}</p>
-          <h3 className="mt-3 font-heading text-xl font-semibold text-foreground">{t("goal")}</h3>
-          <p className="mt-2 min-h-12 text-sm leading-6 text-muted-foreground">{project.projectGoal || t("noGoal")}</p>
-          <div className="mt-6 grid gap-5 border-t pt-5 sm:grid-cols-2">
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("techStack")}</p>
-              <p className="mt-2 text-sm font-medium text-foreground">{project.techStack || t("notSpecified")}</p>
-            </div>
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("timeline")}</p>
-              <p className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-foreground">
-                <CalendarBlank size={16} className="text-muted-foreground" aria-hidden="true" />
-                {home.targetEndDate ? date.format(new Date(home.targetEndDate)) : t("notSpecified")}
-              </p>
-            </div>
+      <div className="grid gap-3 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(14rem,.8fr)]">
+        <section className="workspace-panel min-w-0 p-5" aria-labelledby="overview-criteria-heading">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h2 id="overview-criteria-heading" className="text-base font-semibold">{t("criteriaSnapshot")}</h2>
+            <button type="button" onClick={() => onNavigate("criteria")} className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline">{t("viewAll")}<ArrowRight size={14} aria-hidden="true" /></button>
           </div>
-          {isManager && (
-            <Button variant="outline" className="mt-7 w-fit" onClick={() => onNavigate("settings")}>
-              {t("editProjectProfile")}<ArrowRight size={16} aria-hidden="true" />
-            </Button>
+          {!criteria ? <Skeleton className="h-44 w-full" /> : criteria.length > 0 ? (
+            <ul className="divide-y divide-border/70">
+              {criteria.slice(0, 5).map((criterion) => (
+                <li key={criterion.id} className="flex items-center gap-3 py-3 text-sm">
+                  {criterion.completed ? <CheckCircle size={19} className="shrink-0 text-success" weight="fill" aria-hidden="true" /> : <CircleDashed size={19} className="shrink-0 text-primary" aria-hidden="true" />}
+                  <span className={`min-w-0 flex-1 truncate ${criterion.completed ? "text-muted-foreground line-through" : "text-foreground"}`}>{criterion.title}</span>
+                  <span className="text-xs text-muted-foreground">{criterion.completed ? t("done") : t("inProgress")}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="flex min-h-48 flex-col items-start justify-center">
+              <Target size={30} className="text-primary" aria-hidden="true" />
+              <h3 className="mt-3 text-base font-semibold">{t("noCriteriaTitle")}</h3>
+              <p className="mt-1 max-w-sm text-sm leading-6 text-muted-foreground">{t("noCriteriaDescription")}</p>
+            </div>
           )}
         </section>
 
-        <section className="flex flex-col rounded-3xl border bg-card p-7 shadow-sm sm:p-8" aria-label={t("repository")}>
-          <GithubLogo size={28} className="text-primary" aria-hidden="true" />
-          <h3 className="mt-5 font-heading text-xl font-semibold text-foreground">{t("repository")}</h3>
-          {home.repository.connected ? (
-            <div className="mt-2 space-y-2">
-              <p className="truncate text-sm font-medium text-foreground">{home.repository.repositoryOwner}/{home.repository.repositoryName}</p>
-              {home.repository.githubUnavailable ? (
-                <p className="text-sm text-muted-foreground">{t("githubUnavailable")}</p>
-              ) : home.repository.lastCommit ? (
-                <p className="line-clamp-2 text-sm leading-6 text-muted-foreground">{home.repository.lastCommit.message}</p>
-              ) : null}
-            </div>
-          ) : (
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">{t("noRepository")}</p>
-          )}
-          <Button variant="outline" className="mt-auto w-fit" onClick={() => onNavigate("repository")}>
-            {home.repository.connected ? t("viewRepository") : isManager ? t("connectRepository") : t("viewRepository")}
-            <ArrowRight size={16} aria-hidden="true" />
-          </Button>
+        <section className="workspace-panel min-w-0 p-5" aria-labelledby="overview-profile-heading">
+          <h2 id="overview-profile-heading" className="text-base font-semibold">{t("projectProfile")}</h2>
+          <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-primary">{t("goal")}</p>
+          <p className="mt-1 line-clamp-3 min-h-14 text-sm leading-6 text-foreground/85">{project.projectGoal || t("noGoal")}</p>
+          <dl className="mt-4 space-y-3 border-t pt-4 text-sm">
+            <div className="flex items-start justify-between gap-4"><dt className="inline-flex items-center gap-2 text-muted-foreground"><CalendarBlank size={16} aria-hidden="true" />{t("timeline")}</dt><dd className="text-right font-medium">{home.targetEndDate ? date.format(new Date(home.targetEndDate)) : t("notSpecified")}</dd></div>
+            <div className="flex items-start justify-between gap-4"><dt className="inline-flex items-center gap-2 text-muted-foreground"><Code size={16} aria-hidden="true" />{t("techStack")}</dt><dd className="max-w-[60%] text-right font-medium">{project.techStack || t("notSpecified")}</dd></div>
+            <div className="flex items-start justify-between gap-4"><dt className="inline-flex items-center gap-2 text-muted-foreground"><UsersThree size={16} aria-hidden="true" />{t("manager")}</dt><dd className="max-w-[60%] text-right font-medium">{home.managers.map((manager) => manager.nickname).join(", ") || t("notSpecified")}</dd></div>
+          </dl>
+          {home.organization && <Link href={`/organizations/${home.organization.id}`} className="mt-5 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline">{home.organization.name}<ArrowUpRight size={14} aria-hidden="true" /></Link>}
+        </section>
+
+        <section className="workspace-panel min-w-0 p-5" aria-labelledby="overview-actions-heading">
+          <h2 id="overview-actions-heading" className="mb-4 text-base font-semibold">{t("quickActions")}</h2>
+          <div className="space-y-2.5">
+            <Action primary onClick={() => onNavigate("criteria")}><span className="inline-flex items-center gap-2"><Plus size={17} aria-hidden="true" />{home.criteriaProgress.total === 0 && isManager ? t("defineCriteria") : t("viewCriteria")}</span></Action>
+            {isManager && <Action onClick={() => onNavigate("invitations")}><span className="inline-flex items-center gap-2"><EnvelopeSimple size={17} aria-hidden="true" />{t("viewInvitations")}</span></Action>}
+            <Action onClick={() => onNavigate("repository")}><span className="inline-flex items-center gap-2"><GithubLogo size={17} aria-hidden="true" />{home.repository.connected || !isManager ? t("viewRepository") : t("connectRepository")}</span></Action>
+            {isManager && <Action onClick={() => onNavigate("settings")}><span className="inline-flex items-center gap-2"><GearSix size={17} aria-hidden="true" />{t("editProjectProfile")}</span></Action>}
+          </div>
         </section>
       </div>
     </div>

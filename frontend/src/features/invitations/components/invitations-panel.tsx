@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Plus, ArrowClockwise, X } from "@phosphor-icons/react";
@@ -19,6 +19,8 @@ import { InviteMemberDialog } from "./invite-member-dialog";
 export function InvitationsPanel({ projectId }: { projectId: string }) {
   const t = useTranslations("invitations");
   const te = useTranslations("errors");
+  const tr = useTranslations("roles");
+  const locale = useLocale();
   const queryClient = useQueryClient();
   const [page, setPage] = useState(0);
 
@@ -51,6 +53,7 @@ export function InvitationsPanel({ projectId }: { projectId: string }) {
     <div>
       <PageHeader
         title={t("pendingTitle")}
+        description={t("description")}
         action={
           <InviteMemberDialog
             projectId={projectId}
@@ -74,6 +77,8 @@ export function InvitationsPanel({ projectId }: { projectId: string }) {
             <TableHeader>
               <TableRow>
                 <TableHead>{t("columns.target")}</TableHead>
+                <TableHead>{t("columns.roles")}</TableHead>
+                <TableHead>{t("columns.sentAt")}</TableHead>
                 <TableHead>{t("columns.status")}</TableHead>
                 <TableHead className="text-right">{t("columns.actions")}</TableHead>
               </TableRow>
@@ -81,7 +86,9 @@ export function InvitationsPanel({ projectId }: { projectId: string }) {
             <TableBody>
               {data.content.map((invitation) => (
                 <TableRow key={invitation.id}>
-                  <TableCell className="font-medium">{invitation.email ?? invitation.invitedUserId}</TableCell>
+                  <TableCell className="font-medium"><span className="flex items-center gap-3"><span className="grid size-8 shrink-0 place-items-center rounded-full border border-primary/25 bg-primary/15 text-xs font-bold text-primary">{(invitation.email ?? invitation.invitedUserId ?? "?").slice(0, 1).toLocaleUpperCase(locale)}</span><span>{invitation.email ?? invitation.invitedUserId}</span></span></TableCell>
+                  <TableCell><div className="flex flex-wrap gap-1">{invitation.initialRoles.map((role) => <Badge key={role} variant="secondary">{tr(role)}</Badge>)}</div></TableCell>
+                  <TableCell className="text-muted-foreground">{new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(invitation.createdAt))}</TableCell>
                   <TableCell>
                     <Badge variant={invitation.status === "PENDING" ? "default" : "secondary"}>
                       {t(`statusValues.${invitation.status}`)}

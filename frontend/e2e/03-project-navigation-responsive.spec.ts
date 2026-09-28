@@ -60,3 +60,34 @@ test("project navigation uses a mobile dropdown and a desktop section menu witho
   await expect(page.getByRole("tab", { name: "Kriterler" })).toHaveAttribute("aria-selected", "true");
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBe(1440);
 });
+
+test("criteria filters and search show only matching real criteria", async ({ page }) => {
+  await page.route("**/api/v1/**", async (route) => {
+    const path = new URL(route.request().url()).pathname;
+    let data: unknown;
+    if (path === "/api/v1/auth/me") data = { id: "responsive-user", nickname: "testuser", email: "test@example.com", globalRole: "USER", mustChangePassword: false };
+    if (path === "/api/v1/projects/by-slug/responsive-project") data = project;
+    if (path === "/api/v1/projects/responsive-project/home") data = {
+      ...project, organization: null, managers: [], teamMemberCount: 1,
+      criteriaProgress: { completed: 1, total: 2 }, repository: { connected: false },
+    };
+    if (path === "/api/v1/projects/responsive-project/members/responsive-user") data = { userId: "responsive-user", nickname: "testuser", roles: ["PROJECT_MANAGER"], joinedAt: "2026-09-28T00:00:00Z" };
+    if (path === "/api/v1/projects/responsive-project/criteria") data = [
+      { id: "done", title: "Giriş sistemi", description: null, completed: true },
+      { id: "open", title: "Ekip modülü", description: null, completed: false },
+    ];
+    await route.fulfill({ status: data === undefined ? 404 : 200, contentType: "application/json", body: JSON.stringify(data ?? {}) });
+  });
+
+  await page.goto("/projects/responsive-project");
+  await page.getByRole("tab", { name: "Kriterler" }).click();
+  await expect(page.getByText("Giriş sistemi")).toBeVisible();
+  await expect(page.getByText("Ekip modülü")).toBeVisible();
+  await page.getByRole("button", { name: "Tamamlanan 1" }).click();
+  await expect(page.getByText("Giriş sistemi")).toBeVisible();
+  await expect(page.getByText("Ekip modülü")).toBeHidden();
+  await page.getByRole("button", { name: "Tümü 2" }).click();
+  await page.getByRole("textbox", { name: "Kriter ara..." }).fill("Ekip");
+  await expect(page.getByText("Ekip modülü")).toBeVisible();
+  await expect(page.getByText("Giriş sistemi")).toBeHidden();
+});

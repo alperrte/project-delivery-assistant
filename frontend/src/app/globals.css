@@ -149,6 +149,95 @@
   --auth-cta-ink: #ffffff;
 }
 
+/* The authenticated workspace carries the login scene's ink, cyan and blue
+ * palette into every page and portal without changing the auth screens. */
+html:has(.app-shell) {
+  --background: #f1f7fb;
+  --foreground: var(--auth-ink);
+  --card: #ffffff;
+  --card-foreground: var(--auth-ink);
+  --popover: #ffffff;
+  --popover-foreground: var(--auth-ink);
+  --primary: var(--auth-link);
+  --primary-hover: var(--auth-link-hover);
+  --primary-foreground: #ffffff;
+  --secondary: #e5f1f7;
+  --secondary-foreground: var(--auth-ink);
+  --muted: #e5f1f7;
+  --muted-foreground: var(--auth-muted);
+  --accent: #e5f1f7;
+  --accent-foreground: var(--auth-ink);
+  --border: #d4e3ed;
+  --border-strong: #a8c7d9;
+  --input: #d4e3ed;
+  --ring: var(--auth-link);
+  --surface-2: #e5f1f7;
+}
+
+html.dark:has(.app-shell) {
+  --background: #07121f;
+  --foreground: var(--auth-ink);
+  --card: #0e1e33;
+  --card-foreground: var(--auth-ink);
+  --popover: #10213a;
+  --popover-foreground: var(--auth-ink);
+  --primary: var(--auth-accent-to);
+  --primary-hover: var(--glow);
+  --primary-foreground: #04131d;
+  --secondary: #152a45;
+  --secondary-foreground: var(--auth-ink);
+  --muted: #152a45;
+  --muted-foreground: #a8bad0;
+  --accent: #152a45;
+  --accent-foreground: var(--auth-ink);
+  --border: #23405f;
+  --border-strong: #32658b;
+  --input: #23405f;
+  --ring: var(--glow);
+  --surface-2: #152a45;
+}
+
+.app-shell h1,
+.app-shell h2,
+.app-shell h3,
+.app-shell h4,
+.app-shell .font-heading {
+  font-family: var(--font-exo2), var(--font-inter), sans-serif;
+}
+
+.workspace-panel {
+  border: 1px solid var(--border);
+  border-radius: 0.875rem;
+  background: var(--card);
+  box-shadow: 0 12px 34px -28px rgb(3 18 34 / 0.65);
+}
+
+.dark .workspace-panel {
+  background: linear-gradient(145deg, #10233d, #0b1a2e);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.035), 0 16px 40px -32px rgb(0 0 0 / 0.9);
+}
+
+.dark .app-shell {
+  background-image: radial-gradient(circle at 10% 0%, rgb(12 103 152 / 0.1), transparent 34rem);
+}
+
+.workspace-primary-action {
+  color: var(--auth-cta-ink);
+  background: linear-gradient(110deg, var(--auth-accent-from), var(--auth-accent-to));
+  box-shadow: 0 12px 28px -16px var(--glow);
+}
+
+.workspace-primary-action:hover { filter: brightness(1.1); }
+
+.project-workspace [data-slot="table-container"] {
+  border-radius: 0.875rem;
+  box-shadow: 0 12px 34px -28px rgb(3 18 34 / 0.65);
+}
+
+.project-workspace [data-slot="table-head"] {
+  letter-spacing: 0.1em;
+}
+
 /*
  * Inside the auth card the shared form primitives (FormField, Button, links)
  * pick up the scene palette by remapping the semantic tokens they already use.

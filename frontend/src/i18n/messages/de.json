@@ -114,6 +114,8 @@
     },
     "detail": {
       "backToProjects": "Alle Projekte",
+      "createdAt": "Erstellt: {date}",
+      "edit": "Bearbeiten",
       "eyebrow": "Projektarbeitsbereich",
       "navigation": "Projektmenü",
       "tabs": {
@@ -127,6 +129,22 @@
       }
     },
     "overview": {
+      "progressLabel": "Projektfortschritt",
+      "completedCriteria": "Abgeschlossene Kriterien",
+      "completedCount": "{count} abgeschlossen",
+      "squadCount": "{count} Teams",
+      "squads": "Teams",
+      "viewSquads": "Teams anzeigen",
+      "invitations": "Einladungen",
+      "allInvitations": "Einladungen gesamt",
+      "connected": "Verbunden",
+      "criteriaSnapshot": "Kriterienstatus",
+      "viewAll": "Alle anzeigen",
+      "done": "Abgeschlossen",
+      "inProgress": "In Bearbeitung",
+      "manager": "Projektleitung",
+      "quickActions": "Schnellaktionen",
+      "viewInvitations": "Einladungen öffnen",
       "noCriteriaTitle": "Definieren Sie gemeinsam den Erfolg.",
       "noCriteriaDescription": "Fügen Sie das erste Kriterium hinzu, um den Fortschritt hier zu verfolgen.",
       "defineCriteria": "Kriterien definieren",
@@ -186,6 +204,10 @@
   },
   "criteria": {
     "title": "Erfolgskriterien",
+    "description": "Verwalten Sie die Erfolgskriterien und ihren Fortschritt.",
+    "filters": { "label": "Kriterienfilter", "all": "Alle", "completed": "Abgeschlossen", "remaining": "Offen" },
+    "search": "Kriterien suchen...",
+    "noResults": "Keine passenden Kriterien gefunden.",
     "create": "Neues Kriterium",
     "emptyTitle": "Noch keine Kriterien",
     "emptyDescription": "Fügen Sie die Meilensteine hinzu, die den Erfolg dieses Projekts definieren.",
@@ -229,9 +251,10 @@
   },
   "members": {
     "title": "Projektmitglieder",
+    "description": "Sehen Sie die Mitglieder, Rollen und Beitrittsdaten dieses Projekts.",
     "emptyDescription": "Personen, die diesem Projekt beitreten, und ihre Rollen erscheinen hier.",
     "emptyTitle": "Noch keine Mitglieder",
-    "columns": { "member": "Mitglied", "roles": "Rollen", "actions": "Aktionen" },
+    "columns": { "member": "Mitglied", "roles": "Rollen", "joinedAt": "Beigetreten", "actions": "Aktionen" },
     "editRolesTitle": "Rollen bearbeiten",
     "remove": "Entfernen",
     "removeConfirmTitle": "Dieses Mitglied entfernen?",
@@ -243,10 +266,11 @@
   "invitations": {
     "statusValues": { "PENDING": "Ausstehend", "ACCEPTED": "Angenommen", "REJECTED": "Abgelehnt", "CANCELLED": "Abgebrochen", "EXPIRED": "Abgelaufen" },
     "emptyDescription": "Laden Sie ein Projektmitglied ein, um Ihr Team zu erweitern.",
-    "pendingTitle": "Ausstehende Einladungen",
+    "pendingTitle": "Projekteinladungen",
+    "description": "Verwalten Sie Einladungen, Rollen und Status.",
     "invite": "Mitglied einladen",
     "emptyTitle": "Noch keine Einladungen",
-    "columns": { "target": "Eingeladen", "status": "Status", "actions": "Aktionen" },
+    "columns": { "target": "Eingeladen", "roles": "Rollen", "sentAt": "Einladungsdatum", "status": "Status", "actions": "Aktionen" },
     "resend": "Erneut senden",
     "resent": "Einladung erneut gesendet.",
     "cancel": "Stornieren",
@@ -271,6 +295,8 @@
     }
   },
   "squads": {
+    "description": "Erstellen und verwalten Sie Teams, die an diesem Projekt arbeiten.",
+    "noDescription": "Für dieses Team wurde noch keine Beschreibung hinzugefügt.",
     "manageMembers": "Mitglieder",
     "edit": "Bearbeiten",
     "emptyDescription": "Organisieren Sie Projektmitglieder in Teams, die zusammenarbeiten.",
