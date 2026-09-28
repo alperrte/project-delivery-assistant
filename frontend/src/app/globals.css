@@ -390,7 +390,7 @@
 
 /*
  * Theme switch (theme-transition.tsx): the new theme opens as a circle from
- * the centre, where the sun/moon overlay plays. The overlay has its own
+ * the centre, where a small sun/moon passes. The overlay has its own
  * view-transition name, so it stays live above both snapshots.
  */
 html.theme-reveal::view-transition-old(root) {
@@ -398,7 +398,7 @@ html.theme-reveal::view-transition-old(root) {
 }
 html.theme-reveal::view-transition-new(root) {
   mix-blend-mode: normal;
-  animation: theme-reveal 0.8s cubic-bezier(0.65, 0, 0.35, 1) both;
+  animation: theme-reveal 0.75s cubic-bezier(0.65, 0, 0.35, 1) both;
 }
 @keyframes theme-reveal {
   from { clip-path: circle(0% at 50% 50%); }
@@ -436,23 +436,6 @@ html.theme-reveal::view-transition-new(root) {
   }
   button:disabled, [aria-disabled="true"] {
     cursor: not-allowed;
-  }
-  /* Soft, non-jarring theme switch: colors cross-fade instead of snapping. */
-  html.theme-transitioning,
-  html.theme-transitioning *,
-  html.theme-transitioning *::before,
-  html.theme-transitioning *::after {
-    transition:
-      background-color 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-      border-color 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-      color 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-      fill 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-      stroke 0.45s cubic-bezier(0.22, 1, 0.36, 1) !important;
-  }
-  ::view-transition-old(root),
-  ::view-transition-new(root) {
-    animation-duration: 0.45s;
-    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
   }
 }
 
