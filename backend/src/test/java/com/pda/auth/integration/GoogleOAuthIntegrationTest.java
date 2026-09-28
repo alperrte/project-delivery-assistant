@@ -211,10 +211,15 @@ class GoogleOAuthIntegrationTest {
 
         handlers.success(request, response, googleToken(subject, subject + "@example.test", true));
 
-        assertEquals("http://localhost:3000/", response.getRedirectedUrl());
+        assertEquals("http://localhost:3000/projects", response.getRedirectedUrl());
         List<String> cookies = response.getHeaders(HttpHeaders.SET_COOKIE);
         assertTrue(cookies.stream().anyMatch(value -> value.startsWith("PDA_ACCESS=") && value.contains("HttpOnly")));
         assertTrue(cookies.stream().anyMatch(value -> value.startsWith("PDA_REFRESH=") && value.contains("HttpOnly")));
+        String access = cookies.stream().filter(value -> value.startsWith("PDA_ACCESS="))
+                .findFirst().orElseThrow().split(";", 2)[0].substring("PDA_ACCESS=".length());
+        mvc.perform(get("/api/v1/auth/me").cookie(new Cookie("PDA_ACCESS", access)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value(subject + "@example.test"));
         assertTrue(request.getSession(false) == null || ((MockHttpSession) request.getSession(false)).isInvalid());
         assertEquals("no-store", response.getHeader("Cache-Control"));
     }

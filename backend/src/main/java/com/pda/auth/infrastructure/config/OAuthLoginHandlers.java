@@ -53,7 +53,7 @@ public final class OAuthLoginHandlers {
             } else {
                 LoginTokens tokens = oauth.login(profile, request.getHeader("User-Agent"));
                 cookies.write(tokens, request, response);
-                target = "/";
+                target = "/projects";
             }
         } catch (OAuthLoginException exception) {
             target = "/login?oauth_error=" + exception.reason().code();
