@@ -102,17 +102,97 @@
       "created": "Proje oluşturuldu."
     },
     "detail": {
-      "tabs": { "overview": "Genel Bakış", "members": "Üyeler", "invitations": "Davetler", "squads": "Ekipler" }
+      "tabs": {
+        "overview": "Genel Bakış",
+        "criteria": "Kriterler",
+        "members": "Üyeler",
+        "invitations": "Davetler",
+        "squads": "Ekipler",
+        "repository": "Depo",
+        "settings": "Ayarlar"
+      }
     },
     "overview": {
-      "organization": "Organizasyon",
-      "noOrganization": "Organizasyon yok",
-      "managers": "Proje Yöneticileri",
-      "teamMembers": "Ekip üyeleri",
+      "statusValues": {
+        "PLANNING": "Planlama",
+        "ACTIVE": "Aktif",
+        "ON_HOLD": "Beklemede",
+        "COMPLETED": "Tamamlandı",
+        "ARCHIVED": "Arşivlendi"
+      },
+      "priorityValues": { "LOW": "Düşük", "MEDIUM": "Orta", "HIGH": "Yüksek", "CRITICAL": "Kritik" },
+      "teamMembers": "{count, plural, one {# üye} other {# üye}}",
+      "managedBy": "Yönetici: {names}",
+      "due": "Teslim: {date}",
       "criteriaProgress": "Başarı kriterleri",
       "repository": "Depo",
       "noRepository": "Bağlı depo yok",
       "githubUnavailable": "GitHub geçici olarak erişilemez durumda"
+    },
+    "settings": {
+      "title": "Proje ayarları",
+      "archive": "Arşivle",
+      "archiveConfirmTitle": "Bu proje arşivlensin mi?",
+      "archiveConfirmDescription": "Arşivlenen projeler artık değiştirilemez ve aktif listelerden gizlenir. Bu işlem geri alınamaz.",
+      "cancel": "Vazgeç",
+      "saved": "Ayarlar kaydedildi.",
+      "archived": "Proje arşivlendi.",
+      "name": "Ad",
+      "description": "Açıklama",
+      "status": "Durum",
+      "statusValues": { "PLANNING": "Planlama", "ACTIVE": "Aktif", "ON_HOLD": "Beklemede", "COMPLETED": "Tamamlandı" },
+      "priority": "Öncelik",
+      "priorityValues": { "LOW": "Düşük", "MEDIUM": "Orta", "HIGH": "Yüksek", "CRITICAL": "Kritik" },
+      "startDate": "Başlangıç tarihi",
+      "targetEndDate": "Hedef bitiş tarihi",
+      "organization": "Organizasyon",
+      "organizationNone": "Organizasyon yok",
+      "goal": "Proje hedefi",
+      "techStack": "Teknoloji yığını",
+      "save": "Değişiklikleri kaydet"
+    }
+  },
+  "criteria": {
+    "title": "Başarı kriterleri",
+    "create": "Yeni kriter",
+    "emptyTitle": "Henüz kriter yok",
+    "emptyDescription": "Bu projenin başarısını tanımlayan kilometre taşlarını ekleyin.",
+    "progressLabel": "İlerleme",
+    "progressCount": "{completed}/{total} tamamlandı",
+    "moveUp": "Yukarı taşı",
+    "moveDown": "Aşağı taşı",
+    "delete": "Sil",
+    "deleteConfirmTitle": "Bu kriter silinsin mi?",
+    "cancel": "Vazgeç",
+    "form": {
+      "createTitle": "Yeni kriter",
+      "editTitle": "Kriteri düzenle",
+      "titleLabel": "Başlık",
+      "descriptionLabel": "Açıklama",
+      "cancel": "Vazgeç",
+      "create": "Oluştur",
+      "save": "Kaydet",
+      "created": "Kriter oluşturuldu.",
+      "updated": "Kriter güncellendi."
+    }
+  },
+  "repository": {
+    "title": "Depo",
+    "description": "Proje ana sayfasında son etkinliği göstermek için genel bir GitHub deposu bağlayın.",
+    "noneTitle": "Bağlı depo yok",
+    "noneDescription": "Son commit'leri burada görmek için genel bir GitHub deposu bağlayın.",
+    "connect": "Depo bağla",
+    "connected": "Depo bağlandı.",
+    "disconnect": "Bağlantıyı kes",
+    "disconnected": "Depo bağlantısı kesildi.",
+    "disconnectConfirmTitle": "Bu deponun bağlantısı kesilsin mi?",
+    "cancel": "Vazgeç",
+    "urlLabel": "GitHub depo URL'si",
+    "defaultBranch": "Varsayılan dal: {branch}",
+    "commits": {
+      "title": "Son commit'ler",
+      "refresh": "Yenile",
+      "emptyTitle": "Commit bulunamadı"
     }
   },
   "members": {
@@ -238,7 +318,9 @@
     "passwordMin": "Şifre en az 8 karakter olmalı.",
     "passwordMax": "Şifre en fazla 128 karakter olabilir.",
     "passwordMatch": "Şifreler eşleşmiyor.",
-    "maxLength": "Bu değer çok uzun."
+    "maxLength": "Bu değer çok uzun.",
+    "dateOrder": "Hedef bitiş tarihi başlangıç tarihinden önce olamaz.",
+    "githubUrl": "Genel bir GitHub depo URL'si girin, ör. https://github.com/owner/repo."
   },
   "forgotPassword": {
     "title": "Şifrenizi mi unuttunuz?",

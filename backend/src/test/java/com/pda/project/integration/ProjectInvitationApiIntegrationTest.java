@@ -224,6 +224,61 @@ class ProjectInvitationApiIntegrationTest {
                 .andExpect(jsonPath("$.roles[0]").value("ANALYST"));
     }
 
+    @Test
+    void invitationOperationsAreNotFoundUnderTheWrongProjectId() throws Exception {
+        Cookie csrf = csrfCookie();
+        Account manager = account("invmanager4");
+        Account target = account("invtarget4");
+        UUID projectId = createProject(manager, csrf, "Scoped invite project A");
+        UUID otherProjectId = createProject(manager, csrf, "Scoped invite project B");
+
+        var created = mvc.perform(post("/api/v1/projects/" + projectId + "/invitations")
+                        .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"userId\":\"" + target.id() + "\",\"roles\":[\"TESTER\"]}"))
+                .andExpect(status().isCreated()).andReturn().getResponse();
+        UUID invitationId = UUID.fromString(JsonPath.read(created.getContentAsString(), "$.invitationId"));
+        String token = JsonPath.read(created.getContentAsString(), "$.token");
+
+        mvc.perform(post("/api/v1/projects/" + otherProjectId + "/invitations/" + invitationId + "/accept")
+                        .cookie(csrf, target.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"token\":\"" + token + "\"}"))
+                .andExpect(status().isNotFound());
+        mvc.perform(post("/api/v1/projects/" + otherProjectId + "/invitations/" + invitationId + "/reject")
+                        .cookie(csrf, target.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"token\":\"" + token + "\"}"))
+                .andExpect(status().isNotFound());
+        mvc.perform(post("/api/v1/projects/" + otherProjectId + "/invitations/" + invitationId + "/resend")
+                        .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isNotFound());
+        mvc.perform(delete("/api/v1/projects/" + otherProjectId + "/invitations/" + invitationId)
+                        .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isNotFound());
+
+        // The correct project still accepts it: none of the wrong-project calls above mutated it.
+        mvc.perform(post("/api/v1/projects/" + projectId + "/invitations/" + invitationId + "/accept")
+                        .cookie(csrf, target.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"token\":\"" + token + "\"}"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void invitationEndpointsAreRateLimitedPerIp() throws Exception {
+        UUID projectId = UUID.randomUUID();
+        for (int i = 0; i < 10; i++) {
+            mvc.perform(post("/api/v1/projects/" + projectId + "/invitations").with(request -> {
+                        request.setRemoteAddr("192.0.2.50");
+                        return request;
+                    }))
+                    .andExpect(status().isForbidden());
+        }
+        mvc.perform(post("/api/v1/projects/" + projectId + "/invitations").with(request -> {
+                    request.setRemoteAddr("192.0.2.50");
+                    return request;
+                }))
+                .andExpect(status().isTooManyRequests());
+    }
+
     private UUID createProject(Account actor, Cookie csrf, String name) throws Exception {
         var response = mvc.perform(post("/api/v1/projects").cookie(csrf, actor.access())
                         .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)

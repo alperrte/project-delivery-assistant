@@ -91,6 +91,7 @@ public class SecurityBaselineConfiguration {
                 .cors(cors -> cors.configurationSource(corsSource))
                 .csrf(csrf -> csrf.spa())
                 .addFilterBefore(new AuthRateLimitFilter(), CsrfFilter.class)
+                .addFilterBefore(new ProjectInvitationRateLimitFilter(), CsrfFilter.class)
                 .addFilterBefore(new JwtCookieAuthenticationFilter(tokens, cookies, users, sessions, clock),
                         UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(errors -> errors

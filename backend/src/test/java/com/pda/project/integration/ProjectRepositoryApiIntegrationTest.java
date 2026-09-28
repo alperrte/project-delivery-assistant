@@ -143,6 +143,55 @@ class ProjectRepositoryApiIntegrationTest {
                 .andExpect(status().isNotFound());
     }
 
+    @Test
+    void connectSurfacesGitHubServerErrorAsSafeUnavailableWithoutLeakingDetails() throws Exception {
+        Cookie csrf = csrfCookie();
+        Account manager = account("repomanager4");
+        UUID projectId = createProject(manager, csrf, "Repo unavailable project");
+        Mockito.when(gitHub.fetchMetadata("owner", "flaky"))
+                .thenThrow(new GitHubIntegrationException(Reason.UNAVAILABLE, "GitHub is currently unavailable"));
+
+        mvc.perform(post("/api/v1/projects/" + projectId + "/repository")
+                        .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"repositoryUrl\":\"https://github.com/owner/flaky\"}"))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.detail").value("GitHub is currently unavailable"))
+                .andExpect(jsonPath("$.detail", org.hamcrest.Matchers.not(
+                        org.hamcrest.Matchers.containsStringIgnoringCase("stack"))));
+    }
+
+    @Test
+    void everyContributorRoleIsDeniedEveryRepositoryMutation() throws Exception {
+        Cookie csrf = csrfCookie();
+        Account manager = account("repomanager3");
+        UUID projectId = createProject(manager, csrf, "Repository role matrix project");
+
+        for (ProjectRole role : ProjectRole.values()) {
+            if (role == ProjectRole.PROJECT_MANAGER) {
+                continue;
+            }
+            Account holder = account("repotolerole" + role.name().toLowerCase());
+            memberships.addMember(manager.id(), projectId, holder.id(), Set.of(role));
+
+            mvc.perform(post("/api/v1/projects/" + projectId + "/repository")
+                            .cookie(csrf, holder.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"repositoryUrl\":\"https://github.com/alperrte/project-delivery-assistant\"}"))
+                    .andExpect(status().isForbidden());
+            mvc.perform(delete("/api/v1/projects/" + projectId + "/repository")
+                            .cookie(csrf, holder.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                    .andExpect(status().isForbidden());
+        }
+
+        // Authenticated but not a member of this project at all.
+        Account outsider = account("repooutsider3");
+        mvc.perform(get("/api/v1/projects/" + projectId + "/repository").cookie(outsider.access()))
+                .andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/projects/" + projectId + "/repository/commits").cookie(outsider.access()))
+                .andExpect(status().isForbidden());
+    }
+
     private UUID createProject(Account actor, Cookie csrf, String name) throws Exception {
         var response = mvc.perform(post("/api/v1/projects").cookie(csrf, actor.access())
                         .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)

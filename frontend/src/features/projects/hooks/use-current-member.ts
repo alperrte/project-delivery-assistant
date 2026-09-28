@@ -7,7 +7,7 @@ export function useCurrentMember(projectId: string) {
   const query = useQuery({
     queryKey: ["projects", projectId, "members", "me", user?.id],
     queryFn: () => membersApi.detail(projectId, user!.id),
-    enabled: !!user,
+    enabled: !!user && !!projectId,
   });
 
   return { ...query, isManager: query.data?.roles.includes("PROJECT_MANAGER") ?? false };

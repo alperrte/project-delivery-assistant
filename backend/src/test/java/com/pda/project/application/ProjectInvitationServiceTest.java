@@ -20,6 +20,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -67,6 +68,7 @@ class ProjectInvitationServiceTest {
     @Autowired ProjectService projectService;
     @Autowired ProjectMembershipService membershipService;
     @Autowired UserAccounts users;
+    @Autowired JdbcTemplate jdbc;
     @MockitoBean ProjectInvitationMailPort mailPort;
 
     @Test
@@ -243,6 +245,51 @@ class ProjectInvitationServiceTest {
         assertEquals(InvitationStatus.PENDING, created.invitation().getStatus());
         Mockito.verify(mailPort, Mockito.never()).sendInvitation(Mockito.anyString(), Mockito.anyString(),
                 Mockito.anyString());
+    }
+
+    @Test
+    void expiredInvitationIsRejectedForAcceptRejectCancelAndResend() {
+        UUID manager = registerUser("manager7");
+        UUID target = registerUser("target7");
+        UUID projectId = projectService.create(manager, "Expired invite project", null, null).getId();
+
+        CreatedInvitation created = invitationService.inviteRegisteredUser(manager, projectId, target,
+                Set.of(ProjectRole.TESTER));
+        UUID invitationId = created.invitation().getId();
+        jdbc.update("UPDATE project_invitations SET expires_at = ? WHERE id = ?",
+                java.sql.Timestamp.from(java.time.Instant.now().minusSeconds(60)), invitationId);
+
+        assertThrows(IllegalStateException.class, () -> invitationService.accept(target, projectId, invitationId,
+                created.rawToken()));
+        assertThrows(IllegalStateException.class, () -> invitationService.reject(target, projectId, invitationId,
+                created.rawToken()));
+        assertThrows(IllegalStateException.class, () -> invitationService.cancel(manager, projectId, invitationId));
+        assertThrows(IllegalStateException.class, () -> invitationService.resend(manager, projectId, invitationId));
+    }
+
+    @Test
+    void invitationOperationsAreScopedToTheirOwnProject() {
+        UUID manager = registerUser("manager8");
+        UUID target = registerUser("target8");
+        UUID projectId = projectService.create(manager, "Scoped invite project A", null, null).getId();
+        UUID otherProjectId = projectService.create(manager, "Scoped invite project B", null, null).getId();
+
+        CreatedInvitation created = invitationService.inviteRegisteredUser(manager, projectId, target,
+                Set.of(ProjectRole.TESTER));
+        UUID invitationId = created.invitation().getId();
+
+        assertThrows(NoSuchElementException.class, () -> invitationService.accept(target, otherProjectId,
+                invitationId, created.rawToken()));
+        assertThrows(NoSuchElementException.class, () -> invitationService.reject(target, otherProjectId,
+                invitationId, created.rawToken()));
+        assertThrows(NoSuchElementException.class, () -> invitationService.cancel(manager, otherProjectId,
+                invitationId));
+        assertThrows(NoSuchElementException.class, () -> invitationService.resend(manager, otherProjectId,
+                invitationId));
+
+        // The correct project still accepts it afterward: the wrong-project calls above never mutated it.
+        invitationService.accept(target, projectId, invitationId, created.rawToken());
+        assertEquals(InvitationStatus.ACCEPTED, invitations.findById(invitationId).orElseThrow().getStatus());
     }
 
     private UUID registerUser(String prefix) {
