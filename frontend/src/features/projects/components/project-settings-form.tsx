@@ -36,6 +36,7 @@ export function ProjectSettingsForm({ project }: { project: Project }) {
     register,
     handleSubmit,
     control,
+    reset,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<ProjectSettingsValues>({
     resolver: zodResolver(projectSettingsSchema),
@@ -55,8 +56,19 @@ export function ProjectSettingsForm({ project }: { project: Project }) {
 
   const save = useMutation({
     mutationFn: (values: ProjectSettingsValues) => projectsApi.update(project.id, values),
-    onSuccess: () => {
+    onSuccess: (updated) => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
+      reset({
+        name: updated.name,
+        description: updated.description ?? undefined,
+        priority: updated.priority,
+        status: updated.status === "ARCHIVED" ? "PLANNING" : updated.status,
+        startDate: updated.startDate ?? undefined,
+        targetEndDate: updated.targetEndDate ?? undefined,
+        projectGoal: updated.projectGoal ?? undefined,
+        techStack: updated.techStack ?? undefined,
+        organizationId: updated.organizationId ?? undefined,
+      });
       toast.success(t("saved"));
     },
     onError: (err) => toast.error(te(errorKey(err))),
@@ -97,7 +109,7 @@ export function ProjectSettingsForm({ project }: { project: Project }) {
       <form
         onSubmit={handleSubmit((values) => save.mutate(values))}
         noValidate
-        className="grid max-w-2xl gap-4 sm:grid-cols-2"
+        className="grid gap-5 rounded-2xl border bg-card p-6 shadow-sm sm:grid-cols-2 sm:p-8"
       >
         <div className="space-y-1.5 sm:col-span-2">
           <Label htmlFor="settings-name">{t("name")}</Label>
@@ -111,13 +123,13 @@ export function ProjectSettingsForm({ project }: { project: Project }) {
         </div>
 
         <div className="space-y-1.5">
-          <Label>{t("status")}</Label>
+          <Label htmlFor="settings-status">{t("status")}</Label>
           <Controller
             control={control}
             name="status"
             render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger id="settings-status" className="w-full">
                   <SelectValue>{(value: (typeof projectStatuses)[number]) => t(`statusValues.${value}`)}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
@@ -133,13 +145,13 @@ export function ProjectSettingsForm({ project }: { project: Project }) {
         </div>
 
         <div className="space-y-1.5">
-          <Label>{t("priority")}</Label>
+          <Label htmlFor="settings-priority">{t("priority")}</Label>
           <Controller
             control={control}
             name="priority"
             render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger id="settings-priority" className="w-full">
                   <SelectValue>{(value: (typeof projectPriorities)[number]) => t(`priorityValues.${value}`)}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
@@ -167,14 +179,16 @@ export function ProjectSettingsForm({ project }: { project: Project }) {
 
         {organizations && organizations.content.length > 0 && (
           <div className="space-y-1.5 sm:col-span-2">
-            <Label>{t("organization")}</Label>
+            <Label htmlFor="settings-organization">{t("organization")}</Label>
             <Controller
               control={control}
               name="organizationId"
               render={({ field }) => (
                 <Select value={field.value ?? ""} onValueChange={field.onChange}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder={t("organizationNone")} />
+                  <SelectTrigger id="settings-organization" className="w-full">
+                    <SelectValue placeholder={t("organizationNone")}>
+                      {(value: string) => organizations.content.find((org) => org.id === value)?.name ?? t("organizationNone")}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {organizations.content.map((org) => (
@@ -200,8 +214,8 @@ export function ProjectSettingsForm({ project }: { project: Project }) {
         </div>
 
         <div className="sm:col-span-2">
-          <Button type="submit" disabled={isSubmitting || !isDirty}>
-            {isSubmitting && <CircleNotch size={16} className="animate-spin" />}
+          <Button type="submit" disabled={isSubmitting || save.isPending || !isDirty}>
+            {save.isPending && <CircleNotch size={16} className="animate-spin" />}
             {t("save")}
           </Button>
         </div>

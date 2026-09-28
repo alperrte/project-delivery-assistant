@@ -50,6 +50,13 @@
     "ANALYST": "Analyst"
   },
   "organizations": {
+    "cardLabel": "ORGANISATION",
+    "cardNoDescription": "Noch keine Beschreibung hinzugefügt.",
+    "cardOpen": "Arbeitsbereich öffnen",
+    "cardCreated": "Erstellt: {date}",
+    "backToOrganizations": "Alle Organisationen",
+    "projectsLabel": "Arbeitsbereich",
+    "statusValues": { "ACTIVE": "Aktiv", "ARCHIVED": "Archiviert" },
     "title": "Organisationen",
     "description": "Gruppieren Sie Ihre Projekte unter einer Organisation oder lassen Sie sie eigenständig.",
     "create": "Neue Organisation",
@@ -77,6 +84,10 @@
     }
   },
   "projects": {
+    "cardLabel": "PROJEKT",
+    "cardNoDescription": "Noch keine Beschreibung hinzugefügt.",
+    "cardGoal": "Ziel",
+    "cardUpdated": "Aktualisiert: {date}",
     "title": "Projekte",
     "description": "Projekte, in denen Sie Mitglied sind.",
     "create": "Neues Projekt",
@@ -94,6 +105,9 @@
       "created": "Projekt erstellt."
     },
     "detail": {
+      "backToProjects": "Alle Projekte",
+      "eyebrow": "Projektarbeitsbereich",
+      "navigation": "Projektmenü",
       "tabs": {
         "overview": "Übersicht",
         "criteria": "Kriterien",
@@ -105,6 +119,24 @@
       }
     },
     "overview": {
+      "noCriteriaTitle": "Definieren Sie gemeinsam den Erfolg.",
+      "noCriteriaDescription": "Fügen Sie das erste Kriterium hinzu, um den Fortschritt hier zu verfolgen.",
+      "defineCriteria": "Kriterien definieren",
+      "editProjectProfile": "Projektdaten bearbeiten",
+      "progressCount": "{completed} von {total} Kriterien abgeschlossen",
+      "viewCriteria": "Kriterien anzeigen",
+      "viewMembers": "Mitglieder anzeigen",
+      "projectProfile": "Projektprofil",
+      "goal": "Projektziel",
+      "noGoal": "Für dieses Projekt wurde noch kein Ziel festgelegt.",
+      "techStack": "Technologie-Stack",
+      "timeline": "Zieldatum",
+      "notSpecified": "Nicht angegeben",
+      "viewRepository": "Repository anzeigen",
+      "connectRepository": "Repository verbinden",
+      "sectionLabel": "Übersicht",
+      "heading": "Projektübersicht",
+      "team": "Projektteam",
       "statusValues": {
         "PLANNING": "Planung",
         "ACTIVE": "Aktiv",
@@ -188,6 +220,8 @@
     }
   },
   "members": {
+    "title": "Projektmitglieder",
+    "emptyDescription": "Personen, die diesem Projekt beitreten, und ihre Rollen erscheinen hier.",
     "emptyTitle": "Noch keine Mitglieder",
     "columns": { "member": "Mitglied", "roles": "Rollen", "actions": "Aktionen" },
     "editRolesTitle": "Rollen bearbeiten",
@@ -199,6 +233,8 @@
     "rolesUpdated": "Rollen aktualisiert."
   },
   "invitations": {
+    "statusValues": { "PENDING": "Ausstehend", "ACCEPTED": "Angenommen", "REJECTED": "Abgelehnt", "CANCELLED": "Abgebrochen", "EXPIRED": "Abgelaufen" },
+    "emptyDescription": "Laden Sie ein Projektmitglied ein, um Ihr Team zu erweitern.",
     "pendingTitle": "Ausstehende Einladungen",
     "invite": "Mitglied einladen",
     "emptyTitle": "Noch keine Einladungen",
@@ -216,6 +252,7 @@
     "rolesLabel": "Anfangsrollen",
     "send": "Einladung senden",
     "respond": {
+      "eyebrow": "Projekteinladung",
       "missingToken": "Diesem Einladungslink fehlt das Token.",
       "prompt": "Sie wurden eingeladen, diesem Projekt beizutreten.",
       "accept": "Annehmen",
@@ -226,6 +263,9 @@
     }
   },
   "squads": {
+    "manageMembers": "Mitglieder",
+    "edit": "Bearbeiten",
+    "emptyDescription": "Organisieren Sie Projektmitglieder in Teams, die zusammenarbeiten.",
     "title": "Teams",
     "create": "Neues Team",
     "emptyTitle": "Noch keine Teams",

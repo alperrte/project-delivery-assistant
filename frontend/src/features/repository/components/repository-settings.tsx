@@ -8,6 +8,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { GithubLogo, LinkSimple, CircleNotch, ArrowSquareOut } from "@phosphor-icons/react";
 import { PageHeader } from "@/components/common/page-header";
+import { EmptyState } from "@/components/common/empty-state";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -73,26 +74,22 @@ export function RepositorySettings({ projectId, isManager }: { projectId: string
       {realError && <p className="text-sm text-destructive">{te(errorKey(error))}</p>}
 
       {notConnected && !connecting && isManager && (
-        <div className="flex flex-col items-start gap-3 rounded-xl border border-dashed p-6">
-          <GithubLogo size={28} className="text-muted-foreground" />
-          <p className="text-sm text-foreground">{t("noneTitle")}</p>
-          <p className="text-sm text-muted-foreground">{t("noneDescription")}</p>
-          <Button onClick={() => setConnecting(true)}>
-            <LinkSimple data-icon="inline-start" size={16} />
-            {t("connect")}
-          </Button>
-        </div>
+        <EmptyState
+          title={t("noneTitle")}
+          description={t("noneDescription")}
+          action={<Button onClick={() => setConnecting(true)}><LinkSimple data-icon="inline-start" size={16} />{t("connect")}</Button>}
+        />
       )}
 
       {notConnected && !isManager && (
-        <div className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">{t("noneTitle")}</div>
+        <EmptyState title={t("noneTitle")} description={t("noneDescription")} />
       )}
 
       {notConnected && connecting && (
         <form
           onSubmit={handleSubmit((values) => connect.mutate(values))}
           noValidate
-          className="max-w-md space-y-4 rounded-xl border p-4"
+          className="max-w-xl space-y-5 rounded-2xl border bg-card p-6 shadow-sm"
         >
           <div className="space-y-1.5">
             <Label htmlFor="repository-url">{t("urlLabel")}</Label>
@@ -112,8 +109,8 @@ export function RepositorySettings({ projectId, isManager }: { projectId: string
             <Button type="button" variant="outline" onClick={() => setConnecting(false)}>
               {t("cancel")}
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting && <CircleNotch size={16} className="animate-spin" />}
+            <Button type="submit" disabled={isSubmitting || connect.isPending}>
+              {connect.isPending && <CircleNotch size={16} className="animate-spin" />}
               {t("connect")}
             </Button>
           </div>
@@ -122,7 +119,7 @@ export function RepositorySettings({ projectId, isManager }: { projectId: string
 
       {connection && (
         <div className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-6 shadow-sm">
             <div className="flex items-center gap-3">
               <GithubLogo size={24} />
               <div>

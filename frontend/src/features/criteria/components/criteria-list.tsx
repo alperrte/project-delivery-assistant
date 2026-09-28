@@ -64,7 +64,7 @@ export function CriteriaList({ projectId, isManager }: { projectId: string; isMa
   const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
 
   return (
-    <div className="max-w-3xl">
+    <div>
       <PageHeader
         title={t("title")}
         action={
@@ -83,7 +83,7 @@ export function CriteriaList({ projectId, isManager }: { projectId: string; isMa
       />
 
       {total > 0 && (
-        <div className="mb-5 space-y-1.5">
+        <div className="mb-6 space-y-3 rounded-2xl border bg-card p-5 shadow-sm sm:p-6">
           <Progress value={percent}>
             <div className="flex items-baseline justify-between text-sm">
               <span className="font-medium text-foreground">{t("progressLabel")}</span>
@@ -101,9 +101,9 @@ export function CriteriaList({ projectId, isManager }: { projectId: string; isMa
       {total === 0 && <EmptyState title={t("emptyTitle")} description={t("emptyDescription")} />}
 
       {total > 0 && (
-        <ul className="divide-y rounded-xl border">
+        <ul className="divide-y overflow-hidden rounded-2xl border bg-card shadow-sm">
           {criteria.map((criterion, index) => (
-            <li key={criterion.id} className="flex items-start gap-3 p-3">
+            <li key={criterion.id} className="flex flex-wrap items-start gap-3 p-4 transition-colors hover:bg-muted/25 sm:p-5">
               <label className="flex min-w-0 flex-1 items-start gap-3 has-disabled:cursor-not-allowed">
                 <Checkbox
                   checked={criterion.completed}
