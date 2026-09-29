@@ -1,51 +1,96 @@
 "use client";
 
+import { useEffect, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft } from "@phosphor-icons/react";
+import { useSession } from "@/features/auth/hooks/use-session";
 import { projectsApi } from "@/features/projects/api";
 import { useCurrentMember } from "@/features/projects/hooks/use-current-member";
 import { PROJECT_SECTIONS, projectSection, projectSectionHref } from "@/features/projects/project-sections";
 import { cn } from "@/lib/utils";
 
+const selectionEvent = "pda:project-selection-changed";
+
+function subscribeToSelection(onChange: () => void) {
+  window.addEventListener(selectionEvent, onChange);
+  window.addEventListener("storage", onChange);
+  return () => {
+    window.removeEventListener(selectionEvent, onChange);
+    window.removeEventListener("storage", onChange);
+  };
+}
+
 export function ProjectSidebarNav({ onNavigate }: { onNavigate: () => void }) {
   const t = useTranslations("projects.detail");
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const slug = pathname.split("/")[2];
+  const { data: user } = useSession();
+  const routeSlug = /^\/projects\/([^/]+)$/.exec(pathname)?.[1];
+  const rememberedSlug = useSyncExternalStore(
+    subscribeToSelection,
+    () => user?.id ? sessionStorage.getItem(`pda:last-project:${user.id}`) : null,
+    () => null,
+  );
+  const { data: projectList } = useQuery({
+    queryKey: ["projects", "sidebar-default", user?.id],
+    queryFn: () => projectsApi.list(0, 1),
+    enabled: !!user,
+  });
+  const slug = routeSlug ?? rememberedSlug ?? projectList?.content[0]?.slug;
   const { data: project } = useQuery({
     queryKey: ["projects", "by-slug", slug],
-    queryFn: () => projectsApi.bySlug(slug),
+    queryFn: () => projectsApi.bySlug(slug!),
+    enabled: !!slug,
   });
   const { isManager } = useCurrentMember(project?.id ?? "");
   const active = projectSection(searchParams.get("section"), isManager);
+  const projectPath = slug ? `/projects/${slug}` : null;
+
+  useEffect(() => {
+    if (!user?.id || !routeSlug) return;
+    const key = `pda:last-project:${user.id}`;
+    if (sessionStorage.getItem(key) !== routeSlug) {
+      sessionStorage.setItem(key, routeSlug);
+      window.dispatchEvent(new Event(selectionEvent));
+    }
+  }, [routeSlug, user?.id]);
 
   return (
-    <div className="mt-2 border-t border-border pt-2">
-      <Link href="/projects" onClick={onNavigate} className="mb-2 flex items-center gap-2 rounded-md px-3 py-2 text-xs text-muted-foreground hover:bg-muted hover:text-foreground">
-        <ArrowLeft size={15} aria-hidden="true" />{t("backToProjects")}
-      </Link>
-      {project && <p className="truncate px-3 pb-2 text-[11px] font-semibold text-muted-foreground" title={project.name}>{project.name}</p>}
-      <div className="space-y-0.5" aria-label={t("navigation")}>
+    <div className="mt-3 border-t border-border pt-4">
+      <div className="mb-2 flex items-center justify-between gap-2 px-3">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">{t("selectedProject")}</p>
+        {projectPath && pathname !== "/projects" && <Link href="/projects" onClick={onNavigate} className="text-[11px] font-medium text-muted-foreground hover:text-foreground hover:underline">{t("changeProject")}</Link>}
+      </div>
+      {projectPath ? (
+        <Link href={projectPath} onClick={onNavigate} title={project?.name} className="mb-2 flex min-w-0 items-center gap-2.5 rounded-md border bg-card/60 px-2.5 py-2 text-[13px] font-semibold hover:bg-muted">
+          <span aria-hidden="true" className="grid size-7 shrink-0 place-items-center rounded-md bg-primary text-[11px] font-semibold text-primary-foreground">{project?.name?.slice(0, 1).toLocaleUpperCase() ?? "P"}</span>
+          <span className="truncate">{project?.name ?? slug}</span>
+        </Link>
+      ) : (
+        <Link href="/projects" onClick={onNavigate} className="mb-2 block rounded-md border border-dashed px-3 py-2 text-[12px] text-muted-foreground hover:bg-muted hover:text-foreground">{t("chooseProject")}</Link>
+      )}
+      <div className="ml-2 space-y-0.5 border-l border-border pl-2" aria-label={t("navigation")}>
         {PROJECT_SECTIONS.filter(item => !("managerOnly" in item && item.managerOnly && !isManager)).map(item => {
           const Icon = item.icon;
-          const selected = active === item.value;
+          const selected = !!routeSlug && active === item.value;
+          const className = cn(
+            "flex items-center gap-3 rounded-md px-3 py-2 text-[13px] text-muted-foreground transition-colors",
+            projectPath && "hover:bg-muted hover:text-foreground",
+            selected && "bg-accent font-semibold text-foreground",
+          );
           return (
-            <Link
-              key={item.value}
-              href={projectSectionHref(pathname, item.value)}
-              onClick={onNavigate}
-              aria-current={selected ? "page" : undefined}
-              className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-[13px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
-                selected && "bg-accent font-semibold text-foreground",
-              )}
-            >
-              <Icon size={17} weight={selected ? "fill" : "regular"} aria-hidden="true" />
-              {t(`tabs.${item.value}`)}
-            </Link>
+            projectPath ? (
+              <Link key={item.value} href={projectSectionHref(projectPath, item.value)} onClick={onNavigate} aria-current={selected ? "page" : undefined} className={className}>
+                <Icon size={17} weight={selected ? "fill" : "regular"} aria-hidden="true" />
+                {t(`tabs.${item.value}`)}
+              </Link>
+            ) : (
+              <span key={item.value} aria-disabled="true" className={className}>
+                <Icon size={17} aria-hidden="true" />{t(`tabs.${item.value}`)}
+              </span>
+            )
           );
         })}
       </div>
