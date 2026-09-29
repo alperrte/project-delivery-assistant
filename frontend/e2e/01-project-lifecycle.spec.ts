@@ -34,21 +34,21 @@ test.describe.serial("Project lifecycle (manager)", () => {
     slug = await createProject(page, projectName, { organizationName: orgName });
     expect(page.url()).toContain(slug);
 
-    await page.getByRole("tab", { name: "Üyeler" }).click();
+    await page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Üyeler" }).click();
     const row = page.getByRole("row", { name: new RegExp(manager.nickname) });
     await expect(row).toBeVisible();
     await expect(row.getByText("Proje Yöneticisi")).toBeVisible();
   });
 
   test("edit settings, add criterion, complete it", async () => {
-    await page.getByRole("tab", { name: "Ayarlar" }).click();
+    await page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Ayarlar" }).click();
 
     await page.getByRole("combobox").first().click();
     await page.getByRole("option", { name: "Aktif" }).click();
     await page.getByRole("button", { name: /^Değişiklikleri kaydet$/ }).click();
     await expect(page.getByText("Ayarlar kaydedildi.")).toBeVisible();
 
-    await page.getByRole("tab", { name: "Kriterler" }).click();
+    await page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Kriterler" }).click();
     await page.getByRole("button", { name: /^Yeni kriter$/ }).click();
     await page.locator("#criterion-title").fill("E2E kriteri");
     await page.getByRole("dialog").getByRole("button", { name: /^Oluştur$/ }).click();
@@ -59,7 +59,7 @@ test.describe.serial("Project lifecycle (manager)", () => {
   });
 
   test("connect a public GitHub repository and see latest commits", async () => {
-    await page.getByRole("tab", { name: "Depo" }).click();
+    await page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Depo" }).click();
     await page.getByRole("button", { name: /^Depo bağla$/ }).click();
     await page.locator("#repository-url").fill("https://github.com/octocat/Hello-World");
     await page.getByRole("button", { name: /^Depo bağla$/ }).click();
@@ -71,7 +71,7 @@ test.describe.serial("Project lifecycle (manager)", () => {
   });
 
   test("archive the project", async () => {
-    await page.getByRole("tab", { name: "Ayarlar" }).click();
+    await page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Ayarlar" }).click();
     await page.getByRole("button", { name: /^Arşivle$/ }).click();
     await page.getByRole("dialog").getByRole("button", { name: /^Arşivle$/ }).click();
     await expect(page).toHaveURL(/\/projects$/, { timeout: 15_000 });

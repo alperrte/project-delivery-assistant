@@ -1,18 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
+import { useCallback } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import {
-  ArrowLeft, ChartBar, CheckCircle, Users, EnvelopeSimple,
-  UsersThree, GithubLogo, GearSix, CalendarBlank, Code, PencilSimple,
+  Users, CalendarBlank, Code, PencilSimple,
 } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { errorKey } from "@/lib/api/error-message";
 import { MemberList } from "@/features/projects/components/members/member-list";
 import { InvitationsPanel } from "@/features/invitations/components/invitations-panel";
@@ -20,29 +18,20 @@ import { SquadList } from "@/features/squads/components/squad-list";
 import { CriteriaList } from "@/features/criteria/components/criteria-list";
 import { RepositorySettings } from "@/features/repository/components/repository-settings";
 import { projectsApi } from "../api";
+import { projectSection, projectSectionHref, type ProjectSection } from "../project-sections";
 import { useCurrentMember } from "../hooks/use-current-member";
 import { projectStatusBadgeClass, projectPriorityBadgeClass } from "../status-colors";
 import { ProjectOverview } from "./project-overview";
 import { ProjectSettingsForm } from "./project-settings-form";
-
-const SECTIONS = [
-  { value: "overview", icon: ChartBar },
-  { value: "criteria", icon: CheckCircle },
-  { value: "members", icon: Users },
-  { value: "invitations", icon: EnvelopeSimple, managerOnly: true },
-  { value: "squads", icon: UsersThree },
-  { value: "repository", icon: GithubLogo },
-  { value: "settings", icon: GearSix, managerOnly: true },
-] as const;
-
-type Section = (typeof SECTIONS)[number]["value"];
 
 export function ProjectDetail({ slug }: { slug: string }) {
   const t = useTranslations("projects.detail");
   const tp = useTranslations("projects.overview");
   const te = useTranslations("errors");
   const locale = useLocale();
-  const [section, setSection] = useState<Section>("overview");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const { data: project, isLoading, isError, error } = useQuery({
     queryKey: ["projects", "by-slug", slug],
@@ -56,49 +45,17 @@ export function ProjectDetail({ slug }: { slug: string }) {
     enabled: !!project,
   });
 
+  const section = projectSection(searchParams.get("section"), isManager);
+  const setSection = useCallback((next: ProjectSection) => {
+    router.push(projectSectionHref(pathname, next), { scroll: false });
+  }, [pathname, router]);
+
   if (isLoading || memberLoading) return <Skeleton className="h-64 w-full rounded-2xl" />;
   if (isError) return <p className="text-sm text-destructive">{te(errorKey(error))}</p>;
   if (!project) return null;
 
-  const visibleSections = SECTIONS.filter((item) => !("managerOnly" in item && item.managerOnly && !isManager));
-
   return (
-    <Tabs value={section} onValueChange={(value) => setSection(value as Section)} orientation="vertical" className="project-workspace grid min-w-0 gap-5 lg:grid-cols-[240px_minmax(0,1fr)] xl:grid-cols-[260px_minmax(0,1fr)] lg:gap-7">
-        <aside className="min-w-0 lg:sticky lg:top-24 lg:self-start lg:rounded-2xl lg:border lg:bg-card/55 lg:p-4 lg:pb-8 lg:shadow-sm">
-          <Link href="/projects" className="mb-4 hidden items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:inline-flex">
-            <ArrowLeft size={15} aria-hidden="true" />{t("backToProjects")}
-          </Link>
-          <div className="mb-4 hidden border-t lg:block" aria-hidden="true" />
-          <div className="lg:hidden">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("navigation")}</p>
-            <Select value={section} onValueChange={(value) => setSection(value as Section)}>
-              <SelectTrigger aria-label={t("navigation")} className="h-11 w-full border-border bg-card px-3">
-                <SelectValue>{(value: Section) => t(`tabs.${value}`)}</SelectValue>
-              </SelectTrigger>
-              <SelectContent alignItemWithTrigger={false}>
-                {visibleSections.map((item) => (
-                  <SelectItem key={item.value} value={item.value} className="py-2.5">
-                    {t(`tabs.${item.value}`)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="hidden lg:block">
-            <TabsList className="h-auto w-full max-w-none flex-col items-stretch gap-1 overflow-visible bg-transparent p-0">
-              {visibleSections.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <TabsTrigger key={item.value} value={item.value} className="h-11 flex-none justify-start gap-3 rounded-lg border border-transparent px-3 text-[0.88rem] font-medium text-muted-foreground transition-all hover:bg-muted hover:text-foreground data-active:border-primary/55 data-active:bg-primary/15 data-active:text-foreground data-active:shadow-[inset_3px_0_0_var(--primary)]">
-                    <Icon size={18} aria-hidden="true" />
-                    {t(`tabs.${item.value}`)}
-                  </TabsTrigger>
-                );
-              })}
-            </TabsList>
-          </div>
-        </aside>
-
+    <Tabs value={section} className="project-workspace min-w-0">
         <div className="min-w-0 space-y-6">
           <div className="flex flex-wrap items-start gap-4 sm:gap-5">
             <div aria-hidden="true" className="grid size-14 shrink-0 place-items-center rounded-xl border border-primary/30 bg-primary/10 font-heading text-xl font-semibold text-primary sm:size-16">

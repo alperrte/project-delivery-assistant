@@ -74,7 +74,7 @@ export function LoginForm({ children }: { children?: ReactNode }) {
       writeRememberedEmail(remember ? credentials.email : null);
       const me = await authApi.me();
       queryClient.setQueryData(sessionQueryKey, me);
-      router.replace(me.mustChangePassword ? "/change-password" : "/projects");
+      router.replace(me.mustChangePassword ? "/change-password" : "/dashboard");
     } catch (err) {
       setFormError(te(errorKey(err)));
       shake();

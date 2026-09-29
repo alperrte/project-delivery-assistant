@@ -48,7 +48,7 @@ export function ChangePasswordForm() {
       const me = await authApi.me();
       queryClient.setQueryData(sessionQueryKey, me);
       toast.success(t("success"));
-      router.replace("/projects");
+      router.replace("/dashboard");
     } catch (err) {
       setFormError(te(errorKey(err)));
       shake();

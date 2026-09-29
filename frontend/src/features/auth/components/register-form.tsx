@@ -59,7 +59,7 @@ export function RegisterForm() {
       const me = await authApi.me();
       queryClient.setQueryData(sessionQueryKey, me);
       toast.success(t("welcome"));
-      router.replace(me.mustChangePassword ? "/change-password" : "/projects");
+      router.replace(me.mustChangePassword ? "/change-password" : "/dashboard");
     } catch {
       // The account exists; only the sign-in failed (e.g. rate limit), so the
       // login page is the way forward.
