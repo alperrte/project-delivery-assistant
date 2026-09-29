@@ -102,7 +102,8 @@ public class SecurityBaselineConfiguration {
                                     || path.startsWith("/api/v1/auth/sessions")
                                     || path.startsWith("/api/v1/admin/")
                                     || "/api/v1/auth/password/change".equals(path)
-                                    || path.startsWith("/api/v1/auth/oauth/");
+                                    || path.startsWith("/api/v1/auth/oauth/")
+                                    || path.matches("/api/v1/projects/[^/]+/tasks(?:/.*)?");
                             writeProblem(response, unauthenticated ? 401 : 403);
                         })
                         .accessDeniedHandler((request, response, failure) -> writeProblem(response, 403)))
@@ -138,6 +139,7 @@ public class SecurityBaselineConfiguration {
                             .requestMatchers(HttpMethod.GET, "/api/v1/projects", "/api/v1/projects/**",
                                     "/api/v1/organizations", "/api/v1/organizations/**").authenticated()
                             .requestMatchers(HttpMethod.POST, "/api/v1/projects",
+                                    "/api/v1/projects/*/tasks",
                                     "/api/v1/projects/*/archive", "/api/v1/organizations",
                                     "/api/v1/organizations/*/archive",
                                     "/api/v1/projects/*/members/*/roles",
@@ -154,16 +156,21 @@ public class SecurityBaselineConfiguration {
                                     "/api/v1/projects/*/criteria/reorder",
                                     "/api/v1/projects/*/repository").authenticated()
                             .requestMatchers(HttpMethod.PUT, "/api/v1/projects/*",
+                                    "/api/v1/projects/*/tasks/*/assignees",
                                     "/api/v1/organizations/*",
                                     "/api/v1/projects/*/members/*/roles",
                                     "/api/v1/projects/*/squads/*",
                                     "/api/v1/projects/*/criteria/*").authenticated()
                             .requestMatchers(HttpMethod.DELETE, "/api/v1/projects/*/members/*",
+                                    "/api/v1/projects/*/tasks/*",
                                     "/api/v1/projects/*/members/*/roles/*",
                                     "/api/v1/projects/*/invitations/*",
                                     "/api/v1/projects/*/repository",
                                     "/api/v1/projects/*/criteria/*",
                                     "/api/v1/projects/*/squads/*/members/*").authenticated()
+                            .requestMatchers(HttpMethod.PATCH, "/api/v1/projects/*/tasks/*",
+                                    "/api/v1/projects/*/tasks/*/status",
+                                    "/api/v1/projects/*/tasks/*/blocked").authenticated()
                             .anyRequest().denyAll();
                 })
                 .build();
@@ -187,7 +194,7 @@ public class SecurityBaselineConfiguration {
         }
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(origin.toString()));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Content-Type", "X-XSRF-TOKEN"));
         configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

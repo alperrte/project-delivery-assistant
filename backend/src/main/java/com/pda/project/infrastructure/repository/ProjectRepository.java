@@ -26,6 +26,10 @@ public interface ProjectRepository extends JpaRepository<Project, UUID> {
     @Query("select p from Project p where p.id = :projectId and p.archivedAt is null")
     Optional<Project> lockActive(@Param("projectId") UUID projectId);
 
+    @Lock(LockModeType.PESSIMISTIC_READ)
+    @Query("select p from Project p where p.id = :projectId and p.archivedAt is null")
+    Optional<Project> lockActiveShared(@Param("projectId") UUID projectId);
+
     Page<Project> findByArchivedAtIsNull(Pageable pageable);
 
     Page<Project> findByOrganizationIdAndArchivedAtIsNull(UUID organizationId, Pageable pageable);

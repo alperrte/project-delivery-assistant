@@ -11,6 +11,8 @@ import java.util.UUID;
  */
 public interface ProjectAccess {
     boolean isMember(UUID projectId, UUID userId);
+    /** Membership lookup for archived-project conflict classification only; grants no permission. */
+    boolean isMemberIncludingArchived(UUID projectId, UUID userId);
     Set<String> rolesForUserInProject(UUID projectId, UUID userId);
     boolean canAccessProject(UUID projectId, UUID userId);
 
@@ -19,4 +21,10 @@ public interface ProjectAccess {
 
     /** True only when the user is an active member whose roles grant the permission in this very project. */
     boolean hasPermission(UUID projectId, UUID userId, ProjectPermission permission);
+
+    /** Context for task creation; archived projects are visible here only for conflict classification. */
+    ProjectTaskContext taskContext(UUID projectId);
+
+    /** Active members of an active project among the supplied IDs, in one lookup. */
+    Set<UUID> activeMemberIds(UUID projectId, Set<UUID> userIds);
 }

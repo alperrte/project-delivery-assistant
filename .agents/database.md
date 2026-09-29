@@ -22,7 +22,9 @@ Migration değişikliğiyle birlikte ilgili repository ve Testcontainers Postgre
 
 ## V1 domain kavramları
 
-Plan `User`, `Project`, `ProjectMembership`, `Squad`, `Task`, `TaskAssignment`, `Issue`, `TestReport` ve `Comment` kavramlarını tanımlar. Kalıcı uygulama içi bildirimler için ayrı `Notification` modülü bulunur. Bunların fiziksel alanları, foreign key'leri ve lifecycle kuralları henüz kesinleştirilmemiştir. Kavramsal ilişki çizimi: [er-diagram.md](er-diagram.md).
+Task fiziksel şeması V28–V30 migration'larıyla uygulanmıştır: `tasks`, `project_task_counters`, `task_assignments`, `task_status_history`. Proje/User çapraz modül referansları Task Java modelinde scalar UUID'dir; Task key PostgreSQL atomic upsert ile proje bazında üretilir. `tasks.version` optimistic locking sağlar; atama seti task row lock altında değiştirilir. Üyelik doğrulaması Project public contract'ı üzerinden yapılır.
+
+Plan `User`, `Project`, `ProjectMembership`, `Squad`, `Task`, `TaskAssignment`, `Issue`, `TestReport` ve `Comment` kavramlarını tanımlar. Kalıcı uygulama içi bildirimler için ayrı `Notification` modülü bulunur. Uygulanmış modüllerin fiziksel şeması migration'larda belirlenmiştir; kalan kavramların alanları ve lifecycle kuralları ilgili fazda kesinleşir. Kavramsal ilişki çizimi: [er-diagram.md](er-diagram.md).
 
 `TaskAssignment` ayrı modeldir: bir task birden çok kullanıcıya atanabilir, sabit assignee üst sınırı yoktur. Aynı `(task_id, user_id)` çifti tekrar edemez. Atanan kullanıcı ilgili projenin üyesi olmalıdır. `assigned_by` ve `assigned_at` izlenebilirlik için tutulur. Üyelik kuralı yalnız veritabanı ilişkisinden çıkarılmamalı; use-case seviyesinde doğrulanmalıdır.
 
