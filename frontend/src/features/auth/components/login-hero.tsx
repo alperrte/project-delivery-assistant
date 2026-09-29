@@ -13,12 +13,8 @@ export async function LoginHero() {
   return (
     <div className="mx-auto mb-[clamp(1.25rem,3.5vh,2.5rem)] max-w-4xl text-center">
       <h1
-        className="font-[family-name:var(--font-exo2)] text-balance text-[clamp(2rem,4.2vw,3.4rem)] font-bold leading-[1.08] tracking-[-0.01em]"
+        className="auth-slogan font-(family-name:--font-exo2) text-balance text-[clamp(2rem,4.2vw,3.4rem)] font-bold leading-[1.08] tracking-[-0.01em]"
         data-text={title}
-        className={cn(
-          exo2.className,
-          "auth-slogan text-balance text-[clamp(2rem,4.2vw,3.4rem)] font-bold leading-[1.08] tracking-[-0.01em]",
-        )}
       >
         {title}
       </h1>
