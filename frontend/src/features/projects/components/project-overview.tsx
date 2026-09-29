@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import {
-  ArrowRight, ArrowUpRight, CalendarBlank, CheckCircle, CircleDashed,
+  ArrowRight, ArrowUpRight, CalendarBlank,
   Code, EnvelopeSimple, GearSix, GithubLogo, Plus, Stack, Target, UsersThree,
 } from "@phosphor-icons/react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,6 +15,7 @@ import { invitationsApi } from "@/features/invitations/api";
 import { squadsApi } from "@/features/squads/api";
 import { projectsApi } from "../api";
 import type { Project } from "../types";
+import { ProjectCriteriaActivity, ProjectCriteriaTrend } from "./project-criteria-insights";
 
 type OverviewSection = "criteria" | "members" | "invitations" | "squads" | "repository" | "settings";
 
@@ -103,41 +104,8 @@ export function ProjectOverview({ project, isManager, onNavigate }: {
       </div>
 
       <div className="grid gap-3 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(14rem,.8fr)]">
-        <section className="workspace-panel min-w-0 p-5" aria-labelledby="overview-criteria-heading">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <h2 id="overview-criteria-heading" className="text-base font-semibold">{t("criteriaSnapshot")}</h2>
-            <button type="button" onClick={() => onNavigate("criteria")} className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline">{t("viewAll")}<ArrowRight size={14} aria-hidden="true" /></button>
-          </div>
-          {!criteria ? <Skeleton className="h-44 w-full" /> : criteria.length > 0 ? (
-            <ul className="divide-y divide-border/70">
-              {criteria.slice(0, 5).map((criterion) => (
-                <li key={criterion.id} className="flex items-center gap-3 py-3 text-sm">
-                  {criterion.completed ? <CheckCircle size={19} className="shrink-0 text-success" weight="fill" aria-hidden="true" /> : <CircleDashed size={19} className="shrink-0 text-primary" aria-hidden="true" />}
-                  <span className={`min-w-0 flex-1 truncate ${criterion.completed ? "text-muted-foreground line-through" : "text-foreground"}`}>{criterion.title}</span>
-                  <span className="text-xs text-muted-foreground">{criterion.completed ? t("done") : t("inProgress")}</span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <div className="flex min-h-48 flex-col items-start justify-center">
-              <Target size={30} className="text-primary" aria-hidden="true" />
-              <h3 className="mt-3 text-base font-semibold">{t("noCriteriaTitle")}</h3>
-              <p className="mt-1 max-w-sm text-sm leading-6 text-muted-foreground">{t("noCriteriaDescription")}</p>
-            </div>
-          )}
-        </section>
-
-        <section className="workspace-panel min-w-0 p-5" aria-labelledby="overview-profile-heading">
-          <h2 id="overview-profile-heading" className="text-base font-semibold">{t("projectProfile")}</h2>
-          <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-primary">{t("goal")}</p>
-          <p className="mt-1 line-clamp-3 min-h-14 text-sm leading-6 text-foreground/85">{project.projectGoal || t("noGoal")}</p>
-          <dl className="mt-4 space-y-3 border-t pt-4 text-sm">
-            <div className="flex items-start justify-between gap-4"><dt className="inline-flex items-center gap-2 text-muted-foreground"><CalendarBlank size={16} aria-hidden="true" />{t("timeline")}</dt><dd className="text-right font-medium">{home.targetEndDate ? date.format(new Date(home.targetEndDate)) : t("notSpecified")}</dd></div>
-            <div className="flex items-start justify-between gap-4"><dt className="inline-flex items-center gap-2 text-muted-foreground"><Code size={16} aria-hidden="true" />{t("techStack")}</dt><dd className="max-w-[60%] text-right font-medium">{project.techStack || t("notSpecified")}</dd></div>
-            <div className="flex items-start justify-between gap-4"><dt className="inline-flex items-center gap-2 text-muted-foreground"><UsersThree size={16} aria-hidden="true" />{t("manager")}</dt><dd className="max-w-[60%] text-right font-medium">{home.managers.map((manager) => manager.nickname).join(", ") || t("notSpecified")}</dd></div>
-          </dl>
-          {home.organization && <Link href={`/organizations/${home.organization.id}`} className="mt-5 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline">{home.organization.name}<ArrowUpRight size={14} aria-hidden="true" /></Link>}
-        </section>
+        <ProjectCriteriaActivity criteria={criteria} />
+        <ProjectCriteriaTrend criteria={criteria} />
 
         <section className="workspace-panel min-w-0 p-5" aria-labelledby="overview-actions-heading">
           <h2 id="overview-actions-heading" className="mb-4 text-base font-semibold">{t("quickActions")}</h2>
@@ -149,6 +117,19 @@ export function ProjectOverview({ project, isManager, onNavigate }: {
           </div>
         </section>
       </div>
+
+      <section className="workspace-panel flex flex-col gap-x-8 gap-y-4 p-5 md:flex-row md:items-start" aria-label={t("projectProfile")}>
+        <div className="w-full flex-1 md:min-w-48">
+          <h2 className="text-base font-semibold">{t("projectProfile")}</h2>
+          <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">{project.projectGoal || t("noGoal")}</p>
+        </div>
+        <dl className="grid w-full flex-[2] gap-x-6 gap-y-3 text-sm sm:grid-cols-2 xl:grid-cols-4">
+          <div><dt className="inline-flex items-center gap-1.5 text-xs text-muted-foreground"><CalendarBlank size={15} aria-hidden="true" />{t("timeline")}</dt><dd className="mt-1 font-medium">{home.targetEndDate ? date.format(new Date(home.targetEndDate)) : t("notSpecified")}</dd></div>
+          <div><dt className="inline-flex items-center gap-1.5 text-xs text-muted-foreground"><Code size={15} aria-hidden="true" />{t("techStack")}</dt><dd className="mt-1 font-medium">{project.techStack || t("notSpecified")}</dd></div>
+          <div><dt className="inline-flex items-center gap-1.5 text-xs text-muted-foreground"><UsersThree size={15} aria-hidden="true" />{t("manager")}</dt><dd className="mt-1 font-medium">{home.managers.map((manager) => manager.nickname).join(", ") || t("notSpecified")}</dd></div>
+          {home.organization && <div><dt className="text-xs text-muted-foreground">{t("organization")}</dt><dd className="mt-1 font-medium"><Link href={`/organizations/${home.organization.id}`} className="inline-flex items-center gap-1 text-primary hover:underline">{home.organization.name}<ArrowUpRight size={14} aria-hidden="true" /></Link></dd></div>}
+        </dl>
+      </section>
     </div>
   );
 }

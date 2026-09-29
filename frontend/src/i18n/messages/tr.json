@@ -129,6 +129,15 @@
       }
     },
     "overview": {
+      "recentCriteriaActivity": "Son kriter hareketleri",
+      "criterionCompleted": "{title} tamamlandı",
+      "criterionAdded": "{title} eklendi",
+      "noCriteriaActivity": "Henüz kriter hareketi yok.",
+      "completionTrend": "Tamamlanma eğilimi",
+      "trendDescription": "Mevcut kriterlerin aylara göre tamamlanma oranı",
+      "trendNote": "Mevcut kriterlerin tamamlanma tarihlerinden hesaplanır.",
+      "noTrend": "Tamamlanma tarihleri geldikçe grafik burada oluşur.",
+      "organization": "Organizasyon",
       "progressLabel": "Proje ilerlemesi",
       "completedCriteria": "Tamamlanan kriter",
       "completedCount": "{count} tamamlandı",

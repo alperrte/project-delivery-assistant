@@ -129,6 +129,15 @@
       }
     },
     "overview": {
+      "recentCriteriaActivity": "Letzte Kriterienaktivitäten",
+      "criterionCompleted": "{title} abgeschlossen",
+      "criterionAdded": "{title} hinzugefügt",
+      "noCriteriaActivity": "Noch keine Kriterienaktivitäten.",
+      "completionTrend": "Abschlussverlauf",
+      "trendDescription": "Monatliche Abschlussquote der aktuellen Kriterien",
+      "trendNote": "Aus Abschlussdaten der aktuellen Kriterien berechnet.",
+      "noTrend": "Das Diagramm erscheint, sobald Abschlussdaten vorliegen.",
+      "organization": "Organisation",
       "progressLabel": "Projektfortschritt",
       "completedCriteria": "Abgeschlossene Kriterien",
       "completedCount": "{count} abgeschlossen",

@@ -129,6 +129,15 @@
       }
     },
     "overview": {
+      "recentCriteriaActivity": "Recent criterion activity",
+      "criterionCompleted": "{title} completed",
+      "criterionAdded": "{title} added",
+      "noCriteriaActivity": "No criterion activity yet.",
+      "completionTrend": "Completion trend",
+      "trendDescription": "Monthly completion rate for current criteria",
+      "trendNote": "Calculated from completion dates of current criteria.",
+      "noTrend": "The chart will appear when criteria have completion dates.",
+      "organization": "Organization",
       "progressLabel": "Project progress",
       "completedCriteria": "Completed criteria",
       "completedCount": "{count} completed",
