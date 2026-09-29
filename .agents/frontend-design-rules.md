@@ -62,6 +62,8 @@ Tek vurgu rengi elektrik mavisidir (`--primary`) ve her yerde aynı şekilde kul
 | `--live` | `#0e8f9e` | `#3ad4e6` | Yalnız aktif/çevrimiçi durumu |
 | `--shadow-tint` | `220 30% 25%` | `222 60% 3%` | Gölge tonu (HSL parçaları) |
 
+> **`.app-shell` içindeyken bu tablo geçersizdir.** `globals.css`'te `html:has(.app-shell)` (satır ~163) `--background`, `--foreground`, `--card`, `--primary`, `--secondary`, `--muted`, `--accent`, `--border*`, `--input`, `--ring`, `--surface-2` token'larını auth sahnesinin `--auth-*` değerlerine yeniden eşler (örn. `--primary` → `var(--auth-link)`, yani light'ta `#0a73a3`, doğrudaki `#1b5fe0` değil). `AppShell` sarmalayıcısı tüm oturum-içi sayfalarda (`/projects`, `/organizations`, proje detayı vb.) kullanıldığı için **bu, o sayfaların fiili renk paletidir**; yukarıdaki ham hex değerler yalnız `.app-shell` dışı (örn. bileşen testleri, gelecekte app-shell'siz bir yüzey) için geçerlidir. `--success`/`--warning`/`--destructive`/`--live` bu eşlemeye dahil değildir, değerleri her yerde tablodaki gibidir.
+
 ### Auth sayfaları token'ları
 
 Giriş, kayıt ve şifre sıfırlama ekranları arka plan fotoğrafı üzerinde yumuşak bir camgöbeği ışıkla çalışır. Bu token'lar `--auth-*` önekiyle ayrılmıştır; uygulama içindeki tek mavi vurguyu bozmamak için **auth dışındaki sayfalarda kullanma**.
@@ -91,11 +93,12 @@ Giriş, kayıt ve şifre sıfırlama ekranları arka plan fotoğrafı üzerinde 
 | Gövde metni | Inter (variable) | `src/app/layout.tsx`, `next/font`, `--font-inter` | `font-sans` (varsayılan) |
 | Başlıklar (`h1`–`h4`) | Inter | aynı | `font-heading` (base katmanında `h1`–`h4` için otomatik) |
 | Kod, commit hash | JetBrains Mono 400/500 | `layout.tsx`, `--font-jetbrains-mono` | `font-mono` |
-| Login sloganı | Exo 2 | Yalnız `features/auth/components/login-hero.tsx` | Bileşende `exo2.className` |
+| Login sloganı | Exo 2 | `features/auth/components/login-hero.tsx` | Bileşende `font-(family-name:--font-exo2)` |
+| App-shell sayfa başlığı (`h1`, `.font-heading`) | Exo 2 (Inter'e düşer) | `globals.css` `.app-shell h1,.font-heading` (satır ~211) | Oturum-içi sayfalarda otomatik, sınıf eklemeye gerek yok |
 
 - Fontlar yalnızca `next/font/google` ile yüklenir; `<link>` veya `@import url(...)` ile font ekleme.
 - Başlıklarda `letter-spacing: -0.01em` base katmanından gelir.
-- Exo 2 bir vurgu fontudur. Başka bir yerde gerekirse o bileşende yükle; global fonta çevirme.
+- Exo 2 bir masthead vurgusudur: `.app-shell` içinde yalnız `h1` (sayfanın tek başlığı, örn. "Projeler", proje adı) ve açıkça `.font-heading` sınıfı verilmiş öğeler Exo 2 kullanır. Panel/kart altbaşlıkları (`h2`, `h3`) kasıtlı olarak Inter'de kalır — her başlığı Exo 2 yapmak sayfayı "her yer vurgulu" hissettirir. Bunun dışında yeni bir yere Exo 2 eklemeden önce o bileşende ayrıca yükle; global gövde fontuna çevirme.
 - Kullanılan ağırlıklar: gövde 400, etiket ve link `font-medium`, başlık `font-semibold`, auth başlıkları `font-bold`.
 
 ## Radius, gölge, boşluk

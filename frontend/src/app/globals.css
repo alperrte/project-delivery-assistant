@@ -208,10 +208,10 @@ html.dark:has(.app-shell) {
   --surface-2: #152a45;
 }
 
+/* Exo 2 stays a masthead flourish: the one h1 per screen, or an explicit
+   opt-in. Sub-panel h2/h3 headings use the calmer Inter body font so the
+   page isn't wallpapered in the display face. */
 .app-shell h1,
-.app-shell h2,
-.app-shell h3,
-.app-shell h4,
 .app-shell .font-heading {
   font-family: var(--font-exo2), var(--font-inter), sans-serif;
 }

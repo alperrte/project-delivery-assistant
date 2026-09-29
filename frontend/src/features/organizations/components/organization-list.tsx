@@ -1,16 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowUpRight, Plus } from "@phosphor-icons/react";
+import { Plus } from "@phosphor-icons/react";
 import { PageHeader } from "@/components/common/page-header";
 import { EmptyState } from "@/components/common/empty-state";
 import { PaginationBar } from "@/components/common/pagination-bar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { errorKey } from "@/lib/api/error-message";
 import { organizationsApi } from "../api";
 import { OrganizationFormDialog } from "./organization-form-dialog";
@@ -19,12 +20,14 @@ export function OrganizationList() {
   const t = useTranslations("organizations");
   const locale = useLocale();
   const te = useTranslations("errors");
+  const router = useRouter();
   const [page, setPage] = useState(0);
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["organizations", page],
     queryFn: () => organizationsApi.list(page),
   });
+  const date = new Intl.DateTimeFormat(locale, { dateStyle: "medium" });
 
   return (
     <div>
@@ -59,32 +62,48 @@ export function OrganizationList() {
 
       {data && data.content.length > 0 && (
         <>
-          <div className="space-y-4">
-            {data.content.map((org) => (
-              <Link
-                key={org.id}
-                href={`/organizations/${org.id}`}
-                aria-label={org.name}
-                className="group grid overflow-hidden rounded-3xl border bg-card shadow-sm transition-all hover:border-primary/50 hover:shadow-[0_18px_50px_-28px_var(--primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary lg:grid-cols-[minmax(0,1.35fr)_minmax(17rem,.65fr)]"
-              >
-                <div className="min-w-0 p-6 sm:p-8">
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">{t("cardLabel")}</p>
-                  <h2 className="mt-3 font-heading text-2xl font-semibold tracking-tight text-foreground transition-colors group-hover:text-primary sm:text-3xl">{org.name}</h2>
-                  <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">{org.description || t("cardNoDescription")}</p>
-                </div>
-                <div className="flex min-w-0 flex-col justify-between gap-8 border-t bg-muted/20 p-6 sm:p-8 lg:border-t-0 lg:border-l">
-                  <div className="flex items-start justify-between gap-4">
-                    <Badge variant="outline" className="px-2.5 py-1">{t(`statusValues.${org.status}`)}</Badge>
-                    <ArrowUpRight size={20} className="shrink-0 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary" aria-hidden="true" />
-                  </div>
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium text-primary">{t("cardOpen")}</p>
-                    <p className="text-xs text-muted-foreground">{t("cardCreated", { date: new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(org.createdAt)) })}</p>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t("columns.name")}</TableHead>
+                <TableHead>{t("columns.status")}</TableHead>
+                <TableHead className="text-right">{t("columns.updatedAt")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.content.map((org) => (
+                <TableRow key={org.id} className="cursor-pointer" onClick={() => router.push(`/organizations/${org.id}`)}>
+                  <TableCell className="whitespace-normal">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span
+                        aria-hidden="true"
+                        className="grid size-9 shrink-0 place-items-center rounded-lg border border-primary/25 bg-primary/10 font-heading text-sm font-semibold text-primary"
+                      >
+                        {org.name.slice(0, 1).toLocaleUpperCase(locale)}
+                      </span>
+                      <div className="min-w-0">
+                        <Link
+                          href={`/organizations/${org.id}`}
+                          onClick={(event) => event.stopPropagation()}
+                          className="block truncate text-sm font-medium text-foreground hover:text-primary hover:underline"
+                        >
+                          {org.name}
+                        </Link>
+                        <p className="truncate text-xs text-muted-foreground">{org.description || t("cardNoDescription")}</p>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <span className="inline-flex items-center gap-1.5 text-sm text-foreground">
+                      <span className={`size-2 shrink-0 rounded-full ${org.status === "ACTIVE" ? "bg-success" : "bg-muted-foreground/40"}`} aria-hidden="true" />
+                      {t(`statusValues.${org.status}`)}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-right text-muted-foreground">{date.format(new Date(org.updatedAt))}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
           <PaginationBar
             page={data.page}
             totalPages={data.totalPages}

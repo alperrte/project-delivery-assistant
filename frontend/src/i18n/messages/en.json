@@ -78,7 +78,7 @@
     "noProjects": "This organization has no projects yet.",
     "emptyTitle": "No organizations yet",
     "emptyDescription": "Create one to group related projects together.",
-    "columns": { "name": "Name", "status": "Status" },
+    "columns": { "name": "Name", "status": "Status", "updatedAt": "Updated" },
     "form": {
       "createTitle": "New organization",
       "editTitle": "Edit organization",
@@ -101,7 +101,7 @@
     "create": "New project",
     "emptyTitle": "No projects yet",
     "emptyDescription": "Create your first project to get started.",
-    "columns": { "name": "Name", "status": "Status", "priority": "Priority" },
+    "columns": { "name": "Name", "status": "Status", "priority": "Priority", "techStack": "Tech stack", "updatedAt": "Updated" },
     "form": {
       "createTitle": "New project",
       "name": "Name",

@@ -78,7 +78,7 @@
     "noProjects": "Bu organizasyonun henüz projesi yok.",
     "emptyTitle": "Henüz organizasyon yok",
     "emptyDescription": "İlişkili projeleri bir arada tutmak için bir tane oluşturun.",
-    "columns": { "name": "Ad", "status": "Durum" },
+    "columns": { "name": "Ad", "status": "Durum", "updatedAt": "Güncelleme" },
     "form": {
       "createTitle": "Yeni organizasyon",
       "editTitle": "Organizasyonu düzenle",
@@ -101,7 +101,7 @@
     "create": "Yeni proje",
     "emptyTitle": "Henüz proje yok",
     "emptyDescription": "Başlamak için ilk projenizi oluşturun.",
-    "columns": { "name": "Ad", "status": "Durum", "priority": "Öncelik" },
+    "columns": { "name": "Ad", "status": "Durum", "priority": "Öncelik", "techStack": "Teknoloji", "updatedAt": "Güncelleme" },
     "form": {
       "createTitle": "Yeni proje",
       "name": "Ad",

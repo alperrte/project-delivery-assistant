@@ -78,7 +78,7 @@
     "noProjects": "Diese Organisation hat noch keine Projekte.",
     "emptyTitle": "Noch keine Organisationen",
     "emptyDescription": "Erstellen Sie eine, um verwandte Projekte zu gruppieren.",
-    "columns": { "name": "Name", "status": "Status" },
+    "columns": { "name": "Name", "status": "Status", "updatedAt": "Aktualisiert" },
     "form": {
       "createTitle": "Neue Organisation",
       "editTitle": "Organisation bearbeiten",
@@ -101,7 +101,7 @@
     "create": "Neues Projekt",
     "emptyTitle": "Noch keine Projekte",
     "emptyDescription": "Erstellen Sie Ihr erstes Projekt, um zu beginnen.",
-    "columns": { "name": "Name", "status": "Status", "priority": "Priorität" },
+    "columns": { "name": "Name", "status": "Status", "priority": "Priorität", "techStack": "Technologie", "updatedAt": "Aktualisiert" },
     "form": {
       "createTitle": "Neues Projekt",
       "name": "Name",
