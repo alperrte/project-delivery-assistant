@@ -103,7 +103,8 @@ public class SecurityBaselineConfiguration {
                                     || path.startsWith("/api/v1/admin/")
                                     || "/api/v1/auth/password/change".equals(path)
                                     || path.startsWith("/api/v1/auth/oauth/")
-                                    || path.matches("/api/v1/projects/[^/]+/tasks(?:/.*)?");
+                                    || path.matches("/api/v1/projects/[^/]+/tasks(?:/.*)?")
+                                    || path.equals("/api/v1/notifications") || path.startsWith("/api/v1/notifications/");
                             writeProblem(response, unauthenticated ? 401 : 403);
                         })
                         .accessDeniedHandler((request, response, failure) -> writeProblem(response, 403)))
@@ -133,6 +134,9 @@ public class SecurityBaselineConfiguration {
                             .requestMatchers(HttpMethod.POST, "/api/v1/auth/sessions/*/revoke",
                                     "/api/v1/auth/sessions/revoke-others").authenticated()
                             .requestMatchers(HttpMethod.POST, "/api/v1/auth/password/change").authenticated()
+                            .requestMatchers(HttpMethod.GET, "/api/v1/notifications", "/api/v1/notifications/unread-count").authenticated()
+                            .requestMatchers(HttpMethod.PATCH, "/api/v1/notifications/read-all",
+                                    "/api/v1/notifications/*/read").authenticated()
                             // Platform administration: ADMIN only; the services re-check the platform permission.
                             .requestMatchers(HttpMethod.GET, "/api/v1/admin/**").hasRole("ADMIN")
                             .requestMatchers(HttpMethod.POST, "/api/v1/admin/**").hasRole("ADMIN")
@@ -204,6 +208,8 @@ public class SecurityBaselineConfiguration {
         source.registerCorsConfiguration("/api/v1/projects/**", configuration);
         source.registerCorsConfiguration("/api/v1/organizations", configuration);
         source.registerCorsConfiguration("/api/v1/organizations/**", configuration);
+        source.registerCorsConfiguration("/api/v1/notifications/**", configuration);
+        source.registerCorsConfiguration("/api/v1/notifications", configuration);
         return source;
     }
 

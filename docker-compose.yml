@@ -2,17 +2,17 @@ services:
   postgres:
     image: postgres:18-alpine
     restart: unless-stopped
-    command: ["postgres", "-p", "${DB_PORT:-5432}"]
+    command: ["postgres", "-p", "${DB_PORT:-5436}"]
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "${DB_PORT:-5432}:${DB_PORT:-5432}"
+      - "${DB_PORT:-5436}:${DB_PORT:-5436}"
     volumes:
       - pda_postgres_data:/var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME} -p ${DB_PORT:-5432}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME} -p ${DB_PORT:-5436}"]
       interval: 5s
       timeout: 5s
       retries: 10

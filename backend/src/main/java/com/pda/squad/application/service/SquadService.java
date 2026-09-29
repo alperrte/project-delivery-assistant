@@ -2,6 +2,7 @@ package com.pda.squad.application.service;
 
 import com.pda.project.ProjectAccess;
 import com.pda.squad.domain.entity.Squad;
+import com.pda.squad.SquadMembershipEvents;
 import com.pda.squad.domain.entity.SquadMembership;
 import com.pda.squad.infrastructure.repository.SquadMembershipRepository;
 import com.pda.squad.infrastructure.repository.SquadRepository;
@@ -11,9 +12,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.NoSuchElementException;
+import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -31,13 +34,16 @@ public class SquadService {
     private final SquadRepository squads;
     private final SquadMembershipRepository squadMembers;
     private final UserAccounts users;
+    private final ApplicationEventPublisher events;
 
     public SquadService(ProjectAccess projectAccess, SquadRepository squads,
-                        SquadMembershipRepository squadMembers, UserAccounts users) {
+                        SquadMembershipRepository squadMembers, UserAccounts users,
+                        ApplicationEventPublisher events) {
         this.projectAccess = projectAccess;
         this.squads = squads;
         this.squadMembers = squadMembers;
         this.users = users;
+        this.events = events;
     }
 
     @Transactional
@@ -93,7 +99,9 @@ public class SquadService {
         if (squadMembers.existsBySquadIdAndUserId(squadId, userId)) {
             throw new SquadConflictException("User is already a squad member");
         }
-        return toSummary(squadMembers.saveAndFlush(SquadMembership.add(squadId, userId, actorId)));
+        SquadMemberSummary result = toSummary(squadMembers.saveAndFlush(SquadMembership.add(squadId, userId, actorId)));
+        events.publishEvent(new SquadMembershipEvents.MemberAdded(squadId, projectId, userId, actorId, Instant.now()));
+        return result;
     }
 
     private SquadMemberSummary toSummary(SquadMembership membership) {
@@ -110,6 +118,7 @@ public class SquadService {
         SquadMembership membership = squadMembers.findBySquadIdAndUserId(squadId, userId)
                 .orElseThrow(() -> new NoSuchElementException("Squad member not found"));
         squadMembers.delete(membership);
+        events.publishEvent(new SquadMembershipEvents.MemberRemoved(squadId, projectId, userId, actorId, Instant.now()));
     }
 
     private Squad activeSquadIn(UUID projectId, UUID squadId) {

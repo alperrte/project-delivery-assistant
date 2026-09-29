@@ -2,6 +2,7 @@ package com.pda.project.application.service;
 
 import com.pda.project.domain.entity.ProjectMembership;
 import com.pda.project.ProjectMemberRemovedEvent;
+import com.pda.project.ProjectMembershipEvents;
 import com.pda.project.domain.enums.MembershipStatus;
 import com.pda.user.ProjectPermission;
 import com.pda.user.ProjectRole;
@@ -56,7 +57,9 @@ public class ProjectMembershipService {
                     return existing;
                 })
                 .orElseGet(() -> ProjectMembership.active(projectId, userId, roles));
-        return toSummary(memberships.saveAndFlush(membership));
+        MemberSummary result = toSummary(memberships.saveAndFlush(membership));
+        events.publishEvent(new ProjectMembershipEvents.MemberAdded(projectId, userId, actorId, Instant.now()));
+        return result;
     }
 
     @Transactional(readOnly = true)
@@ -86,14 +89,19 @@ public class ProjectMembershipService {
     public MemberSummary addRole(UUID actorId, UUID projectId, UUID userId, ProjectRole role) {
         lockForManager(actorId, projectId);
         ProjectMembership member = activeMember(projectId, userId);
+        Set<ProjectRole> before = member.getRoles();
         member.addRole(role);
-        return toSummary(memberships.saveAndFlush(member));
+        MemberSummary result = toSummary(memberships.saveAndFlush(member));
+        if (!before.equals(member.getRoles())) events.publishEvent(
+                new ProjectMembershipEvents.RolesChanged(projectId, userId, actorId, Instant.now()));
+        return result;
     }
 
     @Transactional
     public MemberSummary replaceRoles(UUID actorId, UUID projectId, UUID userId, Set<ProjectRole> roles) {
         lockForManager(actorId, projectId);
         ProjectMembership member = activeMember(projectId, userId);
+        Set<ProjectRole> before = member.getRoles();
         if (roles == null || roles.isEmpty()) {
             throw new IllegalArgumentException("at least one role is required");
         }
@@ -101,7 +109,10 @@ public class ProjectMembershipService {
             requireAnotherManager(projectId);
         }
         member.replaceRoles(roles);
-        return toSummary(memberships.saveAndFlush(member));
+        MemberSummary result = toSummary(memberships.saveAndFlush(member));
+        if (!before.equals(member.getRoles())) events.publishEvent(
+                new ProjectMembershipEvents.RolesChanged(projectId, userId, actorId, Instant.now()));
+        return result;
     }
 
     @Transactional
@@ -112,7 +123,9 @@ public class ProjectMembershipService {
             requireAnotherManager(projectId);
         }
         member.removeRole(role);
-        return toSummary(memberships.saveAndFlush(member));
+        MemberSummary result = toSummary(memberships.saveAndFlush(member));
+        events.publishEvent(new ProjectMembershipEvents.RolesChanged(projectId, userId, actorId, Instant.now()));
+        return result;
     }
 
     @Transactional
