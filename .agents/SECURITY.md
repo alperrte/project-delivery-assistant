@@ -226,6 +226,18 @@ Because PDA uses cookie-based authentication:
 
 ## 11. API and Swagger Security
 
+### Notification Service endpoints
+
+Swagger check path: `/swagger-ui/index.html` with `API_DOCS_ENABLED=true`; call `GET /api/v1/auth/csrf`, log in, then use the routes below. All routes require the access cookie and address only the current user's records. PATCH additionally requires `X-XSRF-TOKEN`. Errors use `ProblemDetail`.
+
+| Endpoint | Auth / scope | Input / safe example | Success | Important errors |
+| --- | --- | --- | --- | --- |
+| `GET /api/v1/notifications` | Authenticated, own records | `?page=0&size=20&unreadOnly=true&type=TASK_ASSIGNED`; size 1–100 | `200` paged content with type, text, read timestamps, actor/project/resource IDs | `400` invalid filter/page, `401` unauthenticated |
+| `GET /api/v1/notifications/unread-count` | Authenticated, own records | None | `200 {"count": 5}` | `401` |
+| `PATCH /api/v1/notifications/{notificationId}/read` | Authenticated, own record + CSRF | UUID path, no body | `200` updated notification | `400` bad UUID, `401`, `403` CSRF, `404` missing or other user's record |
+| `PATCH /api/v1/notifications/read-all` | Authenticated, own records + CSRF | No body | `200 {"count": 2}` (number changed) | `401`, `403` CSRF |
+
+
 Swagger/OpenAPI is intended for development and testing.
 
 - Swagger/OpenAPI must be enabled in development/test environments as required.

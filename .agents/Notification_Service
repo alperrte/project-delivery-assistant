@@ -1,0 +1,957 @@
+# PDA Notification Service — Nihai Implementasyon Promptu
+
+PDA (**Project Delivery Assistant**) projesinde **Task Service** ve **Project Service** implementasyonları tamamlandı. Şimdi sistemin **Notification Service / Notification Module** kısmını production kalitesinde tamamlamanı istiyorum.
+
+Bu görevde yalnızca basit bir notification CRUD yazma. Önce mevcut repository’yi, domain modelini, servisleri, use-case’leri, eventleri, controller’ları, entity’leri ve modüller arası ilişkileri incele. Ardından sistem içerisinde kullanıcıya bildirim verilmesini gerektiren gerçek olayları tespit et ve Notification modülünü bu olaylara bağla.
+
+## 1. Önce mevcut sistemi analiz et
+
+Kod yazmaya başlamadan önce mevcut backend’i incele.
+
+Özellikle şunları kontrol et:
+
+- task modülü
+- project modülü
+- project membership yapısı
+- squad yapısı varsa mevcut implementasyonu
+- user/auth modülü
+- issue/problem implementasyonu varsa
+- test report implementasyonu varsa
+- comment implementasyonu varsa
+- mevcut domain/application eventleri
+- servisler arası mevcut communication pattern
+- mevcut Spring Modulith yapısı
+- mevcut package/modül sınırları
+- Flyway migration düzeni
+- exception handling yapısı
+- DTO / mapper / repository standartları
+- mevcut security / authenticated user elde etme yöntemi
+- pagination standardı
+- mevcut test yapısı
+
+Mevcut kodun mimarisine uy. Yeni bir paralel mimari veya gereksiz abstraction üretme.
+
+Eksik olduğunu varsaydığın bir feature’ı uydurma. Repository’de olmayan bir domain özelliği için yalnızca “ileride event üretmeye uygun” altyapı bırakılabilir; olmayan feature’ın kendisini implement etme.
+
+---
+
+## 2. Bildirim gerektiren olayları otomatik olarak belirle
+
+Mevcut sistemi analiz ettikten sonra sistemdeki bütün anlamlı kullanıcı etkileşimlerini değerlendir.
+
+Her olay için şu soruyu sor:
+
+> Bu olay gerçekleştiğinde başka bir kullanıcının bundan haberdar olması, onun bir aksiyon almasını veya sistemde meydana gelen önemli bir değişikliği fark etmesini sağlıyor mu?
+
+Cevap evetse notification üret.
+
+Ancak gereksiz notification spam oluşturma.
+
+Örneğin bir kullanıcının kendi yaptığı işlem için kendisine anlamsız şekilde bildirim gönderme.
+
+Aynı olay için duplicate notification üretme.
+
+### Özellikle aşağıdaki senaryoları incele
+
+Bunlar zorunlu olarak birebir implement edilecek sabit liste değildir. Mevcut kod ile doğrula ve uygun olanları uygula.
+
+### Task
+
+Örneğin:
+
+- Bir kullanıcıya yeni task atanması
+- Mevcut task’a sonradan yeni assignee eklenmesi
+- Kullanıcının task assignment’ının kaldırılması
+- Kullanıcının sorumlu olduğu task’ın önemli bilgilerinin değiştirilmesi
+- Task status değişiminin ilgili kullanıcılar açısından anlamlı olması
+- Task priority değişiminin ilgili assignee’ler açısından anlamlı olması
+- Task due date değişmesi
+- Task tamamlanması
+- Task yeniden açılması
+
+Ancak her küçük task editinde notification üretme.
+
+Örneğin typo düzeltmek gibi her update’i bildirim haline getirme.
+
+### Project
+
+Örneğin:
+
+- Kullanıcının projeye eklenmesi
+- Kullanıcının projeden çıkarılması
+- Project membership bilgilerinin değişmesi
+- Kullanıcının proje rolünün değişmesi
+- Kullanıcının bir squad’a eklenmesi / çıkarılması
+- Project manager açısından önemli olabilecek proje olayları
+
+Proje sahibinin veya işlemi yapan kişinin kendisine gereksiz bildirim üretme.
+
+### Issue / Problem
+
+Eğer ilgili feature mevcutsa:
+
+- Bir task veya proje için issue açılması
+- Issue’nun ilgili kişiye atanması
+- Issue status değişimi
+- Issue’nun çözülmesi / kapatılması
+- Assignee / responsible kullanıcı değişimi
+
+Kimlerin gerçekten bilgilendirilmesi gerektiğini domain ilişkilerine göre belirle.
+
+### Test Report
+
+Eğer mevcutsa:
+
+- Bir task için tester tarafından test report oluşturulması
+- Testin başarılı/başarısız sonucu
+- Task sahibini veya assignee’leri aksiyon almaya yönlendiren sonuç
+- Yeni test sonucu nedeniyle task’ın tekrar geliştirmeye dönmesi
+
+### Comment
+
+Eğer comment feature’ı mevcutsa:
+
+Her comment için herkese notification atma.
+
+Ancak aşağıdaki durumların anlamlı olup olmadığını incele:
+
+- Bir kullanıcının task’ında yeni comment
+- Kendisine atanmış task altında yeni comment
+- Mention sistemi varsa kullanıcı mention edilmesi
+
+Comment’i yazan kullanıcıya kendi comment’i için notification gönderme.
+
+Eğer mention sistemi repository’de yoksa sırf notification için mention sistemi geliştirme.
+
+---
+
+## 3. Domain Event tabanlı tasarım kullan
+
+Notification modülünü diğer modüllere sıkı şekilde bağlama.
+
+Başka modülün repository’sine doğrudan erişme.
+
+PDA mimarisindeki event-driven modular communication yaklaşımını kullan.
+
+Tercih edilen yapı:
+
+Domain/Application işlemi tamamlanır
+
+→ ilgili event publish edilir
+
+→ Notification Module event’i dinler
+
+→ gerekli recipient’leri belirler
+
+→ Notification kaydı oluşturur
+
+Spring tarafında mevcut proje yapısıyla uyumlu şekilde:
+
+- Spring ApplicationEvent
+veya
+- projede halihazırda kullanılan event abstraction
+
+kullan.
+
+Örneğin mantıksal olarak:
+
+- TaskAssignedEvent
+- ProjectMemberAddedEvent
+- ProjectMemberRemovedEvent
+- ProjectRoleChangedEvent
+- TaskStatusChangedEvent
+- TaskDueDateChangedEvent
+- IssueCreatedEvent
+- IssueAssignedEvent
+- TestReportCreatedEvent
+
+gibi eventler olabilir.
+
+Ancak önce mevcut kodu incele.
+
+Var olan event isimlendirme standardını kullan.
+
+Yeni event oluşturman gerekiyorsa domain açısından anlamlı event oluştur.
+
+Generic:
+
+`EntityUpdatedEvent`
+
+gibi anlamsız eventler kullanma.
+
+---
+
+## 4. Transaction davranışını doğru tasarla
+
+Notification’ın, ilgili business transaction gerçekten başarılı olduktan sonra oluşmasını sağla.
+
+Başarısız/rollback olmuş bir task assignment işlemi için notification kaydı oluşmamalı.
+
+Mevcut Spring yapısı uygunsa:
+
+`@TransactionalEventListener`
+
+gibi transaction-aware event handling mekanizmalarını değerlendir.
+
+Ancak repository’nin mevcut mimarisine uy.
+
+Asenkron işlem zorunlu değil.
+
+V1 için Kafka, RabbitMQ, Redis Stream vb. ekleme.
+
+---
+
+## 5. Notification domain modelini oluştur
+
+Mevcut projede henüz yoksa temiz bir Notification modeli oluştur.
+
+Minimum olarak aşağıdakileri değerlendir:
+
+### Notification
+
+- id
+- recipientUserId
+- type
+- title
+- message
+- isRead
+- createdAt
+- readAt
+- actorUserId
+- projectId
+- resourceType
+- resourceId
+
+Ancak nullable alanları domain ihtiyacına göre tasarla.
+
+Örneğin:
+
+**actorUserId:**  
+bildirimi tetikleyen kullanıcı varsa tutulabilir.
+
+**projectId:**  
+bildirimin hangi projeyle ilgili olduğunu belirlemek için kullanılabilir.
+
+**resourceType + resourceId:**  
+frontend’in notification’a tıklayınca ilgili sayfaya yönlenebilmesini sağlar.
+
+Örnek:
+
+```text
+resourceType = TASK
+resourceId = taskId
+```
+
+veya
+
+```text
+resourceType = PROJECT
+resourceId = projectId
+```
+
+String ile uncontrolled değer tutmak yerine uygun yerlerde enum kullan.
+
+Örneğin:
+
+### NotificationType
+
+- TASK_ASSIGNED
+- TASK_UNASSIGNED
+- TASK_STATUS_CHANGED
+- TASK_DUE_DATE_CHANGED
+- PROJECT_MEMBER_ADDED
+- PROJECT_MEMBER_REMOVED
+- PROJECT_ROLE_CHANGED
+- ISSUE_CREATED
+- ISSUE_ASSIGNED
+- ISSUE_RESOLVED
+- TEST_REPORT_CREATED
+- TEST_FAILED
+- COMMENT_ADDED
+
+Gerçek listeyi repository analizi sonucunda belirle.
+
+Gereksiz enum değeri oluşturma.
+
+---
+
+## 6. Notification içeriğini merkezi üret
+
+Business service’lerin içinde doğrudan:
+
+```text
+"John assigned you a task"
+```
+
+gibi string üretme.
+
+Notification Module içerisinde merkezi bir factory/builder/template yapısı kullan.
+
+Örneğin kavramsal olarak:
+
+`NotificationFactory`
+
+veya mevcut mimariye uyacak benzer bir application/domain component.
+
+Ama gereksiz design pattern katmanları üretme.
+
+Event:
+
+```text
+TaskAssignedEvent(
+    taskId,
+    projectId,
+    assigneeUserId,
+    assignedByUserId,
+    taskTitle
+)
+```
+
+Notification Module:
+
+```text
+recipient = assigneeUserId
+type = TASK_ASSIGNED
+title/message = notification template
+resourceType = TASK
+resourceId = taskId
+```
+
+şeklinde dönüştürülebilir.
+
+---
+
+## 7. Kendi işlemine notification gönderme
+
+Genel prensip:
+
+```text
+actorUserId == recipientUserId
+```
+
+ise çoğu durumda notification üretme.
+
+Örneğin kullanıcı kendisini task’a assign edebiliyorsa kendisine “Sana yeni task atandı” notification’ı üretmek genellikle gereksizdir.
+
+Ancak domain açısından gerçekten anlamlı istisna varsa mevcut davranışı analiz ederek karar ver.
+
+---
+
+## 8. Multi-assignee desteğini doğru ele al
+
+PDA task yapısında bir task’ın bir veya birden fazla assignee’si olabilir.
+
+Bu nedenle:
+
+`TaskAssignedEvent`
+
+gibi eventlerde birden fazla recipient olabilecek senaryoları doğru işle.
+
+Örneğin üç yeni kullanıcı task’a atanmışsa her kullanıcı için ayrı notification kaydı oluşabilir.
+
+Ancak daha önce task’a atanmış kullanıcı için duplicate notification oluşturma.
+
+Assignment diff mantığını doğru uygula:
+
+```text
+old assignees
+vs
+new assignees
+```
+
+Yeni eklenenler notification almalı.
+
+Çıkarılan kullanıcı için domain açısından anlamlıysa unassigned notification oluştur.
+
+Değişmeyen assignment için yeni notification üretme.
+
+---
+
+## 9. Notification API’lerini oluştur
+
+Mevcut API standardına uyarak `/api/v1/...` altında notification endpointlerini oluştur.
+
+Minimum olarak şunları destekle:
+
+### Kullanıcının notification listesini getir
+
+```http
+GET /api/v1/notifications
+```
+
+Pagination desteklesin.
+
+Opsiyonel filtreler:
+
+- unreadOnly
+- type
+- page
+- size
+
+Mevcut pagination standardıyla uyumlu ol.
+
+### Unread count
+
+```http
+GET /api/v1/notifications/unread-count
+```
+
+Response sade olabilir:
+
+```json
+{
+  "count": 5
+}
+```
+
+### Tek notification’ı read yap
+
+```http
+PATCH /api/v1/notifications/{notificationId}/read
+```
+
+Yalnız notification’ın sahibi bunu yapabilmeli.
+
+Başka kullanıcının notification’ını read yapmaya çalışma:
+
+403 veya projenin mevcut security/error standardına uygun response dönmeli.
+
+### Tüm notification’ları read yap
+
+```http
+PATCH /api/v1/notifications/read-all
+```
+
+Yalnız authenticated kullanıcının notification’larını etkilesin.
+
+Gerekliyse:
+
+```http
+PATCH /api/v1/notifications/{id}/unread
+```
+
+eklenebilir fakat V1 için gerçek ihtiyaç yoksa ekleme.
+
+Notification delete endpoint’i de yalnızca mevcut ürün tasarımı bunu gerektiriyorsa eklenmeli.
+
+Feature creep yapma.
+
+---
+
+## 10. Notification Security
+
+Notification endpointlerinde authenticated user zorunlu olsun.
+
+Bir kullanıcı:
+
+- başka kullanıcının notification listesini görememeli
+- başka kullanıcının notification detayına ulaşamamalı
+- başka kullanıcının notification’ını read yapamamalı
+- unread count üzerinden başka kullanıcı hakkında veri çıkaramamalı
+
+`recipientUserId` client tarafından gönderilmemeli.
+
+Authenticated user backend tarafından belirlenmeli.
+
+---
+
+## 11. Repository query optimizasyonu
+
+Notification listesi kullanıcıya özel ve sık kullanılan bir endpoint olacak.
+
+Aşağıdaki query patternlerini dikkate al:
+
+```text
+recipient_user_id
+recipient_user_id + is_read
+recipient_user_id + created_at
+```
+
+Gerekliyse uygun DB indexlerini Flyway migration ile ekle.
+
+Örneğin composite index ihtiyacını değerlendir:
+
+```text
+(recipient_user_id, created_at DESC)
+(recipient_user_id, is_read)
+```
+
+Ancak PostgreSQL gerçek query patternine göre karar ver.
+
+N+1 query oluşturma.
+
+Pagination database seviyesinde çalışmalı.
+
+---
+
+## 12. Flyway migration
+
+Projedeki mevcut migration numaralarını incele.
+
+Son migration’dan sonraki doğru versiyon numarasını kullan.
+
+Notification tablosunu Flyway ile oluştur.
+
+Hibernate schema auto-create/update kullanma.
+
+Production yaklaşımına uygun migration yaz.
+
+Foreign key kararlarında modül coupling’ini dikkate al.
+
+Mevcut projede modüller arası ID referanslarında kullanılan standardı takip et.
+
+---
+
+## 13. Frontend entegrasyonuna uygun response üret
+
+Frontend henüz notification ekranını kullanmasa bile backend response’ları UI için yeterli bilgi vermeli.
+
+Notification DTO’sunda örneğin:
+
+- id
+- type
+- title
+- message
+- read
+- createdAt
+- readAt
+- actor
+- projectId
+- resourceType
+- resourceId
+
+gibi alanların gerekli olup olmadığını değerlendir.
+
+Frontend’in bildirim ikonundaki badge için unread count endpoint’i optimize edilmiş olmalı.
+
+Frontend’in notification’a tıklayıp ilgili kaynağa gitmesi için:
+
+```text
+resourceType
+resourceId
+```
+
+mantığını destekle.
+
+Backend doğrudan frontend route stringleri saklamasın.
+
+Örneğin:
+
+```text
+/projects/123/tasks/456
+```
+
+DB’de saklamak yerine:
+
+```text
+resourceType=TASK
+resourceId=456
+projectId=123
+```
+
+daha temizdir.
+
+Frontend kendi route’unu oluşturabilir.
+
+---
+
+## 14. Realtime ekleme
+
+V1 için WebSocket/SSE zorunlu değil.
+
+Notification merkezi normal REST fetch/polling ile çalışabilecek şekilde tasarlanmalı.
+
+Bu görev kapsamında:
+
+- WebSocket
+- Socket.IO
+- SSE infrastructure
+- Redis Pub/Sub
+- Kafka
+- RabbitMQ
+
+ekleme.
+
+İleride realtime eklenmesini engellemeyecek temiz bir tasarım yeterli.
+
+---
+
+## 15. Mail ile Notification’ı birbirine karıştırma
+
+Mail Service ve Notification Service ayrı modüller olmalı.
+
+Bir event ileride hem Notification Module hem de Mail Module tarafından dinlenebilir.
+
+Ancak Notification Service mail gönderme işini üstlenmemeli.
+
+Örneğin:
+
+```text
+TaskAssignedEvent
+
+Notification listener
+→ in-app notification oluşturur
+
+Mail listener
+→ MAIL_ENABLED=true ise mail gönderir
+```
+
+şeklinde genişletilebilir.
+
+Notification oluşturulması `MAIL_ENABLED` değerinden etkilenmemeli.
+
+Mail kapalı olsa bile in-app notification çalışmalı.
+
+---
+
+## 16. Duplicate notification koruması
+
+Aynı domain işlemi nedeniyle aynı kullanıcıya aynı notification’ın istemeden iki kez oluşabileceği yerleri incele.
+
+Özellikle:
+
+- assignment update
+- event’in iki farklı yerde publish edilmesi
+- save/update lifecycle
+- retry davranışı
+- nested service çağrıları
+
+konusunda dikkatli ol.
+
+Sadece gerekiyorsa idempotency/deduplication mekanizması ekle.
+
+Sırf teorik ihtimal nedeniyle aşırı karmaşık event infrastructure oluşturma.
+
+---
+
+## 17. Notification spam kontrolü
+
+Bildirim sistemi “her şey notification” sistemine dönüşmemeli.
+
+Bir olayın notification üretmesi için en az bir kriter karşılanmalı:
+
+1. Kullanıcıdan aksiyon bekleniyor.
+2. Kullanıcının sorumluluğundaki bir öğe önemli şekilde değişti.
+3. Kullanıcı bir projeye/task’a/squad’a dahil edildi veya çıkarıldı.
+4. Kullanıcının rolü/sorumluluğu değişti.
+5. Kullanıcının yürüttüğü iş üzerinde blocker/issue/test sonucu oluştu.
+6. Kullanıcının fark etmesi gereken önemli lifecycle geçişi meydana geldi.
+
+Şunlarda genellikle notification oluşturma:
+
+- Kullanıcının kendi yaptığı sıradan işlem
+- cosmetic field update
+- description içindeki küçük düzenleme
+- kullanıcı açısından aksiyon gerektirmeyen metadata değişimi
+- aynı state’in tekrar kaydedilmesi
+- aynı assignee’nin tekrar gönderilmesi
+- herhangi bir gerçek state değişimi olmayan update
+
+---
+
+## 18. Event recipient mantığını merkezi ve okunabilir tut
+
+Her listener içerisinde dağınık şekilde onlarca if/else yazma.
+
+Recipient hesaplaması karmaşıksa ayrı, anlamlı application/domain componentlere çıkar.
+
+Örneğin:
+
+`TaskNotificationRecipientResolver`
+
+gibi bir abstraction gerçekten gerekiyorsa kullanılabilir.
+
+Ancak iki satırlık logic için gereksiz class üretme.
+
+Kod:
+
+- sade
+- test edilebilir
+- domain açısından anlaşılır
+
+olmalı.
+
+---
+
+## 19. Testler
+
+Notification Service için ciddi test yaz.
+
+En azından aşağıdaki kategorileri kapsa.
+
+### Notification Service
+
+- notification oluşturma
+- read yapma
+- read-all
+- unread count
+- pagination
+- unread filtreleme
+- başka kullanıcı notification’ına erişim engeli
+
+### Event integration
+
+Örneğin gerçek implementasyona göre:
+
+- task assign → notification
+- aynı assignee tekrar save → duplicate notification yok
+- multiple assignee → doğru recipientler
+- self assignment → gereksiz notification yok
+- user project’e eklenir → notification
+- user project’ten çıkarılır → gerekiyorsa notification
+- role değişir → notification
+- issue oluşturulur → doğru recipient
+- test report oluşturulur → doğru recipient
+
+### Transaction
+
+Business transaction rollback olursa notification oluşmadığını doğrula.
+
+### Security
+
+User A:
+
+User B’nin notification’ını göremez/read yapamaz.
+
+### Repository
+
+Pagination ve unread query davranışlarını test et.
+
+Projede Testcontainers PostgreSQL standardı varsa DB integration testlerinde onu kullan.
+
+---
+
+## 20. Spring Modulith sınırlarını kontrol et
+
+Notification modülünü gerçek bir modül sınırı olarak tasarla.
+
+Şunları yapma:
+
+```text
+notification → task repository
+notification → project repository
+notification → user repository
+```
+
+gibi doğrudan cross-module repository dependency oluşturma.
+
+Gerekli bilgi event payload’ında taşınabiliyorsa event üzerinden aktar.
+
+Event payload’ını da gereksiz entity taşıyan bir yapıya dönüştürme.
+
+Persistence entity publish etme.
+
+Örneğin:
+
+```java
+TaskAssignedEvent(
+    UUID taskId,
+    UUID projectId,
+    String taskTitle,
+    UUID assigneeUserId,
+    UUID assignedByUserId
+)
+```
+
+gibi immutable contract tercih edilebilir.
+
+Var olan proje standardına uy.
+
+Spring Modulith architecture testlerinin geçmesini sağla.
+
+---
+
+## 21. Kod kalitesi
+
+Aşağıdaki standartları koru:
+
+- Java 25
+- Spring Boot 4.x
+- Spring Modulith
+- Spring Data JPA
+- PostgreSQL
+- Flyway
+- Jakarta Validation
+- MapStruct yalnız mapping için
+- Lombok mevcut proje standardına göre
+- UUID / mevcut ID standardı
+- mevcut exception handler
+- mevcut API response standardı
+- mevcut package naming
+- mevcut auditing/base entity standardı
+- mevcut timestamp standardı
+- mevcut security context standardı
+
+JPA entity üzerinde dikkatsiz `@Data` kullanma.
+
+Entity relationları gereksiz EAGER yapma.
+
+OSIV’e güvenme.
+
+Controller içine business logic koyma.
+
+Mapper içine business logic koyma.
+
+Repository içinde application logic yazma.
+
+---
+
+## 22. Önce analiz, sonra implementasyon
+
+Göreve şu sırayla ilerle:
+
+### A — Repository analizi
+
+Mevcut feature’ları ve birbirleriyle ilişkilerini çıkar.
+
+### B — Notification Matrix
+
+Implementasyondan önce zihinsel olarak şu matrisi oluştur:
+
+```text
+Event
+→ Actor
+→ Recipient
+→ Notification type
+→ Resource
+→ Notification gerekli mi?
+```
+
+Örneğin:
+
+```text
+Task assigned
+→ assignedBy
+→ new assignee
+→ TASK_ASSIGNED
+→ TASK
+→ YES
+
+Task description edited
+→ editor
+→ assignees
+→ ?
+→ TASK
+→ çoğu durumda NO
+
+Project member added
+→ manager
+→ added user
+→ PROJECT_MEMBER_ADDED
+→ PROJECT
+→ YES
+```
+
+Bu analizi mevcut kod üzerinden yap.
+
+### C — Eksik domain eventlerini ekle
+
+Gerekli eventleri ilgili source modüllere ekle.
+
+### D — Notification Module’ü implement et
+
+Gereken parçaları mevcut mimariye göre oluştur:
+
+- Entity
+- Repository
+- Application Service
+- DTO
+- Mapper
+- Listener
+- Factory/Template
+- Controller
+- Security
+- Migration
+
+### E — Testleri tamamla
+
+Unit + integration + architecture testleri.
+
+### F — Build doğrula
+
+En azından:
+
+- backend build
+- tests
+- architecture tests
+
+geçmeli.
+
+---
+
+## 23. Görev sonunda rapor ver
+
+Implementasyon bittikten sonra bana kısa fakat teknik bir sonuç raporu ver.
+
+Şunları açıkça yaz:
+
+### Notification üreten olaylar
+
+Gerçekte hangi eventlerin notification ürettiğini listele.
+
+Her biri için:
+
+```text
+Event → Recipient → Sebep
+```
+
+formatını kullan.
+
+### Notification üretmeyen ama incelenen olaylar
+
+Özellikle spam yaratmaması için bilinçli olarak notification bağlamadığın önemli olayları belirt.
+
+### Oluşturulan/değiştirilen dosyalar
+
+Önemli dosyaları listele.
+
+### Database değişiklikleri
+
+Flyway migration ve indexleri belirt.
+
+### Endpointler
+
+Eklenen notification endpointlerini belirt.
+
+### Testler
+
+Eklenen test senaryolarını belirt.
+
+### Mimari kararlar
+
+Özellikle:
+
+- event communication
+- transaction handling
+- module boundaries
+- duplicate prevention
+- self-notification prevention
+
+konusunda verdiğin kararları özetle.
+
+---
+
+# Kritik Kurallar
+
+1. Mevcut kodu incelemeden notification event listesi uydurma.
+2. Mevcut mimariyi bozma.
+3. Başka modül repository’sine doğrudan erişme.
+4. Notification’ı domain/application event üzerinden besle.
+5. Persistence entity’lerini event payload olarak kullanma.
+6. Kullanıcının kendi sıradan işlemleri için notification spam üretme.
+7. Aynı event nedeniyle duplicate notification üretme.
+8. Multi-assignee senaryolarını doğru destekle.
+9. Mail ve in-app notification modüllerini birbirinden bağımsız tut.
+10. WebSocket/Kafka/RabbitMQ/Redis ekleme.
+11. Notification verisini kalıcı olarak PostgreSQL’de tut.
+12. Read/unread ve unread count destekle.
+13. Notification listesinde pagination kullan.
+14. Security kontrollerini backend tarafında uygula.
+15. Flyway dışında schema değiştirme.
+16. Mevcut test ve kodlama standartlarını takip et.
+17. Feature creep yapma.
+18. Repository’de olmayan Issue/TestReport/Comment gibi feature’ları sırf notification için implement etme.
+19. Bir event için recipient seçimini domain ilişkilerine bakarak yap.
+20. İşlem rollback olursa notification oluşmamalı.
+21. Finalde bütün backend testlerini ve architecture kontrollerini çalıştır ve ortaya çıkan hataları düzelt.
+22. Yarım implementasyon veya yalnızca plan bırakma; gerekli kod değişikliklerini repository üzerinde tamamla.

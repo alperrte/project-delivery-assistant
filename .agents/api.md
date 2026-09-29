@@ -15,6 +15,8 @@
 
 Task backend sözleşmesi (`/api/v1/projects/{projectId}/tasks`, create/list/detail/basic update/replace assignees/status/blocked/history/archive) F5 ile uygulanmıştır. Gerçek roller için `TASK_MANAGE` ve atanmış kullanıcıda `TASK_WORK` kullanılır; endpoint ayrıntıları ve Swagger kontrol yolu `SECURITY.md` §11 Task tablosundadır. Liste `page`, `size` ve izinli `sort` alanlarıyla sayfalanır.
 
+Notification backend sözleşmesi `/api/v1/notifications` altında liste (`page`, `size`, `unreadOnly`, `type`), unread count, tekli read ve read-all işlemlerini sunar. Tüm işlemler authenticated user's own scope içindedir; PATCH için CSRF zorunludur. Ayrıntı ve Swagger kontrolü `SECURITY.md` §11 Notification tablosundadır.
+
 | Alan | Planlanan kapsam |
 | --- | --- |
 | Authentication | Signup, login, logout, access/refresh akışı |

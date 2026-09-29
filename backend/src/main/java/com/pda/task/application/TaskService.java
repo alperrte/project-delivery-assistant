@@ -82,7 +82,14 @@ public class TaskService {
         requirePermission(projectId, actor, ProjectPermission.TASK_MANAGE);
         Task task = scopedTask(projectId, taskId);
         task.requireActive();
+        TaskPriority previousPriority = task.getPriority();
+        LocalDate previousDueDate = task.getDueDate();
         task.update(title, description, priority, startDate, dueDate, actor);
+        if (previousPriority != task.getPriority()) events.publishEvent(new TaskEvents.TaskPriorityChangedEvent(
+                taskId, projectId, actor, assigneeIds(taskId), Instant.now()));
+        if (!Objects.equals(previousDueDate, task.getDueDate())) events.publishEvent(
+                new TaskEvents.TaskDueDateChangedEvent(taskId, projectId, task.getDueDate(), actor,
+                        assigneeIds(taskId), Instant.now()));
         return task;
     }
 
@@ -93,7 +100,8 @@ public class TaskService {
         Task task = tasks.lockScoped(projectId, taskId)
                 .orElseThrow(() -> new NoSuchElementException("Task not found"));
         task.requireActive();
-        if (userIds == null || userIds.contains(null)) throw new IllegalArgumentException("Invalid assignee IDs");
+        if (userIds == null || userIds.stream().anyMatch(Objects::isNull))
+            throw new IllegalArgumentException("Invalid assignee IDs");
         Set<UUID> desired = Set.copyOf(userIds);
         if (!projects.activeMemberIds(projectId, desired).containsAll(desired)) {
             throw new IllegalArgumentException("Assignee is not an active project member");
@@ -126,7 +134,7 @@ public class TaskService {
         if (task.changeStatus(status, actor)) {
             histories.save(new TaskStatusHistory(taskId, previous, status, actor));
             events.publishEvent(new TaskEvents.TaskStatusChangedEvent(taskId, projectId,
-                    previous, status, actor, Instant.now()));
+                    previous, status, actor, assigneeIds(taskId), Instant.now()));
             if (status == TaskStatus.DONE) events.publishEvent(new TaskEvents.TaskCompletedEvent(
                     taskId, projectId, actor, Instant.now()));
         }
@@ -140,7 +148,8 @@ public class TaskService {
         Task task = mutableTask(projectId, taskId);
         requireWorkPermission(projectId, actor, taskId);
         if (task.setBlocked(blocked, reason, actor)) {
-            if (blocked) events.publishEvent(new TaskEvents.TaskBlockedEvent(taskId, projectId, actor, Instant.now()));
+            if (blocked) events.publishEvent(new TaskEvents.TaskBlockedEvent(taskId, projectId, actor,
+                    assigneeIds(taskId), Instant.now()));
             else events.publishEvent(new TaskEvents.TaskUnblockedEvent(taskId, projectId, actor, Instant.now()));
         }
         return task;
@@ -165,12 +174,7 @@ public class TaskService {
     @EventListener
     @Transactional
     public void memberRemoved(ProjectMemberRemovedEvent event) {
-        List<TaskAssignment> stale = assignments.findByProjectAndUser(event.projectId(), event.userId());
         assignments.deleteByProjectAndUser(event.projectId(), event.userId());
-        for (TaskAssignment assignment : stale) {
-            events.publishEvent(new TaskEvents.TaskUnassignedEvent(assignment.getTaskId(), event.projectId(),
-                    event.userId(), event.removedBy(), event.occurredAt()));
-        }
     }
 
     private ProjectTaskContext requireProject(UUID projectId, UUID actor, boolean mutation) {
@@ -205,6 +209,11 @@ public class TaskService {
         if (projects.hasPermission(projectId, actor, ProjectPermission.TASK_WORK)
                 && assignments.existsByTaskIdAndUserId(taskId, actor)) return;
         throw new AccessDeniedException("Task permission denied");
+    }
+
+    private Set<UUID> assigneeIds(UUID taskId) {
+        return assignments.findByTaskId(taskId).stream().map(TaskAssignment::getUserId)
+                .collect(Collectors.toUnmodifiableSet());
     }
 
 }
