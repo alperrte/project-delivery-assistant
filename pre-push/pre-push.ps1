@@ -6,6 +6,10 @@ Set-Location $Root
 function Fail {
     param([string]$Message)
 
+    if ($script:FrontendTestServer -and -not $script:FrontendTestServer.HasExited) {
+        Stop-Process -Id $script:FrontendTestServer.Id -Force -ErrorAction SilentlyContinue
+    }
+
     Write-Host ""
     Write-Host "==================================================" -ForegroundColor Red
     Write-Host "PDA PRE-PUSH CHECK FAILED" -ForegroundColor Red
@@ -196,11 +200,24 @@ if ($env:DB_URL) {
 
 Push-Location "backend"
 
+# Auth integration tests explicitly exercise disabled-provider cases. Keep real
+# local OAuth settings for the later Docker smoke step, but do not let them
+# override each test's own provider configuration during Maven verify.
+$SavedOAuth = @{}
+foreach ($key in @("GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GITHUB_CLIENT_ID", "GITHUB_CLIENT_SECRET")) {
+    $SavedOAuth[$key] = [Environment]::GetEnvironmentVariable($key, "Process")
+    [Environment]::SetEnvironmentVariable($key, "", "Process")
+}
+
 Run-Step "Backend - Maven clean verify" {
     .\mvnw.cmd clean verify
 }
 
 Pop-Location
+
+foreach ($key in $SavedOAuth.Keys) {
+    [Environment]::SetEnvironmentVariable($key, $SavedOAuth[$key], "Process")
+}
 
 $env:DB_URL = $OriginalDbUrl
 
@@ -232,6 +249,17 @@ Run-Step "Frontend - Next.js production build" {
     npm run build
 }
 
+# Serve the build made above. A pre-existing Next process can hold stale files
+# after the build and make browser tests fail with HTTP 500.
+$FrontendPort = if ($env:FRONTEND_PORT) { $env:FRONTEND_PORT } else { "3000" }
+if (Get-NetTCPConnection -LocalPort $FrontendPort -State Listen -ErrorAction SilentlyContinue) {
+    Fail "Frontend port $FrontendPort is in use; stop the existing server before pre-push."
+}
+$script:FrontendTestServer = Start-Process -FilePath (Get-Command node).Source `
+    -ArgumentList @("node_modules/next/dist/bin/next", "start", "--hostname", "127.0.0.1", "--port", $FrontendPort) `
+    -WorkingDirectory (Get-Location).Path -WindowStyle Hidden -PassThru
+Wait-Http -Url "http://localhost:$FrontendPort" -TimeoutSeconds 60
+
 # Optional Playwright / E2E.
 # This becomes mandatory automatically when package.json contains test:e2e.
 $packageJson = Get-Content "package.json" -Raw | ConvertFrom-Json
@@ -259,7 +287,6 @@ Run-Step "Docker stack build + start" {
 }
 
 $BackendPort = if ($env:BACKEND_PORT) { $env:BACKEND_PORT } else { "8080" }
-$FrontendPort = if ($env:FRONTEND_PORT) { $env:FRONTEND_PORT } else { "3000" }
 
 Write-Host ""
 Write-Host "Backend health bekleniyor..." -ForegroundColor Cyan
@@ -268,6 +295,10 @@ Wait-Http -Url "http://localhost:$BackendPort/actuator/health" -TimeoutSeconds 1
 Write-Host ""
 Write-Host "Frontend bekleniyor..." -ForegroundColor Cyan
 Wait-Http -Url "http://localhost:$FrontendPort" -TimeoutSeconds 120
+
+if ($script:FrontendTestServer -and -not $script:FrontendTestServer.HasExited) {
+    Stop-Process -Id $script:FrontendTestServer.Id -Force -ErrorAction SilentlyContinue
+}
 
 # ------------------------------------------------------------
 # Final status

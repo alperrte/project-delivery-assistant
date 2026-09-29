@@ -13,6 +13,8 @@
 
 ## V1 kaynak alanları
 
+Task backend sözleşmesi (`/api/v1/projects/{projectId}/tasks`, create/list/detail/basic update/replace assignees/status/blocked/history/archive) F5 ile uygulanmıştır. Gerçek roller için `TASK_MANAGE` ve atanmış kullanıcıda `TASK_WORK` kullanılır; endpoint ayrıntıları ve Swagger kontrol yolu `SECURITY.md` §11 Task tablosundadır. Liste `page`, `size` ve izinli `sort` alanlarıyla sayfalanır.
+
 | Alan | Planlanan kapsam |
 | --- | --- |
 | Authentication | Signup, login, logout, access/refresh akışı |

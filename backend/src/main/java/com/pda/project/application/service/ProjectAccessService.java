@@ -1,6 +1,7 @@
 package com.pda.project.application.service;
 
 import com.pda.project.ProjectAccess;
+import com.pda.project.ProjectTaskContext;
 import com.pda.project.domain.enums.MembershipStatus;
 import com.pda.project.infrastructure.repository.ProjectMembershipRepository;
 import com.pda.project.infrastructure.repository.ProjectRepository;
@@ -35,6 +36,13 @@ public class ProjectAccessService implements ProjectAccess {
 
     @Override
     @Transactional(readOnly = true)
+    public boolean isMemberIncludingArchived(UUID projectId, UUID userId) {
+        return projectId != null && userId != null && projects.existsById(projectId)
+                && memberships.findByProjectIdAndUserIdAndStatus(projectId, userId, MembershipStatus.ACTIVE).isPresent();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Set<String> rolesForUserInProject(UUID projectId, UUID userId) {
         if (projectId == null || userId == null || projects.findByIdAndArchivedAtIsNull(projectId).isEmpty()) {
             return Set.of();
@@ -65,5 +73,23 @@ public class ProjectAccessService implements ProjectAccess {
     @Transactional(readOnly = true)
     public boolean hasPermission(UUID projectId, UUID userId, ProjectPermission permission) {
         return permission != null && permissionsForUserInProject(projectId, userId).contains(permission);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ProjectTaskContext taskContext(UUID projectId) {
+        return projectId == null ? null : projects.findById(projectId)
+                .map(project -> new ProjectTaskContext(project.getId(), project.getSlug(),
+                        project.getArchivedAt() != null)).orElse(null);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Set<UUID> activeMemberIds(UUID projectId, Set<UUID> userIds) {
+        if (projectId == null || userIds == null || userIds.isEmpty()
+                || projects.lockActiveShared(projectId).isEmpty()) {
+            return Set.of();
+        }
+        return Set.copyOf(memberships.findActiveUserIds(projectId, userIds));
     }
 }

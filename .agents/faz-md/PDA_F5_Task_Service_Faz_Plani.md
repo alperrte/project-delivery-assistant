@@ -1,10 +1,26 @@
 # PDA — Faz 5: Task Service / Task Module Uygulama Planı
 
 **Dosya hedefi:** `docs/plans/F5_TASK_SERVICE_IMPLEMENTATION_PLAN.md`  
-**Durum:** Uygulama planı / contract-freeze adayı  
+**Durum:** F5-00–F5-06 backend uygulandı; F5-07–F5-08 frontend Claude'a devredilecek
 **Kapsam:** Task Core + Project entegrasyonu + Assignment + Workflow + History + REST API + backend authorization + frontend handoff  
 **Mimari:** Modular Monolith  
 **Not:** Projede günlük dilde “Task Service” denebilir; teknik olarak ayrı deploy edilen microservice değil, `com.pda.task` iş modülüdür.
+
+## Backend teslim durumu (2026-09-29)
+
+F5-00–F5-06 kapsamındaki Task backend kodu tamamlandı. Güncel ve uygulanmış sözleşme için kod ile [F5-00 contract notunu](../../docs/plans/F5_TASK_CONTRACT_FREEZE.md) esas alın. Bu planın eski `OWNER/MANAGER/MEMBER/VIEWER` matrisi mevcut rol modeli değildir; gerçek yetkiler `ProjectPermission.TASK_MANAGE` ve atanmış üyede `TASK_WORK` üzerinden uygulanır. Global `ADMIN` proje yetkisi vermez.
+
+Ana dosyalar:
+
+- REST API ve hata sözleşmesi: `backend/src/main/java/com/pda/task/api/TaskController.java`, `TaskApiErrorHandler.java`
+- Use-case, domain ve olaylar: `backend/src/main/java/com/pda/task/application/TaskService.java`, `task/domain/`, `task/TaskEvents.java`
+- Kalıcılık ve okunabilir key: `backend/src/main/java/com/pda/task/infrastructure/`, `backend/src/main/resources/db/migration/V28__task_core.sql`–`V30__task_status_history.sql`
+- Project public entegrasyonu: `backend/src/main/java/com/pda/project/ProjectAccess.java`, `ProjectTaskContext.java`, `ProjectMemberRemovedEvent.java`
+- Cookie auth/CSRF ile korunan Task rotaları: `backend/src/main/java/com/pda/auth/infrastructure/config/SecurityBaselineConfiguration.java`
+- Doğrulama: `backend/src/test/java/com/pda/task/TaskApiIntegrationTest.java`, `TaskDomainTest.java`, `backend/src/test/java/com/pda/architecture/ModularityTest.java`
+- API/Swagger ayrıntıları: `.agents/SECURITY.md` §11 Task tablosu. Swagger UI: `/swagger-ui/index.html` (`API_DOCS_ENABLED=true`).
+
+F5-07 Task UI ve F5-08 Task History UI/E2E bu dosyada açık kalan frontend fazlarıdır. Backend implementasyon adımları aşağıda tarihsel plan olarak durur; Claude yalnız F5-07/F5-08'i uygular. Frontend çalışmasına başlamadan `AGENTS.md` ve `.agents/FRONTEND_WORKFLOW.md` okunur.
 
 ---
 

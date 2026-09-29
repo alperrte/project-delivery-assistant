@@ -367,6 +367,24 @@ Swagger check path: `/swagger-ui/index.html` with `API_DOCS_ENABLED=true`: `GET 
 
 ---
 
+### Task Service backend endpoints (F5)
+
+Swagger check path: `/swagger-ui/index.html` with `API_DOCS_ENABLED=true`. Call `GET /api/v1/auth/csrf`, log in, create/select an active project, then use the endpoints below. All mutations require the `X-XSRF-TOKEN` header and `PDA_ACCESS` HttpOnly cookie. `ADMIN` alone grants no project access. All routes are project scoped and return `ProblemDetail` on errors.
+
+| Endpoint | Auth / scope | Safe input | Success | Important errors |
+| --- | --- | --- | --- | --- |
+| `POST /api/v1/projects/{projectId}/tasks` | `TASK_MANAGE` | `{ "title": "Prepare demo", "priority": "HIGH" }`; optional description/startDate/dueDate | `201`, Task with stable `taskKey`, number and assignee IDs | `400` fields/dates, `401`, `403`, `404` project, `409` archived project |
+| `GET /api/v1/projects/{projectId}/tasks` | `PROJECT_VIEW` | `page=0&size=20&sort=updatedAt,desc`; sort fields: taskNumber/createdAt/updatedAt/dueDate | `200`, page, excludes archived tasks | `400` page/sort, `401`, `403`, `404` project |
+| `GET /api/v1/projects/{projectId}/tasks/{taskId}` | `PROJECT_VIEW` | UUID path | `200`, Task including `assigneeIds` | `401`, `403`, `404` scoped/archived task |
+| `PATCH /api/v1/projects/{projectId}/tasks/{taskId}` | `TASK_MANAGE` | `{ "title": "Prepare final demo", "priority": "HIGH", "description": null, "startDate": null, "dueDate": null }` (full basic-field replacement) | `200`, updated Task | `400`, `401`, `403`, `404`, `409` archived/optimistic conflict |
+| `PUT /api/v1/projects/{projectId}/tasks/{taskId}/assignees` | `TASK_MANAGE` | `{ "assigneeIds": ["<active-member-uuid>"] }`; empty array clears | `200`, replacement UUID set | `400` nonmember/invalid ID, `401`, `403`, `404`, `409` archived |
+| `PATCH /api/v1/projects/{projectId}/tasks/{taskId}/status` | `TASK_MANAGE` or assigned `TASK_WORK` | `{ "status": "TODO" }` | `200`, Task; true change adds one history row | `400`, `401`, `403`, `404`, `409` invalid transition/archived |
+| `PATCH /api/v1/projects/{projectId}/tasks/{taskId}/blocked` | `TASK_MANAGE` or assigned `TASK_WORK` | `{ "blocked": true, "reason": "Awaiting review" }` | `200`, Task; no status history | `400`, `401`, `403`, `404`, `409` DONE/archived |
+| `GET /api/v1/projects/{projectId}/tasks/{taskId}/history` | `PROJECT_VIEW` | UUID path | `200`, chronological history array | `401`, `403`, `404` |
+| `DELETE /api/v1/projects/{projectId}/tasks/{taskId}` | `TASK_MANAGE` | UUID path | `204`, soft archived | `401`, `403`, `404`, `409` archived |
+
+`TaskPriority` defaults to `MEDIUM`; new tasks start `BACKLOG` and unblocked. The existing role model governs Task: `PROJECT_MANAGER` holds `TASK_MANAGE`; contributors and `TESTER` hold `TASK_WORK` for tasks actively assigned to them. Cross-project task IDs return `404` to callers who can read the path project.
+
 ## 12. Error Handling
 
 API errors must not expose:

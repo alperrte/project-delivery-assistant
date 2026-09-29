@@ -1,6 +1,7 @@
 package com.pda.project.application.service;
 
 import com.pda.project.domain.entity.ProjectMembership;
+import com.pda.project.ProjectMemberRemovedEvent;
 import com.pda.project.domain.enums.MembershipStatus;
 import com.pda.user.ProjectPermission;
 import com.pda.user.ProjectRole;
@@ -12,9 +13,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.time.Instant;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
@@ -26,12 +29,14 @@ public class ProjectMembershipService {
     private final ProjectRepository projects;
     private final ProjectMembershipRepository memberships;
     private final UserAccounts users;
+    private final ApplicationEventPublisher events;
 
     public ProjectMembershipService(ProjectRepository projects, ProjectMembershipRepository memberships,
-                                    UserAccounts users) {
+                                    UserAccounts users, ApplicationEventPublisher events) {
         this.projects = projects;
         this.memberships = memberships;
         this.users = users;
+        this.events = events;
     }
 
     /** Internal onboarding entry point for the later invitation flow. No direct HTTP add-member route. */
@@ -119,6 +124,7 @@ public class ProjectMembershipService {
         }
         member.remove();
         memberships.saveAndFlush(member);
+        events.publishEvent(new ProjectMemberRemovedEvent(projectId, userId, actorId, Instant.now()));
     }
 
     private void requireAnotherManager(UUID projectId) {
