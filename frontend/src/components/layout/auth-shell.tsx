@@ -5,6 +5,7 @@ import { getTranslations } from "next-intl/server";
 import { Logo } from "@/components/common/logo";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { cn } from "@/lib/utils";
 
 // The two photos (both 1672×941) are separate renders of one scene: in the dark
 // one everything sits ~4.5px right and ~39px higher. Each is moved half-way
@@ -20,6 +21,13 @@ const bgShift = (x: number, y: number) => ({
   transform: `translate(calc(${BG_PX} * ${x * BG_SCALE}), calc(${BG_PX} * ${y * BG_SCALE})) scale(${BG_SCALE})`,
 });
 
+const SCENES = [
+  { src: "/images/background/bg-light.png", shift: bgShift(2.25, -19.5), theme: "dark:invisible" },
+  { src: "/images/background/bg-dark.png", shift: bgShift(-2.25, 19.5), theme: "invisible dark:visible" },
+] as const;
+
+const NEON_FILTER_ID = "pda-scene-neon";
+
 /**
  * One centred column over a full-bleed background photo (one per theme; CSS
  * shows the matching one; the other is only made invisible, so it keeps its
@@ -27,32 +35,44 @@ const bgShift = (x: number, y: number) => ({
  * into a ready image instead of an empty frame): wordmark on
  * top, then whatever the page brings (the login page adds its headline above
  * the card). Language and theme sit in the top corners, out of the reading line.
+ *
+ * Over each photo a light runs along its neon strips: the same image again,
+ * filtered down to the strips (`NeonFilter`), is lit only where a soft band
+ * passes (`auth-neon` in globals.css) and screened onto the photo.
  */
 export async function AuthShell({ children }: { children: ReactNode }) {
   const t = await getTranslations("brand");
   return (
     <div className="relative isolate min-h-[100dvh] bg-(--background) text-(--auth-ink)">
-      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10">
-        <Image
-          src="/images/background/bg-light.png"
-          alt=""
-          fill
-          sizes="100vw"
-          quality={BG_QUALITY}
-          loading="eager"
-          className="object-cover dark:invisible"
-          style={bgShift(2.25, -19.5)}
-        />
-        <Image
-          src="/images/background/bg-dark.png"
-          alt=""
-          fill
-          sizes="100vw"
-          quality={BG_QUALITY}
-          loading="eager"
-          className="invisible object-cover dark:visible"
-          style={bgShift(-2.25, 19.5)}
-        />
+      <NeonFilter />
+      <div aria-hidden className="auth-enter-scene pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+        {SCENES.map(({ src, shift, theme }) => (
+          <div key={src} className={cn("absolute inset-0", theme)}>
+            <Image
+              src={src}
+              alt=""
+              fill
+              sizes="100vw"
+              quality={BG_QUALITY}
+              loading="eager"
+              className="object-cover"
+              style={shift}
+            />
+            <div className="auth-neon">
+              <Image
+                src={src}
+                alt=""
+                fill
+                sizes="100vw"
+                quality={BG_QUALITY}
+                loading="eager"
+                className="object-cover"
+                style={{ ...shift, filter: `url(#${NEON_FILTER_ID})` }}
+              />
+              <div className="auth-neon-band" />
+            </div>
+          </div>
+        ))}
       </div>
 
       <a
@@ -62,7 +82,7 @@ export async function AuthShell({ children }: { children: ReactNode }) {
         {t("skip")}
       </a>
 
-      <header className="absolute inset-x-0 top-0 z-10 flex items-center justify-between p-4 sm:p-6">
+      <header className="auth-enter-controls absolute inset-x-0 top-0 z-10 flex items-center justify-between p-4 sm:p-6">
         <LocaleSwitcher triggerClassName="h-11 gap-2 rounded-full border border-(--auth-control-border) bg-(--auth-control) px-4 text-(--auth-ink) shadow-[0_6px_18px_-10px_rgb(15_23_42/0.35)] backdrop-blur-md hover:bg-(--auth-control) hover:text-(--auth-ink) aria-expanded:bg-(--auth-control) dark:hover:bg-(--auth-control)" />
         <ThemeToggle />
       </header>
@@ -74,12 +94,38 @@ export async function AuthShell({ children }: { children: ReactNode }) {
         <Link
           href="/login"
           aria-label="PDA · Project Delivery Assistant"
-          className="w-[clamp(13.5rem,min(30vw,39vh),27.5rem)] rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-(--glow)"
+          className="auth-enter-logo w-[clamp(13.5rem,min(30vw,39vh),27.5rem)] rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-(--glow)"
         >
           <Logo variant="wordmark" size={440} priority />
         </Link>
         <div className="mt-[clamp(1rem,2.5vh,2rem)] w-full">{children}</div>
       </main>
     </div>
+  );
+}
+
+/**
+ * Keeps only the photos' neon strips: alpha = 4·(G/2 + B/2 − R) − 1.6 picks
+ * saturated cyan and nothing else (not the pale light-theme sky, not the
+ * chrome), and a blur adds the halo the moving light spills around them.
+ */
+function NeonFilter() {
+  return (
+    <svg aria-hidden width="0" height="0" className="absolute">
+      <filter id={NEON_FILTER_ID} colorInterpolationFilters="sRGB">
+        <feColorMatrix
+          in="SourceGraphic"
+          type="matrix"
+          values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  -4 2 2 0 -1.6"
+          result="neon"
+        />
+        <feGaussianBlur in="neon" stdDeviation="5" result="halo" />
+        <feMerge>
+          <feMergeNode in="halo" />
+          <feMergeNode in="halo" />
+          <feMergeNode in="neon" />
+        </feMerge>
+      </filter>
+    </svg>
   );
 }

@@ -19,7 +19,8 @@ export async function registerUser(page: Page, user: { email: string; nickname: 
   await page.locator('input[name="password"]').fill(user.password);
   await page.locator('input[name="confirmPassword"]').fill(user.password);
   await page.getByRole("button", { name: /^Kayıt ol$/ }).click();
-  await expect(page).toHaveURL(/\/login/, { timeout: 15_000 });
+  // Registration signs the new account in and opens the app.
+  await expect(page.getByRole("navigation")).toBeVisible({ timeout: 15_000 });
 }
 
 export async function login(page: Page, email: string, password: string) {
@@ -33,7 +34,6 @@ export async function login(page: Page, email: string, password: string) {
 export async function registerAndLogin(page: Page, prefix: string) {
   const user = uniqueUser(prefix);
   await registerUser(page, user);
-  await login(page, user.email, user.password);
   return user;
 }
 

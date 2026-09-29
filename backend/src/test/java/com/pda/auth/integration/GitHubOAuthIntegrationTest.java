@@ -120,7 +120,7 @@ class GitHubOAuthIntegrationTest {
 
         handlers.success(request, response, githubToken(id, id + "@example.test", true));
 
-        assertEquals("http://localhost:3000/", response.getRedirectedUrl());
+        assertEquals("http://localhost:3000/projects", response.getRedirectedUrl());
         List<String> cookies = response.getHeaders(HttpHeaders.SET_COOKIE);
         assertTrue(cookies.stream().anyMatch(value -> value.startsWith("PDA_ACCESS=") && value.contains("HttpOnly")));
         assertTrue(cookies.stream().anyMatch(value -> value.startsWith("PDA_REFRESH=") && value.contains("HttpOnly")));

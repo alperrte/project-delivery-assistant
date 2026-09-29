@@ -23,6 +23,8 @@ Bir faz, servis veya bağımsız teslim gerçekten tamamlandığında `docs/comp
 
 Frontend, UI veya UX ile ilgili anlamlı bir geliştirme başlamadan önce
 `.agents/FRONTEND_WORKFLOW.md` dosyasını oku ve oradaki workflow'u uygula.
+Görsel bir değişiklikten (renk, font, bileşen, sayfa) önce `.agents/frontend-design-rules.md`
+ve `frontend/src/app/globals.css` dosyalarını oku; tüm sayfalar bu token'lara uymalı.
 
 İlgili global Claude Code skill ve plugin'lerini görev gerektiriyorsa kullan.
 Küçük stil veya tek satırlık değişikliklerde gereksiz tam audit pipeline'ı çalıştırma.

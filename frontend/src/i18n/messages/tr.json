@@ -362,8 +362,13 @@
     "metaTitle": "Giriş yap",
     "rememberMe": "Beni hatırla",
     "hero": {
-      "title": "Planlayın. Yönetin. <accent>Teslim edin.</accent>",
+      "title": "Planlayın. Yönetin. Teslim edin.",
       "subtitle": "Görevler, ekipler ve teslim süreçleri için sade, güçlü ve modern bir çalışma alanı."
+    },
+    "footer": {
+      "copyright": "© 2026 PDA — Project Delivery Assistant",
+      "github": "GitHub",
+      "license": "Apache 2.0"
     }
   },
   "register": {
@@ -378,6 +383,7 @@
     "submit": "Kayıt ol",
     "submitting": "Kaydediliyor",
     "success": "Hesabınız oluşturuldu. Şimdi giriş yapabilirsiniz.",
+    "welcome": "Hesabınız oluşturuldu, hoş geldiniz!",
     "haveAccount": "Zaten hesabınız var mı?",
     "toLogin": "Giriş yapın",
     "emailPlaceholder": "ornek@gmail.com",
