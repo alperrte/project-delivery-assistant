@@ -16,6 +16,15 @@ public class AuthCookies {
 
     public static final String ACCESS = "PDA_ACCESS";
     public static final String REFRESH = "PDA_REFRESH";
+    /**
+     * Non-authoritative marker, {@code Path=/} so the frontend's edge middleware can see it (unlike {@link
+     * #ACCESS}/{@link #REFRESH}, deliberately scoped to {@code /api*} to keep the real tokens off every other
+     * request). It carries no token and grants nothing by itself — every API call is still independently
+     * authorized against the {@code HttpOnly} {@link #ACCESS}/{@link #REFRESH} cookies — it only lets middleware
+     * skip rendering a protected page shell for a browser that plainly has no session, mirroring the refresh
+     * token's lifetime since that is how long a session can still be silently renewed.
+     */
+    public static final String SESSION_HINT = "PDA_SESSION";
     private final JwtTokens tokens;
     private final boolean production;
 
@@ -27,11 +36,13 @@ public class AuthCookies {
     public void write(LoginTokens pair, HttpServletRequest request, HttpServletResponse response) {
         add(response, ACCESS, pair.access(), "/api", tokens.accessLifetime(), request);
         add(response, REFRESH, pair.refresh(), "/api/v1/auth", tokens.refreshLifetime(), request);
+        add(response, SESSION_HINT, "1", "/", tokens.refreshLifetime(), request);
     }
 
     public void clear(HttpServletRequest request, HttpServletResponse response) {
         add(response, ACCESS, "", "/api", Duration.ZERO, request);
         add(response, REFRESH, "", "/api/v1/auth", Duration.ZERO, request);
+        add(response, SESSION_HINT, "", "/", Duration.ZERO, request);
     }
 
     public String access(HttpServletRequest request) { return read(request, ACCESS); }
