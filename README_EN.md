@@ -98,14 +98,15 @@ The README will also act as a high-level project progress view.
 |---|---|
 | Technical planning | ✅ Complete |
 | Brand / README / open-source repository foundation | ✅ Complete |
-| Backend scaffold | ⏳ Next |
-| Authentication & Security | ⏳ Planned |
-| Project / Role / Squad modules | ⏳ Planned |
-| Task management | ⏳ Planned |
+| Backend scaffold | ✅ Complete |
+| Authentication & Security | ✅ Complete |
+| Project / Role / Squad modules (backend + frontend) | ✅ Complete |
+| Task management — backend (Task API, workflow, RBAC) | ✅ Complete |
+| Task management — frontend (Task UI, history view) | ⏳ Next |
 | Notification / Mail | ⏳ Planned |
-| Frontend scaffold | ⏳ Planned |
-| UI / UX implementation | ⏳ Planned |
-| Frontend ↔ Backend integration | ⏳ Planned |
+| Frontend scaffold | ✅ Complete |
+| UI / UX implementation | 🔄 In progress |
+| Frontend ↔ Backend integration | 🔄 In progress |
 | Regression / E2E / Performance testing | ⏳ Planned |
 | Deployment decision | ⏳ TBD |
 | V1.0.0 | ⏳ Target |

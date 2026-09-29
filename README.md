@@ -98,14 +98,15 @@ README aynı zamanda projenin yüksek seviyeli ilerleme durumunu gösterecek şe
 |---|---|
 | Teknik planlama | ✅ Tamamlandı |
 | Marka / README / açık kaynak repo temeli | ✅ Tamamlandı |
-| Backend scaffold | ⏳ Sırada |
-| Authentication & Security | ⏳ Planlandı |
-| Project / Role / Squad modülleri | ⏳ Planlandı |
-| Task management | ⏳ Planlandı |
+| Backend scaffold | ✅ Tamamlandı |
+| Authentication & Security | ✅ Tamamlandı |
+| Project / Role / Squad modülleri (backend + frontend) | ✅ Tamamlandı |
+| Task management — backend (Task API, workflow, RBAC) | ✅ Tamamlandı |
+| Task management — frontend (Task UI, geçmiş görünümü) | ⏳ Sırada |
 | Notification / Mail | ⏳ Planlandı |
-| Frontend scaffold | ⏳ Planlandı |
-| UI / UX geliştirme | ⏳ Planlandı |
-| Frontend ↔ Backend entegrasyonu | ⏳ Planlandı |
+| Frontend scaffold | ✅ Tamamlandı |
+| UI / UX geliştirme | 🔄 Devam ediyor |
+| Frontend ↔ Backend entegrasyonu | 🔄 Devam ediyor |
 | Regression / E2E / Performance testleri | ⏳ Planlandı |
 | Deployment kararı | ⏳ TBD |
 | V1.0.0 | ⏳ Hedef |
