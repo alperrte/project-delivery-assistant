@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "preview:project": "node scripts/preview-project.cjs",
     "lint": "eslint",
     "test:e2e": "playwright test"
   },

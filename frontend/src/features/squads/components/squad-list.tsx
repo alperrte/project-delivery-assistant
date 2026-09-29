@@ -4,14 +4,13 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plus, PencilSimple, Archive, Users } from "@phosphor-icons/react";
+import { Plus, PencilSimple, Archive, Users, Stack } from "@phosphor-icons/react";
 import { PageHeader } from "@/components/common/page-header";
 import { EmptyState } from "@/components/common/empty-state";
 import { PaginationBar } from "@/components/common/pagination-bar";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { errorKey } from "@/lib/api/error-message";
 import { squadsApi } from "../api";
 import { SquadFormDialog } from "./squad-form-dialog";
@@ -32,6 +31,7 @@ export function SquadList({ projectId, isManager }: { projectId: string; isManag
     <div>
       <PageHeader
         title={t("title")}
+        description={t("description")}
         action={
           isManager && (
             <SquadFormDialog
@@ -53,19 +53,17 @@ export function SquadList({ projectId, isManager }: { projectId: string; isManag
 
       {data && data.content.length > 0 && (
         <>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("columns.name")}</TableHead>
-                <TableHead className="text-right">{t("columns.actions")}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          <ul className="grid gap-3 xl:grid-cols-2">
               {data.content.map((squad) => (
-                <TableRow key={squad.id}>
-                  <TableCell className="font-medium">{squad.name}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-1.5">
+                <li key={squad.id} className="workspace-panel min-w-0 p-5">
+                  <div className="flex items-start gap-4">
+                    <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-primary/15 text-primary"><Stack size={25} weight="duotone" aria-hidden="true" /></span>
+                    <div className="min-w-0 flex-1">
+                      <h2 className="text-base font-semibold text-foreground">{squad.name}</h2>
+                      <p className="mt-1 line-clamp-2 min-h-9 text-sm leading-5 text-muted-foreground">{squad.description || t("noDescription")}</p>
+                    </div>
+                  </div>
+                  <div className="mt-5 flex flex-wrap items-center gap-1.5 border-t pt-4">
                       <SquadMembersDialog
                         projectId={projectId}
                         squad={squad}
@@ -112,12 +110,10 @@ export function SquadList({ projectId, isManager }: { projectId: string; isManag
                           />
                         </>
                       )}
-                    </div>
-                  </TableCell>
-                </TableRow>
+                  </div>
+                </li>
               ))}
-            </TableBody>
-          </Table>
+          </ul>
           <PaginationBar page={data.page} totalPages={data.totalPages} totalElements={data.totalElements} onPageChange={setPage} />
         </>
       )}

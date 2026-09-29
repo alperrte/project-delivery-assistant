@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
-import { SignOut } from "@phosphor-icons/react";
+import { CaretDown, SignOut } from "@phosphor-icons/react";
 import { Logo } from "@/components/common/logo";
 import { ThemeSwitcher } from "@/components/layout/theme-switcher";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
@@ -56,8 +56,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-[100dvh]">
-      <header className="sticky top-0 z-40 border-b bg-card/95 backdrop-blur supports-backdrop-filter:bg-card/80">
+    <div className="app-shell min-h-[100dvh] bg-background">
+      <header className="sticky top-0 z-40 border-b bg-card/90 backdrop-blur-xl supports-backdrop-filter:bg-card/75">
         <div className="mx-auto flex max-w-[1720px] flex-wrap items-center gap-x-7 gap-y-2 px-5 py-2 sm:h-17 sm:flex-nowrap sm:px-8 sm:py-0 xl:px-12">
           <Link href="/projects" className="flex shrink-0 items-center gap-2.5" aria-label="PDA">
             <Logo variant="emblem" size={32} />
@@ -85,8 +85,10 @@ export function AppShell({ children }: { children: ReactNode }) {
             <DropdownMenu>
               <DropdownMenuTrigger
                 render={
-                  <Button variant="ghost" size="sm" className="max-w-28 min-w-0 gap-1.5 sm:max-w-40">
+                  <Button variant="ghost" size="sm" className="max-w-36 min-w-0 gap-2 sm:max-w-48">
+                    <span className="grid size-7 shrink-0 place-items-center rounded-full border border-primary/40 bg-primary/15 text-xs font-semibold text-primary">{user?.nickname?.slice(0, 1).toUpperCase()}</span>
                     <span className="truncate">{user?.nickname}</span>
+                    <CaretDown size={13} className="text-muted-foreground" aria-hidden="true" />
                   </Button>
                 }
               />
@@ -105,7 +107,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className="mx-auto max-w-[1720px] px-5 py-8 sm:px-8 sm:py-10 xl:px-12">{children}</main>
+      <main className="mx-auto max-w-[1720px] px-5 py-6 sm:px-8 sm:py-8 xl:px-12">{children}</main>
     </div>
   );
 }

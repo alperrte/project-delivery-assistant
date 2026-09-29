@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { PencilSimple, UserMinus } from "@phosphor-icons/react";
@@ -21,6 +21,7 @@ export function MemberList({ projectId, isManager }: { projectId: string; isMana
   const t = useTranslations("members");
   const tr = useTranslations("roles");
   const te = useTranslations("errors");
+  const locale = useLocale();
   const queryClient = useQueryClient();
   const [page, setPage] = useState(0);
 
@@ -35,7 +36,7 @@ export function MemberList({ projectId, isManager }: { projectId: string; isMana
 
   return (
     <div>
-      <PageHeader title={t("title")} />
+      <PageHeader title={t("title")} description={t("description")} />
       {data.content.length === 0 ? <EmptyState title={t("emptyTitle")} description={t("emptyDescription")} /> : (
       <>
       <Table>
@@ -43,13 +44,14 @@ export function MemberList({ projectId, isManager }: { projectId: string; isMana
           <TableRow>
             <TableHead>{t("columns.member")}</TableHead>
             <TableHead>{t("columns.roles")}</TableHead>
+            <TableHead>{t("columns.joinedAt")}</TableHead>
             {isManager && <TableHead className="text-right">{t("columns.actions")}</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
           {data.content.map((member) => (
             <TableRow key={member.userId}>
-              <TableCell className="font-medium">{member.nickname ?? member.userId}</TableCell>
+              <TableCell className="font-medium"><span className="flex items-center gap-3"><span className="grid size-8 shrink-0 place-items-center rounded-full border border-primary/25 bg-primary/15 text-xs font-bold text-primary">{(member.nickname ?? member.userId).slice(0, 1).toLocaleUpperCase(locale)}</span><span>{member.nickname ?? member.userId}</span></span></TableCell>
               <TableCell>
                 <div className="flex flex-wrap gap-1">
                   {member.roles.map((role) => (
@@ -59,6 +61,7 @@ export function MemberList({ projectId, isManager }: { projectId: string; isMana
                   ))}
                 </div>
               </TableCell>
+              <TableCell className="text-muted-foreground">{new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(member.joinedAt))}</TableCell>
               {isManager && (
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-1.5">

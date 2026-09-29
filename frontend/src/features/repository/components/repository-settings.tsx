@@ -77,12 +77,13 @@ export function RepositorySettings({ projectId, isManager }: { projectId: string
         <EmptyState
           title={t("noneTitle")}
           description={t("noneDescription")}
+          className="flex min-h-72 flex-col items-center justify-center text-center [&_p]:mx-auto"
           action={<Button onClick={() => setConnecting(true)}><LinkSimple data-icon="inline-start" size={16} />{t("connect")}</Button>}
         />
       )}
 
       {notConnected && !isManager && (
-        <EmptyState title={t("noneTitle")} description={t("noneDescription")} />
+        <EmptyState title={t("noneTitle")} description={t("noneDescription")} className="flex min-h-72 flex-col items-center justify-center text-center [&_p]:mx-auto" />
       )}
 
       {notConnected && connecting && (
