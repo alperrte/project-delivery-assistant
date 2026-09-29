@@ -46,7 +46,9 @@
       "projects": "Projeler",
       "organizations": "Organizasyonlar",
       "logout": "Çıkış yap"
-    }
+    },
+    "breadcrumb": "Sayfa yolu",
+    "invitation": "Davet"
   },
   "roles": {
     "PROJECT_MANAGER": "Proje Yöneticisi",
@@ -450,20 +452,28 @@
   },
   "workspace": {
     "navigation": "Gezinme menüsü",
-    "search": "Projelerde ara…",
-    "searchHint": "İlk 100 projenin adı ve açıklamasında ara.",
+    "search": "Ara",
+    "searchPlaceholder": "Sayfa, proje veya organizasyon ara…",
+    "searchGroups": {
+      "pages": "Sayfalar",
+      "projects": "Projeler",
+      "organizations": "Organizasyonlar"
+    },
     "loading": "Yükleniyor…",
     "retry": "Tekrar dene",
-    "noResults": "Eşleşen proje bulunamadı.",
+    "clearSearch": "Aramayı temizle",
+    "noResults": "Sonuç bulunamadı.",
     "loadError": "Projeler yüklenemedi. Tekrar deneyin.",
     "tasks": "Görevler",
     "notifications": "Bildirimler",
-    "soon": "Yakında",
+    "noNotifications": "Henüz bildirim yok.",
     "calendar": "Takvim",
     "settings": "Hesap ayarları",
     "workspace": "Çalışma alanın",
     "skip": "İçeriğe geç",
     "account": "Hesap menüsü",
+    "collapseSidebar": "Kenar çubuğunu daralt",
+    "expandSidebar": "Kenar çubuğunu genişlet",
     "previousMonth": "Önceki ay",
     "nextMonth": "Sonraki ay",
     "targetDate": "Hedef bitiş tarihi",

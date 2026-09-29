@@ -46,7 +46,9 @@
       "projects": "Projekte",
       "organizations": "Organisationen",
       "logout": "Abmelden"
-    }
+    },
+    "breadcrumb": "Brotkrumen",
+    "invitation": "Einladung"
   },
   "roles": {
     "PROJECT_MANAGER": "Projektleiter",
@@ -450,20 +452,28 @@
   },
   "workspace": {
     "navigation": "Navigationsmenü",
-    "search": "Projekte suchen…",
-    "searchHint": "Namen und Beschreibungen der ersten 100 Projekte durchsuchen.",
+    "search": "Suche",
+    "searchPlaceholder": "Seiten, Projekte oder Organisationen suchen…",
+    "searchGroups": {
+      "pages": "Seiten",
+      "projects": "Projekte",
+      "organizations": "Organisationen"
+    },
     "loading": "Wird geladen…",
     "retry": "Erneut versuchen",
-    "noResults": "Keine passenden Projekte.",
+    "clearSearch": "Suche leeren",
+    "noResults": "Keine Ergebnisse gefunden.",
     "loadError": "Projekte konnten nicht geladen werden. Bitte erneut versuchen.",
     "tasks": "Aufgaben",
     "notifications": "Benachrichtigungen",
-    "soon": "Demnächst",
+    "noNotifications": "Noch keine Benachrichtigungen.",
     "calendar": "Kalender",
     "settings": "Kontoeinstellungen",
     "workspace": "Dein Arbeitsbereich",
     "skip": "Zum Inhalt springen",
     "account": "Kontomenü",
+    "collapseSidebar": "Seitenleiste einklappen",
+    "expandSidebar": "Seitenleiste ausklappen",
     "previousMonth": "Vorheriger Monat",
     "nextMonth": "Nächster Monat",
     "targetDate": "Geplantes Enddatum",

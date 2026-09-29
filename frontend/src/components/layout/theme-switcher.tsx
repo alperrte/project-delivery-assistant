@@ -35,15 +35,19 @@ export function useThemeSelection() {
 
   function selectTheme(next: string) {
     const from = resolvedTheme === "dark" ? "dark" : "light";
-    const to =
-      next === "system" ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : next;
+    const osScheme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    const to = next === "system" ? osScheme : next;
+    // Clicking the option that already matches the OS preference pins nothing
+    // — it re-enables following the system setting instead, so an explicit
+    // choice equal to "system" and an implicit one both read the same way.
+    const applied = next !== "system" && next === osScheme ? "system" : next;
     const animated =
       !reduce &&
       from !== to &&
       (to === "light" || to === "dark") &&
       "startViewTransition" in document &&
-      playThemeTransition(from, to, () => flushSync(() => setTheme(next)));
-    if (!animated) setTheme(next);
+      playThemeTransition(from, to, () => flushSync(() => setTheme(applied)));
+    if (!animated) setTheme(applied);
   }
 
   return {

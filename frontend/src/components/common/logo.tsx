@@ -6,6 +6,10 @@ type LogoProps = {
   size?: number;
   className?: string;
   priority?: boolean;
+  /** Wordmark only: crop to just the "PDA" letters, dropping the tagline — for tight spots like the sidebar header where the tagline would render too small to read. */
+  compact?: boolean;
+  /** Wordmark only: skip the animated current-trace overlay (`CurrentFilter`/`logo-current`) and render the plain file. */
+  plain?: boolean;
 };
 
 // One wordmark file per theme, used as delivered; CSS shows the matching one.
@@ -20,7 +24,14 @@ const WORDMARKS = [
   { src: "/images/branding/yazi-dark.png", width: 1672, height: 941, box: [105, 276, 1587, 684], theme: "hidden dark:block" },
 ] as const;
 
-export function Logo({ variant = "emblem", size = 72, className, priority }: LogoProps) {
+// Same idea, boxed tighter around just the "PDA" letters (measured off each
+// file's alpha channel) — the tagline sits just below and is cropped out.
+const WORDMARKS_COMPACT = [
+  { src: "/images/branding/yazi-light.png", width: 2172, height: 724, box: [114, 89, 2063, 553], theme: "dark:hidden" },
+  { src: "/images/branding/yazi-dark.png", width: 1672, height: 941, box: [107, 272, 1597, 622], theme: "hidden dark:block" },
+] as const;
+
+export function Logo({ variant = "emblem", size = 72, className, priority, compact, plain }: LogoProps) {
   if (variant === "emblem") {
     return (
       <Image
@@ -48,10 +59,11 @@ export function Logo({ variant = "emblem", size = 72, className, priority }: Log
   }
 
   // `size` caps the width of the visible artwork; the height follows it.
+  const marks = compact ? WORDMARKS_COMPACT : WORDMARKS;
   return (
     <>
-      <CurrentFilter />
-      {WORDMARKS.map(({ src, width, height, box: [x0, y0, x1, y1], theme }) => {
+      {!plain && <CurrentFilter />}
+      {marks.map(({ src, width, height, box: [x0, y0, x1, y1], theme }) => {
         const boxW = x1 - x0;
         const boxH = y1 - y0;
         const image = {
@@ -71,21 +83,31 @@ export function Logo({ variant = "emblem", size = 72, className, priority }: Log
           <span
             key={src}
             className={cn("relative block w-full", theme, className)}
-            style={{ maxWidth: size, aspectRatio: `${boxW} / ${boxH}` }}
+            style={{
+              maxWidth: size,
+              aspectRatio: `${boxW} / ${boxH}`,
+              // Compact box already excludes the tagline, but the glow layer
+              // (below) overhangs it; clip the span itself so no trace of the
+              // tagline survives at small sidebar scale. Sides/top keep room
+              // for the glow to bleed.
+              clipPath: compact ? "inset(-30% -8% 0 -8%)" : undefined,
+            }}
           >
             <Image alt="PDA · Project Delivery Assistant" {...image} />
-            {/*
-              The same file again, reduced to a thin bright line along the
-              letters' edges; `logo-current` masks it down to electrons that
-              orbit each letter. The outer span overhangs the box so the
-              line's glow is not cut at the letters' outer edges; the inner
-              one maps back onto the box.
-            */}
-            <span aria-hidden className="logo-current absolute -inset-x-[4%] -inset-y-[15%]">
-              <span className="absolute inset-x-[3.7037%] inset-y-[11.5385%] will-change-transform">
-                <Image alt="" {...image} style={{ ...image.style, filter: `url(#${CURRENT_FILTER_ID})` }} />
+            {!plain && (
+              /*
+                The same file again, reduced to a thin bright line along the
+                letters' edges; `logo-current` masks it down to electrons that
+                orbit each letter. The outer span overhangs the box so the
+                line's glow is not cut at the letters' outer edges; the inner
+                one maps back onto the box.
+              */
+              <span aria-hidden className="logo-current absolute -inset-x-[4%] -inset-y-[15%]">
+                <span className="absolute inset-x-[3.7037%] inset-y-[11.5385%] will-change-transform">
+                  <Image alt="" {...image} style={{ ...image.style, filter: `url(#${CURRENT_FILTER_ID})` }} />
+                </span>
               </span>
-            </span>
+            )}
           </span>
         );
       })}

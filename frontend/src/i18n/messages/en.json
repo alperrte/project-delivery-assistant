@@ -46,7 +46,9 @@
       "projects": "Projects",
       "organizations": "Organizations",
       "logout": "Log out"
-    }
+    },
+    "breadcrumb": "Breadcrumb",
+    "invitation": "Invitation"
   },
   "roles": {
     "PROJECT_MANAGER": "Project Manager",
@@ -450,20 +452,28 @@
   },
   "workspace": {
     "navigation": "Navigation menu",
-    "search": "Search projects…",
-    "searchHint": "Search names and descriptions of the first 100 projects.",
+    "search": "Search",
+    "searchPlaceholder": "Search pages, projects, or organizations…",
+    "searchGroups": {
+      "pages": "Pages",
+      "projects": "Projects",
+      "organizations": "Organizations"
+    },
     "loading": "Loading…",
     "retry": "Try again",
-    "noResults": "No matching projects.",
+    "clearSearch": "Clear search",
+    "noResults": "No results found.",
     "loadError": "Projects could not be loaded. Try again.",
     "tasks": "Tasks",
     "notifications": "Notifications",
-    "soon": "Soon",
+    "noNotifications": "No notifications yet.",
     "calendar": "Calendar",
     "settings": "Account settings",
     "workspace": "Your workspace",
     "skip": "Skip to content",
     "account": "Account menu",
+    "collapseSidebar": "Collapse sidebar",
+    "expandSidebar": "Expand sidebar",
     "previousMonth": "Previous month",
     "nextMonth": "Next month",
     "targetDate": "Target end date",

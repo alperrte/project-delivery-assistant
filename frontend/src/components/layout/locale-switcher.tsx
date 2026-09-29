@@ -36,7 +36,14 @@ const EASE = [0.22, 1, 0.36, 1] as const;
  * refresh is done and the turn has played, then clears itself once its own
  * exit animation finishes.
  */
-export function LocaleSwitcher({ triggerClassName }: { triggerClassName?: string }) {
+export function LocaleSwitcher({
+  triggerClassName,
+  hideLabelOnMobile,
+}: {
+  triggerClassName?: string;
+  /** Drops the "TR"/"EN"/"DE" text (flag + caret only) below `sm`, for tight navbar layouts. */
+  hideLabelOnMobile?: boolean;
+}) {
   const t = useTranslations("common.language");
   const current = useLocale() as Locale;
   const router = useRouter();
@@ -66,8 +73,8 @@ export function LocaleSwitcher({ triggerClassName }: { triggerClassName?: string
           className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "h-8 gap-1.5 px-2 font-medium", triggerClassName)}
         >
           <CurrentFlag className="h-3.5 w-5 rounded-[2px]" title={t(current)} />
-          <span className="uppercase">{current}</span>
-          <CaretDown size={12} weight="bold" className="opacity-60" />
+          <span className={cn("uppercase", hideLabelOnMobile && "max-sm:hidden")}>{current}</span>
+          <CaretDown size={12} weight="bold" aria-hidden="true" className="opacity-60" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="min-w-40">
           {locales.map((code) => {
