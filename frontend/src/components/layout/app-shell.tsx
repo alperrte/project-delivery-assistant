@@ -68,10 +68,10 @@ export function AppShell({ children }: { children: ReactNode }) {
     <nav aria-label={tw("navigation")} className="min-h-0 flex-1 space-y-1 overflow-y-auto px-3 py-3">
       {NAV_LINKS.map(link => {
         const Icon = link.icon;
-        const active = pathname.startsWith(link.href);
+        const active = pathname === link.href;
         return <Link key={link.href} href={link.href} onClick={() => setMenuOpen(false)} aria-current={active ? "page" : undefined} className={cn("flex items-center gap-3 rounded-md px-3 py-2.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground", active && "bg-accent font-semibold text-foreground")}><Icon size={19} weight={active ? "fill" : "regular"} aria-hidden="true" />{t(`nav.${link.key}`)}</Link>;
       })}
-      {/^\/projects\/[^/]+$/.test(pathname) && <ProjectSidebarNav onNavigate={() => setMenuOpen(false)} />}
+      <ProjectSidebarNav onNavigate={() => setMenuOpen(false)} />
       <div className="my-3 border-t" />
       {[[CheckCircle, "tasks"], [Bell, "notifications"]].map(([Icon, key]) => {
         const NavIcon = Icon as typeof CheckCircle;

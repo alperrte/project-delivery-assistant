@@ -59,7 +59,7 @@ Dosyanın bölümleri:
 
 ### Oturum içi sayfaların düzeni
 
-Dashboard, Projeler, Organizasyonlar ve proje detayları `app-shell` ile aynı 240 px sol menüyü, 56 px üst çubuğu, mobil çekmeceyi ve Inter başlıkları kullanır. Dashboard içeriği `features/dashboard/dashboard.tsx` içinde kalır. Diğer sayfaların içerik sınırı 1560 px'tir. Proje detayındaki Genel Bakış, Kriterler, Üyeler, Davetler, Ekipler, Depo ve Ayarlar bağlantıları `project-sidebar-nav.tsx` ile ortak sidebar içinde gösterilir; proje içeriğinde ikinci sidebar bulunmaz. Mobilde bu bağlantılar aynı çekmecededir. `html:has(.app-shell)` radius değerini `0.5rem` yapar. Proje oluşturma, kriter, üyelik, davet ve ayar bileşenleri eski sayfalarda kullanılmaya devam eder.
+Dashboard, Projeler, Organizasyonlar ve proje detayları `app-shell` ile aynı 240 px sol menüyü, 56 px üst çubuğu, mobil çekmeceyi ve Inter başlıkları kullanır. Dashboard içeriği `features/dashboard/dashboard.tsx` içinde kalır. Diğer sayfaların içerik sınırı 1560 px'tir. Ana "Projeler" bağlantısı tüm projelerin listesini açar. Altındaki "Seçili proje" alanı tek projenin adını ve Genel Bakış, Kriterler, Üyeler, Davetler, Ekipler, Depo ve Ayarlar bölümlerini gösterir; bu bölümler dikey çizgiyle biraz içeride hizalanır. Seçili projeyi değiştirmek için proje listesine gidilir. Proje içeriğinde ikinci sidebar bulunmaz. Son seçilen proje kullanılır, henüz seçim yoksa ilk proje kullanılır; proje yoksa bölüm adları pasif görünür. Mobilde aynı gezinme çekmecededir. Yalnız açık sayfa seçili arka planı alır. `html:has(.app-shell)` radius değerini `0.5rem` yapar. Proje oluşturma, kriter, üyelik, davet ve ayar bileşenleri eski sayfalarda kullanılmaya devam eder.
 
 ### Auth sayfaları token'ları
 

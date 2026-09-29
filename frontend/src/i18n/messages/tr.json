@@ -114,7 +114,9 @@
       "created": "Proje oluşturuldu."
     },
     "detail": {
-      "backToProjects": "Tüm projeler",
+      "selectedProject": "Seçili proje",
+      "changeProject": "Değiştir",
+      "chooseProject": "Proje seçin",
       "createdAt": "Oluşturulma: {date}",
       "edit": "Düzenle",
       "eyebrow": "Proje çalışma alanı",

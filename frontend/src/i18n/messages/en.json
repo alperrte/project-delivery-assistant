@@ -114,7 +114,9 @@
       "created": "Project created."
     },
     "detail": {
-      "backToProjects": "All projects",
+      "selectedProject": "Selected project",
+      "changeProject": "Change",
+      "chooseProject": "Choose a project",
       "createdAt": "Created: {date}",
       "edit": "Edit",
       "eyebrow": "Project workspace",
