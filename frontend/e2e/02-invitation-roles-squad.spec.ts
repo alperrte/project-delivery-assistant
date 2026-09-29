@@ -41,7 +41,7 @@ test.describe.serial("Invitation, roles, squad, and denial checks", () => {
   });
 
   test("manager searches, invites the contributor, and captures the invitation token", async () => {
-    await managerPage.getByRole("tab", { name: "Davetler" }).click();
+    await managerPage.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Davetler" }).click();
     await managerPage.getByRole("button", { name: /^Üye davet et$/ }).click();
     await managerPage.getByPlaceholder("Kullanıcı adı veya e-posta ile ara").fill(member.nickname);
     await managerPage.getByRole("button", { name: new RegExp(member.nickname) }).click();
@@ -84,7 +84,7 @@ test.describe.serial("Invitation, roles, squad, and denial checks", () => {
     await expect(memberPage.getByText("Projeye katıldınız.")).toBeVisible();
 
     await managerPage.goto(`/projects/${slug}`);
-    await managerPage.getByRole("tab", { name: "Üyeler" }).click();
+    await managerPage.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Üyeler" }).click();
     await expect(managerPage.getByRole("row", { name: new RegExp(member.nickname) })).toBeVisible();
   });
 
@@ -102,7 +102,7 @@ test.describe.serial("Invitation, roles, squad, and denial checks", () => {
 
   test("non-manager cannot change project settings (UI hidden and API denies)", async () => {
     await memberPage.goto(`/projects/${slug}`);
-    await expect(memberPage.getByRole("tab", { name: "Ayarlar" })).toHaveCount(0);
+    await expect(memberPage.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Ayarlar" })).toHaveCount(0);
 
     const status = await memberPage.evaluate(async (id) => {
       const csrfRes = await fetch("http://localhost:8080/api/v1/auth/csrf", { credentials: "include" });
@@ -146,7 +146,7 @@ test.describe.serial("Invitation, roles, squad, and denial checks", () => {
   });
 
   test("manager creates a squad and adds the contributor to it", async () => {
-    await managerPage.getByRole("tab", { name: "Ekipler" }).click();
+    await managerPage.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Ekipler" }).click();
     await managerPage.getByRole("button", { name: /^Yeni ekip$/ }).click();
     await managerPage.locator("#squad-name").fill("E2E Squad");
     await managerPage.getByRole("dialog").getByRole("button", { name: /^Oluştur$/ }).click();

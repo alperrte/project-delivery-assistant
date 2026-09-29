@@ -13,14 +13,16 @@ import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { errorKey } from "@/lib/api/error-message";
 import { useSession } from "@/features/auth/hooks/use-session";
-import { ProjectCard } from "@/features/projects/components/project-card";
+import { ProjectRow } from "@/features/projects/components/project-card";
 import { organizationsApi } from "../api";
 import { OrganizationFormDialog } from "./organization-form-dialog";
 
 export function OrganizationDetail({ organizationId }: { organizationId: string }) {
   const t = useTranslations("organizations");
+  const tp = useTranslations("projects");
   const te = useTranslations("errors");
   const { data: user } = useSession();
   const router = useRouter();
@@ -91,8 +93,7 @@ export function OrganizationDetail({ organizationId }: { organizationId: string 
       {archived && <Badge variant="outline" className="mb-5 px-2.5 py-1">{t("archivedBadge")}</Badge>}
 
       <div className="mb-4 border-t pt-7">
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("projectsLabel")}</p>
-        <h2 className="mt-1 font-heading text-2xl font-semibold text-foreground">{t("projectsHeading")}</h2>
+        <h2 className="text-lg font-semibold text-foreground">{t("projectsHeading")}</h2>
       </div>
 
       {projects && projects.content.length === 0 && (
@@ -101,9 +102,20 @@ export function OrganizationDetail({ organizationId }: { organizationId: string 
 
       {projects && projects.content.length > 0 && (
         <>
-          <div className="space-y-4">
-            {projects.content.map((project) => <ProjectCard key={project.id} project={project} />)}
-          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{tp("columns.name")}</TableHead>
+                <TableHead>{tp("columns.status")}</TableHead>
+                <TableHead>{tp("columns.priority")}</TableHead>
+                <TableHead>{tp("columns.techStack")}</TableHead>
+                <TableHead className="text-right">{tp("columns.updatedAt")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {projects.content.map((project) => <ProjectRow key={project.id} project={project} />)}
+            </TableBody>
+          </Table>
           <PaginationBar
             page={projects.page}
             totalPages={projects.totalPages}

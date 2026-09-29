@@ -30,37 +30,36 @@ Dosyanın bölümleri:
 
 ## Renk paleti
 
-Tek vurgu rengi elektrik mavisidir (`--primary`) ve her yerde aynı şekilde kullanılır. Camgöbeği (`--live`) yalnızca gerçek bir anlamsal sinyal içindir (aktif/çevrimiçi durum), süs için kullanılmaz. Sıcak kâğıt/pirinç tonları ve mor parıltı kullanılmaz.
+`frontend/src/app/globals.css` içindeki `html:has(.app-shell)` ve `html.dark:has(.app-shell)` token'ları kullanıcı tarafından verilen DESIGN.md'nin Titanium beyaz/karbon paletini kullanır. Aşağıdaki tablo bu oturum içi paleti gösterir; dashboard, proje ve organizasyon sayfalarında geçerlidir. `:root` ve `.dark` temel token'ları ise auth ekranlarında kullanılmaya devam eder. Yeşil, amber ve kırmızı yalnız durum göstergeleri içindir. Kimlik ekranlarının sahne renkleri ayrıca `--auth-*` token'ları ile tanımlanır.
 
-### Uygulama genel token'ları
+### Genel token'lar
 
 | Token | Light | Dark | Kullanım |
 |---|---|---|---|
-| `--background` | `#f4f6f9` | `#0b0e14` | Sayfa zemini (`bg-background`) |
-| `--foreground` | `#10131a` | `#e7ebf2` | Ana metin |
-| `--card` | `#ffffff` | `#12161f` | Kart yüzeyi |
-| `--card-foreground` | `#10131a` | `#e7ebf2` | Kart metni |
-| `--popover` | `#ffffff` | `#12161f` | Menü, açılır pencere |
-| `--popover-foreground` | `#10131a` | `#e7ebf2` | |
-| `--primary` | `#1b5fe0` | `#4c8dff` | Tek vurgu: birincil buton, link, odak |
-| `--primary-hover` | `#164fbd` | `#6fa3ff` | Birincil hover |
-| `--primary-foreground` | `#ffffff` | `#071022` | Birincil üstündeki metin |
-| `--secondary` | `#e8ecf2` | `#1a2029` | İkincil buton |
-| `--secondary-foreground` | `#10131a` | `#e7ebf2` | |
-| `--muted` | `#e8ecf2` | `#1a2029` | Sakin zemin, hover |
-| `--muted-foreground` | `#5b6472` | `#8a93a6` | İkincil metin, açıklama |
-| `--accent` | `#e8ecf2` | `#1a2029` | Menü öğesi vurgusu |
-| `--accent-foreground` | `#10131a` | `#e7ebf2` | |
-| `--surface-2` | `#e8ecf2` | `#1a2029` | İkinci seviye yüzey |
-| `--destructive` | `#c8323a` | `#ff6b72` | Hata, silme |
-| `--success` | `#147a52` | `#3dd598` | Başarı |
-| `--warning` | `#a4660b` | `#f5b942` | Uyarı |
-| `--border` | `#d8dee8` | `#262d3a` | Varsayılan kenarlık (tüm öğelerde varsayılan) |
-| `--border-strong` | `#b8c2d1` | `#374152` | Belirgin kenarlık |
-| `--input` | `#d8dee8` | `#262d3a` | Form alanı kenarlığı |
-| `--ring` | `#1b5fe0` | `#4c8dff` | Odak halkası |
-| `--live` | `#0e8f9e` | `#3ad4e6` | Yalnız aktif/çevrimiçi durumu |
-| `--shadow-tint` | `220 30% 25%` | `222 60% 3%` | Gölge tonu (HSL parçaları) |
+| `--background` | `#ffffff` | `#090a0b` | Sayfa zemini |
+| `--foreground` | `#090a0b` | `#f4f5f6` | Ana metin |
+| `--card`, `--popover` | `#ffffff` | `#18191b` | Kart, menü ve dialog yüzeyi |
+| `--card-foreground`, `--popover-foreground` | `#090a0b` | `#f4f5f6` | Yüzey üstündeki metin |
+| `--primary` | `#090a0b` | `#f4f5f6` | Birincil eylem ve vurgu |
+| `--primary-hover` | `#303031` | `#dce0e6` | Birincil eylem hover |
+| `--primary-foreground` | `#ffffff` | `#090a0b` | Birincil eylem üstündeki metin |
+| `--secondary`, `--muted` | `#f4f5f6` | `#222326` | İkincil yüzey ve hover |
+| `--secondary-foreground`, `--accent-foreground` | `#090a0b` | `#f4f5f6` | İkincil yüzey metni |
+| `--accent` | `#eaebed` | `#222326` | Aktif menü öğesi |
+| `--muted-foreground` | `#525866` | `#a1a1aa` | İkincil metin |
+| `--surface-2` | `#f9fafa` | `#111214` | Sidebar ve sağ panel |
+| `--border` | `#e5e7eb` | `#27282b` | İnce kenarlık |
+| `--border-strong`, `--input` | `#c5c6c9` | `#45474a` | Belirgin kenarlık ve form |
+| `--ring` | `#525866` | `#a1a1aa` | Klavye odak halkası |
+| `--success` | `#147a52` | `#10b981` | Başarı ve aktif durum |
+| `--warning` | `#a4660b` | `#f59e0b` | Uyarı |
+| `--destructive` | `#ba1a1a` | `#ef4444` | Hata ve silme |
+| `--live` | `#10b981` | `#10b981` | Gerçek çevrimiçi/bağlı durum |
+| `--shadow-tint` | `0 0% 15%` | `0 0% 0%` | Nötr panel gölgesi (HSL parçaları) |
+
+### Oturum içi sayfaların düzeni
+
+Dashboard, Projeler, Organizasyonlar ve proje detayları `app-shell` ile aynı 240 px sol menüyü, 56 px üst çubuğu, mobil çekmeceyi ve Inter başlıkları kullanır. Dashboard içeriği `features/dashboard/dashboard.tsx` içinde kalır. Diğer sayfaların içerik sınırı 1560 px'tir. Proje detayındaki Genel Bakış, Kriterler, Üyeler, Davetler, Ekipler, Depo ve Ayarlar bağlantıları `project-sidebar-nav.tsx` ile ortak sidebar içinde gösterilir; proje içeriğinde ikinci sidebar bulunmaz. Mobilde bu bağlantılar aynı çekmecededir. `html:has(.app-shell)` radius değerini `0.5rem` yapar. Proje oluşturma, kriter, üyelik, davet ve ayar bileşenleri eski sayfalarda kullanılmaya devam eder.
 
 ### Auth sayfaları token'ları
 
@@ -91,16 +90,17 @@ Giriş, kayıt ve şifre sıfırlama ekranları arka plan fotoğrafı üzerinde 
 | Gövde metni | Inter (variable) | `src/app/layout.tsx`, `next/font`, `--font-inter` | `font-sans` (varsayılan) |
 | Başlıklar (`h1`–`h4`) | Inter | aynı | `font-heading` (base katmanında `h1`–`h4` için otomatik) |
 | Kod, commit hash | JetBrains Mono 400/500 | `layout.tsx`, `--font-jetbrains-mono` | `font-mono` |
-| Login sloganı | Exo 2 | Yalnız `features/auth/components/login-hero.tsx` | Bileşende `exo2.className` |
+| Login sloganı | Exo 2 | `features/auth/components/login-hero.tsx` | Bileşende `font-(family-name:--font-exo2)` |
+| Oturum içi sayfa başlığı (`h1`, `.font-heading`) | Inter | `globals.css` `.app-shell` | Dashboard, proje ve organizasyon sayfaları |
 
 - Fontlar yalnızca `next/font/google` ile yüklenir; `<link>` veya `@import url(...)` ile font ekleme.
 - Başlıklarda `letter-spacing: -0.01em` base katmanından gelir.
-- Exo 2 bir vurgu fontudur. Başka bir yerde gerekirse o bileşende yükle; global fonta çevirme.
+- Exo 2 auth sloganında kullanılır; oturum içi sayfa başlıkları Inter kalır.
 - Kullanılan ağırlıklar: gövde 400, etiket ve link `font-medium`, başlık `font-semibold`, auth başlıkları `font-bold`.
 
 ## Radius, gölge, boşluk
 
-- Taban `--radius: 0.625rem`. Ölçek: `rounded-sm` ×0.6, `rounded-md` ×0.8, `rounded-lg` ×1, `rounded-xl` ×1.4, `rounded-2xl` ×1.8, `rounded-3xl` ×2.2, `rounded-4xl` ×2.6.
+- Genel taban `--radius: 0.625rem`, oturum içi `app-shell` kabuğunda `0.5rem`. Ölçek: `rounded-sm` ×0.6, `rounded-md` ×0.8, `rounded-lg` ×1, `rounded-xl` ×1.4, `rounded-2xl` ×1.8, `rounded-3xl` ×2.2, `rounded-4xl` ×2.6.
 - Buton ve alanlar `rounded-lg`, kartlar (`ui/card.tsx`) `rounded-2xl`. Auth kartı istisna olarak `rounded-[1.25rem]`.
 - Buton yükseklikleri `button.tsx` içindeki boyutlardan gelir (`h-8` varsayılan, `sm` `h-7`, `lg` `h-9`). Yeni buton boyutu uydurma; varyantları kullan.
 - Sayfa başlığı için `components/common/page-header.tsx`, boş durum için `empty-state.tsx`, form alanı için `form-field.tsx` kullan.
@@ -118,7 +118,7 @@ Giriş, kayıt ve şifre sıfırlama ekranları arka plan fotoğrafı üzerinde 
 - Bileşenlerde sabit hex, `bg-white`, `text-black` veya `bg-slate-*` gibi paletten bağımsız renkler kullanma. `bg-background`, `text-foreground`, `border-border`, `bg-card`, `text-muted-foreground`, `bg-primary` gibi token sınıflarını kullan. Auth'a özel değerler için `bg-(--auth-card)` yazımı kullanılır.
 - `dark:` varyantını yalnız token'ın karşılamadığı ince farklar için kullan; renkleri token seviyesinde çöz.
 - Tema değiştirme `components/layout/theme-switcher.tsx` → `playThemeTransition` (`theme-transition.tsx`) üzerinden geçer: ortadan açılan daire ve küçük güneş/ay. Tema değişimini başka bir yoldan tetikleme.
-- `layout.tsx` içindeki `themeColor` değerleri `--background` ile aynıdır (`#f4f6f9` / `#0b0e14`); zemin değişirse ikisini birlikte güncelle.
+- `layout.tsx` içindeki `themeColor` değerleri `--background` ile aynıdır (`#ffffff` / `#090a0b`); zemin değişirse ikisini birlikte güncelle.
 - Her değişikliği iki temada da kontrol et.
 
 ## Hareket ve erişilebilirlik

@@ -19,7 +19,7 @@ const project = {
   visibility: "PRIVATE",
 };
 
-test("project navigation uses a mobile dropdown and a desktop section menu without page overflow", async ({ page }) => {
+test("project sections use the shared sidebar on desktop and its mobile drawer", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.route("**/api/v1/**", async (route) => {
     const path = new URL(route.request().url()).pathname;
@@ -44,20 +44,20 @@ test("project navigation uses a mobile dropdown and a desktop section menu witho
 
   await page.goto("/projects/responsive-project");
   await expect(page.getByRole("heading", { name: "Responsive project" })).toBeVisible();
-  const mobileMenu = page.getByRole("combobox", { name: "Proje menüsü" });
-  await mobileMenu.click();
-  await page.getByRole("option", { name: "Kriterler" }).click();
+  await page.getByRole("button", { name: "Gezinme menüsü" }).click();
+  await page.getByRole("dialog").getByRole("link", { name: "Kriterler" }).click();
   await expect(page.getByRole("heading", { name: "Başarı kriterleri" })).toBeVisible();
+  await expect(page.getByRole("dialog")).toBeHidden();
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
   expect(await page.getByRole("button", { name: "Yeni kriter" }).evaluate((button) => getComputedStyle(button).cursor)).toBe("pointer");
 
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.getByRole("tab", { name: "Üyeler" }).click();
-  await expect(page.getByRole("tab", { name: "Üyeler" })).toHaveAttribute("aria-selected", "true");
+  await page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Üyeler" }).click();
+  await expect(page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Üyeler" })).toHaveAttribute("aria-current", "page");
   await expect(page.getByRole("row", { name: /testuser/ })).toBeVisible();
-  await page.getByRole("tab", { name: "Genel Bakış" }).click();
+  await page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Genel Bakış" }).click();
   await page.getByRole("button", { name: "Kriterleri tanımla" }).click();
-  await expect(page.getByRole("tab", { name: "Kriterler" })).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Kriterler" })).toHaveAttribute("aria-current", "page");
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBe(1440);
 });
 
@@ -80,7 +80,7 @@ test("criteria filters and search show only matching real criteria", async ({ pa
   });
 
   await page.goto("/projects/responsive-project");
-  await page.getByRole("tab", { name: "Kriterler" }).click();
+  await page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Kriterler" }).click();
   await expect(page.getByText("Giriş sistemi")).toBeVisible();
   await expect(page.getByText("Ekip modülü")).toBeVisible();
   await page.getByRole("button", { name: "Tamamlanan 1" }).click();

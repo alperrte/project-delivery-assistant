@@ -1,31 +1,45 @@
 "use client";
 
-import type { ReactNode } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import {
-  ArrowRight, ArrowUpRight, CalendarBlank,
-  Code, EnvelopeSimple, GearSix, GithubLogo, Plus, Stack, Target, UsersThree,
+  ArrowUpRight, CalendarBlank, CaretRight, CheckCircle, Circle,
+  Code, EnvelopeSimple, GearSix, GithubLogo, Plus, UsersThree,
 } from "@phosphor-icons/react";
+import { Avatar } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { errorKey } from "@/lib/api/error-message";
 import { criteriaApi } from "@/features/criteria/api";
 import { invitationsApi } from "@/features/invitations/api";
 import { squadsApi } from "@/features/squads/api";
+import { membersApi } from "../members-api";
 import { projectsApi } from "../api";
 import type { Project } from "../types";
 import { ProjectCriteriaActivity, ProjectCriteriaTrend } from "./project-criteria-insights";
 
 type OverviewSection = "criteria" | "members" | "invitations" | "squads" | "repository" | "settings";
 
-function Action({ children, onClick, primary = false }: { children: ReactNode; onClick: () => void; primary?: boolean }) {
+function RailRow({ label, value, onClick, leading }: { label: string; value: string; onClick: () => void; leading: React.ReactNode }) {
   return (
-    <button type="button" onClick={onClick}
-      className={`flex min-h-10 w-full items-center justify-between gap-3 rounded-lg border px-3.5 text-left text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${primary ? "workspace-primary-action border-transparent" : "border-border bg-background/35 text-foreground hover:border-primary/45 hover:bg-primary/10"}`}>
-      {children}<ArrowRight size={16} aria-hidden="true" />
+    <button
+      type="button"
+      onClick={onClick}
+      className="group flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-muted/40 focus-visible:bg-muted/40 focus-visible:outline-none"
+    >
+      {leading}
+      <span className="min-w-0 flex-1">
+        <span className="block text-xs text-muted-foreground">{label}</span>
+        <span className="block truncate text-sm font-medium text-foreground">{value}</span>
+      </span>
+      <CaretRight size={14} className="shrink-0 text-muted-foreground/50 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
     </button>
   );
+}
+
+function Dot({ tone }: { tone: "live" | "primary" | "muted" }) {
+  const color = tone === "live" ? "bg-live" : tone === "primary" ? "bg-primary" : "bg-muted-foreground/40";
+  return <span className={`size-2 shrink-0 rounded-full ${color}`} aria-hidden="true" />;
 }
 
 export function ProjectOverview({ project, isManager, onNavigate }: {
@@ -53,74 +67,164 @@ export function ProjectOverview({ project, isManager, onNavigate }: {
     queryFn: () => invitationsApi.list(project.id, 0),
     enabled: isManager,
   });
+  const { data: members } = useQuery({
+    queryKey: ["projects", project.id, "members", 0],
+    queryFn: () => membersApi.list(project.id, 0, 5),
+  });
 
   if (isLoading) return <Skeleton className="h-96 w-full rounded-xl" />;
   if (isError) return <p className="text-sm text-destructive">{te(errorKey(error))}</p>;
   if (!home) return null;
 
-  const progress = home.criteriaProgress.total === 0 ? 0 : Math.round(home.criteriaProgress.completed / home.criteriaProgress.total * 100);
+  const total = home.criteriaProgress.total;
+  const completed = home.criteriaProgress.completed;
+  const progress = total === 0 ? 0 : Math.round((completed / total) * 100);
   const date = new Intl.DateTimeFormat(locale, { dateStyle: "medium" });
 
+  const open = criteria?.filter((c) => !c.completed) ?? [];
+  const done = criteria?.filter((c) => c.completed).sort((a, b) => Date.parse(b.completedAt ?? "0") - Date.parse(a.completedAt ?? "0")) ?? [];
+  const snapshot = [...open, ...done].slice(0, 5);
+
+  const visibleMembers = members?.content.slice(0, 4) ?? [];
+  const extraMembers = Math.max(0, home.teamMemberCount - visibleMembers.length);
+
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3 xl:grid-cols-5">
-        <button type="button" onClick={() => onNavigate("criteria")} className="workspace-panel col-span-2 flex min-h-36 items-center gap-3 p-4 text-left transition-colors hover:border-primary/55 xl:col-span-1">
-          <span className="grid size-18 shrink-0 place-items-center rounded-full p-1" style={{ background: `conic-gradient(var(--primary) ${progress}%, var(--border) 0)` }}>
-            <span className="grid size-full place-items-center rounded-full bg-card font-heading text-lg font-bold text-foreground">{progress}%</span>
-          </span>
-          <span className="min-w-0">
-            <span className="block text-xs font-medium text-muted-foreground">{t("progressLabel")}</span>
-            <span className="mt-1 block font-heading text-base font-semibold text-foreground">{home.criteriaProgress.completed} / {home.criteriaProgress.total}</span>
-            <span className="mt-1 block text-xs text-muted-foreground">{t("completedCriteria")}</span>
-          </span>
-        </button>
+    <div className="space-y-5">
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.7fr)_minmax(18rem,1fr)]">
+        <section className="workspace-panel min-w-0 p-6" aria-labelledby="criteria-snapshot-heading">
+          <div className="flex flex-wrap items-baseline justify-between gap-3">
+            <h2 id="criteria-snapshot-heading" className="text-base font-semibold text-foreground">{t("criteriaSnapshot")}</h2>
+            {total > 0 && (
+              <button type="button" onClick={() => onNavigate("criteria")} className="text-sm font-medium text-primary hover:underline">
+                {t("viewAll")}
+              </button>
+            )}
+          </div>
 
-        <button type="button" onClick={() => onNavigate("criteria")} className="workspace-panel group flex min-h-36 flex-col justify-between p-4 text-left transition-colors hover:border-primary/55">
-          <span className="flex items-start justify-between"><span className="rounded-lg bg-primary/15 p-2 text-primary"><Target size={22} aria-hidden="true" /></span><ArrowUpRight size={17} className="text-muted-foreground group-hover:text-primary" aria-hidden="true" /></span>
-          <span><span className="block text-xs font-medium text-muted-foreground">{t("criteriaProgress")}</span><span className="mt-1 block font-heading text-2xl font-bold text-foreground">{home.criteriaProgress.total}</span><span className="text-xs text-muted-foreground">{t("completedCount", { count: home.criteriaProgress.completed })}</span></span>
-        </button>
+          {total === 0 ? (
+            <div className="mt-5 flex flex-col items-start gap-3 border-t pt-5">
+              <p className="text-sm leading-6 text-muted-foreground">{t("noCriteriaDescription")}</p>
+              {isManager && (
+                <button
+                  type="button"
+                  onClick={() => onNavigate("criteria")}
+                  className="workspace-primary-action inline-flex h-9 items-center gap-2 rounded-lg px-4 text-sm font-medium"
+                >
+                  <Plus size={16} aria-hidden="true" />
+                  {t("defineCriteria")}
+                </button>
+              )}
+            </div>
+          ) : (
+            <>
+              <div className="mt-4 flex items-baseline gap-2">
+                <span className="font-mono text-3xl font-semibold tabular-nums text-foreground">{progress}%</span>
+                <span className="text-sm text-muted-foreground">{t("progressCount", { total, completed })}</span>
+              </div>
+              <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                <div className="h-full rounded-full bg-primary transition-[width]" style={{ width: `${progress}%` }} />
+              </div>
 
-        <button type="button" onClick={() => onNavigate("members")} className="workspace-panel group flex min-h-36 flex-col justify-between p-4 text-left transition-colors hover:border-primary/55">
-          <span className="flex items-start justify-between"><span className="rounded-lg bg-primary/15 p-2 text-primary"><UsersThree size={22} aria-hidden="true" /></span><ArrowUpRight size={17} className="text-muted-foreground group-hover:text-primary" aria-hidden="true" /></span>
-          <span><span className="block text-xs font-medium text-muted-foreground">{t("team")}</span><span className="mt-1 block font-heading text-2xl font-bold text-foreground">{home.teamMemberCount}</span><span className="text-xs text-muted-foreground">{squads ? t("squadCount", { count: squads.totalElements }) : t("teamMembers", { count: home.teamMemberCount })}</span></span>
-        </button>
+              <ul className="mt-5 divide-y border-t">
+                {snapshot.map((criterion) => (
+                  <li key={criterion.id} className="flex items-center gap-3 py-2.5 text-sm">
+                    {criterion.completed ? (
+                      <CheckCircle size={17} weight="fill" className="shrink-0 text-success" aria-hidden="true" />
+                    ) : (
+                      <Circle size={17} className="shrink-0 text-muted-foreground/40" aria-hidden="true" />
+                    )}
+                    <span className={`min-w-0 flex-1 truncate ${criterion.completed ? "text-muted-foreground line-through" : "text-foreground"}`}>
+                      {criterion.title}
+                    </span>
+                    <span className="shrink-0 text-xs text-muted-foreground">{criterion.completed ? t("done") : t("inProgress")}</span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </section>
 
-        {isManager ? (
-          <button type="button" onClick={() => onNavigate("invitations")} className="workspace-panel group flex min-h-36 flex-col justify-between p-4 text-left transition-colors hover:border-primary/55">
-            <span className="flex items-start justify-between"><span className="rounded-lg bg-warning/15 p-2 text-warning"><EnvelopeSimple size={22} aria-hidden="true" /></span><ArrowUpRight size={17} className="text-muted-foreground group-hover:text-primary" aria-hidden="true" /></span>
-            <span><span className="block text-xs font-medium text-muted-foreground">{t("invitations")}</span><span className="mt-1 block font-heading text-2xl font-bold text-foreground">{invitations?.totalElements ?? "—"}</span><span className="text-xs text-muted-foreground">{t("allInvitations")}</span></span>
-          </button>
-        ) : (
-          <button type="button" onClick={() => onNavigate("squads")} className="workspace-panel group flex min-h-36 flex-col justify-between p-4 text-left transition-colors hover:border-primary/55">
-            <span className="flex items-start justify-between"><span className="rounded-lg bg-primary/15 p-2 text-primary"><Stack size={22} aria-hidden="true" /></span><ArrowUpRight size={17} className="text-muted-foreground group-hover:text-primary" aria-hidden="true" /></span>
-            <span><span className="block text-xs font-medium text-muted-foreground">{t("squads")}</span><span className="mt-1 block font-heading text-2xl font-bold text-foreground">{squads?.totalElements ?? "—"}</span><span className="text-xs text-muted-foreground">{t("viewSquads")}</span></span>
-          </button>
-        )}
+        <aside className="flex flex-col divide-y overflow-hidden rounded-[0.875rem] border bg-card shadow-sm">
+          <RailRow
+            label={t("team")}
+            value={t("teamMembers", { count: home.teamMemberCount })}
+            onClick={() => onNavigate("members")}
+            leading={
+              visibleMembers.length > 0 ? (
+                <div className="flex -space-x-2">
+                  {visibleMembers.map((member, index) => (
+                    <Avatar key={member.userId} name={member.nickname ?? member.userId} tint={index} className="size-7 text-[10px]" />
+                  ))}
+                  {extraMembers > 0 && (
+                    <span className="grid size-7 shrink-0 place-items-center rounded-full bg-muted text-[10px] font-semibold text-muted-foreground ring-2 ring-card">
+                      +{extraMembers}
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <UsersThree size={18} className="shrink-0 text-muted-foreground" aria-hidden="true" />
+              )
+            }
+          />
+          <RailRow
+            label={t("repository")}
+            value={home.repository.connected ? `${home.repository.repositoryOwner}/${home.repository.repositoryName}` : t("noRepository")}
+            onClick={() => onNavigate("repository")}
+            leading={<Dot tone={home.repository.connected ? "live" : "muted"} />}
+          />
+          {isManager && (
+            <RailRow
+              label={t("invitations")}
+              value={t("allInvitations")}
+              onClick={() => onNavigate("invitations")}
+              leading={<span className="font-mono text-sm font-semibold tabular-nums text-foreground">{invitations?.totalElements ?? "—"}</span>}
+            />
+          )}
+          <RailRow
+            label={t("squads")}
+            value={squads ? t("squadCount", { count: squads.totalElements }) : "—"}
+            onClick={() => onNavigate("squads")}
+            leading={<span className="font-mono text-sm font-semibold tabular-nums text-foreground">{squads?.totalElements ?? "—"}</span>}
+          />
 
-        <button type="button" onClick={() => onNavigate("repository")} className="workspace-panel group flex min-h-36 flex-col justify-between p-4 text-left transition-colors hover:border-primary/55">
-          <span className="flex items-start justify-between"><span className="rounded-lg bg-primary/15 p-2 text-primary"><GithubLogo size={22} aria-hidden="true" /></span><ArrowUpRight size={17} className="text-muted-foreground group-hover:text-primary" aria-hidden="true" /></span>
-          <span><span className="block text-xs font-medium text-muted-foreground">{t("repository")}</span><span className="mt-2 block truncate text-sm font-semibold text-foreground">{home.repository.connected ? `${home.repository.repositoryOwner}/${home.repository.repositoryName}` : t("noRepository")}</span><span className="text-xs text-muted-foreground">{home.repository.connected ? t("connected") : isManager ? t("connectRepository") : t("viewRepository")}</span></span>
-        </button>
+          <div className="px-4 py-3">
+            <p className="mb-1.5 text-xs font-medium text-muted-foreground">{t("quickActions")}</p>
+            <ul>
+              {isManager && (
+                <li>
+                  <button type="button" onClick={() => onNavigate("invitations")} className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-foreground transition-colors hover:bg-muted/60">
+                    <EnvelopeSimple size={15} className="text-muted-foreground" aria-hidden="true" />
+                    {t("viewInvitations")}
+                  </button>
+                </li>
+              )}
+              <li>
+                <button type="button" onClick={() => onNavigate("repository")} className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-foreground transition-colors hover:bg-muted/60">
+                  <GithubLogo size={15} className="text-muted-foreground" aria-hidden="true" />
+                  {home.repository.connected || !isManager ? t("viewRepository") : t("connectRepository")}
+                </button>
+              </li>
+              {isManager && (
+                <li>
+                  <button type="button" onClick={() => onNavigate("settings")} className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-foreground transition-colors hover:bg-muted/60">
+                    <GearSix size={15} className="text-muted-foreground" aria-hidden="true" />
+                    {t("editProjectProfile")}
+                  </button>
+                </li>
+              )}
+            </ul>
+          </div>
+        </aside>
       </div>
 
-      <div className="grid gap-3 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(14rem,.8fr)]">
+      <div className="grid gap-5 lg:grid-cols-2">
         <ProjectCriteriaActivity criteria={criteria} />
         <ProjectCriteriaTrend criteria={criteria} />
-
-        <section className="workspace-panel min-w-0 p-5" aria-labelledby="overview-actions-heading">
-          <h2 id="overview-actions-heading" className="mb-4 text-base font-semibold">{t("quickActions")}</h2>
-          <div className="space-y-2.5">
-            <Action primary onClick={() => onNavigate("criteria")}><span className="inline-flex items-center gap-2"><Plus size={17} aria-hidden="true" />{home.criteriaProgress.total === 0 && isManager ? t("defineCriteria") : t("viewCriteria")}</span></Action>
-            {isManager && <Action onClick={() => onNavigate("invitations")}><span className="inline-flex items-center gap-2"><EnvelopeSimple size={17} aria-hidden="true" />{t("viewInvitations")}</span></Action>}
-            <Action onClick={() => onNavigate("repository")}><span className="inline-flex items-center gap-2"><GithubLogo size={17} aria-hidden="true" />{home.repository.connected || !isManager ? t("viewRepository") : t("connectRepository")}</span></Action>
-            {isManager && <Action onClick={() => onNavigate("settings")}><span className="inline-flex items-center gap-2"><GearSix size={17} aria-hidden="true" />{t("editProjectProfile")}</span></Action>}
-          </div>
-        </section>
       </div>
 
-      <section className="workspace-panel flex flex-col gap-x-8 gap-y-4 p-5 md:flex-row md:items-start" aria-label={t("projectProfile")}>
+      <section className="workspace-panel flex flex-col gap-x-8 gap-y-4 p-6 md:flex-row md:items-start" aria-label={t("projectProfile")}>
         <div className="w-full flex-1 md:min-w-48">
-          <h2 className="text-base font-semibold">{t("projectProfile")}</h2>
+          <h2 className="text-base font-semibold text-foreground">{t("projectProfile")}</h2>
           <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">{project.projectGoal || t("noGoal")}</p>
         </div>
         <dl className="grid w-full flex-[2] gap-x-6 gap-y-3 text-sm sm:grid-cols-2 xl:grid-cols-4">

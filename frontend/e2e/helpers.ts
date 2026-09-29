@@ -71,5 +71,5 @@ export async function createProject(
 
 export async function gotoProjectTab(page: Page, slug: string, tabName: string) {
   await page.goto(`/projects/${slug}`);
-  await page.getByRole("tab", { name: tabName }).click();
+  await page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: tabName }).click();
 }

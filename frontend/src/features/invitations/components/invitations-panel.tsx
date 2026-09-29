@@ -90,7 +90,15 @@ export function InvitationsPanel({ projectId }: { projectId: string }) {
                   <TableCell><div className="flex flex-wrap gap-1">{invitation.initialRoles.map((role) => <Badge key={role} variant="secondary">{tr(role)}</Badge>)}</div></TableCell>
                   <TableCell className="text-muted-foreground">{new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(invitation.createdAt))}</TableCell>
                   <TableCell>
-                    <Badge variant={invitation.status === "PENDING" ? "default" : "secondary"}>
+                    <Badge
+                      className={
+                        invitation.status === "ACCEPTED"
+                          ? "border border-success/25 bg-success/10 text-success"
+                          : invitation.status === "PENDING"
+                            ? "border border-primary/25 bg-primary/10 text-primary"
+                            : "border border-border bg-muted text-muted-foreground"
+                      }
+                    >
                       {t(`statusValues.${invitation.status}`)}
                     </Badge>
                   </TableCell>

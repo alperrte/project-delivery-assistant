@@ -160,93 +160,81 @@
   --auth-cta-ink: #ffffff;
 }
 
-/* The authenticated workspace carries the login scene's ink, cyan and blue
- * palette into every page and portal without changing the auth screens. */
+/* Titanium workspace palette from the supplied DESIGN.md. Auth stays scoped. */
 html:has(.app-shell) {
-  --background: #f1f7fb;
-  --foreground: var(--auth-ink);
+  --radius: 0.5rem;
+  --background: #ffffff;
+  --foreground: #090a0b;
   --card: #ffffff;
-  --card-foreground: var(--auth-ink);
+  --card-foreground: #090a0b;
   --popover: #ffffff;
-  --popover-foreground: var(--auth-ink);
-  --primary: var(--auth-link);
-  --primary-hover: var(--auth-link-hover);
+  --popover-foreground: #090a0b;
+  --primary: #090a0b;
+  --primary-hover: #303031;
   --primary-foreground: #ffffff;
-  --secondary: #e5f1f7;
-  --secondary-foreground: var(--auth-ink);
-  --muted: #e5f1f7;
-  --muted-foreground: var(--auth-muted);
-  --accent: #e5f1f7;
-  --accent-foreground: var(--auth-ink);
-  --border: #d4e3ed;
-  --border-strong: #a8c7d9;
-  --input: #d4e3ed;
-  --ring: var(--auth-link);
-  --surface-2: #e5f1f7;
+  --secondary: #f4f5f6;
+  --secondary-foreground: #090a0b;
+  --muted: #f4f5f6;
+  --muted-foreground: #525866;
+  --accent: #eaebed;
+  --accent-foreground: #090a0b;
+  --border: #e5e7eb;
+  --border-strong: #c5c6c9;
+  --input: #c5c6c9;
+  --ring: #525866;
+  --surface-2: #f9fafa;
+  --success: #147a52;
+  --warning: #a4660b;
+  --destructive: #ba1a1a;
+  --live: #10b981;
 }
-
 html.dark:has(.app-shell) {
-  --background: #07121f;
-  --foreground: var(--auth-ink);
-  --card: #0e1e33;
-  --card-foreground: var(--auth-ink);
-  --popover: #10213a;
-  --popover-foreground: var(--auth-ink);
-  --primary: var(--auth-accent-to);
-  --primary-hover: var(--glow);
-  --primary-foreground: #04131d;
-  --secondary: #152a45;
-  --secondary-foreground: var(--auth-ink);
-  --muted: #152a45;
-  --muted-foreground: #a8bad0;
-  --accent: #152a45;
-  --accent-foreground: var(--auth-ink);
-  --border: #23405f;
-  --border-strong: #32658b;
-  --input: #23405f;
-  --ring: var(--glow);
-  --surface-2: #152a45;
+  --background: #090a0b;
+  --foreground: #f4f5f6;
+  --card: #18191b;
+  --card-foreground: #f4f5f6;
+  --popover: #18191b;
+  --popover-foreground: #f4f5f6;
+  --primary: #f4f5f6;
+  --primary-hover: #dce0e6;
+  --primary-foreground: #090a0b;
+  --secondary: #222326;
+  --secondary-foreground: #f4f5f6;
+  --muted: #222326;
+  --muted-foreground: #a1a1aa;
+  --accent: #222326;
+  --accent-foreground: #f4f5f6;
+  --border: #27282b;
+  --border-strong: #45474a;
+  --input: #45474a;
+  --ring: #a1a1aa;
+  --surface-2: #111214;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --destructive: #ef4444;
+  --live: #10b981;
 }
-
-.app-shell h1,
-.app-shell h2,
-.app-shell h3,
-.app-shell h4,
-.app-shell .font-heading {
-  font-family: var(--font-exo2), var(--font-inter), sans-serif;
+.app-shell h1, .app-shell .font-heading {
+  font-family: var(--font-inter), sans-serif;
 }
-
+.app-shell :is(a, button, input):focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+}
 .workspace-panel {
   border: 1px solid var(--border);
-  border-radius: 0.875rem;
+  border-radius: 0.5rem;
   background: var(--card);
-  box-shadow: 0 12px 34px -28px rgb(3 18 34 / 0.65);
 }
-
-.dark .workspace-panel {
-  background: linear-gradient(145deg, #10233d, #0b1a2e);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.035), 0 16px 40px -32px rgb(0 0 0 / 0.9);
-}
-
-.dark .app-shell {
-  background-image: radial-gradient(circle at 10% 0%, rgb(12 103 152 / 0.1), transparent 34rem);
-}
-
 .workspace-primary-action {
-  color: var(--auth-cta-ink);
-  background: linear-gradient(110deg, var(--auth-accent-from), var(--auth-accent-to));
-  box-shadow: 0 12px 28px -16px var(--glow);
+  color: var(--primary-foreground);
+  background: var(--primary);
 }
-
-.workspace-primary-action:hover { filter: brightness(1.1); }
-
-.project-workspace [data-slot="table-container"] {
-  border-radius: 0.875rem;
-  box-shadow: 0 12px 34px -28px rgb(3 18 34 / 0.65);
-}
-
-.project-workspace [data-slot="table-head"] {
-  letter-spacing: 0.1em;
+.workspace-primary-action:hover { background: var(--primary-hover); }
+.project-workspace [data-slot="table-container"] { border-radius: 0.5rem; }
+.project-workspace [data-slot="table-head"] { letter-spacing: 0.02em; }
+.dashboard-hero {
+  background: linear-gradient(120deg, var(--muted), var(--card) 65%, var(--surface-2));
 }
 
 /*
