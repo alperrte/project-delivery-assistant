@@ -58,7 +58,8 @@ export function ProjectSidebarNav({ onNavigate, collapsed }: { onNavigate: () =>
     }
   }, [routeSlug, user?.id]);
 
-  const sections = PROJECT_SECTIONS.filter(item => !("managerOnly" in item && item.managerOnly && !isManager));
+  const sections = PROJECT_SECTIONS.filter(item =>
+    !("managerOnly" in item && item.managerOnly && !isManager) && (!!projectPath || item.value !== "teams"));
 
   if (collapsed) {
     return (

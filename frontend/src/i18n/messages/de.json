@@ -45,6 +45,7 @@
       "home": "Startseite",
       "projects": "Projekte",
       "organizations": "Organisationen",
+      "invitations": "Einladungen",
       "logout": "Abmelden"
     },
     "breadcrumb": "Brotkrumen",
@@ -128,6 +129,7 @@
         "criteria": "Kriterien",
         "members": "Mitglieder",
         "invitations": "Einladungen",
+        "teams": "Teams",
         "squads": "Teams",
         "repository": "Repository",
         "settings": "Einstellungen"
@@ -278,6 +280,13 @@
     "rolesUpdated": "Rollen aktualisiert."
   },
   "invitations": {
+    "mineTitle": "Meine Projekteinladungen",
+    "mineDescription": "Einladungen an Ihr Konto ansehen.",
+    "mineEmpty": "Sie haben keine Projekteinladungen.",
+    "from": "Eingeladen von {name}",
+    "rejectionMessage": "Grund für die Ablehnung (optional)",
+    "acceptSuccess": "Einladung angenommen.",
+    "rejectSuccess": "Einladung abgelehnt.",
     "statusValues": { "PENDING": "Ausstehend", "ACCEPTED": "Angenommen", "REJECTED": "Abgelehnt", "CANCELLED": "Abgebrochen", "EXPIRED": "Abgelaufen" },
     "emptyDescription": "Laden Sie ein Projektmitglied ein, um Ihr Team zu erweitern.",
     "pendingTitle": "Projekteinladungen",

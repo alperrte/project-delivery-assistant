@@ -1,4 +1,7 @@
-# Klasör yapısı kısa rehberi
+﻿# Klasör yapısı kısa rehberi
+## Teams ve davet ekranları (2026-09-30)
+
+Birleşik Teams bölümü `frontend/src/features/projects/components/project-detail.tsx` içinde; ekip API bileşenleri `frontend/src/features/squads/` altında, kullanıcı davet sayfası `frontend/src/app/(app)/invitations/page.tsx` içindedir. Proje sidebar tanımı `frontend/src/features/projects/project-sections.ts` dosyasındadır.
 
 ## Teams refactor yolu (2026-09-30)
 

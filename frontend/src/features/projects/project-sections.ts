@@ -1,14 +1,11 @@
 import {
-  ChartBar, CheckCircle, EnvelopeSimple, GearSix, GithubLogo,
-  Users, UsersThree,
+  ChartBar, CheckCircle, GearSix, GithubLogo, UsersThree,
 } from "@phosphor-icons/react";
 
 export const PROJECT_SECTIONS = [
   { value: "overview", icon: ChartBar },
   { value: "criteria", icon: CheckCircle },
-  { value: "members", icon: Users },
-  { value: "invitations", icon: EnvelopeSimple, managerOnly: true },
-  { value: "squads", icon: UsersThree },
+  { value: "teams", icon: UsersThree },
   { value: "repository", icon: GithubLogo },
   { value: "settings", icon: GearSix, managerOnly: true },
 ] as const;
@@ -16,6 +13,7 @@ export const PROJECT_SECTIONS = [
 export type ProjectSection = (typeof PROJECT_SECTIONS)[number]["value"];
 
 export function projectSection(value: string | null, isManager: boolean): ProjectSection {
+  if (value === "members" || value === "invitations" || value === "squads") return "teams";
   const section = PROJECT_SECTIONS.find(item => item.value === value);
   if (!section || ("managerOnly" in section && section.managerOnly && !isManager)) return "overview";
   return section.value;
