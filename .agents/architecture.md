@@ -1,7 +1,7 @@
 ﻿# Mimari kısa özet
 ## Teams ve Invitations arayüzü (2026-09-30)
 
-Proje navigasyonundaki ayrı Members, Invitations ve Squads girişleri birleşik Teams bölümüne dönüştürüldü. Bu bölüm mevcut project membership/role API'sini ve yeni /teams ile invitation API'lerini kullanır. Kullanıcının kendi davetleri /invitations sayfasındadır.
+Proje navigasyonundaki ayrı Members, Invitations ve Squads girişleri birleşik Teams bölümüne dönüştürüldü. Teams ana ekranı ekip kartları ve proje davetlerini gösterir; ekip üyeleri proje slug'ı altında `/projects/[slug]/teams/[teamId]/members` sayfasında listelenir. Rol düzenleme ProjectMembership API'sini, ekip üyeliği işlemleri /teams API'sini kullanır. Kullanıcının kendi davetleri /invitations sayfasındadır.
 
 ## Project Teams ve Invitations (2026-09-30)
 

@@ -41,7 +41,7 @@ test.describe.serial("Invitation, roles, squad, and denial checks", () => {
   });
 
   test("manager searches, invites the contributor, and captures the invitation token", async () => {
-    await managerPage.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Davetler" }).click();
+    await managerPage.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Ekipler" }).click();
     await managerPage.getByRole("button", { name: /^Üye davet et$/ }).click();
     await managerPage.getByPlaceholder("Kullanıcı adı veya e-posta ile ara").fill(member.nickname);
     await managerPage.getByRole("button", { name: new RegExp(member.nickname) }).click();
@@ -83,8 +83,9 @@ test.describe.serial("Invitation, roles, squad, and denial checks", () => {
     await memberPage.getByRole("button", { name: /^Kabul et$/ }).click();
     await expect(memberPage.getByText("Projeye katıldınız.")).toBeVisible();
 
-    await managerPage.goto(`/projects/${slug}`);
-    await managerPage.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Üyeler" }).click();
+    await managerPage.goto(`/projects/${slug}?section=teams`);
+    await managerPage.getByRole("link", { name: /General Team üyeleri/ }).click();
+    await expect(managerPage).toHaveURL(new RegExp(`/projects/${slug}/teams/[^/]+/members$`));
     await expect(managerPage.getByRole("row", { name: new RegExp(member.nickname) })).toBeVisible();
   });
 
@@ -97,7 +98,7 @@ test.describe.serial("Invitation, roles, squad, and denial checks", () => {
     await expect(managerPage.getByText("Roller güncellendi.")).toBeVisible();
 
     await memberPage.goto("/projects");
-    await expect(memberPage.getByRole("link", { name: projectName })).toBeVisible();
+    await expect(memberPage.locator("#main-content").getByRole("link", { name: projectName })).toBeVisible();
   });
 
   test("non-manager cannot change project settings (UI hidden and API denies)", async () => {
@@ -152,9 +153,16 @@ test.describe.serial("Invitation, roles, squad, and denial checks", () => {
     await managerPage.getByRole("dialog").getByRole("button", { name: /^Oluştur$/ }).click();
     await expect(managerPage.getByText("Ekip oluşturuldu.")).toBeVisible();
 
-    await managerPage.getByRole("button", { name: /E2E Squad üyeleri/ }).click();
-    await managerPage.getByPlaceholder("Proje üyelerinde ara").fill(member.nickname);
-    await managerPage.getByRole("button", { name: new RegExp(member.nickname) }).click();
-    await expect(managerPage.getByRole("dialog").getByText(member.nickname)).toBeVisible();
+    await managerPage.getByRole("link", { name: /E2E Squad üyeleri/ }).click();
+    await expect(managerPage).toHaveURL(new RegExp(`/projects/${slug}/teams/[^/]+/members$`));
+    await managerPage.reload();
+    await managerPage.getByRole("button", { name: /^Üye ekle$/ }).first().click();
+    await managerPage.getByRole("dialog").getByRole("button", { name: new RegExp(`${member.nickname} kişisini ekibe ekle`) }).click();
+    await expect(managerPage.getByRole("row", { name: new RegExp(member.nickname) })).toBeVisible();
+    await managerPage.getByRole("button", { name: "Ekipten çıkar" }).click();
+    await managerPage.getByRole("dialog").getByRole("button", { name: "Ekipten çıkar" }).click();
+    await expect(managerPage.getByRole("row", { name: new RegExp(member.nickname) })).toHaveCount(0);
+    await managerPage.getByRole("link", { name: "Ekiplere dön" }).click();
+    await expect(managerPage).toHaveURL(`/projects/${slug}?section=teams`);
   });
 });

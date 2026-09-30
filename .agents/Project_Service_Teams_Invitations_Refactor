@@ -1,0 +1,1679 @@
+# PDA Project Service — Teams, Membership & Invitations Refactor
+
+PDA (**Project Delivery Assistant**) projesinde `project-service` backendine geri dönüyoruz.
+
+Mevcut Project Service implementasyonunu önce detaylı şekilde incele. Özellikle:
+
+- Project
+- ProjectMembership
+- mevcut member/member management yapısı
+- Project Role yapısı
+- Auth/User entegrasyonu
+- Notification Service
+- mevcut invitation/davet sistemi varsa onun implementasyonu
+- Task Service’in ProjectMembership ile ilişkisi
+- security/authorization kontrolleri
+- Spring Modulith sınırları
+- mevcut Flyway migrationları
+- mevcut DTO / Mapper / Service / Repository / Controller standartları
+- mevcut API response ve exception yapısı
+
+üzerinden mevcut mimariyi çıkar.
+
+Bu görev bir sıfırdan yeniden yazım değildir.
+
+Var olan çalışan yapıyı mümkün olduğunca koru, fakat aşağıdaki yeni ürün modeline göre **Project Membership + Teams + Invitations** alanını refactor et.
+
+---
+
+# 1. Yeni Ürün Modeli
+
+Mevcut ayrı **“Üyeler / Members”** özelliği kullanıcı arayüzünden kaldırılacaktır.
+
+Bunun yerine açık bir proje içerisinde:
+
+**Ekipler / Teams**
+
+sayfası bulunacaktır.
+
+Bu nedenle backend tarafında da kullanıcıların proje üyeliği, ekip organizasyonu, roller ve davet işlemlerinin birlikte çalışabileceği temiz bir domain modeli oluştur.
+
+Ancak önemli:
+
+> “Üyeler sayfasının kaldırılması”, `ProjectMembership` domain kavramının kaldırılması anlamına gelmez.
+
+`ProjectMembership`, kullanıcının gerçekten projeye ait olup olmadığını gösteren temel ilişki ve authorization kaynağı olarak kalmalıdır.
+
+Teams ise bunun üzerinde çalışan **organizasyon katmanıdır**.
+
+---
+
+# 2. Auth Service ile Kullanıcı Bağlantısı
+
+Projeye eklenen kişiler bağımsız veya tekrar oluşturulan kullanıcı kayıtları olmamalıdır.
+
+Project Service içerisindeki bütün kullanıcı ilişkileri mevcut `auth-service / user` kayıtlarına bağlanmalıdır.
+
+Başka bir deyişle:
+
+```text
+Auth/User
+    ↓
+ProjectMembership
+    ↓
+TeamMembership
+```
+
+şeklinde bir ilişki bulunmalıdır.
+
+Projeye yalnızca sistemde gerçek kullanıcı hesabı bulunan kişiler üye olabilir.
+
+Aynı kullanıcı için Project Service içerisinde ikinci bir user/profile entity üretme.
+
+User entity’lerini modüller arasında doğrudan taşımak yerine mevcut public contract/API yapısını kullan.
+
+Başka modülün repository’sine doğrudan erişme.
+
+---
+
+# 3. ProjectMembership Source of Truth Olarak Kalsın
+
+`ProjectMembership` aşağıdaki sorunun cevabı olmalıdır:
+
+> Bu kullanıcı bu projenin üyesi mi?
+
+Bu ilişki:
+
+- authorization
+- project access
+- role kontrolü
+- task assignment validation
+- team membership validation
+
+gibi işlemlerde source of truth olarak kullanılmalıdır.
+
+Örneğin:
+
+```text
+User
+→ ProjectMembership
+→ Project
+```
+
+ilişkisi olmadan kullanıcı herhangi bir project team içerisine eklenememeli.
+
+Task Service tarafında da mevcut:
+
+> Bir task’a yalnızca ilgili projenin üyeleri atanabilir.
+
+kuralını koru.
+
+Team membership, task assignment için zorunlu ön koşul haline getirilmemelidir.
+
+---
+
+# 4. Teams Domain Modeli
+
+Her proje kendi ekip yapısına sahip olabilmelidir.
+
+Örneğin:
+
+```text
+Project
+└── General Team
+    ├── Development
+    │   ├── Backend
+    │   ├── Frontend
+    │   └── Database
+    ├── Test
+    ├── Security
+    ├── Production
+    └── Advertisement
+```
+
+Ancak bunlar sistem tarafından hardcode edilmiş ekipler olmamalıdır.
+
+Kullanıcı istediği ekip isimlerini oluşturabilmelidir.
+
+Örneğin:
+
+- Backend
+- Frontend
+- Database
+- Test
+- Security
+- Development
+- Production
+- Advertisement
+- Mobile
+- UI/UX
+- DevOps
+
+veya tamamen farklı isimler kullanılabilmelidir.
+
+---
+
+# 5. Default / General Team
+
+Her proje oluşturulduğunda otomatik olarak bir:
+
+```text
+General Team
+```
+
+veya mevcut localization standardına uygun:
+
+```text
+Genel Ekip
+```
+
+oluşturulmasını öneriyorum.
+
+Bu ekip sistem tarafından oluşturulan root/default ekip olmalıdır.
+
+Amaç:
+
+Bir proje ekip organizasyonu kullanmak istemiyorsa bile tüm üyeler tek bir yerde görüntülenebilsin.
+
+Örneğin küçük bir proje:
+
+```text
+My Project
+└── General Team
+    ├── Hamza
+    ├── Alper
+    ├── Nisa
+    └── Kerem
+```
+
+şeklinde çalışabilir.
+
+Kullanıcı daha detaylı organizasyon isterse:
+
+```text
+General Team
+├── Development
+│   ├── Backend
+│   └── Frontend
+└── Test
+```
+
+şeklinde alt ekipler oluşturabilir.
+
+Böylece Teams özelliği **opsiyonel organizasyon derinliğine** sahip olur ancak projenin temel membership sistemi her durumda çalışır.
+
+---
+
+# 6. Hiyerarşik Team / Alt Ekip Yapısı
+
+Teams altında alt kategori mantığı desteklenmelidir.
+
+Bir ekip başka bir ekibin altında bulunabilmelidir.
+
+Örneğin:
+
+```text
+Development
+├── Backend
+├── Frontend
+└── Database
+```
+
+veya:
+
+```text
+Engineering
+└── Development
+    └── Backend
+```
+
+gibi hiyerarşik yapılar mümkün olmalıdır.
+
+Bunun için Team entity’sinde örneğin:
+
+```text
+id
+projectId
+name
+description
+parentTeamId
+createdBy
+createdAt
+updatedAt
+```
+
+gibi alanları değerlendir.
+
+`parentTeamId` nullable olabilir.
+
+Root/default General Team için `parentTeamId = null` olabilir.
+
+Ancak gerçek entity yapısını mevcut base entity/id/auditing standardına göre belirle.
+
+---
+
+# 7. Team Kuralları
+
+Aşağıdaki business rule’ları uygula:
+
+- Team yalnızca tek bir projeye ait olabilir.
+- Parent team aynı projeye ait olmalıdır.
+- Bir team kendisinin parent’ı olamaz.
+- Circular hierarchy oluşmasına izin verme.
+
+Örneğin:
+
+```text
+A → B → C → A
+```
+
+yasak olmalıdır.
+
+- Default General Team silinememeli.
+- Default General Team başka bir team altına taşınamamalı.
+- Team silme işleminde child team’lerin ne olacağını açık ve güvenli şekilde belirle.
+- Team silinmesi ProjectMembership’i silmemeli.
+- Bir kullanıcının team’den çıkarılması projeden çıkarılması anlamına gelmemeli.
+
+---
+
+# 8. Team Membership
+
+ProjectMembership ile Team arasındaki ilişkiyi ayrı bir modelle yönet.
+
+Örneğin:
+
+```text
+TeamMembership
+```
+
+değerlendir.
+
+Kavramsal olarak:
+
+```text
+TeamMembership
+- id
+- teamId
+- projectMembershipId
+- addedAt
+- addedBy
+```
+
+veya mevcut architecture standardına uygun eşdeğer yapı kullanılabilir.
+
+Ancak TeamMembership içerisinde tekrar:
+
+```text
+userId + projectId + user data
+```
+
+gibi ProjectMembership’i duplicate eden bir model oluşturma.
+
+Kaynak:
+
+```text
+User
+→ ProjectMembership
+→ TeamMembership
+→ Team
+```
+
+olmalıdır.
+
+---
+
+# 9. Kullanıcı Birden Fazla Team’de Bulunabilir mi?
+
+Bir proje üyesinin aynı proje içerisinde **birden fazla ekipte bulunmasına izin ver**.
+
+Örneğin:
+
+Hamza:
+
+```text
+Backend
+Security
+DevOps
+```
+
+ekiplerinin üçünün de üyesi olabilir.
+
+Bu özellikle küçük ekiplerde bir kişinin birden fazla sorumluluk alabilmesi için gereklidir.
+
+Ancak aynı:
+
+```text
+teamId + projectMembershipId
+```
+
+kombinasyonu duplicate olmamalıdır.
+
+Unique constraint uygula.
+
+---
+
+# 10. General Team Davranışı
+
+General Team özel bir organizasyon mantığıdır.
+
+Bir kullanıcı projeye kabul edildiğinde:
+
+1. `ProjectMembership` oluştur.
+2. Kullanıcıyı otomatik olarak General Team içerisinde görünür hale getir.
+
+Bunun implementasyon yöntemini mevcut mimariye göre seç.
+
+General Team membership fiziksel `TeamMembership` kaydı olabilir veya General Team membership project membership üzerinden türetilebilir.
+
+Ancak mümkün olduğunca sade ve sorgulanabilir bir çözüm tercih et.
+
+Şu davranış mutlaka sağlanmalıdır:
+
+> Projeye üye olan fakat hiçbir custom team’e eklenmemiş kullanıcı Teams ekranında kaybolmamalıdır.
+
+---
+
+# 11. Project Roles Teams Sayfasından Yönetilecek
+
+Mevcut proje bazlı roller korunmalıdır.
+
+Örneğin mevcut sistemde:
+
+- PROJECT_MANAGER
+- BACKEND_ENGINEER
+- FRONTEND_ENGINEER
+- FULL_STACK_DEVELOPER
+- TESTER
+- UI_DESIGNER
+
+gibi roller varsa mevcut role modelini kullan.
+
+Ancak rolün scope’unu değiştirme.
+
+Role:
+
+```text
+ProjectMembership
+```
+
+seviyesinde kalmalıdır.
+
+Yani:
+
+```text
+Hamza
+Project A → BACKEND_ENGINEER
+
+Hamza
+Project B → PROJECT_MANAGER
+```
+
+olabilir.
+
+Teams ekranı bu rolleri **yönetmek için UI surface** sağlayacaktır.
+
+Ancak backend’de rolü TeamMembership’e taşıma.
+
+Başka bir deyişle:
+
+```text
+Role ≠ Team Role
+```
+
+V1 için ayrıca team-specific permission sistemi geliştirme.
+
+Teams ekranından değiştirilse bile role yine ProjectMembership’in project-level role bilgisidir.
+
+---
+
+# 12. Task Assignment Teams Sayfasında Olmayacak
+
+Teams özelliğini Task yönetimi ile karıştırma.
+
+Teams ekranında:
+
+- kullanıcı görüntüleme
+- ekip oluşturma
+- alt ekip oluşturma
+- ekip düzenleme
+- ekip silme
+- kullanıcıyı ekibe ekleme
+- kullanıcıyı ekipten çıkarma
+- project role yönetimi
+- project invitation yönetimi
+
+bulunabilir.
+
+Ancak:
+
+**Task assignment yapılmayacaktır.**
+
+Task atama Task modülünün kendi ekranında ve kendi use-case’inde kalmalıdır.
+
+Team yapısını Task Service’e gereksiz şekilde bağlama.
+
+Ancak Task Service’in:
+
+```text
+assignee ∈ ProjectMembership
+```
+
+validation’ı korunmalıdır.
+
+---
+
+# 13. Üye Genel Bilgileri
+
+Teams API’si frontend’in ekip üyelerini anlamlı şekilde gösterebilmesi için yeterli user summary bilgisi sağlayabilmelidir.
+
+Örneğin:
+
+```text
+userId
+nickname
+displayName
+email
+roles
+teams
+```
+
+gibi mevcut sistemde gerçekten bulunan alanları değerlendir.
+
+Olmayan profile alanlarını uydurma.
+
+Frontend ileride profil fotoğrafı gösterecektir.
+
+Şimdilik profil fotoğrafı olmadığı durumda frontend nickname/display name üzerinden initial gösterecektir.
+
+Örneğin:
+
+```text
+Hamza
+→ H
+```
+
+Backend’in avatar image üretmesine gerek yok.
+
+Backend yalnızca bunun için gereken kullanıcı bilgisini sağlamalıdır.
+
+---
+
+# 14. User Summary Contract
+
+Project Service, başka modülün User entity’sine doğrudan bağlı olmamalıdır.
+
+Mevcut User/Auth public contract mekanizmasını kullan.
+
+Gerekliyse public/read-only bir user summary contract kullan:
+
+```text
+UserSummary
+- id
+- nickname
+- displayName
+- email
+```
+
+Ancak yalnızca gerçekten UI için gerekli ve mevcut sistemde bulunan alanları expose et.
+
+Password, authentication credential, refresh token vb. hiçbir hassas bilgi Project Service’e taşınmamalıdır.
+
+---
+
+# 15. Project Invitations
+
+Proje davet sistemi Teams alanı ile bütünleşmelidir.
+
+Teams ekranından yetkili kullanıcı:
+
+- projeye kullanıcı davet edebilmeli
+- bekleyen davetleri görebilmeli
+- invitation durumlarını görebilmeli
+- gerekiyorsa iptal edebilmeli
+
+Ancak invitation:
+
+```text
+Team invitation
+```
+
+değil öncelikle:
+
+```text
+Project invitation
+```
+
+olmalıdır.
+
+Çünkü kullanıcı önce projenin üyesi olmalıdır.
+
+Davet kabul edildikten sonra:
+
+```text
+ProjectInvitation
+→ ACCEPTED
+→ ProjectMembership created
+→ General Team membership
+```
+
+akışı gerçekleşmelidir.
+
+Custom Team assignment bundan sonra yapılabilir.
+
+---
+
+# 16. Invitation Domain Modeli
+
+Mevcut invitation sistemi varsa onu refactor et; ikinci bir paralel invitation sistemi oluşturma.
+
+Yoksa mevcut project architecture standardına uygun şekilde aşağıdaki kavramları değerlendir:
+
+```text
+ProjectInvitation
+
+id
+projectId
+invitedUserId
+invitedByUserId
+status
+createdAt
+respondedAt
+rejectionMessage
+```
+
+Status örneğin:
+
+```text
+PENDING
+ACCEPTED
+REJECTED
+CANCELLED
+```
+
+olabilir.
+
+Gerçek enum listesini gereksiz büyütme.
+
+---
+
+# 17. Yalnız Sistemde Kayıtlı Kullanıcılar Davet Edilsin
+
+Bu aşamada davet sistemi mevcut Auth/User hesaplarına bağlanmalıdır.
+
+Yani kullanıcı:
+
+```text
+email adresine dışarıdan invitation
+```
+
+yerine sistemde kayıtlı bir user olarak bulunmalıdır.
+
+Frontend ileride nickname/email üzerinden kullanıcı arayabilir.
+
+Project Service:
+
+```text
+invitedUserId
+```
+
+üzerinden invitation oluşturmalıdır.
+
+Client’ın göndereceği kullanıcı ID’sini backend mutlaka User/Auth contract üzerinden validate et.
+
+---
+
+# 18. Duplicate Invitation Engeli
+
+Aşağıdaki durumları engelle:
+
+### Kullanıcı zaten project member ise
+
+Yeni invitation oluşturma.
+
+### Kullanıcının aynı proje için PENDING invitation’ı varsa
+
+Yeni duplicate invitation oluşturma.
+
+### Kullanıcı invitation’ı kabul etmişse
+
+Membership zaten oluşacağı için tekrar pending invitation açılamamalı.
+
+Bu kurallar application/service seviyesinde ve gerektiğinde DB constraint/index ile korunmalıdır.
+
+---
+
+# 19. Kullanıcı Kendi Kendini Davet Edemesin
+
+Bir kullanıcı kendi kendisine project invitation oluşturamamalıdır.
+
+Örneğin:
+
+```text
+invitedByUserId == invitedUserId
+```
+
+ise işlem reddedilmelidir.
+
+---
+
+# 20. Invitation Kabul Akışı
+
+Kullanıcı invitation’ı ACCEPT ettiğinde:
+
+1. Invitation’ın gerçekten authenticated kullanıcıya ait olduğunu doğrula.
+2. Status `PENDING` olmalı.
+3. Aynı project için membership zaten yok olmalı.
+4. Invitation `ACCEPTED` yapılmalı.
+5. `ProjectMembership` oluşturulmalı.
+6. Kullanıcı General Team içerisinde görünür olmalı.
+7. Tüm işlem tek bir transaction içerisinde gerçekleşmeli.
+8. Notification eventleri gerekiyorsa transaction sonrası publish edilmeli.
+
+Race condition / duplicate membership ihtimalini de DB constraint ile koru.
+
+---
+
+# 21. Invitation Reject Akışı
+
+Kullanıcı project invitation’ını reddedebilmeli.
+
+Örneğin:
+
+```http
+POST /api/v1/project-invitations/{id}/reject
+```
+
+veya mevcut API convention neyse onu kullan.
+
+Reject sırasında kullanıcıya opsiyonel bir mesaj yazma hakkı ver.
+
+Örneğin:
+
+```json
+{
+  "message": "Şu anda başka bir projede çalışıyorum."
+}
+```
+
+Bu alan zorunlu olmasın.
+
+Backend tarafında uygun maksimum uzunluk belirle.
+
+Örneğin:
+
+```text
+500
+```
+
+veya proje validation standardına uygun makul bir sınır.
+
+Boş string’i normalize et.
+
+---
+
+# 22. Invitation Rejection Message
+
+Rejection message:
+
+- daveti gönderen kişi tarafından görülebilmeli
+- diğer sıradan proje üyelerine gereksiz şekilde expose edilmemeli
+- notification içeriğinde tamamı gösterilmek zorunda değil
+- API üzerinden gerektiğinde okunabilmeli
+
+Hassas veri değildir ancak gereksiz şekilde herkese açık hale getirilmemelidir.
+
+---
+
+# 23. Kullanıcı İçin Invitations API
+
+Kullanıcının kendisine gelen project invitation’larını görebileceği endpoint oluştur veya mevcut endpointi uygun şekilde geliştir.
+
+Örneğin:
+
+```http
+GET /api/v1/project-invitations/me
+```
+
+veya mevcut naming standardı.
+
+Kullanıcı şunları görebilmeli:
+
+- proje
+- daveti gönderen kullanıcı
+- invitation status
+- oluşturulma tarihi
+- gerekiyorsa kendisine önerilen role bilgisi
+- kabul / red için gereken invitation id
+
+Pagination gerekiyorsa mevcut pagination standardını kullan.
+
+---
+
+# 24. Project Teams İçinden Invitation Yönetimi
+
+Project Manager / yetkili kullanıcı açık bir projenin Teams alanından:
+
+```text
+Members / Invitations
+```
+
+bilgisine ulaşabilmelidir.
+
+Ayrı bir eski “Members page” backend modeli geliştirme.
+
+Teams frontend’inin ihtiyaç duyacağı API contractları sağla.
+
+Örneğin Teams screen backend açısından şu verileri çekebilir:
+
+```text
+Project
+├── General Team
+├── Custom Teams
+│
+├── Members
+│   ├── User
+│   ├── Roles
+│   └── Team memberships
+│
+└── Pending Invitations
+```
+
+Bu verilerin tamamını devasa tek endpoint içinde vermek zorunda değilsin.
+
+Performans ve separation açısından mantıklı API’lere böl.
+
+---
+
+# 25. Notification Service Entegrasyonu
+
+Notification Service artık mevcut olduğundan invitation olaylarını notification sistemiyle bağla.
+
+Mevcut Notification Service architecture ve event contract standardını incele.
+
+Doğrudan notification repository’sine erişme.
+
+Domain/application event publish et.
+
+En azından aşağıdaki olayları değerlendir.
+
+## Project Invitation Created
+
+Recipient:
+
+```text
+invited user
+```
+
+Notification:
+
+```text
+X seni Y projesine davet etti.
+```
+
+Resource:
+
+```text
+PROJECT_INVITATION
+```
+
+veya Notification Service’in mevcut resource modeline uygun yapı.
+
+Kullanıcı notification’a tıklayınca Invitations ekranına veya ilgili invitation’a yönlendirilebilecek metadata sağla.
+
+## Project Invitation Accepted
+
+Recipient:
+
+```text
+invitation sender
+```
+
+veya domain açısından anlamlı project manager’lar.
+
+Notification:
+
+```text
+X, Y projesine yaptığın daveti kabul etti.
+```
+
+Gereksiz şekilde bütün proje üyelerine notification gönderme.
+
+## Project Invitation Rejected
+
+Recipient:
+
+```text
+invitation sender
+```
+
+Notification:
+
+```text
+X, Y projesine yaptığın daveti reddetti.
+```
+
+Rejection message varsa API/detail üzerinden erişilebilir olmalı.
+
+Notification message içinde uzun rejection metnini gömmek zorunda değilsin.
+
+---
+
+# 26. Team Notification Spam Üretme
+
+Her Teams işlemi notification üretmemeli.
+
+Örneğin aşağıdaki olayların notification gerektirip gerektirmediğini domain açısından değerlendir:
+
+```text
+User added to team
+User removed from team
+Project role changed
+```
+
+Özellikle role değişikliği kullanıcı için anlamlı olduğundan notification uygun olabilir.
+
+Ancak:
+
+```text
+Team renamed
+Team description updated
+Team hierarchy moved
+```
+
+gibi organizasyonel işlemler için tüm kullanıcılara notification üretme.
+
+Notification Service’in mevcut spam prevention yaklaşımına uy.
+
+---
+
+# 27. Project Role Değişimi
+
+Teams ekranından bir kullanıcının project role’ları değiştirilebilir.
+
+Bu işlem:
+
+```text
+ProjectMembership
+```
+
+üzerinde gerçekleşmelidir.
+
+TeamMembership role taşımamalıdır.
+
+Role update sırasında:
+
+- actor
+- target user
+- project
+- old roles
+- new roles
+
+bilgilerini karşılaştır.
+
+Gerçek değişiklik yoksa işlem/no-op durumunda event ve notification üretme.
+
+Gerçek role değişikliği varsa Notification Service için anlamlı event publish etmeyi değerlendir.
+
+Örneğin:
+
+```text
+ProjectRolesChangedEvent
+```
+
+Recipient:
+
+```text
+role'u değiştirilen kullanıcı
+```
+
+Actor ile recipient aynıysa gereksiz self notification üretme.
+
+---
+
+# 28. Project Member Removal
+
+Bir kullanıcı projeden çıkarıldığında:
+
+1. ProjectMembership kaldırılmalı veya mevcut lifecycle modeline göre inactive yapılmalı.
+2. İlgili TeamMembership kayıtları temizlenmeli.
+3. Kullanıcının proje erişimi sona ermeli.
+4. Task Service ile oluşabilecek referans problemlerini incele.
+5. Existing assignments konusunda mevcut business rule’a göre güvenli davran.
+
+Silme davranışını tasarlamadan önce mevcut Task Service’i incele.
+
+Aktif task assignment’ları olan bir kullanıcı için foreign key/entity integrity bozacak blind delete yapma.
+
+Gerekirse membership removal için mevcut soft-delete/status modelini kullan.
+
+Yeni ve gereksiz bir lifecycle uydurma.
+
+---
+
+# 29. Ekipten Çıkarma ile Projeden Çıkarma Farklı İşlemler Olsun
+
+Bunları kesinlikle karıştırma.
+
+```text
+Remove from Team
+```
+
+yalnız TeamMembership’i etkiler.
+
+```text
+Remove from Project
+```
+
+ProjectMembership’i etkiler ve ilgili team associations’ı temizler.
+
+API isimleri ve service methodları bu farkı açık şekilde göstermelidir.
+
+---
+
+# 30. Team API’leri
+
+Mevcut REST convention’a göre `/api/v1` altında gerekli API’leri oluştur.
+
+Tam path naming’i repository standardına göre belirle.
+
+Kavramsal olarak şu işlemler bulunmalı:
+
+### Team
+
+```text
+List project teams
+Get team
+Create team
+Update team
+Delete team
+Move/change parent team
+```
+
+### Team Membership
+
+```text
+List team members
+Add project member to team
+Remove project member from team
+```
+
+### Project Members via Teams domain
+
+```text
+List project members
+Get project member summary
+Update project roles
+Remove member from project
+```
+
+### Invitations
+
+```text
+Invite user
+List project invitations
+Cancel invitation
+List my invitations
+Accept invitation
+Reject invitation
+```
+
+Ancak mevcut controller yapısı ile birleştirmek daha mantıklıysa mevcut standardı takip et.
+
+Tek bir devasa `ProjectController` içerisine bütün business logic’i doldurma.
+
+---
+
+# 31. Authorization
+
+Her endpoint için yetki kontrolünü backend’de uygula.
+
+Frontend’in butonu gizlemesi authorization değildir.
+
+Mevcut project permission modelini incele.
+
+Örneğin Project Manager veya mevcut sistemde proje yönetme yetkisine sahip roller:
+
+- team oluşturabilmeli
+- team düzenleyebilmeli
+- team silebilmeli
+- project member davet edebilmeli
+- invitation iptal edebilmeli
+- project role değiştirebilmeli
+- member’ı project’ten çıkarabilmeli
+
+Normal project member:
+
+- project teams görebilmeli
+- erişebildiği member summary’leri görebilmeli
+
+ancak yönetim işlemlerini yapamamalı.
+
+Invitation accept/reject:
+
+yalnız invitation’ın recipient’ı tarafından yapılabilmeli.
+
+Global ADMIN davranışında mevcut security modelini koru.
+
+---
+
+# 32. Data Exposure
+
+Team member endpointlerinde gereksiz user bilgisi expose etme.
+
+Özellikle:
+
+- password hash
+- tokens
+- auth secrets
+- internal security metadata
+
+asla dönmemeli.
+
+Frontend’in ihtiyacı olan minimum user summary kullan.
+
+---
+
+# 33. Database Constraints
+
+Gerçek domain invariants için yalnız application validation’a güvenme.
+
+Mevcut schema standardına göre DB tarafında da uygun constraint/indexleri değerlendir.
+
+Örneğin:
+
+```text
+project_memberships:
+UNIQUE(project_id, user_id)
+
+team_memberships:
+UNIQUE(team_id, project_membership_id)
+
+project_invitations:
+aynı proje + user için duplicate active invitation engeli
+
+teams:
+project_id index
+parent_team_id index
+```
+
+PostgreSQL partial unique index gerekiyorsa mevcut proje/Flyway standardına göre kullanabilirsin.
+
+Örneğin yalnız `PENDING` invitation için duplicate engellemek mantıklı olabilir.
+
+---
+
+# 34. Flyway
+
+Mevcut en son migration’ı bul.
+
+Yeni migrationları onun ardından doğru sırayla oluştur.
+
+Hibernate:
+
+```text
+create
+update
+```
+
+ile schema değiştirme.
+
+Migration içerisinde:
+
+- teams
+- team membership
+- invitations
+- gerekli constraintler
+- gerekli indexler
+- mevcut membership schema değişiklikleri
+
+gerçek ihtiyaç kadar eklenmeli.
+
+Var olan datayı gereksiz yere bozma.
+
+---
+
+# 35. Mevcut Members Yapısının Refactor Edilmesi
+
+Repository’de eski Members endpoint/controller/service yapısı varsa kör şekilde silme.
+
+Önce nerelerde kullanıldığını bul.
+
+Ardından yeni Teams modeline uygun şekilde:
+
+- reuse
+- rename
+- refactor
+- deprecate
+- remove
+
+kararı ver.
+
+Task Service veya authorization başka yerde mevcut membership service’e bağlıysa onu kırma.
+
+Ama artık frontend’de bağımsız **Members page** olmayacağı için yalnız UI’ye özel obsolete endpointler varsa temizlenebilir.
+
+Domain-level ProjectMembership API/contract’larını koru.
+
+---
+
+# 36. Sidebar / Frontend Contract
+
+Bu görev ağırlıklı olarak backend refactorudur.
+
+Ancak frontend’in yeni navigation modeli şu şekilde olacaktır:
+
+```text
+Project
+├── Overview
+├── Tasks
+├── Teams
+├── Issues
+...
+```
+
+Eski:
+
+```text
+Members
+```
+
+sidebar item’ı kaldırılacaktır.
+
+Yerine:
+
+```text
+Teams
+```
+
+gelmelidir.
+
+Teams yalnızca **bir proje context’i içindeyken** görünmelidir.
+
+Global sidebar’da proje seçilmeden gösterilmemelidir.
+
+Bu backend görevinde frontend implementasyonu yapılmıyorsa bile API contract’larını bu UI modeline göre tasarla.
+
+Repository monorepo ise ve mevcut frontend küçük navigation değişikliklerini açıkça gerektiriyorsa ilgili sidebar/menu referanslarını da güncelle; ancak kapsamı gereksiz frontend redesign’a dönüştürme.
+
+---
+
+# 37. Teams Sayfasının Desteklemesi Gereken UI Verileri
+
+Backend API aşağıdaki ekranın yapılabilmesini desteklemeli:
+
+```text
+Teams
+────────────────────────────
+
+General Team
+12 members
+
+Development
+├── Backend       4 members
+├── Frontend      3 members
+└── Database      2 members
+
+Test
+3 members
+```
+
+Bir team açıldığında örneğin:
+
+```text
+Backend
+
+H  Hamza
+   BACKEND_ENGINEER
+
+A  Alper
+   FULL_STACK_DEVELOPER
+```
+
+gibi bilgiler oluşturulabilmeli.
+
+Avatar yerine şimdilik nickname/displayName initial’ı frontend tarafından kullanılacaktır.
+
+---
+
+# 38. Invitation UI Contract
+
+Kullanıcının global veya uygun user area içerisinde bir:
+
+```text
+Invitations
+```
+
+sayfası olacaktır.
+
+Burada kullanıcı kendisine gelen proje davetlerini görecektir.
+
+Örneğin:
+
+```text
+PDA Backend Rewrite
+Invited by: Alper
+Role: BACKEND_ENGINEER
+Date: ...
+
+[Accept] [Reject]
+```
+
+Reject seçildiğinde opsiyonel:
+
+```text
+Reason / message
+```
+
+girilebilmelidir.
+
+Backend API bu akışı eksiksiz desteklemelidir.
+
+---
+
+# 39. Transaction Sınırları
+
+Aşağıdaki gibi çok adımlı use-case’leri transactional yap:
+
+### Accept invitation
+
+```text
+validate invitation
+→ update invitation
+→ create ProjectMembership
+→ add General Team membership
+→ publish domain event
+```
+
+### Remove project member
+
+```text
+validate permission
+→ clean TeamMembership
+→ update/remove ProjectMembership
+→ domain event
+```
+
+### Create project
+
+```text
+create Project
+→ create owner membership
+→ create General Team
+→ add owner to General Team
+```
+
+İşlemin yarısı başarılı yarısı başarısız kalmamalı.
+
+Event/notification davranışının rollback olmuş transaction için çalışmadığından emin ol.
+
+---
+
+# 40. Project Creation Akışını Güncelle
+
+Yeni project oluşturulduğunda:
+
+1. Project kaydı oluşturulsun.
+2. Creator için mevcut kurala göre ProjectMembership oluşturulsun.
+3. Creator uygun manager/owner role’ünü alsın.
+4. General Team otomatik oluşturulsun.
+5. Creator General Team içerisinde yer alsın.
+
+Mevcut project creation davranışını incele ve duplicate creator membership yaratma.
+
+---
+
+# 41. Spring Modulith Sınırları
+
+Module boundaries’i koru.
+
+Yasak örnekler:
+
+```text
+project → auth repository
+project → notification repository
+project → task repository
+```
+
+yerine public contract / event kullan.
+
+Örneğin:
+
+```text
+ProjectInvitationCreatedEvent
+ProjectInvitationAcceptedEvent
+ProjectInvitationRejectedEvent
+ProjectMemberRemovedEvent
+ProjectRolesChangedEvent
+```
+
+gibi eventler gerçek domain ihtiyacına göre kullanılabilir.
+
+Event payload’larında JPA entity taşıma.
+
+Immutable ID/value contract kullan.
+
+---
+
+# 42. Testler
+
+Bu refactor için kapsamlı test yaz.
+
+En azından aşağıdaki senaryoları kapsa.
+
+## Project Creation
+
+- project oluşturulur
+- creator membership oluşur
+- General Team oluşur
+- creator General Team’de bulunur
+- duplicate membership oluşmaz
+
+## Teams
+
+- team oluşturma
+- child team oluşturma
+- nested team
+- başka project’in team’ini parent seçememe
+- self-parent engeli
+- circular hierarchy engeli
+- General Team silinememe
+- team silme davranışı
+- team rename/update
+
+## Team Membership
+
+- project member team’e eklenebilir
+- project member olmayan user eklenemez
+- duplicate team membership oluşmaz
+- user birden fazla team’e eklenebilir
+- team’den çıkarma project membership’i etkilemez
+
+## Roles
+
+- role Teams workflow üzerinden değiştirilebilir
+- role ProjectMembership üzerinde değişir
+- unauthorized user role değiştiremez
+- no-op update notification/event üretmez
+
+## Invitations
+
+- registered user davet edilebilir
+- nonexistent user davet edilemez
+- project member tekrar davet edilemez
+- duplicate pending invitation oluşmaz
+- self invitation yapılamaz
+- accept → membership oluşur
+- accept → General Team membership oluşur
+- reject → membership oluşmaz
+- reject message saklanır
+- başka kullanıcı invitation’ı accept/reject edemez
+- cancelled/rejected/accepted invitation tekrar accept edilemez
+
+## Notifications
+
+- invitation created → recipient notification
+- accepted → sender notification
+- rejected → sender notification
+- duplicate event → gereksiz duplicate notification oluşmaması
+- transaction rollback → notification oluşmaması
+
+## Authorization
+
+- normal member management işlemlerine erişemez
+- project manager gerekli yönetim işlemlerini yapabilir
+- başka project’in team/member verisi yönetilemez
+
+## Database
+
+Gerekli integration testlerini Testcontainers PostgreSQL ile çalıştır.
+
+---
+
+# 43. Architecture Testleri
+
+Spring Modulith architecture testlerinin geçmesini sağla.
+
+Özellikle yeni Team ve Invitation implementasyonunun:
+
+- Auth internal package’larına
+- Notification internal package’larına
+- Task internal package’larına
+
+doğrudan dependency üretmediğini doğrula.
+
+---
+
+# 44. Kod Kalitesi
+
+Mevcut proje standartlarını koru:
+
+- Java 25
+- Spring Boot 4.x
+- Spring Modulith
+- Spring Data JPA
+- PostgreSQL
+- Flyway
+- MapStruct
+- Jakarta Validation
+- mevcut Lombok standardı
+- mevcut UUID/id standardı
+- mevcut auditing standardı
+- mevcut error response yapısı
+- mevcut pagination standardı
+- mevcut security context
+
+Ayrıca:
+
+- Controller içine business logic koyma.
+- Mapper içine business logic koyma.
+- Repository içine application workflow koyma.
+- JPA entity üzerinde dikkatsiz `@Data` kullanma.
+- Gereksiz EAGER relation oluşturma.
+- N+1 query üretme.
+- OSIV’e güvenme.
+- Başka modül entity’sini persistence relation olarak kullanma.
+- Feature creep yapma.
+
+---
+
+# 45. Çalışma Sırası
+
+Görevi şu sırayla gerçekleştir.
+
+## A — Existing Architecture Analysis
+
+Önce mevcut:
+
+```text
+Project
+ProjectMembership
+User/Auth
+Task
+Notification
+Role
+Invitation
+```
+
+ilişkilerini çıkar.
+
+## B — Impact Analysis
+
+Eski Members feature’ının hangi backend/frontend parçalarında kullanıldığını bul.
+
+Task assignment ve authorization gibi çalışan davranışları kırma.
+
+## C — Domain Refactor
+
+Aşağıdaki hedef modeli mevcut architecture’a en temiz şekilde entegre et:
+
+```text
+User
+   │
+   ▼
+ProjectMembership
+   │
+   ├──────────────► Project Roles
+   │
+   ▼
+TeamMembership
+   │
+   ▼
+Team
+```
+
+Invitation:
+
+```text
+User
+   │
+   ▼
+ProjectInvitation
+   │
+   ├── ACCEPTED
+   │      │
+   │      ▼
+   │ ProjectMembership
+   │      │
+   │      ▼
+   │ General Team
+   │
+   └── REJECTED
+          │
+          ▼
+   Optional rejection message
+```
+
+## D — APIs
+
+Teams, TeamMembership, ProjectMembership management ve Invitations endpointlerini tamamla.
+
+## E — Notifications
+
+Project invitation ve anlamlı membership/role eventlerini mevcut Notification Service’e bağla.
+
+## F — Migration
+
+Flyway migrationlarını tamamla.
+
+## G — Tests
+
+Unit + service + repository + integration + security + architecture testlerini ekle.
+
+## H — Build
+
+Backend build ve bütün testleri çalıştır.
+
+Hataları düzelt.
+
+Yalnız plan bırakma; implementasyonu tamamla.
+
+---
+
+# 46. Görev Sonunda Rapor
+
+Implementasyon tamamlandığında bana aşağıdaki formatta teknik özet ver.
+
+## Domain Değişiklikleri
+
+Hangi entity/model eklendi veya değiştirildi?
+
+## Teams Modeli
+
+- General Team nasıl çalışıyor?
+- Custom team nasıl çalışıyor?
+- Nested team nasıl çalışıyor?
+- TeamMembership nasıl çalışıyor?
+
+## ProjectMembership
+
+Membership’in yeni yapıdaki sorumluluğunu açıkla.
+
+## Role Management
+
+Rollerin nerede saklandığını ve Teams üzerinden nasıl yönetildiğini açıkla.
+
+## Invitation Flow
+
+```text
+Invite
+→ Notification
+→ Accept / Reject
+→ Membership
+→ General Team
+```
+
+akışını özetle.
+
+## Notification Events
+
+Şu formatta listele:
+
+```text
+Event → Recipient → Notification
+```
+
+## API Endpoints
+
+Eklenen/değiştirilen endpointleri listele.
+
+## Database
+
+Migration, constraint ve indexleri listele.
+
+## Eski Members Sistemi
+
+Nelerin:
+
+- kaldırıldığını
+- refactor edildiğini
+- korunduğunu
+
+açıkla.
+
+## Tests
+
+Eklenen önemli testleri listele.
+
+## Değiştirilen Dosyalar
+
+Önemli dosyaları listele.
+
+## Build Sonucu
+
+Çalıştırılan build/test komutlarını ve sonucunu belirt.
+
+---
+
+# Kritik Kurallar
+
+1. Mevcut repository’yi incelemeden implementasyona başlama.
+2. `ProjectMembership` kavramını sırf Members sayfası kalkıyor diye kaldırma.
+3. `ProjectMembership`, project authorization için source of truth olarak kalmalı.
+4. Teams organizasyon katmanı olmalı.
+5. Her project otomatik bir General Team’e sahip olmalı.
+6. Custom team kullanımı zorunlu olmamalı.
+7. Nested/sub-team yapısı desteklenmeli.
+8. Kullanıcı aynı projede birden fazla custom team’e dahil olabilmeli.
+9. Team’den çıkarılmak project’ten çıkarılmak anlamına gelmemeli.
+10. Project roles `ProjectMembership` üzerinde kalmalı.
+11. Team-specific permission sistemi V1’e ekleme.
+12. Task assignment Teams ekranına veya Teams domain’ine taşınmamalı.
+13. Task assignee validation ProjectMembership üzerinden çalışmaya devam etmeli.
+14. Auth/User kayıtlarını duplicate etme.
+15. Başka modül repository’sine doğrudan erişme.
+16. Invitation yalnız registered user için oluşturulmalı.
+17. Duplicate pending invitation engellenmeli.
+18. Existing member tekrar davet edilememeli.
+19. Invitation accept transactionally membership oluşturmalı.
+20. Invitation reject opsiyonel rejection message desteklemeli.
+21. Invitation olaylarını Notification Service’e event üzerinden bağla.
+22. Notification repository’sine doğrudan erişme.
+23. Gereksiz notification spam üretme.
+24. General Team silinememeli.
+25. Circular team hierarchy engellenmeli.
+26. Security kontrollerini backend’de uygula.
+27. Schema değişikliklerini yalnız Flyway ile yap.
+28. Mevcut çalışan Project/Task davranışlarını bozma.
+29. Frontend’de Members navigation yerine Teams modelini destekleyecek contract sağla.
+30. Yarım refactor bırakma; build ve testleri geçirerek implementasyonu tamamla.

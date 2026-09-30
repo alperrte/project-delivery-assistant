@@ -34,7 +34,8 @@ test.describe.serial("Project lifecycle (manager)", () => {
     slug = await createProject(page, projectName, { organizationName: orgName });
     expect(page.url()).toContain(slug);
 
-    await page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Üyeler" }).click();
+    await page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Ekipler" }).click();
+    await page.getByRole("link", { name: /General Team üyeleri/ }).click();
     const row = page.getByRole("row", { name: new RegExp(manager.nickname) });
     await expect(row).toBeVisible();
     await expect(row.getByText("Proje Yöneticisi")).toBeVisible();
