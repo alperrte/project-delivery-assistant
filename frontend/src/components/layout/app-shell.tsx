@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
-import { Buildings, CaretDown, SquaresFour, House, GearSix, CalendarBlank, CheckCircle, SidebarSimple } from "@phosphor-icons/react";
+import { Buildings, CaretDown, SquaresFour, House, GearSix, CalendarBlank, CheckCircle, SidebarSimple, EnvelopeSimple } from "@phosphor-icons/react";
 import { AppHeader } from "./app-header";
 import { ProjectSidebarNav } from "./project-sidebar-nav";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -21,6 +21,7 @@ const NAV_LINKS = [
   { href: "/dashboard", key: "home", icon: House },
   { href: "/projects", key: "projects", icon: SquaresFour },
   { href: "/organizations", key: "organizations", icon: Buildings },
+  { href: "/invitations", key: "invitations", icon: EnvelopeSimple },
 ] as const;
 
 const COLLAPSE_KEY = "pda:sidebar-collapsed";

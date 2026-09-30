@@ -71,11 +71,11 @@ export function SquadList({ projectId, isManager }: { projectId: string; isManag
                         trigger={
                           <Button variant="outline" size="sm" aria-label={t("members.title", { name: squad.name })}>
                             <Users size={16} />
-                            {t("manageMembers")}
+                            {t("manageMembers")} ({squad.memberCount})
                           </Button>
                         }
                       />
-                      {isManager && (
+                      {isManager && !squad.general && (
                         <>
                           <SquadFormDialog
                             projectId={projectId}

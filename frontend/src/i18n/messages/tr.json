@@ -45,6 +45,7 @@
       "home": "Ana Sayfa",
       "projects": "Projeler",
       "organizations": "Organizasyonlar",
+      "invitations": "Davetler",
       "logout": "Çıkış yap"
     },
     "breadcrumb": "Sayfa yolu",
@@ -128,6 +129,7 @@
         "criteria": "Kriterler",
         "members": "Üyeler",
         "invitations": "Davetler",
+        "teams": "Ekipler",
         "squads": "Ekipler",
         "repository": "Depo",
         "settings": "Ayarlar"
@@ -278,6 +280,13 @@
     "rolesUpdated": "Roller güncellendi."
   },
   "invitations": {
+    "mineTitle": "Proje davetlerim",
+    "mineDescription": "Hesabınıza gönderilen davetleri inceleyin.",
+    "mineEmpty": "Proje davetiniz yok.",
+    "from": "Davet eden: {name}",
+    "rejectionMessage": "Reddetme nedeni (isteğe bağlı)",
+    "acceptSuccess": "Davet kabul edildi.",
+    "rejectSuccess": "Davet reddedildi.",
     "statusValues": { "PENDING": "Bekliyor", "ACCEPTED": "Kabul edildi", "REJECTED": "Reddedildi", "CANCELLED": "İptal edildi", "EXPIRED": "Süresi doldu" },
     "emptyDescription": "Ekibinizi büyütmek için bir proje üyesi davet edin.",
     "pendingTitle": "Proje davetleri",

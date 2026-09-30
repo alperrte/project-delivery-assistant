@@ -10,8 +10,21 @@ export type Invitation = {
   invitedBy: string;
   initialRoles: ProjectRole[];
   status: InvitationStatus;
+  rejectionMessage: string | null;
   createdAt: string;
   expiresAt: string;
 };
 
 export type CreatedInvitation = { invitationId: string; token: string; expiresAt: string };
+
+export type MyInvitation = {
+  id: string;
+  projectId: string;
+  projectName: string | null;
+  invitedBy: string;
+  invitedByNickname: string | null;
+  initialRoles: ProjectRole[];
+  status: InvitationStatus;
+  createdAt: string;
+  expiresAt: string;
+};

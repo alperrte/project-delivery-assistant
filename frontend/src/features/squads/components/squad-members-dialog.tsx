@@ -72,7 +72,7 @@ export function SquadMembersDialog({
           <DialogTitle>{t("title", { name: squad.name })}</DialogTitle>
         </DialogHeader>
 
-        {isManager && (
+        {isManager && !squad.general && (
           <div className="space-y-1.5">
             <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("searchPlaceholder")} />
             {results && results.filter((r) => !memberIds.has(r.userId)).length > 0 && (
@@ -102,7 +102,7 @@ export function SquadMembersDialog({
             {members.content.map((member) => (
               <div key={member.userId} className="flex items-center justify-between rounded-md border px-2.5 py-1.5 text-sm">
                 {member.nickname ?? member.userId}
-                {isManager && (
+                {isManager && !squad.general && (
                   <Button
                     variant="ghost"
                     size="icon-sm"

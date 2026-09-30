@@ -78,9 +78,11 @@ export function ProjectDetail({ slug }: { slug: string }) {
           </div>
           <TabsContent value="overview"><ProjectOverview project={project} isManager={isManager} onNavigate={setSection} /></TabsContent>
           <TabsContent value="criteria"><CriteriaList projectId={project.id} isManager={isManager} /></TabsContent>
-          <TabsContent value="members"><MemberList projectId={project.id} isManager={isManager} /></TabsContent>
-          {isManager && <TabsContent value="invitations"><InvitationsPanel projectId={project.id} /></TabsContent>}
-          <TabsContent value="squads"><SquadList projectId={project.id} isManager={isManager} /></TabsContent>
+          <TabsContent value="teams" className="space-y-8">
+            <SquadList projectId={project.id} isManager={isManager} />
+            <MemberList projectId={project.id} isManager={isManager} />
+            {isManager && <InvitationsPanel projectId={project.id} />}
+          </TabsContent>
           <TabsContent value="repository"><RepositorySettings projectId={project.id} isManager={isManager} /></TabsContent>
           {isManager && <TabsContent value="settings"><ProjectSettingsForm project={project} /></TabsContent>}
         </div>

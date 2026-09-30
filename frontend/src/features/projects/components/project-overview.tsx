@@ -18,7 +18,7 @@ import { projectsApi } from "../api";
 import type { Project } from "../types";
 import { ProjectCriteriaActivity, ProjectCriteriaTrend } from "./project-criteria-insights";
 
-type OverviewSection = "criteria" | "members" | "invitations" | "squads" | "repository" | "settings";
+type OverviewSection = "criteria" | "teams" | "repository" | "settings";
 
 function RailRow({ label, value, onClick, leading }: { label: string; value: string; onClick: () => void; leading: React.ReactNode }) {
   return (
@@ -148,7 +148,7 @@ export function ProjectOverview({ project, isManager, onNavigate }: {
           <RailRow
             label={t("team")}
             value={t("teamMembers", { count: home.teamMemberCount })}
-            onClick={() => onNavigate("members")}
+            onClick={() => onNavigate("teams")}
             leading={
               visibleMembers.length > 0 ? (
                 <div className="flex -space-x-2">
@@ -176,14 +176,14 @@ export function ProjectOverview({ project, isManager, onNavigate }: {
             <RailRow
               label={t("invitations")}
               value={t("allInvitations")}
-              onClick={() => onNavigate("invitations")}
+              onClick={() => onNavigate("teams")}
               leading={<span className="font-mono text-sm font-semibold tabular-nums text-foreground">{invitations?.totalElements ?? "—"}</span>}
             />
           )}
           <RailRow
             label={t("squads")}
             value={squads ? t("squadCount", { count: squads.totalElements }) : "—"}
-            onClick={() => onNavigate("squads")}
+            onClick={() => onNavigate("teams")}
             leading={<span className="font-mono text-sm font-semibold tabular-nums text-foreground">{squads?.totalElements ?? "—"}</span>}
           />
 
@@ -192,7 +192,7 @@ export function ProjectOverview({ project, isManager, onNavigate }: {
             <ul>
               {isManager && (
                 <li>
-                  <button type="button" onClick={() => onNavigate("invitations")} className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-foreground transition-colors hover:bg-muted/60">
+                  <button type="button" onClick={() => onNavigate("teams")} className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-foreground transition-colors hover:bg-muted/60">
                     <EnvelopeSimple size={15} className="text-muted-foreground" aria-hidden="true" />
                     {t("viewInvitations")}
                   </button>

@@ -45,6 +45,7 @@
       "home": "Home",
       "projects": "Projects",
       "organizations": "Organizations",
+      "invitations": "Invitations",
       "logout": "Log out"
     },
     "breadcrumb": "Breadcrumb",
@@ -127,6 +128,7 @@
         "overview": "Overview",
         "criteria": "Criteria",
         "members": "Members",
+        "teams": "Teams",
         "invitations": "Invitations",
         "squads": "Squads",
         "repository": "Repository",
@@ -278,6 +280,13 @@
     "rolesUpdated": "Roles updated."
   },
   "invitations": {
+    "mineTitle": "My project invitations",
+    "mineDescription": "Review invitations sent to your account.",
+    "mineEmpty": "You have no project invitations.",
+    "from": "Invited by {name}",
+    "rejectionMessage": "Reason for declining (optional)",
+    "acceptSuccess": "Invitation accepted.",
+    "rejectSuccess": "Invitation declined.",
     "statusValues": { "PENDING": "Pending", "ACCEPTED": "Accepted", "REJECTED": "Rejected", "CANCELLED": "Cancelled", "EXPIRED": "Expired" },
     "emptyDescription": "Invite a project member to grow your team.",
     "pendingTitle": "Project invitations",

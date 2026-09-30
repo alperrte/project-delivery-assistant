@@ -101,6 +101,7 @@ export function InvitationsPanel({ projectId }: { projectId: string }) {
                     >
                       {t(`statusValues.${invitation.status}`)}
                     </Badge>
+                    {invitation.rejectionMessage && <p className="mt-1 max-w-56 text-xs text-muted-foreground">{invitation.rejectionMessage}</p>}
                   </TableCell>
                   <TableCell className="text-right">
                     {invitation.status === "PENDING" && (
