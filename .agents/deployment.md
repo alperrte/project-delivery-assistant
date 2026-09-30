@@ -22,6 +22,8 @@ Frontend API adresini `NEXT_PUBLIC_API_URL` ile alır; tanımlı değilse `http:
 
 Windows PowerShell'de ilk komut için `Copy-Item .env.example .env` kullanılabilir. Compose portları ve health check tanımları gerçek dosyadan okunmalıdır; bu planda henüz sabitlenmemiştir. Durdurmak için `docker compose down` kullanın. Veri silinmesi istenmiyorsa volume silme seçeneğini eklemeyin.
 
+`DB_PORT` veya `DB_URL` değiştiğinde Docker Desktop'ı ya da mevcut container'ı yeniden başlatmak eski container komutunu değiştirmez. Port değerlerinin eşleştiğini kontrol edip `docker compose up -d --build --force-recreate postgres backend` çalıştırın; bu işlem named PostgreSQL volume'ünü silmez. Ardından `docker compose ps` ve `/actuator/health` ile doğrulayın. `down -v` kullanmayın; volume içindeki veriyi siler.
+
 ## Konfigürasyon
 
 Backend profilleri `application-dev.yml`, `application-test.yml`, `application-prod.yml` ve ortak `application.yml` olarak planlanmıştır. Secret değerler bu dosyalara girilmez. Production'da zorunlu secret veya ayar eksikse uygulama fail-fast davranmalıdır.

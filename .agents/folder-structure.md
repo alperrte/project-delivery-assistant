@@ -1,5 +1,9 @@
 # Klasör yapısı kısa rehberi
 
+## Teams refactor yolu (2026-09-30)
+
+`project/ProjectCreatedEvent`, `ProjectInvitationEvents`, `ProjectMemberView` ve genişleyen `ProjectAccess` modüller arası public sözleşmedir. `project/api/MyProjectInvitationController` alıcının davet listesini/yanıtını; `squad/api/TeamController` yeni `/teams` API'sini sunar. Squad entity/repository/service eski `/squads` ile aynı veriyi kullanır. `V32__project_teams_and_registered_invitations.sql` General Team ve membership backfill yapar.
+
 Bu belge gezinme haritasıdır; gerçek dosya ve klasörler değişmiş olabilir. Görev sırasında ilgili yolu doğrula.
 
 | Yol | İçerik / yerleştirme kuralı |

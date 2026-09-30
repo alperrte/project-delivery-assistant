@@ -2,6 +2,7 @@ package com.pda.notification.application;
 
 import com.pda.notification.domain.*;
 import com.pda.project.ProjectMemberRemovedEvent;
+import com.pda.project.ProjectInvitationEvents;
 import com.pda.project.ProjectMembershipEvents;
 import com.pda.squad.SquadMembershipEvents;
 import com.pda.task.TaskEvents;
@@ -63,5 +64,20 @@ public class NotificationEventListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void squadRemoved(SquadMembershipEvents.MemberRemoved e) {
         writer.save(e.userId(), e.removedBy(), e.projectId(), ResourceType.SQUAD, e.squadId(), NotificationType.SQUAD_MEMBER_REMOVED);
+    }
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void invitationCreated(ProjectInvitationEvents.Created e) {
+        writer.save(e.invitedUserId(), e.invitedBy(), e.projectId(), ResourceType.PROJECT_INVITATION,
+                e.invitationId(), NotificationType.PROJECT_INVITATION_CREATED);
+    }
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void invitationAccepted(ProjectInvitationEvents.Accepted e) {
+        writer.save(e.invitedBy(), e.invitedUserId(), e.projectId(), ResourceType.PROJECT_INVITATION,
+                e.invitationId(), NotificationType.PROJECT_INVITATION_ACCEPTED);
+    }
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void invitationRejected(ProjectInvitationEvents.Rejected e) {
+        writer.save(e.invitedBy(), e.invitedUserId(), e.projectId(), ResourceType.PROJECT_INVITATION,
+                e.invitationId(), NotificationType.PROJECT_INVITATION_REJECTED);
     }
 }

@@ -3,6 +3,10 @@ package com.pda.squad.repository;
 import com.pda.BackendApplication;
 import com.pda.project.domain.entity.Project;
 import com.pda.project.infrastructure.repository.ProjectRepository;
+import com.pda.project.infrastructure.repository.ProjectMembershipRepository;
+import com.pda.project.domain.entity.ProjectMembership;
+import com.pda.user.ProjectRole;
+import java.util.Set;
 import com.pda.squad.domain.entity.Squad;
 import com.pda.squad.domain.entity.SquadMembership;
 import com.pda.squad.infrastructure.repository.SquadMembershipRepository;
@@ -46,6 +50,7 @@ class SquadRepositoryTest {
 
     @Autowired private ProjectRepository projects;
     @Autowired private SquadRepository squads;
+    @Autowired private ProjectMembershipRepository memberships;
     @Autowired private SquadMembershipRepository squadMembers;
     @Autowired private EntityManager entityManager;
 
@@ -82,11 +87,12 @@ class SquadRepositoryTest {
     void memberMustBeUniquePerSquad() {
         UUID projectId = newProject();
         UUID squadId = squads.saveAndFlush(Squad.create(projectId, "Unique Squad", null, UUID.randomUUID())).getId();
-        UUID userId = UUID.randomUUID();
-        squadMembers.saveAndFlush(SquadMembership.add(squadId, userId, UUID.randomUUID()));
+        UUID memberId = memberships.saveAndFlush(ProjectMembership.active(projectId, UUID.randomUUID(),
+                Set.of(ProjectRole.TESTER))).getId();
+        squadMembers.saveAndFlush(SquadMembership.add(squadId, memberId, UUID.randomUUID()));
 
         assertThrows(DataIntegrityViolationException.class, () -> squadMembers.saveAndFlush(
-                SquadMembership.add(squadId, userId, UUID.randomUUID())));
+                SquadMembership.add(squadId, memberId, UUID.randomUUID())));
     }
 
     @Test
@@ -94,14 +100,15 @@ class SquadRepositoryTest {
         UUID projectId = newProject();
         UUID squadId = squads.saveAndFlush(Squad.create(projectId, "Removable Squad", null, UUID.randomUUID()))
                 .getId();
-        UUID userId = UUID.randomUUID();
+        UUID memberId = memberships.saveAndFlush(ProjectMembership.active(projectId, UUID.randomUUID(),
+                Set.of(ProjectRole.TESTER))).getId();
         UUID adder = UUID.randomUUID();
-        squadMembers.saveAndFlush(SquadMembership.add(squadId, userId, adder));
+        squadMembers.saveAndFlush(SquadMembership.add(squadId, memberId, adder));
 
-        assertTrue(squadMembers.existsBySquadIdAndUserId(squadId, userId));
+        assertTrue(squadMembers.existsBySquadIdAndProjectMembershipId(squadId, memberId));
         assertEquals(1, squadMembers.countBySquadId(squadId));
         assertEquals(1, squadMembers.findBySquadId(squadId, PageRequest.of(0, 10)).getTotalElements());
-        assertEquals(adder, squadMembers.findBySquadIdAndUserId(squadId, userId).orElseThrow().getAddedBy());
+        assertEquals(adder, squadMembers.findBySquadIdAndProjectMembershipId(squadId, memberId).orElseThrow().getAddedBy());
 
         squads.deleteById(squadId);
         squads.flush();

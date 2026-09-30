@@ -83,6 +83,9 @@ public class ProjectInvitation {
     @Column(name = "cancelled_at")
     private Instant cancelledAt;
 
+    @Column(name = "rejection_message", length = 500)
+    private String rejectionMessage;
+
     protected ProjectInvitation() {
         // JPA
     }
@@ -140,10 +143,16 @@ public class ProjectInvitation {
         acceptedAt = now;
     }
 
-    public void reject(Instant now) {
+    public void reject(Instant now) { reject(now, null); }
+
+    public void reject(Instant now, String message) {
         requirePending(now);
+        String normalized = message == null || message.isBlank() ? null : message.strip();
+        if (normalized != null && normalized.length() > 500)
+            throw new IllegalArgumentException("Rejection message too long");
         status = InvitationStatus.REJECTED;
         rejectedAt = now;
+        rejectionMessage = normalized;
     }
 
     public void cancel(Instant now) {
@@ -194,4 +203,5 @@ public class ProjectInvitation {
     public Instant getAcceptedAt() { return acceptedAt; }
     public Instant getRejectedAt() { return rejectedAt; }
     public Instant getCancelledAt() { return cancelledAt; }
+    public String getRejectionMessage() { return rejectionMessage; }
 }

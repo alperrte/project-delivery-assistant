@@ -1,6 +1,7 @@
 package com.pda.project.application.service;
 
 import com.pda.project.domain.entity.Project;
+import com.pda.project.ProjectCreatedEvent;
 import com.pda.project.domain.entity.ProjectMembership;
 import com.pda.project.domain.enums.MembershipStatus;
 import com.pda.project.domain.enums.ProjectPriority;
@@ -14,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
@@ -27,12 +29,14 @@ public class ProjectService {
     private final ProjectRepository projects;
     private final ProjectMembershipRepository memberships;
     private final OrganizationService organizations;
+    private final ApplicationEventPublisher events;
 
     public ProjectService(ProjectRepository projects, ProjectMembershipRepository memberships,
-                          OrganizationService organizations) {
+                          OrganizationService organizations, ApplicationEventPublisher events) {
         this.projects = projects;
         this.memberships = memberships;
         this.organizations = organizations;
+        this.events = events;
     }
 
     @Transactional
@@ -44,6 +48,7 @@ public class ProjectService {
         Project project = projects.saveAndFlush(Project.create(name, SlugGenerator.generate(name),
                 description, actorId, organizationId));
         memberships.saveAndFlush(ProjectMembership.initialManager(project.getId(), actorId));
+        events.publishEvent(new ProjectCreatedEvent(project.getId(), actorId));
         return project;
     }
 

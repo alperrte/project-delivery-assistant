@@ -17,10 +17,11 @@ import java.util.UUID;
  */
 public record InvitationSummary(UUID id, UUID projectId, UUID invitedUserId, String email, UUID invitedBy,
                                 Set<ProjectRole> initialRoles, InvitationStatus status, Instant createdAt,
-                                Instant expiresAt) {
+                                Instant expiresAt, String rejectionMessage) {
     public static InvitationSummary from(ProjectInvitation invitation) {
         return new InvitationSummary(invitation.getId(), invitation.getProjectId(), invitation.getInvitedUserId(),
                 invitation.getEmail(), invitation.getInvitedBy(), invitation.getInitialRoles(),
-                invitation.getStatus(), invitation.getCreatedAt(), invitation.getExpiresAt());
+                invitation.getStatus(), invitation.getCreatedAt(), invitation.getExpiresAt(),
+                invitation.getRejectionMessage());
     }
 }

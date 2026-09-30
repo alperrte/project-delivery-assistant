@@ -150,6 +150,60 @@ class SquadApiIntegrationTest {
     }
 
     @Test
+    void teamsHaveGeneralRootAndRejectCyclesAndStaleMemberships() throws Exception {
+        Cookie csrf = csrfCookie();
+        Account manager = account("teamsmanager");
+        Account member = account("teamsmember");
+        UUID projectId = createProject(manager, csrf, "Teams hierarchy project");
+        memberships.addMember(manager.id(), projectId, member.id(), Set.of(ProjectRole.BACKEND_DEVELOPER));
+
+        mvc.perform(get("/api/v1/projects/" + projectId + "/teams"))
+                .andExpect(status().isUnauthorized());
+
+        var listed = mvc.perform(get("/api/v1/projects/" + projectId + "/teams").cookie(member.access()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].general").value(true))
+                .andExpect(jsonPath("$.content[0].memberCount").value(2)).andReturn().getResponse();
+        UUID generalId = UUID.fromString(JsonPath.read(listed.getContentAsString(), "$.content[0].id"));
+        mvc.perform(get("/api/v1/projects/" + projectId + "/teams/" + generalId + "/members")
+                        .cookie(member.access()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(2));
+        mvc.perform(delete("/api/v1/projects/" + projectId + "/teams/" + generalId)
+                        .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isConflict());
+
+        var parentCreated = mvc.perform(post("/api/v1/projects/" + projectId + "/teams")
+                        .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Development\"}"))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.parentTeamId").value(generalId.toString()))
+                .andReturn().getResponse();
+        UUID parentId = UUID.fromString(JsonPath.read(parentCreated.getContentAsString(), "$.id"));
+        var childCreated = mvc.perform(post("/api/v1/projects/" + projectId + "/teams")
+                        .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Backend\",\"parentTeamId\":\"" + parentId + "\"}"))
+                .andExpect(status().isCreated()).andReturn().getResponse();
+        UUID childId = UUID.fromString(JsonPath.read(childCreated.getContentAsString(), "$.id"));
+        mvc.perform(put("/api/v1/projects/" + projectId + "/teams/" + parentId + "/parent")
+                        .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"parentTeamId\":\"" + childId + "\"}"))
+                .andExpect(status().isConflict());
+        mvc.perform(post("/api/v1/projects/" + projectId + "/teams/" + childId + "/members")
+                        .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"userId\":\"" + member.id() + "\"}"))
+                .andExpect(status().isCreated());
+        memberships.removeMember(manager.id(), projectId, member.id());
+        mvc.perform(get("/api/v1/projects/" + projectId + "/teams/" + childId + "/members")
+                        .cookie(manager.access()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(0));
+        mvc.perform(get("/api/v1/projects/" + projectId + "/teams/" + generalId + "/members")
+                        .cookie(manager.access()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(1));
+    }
+
+    @Test
     void nonMembersAreDeniedAndSquadIsScopedToItsOwnProject() throws Exception {
         Cookie csrf = csrfCookie();
         Account manager = account("sqhttpmanager2");

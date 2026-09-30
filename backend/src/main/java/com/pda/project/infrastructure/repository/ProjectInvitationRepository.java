@@ -20,4 +20,8 @@ public interface ProjectInvitationRepository extends JpaRepository<ProjectInvita
     Page<ProjectInvitation> findByProjectIdAndStatus(UUID projectId, InvitationStatus status, Pageable pageable);
 
     Optional<ProjectInvitation> findByTokenHash(String tokenHash);
+
+    Page<ProjectInvitation> findByInvitedUserId(UUID invitedUserId, Pageable pageable);
+
+    Page<ProjectInvitation> findByProjectId(UUID projectId, Pageable pageable);
 }

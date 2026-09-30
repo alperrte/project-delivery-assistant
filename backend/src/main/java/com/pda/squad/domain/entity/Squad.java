@@ -51,6 +51,12 @@ public class Squad {
     @Column(name = "archived_at")
     private Instant archivedAt;
 
+    @Column(name = "parent_squad_id")
+    private UUID parentSquadId;
+
+    @Column(name = "is_general", nullable = false)
+    private boolean general;
+
     protected Squad() {
         // JPA
     }
@@ -64,6 +70,19 @@ public class Squad {
         return squad;
     }
 
+    public static Squad general(UUID projectId, UUID creator) {
+        Squad squad = create(projectId, "General Team", null, creator);
+        squad.general = true;
+        return squad;
+    }
+
+    public void moveUnder(UUID parentId) {
+        requireActive();
+        if (general) throw new IllegalStateException("General Team cannot be moved");
+        if (id != null && id.equals(parentId)) throw new IllegalArgumentException("Team cannot parent itself");
+        parentSquadId = Objects.requireNonNull(parentId);
+    }
+
     public void updateDetails(String name, String description) {
         requireActive();
         this.name = requiredText(name, NAME_LIMIT, "name");
@@ -71,6 +90,7 @@ public class Squad {
     }
 
     public void archive() {
+        if (general) throw new IllegalStateException("General Team cannot be deleted");
         if (archivedAt == null) {
             archivedAt = Instant.now();
         }
@@ -117,6 +137,8 @@ public class Squad {
     }
 
     public UUID getId() { return id; }
+    public UUID getParentSquadId() { return parentSquadId; }
+    public boolean isGeneral() { return general; }
     public UUID getProjectId() { return projectId; }
     public String getName() { return name; }
     public String getDescription() { return description; }

@@ -9,6 +9,9 @@ import com.pda.user.domain.enums.AccountStatus;
 import com.pda.user.infrastructure.repository.UserOAuthIdentityRepository;
 import com.pda.user.infrastructure.repository.UserRepository;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -90,6 +93,16 @@ public class UserAccountService implements UserAccounts {
         return users.findById(userId)
                 .filter(user -> user.getAccountStatus() == AccountStatus.ACTIVE)
                 .map(UserAccountService::summary);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<UUID, AuthenticatedUser> findActiveByIds(Set<UUID> userIds) {
+        if (userIds == null || userIds.isEmpty()) return Map.of();
+        return users.findAllById(userIds).stream()
+                .filter(user -> user.getAccountStatus() == AccountStatus.ACTIVE)
+                .map(UserAccountService::summary)
+                .collect(Collectors.toMap(AuthenticatedUser::id, user -> user));
     }
 
     @Override

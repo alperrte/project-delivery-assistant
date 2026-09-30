@@ -1,5 +1,9 @@
 # Veritabanı ve kalıcılık
 
+## V32 Teams ve davet değişikliği
+
+`V32__project_teams_and_registered_invitations.sql`, mevcut `squads` tablosuna `parent_squad_id` ve `is_general` ekler; proje başına tek General Team'i ve aynı proje içinde ebeveyni DB kısıtlarıyla korur. Mevcut her projeye General Team ekler, mevcut ekipleri onun altına taşır. `squad_members.user_id`, aktif üyelikle eşleştirilip `project_membership_id` FK'sine dönüştürülür; aktif üyeliği olmayan eski eşleşmeler silinir. General üyeliği ayrı satır olarak tutulmaz. Davetlere en çok 500 karakterlik `rejection_message` ve alıcı listeleme indeksi eklenir. Yeni davetler yalnız kayıtlı kullanıcıyı hedefler; tarihsel e-posta davetleri veri kaybı olmadan kalır fakat kayıtlı hedefi olmayan eski davet yeniden gönderilemez.
+
 > Durum: teknik plan kararı. Fiziksel tablo/kolon adları ve ayrıntılı kısıtlar migration yazılırken belirlenir.
 
 ## Altyapı

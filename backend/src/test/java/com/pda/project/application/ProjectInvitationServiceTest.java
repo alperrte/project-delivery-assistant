@@ -145,21 +145,25 @@ class ProjectInvitationServiceTest {
     }
 
     @Test
-    void emailInvitationNeedsNoExistingAccountAndBlocksDuplicates() {
+    void emailInvitationRequiresRegisteredAccountAndOnlyRecipientMayReject() {
         UUID manager = registerUser("manager4");
         UUID projectId = projectService.create(manager, "Email invite project", null, null).getId();
+        UUID target = registerUser("target4");
+        String email = users.findActiveById(target).orElseThrow().email();
 
-        CreatedInvitation created = invitationService.inviteByEmail(manager, projectId, "outside@example.test",
+        assertThrows(NoSuchElementException.class, () -> invitationService.inviteByEmail(manager, projectId,
+                "outside@example.test", Set.of(ProjectRole.ANALYST)));
+        CreatedInvitation created = invitationService.inviteByEmail(manager, projectId, email,
                 Set.of(ProjectRole.ANALYST));
-        assertNull(created.invitation().getInvitedUserId());
-        assertEquals("outside@example.test", created.invitation().getEmail());
+        assertEquals(target, created.invitation().getInvitedUserId());
 
         assertThrows(InvitationConflictException.class, () -> invitationService.inviteByEmail(manager, projectId,
-                "outside@example.test", Set.of(ProjectRole.TESTER)));
+                email, Set.of(ProjectRole.TESTER)));
 
-        // The token itself is the credential for an email-target invite; no matching account needs to exist yet.
         UUID anyLoggedInUser = registerUser("bystander4");
-        invitationService.reject(anyLoggedInUser, projectId, created.invitation().getId(), created.rawToken());
+        assertThrows(AccessDeniedException.class, () -> invitationService.reject(anyLoggedInUser, projectId,
+                created.invitation().getId(), created.rawToken()));
+        invitationService.reject(target, projectId, created.invitation().getId(), created.rawToken());
         assertEquals(InvitationStatus.REJECTED,
                 invitations.findById(created.invitation().getId()).orElseThrow().getStatus());
     }
@@ -193,21 +197,27 @@ class ProjectInvitationServiceTest {
     }
 
     @Test
-    void acceptingAnEmailInvitationLetsTheClaimingAccountJoinAndBlocksDoubleMembership() {
+    void acceptingAnEmailInvitationRequiresMatchingRecipientAndBlocksDoubleMembership() {
         UUID manager = registerUser("manager6");
         UUID projectId = projectService.create(manager, "Email accept project", null, null).getId();
-        CreatedInvitation created = invitationService.inviteByEmail(manager, projectId, "newcomer@example.test",
+        UUID claimant = registerUser("claimant6");
+        String claimantEmail = users.findActiveById(claimant).orElseThrow().email();
+        CreatedInvitation created = invitationService.inviteByEmail(manager, projectId, claimantEmail,
                 Set.of(ProjectRole.ANALYST));
 
-        UUID claimant = registerUser("claimant6");
+        UUID bystander = registerUser("bystander6");
+        assertThrows(AccessDeniedException.class, () -> invitationService.accept(bystander, projectId,
+                created.invitation().getId(), created.rawToken()));
         MemberSummary membership = invitationService.accept(claimant, projectId, created.invitation().getId(),
                 created.rawToken());
         assertEquals(claimant, membership.userId());
         assertEquals(Set.of(ProjectRole.ANALYST), membership.roles());
 
-        CreatedInvitation second = invitationService.inviteByEmail(manager, projectId, "second@example.test",
+        UUID secondTarget = registerUser("second6");
+        CreatedInvitation second = invitationService.inviteByEmail(manager, projectId,
+                users.findActiveById(secondTarget).orElseThrow().email(),
                 Set.of(ProjectRole.TESTER));
-        assertThrows(InvitationConflictException.class, () -> invitationService.accept(claimant, projectId,
+        assertThrows(AccessDeniedException.class, () -> invitationService.accept(claimant, projectId,
                 second.invitation().getId(), second.rawToken()));
     }
 
@@ -238,9 +248,11 @@ class ProjectInvitationServiceTest {
     void invitationCreationSucceedsWhenMailIsUnavailable() {
         Mockito.when(mailPort.available()).thenReturn(false);
         UUID manager = registerUser("nomailmanager");
+        UUID target = registerUser("nomailtarget");
         UUID projectId = projectService.create(manager, "No mail project", null, null).getId();
 
-        CreatedInvitation created = invitationService.inviteByEmail(manager, projectId, "nomail@example.test",
+        CreatedInvitation created = invitationService.inviteByEmail(manager, projectId,
+                users.findActiveById(target).orElseThrow().email(),
                 Set.of(ProjectRole.ANALYST));
         assertEquals(InvitationStatus.PENDING, created.invitation().getStatus());
         Mockito.verify(mailPort, Mockito.never()).sendInvitation(Mockito.anyString(), Mockito.anyString(),

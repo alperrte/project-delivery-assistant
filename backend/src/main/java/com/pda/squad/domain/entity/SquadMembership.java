@@ -15,13 +15,14 @@ import java.util.Objects;
 import java.util.UUID;
 
 /**
- * Links a user (identified only by id; Squad never depends on the User module's entity/repository) to a squad.
+ * Links an authoritative ProjectMembership ID to a team; no user/profile data is duplicated here.
  * Carries no role: squad membership is a grouping only, never an authorization source.
  */
 @Entity
 @Table(name = "squad_members",
-        uniqueConstraints = @UniqueConstraint(name = "uk_squad_members_squad_user", columnNames = {"squad_id", "user_id"}),
-        indexes = @Index(name = "ix_squad_members_user", columnList = "user_id"))
+        uniqueConstraints = @UniqueConstraint(name = "uk_squad_members_squad_membership",
+                columnNames = {"squad_id", "project_membership_id"}),
+        indexes = @Index(name = "ix_squad_members_membership", columnList = "project_membership_id"))
 public class SquadMembership {
 
     @Id
@@ -31,8 +32,8 @@ public class SquadMembership {
     @Column(name = "squad_id", nullable = false, updatable = false)
     private UUID squadId;
 
-    @Column(name = "user_id", nullable = false, updatable = false)
-    private UUID userId;
+    @Column(name = "project_membership_id", nullable = false, updatable = false)
+    private UUID projectMembershipId;
 
     @Column(name = "added_by", nullable = false, updatable = false)
     private UUID addedBy;
@@ -44,10 +45,10 @@ public class SquadMembership {
         // JPA
     }
 
-    public static SquadMembership add(UUID squadId, UUID userId, UUID addedBy) {
+    public static SquadMembership add(UUID squadId, UUID projectMembershipId, UUID addedBy) {
         SquadMembership membership = new SquadMembership();
         membership.squadId = Objects.requireNonNull(squadId, "squadId is required");
-        membership.userId = Objects.requireNonNull(userId, "userId is required");
+        membership.projectMembershipId = Objects.requireNonNull(projectMembershipId, "projectMembershipId is required");
         membership.addedBy = Objects.requireNonNull(addedBy, "addedBy is required");
         return membership;
     }
@@ -59,7 +60,7 @@ public class SquadMembership {
 
     public UUID getId() { return id; }
     public UUID getSquadId() { return squadId; }
-    public UUID getUserId() { return userId; }
+    public UUID getProjectMembershipId() { return projectMembershipId; }
     public UUID getAddedBy() { return addedBy; }
     public Instant getAddedAt() { return addedAt; }
 }

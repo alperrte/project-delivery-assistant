@@ -137,6 +137,7 @@ public class ProjectMembershipService {
         }
         member.remove();
         memberships.saveAndFlush(member);
+        events.publishEvent(new ProjectMembershipEvents.MemberRemoved(projectId, member.getId()));
         events.publishEvent(new ProjectMemberRemovedEvent(projectId, userId, actorId, Instant.now()));
     }
 
