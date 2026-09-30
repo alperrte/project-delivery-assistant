@@ -28,7 +28,8 @@ export function ProjectSidebarNav({ onNavigate, collapsed }: { onNavigate: () =>
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { data: user } = useSession();
-  const routeSlug = /^\/projects\/([^/]+)$/.exec(pathname)?.[1];
+  const teamMembersRoute = /^\/projects\/([^/]+)\/teams\/[^/]+\/members$/.exec(pathname);
+  const routeSlug = /^\/projects\/([^/]+)$/.exec(pathname)?.[1] ?? teamMembersRoute?.[1];
   const rememberedSlug = useSyncExternalStore(
     subscribeToSelection,
     () => user?.id ? sessionStorage.getItem(`pda:last-project:${user.id}`) : null,
@@ -46,7 +47,7 @@ export function ProjectSidebarNav({ onNavigate, collapsed }: { onNavigate: () =>
     enabled: !!slug,
   });
   const { isManager } = useCurrentMember(project?.id ?? "");
-  const active = projectSection(searchParams.get("section"), isManager);
+  const active = teamMembersRoute ? "teams" : projectSection(searchParams.get("section"), isManager);
   const projectPath = slug ? `/projects/${slug}` : null;
 
   useEffect(() => {

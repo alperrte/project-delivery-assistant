@@ -1,3 +1,5 @@
+import type { ProjectRole } from "@/features/projects/types";
+
 export type Squad = {
   id: string;
   projectId: string;
@@ -16,7 +18,7 @@ export type SquadMember = {
   userId: string;
   nickname: string | null;
   email: string | null;
-  roles: string[];
+  roles: ProjectRole[];
   addedBy: string;
   addedAt: string;
 };

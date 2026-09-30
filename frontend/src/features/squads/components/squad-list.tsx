@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -9,14 +10,14 @@ import { PageHeader } from "@/components/common/page-header";
 import { EmptyState } from "@/components/common/empty-state";
 import { PaginationBar } from "@/components/common/pagination-bar";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { errorKey } from "@/lib/api/error-message";
+import { cn } from "@/lib/utils";
 import { squadsApi } from "../api";
 import { SquadFormDialog } from "./squad-form-dialog";
-import { SquadMembersDialog } from "./squad-members-dialog";
 
-export function SquadList({ projectId, isManager }: { projectId: string; isManager: boolean }) {
+export function SquadList({ projectId, projectSlug, isManager }: { projectId: string; projectSlug: string; isManager: boolean }) {
   const t = useTranslations("squads");
   const te = useTranslations("errors");
   const queryClient = useQueryClient();
@@ -64,17 +65,14 @@ export function SquadList({ projectId, isManager }: { projectId: string; isManag
                     </div>
                   </div>
                   <div className="mt-5 flex flex-wrap items-center gap-1.5 border-t pt-4">
-                      <SquadMembersDialog
-                        projectId={projectId}
-                        squad={squad}
-                        isManager={isManager}
-                        trigger={
-                          <Button variant="outline" size="sm" aria-label={t("members.title", { name: squad.name })}>
-                            <Users size={16} />
-                            {t("manageMembers")} ({squad.memberCount})
-                          </Button>
-                        }
-                      />
+                      <Link
+                        href={`/projects/${projectSlug}/teams/${squad.id}/members`}
+                        className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+                        aria-label={t("members.title", { name: squad.name })}
+                      >
+                        <Users size={16} aria-hidden="true" />
+                        {t("manageMembers")} ({squad.memberCount})
+                      </Link>
                       {isManager && !squad.general && (
                         <>
                           <SquadFormDialog

@@ -1,4 +1,7 @@
 import { test, expect } from "@playwright/test";
+import { MANAGER_STORAGE } from "./global-setup";
+
+test.use({ storageState: MANAGER_STORAGE });
 
 const project = {
   id: "responsive-project",
@@ -32,6 +35,9 @@ test("project sections use the shared sidebar on desktop and its mobile drawer",
     };
     if (path === "/api/v1/projects/responsive-project/members/responsive-user") data = { userId: "responsive-user", nickname: "testuser", roles: ["PROJECT_MANAGER"], joinedAt: "2026-09-28T00:00:00Z" };
     if (path === "/api/v1/projects/responsive-project/members") data = { content: [{ userId: "responsive-user", nickname: "testuser", roles: ["PROJECT_MANAGER"], joinedAt: "2026-09-28T00:00:00Z" }], page: 0, totalPages: 1, totalElements: 1 };
+    if (path === "/api/v1/projects/responsive-project/teams") data = { content: [{ id: "general-team", projectId: "responsive-project", name: "General Team", description: null, parentTeamId: null, general: true, memberCount: 1, createdBy: "responsive-user", createdAt: "2026-09-28T00:00:00Z", updatedAt: "2026-09-28T00:00:00Z", archivedAt: null }], page: 0, totalPages: 1, totalElements: 1 };
+    if (path === "/api/v1/projects/responsive-project/teams/general-team") data = { id: "general-team", projectId: "responsive-project", name: "General Team", description: null, parentTeamId: null, general: true, memberCount: 1, createdBy: "responsive-user", createdAt: "2026-09-28T00:00:00Z", updatedAt: "2026-09-28T00:00:00Z", archivedAt: null };
+    if (path === "/api/v1/projects/responsive-project/teams/general-team/members") data = { content: [{ userId: "responsive-user", nickname: "testuser", email: "test@example.com", roles: ["PROJECT_MANAGER"], addedBy: "responsive-user", addedAt: "2026-09-28T00:00:00Z" }], page: 0, totalPages: 1, totalElements: 1 };
     if (path === "/api/v1/projects/responsive-project/criteria") data = [];
 
     await route.fulfill({
@@ -52,9 +58,14 @@ test("project sections use the shared sidebar on desktop and its mobile drawer",
   expect(await page.getByRole("button", { name: "Yeni kriter" }).evaluate((button) => getComputedStyle(button).cursor)).toBe("pointer");
 
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Üyeler" }).click();
-  await expect(page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Üyeler" })).toHaveAttribute("aria-current", "page");
+  await page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Ekipler" }).click();
+  await page.getByRole("link", { name: /General Team üyeleri/ }).click();
+  await expect(page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Ekipler" })).toHaveAttribute("aria-current", "page");
   await expect(page.getByRole("row", { name: /testuser/ })).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.getByRole("listitem").filter({ hasText: "testuser" })).toBeVisible();
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
+  await page.setViewportSize({ width: 1440, height: 900 });
   await page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Genel Bakış" }).click();
   await page.getByRole("button", { name: "Kriterleri tanımla" }).click();
   await expect(page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Kriterler" })).toHaveAttribute("aria-current", "page");

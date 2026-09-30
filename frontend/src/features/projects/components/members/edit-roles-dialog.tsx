@@ -25,7 +25,7 @@ export function EditRolesDialog({
 }: {
   trigger: ReactNode;
   projectId: string;
-  member: Member;
+  member: Pick<Member, "userId" | "roles">;
 }) {
   const t = useTranslations("members");
   const tr = useTranslations("roles");
@@ -38,6 +38,7 @@ export function EditRolesDialog({
     mutationFn: () => membersApi.replaceRoles(projectId, member.userId, Array.from(selected)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects", projectId, "members"] });
+      queryClient.invalidateQueries({ queryKey: ["projects", projectId, "squads"] });
       toast.success(t("rolesUpdated"));
       setOpen(false);
     },

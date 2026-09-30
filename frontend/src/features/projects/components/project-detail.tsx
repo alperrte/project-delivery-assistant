@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { errorKey } from "@/lib/api/error-message";
-import { MemberList } from "@/features/projects/components/members/member-list";
 import { InvitationsPanel } from "@/features/invitations/components/invitations-panel";
 import { SquadList } from "@/features/squads/components/squad-list";
 import { CriteriaList } from "@/features/criteria/components/criteria-list";
@@ -79,8 +78,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
           <TabsContent value="overview"><ProjectOverview project={project} isManager={isManager} onNavigate={setSection} /></TabsContent>
           <TabsContent value="criteria"><CriteriaList projectId={project.id} isManager={isManager} /></TabsContent>
           <TabsContent value="teams" className="space-y-8">
-            <SquadList projectId={project.id} isManager={isManager} />
-            <MemberList projectId={project.id} isManager={isManager} />
+            <SquadList projectId={project.id} projectSlug={project.slug} isManager={isManager} />
             {isManager && <InvitationsPanel projectId={project.id} />}
           </TabsContent>
           <TabsContent value="repository"><RepositorySettings projectId={project.id} isManager={isManager} /></TabsContent>
