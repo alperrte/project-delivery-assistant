@@ -26,6 +26,8 @@ final class ProjectInvitationRateLimitFilter extends OncePerRequestFilter {
     private static final Pattern CREATE = Pattern.compile("^/api/v1/projects/[^/]+/invitations$");
     private static final Pattern RESEND_ACCEPT_REJECT =
             Pattern.compile("^/api/v1/projects/[^/]+/invitations/[^/]+/(resend|accept|reject)$");
+    private static final Pattern MY_RESPONSE =
+            Pattern.compile("^/api/v1/project-invitations/[^/]+/(accept|reject)$");
     private static final long WINDOW_MILLIS = Duration.ofMinutes(10).toMillis();
     // Higher than the pre-auth login/register limit (5): these are authenticated, legitimate-manager actions
     // (inviting several teammates in one session) rather than an attacker-facing credential-guessing surface.
@@ -41,7 +43,8 @@ final class ProjectInvitationRateLimitFilter extends OncePerRequestFilter {
             return true;
         }
         String path = request.getRequestURI().substring(request.getContextPath().length());
-        return !CREATE.matcher(path).matches() && !RESEND_ACCEPT_REJECT.matcher(path).matches();
+        return !CREATE.matcher(path).matches() && !RESEND_ACCEPT_REJECT.matcher(path).matches()
+                && !MY_RESPONSE.matcher(path).matches();
     }
 
     @Override

@@ -1,5 +1,9 @@
 # Mimari kısa özet
 
+## Project Teams ve Invitations (2026-09-30)
+
+`ProjectMembership` proje erişimi ve rollerin tek kaynağıdır. Var olan `com.pda.squad` modülü Teams organizasyon katmanı olarak genişletildi: her projede değiştirilemeyen General Team, altında isteğe bağlı alt ekipler; custom ekip üyeliği aktif `ProjectMembership` kimliğine bağlıdır. General üyeleri aktif proje üyeliğinden türetilir. Project oluşturma ve üye çıkarma olaylarını Squad senkron dinler; Notification davet create/accept/reject olaylarını commit sonrasında dinler. Davetler yalnız kayıtlı aktif kullanıcıya gönderilir ve yalnız hedef hesap tarafından yanıtlanır. `/teams` yeni sözleşmedir; `/squads` eski istemci uyumu için durur.
+
 **Durum:** Kabul edilmiş teknik plan ve mevcut iskeletin özeti. Bir özelliğin uygulanmış olduğunu tek başına göstermez.
 
 - Ürün: öğrenciler ve küçük ekipler için self-hosted proje yönetimi.

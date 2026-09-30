@@ -226,6 +226,28 @@ Because PDA uses cookie-based authentication:
 
 ## 11. API and Swagger Security
 
+### Project Teams ve kayıtlı kullanıcı davetleri (2026-09-30)
+
+Swagger kontrolü: `API_DOCS_ENABLED=true` ile `/swagger-ui/index.html`; önce `GET /api/v1/auth/csrf`, ardından oturum açma. Tüm yollar access cookie ister; POST/PUT/DELETE işlemleri ayrıca `X-XSRF-TOKEN` ister. `PROJECT_VIEW` aktif proje üyeliği, `SQUAD_MANAGE` ve davet yönetimi Project Manager yetkisi gerektirir. Hatalar `ProblemDetail` döner. `page>=0`, `size=1..100`.
+
+| Endpoint | Yetki | Güvenli örnek girdi | Başarı | Önemli hatalar |
+| --- | --- | --- | --- | --- |
+| `GET /api/v1/projects/{projectId}/teams` | `PROJECT_VIEW` | `?page=0&size=20` | `200` sayfalı ekipler, `general`, `parentTeamId`, `memberCount` | `400`, `401`, `403` |
+| `GET /api/v1/projects/{projectId}/teams/{teamId}` | `PROJECT_VIEW` | UUID path | `200` ekip | `401`, `403`, `404` |
+| `POST /api/v1/projects/{projectId}/teams` | `SQUAD_MANAGE` | `{"name":"Backend","parentTeamId":"<general-team-uuid>"}` | `201` ekip | `400`, `401`, `403`, `404` parent |
+| `PUT /api/v1/projects/{projectId}/teams/{teamId}` | `SQUAD_MANAGE` | `{"name":"API","description":"Services"}` | `200` ekip | `400`, `403`, `404`, `409` General Team |
+| `PUT /api/v1/projects/{projectId}/teams/{teamId}/parent` | `SQUAD_MANAGE` | `{"parentTeamId":"<team-uuid>"}` | `200` ekip | `400`, `403`, `404`, `409` döngü/General |
+| `DELETE /api/v1/projects/{projectId}/teams/{teamId}` | `SQUAD_MANAGE` | UUID path | `204` | `403`, `404`, `409` General/aktif alt ekip |
+| `GET /api/v1/projects/{projectId}/teams/{teamId}/members` | `PROJECT_VIEW` | `?page=0&size=20` | `200` sayfalı nickname/email/project roles | `400`, `403`, `404` |
+| `POST /api/v1/projects/{projectId}/teams/{teamId}/members` | `SQUAD_MANAGE` | `{"userId":"<active-project-member-uuid>"}` | `201` üye | `400`, `403`, `404`, `409` tekrar/General |
+| `DELETE /api/v1/projects/{projectId}/teams/{teamId}/members/{userId}` | `SQUAD_MANAGE` | UUID path | `204` | `403`, `404`, `409` General |
+| `GET /api/v1/project-invitations/me` | Oturum sahibi | `?page=0&size=20` | `200` yalnız kendine gelen davetler | `400`, `401` |
+| `POST /api/v1/project-invitations/{invitationId}/accept` | Yalnız davet edilen hesap | Body yok | `200` project membership | `401`, `403` CSRF, `404` başka alıcı, `409` beklemiyor/üye |
+| `POST /api/v1/project-invitations/{invitationId}/reject` | Yalnız davet edilen hesap | `{"message":"Şu an uygun değilim"}`; isteğe bağlı, en çok 500 | `204` | `400`, `401`, `403` CSRF, `404` başka alıcı, `409` beklemiyor |
+| `GET /api/v1/projects/{projectId}/invitations/all` | Project Manager | `?page=0&size=20` | `200` durum ve rejectionMessage içeren sayfalı geçmiş | `400`, `401`, `403` |
+
+Mevcut `POST .../invitations` artık yalnız aktif kayıtlı `userId` veya kayıtlı hesap e-postasını kabul eder (`{"userId":"<registered-user-uuid>","roles":["TESTER"]}` → `201`; bilinmeyen hesap `404`, tekrar/aktif üye `409`). Eski tokenlı accept/reject yolları yalnız gerçek hedef hesap için çalışır. Yeni davet yanıt yolları da 10 istek/10 dakika/IP/yol hız sınırına dahildir (`429`). `.env`, auth cookie, CSRF veya rol matrisi değişmedi.
+
 ### Notification Service endpoints
 
 Swagger check path: `/swagger-ui/index.html` with `API_DOCS_ENABLED=true`; call `GET /api/v1/auth/csrf`, log in, then use the routes below. All routes require the access cookie and address only the current user's records. PATCH additionally requires `X-XSRF-TOKEN`. Errors use `ProblemDetail`.

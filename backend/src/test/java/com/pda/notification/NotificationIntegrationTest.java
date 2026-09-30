@@ -4,6 +4,7 @@ import com.pda.BackendApplication;
 import com.pda.notification.application.NotificationService;
 import com.pda.notification.domain.NotificationType;
 import com.pda.project.application.service.ProjectMembershipService;
+import com.pda.project.application.service.ProjectInvitationService;
 import com.pda.project.application.service.ProjectService;
 import com.pda.squad.application.service.SquadService;
 import com.pda.task.TaskEvents;
@@ -55,6 +56,7 @@ class NotificationIntegrationTest {
     @Autowired UserAccounts users;
     @Autowired ProjectService projects;
     @Autowired ProjectMembershipService memberships;
+    @Autowired ProjectInvitationService invitations;
     @Autowired TaskService tasks;
     @Autowired SquadService squads;
     @Autowired NotificationService notifications;
@@ -144,6 +146,21 @@ class NotificationIntegrationTest {
         assertEquals(4, notifications.unreadCount(member));
         memberships.removeMember(manager, project, member);
         assertEquals(5, notifications.unreadCount(member));
+    }
+
+    @Test void invitationNotificationsFollowRecipientAndSender() {
+        UUID manager = user(); UUID recipient = user();
+        UUID project = projects.create(manager, "Invitation notification " + UUID.randomUUID(), null, null).getId();
+        var first = invitations.inviteRegisteredUser(manager, project, recipient, Set.of(ProjectRole.TESTER));
+        assertEquals(1, notifications.list(recipient, true, NotificationType.PROJECT_INVITATION_CREATED, 0, 20)
+                .getTotalElements());
+        invitations.rejectMine(recipient, first.invitation().getId(), "Unavailable");
+        assertEquals(1, notifications.list(manager, true, NotificationType.PROJECT_INVITATION_REJECTED, 0, 20)
+                .getTotalElements());
+        var second = invitations.inviteRegisteredUser(manager, project, recipient, Set.of(ProjectRole.TESTER));
+        invitations.acceptMine(recipient, second.invitation().getId());
+        assertEquals(1, notifications.list(manager, true, NotificationType.PROJECT_INVITATION_ACCEPTED, 0, 20)
+                .getTotalElements());
     }
 
     private UUID user() {

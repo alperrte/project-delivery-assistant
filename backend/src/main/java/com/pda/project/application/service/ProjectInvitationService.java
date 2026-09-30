@@ -1,6 +1,7 @@
 package com.pda.project.application.service;
 
 import com.pda.project.domain.entity.Project;
+import com.pda.project.ProjectInvitationEvents;
 import com.pda.project.domain.entity.ProjectInvitation;
 import com.pda.project.domain.entity.ProjectMembership;
 import com.pda.project.domain.enums.InvitationStatus;
@@ -20,6 +21,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
@@ -30,6 +32,10 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Invitation create/resend/cancel/reject (HMZ-PROJ-14), accept-into-membership (HMZ-PROJ-15) and best-effort
@@ -52,11 +58,13 @@ public class ProjectInvitationService {
     private final ObjectProvider<ProjectInvitationMailPort> mailProvider;
     private final Clock clock;
     private final String frontendUrl;
+    private final ApplicationEventPublisher events;
 
     public ProjectInvitationService(ProjectRepository projects, ProjectMembershipRepository memberships,
                                     ProjectInvitationRepository invitations, UserAccounts users,
                                     ObjectProvider<ProjectInvitationMailPort> mailProvider, Clock clock,
-                                    @Value("${FRONTEND_URL}") String frontendUrl) {
+                                    @Value("${FRONTEND_URL}") String frontendUrl,
+                                    ApplicationEventPublisher events) {
         this.projects = projects;
         this.memberships = memberships;
         this.invitations = invitations;
@@ -64,6 +72,7 @@ public class ProjectInvitationService {
         this.mailProvider = mailProvider;
         this.clock = clock;
         this.frontendUrl = frontendUrl;
+        this.events = events;
     }
 
     /** The raw token is returned exactly once, to be delivered out-of-band (mail, in HMZ-PROJ-16); never persisted. */
@@ -74,6 +83,7 @@ public class ProjectInvitationService {
                                                   Set<ProjectRole> roles) {
         Project project = requireManager(actorId, projectId);
         Objects.requireNonNull(targetUserId, "targetUserId is required");
+        if (targetUserId.equals(actorId)) throw new IllegalArgumentException("Cannot invite yourself");
         UserAccounts.AuthenticatedUser target = users.findActiveById(targetUserId)
                 .orElseThrow(() -> new NoSuchElementException("Active user not found"));
         if (memberships.findByProjectIdAndUserIdAndStatus(projectId, targetUserId, MembershipStatus.ACTIVE)
@@ -88,27 +98,17 @@ public class ProjectInvitationService {
         ProjectInvitation invitation = ProjectInvitation.forRegisteredUser(projectId, targetUserId, actorId,
                 roles, rawToken, clock.instant().plus(INVITATION_TTL));
         ProjectInvitation saved = invitations.saveAndFlush(invitation);
+        events.publishEvent(new ProjectInvitationEvents.Created(saved.getId(), projectId, targetUserId, actorId));
         sendInvitationMailSafely(target.email(), project.getName(), projectId, saved.getId(), rawToken);
         return new CreatedInvitation(saved, rawToken);
     }
 
     @Transactional
     public CreatedInvitation inviteByEmail(UUID actorId, UUID projectId, String email, Set<ProjectRole> roles) {
-        Project project = requireManager(actorId, projectId);
-        if (email == null || email.isBlank()) {
-            throw new IllegalArgumentException("email is required");
-        }
-        String normalized = email.strip();
-        if (invitations.findByProjectIdAndEmailAndStatus(projectId, normalized, InvitationStatus.PENDING)
-                .isPresent()) {
-            throw new InvitationConflictException("An invitation is already pending for this email");
-        }
-        String rawToken = generateToken();
-        ProjectInvitation invitation = ProjectInvitation.forEmail(projectId, normalized, actorId, roles,
-                rawToken, clock.instant().plus(INVITATION_TTL));
-        ProjectInvitation saved = invitations.saveAndFlush(invitation);
-        sendInvitationMailSafely(normalized, project.getName(), projectId, saved.getId(), rawToken);
-        return new CreatedInvitation(saved, rawToken);
+        if (email == null || email.isBlank()) throw new IllegalArgumentException("email is required");
+        UUID userId = users.findActiveByEmail(email.strip())
+                .orElseThrow(() -> new NoSuchElementException("Registered user not found"));
+        return inviteRegisteredUser(actorId, projectId, userId, roles);
     }
 
     @Transactional(readOnly = true)
@@ -118,27 +118,49 @@ public class ProjectInvitationService {
                 .map(InvitationSummary::from);
     }
 
+    @Transactional(readOnly = true)
+    public Page<InvitationSummary> listProject(UUID actorId, UUID projectId, Pageable pageable) {
+        requireManager(actorId, projectId);
+        return invitations.findByProjectId(projectId, pageable).map(InvitationSummary::from);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<MyInvitationSummary> listMine(UUID actorId, Pageable pageable) {
+        Page<ProjectInvitation> page = invitations.findByInvitedUserId(actorId, pageable);
+        Map<UUID, Project> projectMap = projects.findAllById(page.getContent().stream()
+                .map(ProjectInvitation::getProjectId).collect(Collectors.toSet())).stream()
+                .collect(Collectors.toMap(Project::getId, Function.identity()));
+        Map<UUID, UserAccounts.AuthenticatedUser> senders = users.findActiveByIds(page.getContent().stream()
+                .map(ProjectInvitation::getInvitedBy).collect(Collectors.toSet()));
+        return page.map(invitation -> new MyInvitationSummary(InvitationSummary.from(invitation),
+                projectMap.containsKey(invitation.getProjectId())
+                        ? projectMap.get(invitation.getProjectId()).getName() : null,
+                senders.containsKey(invitation.getInvitedBy())
+                        ? senders.get(invitation.getInvitedBy()).nickname() : null));
+    }
+
+    public record MyInvitationSummary(InvitationSummary invitation, String projectName, String invitedByNickname) {}
+
     /** Cancels the existing pending invitation and issues a fresh one to the same target with the same roles. */
     @Transactional
     public CreatedInvitation resend(UUID actorId, UUID projectId, UUID invitationId) {
         Project project = requireManager(actorId, projectId);
         ProjectInvitation current = pendingInvitationIn(projectId, invitationId);
+        if (current.getInvitedUserId() == null) {
+            throw new InvitationConflictException("Invitation target must be a registered user");
+        }
         current.cancel(clock.instant());
         invitations.saveAndFlush(current);
 
         String rawToken = generateToken();
-        boolean registeredTarget = current.getInvitedUserId() != null;
-        ProjectInvitation next = registeredTarget
-                ? ProjectInvitation.forRegisteredUser(projectId, current.getInvitedUserId(), actorId,
-                        current.getInitialRoles(), rawToken, clock.instant().plus(INVITATION_TTL))
-                : ProjectInvitation.forEmail(projectId, current.getEmail(), actorId,
-                        current.getInitialRoles(), rawToken, clock.instant().plus(INVITATION_TTL));
+        ProjectInvitation next = ProjectInvitation.forRegisteredUser(projectId, current.getInvitedUserId(), actorId,
+                current.getInitialRoles(), rawToken, clock.instant().plus(INVITATION_TTL));
         ProjectInvitation saved = invitations.saveAndFlush(next);
+        if (saved.getInvitedUserId() != null) events.publishEvent(new ProjectInvitationEvents.Created(
+                saved.getId(), projectId, saved.getInvitedUserId(), actorId));
 
-        String recipientEmail = registeredTarget
-                ? users.findActiveById(current.getInvitedUserId()).map(UserAccounts.AuthenticatedUser::email)
-                        .orElse(null)
-                : current.getEmail();
+        String recipientEmail = users.findActiveById(current.getInvitedUserId())
+                .map(UserAccounts.AuthenticatedUser::email).orElse(null);
         if (recipientEmail != null) {
             sendInvitationMailSafely(recipientEmail, project.getName(), projectId, saved.getId(), rawToken);
         }
@@ -157,11 +179,22 @@ public class ProjectInvitationService {
     @Transactional
     public void reject(UUID actorId, UUID projectId, UUID invitationId, String rawToken) {
         ProjectInvitation invitation = requireMatchingPendingInvitation(projectId, invitationId, rawToken);
-        if (invitation.getInvitedUserId() != null && !invitation.getInvitedUserId().equals(actorId)) {
+        rejectOwned(actorId, invitation, null);
+    }
+
+    @Transactional
+    public void rejectMine(UUID actorId, UUID invitationId, String message) {
+        ProjectInvitation invitation = ownPending(actorId, invitationId);
+        rejectOwned(actorId, invitation, message);
+    }
+
+    private void rejectOwned(UUID actorId, ProjectInvitation invitation, String message) {
+        if (!actorId.equals(invitation.getInvitedUserId()))
             throw new AccessDeniedException("This invitation is not addressed to you");
-        }
-        invitation.reject(clock.instant());
+        invitation.reject(clock.instant(), message);
         invitations.saveAndFlush(invitation);
+        events.publishEvent(new ProjectInvitationEvents.Rejected(invitation.getId(), invitation.getProjectId(),
+                actorId, invitation.getInvitedBy()));
     }
 
     /**
@@ -171,9 +204,18 @@ public class ProjectInvitationService {
     @Transactional
     public MemberSummary accept(UUID actorId, UUID projectId, UUID invitationId, String rawToken) {
         ProjectInvitation invitation = requireMatchingPendingInvitation(projectId, invitationId, rawToken);
-        if (invitation.getInvitedUserId() != null && !invitation.getInvitedUserId().equals(actorId)) {
+        return acceptOwned(actorId, invitation);
+    }
+
+    @Transactional
+    public MemberSummary acceptMine(UUID actorId, UUID invitationId) {
+        return acceptOwned(actorId, ownPending(actorId, invitationId));
+    }
+
+    private MemberSummary acceptOwned(UUID actorId, ProjectInvitation invitation) {
+        if (!actorId.equals(invitation.getInvitedUserId()))
             throw new AccessDeniedException("This invitation is not addressed to you");
-        }
+        UUID projectId = invitation.getProjectId();
         String nickname = users.findActiveById(actorId)
                 .map(UserAccounts.AuthenticatedUser::nickname)
                 .orElseThrow(() -> new NoSuchElementException("Active user not found"));
@@ -189,7 +231,17 @@ public class ProjectInvitationService {
         ProjectMembership saved = memberships.saveAndFlush(membership);
         invitation.accept(clock.instant());
         invitations.saveAndFlush(invitation);
+        events.publishEvent(new ProjectInvitationEvents.Accepted(invitation.getId(), projectId,
+                actorId, invitation.getInvitedBy()));
         return MemberSummary.from(saved, nickname);
+    }
+
+    private ProjectInvitation ownPending(UUID actorId, UUID invitationId) {
+        ProjectInvitation invitation = invitations.findById(invitationId)
+                .filter(candidate -> actorId.equals(candidate.getInvitedUserId()))
+                .orElseThrow(() -> new NoSuchElementException("Invitation not found"));
+        if (!invitation.isPending(clock.instant())) throw new InvitationConflictException("Invitation is not pending");
+        return invitation;
     }
 
     private ProjectInvitation requireMatchingPendingInvitation(UUID projectId, UUID invitationId, String rawToken) {

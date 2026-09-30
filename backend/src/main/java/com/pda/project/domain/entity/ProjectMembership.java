@@ -17,6 +17,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import org.hibernate.annotations.BatchSize;
 
 import java.time.Instant;
 import java.util.HashSet;
@@ -42,6 +43,7 @@ public class ProjectMembership {
     private UUID userId;
 
     @ElementCollection(fetch = FetchType.LAZY)
+    @BatchSize(size = 100)
     @CollectionTable(name = "project_membership_roles", joinColumns = @JoinColumn(name = "membership_id"))
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false, length = 40)

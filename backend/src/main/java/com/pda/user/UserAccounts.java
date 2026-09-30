@@ -2,6 +2,8 @@ package com.pda.user;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -12,6 +14,8 @@ public interface UserAccounts {
     boolean activateVerifiedEmail(UUID userId);
     Optional<AuthenticatedUser> authenticateLocal(String email, String password);
     Optional<AuthenticatedUser> findActiveById(UUID userId);
+    /** Active, non-sensitive user summaries in one query for paginated team/member views. */
+    Map<UUID, AuthenticatedUser> findActiveByIds(Set<UUID> userIds);
 
     /** ACTIVE user connected to this provider identity; empty when unknown or the account is not active. */
     Optional<AuthenticatedUser> findActiveByOAuthIdentity(OAuthProvider provider, String subject);

@@ -66,7 +66,7 @@ class SquadDomainTest {
         SquadMembership membership = SquadMembership.add(squadId, userId, creatorId);
 
         assertEquals(squadId, membership.getSquadId());
-        assertEquals(userId, membership.getUserId());
+        assertEquals(userId, membership.getProjectMembershipId());
         assertEquals(creatorId, membership.getAddedBy());
         assertThrows(NullPointerException.class, () -> SquadMembership.add(null, userId, creatorId));
         assertThrows(NullPointerException.class, () -> SquadMembership.add(squadId, null, creatorId));

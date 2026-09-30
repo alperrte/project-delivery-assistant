@@ -6,9 +6,11 @@ import java.time.Instant;
 import java.util.UUID;
 
 public record SquadResponse(UUID id, UUID projectId, String name, String description, UUID createdBy,
-                            Instant createdAt, Instant updatedAt, Instant archivedAt) {
+                            Instant createdAt, Instant updatedAt, Instant archivedAt,
+                            UUID parentTeamId, boolean general) {
     public static SquadResponse from(Squad squad) {
         return new SquadResponse(squad.getId(), squad.getProjectId(), squad.getName(), squad.getDescription(),
-                squad.getCreatedBy(), squad.getCreatedAt(), squad.getUpdatedAt(), squad.getArchivedAt());
+                squad.getCreatedBy(), squad.getCreatedAt(), squad.getUpdatedAt(), squad.getArchivedAt(),
+                squad.getParentSquadId(), squad.isGeneral());
     }
 }

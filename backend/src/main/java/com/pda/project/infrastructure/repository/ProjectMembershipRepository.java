@@ -30,6 +30,9 @@ public interface ProjectMembershipRepository extends JpaRepository<ProjectMember
     Page<ProjectMembership> findByProjectIdAndStatus(UUID projectId, MembershipStatus status,
                                                      Pageable pageable);
 
+    List<ProjectMembership> findByProjectIdAndIdInAndStatus(UUID projectId, Collection<UUID> ids,
+                                                            MembershipStatus status);
+
     @Query("select m.projectId, count(m) from ProjectMembership m where m.projectId in :projectIds "
             + "and m.status = com.pda.project.domain.enums.MembershipStatus.ACTIVE group by m.projectId")
     List<Object[]> countActiveByProjectIds(@Param("projectIds") Collection<UUID> projectIds);

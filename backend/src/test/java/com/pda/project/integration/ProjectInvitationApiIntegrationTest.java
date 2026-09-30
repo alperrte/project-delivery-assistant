@@ -180,7 +180,7 @@ class ProjectInvitationApiIntegrationTest {
     }
 
     @Test
-    void invitedUserCanRejectAndEmailInvitationCanBeClaimedByAnyAuthenticatedAccount() throws Exception {
+    void invitedUserCanRejectAndOnlyRegisteredEmailRecipientCanAccept() throws Exception {
         Cookie csrf = csrfCookie();
         Account manager = account("invmanager3");
         Account target = account("invtarget3");
@@ -208,20 +208,57 @@ class ProjectInvitationApiIntegrationTest {
                 .andExpect(status().isConflict());
 
         Account claimant = account("invclaimant3");
+        Account bystander = account("invbystander3");
         var emailInvite = mvc.perform(post("/api/v1/projects/" + projectId + "/invitations")
                         .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\":\"unregistered@example.test\",\"roles\":[\"ANALYST\"]}"))
+                        .content("{\"userId\":\"" + claimant.id() + "\",\"roles\":[\"ANALYST\"]}"))
                 .andExpect(status().isCreated()).andReturn().getResponse();
         UUID emailInvitationId = UUID.fromString(JsonPath.read(emailInvite.getContentAsString(), "$.invitationId"));
         String emailToken = JsonPath.read(emailInvite.getContentAsString(), "$.token");
 
+        mvc.perform(post("/api/v1/projects/" + projectId + "/invitations/" + emailInvitationId + "/accept")
+                        .cookie(csrf, bystander.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"token\":\"" + emailToken + "\"}"))
+                .andExpect(status().isForbidden());
         mvc.perform(post("/api/v1/projects/" + projectId + "/invitations/" + emailInvitationId + "/accept")
                         .cookie(csrf, claimant.access()).header("X-XSRF-TOKEN", csrf.getValue())
                         .contentType(MediaType.APPLICATION_JSON).content("{\"token\":\"" + emailToken + "\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userId").value(claimant.id().toString()))
                 .andExpect(jsonPath("$.roles[0]").value("ANALYST"));
+    }
+
+    @Test
+    void recipientListsAndRejectsWithMessageWhileManagerCanSeeHistory() throws Exception {
+        Cookie csrf = csrfCookie();
+        Account manager = account("myinvmanager");
+        Account recipient = account("myinvrecipient");
+        Account outsider = account("myinvoutsider");
+        UUID projectId = createProject(manager, csrf, "My invitation project");
+        var created = mvc.perform(post("/api/v1/projects/" + projectId + "/invitations")
+                        .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"userId\":\"" + recipient.id() + "\",\"roles\":[\"TESTER\"]}"))
+                .andExpect(status().isCreated()).andReturn().getResponse();
+        UUID invitationId = UUID.fromString(JsonPath.read(created.getContentAsString(), "$.invitationId"));
+
+        mvc.perform(get("/api/v1/project-invitations/me").cookie(recipient.access()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].id").value(invitationId.toString()));
+        mvc.perform(get("/api/v1/project-invitations/me").cookie(outsider.access()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(0));
+        mvc.perform(post("/api/v1/project-invitations/" + invitationId + "/accept")
+                        .cookie(csrf, outsider.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isNotFound());
+        mvc.perform(post("/api/v1/project-invitations/" + invitationId + "/reject")
+                        .cookie(csrf, recipient.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"message\":\"Not available\"}"))
+                .andExpect(status().isNoContent());
+        mvc.perform(get("/api/v1/projects/" + projectId + "/invitations/all").cookie(manager.access()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].status").value("REJECTED"))
+                .andExpect(jsonPath("$.content[0].rejectionMessage").value("Not available"));
     }
 
     @Test

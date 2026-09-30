@@ -20,6 +20,9 @@ public class NotificationFactory {
             case PROJECT_ROLE_CHANGED -> "Project role changed";
             case SQUAD_MEMBER_ADDED -> "Added to squad";
             case SQUAD_MEMBER_REMOVED -> "Removed from squad";
+            case PROJECT_INVITATION_CREATED -> "Project invitation";
+            case PROJECT_INVITATION_ACCEPTED -> "Invitation accepted";
+            case PROJECT_INVITATION_REJECTED -> "Invitation rejected";
         };
         String message = switch (type) {
             case TASK_ASSIGNED -> "You were assigned to a task.";
@@ -33,6 +36,9 @@ public class NotificationFactory {
             case PROJECT_ROLE_CHANGED -> "Your project role was changed.";
             case SQUAD_MEMBER_ADDED -> "You were added to a squad.";
             case SQUAD_MEMBER_REMOVED -> "You were removed from a squad.";
+            case PROJECT_INVITATION_CREATED -> "You were invited to a project.";
+            case PROJECT_INVITATION_ACCEPTED -> "Your project invitation was accepted.";
+            case PROJECT_INVITATION_REJECTED -> "Your project invitation was rejected.";
         };
         return new Notification(recipient, type, title, message, actor, projectId, resourceType, resourceId);
     }

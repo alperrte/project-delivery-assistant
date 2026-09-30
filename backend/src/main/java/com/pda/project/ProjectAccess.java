@@ -2,7 +2,10 @@ package com.pda.project;
 
 import com.pda.user.ProjectPermission;
 import java.util.Set;
+import java.util.Map;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 /**
  * Public Project module contract for other modules (Auth, Task, ...). Membership is owned by Project; what a role may
@@ -27,4 +30,13 @@ public interface ProjectAccess {
 
     /** Active members of an active project among the supplied IDs, in one lookup. */
     Set<UUID> activeMemberIds(UUID projectId, Set<UUID> userIds);
+
+    /** Safe active membership view; null when absent. Does not grant access by itself. */
+    ProjectMemberView member(UUID projectId, UUID userId);
+
+    /** Batch view for TeamMembership IDs; excludes removed and cross-project rows. */
+    Map<UUID, ProjectMemberView> membersByIds(UUID projectId, Set<UUID> membershipIds);
+
+    /** Active project members, paginated at the database for the General Team. */
+    Page<ProjectMemberView> members(UUID projectId, Pageable pageable);
 }

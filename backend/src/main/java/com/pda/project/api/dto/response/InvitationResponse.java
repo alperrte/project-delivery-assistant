@@ -11,10 +11,10 @@ import java.util.UUID;
 /** Never carries the raw token; see {@link CreatedInvitationResponse} for the once-only token response. */
 public record InvitationResponse(UUID id, UUID projectId, UUID invitedUserId, String email, UUID invitedBy,
                                  Set<ProjectRole> initialRoles, InvitationStatus status, Instant createdAt,
-                                 Instant expiresAt) {
+                                 Instant expiresAt, String rejectionMessage) {
     public static InvitationResponse from(InvitationSummary summary) {
         return new InvitationResponse(summary.id(), summary.projectId(), summary.invitedUserId(), summary.email(),
                 summary.invitedBy(), summary.initialRoles(), summary.status(), summary.createdAt(),
-                summary.expiresAt());
+                summary.expiresAt(), summary.rejectionMessage());
     }
 }

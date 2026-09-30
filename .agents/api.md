@@ -1,5 +1,9 @@
 # API rehberi
 
+## Teams ve alıcı davetleri (2026-09-30)
+
+Uygulanan yeni proje kapsamlı API `/api/v1/projects/{projectId}/teams` altında General/custom ekip listeleme, detay, create/update/parent taşıma/archive ve ekip üyeliği işlemleridir. General Team aktif `ProjectMembership` üyelerini yansıtır. `/api/v1/project-invitations/me` yalnız alıcının davetlerini; `/{invitationId}/accept|reject` yalnız o hesabın yanıtını sunar. `GET /api/v1/projects/{projectId}/invitations/all` yöneticinin geçmişini ve ret mesajını döner. Mevcut üyelik/rol endpointleri Project yetkisinde kalır; `/squads` uyumluluk yolu devam eder. Yöntem, body, yetki ve hata matrisi `SECURITY.md` §11'de, uçtan uca örnekler teslim kaydındadır.
+
 > Durum: teknik plan kararı. Endpoint adları, DTO alanları ve feature davranışları ilgili geliştirme planında kesinleştirilir. Bu belge henüz yayımlanmış bir API sözleşmesi değildir.
 
 ## Temel sözleşme

@@ -104,6 +104,9 @@ public class SecurityBaselineConfiguration {
                                     || "/api/v1/auth/password/change".equals(path)
                                     || path.startsWith("/api/v1/auth/oauth/")
                                     || path.matches("/api/v1/projects/[^/]+/tasks(?:/.*)?")
+                                    || path.matches("/api/v1/projects/[^/]+/teams(?:/.*)?")
+                                    || path.equals("/api/v1/project-invitations/me")
+                                    || path.startsWith("/api/v1/project-invitations/")
                                     || path.equals("/api/v1/notifications") || path.startsWith("/api/v1/notifications/");
                             writeProblem(response, unauthenticated ? 401 : 403);
                         })
@@ -122,6 +125,9 @@ public class SecurityBaselineConfiguration {
                         }
                     }
                     authorize.requestMatchers(HttpMethod.GET, "/actuator/health", "/api/v1/auth/csrf").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/v1/project-invitations/me").authenticated()
+                            .requestMatchers(HttpMethod.POST, "/api/v1/project-invitations/*/accept",
+                                    "/api/v1/project-invitations/*/reject").authenticated()
                             .requestMatchers(HttpMethod.GET, "/api/v1/auth/oauth/identities").authenticated()
                             .requestMatchers(HttpMethod.POST, "/api/v1/auth/oauth/*/link",
                                     "/api/v1/auth/oauth/*/unlink").authenticated()
@@ -152,6 +158,8 @@ public class SecurityBaselineConfiguration {
                                     "/api/v1/projects/*/invitations/*/accept",
                                     "/api/v1/projects/*/invitations/*/reject",
                                     "/api/v1/projects/*/squads",
+                                    "/api/v1/projects/*/teams",
+                                    "/api/v1/projects/*/teams/*/members",
                                     "/api/v1/projects/*/squads/*/archive",
                                     "/api/v1/projects/*/squads/*/members",
                                     "/api/v1/projects/*/criteria",
@@ -164,6 +172,8 @@ public class SecurityBaselineConfiguration {
                                     "/api/v1/organizations/*",
                                     "/api/v1/projects/*/members/*/roles",
                                     "/api/v1/projects/*/squads/*",
+                                    "/api/v1/projects/*/teams/*",
+                                    "/api/v1/projects/*/teams/*/parent",
                                     "/api/v1/projects/*/criteria/*").authenticated()
                             .requestMatchers(HttpMethod.DELETE, "/api/v1/projects/*/members/*",
                                     "/api/v1/projects/*/tasks/*",
@@ -172,6 +182,8 @@ public class SecurityBaselineConfiguration {
                                     "/api/v1/projects/*/repository",
                                     "/api/v1/projects/*/criteria/*",
                                     "/api/v1/projects/*/squads/*/members/*").authenticated()
+                            .requestMatchers(HttpMethod.DELETE, "/api/v1/projects/*/teams/*",
+                                    "/api/v1/projects/*/teams/*/members/*").authenticated()
                             .requestMatchers(HttpMethod.PATCH, "/api/v1/projects/*/tasks/*",
                                     "/api/v1/projects/*/tasks/*/status",
                                     "/api/v1/projects/*/tasks/*/blocked").authenticated()
@@ -210,6 +222,7 @@ public class SecurityBaselineConfiguration {
         source.registerCorsConfiguration("/api/v1/organizations/**", configuration);
         source.registerCorsConfiguration("/api/v1/notifications/**", configuration);
         source.registerCorsConfiguration("/api/v1/notifications", configuration);
+        source.registerCorsConfiguration("/api/v1/project-invitations/**", configuration);
         return source;
     }
 

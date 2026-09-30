@@ -48,9 +48,19 @@ public class ProjectInvitationController {
                 pageRequest(page, size)), InvitationResponse::from);
     }
 
+    @GetMapping("/all")
+    @Operation(summary = "List project invitation history including rejections", description = "PROJECT_MANAGER only; paginated")
+    public PageResponse<InvitationResponse> listAll(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
+                                                    @PathVariable UUID projectId,
+                                                    @RequestParam(defaultValue = "0") int page,
+                                                    @RequestParam(defaultValue = "20") int size) {
+        return PageResponse.from(invitations.listProject(AuthenticatedActor.id(principal), projectId,
+                pageRequest(page, size)), InvitationResponse::from);
+    }
+
     @PostMapping
-    @Operation(summary = "Invite a user into the project", description = "PROJECT_MANAGER only. Requires CSRF. "
-            + "Exactly one of userId or email must be set. The response carries the raw invitation token once; "
+    @Operation(summary = "Invite a registered user into the project", description = "PROJECT_MANAGER only. Requires CSRF. "
+            + "Exactly one of userId or an existing account email must be set. The response carries the raw invitation token once; "
             + "it is never persisted or returned again.")
     public ResponseEntity<CreatedInvitationResponse> create(
             @AuthenticationPrincipal UserAccounts.AuthenticatedUser principal, @PathVariable UUID projectId,

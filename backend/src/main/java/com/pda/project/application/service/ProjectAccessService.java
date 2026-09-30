@@ -2,15 +2,24 @@ package com.pda.project.application.service;
 
 import com.pda.project.ProjectAccess;
 import com.pda.project.ProjectTaskContext;
+import com.pda.project.ProjectMemberView;
 import com.pda.project.domain.enums.MembershipStatus;
 import com.pda.project.infrastructure.repository.ProjectMembershipRepository;
 import com.pda.project.infrastructure.repository.ProjectRepository;
 import com.pda.user.ProjectPermission;
 import com.pda.user.RolePolicy;
+import com.pda.user.UserAccounts;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Set;
+import java.util.Map;
+import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Stream;
+import com.pda.project.domain.entity.ProjectMembership;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -19,10 +28,13 @@ public class ProjectAccessService implements ProjectAccess {
 
     private final ProjectRepository projects;
     private final ProjectMembershipRepository memberships;
+    private final UserAccounts users;
 
-    public ProjectAccessService(ProjectRepository projects, ProjectMembershipRepository memberships) {
+    public ProjectAccessService(ProjectRepository projects, ProjectMembershipRepository memberships,
+                                UserAccounts users) {
         this.projects = projects;
         this.memberships = memberships;
+        this.users = users;
     }
 
     @Override
@@ -91,5 +103,44 @@ public class ProjectAccessService implements ProjectAccess {
             return Set.of();
         }
         return Set.copyOf(memberships.findActiveUserIds(projectId, userIds));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ProjectMemberView member(UUID projectId, UUID userId) {
+        if (projectId == null || userId == null || projects.findByIdAndArchivedAtIsNull(projectId).isEmpty()) return null;
+        return memberships.findByProjectIdAndUserIdAndStatus(projectId, userId, MembershipStatus.ACTIVE)
+                .map(m -> view(m, users.findActiveById(userId).orElse(null))).orElse(null);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<UUID, ProjectMemberView> membersByIds(UUID projectId, Set<UUID> membershipIds) {
+        if (projectId == null || membershipIds == null || membershipIds.isEmpty()
+                || projects.findByIdAndArchivedAtIsNull(projectId).isEmpty()) return Map.of();
+        return views(memberships.findByProjectIdAndIdInAndStatus(projectId, membershipIds, MembershipStatus.ACTIVE))
+                .stream().collect(Collectors.toMap(ProjectMemberView::membershipId, Function.identity()));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ProjectMemberView> members(UUID projectId, Pageable pageable) {
+        if (projects.findByIdAndArchivedAtIsNull(projectId).isEmpty()) throw new java.util.NoSuchElementException("Project not found");
+        Page<ProjectMembership> page = memberships.findByProjectIdAndStatus(projectId, MembershipStatus.ACTIVE, pageable);
+        Map<UUID, ProjectMemberView> mapped = views(page.getContent()).stream()
+                .collect(Collectors.toMap(ProjectMemberView::membershipId, Function.identity()));
+        return page.map(m -> mapped.get(m.getId()));
+    }
+
+    private List<ProjectMemberView> views(List<ProjectMembership> rows) {
+        Map<UUID, UserAccounts.AuthenticatedUser> accounts = users.findActiveByIds(rows.stream()
+                .map(ProjectMembership::getUserId).collect(Collectors.toSet()));
+        return rows.stream().map(m -> view(m, accounts.get(m.getUserId()))).toList();
+    }
+
+    private static ProjectMemberView view(ProjectMembership membership, UserAccounts.AuthenticatedUser account) {
+        return new ProjectMemberView(membership.getId(), membership.getUserId(),
+                account == null ? null : account.nickname(), account == null ? null : account.email(),
+                membership.getRoles(), membership.getJoinedAt());
     }
 }
