@@ -1,7 +1,7 @@
-import { apiRequest } from "@/lib/api/client";
+import { apiRequest, apiUrl } from "@/lib/api/client";
 import type { Page } from "@/types/pagination";
 import type { Member, ProjectRole } from "@/features/projects/types";
-import type { CreatedInvitation, Invitation, InvitationStatus, MyInvitation, ExternalInvitationPreview, AcceptedExternalInvitation } from "./types";
+import type { CreatedInvitation, Invitation, InvitationStatus, MyInvitation, ExternalInvitationPreview, AcceptedExternalInvitation, InvitationProjectPreview } from "./types";
 
 export const invitationsApi = {
   list: (projectId: string, page: number, size = 20, status?: InvitationStatus) =>
@@ -18,6 +18,10 @@ export const invitationsApi = {
     apiRequest<Member>(`/projects/${projectId}/invitations/${invitationId}/accept`, { method: "POST", body: { token } }),
   mine: (page: number, size = 20) =>
     apiRequest<Page<MyInvitation>>(`/project-invitations/me?page=${page}&size=${size}`),
+  previewMine: (invitationId: string) =>
+    apiRequest<InvitationProjectPreview>(`/project-invitations/${invitationId}/preview`),
+  previewLogoUrl: (invitationId: string, logoVersion: number) =>
+    apiUrl(`/project-invitations/${invitationId}/logo?v=${logoVersion}`),
   acceptMine: (invitationId: string) =>
     apiRequest<Member>(`/project-invitations/${invitationId}/accept`, { method: "POST" }),
   rejectMine: (invitationId: string, message: string) =>

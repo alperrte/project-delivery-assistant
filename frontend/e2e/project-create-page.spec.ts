@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
-import { registerAndLogin } from "./helpers";
+import { MANAGER_STORAGE } from "./global-setup";
+
+test.use({ storageState: MANAGER_STORAGE });
 
 // 1x1 transparent PNG; enough for the server's magic byte check.
 const PNG = Buffer.from(
@@ -9,7 +11,6 @@ const PNG = Buffer.from(
 
 test.describe("Yeni proje sayfası", () => {
   test("önizleme yazdıkça güncellenir ve teknoloji seçilebilir", async ({ page }) => {
-    await registerAndLogin(page, "newpage");
     await page.goto("/projects/new");
 
     const preview = page.getByRole("complementary", { name: "Önizleme" });
@@ -33,7 +34,6 @@ test.describe("Yeni proje sayfası", () => {
   });
 
   test("geçersiz logo reddedilir ve tür seçilmeden gönderilemez", async ({ page }) => {
-    await registerAndLogin(page, "newpagelogo");
     await page.goto("/projects/new");
 
     await page.locator('input[type="file"]').setInputFiles({
@@ -50,7 +50,6 @@ test.describe("Yeni proje sayfası", () => {
   });
 
   test("logo ile oluşturulan proje listede logosuyla görünür, kart başına /home çağrılmaz", async ({ page }) => {
-    await registerAndLogin(page, "newpagecreate");
     await page.goto("/projects/new");
 
     await page.locator('input[type="file"]').setInputFiles({ name: "logo.png", mimeType: "image/png", buffer: PNG });

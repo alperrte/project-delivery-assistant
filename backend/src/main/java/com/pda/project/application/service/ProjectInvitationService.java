@@ -5,13 +5,17 @@ import com.pda.project.ProjectInvitationEvents;
 import com.pda.project.ProjectInvitationOnboarding;
 import com.pda.project.ProjectTeamDirectory;
 import com.pda.project.domain.entity.ProjectInvitation;
+import com.pda.project.domain.entity.ProjectLogo;
 import com.pda.project.domain.entity.ProjectMembership;
 import com.pda.project.domain.enums.InvitationStatus;
 import com.pda.project.domain.enums.MembershipStatus;
+import com.pda.project.domain.enums.ProjectStatus;
+import com.pda.project.domain.enums.ProjectType;
 import com.pda.user.ProjectPermission;
 import com.pda.user.ProjectRole;
 import com.pda.user.RolePolicy;
 import com.pda.project.infrastructure.repository.ProjectInvitationRepository;
+import com.pda.project.infrastructure.repository.ProjectLogoRepository;
 import com.pda.project.infrastructure.repository.ProjectMembershipRepository;
 import com.pda.project.infrastructure.repository.ProjectRepository;
 import com.pda.user.UserAccounts;
@@ -31,6 +35,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Base64;
 import java.util.NoSuchElementException;
 import java.util.Objects;
@@ -58,6 +63,7 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
     private final ProjectRepository projects;
     private final ProjectMembershipRepository memberships;
     private final ProjectInvitationRepository invitations;
+    private final ProjectLogoRepository logos;
     private final UserAccounts users;
     private final ObjectProvider<ProjectInvitationMailPort> mailProvider;
     private final Clock clock;
@@ -66,13 +72,15 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
     private final ProjectTeamDirectory teams;
 
     public ProjectInvitationService(ProjectRepository projects, ProjectMembershipRepository memberships,
-                                    ProjectInvitationRepository invitations, UserAccounts users,
+                                    ProjectInvitationRepository invitations, ProjectLogoRepository logos,
+                                    UserAccounts users,
                                     ObjectProvider<ProjectInvitationMailPort> mailProvider, Clock clock,
                                     @Value("${FRONTEND_URL}") String frontendUrl,
                                     ApplicationEventPublisher events, ProjectTeamDirectory teams) {
         this.projects = projects;
         this.memberships = memberships;
         this.invitations = invitations;
+        this.logos = logos;
         this.users = users;
         this.mailProvider = mailProvider;
         this.clock = clock;
@@ -202,6 +210,40 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
     }
 
     public record MyInvitationSummary(InvitationSummary invitation, String projectName, String invitedByNickname) {}
+
+    /** Card-level fields only. The recipient may inspect an invitation without becoming a project member. */
+    public record InvitationProjectPreview(UUID projectId, String slug, String name, String tagline, String description,
+                                           String projectGoal, ProjectStatus status, ProjectType projectType,
+                                           String techStack, long memberCount, Instant updatedAt,
+                                           Long logoVersion) {}
+
+    @Transactional(readOnly = true)
+    public InvitationProjectPreview previewMine(UUID actorId, UUID invitationId) {
+        Project project = invitedProject(actorId, invitationId);
+        Instant logoUpdatedAt = project.getLogoUpdatedAt();
+        return new InvitationProjectPreview(project.getId(), project.getSlug(), project.getName(), project.getTagline(),
+                project.getDescription(), project.getProjectGoal(), project.getStatus(), project.getProjectType(),
+                project.getTechStack(), memberships.countByProjectIdAndStatus(project.getId(), MembershipStatus.ACTIVE),
+                project.getUpdatedAt(), logoUpdatedAt == null ? null : logoUpdatedAt.toEpochMilli());
+    }
+
+    @Transactional(readOnly = true)
+    public ProjectLogoService.StoredLogo previewLogoMine(UUID actorId, UUID invitationId) {
+        Project project = invitedProject(actorId, invitationId);
+        ProjectLogo logo = logos.findById(project.getId())
+                .orElseThrow(() -> new NoSuchElementException("Project logo not found"));
+        return new ProjectLogoService.StoredLogo(logo.getContentType(), logo.getData());
+    }
+
+    private Project invitedProject(UUID actorId, UUID invitationId) {
+        Objects.requireNonNull(actorId, "actorId is required");
+        Objects.requireNonNull(invitationId, "invitationId is required");
+        ProjectInvitation invitation = invitations.findById(invitationId)
+                .filter(candidate -> actorId.equals(candidate.getInvitedUserId()))
+                .orElseThrow(() -> new NoSuchElementException("Invitation not found"));
+        return projects.findByIdAndArchivedAtIsNull(invitation.getProjectId())
+                .orElseThrow(() -> new NoSuchElementException("Project not found"));
+    }
 
     @Override
     @Transactional(readOnly = true)

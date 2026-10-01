@@ -13,6 +13,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.HttpMethod;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -29,12 +31,15 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -303,7 +308,37 @@ class ProjectInvitationApiIntegrationTest {
 
         mvc.perform(get("/api/v1/project-invitations/me").cookie(recipient.access()))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(1))
-                .andExpect(jsonPath("$.content[0].id").value(invitationId.toString()));
+                .andExpect(jsonPath("$.content[0].id").value(invitationId.toString()))
+                .andExpect(jsonPath("$.content[0].teamName").value("Core"));
+        String previewPath = "/api/v1/project-invitations/" + invitationId + "/preview";
+        String logoPath = "/api/v1/project-invitations/" + invitationId + "/logo";
+        mvc.perform(get(previewPath).cookie(recipient.access()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.projectId").value(projectId.toString()))
+                .andExpect(jsonPath("$.name").value("My invitation project"))
+                .andExpect(jsonPath("$.status").value("PLANNING"))
+                .andExpect(jsonPath("$.memberCount").value(1))
+                .andExpect(jsonPath("$.team").doesNotExist())
+                .andExpect(jsonPath("$.members").doesNotExist());
+        mvc.perform(get("/api/v1/projects/" + projectId).cookie(recipient.access()))
+                .andExpect(status().isForbidden());
+        mvc.perform(get(previewPath)).andExpect(status().isUnauthorized());
+        mvc.perform(get(previewPath).cookie(outsider.access())).andExpect(status().isNotFound());
+        mvc.perform(get(logoPath).cookie(outsider.access())).andExpect(status().isNotFound());
+        mvc.perform(get(logoPath).cookie(recipient.access())).andExpect(status().isNotFound());
+        byte[] png = {(byte) 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0};
+        mvc.perform(multipart(HttpMethod.PUT, "/api/v1/projects/" + projectId + "/logo")
+                        .file(new MockMultipartFile("file", "logo.png", "image/png", png))
+                        .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isNoContent());
+        mvc.perform(get(previewPath).cookie(recipient.access()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.logoVersion").isNumber());
+        byte[] previewLogo = mvc.perform(get(logoPath).cookie(recipient.access()))
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, "image/png"))
+                .andExpect(header().string("X-Content-Type-Options", "nosniff"))
+                .andReturn().getResponse().getContentAsByteArray();
+        assertArrayEquals(png, previewLogo);
         mvc.perform(get("/api/v1/project-invitations/me").cookie(outsider.access()))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(0));
         mvc.perform(post("/api/v1/project-invitations/" + invitationId + "/accept")
@@ -317,6 +352,9 @@ class ProjectInvitationApiIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].status").value("REJECTED"))
                 .andExpect(jsonPath("$.content[0].rejectionMessage").value("Not available"));
+        mvc.perform(get(previewPath).cookie(recipient.access()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("My invitation project"));
     }
 
     @Test
