@@ -6,8 +6,10 @@ import com.pda.project.domain.entity.ProjectMembership;
 import com.pda.project.domain.enums.MembershipStatus;
 import com.pda.project.domain.enums.ProjectPriority;
 import com.pda.project.domain.enums.ProjectStatus;
+import com.pda.project.domain.enums.ProjectType;
 import com.pda.user.ProjectPermission;
 import com.pda.user.RolePolicy;
+import com.pda.user.UserAccounts;
 import com.pda.project.infrastructure.repository.ProjectMembershipRepository;
 import com.pda.project.infrastructure.repository.ProjectRepository;
 import com.pda.project.organization.application.OrganizationService;
@@ -19,34 +21,51 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
 public class ProjectService {
 
+    private static final int CARD_PREVIEW_MEMBERS = 5;
+
     private final ProjectRepository projects;
     private final ProjectMembershipRepository memberships;
     private final OrganizationService organizations;
     private final ApplicationEventPublisher events;
+    private final UserAccounts users;
 
     public ProjectService(ProjectRepository projects, ProjectMembershipRepository memberships,
-                          OrganizationService organizations, ApplicationEventPublisher events) {
+                          OrganizationService organizations, ApplicationEventPublisher events,
+                          UserAccounts users) {
         this.projects = projects;
         this.memberships = memberships;
         this.organizations = organizations;
         this.events = events;
+        this.users = users;
     }
 
     @Transactional
     public Project create(UUID actorId, String name, String description, UUID organizationId) {
+        return create(actorId, name, description, organizationId, null, null, null);
+    }
+
+    @Transactional
+    public Project create(UUID actorId, String name, String description, UUID organizationId,
+                          ProjectType projectType, String tagline, String techStack) {
         Objects.requireNonNull(actorId, "actorId is required");
         if (organizationId != null) {
             organizations.detail(actorId, organizationId);
         }
         Project project = projects.saveAndFlush(Project.create(name, SlugGenerator.generate(name),
-                description, actorId, organizationId));
+                description, actorId, organizationId, projectType, tagline, techStack));
         memberships.saveAndFlush(ProjectMembership.initialManager(project.getId(), actorId));
         events.publishEvent(new ProjectCreatedEvent(project.getId(), actorId));
         return project;
@@ -56,6 +75,45 @@ public class ProjectService {
     public Page<Project> list(UUID actorId, Pageable pageable) {
         Objects.requireNonNull(actorId, "actorId is required");
         return projects.findVisibleTo(actorId, pageable);
+    }
+
+    /** The list page plus per-project card data, using a fixed number of queries for the whole page. */
+    @Transactional(readOnly = true)
+    public Page<ProjectCardView> listCards(UUID actorId, Pageable pageable) {
+        Page<Project> page = list(actorId, pageable);
+        List<Project> content = page.getContent();
+        if (content.isEmpty()) {
+            return page.map(project -> new ProjectCardView(project, 0, List.of(), null));
+        }
+        List<UUID> projectIds = content.stream().map(Project::getId).toList();
+
+        Map<UUID, Integer> counts = new HashMap<>();
+        for (Object[] row : memberships.countActiveByProjectIds(projectIds)) {
+            counts.put((UUID) row[0], ((Number) row[1]).intValue());
+        }
+        Map<UUID, List<UUID>> previewIds = new HashMap<>();
+        Set<UUID> userIds = new HashSet<>();
+        for (Object[] row : memberships.findPreviewMembers(projectIds, CARD_PREVIEW_MEMBERS)) {
+            UUID projectId = (UUID) row[0];
+            UUID userId = (UUID) row[1];
+            previewIds.computeIfAbsent(projectId, key -> new ArrayList<>()).add(userId);
+            userIds.add(userId);
+        }
+        content.stream().map(Project::getUpdatedBy).filter(Objects::nonNull).forEach(userIds::add);
+        Map<UUID, UserAccounts.AuthenticatedUser> accounts = users.findActiveByIds(userIds);
+
+        return page.map(project -> new ProjectCardView(project,
+                counts.getOrDefault(project.getId(), 0),
+                previewIds.getOrDefault(project.getId(), List.of()).stream()
+                        .filter(accounts::containsKey)
+                        .map(id -> new ProjectCardView.Person(id, accounts.get(id).nickname()))
+                        .toList(),
+                person(accounts, project.getUpdatedBy())));
+    }
+
+    private static ProjectCardView.Person person(Map<UUID, UserAccounts.AuthenticatedUser> accounts, UUID userId) {
+        UserAccounts.AuthenticatedUser account = userId == null ? null : accounts.get(userId);
+        return account == null ? null : new ProjectCardView.Person(account.id(), account.nickname());
     }
 
     @Transactional(readOnly = true)
@@ -76,6 +134,15 @@ public class ProjectService {
     public Project update(UUID actorId, UUID projectId, String name, String description,
                           ProjectPriority priority, ProjectStatus status, LocalDate startDate,
                           LocalDate targetEndDate, String projectGoal, String techStack, UUID organizationId) {
+        return update(actorId, projectId, name, description, priority, status, startDate, targetEndDate,
+                projectGoal, techStack, organizationId, null, null);
+    }
+
+    @Transactional
+    public Project update(UUID actorId, UUID projectId, String name, String description,
+                          ProjectPriority priority, ProjectStatus status, LocalDate startDate,
+                          LocalDate targetEndDate, String projectGoal, String techStack, UUID organizationId,
+                          ProjectType projectType, String tagline) {
         require(actorId, projectId, ProjectPermission.PROJECT_UPDATE);
         Project project = activeProject(projectId);
         if (organizationId != null) {
@@ -86,6 +153,8 @@ public class ProjectService {
         }
         project.updateDetails(name, description, priority, startDate, targetEndDate,
                 projectGoal, techStack, organizationId);
+        project.updateIdentity(projectType, tagline);
+        project.touch(actorId);
         return projects.save(project);
     }
 

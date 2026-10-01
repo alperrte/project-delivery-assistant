@@ -1,84 +1,141 @@
+/* eslint-disable @next/next/no-img-element -- the project logo is an authenticated API image; next/image optimisation does not apply. */
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { useQuery } from "@tanstack/react-query";
-import { CalendarBlank } from "@phosphor-icons/react";
+import { ArrowRight, CalendarBlank } from "@phosphor-icons/react";
 import { EntityCard, EntityCardFooter, EntityCardLink, EntityCardSection, EntityStatusPill } from "@/components/common/entity-card";
 import { Avatar } from "@/components/ui/avatar";
-import { Skeleton } from "@/components/ui/skeleton";
+import { buttonVariants } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
-import { projectsApi } from "../api";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
+import { projectLogoUrl } from "../api";
 import { parseTechStack } from "../tech-stack";
-import type { Project } from "../types";
+import type { Project, ProjectType } from "../types";
 import {
   projectStatusBadgeClass,
   projectStatusDotClass,
   projectStatusTone,
   projectPriorityDotClass,
 } from "../status-colors";
+import { ProjectTypeBadge } from "./project-type";
+import { TechLogo, toTechLabels } from "./tech-logo";
 
-const MAX_TECH_CHIPS = 3;
-const MAX_AVATARS = 4;
+const MAX_TECH_LOGOS = 6;
+const MAX_AVATARS = 5;
 
-export function ProjectCard({ project }: { project: Project }) {
+export type ProjectCardData = Pick<
+  Project,
+  "id" | "slug" | "name" | "tagline" | "description" | "projectGoal" | "status" | "techStack" | "logoVersion" | "team" | "updatedBy" | "updatedAt"
+> & {
+  /** `null` only in the create preview, before a type has been picked. */
+  projectType: ProjectType | null;
+};
+
+/** Live preview on the create page: the link is inert and the logo comes from the file the user just picked. */
+export type ProjectCardPreview = { logoSrc: string | null; updatedLabel: string };
+
+const techChip = "relative z-10 inline-flex h-8 min-w-8 items-center justify-center rounded-md border bg-surface-2 px-1.5 text-xs font-medium text-muted-foreground";
+
+/** Logo tile content: the uploaded logo, or the first letter when there is none (or it failed to load). */
+export function ProjectMark({ name, src }: { name: string; src: string | null }) {
+  const locale = useLocale();
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  if (src && failedSrc !== src) {
+    return <img src={src} alt="" className="size-full rounded-[inherit] object-cover" onError={() => setFailedSrc(src)} />;
+  }
+  return <>{(name.trim().slice(0, 1) || "?").toLocaleUpperCase(locale)}</>;
+}
+
+function logoSource(project: Pick<Project, "id" | "logoVersion">, preview?: ProjectCardPreview): string | null {
+  if (preview) return preview.logoSrc;
+  return project.logoVersion == null ? null : projectLogoUrl(project.id, project.logoVersion);
+}
+
+/** Logos only; the name lives in a tooltip and in the accessible label. Free text from older projects stays a text chip. */
+function TechStrip({ labels }: { labels: string[] }) {
+  const t = useTranslations("projects.card");
+  const items = toTechLabels(labels);
+  const shown = items.slice(0, MAX_TECH_LOGOS);
+  const rest = items.slice(MAX_TECH_LOGOS);
+  const restNames = rest.map(({ label, tech }) => tech?.name ?? label).join(", ");
+
+  return (
+    <ul aria-label={t("technology")} className="flex flex-wrap items-center gap-1.5">
+      {shown.map(({ label, tech }) => (
+        <li key={label}>
+          {tech ? (
+            <Tooltip>
+              <TooltipTrigger render={<span role="img" aria-label={tech.name} className={techChip} />}>
+                <TechLogo tech={tech} />
+              </TooltipTrigger>
+              <TooltipContent>{tech.name}</TooltipContent>
+            </Tooltip>
+          ) : (
+            <span className={cn(techChip, "max-w-32 justify-start truncate")} title={label}>{label}</span>
+          )}
+        </li>
+      ))}
+      {rest.length > 0 && (
+        <li>
+          <Tooltip>
+            <TooltipTrigger render={<span role="img" aria-label={restNames} className={techChip} />}>+{rest.length}</TooltipTrigger>
+            <TooltipContent>{restNames}</TooltipContent>
+          </Tooltip>
+        </li>
+      )}
+    </ul>
+  );
+}
+
+export function ProjectCard({ project, preview }: { project: ProjectCardData; preview?: ProjectCardPreview }) {
   const t = useTranslations("projects");
   const locale = useLocale();
   const date = new Intl.DateTimeFormat(locale, { dateStyle: "medium" });
-  const href = `/projects/${project.slug}`;
   const tech = parseTechStack(project.techStack);
-  // Same key as the dashboard, so both screens share one cached Project Home.
-  const home = useQuery({
-    queryKey: ["project-home", project.id],
-    queryFn: () => projectsApi.home(project.id),
-  });
-  const managers = home.data?.managers ?? [];
-  const memberCount = home.data?.teamMemberCount ?? 0;
-  const shown = managers.slice(0, MAX_AVATARS);
-  const extra = Math.max(memberCount - shown.length, 0);
+  const team = project.team;
+  const members = team?.preview.slice(0, MAX_AVATARS) ?? [];
+  const extra = team ? Math.max(team.memberCount - members.length, 0) : 0;
+  const when = preview?.updatedLabel ?? date.format(new Date(project.updatedAt));
+  const updated = project.updatedBy ? t("card.updatedBy", { date: when, name: project.updatedBy.nickname }) : when;
 
   return (
     <EntityCard
       tone={projectStatusTone(project.status)}
-      mark={project.name.slice(0, 1).toLocaleUpperCase(locale)}
+      mark={<ProjectMark key={logoSource(project, preview) ?? "none"} name={project.name} src={logoSource(project, preview)} />}
       title={project.name}
-      description={project.description || project.projectGoal || t("cardNoDescription")}
+      description={project.tagline || project.description || project.projectGoal || t("cardNoDescription")}
       badge={
-        <EntityStatusPill
-          className={projectStatusBadgeClass(project.status)}
-          dotClassName={projectStatusDotClass(project.status)}
-          label={t(`overview.statusValues.${project.status}`)}
-        />
+        <div className="flex flex-wrap justify-center gap-1.5">
+          <EntityStatusPill
+            className={projectStatusBadgeClass(project.status)}
+            dotClassName={projectStatusDotClass(project.status)}
+            label={t(`overview.statusValues.${project.status}`)}
+          />
+          {project.projectType && (
+            <ProjectTypeBadge type={project.projectType} label={t(`card.types.${project.projectType}`)} />
+          )}
+        </div>
       }
+      className={preview ? "hover:translate-y-0 hover:border-border hover:shadow-none motion-safe:hover:translate-y-0" : undefined}
     >
       <EntityCardSection label={t("card.technology")}>
         {tech.length === 0 ? (
-          <p className="flex min-h-7 items-center text-sm text-muted-foreground">{t("card.noTechnology")}</p>
+          <p className="flex min-h-8 items-center text-sm text-muted-foreground">{t("card.noTechnology")}</p>
         ) : (
-          <ul className="flex flex-wrap gap-1.5">
-            {tech.slice(0, MAX_TECH_CHIPS).map((item) => (
-              <li key={item} className="max-w-full truncate rounded-md border bg-surface-2 px-2 py-1 text-xs font-medium text-foreground">{item}</li>
-            ))}
-            {tech.length > MAX_TECH_CHIPS && (
-              <li className="rounded-md border bg-surface-2 px-2 py-1 text-xs text-muted-foreground" title={tech.slice(MAX_TECH_CHIPS).join(", ")}>
-                +{tech.length - MAX_TECH_CHIPS}
-              </li>
-            )}
-          </ul>
+          <TechStrip labels={tech} />
         )}
       </EntityCardSection>
 
-      <EntityCardSection label={t("card.team")}>
-        {home.isLoading ? (
-          <Skeleton className="h-8 w-28" />
-        ) : home.isError ? (
-          <p className="flex min-h-8 items-center text-sm text-muted-foreground">{t("card.teamUnavailable")}</p>
-        ) : (
+      {team && (
+        <EntityCardSection label={t("card.team")}>
           <div className="flex items-center gap-3">
             <div className="flex -space-x-2" aria-hidden="true">
-              {shown.map((manager) => (
-                <Avatar key={manager.userId} name={manager.nickname} className="bg-muted text-foreground" />
+              {members.map((member) => (
+                <Avatar key={member.userId} name={member.nickname} className="bg-muted text-foreground" />
               ))}
               {extra > 0 && (
                 <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-medium text-muted-foreground ring-2 ring-card">
@@ -86,20 +143,34 @@ export function ProjectCard({ project }: { project: Project }) {
                 </span>
               )}
             </div>
-            <span className="text-sm text-muted-foreground">{t("card.members", { count: memberCount })}</span>
+            <span className="text-sm text-muted-foreground">{t("card.members", { count: team.memberCount })}</span>
           </div>
-        )}
-      </EntityCardSection>
+        </EntityCardSection>
+      )}
 
       <EntityCardSection label={t("card.lastUpdate")}>
         <p className="flex items-center gap-2 text-sm text-foreground">
-          <CalendarBlank size={16} className="text-muted-foreground" aria-hidden="true" />
-          <time dateTime={project.updatedAt}>{date.format(new Date(project.updatedAt))}</time>
+          <CalendarBlank size={16} className="shrink-0 text-muted-foreground" aria-hidden="true" />
+          <span className="min-w-0 truncate" title={updated}>{updated}</span>
         </p>
       </EntityCardSection>
 
       <EntityCardFooter>
-        <EntityCardLink href={href} label={t("card.open")} ariaLabel={t("card.openNamed", { name: project.name })} />
+        {preview ? (
+          <span
+            aria-disabled="true"
+            className={cn(buttonVariants({ variant: "outline", size: "lg" }), "min-w-0 flex-1 justify-between px-3 opacity-60")}
+          >
+            {t("card.open")}
+            <ArrowRight size={16} aria-hidden="true" />
+          </span>
+        ) : (
+          <EntityCardLink
+            href={`/projects/${project.slug}`}
+            label={t("card.open")}
+            ariaLabel={t("card.openNamed", { name: project.name })}
+          />
+        )}
       </EntityCardFooter>
     </EntityCard>
   );
@@ -110,6 +181,7 @@ export function ProjectRow({ project }: { project: Project }) {
   const locale = useLocale();
   const router = useRouter();
   const date = new Intl.DateTimeFormat(locale, { dateStyle: "medium" });
+  const logo = logoSource(project);
 
   return (
     <TableRow
@@ -122,7 +194,7 @@ export function ProjectRow({ project }: { project: Project }) {
             aria-hidden="true"
             className="grid size-9 shrink-0 place-items-center rounded-lg border border-primary/25 bg-primary/10 font-heading text-sm font-semibold text-primary"
           >
-            {project.name.slice(0, 1).toLocaleUpperCase(locale)}
+            <ProjectMark key={logo ?? "none"} name={project.name} src={logo} />
           </span>
           <div className="min-w-0">
             <Link
@@ -133,7 +205,7 @@ export function ProjectRow({ project }: { project: Project }) {
               {project.name}
             </Link>
             <p className="truncate text-xs text-muted-foreground">
-              {project.description || project.projectGoal || t("cardNoDescription")}
+              {project.tagline || project.description || project.projectGoal || t("cardNoDescription")}
             </p>
           </div>
         </div>
@@ -150,6 +222,7 @@ export function ProjectRow({ project }: { project: Project }) {
           {t(`overview.priorityValues.${project.priority}`)}
         </span>
       </TableCell>
+      <TableCell className="text-muted-foreground">{t(`card.types.${project.projectType}`)}</TableCell>
       <TableCell className="text-muted-foreground">{project.techStack || "—"}</TableCell>
       <TableCell className="text-right text-muted-foreground">{date.format(new Date(project.updatedAt))}</TableCell>
     </TableRow>

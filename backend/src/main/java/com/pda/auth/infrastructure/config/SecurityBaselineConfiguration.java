@@ -176,8 +176,10 @@ public class SecurityBaselineConfiguration {
                                     "/api/v1/projects/*/squads/*",
                                     "/api/v1/projects/*/teams/*",
                                     "/api/v1/projects/*/teams/*/parent",
-                                    "/api/v1/projects/*/criteria/*").authenticated()
+                                    "/api/v1/projects/*/criteria/*",
+                                    "/api/v1/projects/*/logo").authenticated()
                             .requestMatchers(HttpMethod.DELETE, "/api/v1/projects/*/members/*",
+                                    "/api/v1/projects/*/logo",
                                     "/api/v1/projects/*/tasks/*",
                                     "/api/v1/projects/*/members/*/roles/*",
                                     "/api/v1/projects/*/invitations/*",

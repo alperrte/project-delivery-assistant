@@ -20,9 +20,9 @@ import { errorKey } from "@/lib/api/error-message";
 import { cn } from "@/lib/utils";
 import { organizationsApi } from "@/features/organizations/api";
 import { projectsApi } from "../api";
-import { projectPriorities, projectSettingsSchema, projectStatuses, type ProjectSettingsValues } from "../schemas";
+import { projectPriorities, projectSettingsSchema, projectStatuses, TAGLINE_MAX, type ProjectSettingsValues } from "../schemas";
 import { formatTechStack, parseTechStack } from "../tech-stack";
-import type { Project } from "../types";
+import { PROJECT_TYPES, type Project } from "../types";
 
 const inputClass = "h-10 bg-background px-3";
 const textareaClass = "min-h-20 bg-background px-3 py-2.5 leading-6";
@@ -40,6 +40,8 @@ function toFormValues(project: Project): ProjectSettingsValues {
     projectGoal: project.projectGoal ?? "",
     techStack: project.techStack ?? "",
     organizationId: project.organizationId ?? undefined,
+    projectType: project.projectType,
+    tagline: project.tagline ?? "",
   };
 }
 
@@ -73,6 +75,7 @@ function Field({
 
 export function ProjectSettingsForm({ project }: { project: Project }) {
   const t = useTranslations("projects.settings");
+  const tCard = useTranslations("projects.card");
   const tv = useTranslations("validation");
   const te = useTranslations("errors");
   const router = useRouter();
@@ -132,6 +135,35 @@ export function ProjectSettingsForm({ project }: { project: Project }) {
                 aria-invalid={!!errors.name}
                 aria-describedby={errors.name ? "settings-name-error" : undefined}
                 {...register("name")}
+              />
+            </Field>
+            <Field id="settings-tagline" label={t("tagline")} error={errors.tagline && tv(errors.tagline.message!)}>
+              <Input
+                id="settings-tagline"
+                className={inputClass}
+                maxLength={TAGLINE_MAX}
+                placeholder={t("taglinePlaceholder")}
+                aria-invalid={!!errors.tagline}
+                aria-describedby={errors.tagline ? "settings-tagline-error" : undefined}
+                {...register("tagline")}
+              />
+            </Field>
+            <Field id="settings-type" label={t("type")}>
+              <Controller
+                control={control}
+                name="projectType"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger id="settings-type" className={selectClass}>
+                      <SelectValue>{(value: (typeof PROJECT_TYPES)[number]) => tCard(`types.${value}`)}</SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PROJECT_TYPES.map((type) => (
+                        <SelectItem key={type} value={type}>{tCard(`types.${type}`)}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               />
             </Field>
             <Field id="settings-description" label={t("description")} error={errors.description && tv(errors.description.message!)}>

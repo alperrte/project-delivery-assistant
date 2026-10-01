@@ -18,7 +18,10 @@
       "total": "{count, plural, one {# item} other {# items}}",
       "previous": "Previous",
       "next": "Next",
-      "pageOf": "Page {page} of {totalPages}"
+      "pageOf": "Page {page} of {totalPages}",
+      "navLabel": "Pagination",
+      "pageNumber": "Page {page}",
+      "showing": "Showing {from}-{to}"
     },
     "showPassword": "Show password",
     "hidePassword": "Hide password"
@@ -38,7 +41,10 @@
     "mailUnavailable": "The mail system is temporarily unavailable. Please try again later.",
     "currentPasswordIncorrect": "Your current password is incorrect.",
     "passwordUnchanged": "The new password cannot be the same as your current password.",
-    "accountUnavailable": "Your account is currently unavailable."
+    "accountUnavailable": "Your account is currently unavailable.",
+    "PROJECT_LOGO_INVALID_TYPE": "The logo must be a PNG, JPEG or WebP file.",
+    "PROJECT_LOGO_TOO_LARGE": "The logo can be at most 512 KB.",
+    "PROJECT_LOGO_EMPTY": "The logo file is empty."
   },
   "app": {
     "nav": {
@@ -97,7 +103,23 @@
     }
   },
   "projects": {
-    "card": { "technology": "Technology", "noTechnology": "No technology listed", "team": "Team", "teamUnavailable": "Team details could not be loaded.", "members": "{count, plural, one {# member} other {# members}}", "lastUpdate": "Last update", "open": "Open project", "openNamed": "Open project {name}" },
+    "card": {
+      "technology": "Technology",
+      "noTechnology": "No technology specified",
+      "team": "Team",
+      "members": "{count, plural, one {# member} other {# members}}",
+      "lastUpdate": "Last update",
+      "updatedBy": "{date} · {name}",
+      "open": "Open project",
+      "openNamed": "Open project {name}",
+      "types": {
+        "WEB": "Web",
+        "MOBILE": "Mobile",
+        "AI": "AI",
+        "DESKTOP": "Desktop",
+        "OTHER": "Other"
+      }
+    },
     "cardLabel": "PROJECT",
     "cardNoDescription": "No description added yet.",
     "cardGoal": "Goal",
@@ -108,15 +130,115 @@
     "emptyTitle": "No projects yet",
     "emptyDescription": "Create your first project to get started.",
     "columns": { "name": "Name", "status": "Status", "priority": "Priority", "techStack": "Tech stack", "updatedAt": "Updated" },
-    "form": {
-      "createTitle": "New project",
-      "name": "Name",
-      "description": "Description",
-      "organization": "Organization",
-      "organizationNone": "No organization",
-      "cancel": "Cancel",
-      "create": "Create",
-      "created": "Project created."
+    "emptyAction": "Create your first project",
+    "newPage": {
+      "title": "New project",
+      "description": "Define the project's identity. The card on the right shows how it will look in the list.",
+      "sections": {
+        "identity": {
+          "title": "Identity",
+          "description": "The logo, name and tagline appear at the top of the card."
+        },
+        "type": {
+          "title": "Project type",
+          "description": "The type shows as a badge on the card and shapes the technology suggestions."
+        },
+        "technology": {
+          "title": "Technologies",
+          "description": "Only their logos appear on the card. Pick up to {max}."
+        },
+        "details": {
+          "title": "Details",
+          "description": "Organization and description are optional."
+        }
+      },
+      "logo": {
+        "label": "Logo",
+        "hint": "PNG, JPEG or WebP, up to 512 KB. Without a logo the first letter of the name is used.",
+        "choose": "Upload logo",
+        "change": "Change",
+        "remove": "Remove",
+        "drop": "Drop the file here or choose one",
+        "invalidType": "Upload a PNG, JPEG or WebP file.",
+        "tooLarge": "The logo can be at most 512 KB."
+      },
+      "name": {
+        "label": "Project name",
+        "placeholder": "e.g. Delivery Portal",
+        "address": "Address: /projects/{slug}"
+      },
+      "tagline": {
+        "label": "Tagline",
+        "optional": "Optional",
+        "placeholder": "Describe the project in one sentence",
+        "counter": "{count}/{max}"
+      },
+      "technology": {
+        "search": "Search technologies",
+        "searchPlaceholder": "Search technologies",
+        "noResults": "No matching technology.",
+        "selected": "{count}/{max} selected",
+        "otherSelections": "Other selections",
+        "categories": {
+          "frontend": "Frontend",
+          "backend": "Backend",
+          "database": "Database",
+          "infrastructure": "Infrastructure",
+          "app": "App",
+          "tools": "Tools",
+          "backendService": "Backend and cloud",
+          "data": "Data",
+          "language": "Language and environment",
+          "framework": "Models and frameworks",
+          "provider": "Model provider",
+          "services": "Services and data",
+          "desktop": "Desktop",
+          "all": "All technologies"
+        }
+      },
+      "details": {
+        "organization": "Organization",
+        "organizationNone": "No organization",
+        "description": "Description",
+        "descriptionPlaceholder": "What does this project do, and for whom?"
+      },
+      "preview": {
+        "title": "Preview",
+        "caption": "This is how the card will look in the list.",
+        "you": "You",
+        "now": "Just now",
+        "namePlaceholder": "Project name",
+        "taglinePlaceholder": "Your tagline appears here",
+        "show": "Show preview"
+      },
+      "actions": {
+        "cancel": "Cancel",
+        "submit": "Create project",
+        "created": "Project created.",
+        "logoFailed": "The logo could not be uploaded. You can try again from the project settings."
+      },
+      "types": {
+        "WEB": {
+          "name": "Web",
+          "description": "A site or app that runs in the browser"
+        },
+        "MOBILE": {
+          "name": "Mobile",
+          "description": "An iOS or Android app"
+        },
+        "AI": {
+          "name": "AI",
+          "description": "A model, agent or data-driven product"
+        },
+        "DESKTOP": {
+          "name": "Desktop",
+          "description": "A Windows, macOS or Linux app"
+        },
+        "OTHER": {
+          "name": "Other",
+          "description": "Any other kind of project"
+        }
+      }
     },
     "detail": {
       "selectedProject": "Selected project",
@@ -228,6 +350,9 @@
       "discard": "Discard changes",
       "dangerTitle": "Archive project",
       "dangerDescription": "An archived project can no longer be changed and is hidden from active lists. This cannot be undone.",
+      "tagline": "Tagline",
+      "taglinePlaceholder": "Describe the project in one sentence",
+      "type": "Project type",
       "sections": {
         "general": { "title": "General", "description": "The project's name, description and goal. Shown in lists and the project header." },
         "planning": { "title": "Planning", "description": "Status, priority and dates. An organization groups the project under a workspace." },

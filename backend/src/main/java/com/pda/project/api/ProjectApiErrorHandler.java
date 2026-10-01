@@ -3,6 +3,7 @@ package com.pda.project.api;
 import com.pda.project.application.service.GitHubIntegrationException;
 import com.pda.project.application.service.InvitationConflictException;
 import com.pda.project.application.service.MembershipConflictException;
+import com.pda.project.application.service.ProjectLogoException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -14,6 +15,9 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -37,6 +41,22 @@ public class ProjectApiErrorHandler {
             MissingServletRequestParameterException.class, IllegalArgumentException.class})
     ResponseEntity<ProblemDetail> invalidInput() {
         return problem(HttpStatus.BAD_REQUEST, "Invalid request");
+    }
+
+    @ExceptionHandler(ProjectLogoException.class)
+    ResponseEntity<ProblemDetail> invalidLogo(ProjectLogoException exception) {
+        return logoProblem(exception.code());
+    }
+
+    /** The servlet multipart limit trips before the service can measure the file. */
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    ResponseEntity<ProblemDetail> logoTooLarge() {
+        return logoProblem(ProjectLogoException.TOO_LARGE);
+    }
+
+    @ExceptionHandler({MissingServletRequestPartException.class, MultipartException.class})
+    ResponseEntity<ProblemDetail> missingLogoPart() {
+        return logoProblem(ProjectLogoException.EMPTY);
     }
 
     @ExceptionHandler(NoSuchElementException.class)
@@ -72,6 +92,12 @@ public class ProjectApiErrorHandler {
             case RATE_LIMITED -> problem(HttpStatus.TOO_MANY_REQUESTS, "GitHub rate limit reached");
             case UNAVAILABLE -> problem(HttpStatus.SERVICE_UNAVAILABLE, "GitHub is currently unavailable");
         };
+    }
+
+    private static ResponseEntity<ProblemDetail> logoProblem(String code) {
+        ProblemDetail body = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Invalid project logo");
+        body.setProperty("code", code);
+        return ResponseEntity.badRequest().header("Cache-Control", "no-store").body(body);
     }
 
     private static ResponseEntity<ProblemDetail> problem(HttpStatus status, String detail) {

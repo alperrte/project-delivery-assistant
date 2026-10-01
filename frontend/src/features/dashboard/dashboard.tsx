@@ -5,10 +5,9 @@ import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { ArrowRight, Plus, Lightning, FolderSimple, CheckCircle, Clock, CaretLeft, CaretRight, Users, GearSix } from "@phosphor-icons/react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/common/empty-state";
-import { ProjectCreateDialog } from "@/features/projects/components/project-create-dialog";
 import { projectsApi } from "@/features/projects/api";
 import { projectStatusDotClass } from "@/features/projects/status-colors";
 import type { Project } from "@/features/projects/types";
@@ -64,7 +63,7 @@ export function Dashboard() {
   const projects = query.data?.content ?? [];
   const homes = useQueries({ queries: projects.map(project => ({ queryKey: ["project-home", project.id], queryFn: () => projectsApi.home(project.id) })) });
   const updates = [...projects].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
-  const create = <ProjectCreateDialog trigger={<Button><Plus size={16} aria-hidden="true" />{t("create")}</Button>} />;
+  const create = <Link href="/projects/new" className={buttonVariants()}><Plus size={16} aria-hidden="true" />{t("create")}</Link>;
   const updateList = <section className="min-w-0"><h2 className="mb-4 text-[15px] font-semibold">{t("updates")}</h2><div className="space-y-0">{updates.map(project => <Link key={project.id} href={`/projects/${project.slug}`} className="flex items-start gap-3 border-b py-3 last:border-0 hover:bg-muted/50"><span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full border bg-surface-2"><Clock size={14} aria-hidden="true" /></span><span className="min-w-0 flex-1"><span className="block truncate text-xs font-medium">{project.name}</span><span className="text-[11px] text-muted-foreground">{t("projectUpdated")}</span></span><time dateTime={project.updatedAt} className="shrink-0 text-[10px] text-muted-foreground">{new Date(project.updatedAt).toLocaleDateString(locale, { day: "numeric", month: "short" })}</time></Link>)}{!query.isLoading && !query.isError && !updates.length && <p className="text-xs text-muted-foreground">{t("noUpdates")}</p>}</div></section>;
 
   return <div className="grid min-h-[calc(100dvh-3.5rem)] xl:grid-cols-[minmax(0,1fr)_300px] 2xl:grid-cols-[minmax(0,1fr)_320px]">
@@ -98,7 +97,7 @@ export function Dashboard() {
     </div>
     <aside aria-label={t("insights")} className="min-w-0 space-y-6 border-t bg-surface-2 p-5 xl:border-t-0 xl:border-l">
       <section><h2 className="mb-3 text-sm font-semibold">{t("workspace")}</h2><div className="rounded-lg border bg-card p-4"><div className="flex items-center justify-between"><span className="text-xs text-muted-foreground">{t("totalProjects")}</span><span className="text-xl font-semibold tabular-nums">{query.data?.totalElements ?? "—"}</span></div><p className="mt-3 border-t pt-3 text-xs leading-5 text-muted-foreground">{t("summaryDescription")}</p></div></section>
-      <section><h2 className="mb-2 text-xs font-medium text-muted-foreground">{t("quickActions")}</h2><ProjectCreateDialog trigger={<button className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-xs hover:bg-muted"><Plus size={17} aria-hidden="true" />{t("create")}<ArrowRight className="ml-auto" size={14} aria-hidden="true" /></button>} /><Link href="/organizations" className="flex items-center gap-3 rounded-md px-3 py-2.5 text-xs hover:bg-muted"><Users size={17} aria-hidden="true" />{t("teams")}<ArrowRight className="ml-auto" size={14} aria-hidden="true" /></Link><Link href="/account" className="flex items-center gap-3 rounded-md px-3 py-2.5 text-xs hover:bg-muted"><GearSix size={17} aria-hidden="true" />{t("settings")}<ArrowRight className="ml-auto" size={14} aria-hidden="true" /></Link></section>
+      <section><h2 className="mb-2 text-xs font-medium text-muted-foreground">{t("quickActions")}</h2><Link href="/projects/new" className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-xs hover:bg-muted"><Plus size={17} aria-hidden="true" />{t("create")}<ArrowRight className="ml-auto" size={14} aria-hidden="true" /></Link><Link href="/organizations" className="flex items-center gap-3 rounded-md px-3 py-2.5 text-xs hover:bg-muted"><Users size={17} aria-hidden="true" />{t("teams")}<ArrowRight className="ml-auto" size={14} aria-hidden="true" /></Link><Link href="/account" className="flex items-center gap-3 rounded-md px-3 py-2.5 text-xs hover:bg-muted"><GearSix size={17} aria-hidden="true" />{t("settings")}<ArrowRight className="ml-auto" size={14} aria-hidden="true" /></Link></section>
       <MiniCalendar projects={projects} />
     </aside>
   </div>;

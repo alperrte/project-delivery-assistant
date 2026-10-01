@@ -2,6 +2,7 @@ package com.pda.project.api.dto.request;
 
 import com.pda.project.domain.enums.ProjectPriority;
 import com.pda.project.domain.enums.ProjectStatus;
+import com.pda.project.domain.enums.ProjectType;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -11,7 +12,8 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 /** {@code status} may be any operational value (PLANNING/ACTIVE/ON_HOLD/COMPLETED); ARCHIVED is rejected here on
- * purpose — archiving only happens through {@code POST /projects/{id}/archive}. */
+ * purpose — archiving only happens through {@code POST /projects/{id}/archive}. A null {@code projectType} keeps
+ * the current type; {@code tagline} is replaced as sent (null clears it). */
 public record UpdateProjectRequest(
         @NotBlank @Size(max = 160) String name,
         @Size(max = 2000) String description,
@@ -21,7 +23,9 @@ public record UpdateProjectRequest(
         LocalDate targetEndDate,
         @Size(max = 2000) String projectGoal,
         @Size(max = 1000) String techStack,
-        UUID organizationId
+        UUID organizationId,
+        ProjectType projectType,
+        @Size(max = 120) String tagline
 ) {
     @AssertTrue(message = "targetEndDate cannot precede startDate")
     public boolean isDateOrderValid() {

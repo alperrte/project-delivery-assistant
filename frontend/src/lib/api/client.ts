@@ -54,7 +54,8 @@ async function toApiError(res: Response): Promise<ApiError> {
 
 async function send(path: string, init: RequestInit, method: string): Promise<Response> {
   const headers = new Headers(init.headers);
-  if (init.body) headers.set("Content-Type", "application/json");
+  // FormData must keep the browser-generated multipart boundary, so only JSON bodies get a Content-Type.
+  if (init.body && !(init.body instanceof FormData)) headers.set("Content-Type", "application/json");
   if (method !== "GET") {
     const { headerName, token } = await ensureCsrf();
     headers.set(headerName, token);
@@ -83,7 +84,10 @@ export async function apiRequest<T = void>(
   options: { method?: "GET" | "POST" | "PUT" | "DELETE"; body?: unknown } = {},
 ): Promise<T> {
   const method = options.method ?? "GET";
-  const init: RequestInit = options.body === undefined ? {} : { body: JSON.stringify(options.body) };
+  const init: RequestInit =
+    options.body === undefined
+      ? {}
+      : { body: options.body instanceof FormData ? options.body : JSON.stringify(options.body) };
 
   let res = await send(path, init, method);
 

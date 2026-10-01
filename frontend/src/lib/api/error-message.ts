@@ -12,6 +12,9 @@ const CODE_KEYS: Record<string, string> = {
   current_password_incorrect: "currentPasswordIncorrect",
   password_unchanged: "passwordUnchanged",
   account_unavailable: "accountUnavailable",
+  PROJECT_LOGO_INVALID_TYPE: "PROJECT_LOGO_INVALID_TYPE",
+  PROJECT_LOGO_TOO_LARGE: "PROJECT_LOGO_TOO_LARGE",
+  PROJECT_LOGO_EMPTY: "PROJECT_LOGO_EMPTY",
 };
 
 /** Maps an API failure to a key under the `errors` i18n namespace. */

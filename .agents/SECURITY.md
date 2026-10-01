@@ -414,6 +414,22 @@ Swagger check path: `/swagger-ui/index.html` with `API_DOCS_ENABLED=true`: `GET 
 
 ---
 
+### Project identity and logo endpoints (2026-10-01)
+
+New migration `V34__project_identity.sql` (`project_type`, `tagline`, `updated_by`, `logo_updated_at`, `project_logos`); no new ENV key or dependency. `CreateProjectRequest` now requires `projectType` and accepts `tagline` (max 120) and `techStack` (max 1000); `UpdateProjectRequest` accepts `projectType` and `tagline`. `GET /api/v1/projects` list items additionally return `projectType`, `tagline`, `logoVersion`, `updatedBy {userId,nickname}` and `team {memberCount, preview[]}` (first 5 active members, computed with a fixed number of queries per page; the card no longer calls `/home`).
+
+Logo storage is an approved exception to §18 (see there). Bytes live in the separate `project_logos` table, never in list queries. No new `RolePolicy` action: existing `PROJECT_UPDATE` and `PROJECT_VIEW` apply (deny-by-default kept).
+
+| Endpoint | Auth / scope | Input | Success | Important errors |
+| --- | --- | --- | --- | --- |
+| `PUT /api/v1/projects/{projectId}/logo` | `PROJECT_UPDATE` + CSRF | multipart `file`, max 512 KB | `204` | `400` `PROJECT_LOGO_INVALID_TYPE` / `PROJECT_LOGO_TOO_LARGE` / empty file, `403` role/CSRF, `404` |
+| `DELETE /api/v1/projects/{projectId}/logo` | `PROJECT_UPDATE` + CSRF | none | `204` | `403`, `404` |
+| `GET /api/v1/projects/{projectId}/logo` | `PROJECT_VIEW` | none | `200` image bytes; `Content-Type` is the stored type, `X-Content-Type-Options: nosniff`, `Content-Disposition: inline`, `Cache-Control: private, max-age=31536000, immutable` (URL is versioned with `?v=logoVersion`) | `403` not a member, `404` no logo |
+
+Swagger check path: `/swagger-ui/index.html` with `API_DOCS_ENABLED=true`: `GET /api/v1/auth/csrf`, log in, pick a `projectId` from `GET /api/v1/projects`, then call the endpoints above.
+
+---
+
 ### Task Service backend endpoints (F5)
 
 Swagger check path: `/swagger-ui/index.html` with `API_DOCS_ENABLED=true`. Call `GET /api/v1/auth/csrf`, log in, create/select an active project, then use the endpoints below. All mutations require the `X-XSRF-TOKEN` header and `PDA_ACCESS` HttpOnly cookie. `ADMIN` alone grants no project access. All routes are project scoped and return `ProblemDetail` on errors.
@@ -546,6 +562,8 @@ When file handling is introduced:
 - uploaded file type/content validation must be implemented according to the relevant feature's requirements.
 
 File attachment/storage is outside PDA V1 unless explicitly approved.
+
+**Approved exception (2026-10-01): project logo.** A single image per project is stored in the database (`project_logos`, `BYTEA`), not on disk, so no path or filename is ever used. The uploaded filename and the client `Content-Type` are ignored; the type is derived from magic bytes (PNG `89 50 4E 47`, JPEG `FF D8 FF`, WebP `RIFF....WEBP`). SVG and GIF are rejected (script/active-content risk). Size is capped at 512 KB (also a DB `CHECK`), empty files are rejected, and the image is served with `nosniff` and `inline` disposition. Any other upload feature still needs its own approval.
 
 ---
 

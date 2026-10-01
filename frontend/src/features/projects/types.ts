@@ -2,6 +2,13 @@ export type ProjectStatus = "PLANNING" | "ACTIVE" | "ON_HOLD" | "COMPLETED" | "A
 export type ProjectPriority = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 export type ProjectVisibility = "PRIVATE";
 
+export const PROJECT_TYPES = ["WEB", "MOBILE", "AI", "DESKTOP", "OTHER"] as const;
+export type ProjectType = (typeof PROJECT_TYPES)[number];
+
+export type UserRef = { userId: string; nickname: string };
+/** Filled by the list endpoint only (aggregated per page); detail responses carry `null`. */
+export type ProjectTeam = { memberCount: number; preview: UserRef[] };
+
 export type Project = {
   id: string;
   name: string;
@@ -19,6 +26,12 @@ export type Project = {
   createdAt: string;
   updatedAt: string;
   archivedAt: string | null;
+  projectType: ProjectType;
+  tagline: string | null;
+  /** Epoch ms of the stored logo; `null` means no logo. Append to the logo URL as `?v=` for cache busting. */
+  logoVersion: number | null;
+  updatedBy: UserRef | null;
+  team: ProjectTeam | null;
 };
 
 export type OrganizationSummary = { id: string; name: string; slug: string };
