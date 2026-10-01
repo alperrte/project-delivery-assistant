@@ -1,5 +1,11 @@
 # Veritabanı ve kalıcılık
 
+## V35 Proje takvim anımsatıcıları
+
+`V35__project_reminders.sql`, `project_reminders` tablosunu ekler: `project_id` (`projects` FK), `creator_user_id`, `title` (100), `description` (500, opsiyonel), `type`, `scope`, `reminder_date` (`DATE`), `reminder_time` (`TIME`, opsiyonel), `created_at`, `updated_at`. `type` ve `scope` değerleri `CHECK` ile sınırlıdır. Tarih ve saat kasıtlı olarak zaman dilimsiz `DATE`/`TIME` tutulur; böylece "3 Ekim" hiçbir dönüşümde 2 Ekim'e kaymaz. Takvim okumaları hep "tek proje + tarih aralığı" olduğundan tek indeks `(project_id, reminder_date)` yeterlidir; PERSONAL/PROJECT görünürlüğü bu dilim üzerinde ucuz bir filtredir.
+
+**Geriye uyumluluk.** V35 yalnız yeni bir tablo ve indeks ekler; mevcut hiçbir tabloya, kolona veya veriye dokunmaz ve tek bağımlılığı `projects(id)` FK'sıdır. V35 öncesi bir uygulama sürümü bu tabloyu bilmez ve `ddl-auto=validate` yalnız eşlediği entity'leri denetlediği için çalışmaya devam eder; Flyway de daha yüksek uygulanmış sürümü varsayılan olarak yok sayar. Geri dönüşte tabloyu silmek gerekmez ve silinmemelidir: anımsatıcı verisi kalır, uygulama tekrar yükseltilince kaldığı yerden devam eder. Üye projeden çıkarılınca anımsatıcı satırları silinmez (ayrıntı `SECURITY.md` §11 "Project calendar reminders").
+
 ## V32 Teams ve davet değişikliği
 
 `V32__project_teams_and_registered_invitations.sql`, mevcut `squads` tablosuna `parent_squad_id` ve `is_general` ekler; proje başına tek General Team'i ve aynı proje içinde ebeveyni DB kısıtlarıyla korur. Mevcut her projeye General Team ekler, mevcut ekipleri onun altına taşır. `squad_members.user_id`, aktif üyelikle eşleştirilip `project_membership_id` FK'sine dönüştürülür; aktif üyeliği olmayan eski eşleşmeler silinir. General üyeliği ayrı satır olarak tutulmaz. Davetlere en çok 500 karakterlik `rejection_message` ve alıcı listeleme indeksi eklenir. Yeni davetler yalnız kayıtlı kullanıcıyı hedefler; tarihsel e-posta davetleri veri kaybı olmadan kalır fakat kayıtlı hedefi olmayan eski davet yeniden gönderilemez.

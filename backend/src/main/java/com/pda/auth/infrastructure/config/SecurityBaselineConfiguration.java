@@ -168,6 +168,7 @@ public class SecurityBaselineConfiguration {
                                     "/api/v1/projects/*/criteria/*/complete",
                                     "/api/v1/projects/*/criteria/*/uncomplete",
                                     "/api/v1/projects/*/criteria/reorder",
+                                    "/api/v1/projects/*/reminders",
                                     "/api/v1/projects/*/repository").authenticated()
                             .requestMatchers(HttpMethod.PUT, "/api/v1/projects/*",
                                     "/api/v1/projects/*/tasks/*/assignees",
@@ -185,10 +186,12 @@ public class SecurityBaselineConfiguration {
                                     "/api/v1/projects/*/invitations/*",
                                     "/api/v1/projects/*/repository",
                                     "/api/v1/projects/*/criteria/*",
+                                    "/api/v1/projects/*/reminders/*",
                                     "/api/v1/projects/*/squads/*/members/*").authenticated()
                             .requestMatchers(HttpMethod.DELETE, "/api/v1/projects/*/teams/*",
                                     "/api/v1/projects/*/teams/*/members/*").authenticated()
                             .requestMatchers(HttpMethod.PATCH, "/api/v1/projects/*/tasks/*",
+                                    "/api/v1/projects/*/reminders/*",
                                     "/api/v1/projects/*/tasks/*/status",
                                     "/api/v1/projects/*/tasks/*/blocked").authenticated()
                             .anyRequest().denyAll();

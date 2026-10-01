@@ -615,6 +615,22 @@
       "openTeam": "Open team {name}",
       "members": "{count, plural, one {# member} other {# members}}"
     },
+    "description": "Create and manage teams working together on this project.",
+    "noDescription": "No description has been added for this team.",
+    "newPage": {
+      "description": "Give the team a name and a short description. You can add members after the team is created.",
+      "notAllowed": "You need to be a project manager to create a team."
+    },
+    "manageMembers": "Members",
+    "edit": "Edit",
+    "emptyDescription": "Organize project members into teams that work together.",
+    "title": "Squads",
+    "create": "New squad",
+    "emptyTitle": "No squads yet",
+    "archive": "Archive",
+    "archiveConfirmTitle": "Archive this squad?",
+    "cancel": "Cancel",
+    "columns": { "name": "Name", "actions": "Actions" },
     "form": {
       "title": "New team",
       "editTitle": "Edit team",
@@ -850,6 +866,91 @@
     "success": "Your password has been updated. You can sign in now.",
     "backToLogin": "Back to sign in"
   },
+  "calendarPage": {
+    "description": "Follow the selected project's reminders and target end date month by month.",
+    "today": "Today",
+    "create": "Create reminder",
+    "project": "Project",
+    "selectProject": "Select a project",
+    "projectDeadline": "Project target end date",
+    "noRemindersForDay": "No reminders on this day.",
+    "noProjectTitle": "The calendar belongs to a project",
+    "noProjectDescription": "Create a project or join one to start adding reminders.",
+    "projectNotFound": "The selected project could not be found. Pick another one above.",
+    "loadError": "Reminders could not be loaded.",
+    "openCalendar": "Open calendar"
+  },
+  "reminders": {
+    "types": {
+      "MEETING": "Meeting",
+      "DEADLINE": "Deadline",
+      "PRESENTATION": "Presentation",
+      "REVIEW": "Review",
+      "DELIVERY": "Delivery",
+      "WORK": "Work",
+      "OTHER": "Other"
+    },
+    "scope": { "PERSONAL": "Personal", "PROJECT": "Project-wide" },
+    "createdBy": "Created by {name}",
+    "toasts": {
+      "created": "Reminder created.",
+      "updated": "Reminder updated.",
+      "deleted": "Reminder deleted."
+    },
+    "actions": {
+      "edit": "Edit",
+      "editNamed": "Edit reminder {title}",
+      "delete": "Delete",
+      "deleteNamed": "Delete reminder {title}",
+      "deleteTitle": "Delete this reminder?",
+      "deleteDescription": "“{title}” will be deleted permanently.",
+      "cancel": "Cancel"
+    },
+    "form": {
+      "back": "Back to calendar",
+      "createTitle": "Create reminder",
+      "createDescription": "Add an important date to the selected project's calendar.",
+      "editTitle": "Edit reminder",
+      "editDescription": "Update the reminder's name, type, date or time.",
+      "scopeLabel": "Who is this reminder for?",
+      "scopePersonal": "Just me",
+      "scopePersonalHint": "Only you can see it.",
+      "scopeProject": "Everyone in the project",
+      "scopeProjectHint": "All project members can see it.",
+      "scopeFixed": "The scope cannot be changed after creation.",
+      "title": "Reminder name",
+      "titlePlaceholder": "E.g. Sprint meeting",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Optional",
+      "type": "Reminder type",
+      "typePlaceholder": "Select a type",
+      "date": "Date",
+      "time": "Time (optional)",
+      "cancel": "Cancel",
+      "create": "Create",
+      "save": "Save",
+      "noProject": "Select a project in the calendar before creating a reminder.",
+      "notFound": "This reminder could not be found."
+    },
+    "validation": {
+      "titleRequired": "A reminder name is required.",
+      "titleMax": "The name can be at most 100 characters.",
+      "descriptionMax": "The description can be at most 500 characters.",
+      "typeRequired": "Select a reminder type.",
+      "dateRequired": "A date is required.",
+      "dateInvalid": "Enter a valid date.",
+      "datePast": "A reminder cannot be dated in the past.",
+      "timeInvalid": "Enter a valid time."
+    }
+  },
+  "account": {
+    "title": "Account settings",
+    "description": "View your account details and manage your password.",
+    "profile": "Profile",
+    "nickname": "Username",
+    "email": "Email",
+    "security": "Security"
+  },
   "changePassword": {
     "title": "Update your password",
     "subtitleRequired": "You need to change your password before continuing.",
@@ -894,9 +995,7 @@
     "expandSidebar": "Expand sidebar",
     "previousMonth": "Previous month",
     "nextMonth": "Next month",
-    "targetDate": "Target end date",
-    "noDeadlines": "No project deadlines on this day.",
-    "calendarScope": "The calendar shows target dates for projects on this page.",
+    "calendarScope": "The calendar shows the selected project's reminders and target end date.",
     "create": "Create project",
     "updates": "Recent updates",
     "projectUpdated": "Project updated",

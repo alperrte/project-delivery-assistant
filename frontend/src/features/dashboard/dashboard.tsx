@@ -10,43 +10,47 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/common/empty-state";
 import { projectsApi } from "@/features/projects/api";
 import { projectStatusDotClass } from "@/features/projects/status-colors";
-import type { Project } from "@/features/projects/types";
 import { useSession } from "@/features/auth/hooks/use-session";
+import { MonthGrid } from "@/features/calendar/components/month-grid";
+import { useCurrentMember } from "@/features/projects/hooks/use-current-member";
+import { useSelectedProject } from "@/features/projects/hooks/use-selected-project";
+import { ReminderList } from "@/features/reminders/components/reminder-list";
+import { dateFromKey, dateKey, todayKey } from "@/features/reminders/dates";
+import { useMonthReminders } from "@/features/reminders/hooks/use-month-reminders";
 import { cn } from "@/lib/utils";
 
-function MiniCalendar({ projects }: { projects: Project[] }) {
+function MiniCalendar() {
   const t = useTranslations("workspace");
+  const tc = useTranslations("calendarPage");
   const locale = useLocale();
-  const [today] = useState(() => new Date());
-  const [month, setMonth] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
-  const [selected, setSelected] = useState(today.getDate());
-  const offset = (month.getDay() + 6) % 7;
-  const count = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
-  const dateKey = (day: number) => `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-  const events = projects.filter(project => project.targetEndDate === dateKey(selected));
+  const { data: user } = useSession();
+  const { project } = useSelectedProject();
+  const { isManager } = useCurrentMember(project?.id ?? "");
+  const [today] = useState(() => todayKey());
+  const [month, setMonth] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+  const [selected, setSelected] = useState(today);
+  const reminders = useMonthReminders(project?.id, month);
+  const selectedReminders = reminders.byDate.get(selected) ?? [];
   function moveMonth(delta: number) {
-    setMonth(new Date(month.getFullYear(), month.getMonth() + delta, 1)); setSelected(1);
+    const next = new Date(month.getFullYear(), month.getMonth() + delta, 1);
+    setMonth(next);
+    setSelected(dateKey(next.getFullYear(), next.getMonth(), 1));
   }
   return <section id="calendar" className="scroll-mt-20 border-t pt-5">
-    <h2 className="mb-4 text-sm font-semibold">{t("calendar")}</h2>
+    <h2 className="text-sm font-semibold">{t("calendar")}</h2>
+    {project && <p className="mb-3 truncate text-xs text-muted-foreground">{project.name}</p>}
     <div className="mb-3 flex items-center justify-between">
-      <span className="text-xs font-medium" aria-live="polite">{month.toLocaleDateString(locale, { month: "long", year: "numeric" })}</span>
+      <span className="text-xs font-medium capitalize" aria-live="polite">{month.toLocaleDateString(locale, { month: "long", year: "numeric" })}</span>
       <div className="flex"><Button variant="ghost" size="icon-sm" aria-label={t("previousMonth")} onClick={() => moveMonth(-1)}><CaretLeft size={14} /></Button><Button variant="ghost" size="icon-sm" aria-label={t("nextMonth")} onClick={() => moveMonth(1)}><CaretRight size={14} /></Button></div>
     </div>
-    <div className="grid grid-cols-7 gap-y-1 text-center text-xs tabular-nums">
-      {Array.from({ length: 7 }, (_, i) => <span key={i} className="pb-2 text-[10px] text-muted-foreground">{new Date(2026, 5, 1 + i).toLocaleDateString(locale, { weekday: "short" })}</span>)}
-      {Array.from({ length: offset }, (_, i) => <span key={`space-${i}`} />)}
-      {Array.from({ length: count }, (_, i) => {
-        const day = i + 1;
-        const isToday = today.getFullYear() === month.getFullYear() && today.getMonth() === month.getMonth() && today.getDate() === day;
-        return <button key={day} onClick={() => setSelected(day)} aria-pressed={selected === day} aria-current={isToday ? "date" : undefined} aria-label={new Date(month.getFullYear(), month.getMonth(), day).toLocaleDateString(locale, { dateStyle: "full" })} className={cn("relative mx-auto grid size-8 place-items-center rounded-full hover:bg-muted", isToday && "font-bold ring-1 ring-border-strong", selected === day && "bg-primary text-primary-foreground hover:bg-primary/90")}>
-          {day}{projects.some(project => project.targetEndDate === dateKey(day)) && <span className="absolute bottom-1 size-1 rounded-full bg-current" />}
-        </button>;
-      })}
-    </div>
+    <MonthGrid compact month={month} selected={selected} today={today} byDate={reminders.byDate} deadline={project?.targetEndDate ?? null} onSelect={setSelected} />
     <div className="mt-4 space-y-2 border-t pt-3" aria-live="polite">
-      <p className="text-[11px] font-medium">{new Date(month.getFullYear(), month.getMonth(), selected).toLocaleDateString(locale, { day: "numeric", month: "long" })}</p>
-      {events.length ? events.map(project => <Link key={project.id} href={`/projects/${project.slug}`} className="block rounded p-2 text-xs hover:bg-muted"><span className="block truncate font-medium">{project.name}</span><span className="text-muted-foreground">{t("targetDate")}</span></Link>) : <p className="text-xs leading-5 text-muted-foreground">{t("noDeadlines")}</p>}
+      <p className="text-[11px] font-medium">{dateFromKey(selected).toLocaleDateString(locale, { day: "numeric", month: "long" })}</p>
+      {project && selectedReminders.length > 0
+        ? <ReminderList reminders={selectedReminders} projectId={project.id} currentUserId={user?.id} isManager={isManager} />
+        : <p className="text-xs leading-5 text-muted-foreground">{tc("noRemindersForDay")}</p>}
+      {reminders.isError && <p role="alert" className="text-xs text-destructive">{tc("loadError")}</p>}
+      <Link href="/calendar" className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:underline">{tc("openCalendar")}<ArrowRight size={12} aria-hidden="true" /></Link>
       <p className="text-[10px] leading-4 text-muted-foreground">{t("calendarScope")}</p>
     </div>
   </section>;
@@ -98,7 +102,7 @@ export function Dashboard() {
     <aside aria-label={t("insights")} className="min-w-0 space-y-6 border-t bg-surface-2 p-5 xl:border-t-0 xl:border-l">
       <section><h2 className="mb-3 text-sm font-semibold">{t("workspace")}</h2><div className="rounded-lg border bg-card p-4"><div className="flex items-center justify-between"><span className="text-xs text-muted-foreground">{t("totalProjects")}</span><span className="text-xl font-semibold tabular-nums">{query.data?.totalElements ?? "—"}</span></div><p className="mt-3 border-t pt-3 text-xs leading-5 text-muted-foreground">{t("summaryDescription")}</p></div></section>
       <section><h2 className="mb-2 text-xs font-medium text-muted-foreground">{t("quickActions")}</h2><Link href="/projects/new" className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-xs hover:bg-muted"><Plus size={17} aria-hidden="true" />{t("create")}<ArrowRight className="ml-auto" size={14} aria-hidden="true" /></Link><Link href="/organizations" className="flex items-center gap-3 rounded-md px-3 py-2.5 text-xs hover:bg-muted"><Users size={17} aria-hidden="true" />{t("teams")}<ArrowRight className="ml-auto" size={14} aria-hidden="true" /></Link><Link href="/account" className="flex items-center gap-3 rounded-md px-3 py-2.5 text-xs hover:bg-muted"><GearSix size={17} aria-hidden="true" />{t("settings")}<ArrowRight className="ml-auto" size={14} aria-hidden="true" /></Link></section>
-      <MiniCalendar projects={projects} />
+      <MiniCalendar />
     </aside>
   </div>;
 }
