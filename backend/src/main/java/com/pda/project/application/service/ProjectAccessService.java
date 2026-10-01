@@ -4,6 +4,8 @@ import com.pda.project.ProjectAccess;
 import com.pda.project.ProjectTaskContext;
 import com.pda.project.ProjectMemberView;
 import com.pda.project.domain.enums.MembershipStatus;
+import com.pda.project.domain.entity.ProjectInvitation;
+import com.pda.project.infrastructure.repository.ProjectInvitationRepository;
 import com.pda.project.infrastructure.repository.ProjectMembershipRepository;
 import com.pda.project.infrastructure.repository.ProjectRepository;
 import com.pda.user.ProjectPermission;
@@ -14,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.util.Set;
 import java.util.Map;
 import java.util.List;
@@ -29,12 +32,16 @@ public class ProjectAccessService implements ProjectAccess {
     private final ProjectRepository projects;
     private final ProjectMembershipRepository memberships;
     private final UserAccounts users;
+    private final ProjectInvitationRepository invitations;
+    private final Clock clock;
 
     public ProjectAccessService(ProjectRepository projects, ProjectMembershipRepository memberships,
-                                UserAccounts users) {
+                                UserAccounts users, ProjectInvitationRepository invitations, Clock clock) {
         this.projects = projects;
         this.memberships = memberships;
         this.users = users;
+        this.invitations = invitations;
+        this.clock = clock;
     }
 
     @Override
@@ -130,6 +137,40 @@ public class ProjectAccessService implements ProjectAccess {
         Map<UUID, ProjectMemberView> mapped = views(page.getContent()).stream()
                 .collect(Collectors.toMap(ProjectMemberView::membershipId, Function.identity()));
         return page.map(m -> mapped.get(m.getId()));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<UUID, UUID> activeMembershipIds(UUID projectId, Set<UUID> userIds) {
+        if (projectId == null || userIds == null || userIds.isEmpty()) return Map.of();
+        return memberships.findActiveByUserIds(projectId, userIds).stream()
+                .collect(Collectors.toMap(ProjectMembership::getUserId, ProjectMembership::getId));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Set<UUID> pendingInviteeIds(UUID projectId, Set<UUID> userIds) {
+        if (projectId == null || userIds == null || userIds.isEmpty()) return Set.of();
+        return Set.copyOf(invitations.findPendingInviteeIds(projectId, userIds));
+    }
+
+    @Override
+    @Transactional
+    public int cancelPendingInvitationsForTeam(UUID projectId, UUID teamId) {
+        if (projectId == null || teamId == null) return 0;
+        List<ProjectInvitation> pending = invitations.lockPendingForTeam(projectId, teamId);
+        java.time.Instant now = clock.instant();
+        int cancelled = 0;
+        for (ProjectInvitation invitation : pending) {
+            if (invitation.isPending(now)) {
+                invitation.cancel(now);
+                cancelled++;
+            } else {
+                invitation.expire(now);
+            }
+        }
+        invitations.saveAll(pending);
+        return cancelled;
     }
 
     private List<ProjectMemberView> views(List<ProjectMembership> rows) {

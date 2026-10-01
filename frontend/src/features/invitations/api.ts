@@ -1,12 +1,12 @@
 import { apiRequest } from "@/lib/api/client";
 import type { Page } from "@/types/pagination";
 import type { Member, ProjectRole } from "@/features/projects/types";
-import type { CreatedInvitation, Invitation, MyInvitation, ExternalInvitationPreview, AcceptedExternalInvitation } from "./types";
+import type { CreatedInvitation, Invitation, InvitationStatus, MyInvitation, ExternalInvitationPreview, AcceptedExternalInvitation } from "./types";
 
 export const invitationsApi = {
-  list: (projectId: string, page: number, size = 20) =>
-    apiRequest<Page<Invitation>>(`/projects/${projectId}/invitations/all?page=${page}&size=${size}`),
-  create: (projectId: string, body: { userId?: string; email?: string; firstName?: string; lastName?: string; message?: string; roles: ProjectRole[] }) =>
+  list: (projectId: string, page: number, size = 20, status?: InvitationStatus) =>
+    apiRequest<Page<Invitation>>(`/projects/${projectId}/invitations/all?page=${page}&size=${size}${status ? `&status=${status}` : ""}`),
+  create: (projectId: string, body: { teamId: string; userId?: string; email?: string; firstName?: string; lastName?: string; message?: string; roles: ProjectRole[] }) =>
     apiRequest<CreatedInvitation>(`/projects/${projectId}/invitations`, { method: "POST", body }),
   resend: (projectId: string, invitationId: string) =>
     apiRequest<CreatedInvitation>(`/projects/${projectId}/invitations/${invitationId}/resend`, { method: "POST" }),

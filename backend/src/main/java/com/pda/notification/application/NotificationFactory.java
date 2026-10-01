@@ -18,8 +18,8 @@ public class NotificationFactory {
             case PROJECT_MEMBER_ADDED -> "Added to project";
             case PROJECT_MEMBER_REMOVED -> "Removed from project";
             case PROJECT_ROLE_CHANGED -> "Project role changed";
-            case SQUAD_MEMBER_ADDED -> "Added to squad";
-            case SQUAD_MEMBER_REMOVED -> "Removed from squad";
+            case SQUAD_MEMBER_ADDED -> "Added to team";
+            case SQUAD_MEMBER_REMOVED -> "Removed from team";
             case PROJECT_INVITATION_CREATED -> "Project invitation";
             case PROJECT_INVITATION_ACCEPTED -> "Invitation accepted";
             case PROJECT_INVITATION_REJECTED -> "Invitation rejected";
@@ -34,8 +34,8 @@ public class NotificationFactory {
             case PROJECT_MEMBER_ADDED -> "You were added to a project.";
             case PROJECT_MEMBER_REMOVED -> "Your project membership was removed.";
             case PROJECT_ROLE_CHANGED -> "Your project role was changed.";
-            case SQUAD_MEMBER_ADDED -> "You were added to a squad.";
-            case SQUAD_MEMBER_REMOVED -> "You were removed from a squad.";
+            case SQUAD_MEMBER_ADDED -> "You were added to a team.";
+            case SQUAD_MEMBER_REMOVED -> "You were removed from a team.";
             case PROJECT_INVITATION_CREATED -> "You were invited to a project.";
             case PROJECT_INVITATION_ACCEPTED -> "Your project invitation was accepted.";
             case PROJECT_INVITATION_REJECTED -> "Your project invitation was rejected.";

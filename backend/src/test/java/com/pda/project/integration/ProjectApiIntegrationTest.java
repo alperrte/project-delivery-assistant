@@ -390,36 +390,37 @@ class ProjectApiIntegrationTest {
     }
 
     @Test
-    void lastManagerCannotLeaveOrLoseRole() throws Exception {
+    void projectFounderCannotLeaveOrLoseManagerRoleWhileOtherManagersAreFree() throws Exception {
         Cookie csrf = csrfCookie();
-        Account manager = account("lastmanager");
+        Account founder = account("lastmanager");
         Account second = account("secondmanager");
-        UUID projectId = createProject(manager, csrf, "Last manager rule");
-        String memberPath = "/api/v1/projects/" + projectId + "/members/" + manager.id();
+        UUID projectId = createProject(founder, csrf, "Founder rule");
+        String memberPath = "/api/v1/projects/" + projectId + "/members/" + founder.id();
 
-        mvc.perform(put(memberPath + "/roles").cookie(csrf, manager.access())
+        mvc.perform(put(memberPath + "/roles").cookie(csrf, founder.access())
                         .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"roles\":[\"ANALYST\"]}"))
-                .andExpect(status().isConflict());
-        mvc.perform(delete(memberPath).cookie(csrf, manager.access())
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("PROJECT_OWNER_PROTECTED"));
+        mvc.perform(delete(memberPath).cookie(csrf, founder.access())
                         .header("X-XSRF-TOKEN", csrf.getValue()))
-                .andExpect(status().isConflict());
-        mvc.perform(post(memberPath + "/roles").cookie(csrf, manager.access())
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("PROJECT_OWNER_PROTECTED"));
+        mvc.perform(post(memberPath + "/roles").cookie(csrf, founder.access())
                         .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"role\":\"ANALYST\"}"))
                 .andExpect(status().isOk());
-        mvc.perform(delete(memberPath + "/roles/PROJECT_MANAGER").cookie(csrf, manager.access())
+        mvc.perform(delete(memberPath + "/roles/PROJECT_MANAGER").cookie(csrf, founder.access())
                         .header("X-XSRF-TOKEN", csrf.getValue()))
-                .andExpect(status().isConflict());
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("PROJECT_OWNER_PROTECTED"));
 
-        memberships.addMember(manager.id(), projectId, second.id(), Set.of(ProjectRole.PROJECT_MANAGER));
-        mvc.perform(delete(memberPath + "/roles/PROJECT_MANAGER").cookie(csrf, manager.access())
+        // A manager who did not found the project is not protected, even though the founder stays a manager.
+        memberships.addMember(founder.id(), projectId, second.id(),
+                Set.of(ProjectRole.PROJECT_MANAGER, ProjectRole.ANALYST));
+        String secondPath = "/api/v1/projects/" + projectId + "/members/" + second.id();
+        mvc.perform(delete(secondPath + "/roles/PROJECT_MANAGER").cookie(csrf, second.access())
                         .header("X-XSRF-TOKEN", csrf.getValue()))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.roles[0]").value("ANALYST"));
-        mvc.perform(delete("/api/v1/projects/" + projectId + "/members/" + second.id())
-                        .cookie(csrf, second.access()).header("X-XSRF-TOKEN", csrf.getValue()))
-                .andExpect(status().isConflict());
-        assertEquals(Set.of("PROJECT_MANAGER"), projectAccess.rolesForUserInProject(projectId, second.id()));
+        assertEquals(Set.of("ANALYST"), projectAccess.rolesForUserInProject(projectId, second.id()));
+        assertTrue(projectAccess.rolesForUserInProject(projectId, founder.id()).contains("PROJECT_MANAGER"));
     }
 
     @Test

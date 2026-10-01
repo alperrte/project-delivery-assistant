@@ -97,6 +97,10 @@ public class ProjectInvitation {
     @Column(name = "rejection_message", length = 500)
     private String rejectionMessage;
 
+    /** The team the invitee joins on acceptance; null only for legacy invitations that predate teams. */
+    @Column(name = "team_id", updatable = false)
+    private UUID teamId;
+
     protected ProjectInvitation() {
         // JPA
     }
@@ -153,6 +157,12 @@ public class ProjectInvitation {
         invitation.status = InvitationStatus.PENDING;
         invitation.expiresAt = expiresAt;
         return invitation;
+    }
+
+    /** Binds a freshly built invitation to the team the invitee joins; call before the first save. */
+    public ProjectInvitation inTeam(UUID teamId) {
+        this.teamId = Objects.requireNonNull(teamId, "teamId is required");
+        return this;
     }
 
     public boolean matchesToken(String rawToken) {
@@ -257,6 +267,7 @@ public class ProjectInvitation {
     public String getInviteeLastName() { return inviteeLastName; }
     public String getMessage() { return message; }
     public UUID getInvitedBy() { return invitedBy; }
+    public UUID getTeamId() { return teamId; }
     public Set<ProjectRole> getInitialRoles() { return Set.copyOf(initialRoles); }
     public InvitationStatus getStatus() { return status; }
     public Instant getCreatedAt() { return createdAt; }

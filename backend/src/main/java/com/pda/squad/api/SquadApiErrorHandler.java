@@ -46,10 +46,19 @@ public class SquadApiErrorHandler {
         return problem(HttpStatus.FORBIDDEN, "Access denied");
     }
 
-    @ExceptionHandler({DataIntegrityViolationException.class, SquadConflictException.class,
-            IllegalStateException.class})
+    @ExceptionHandler({DataIntegrityViolationException.class, IllegalStateException.class})
     ResponseEntity<ProblemDetail> conflict() {
         return problem(HttpStatus.CONFLICT, "Squad change conflicts with existing state");
+    }
+
+    /** Adds the stable {@code code} (and the affected member names) so the UI can explain the conflict. */
+    @ExceptionHandler(SquadConflictException.class)
+    ResponseEntity<ProblemDetail> squadConflict(SquadConflictException exception) {
+        ProblemDetail body = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,
+                "Squad change conflicts with existing state");
+        if (exception.code() != null) body.setProperty("code", exception.code());
+        if (!exception.members().isEmpty()) body.setProperty("members", exception.members());
+        return ResponseEntity.status(HttpStatus.CONFLICT).header("Cache-Control", "no-store").body(body);
     }
 
     private static ResponseEntity<ProblemDetail> problem(HttpStatus status, String detail) {

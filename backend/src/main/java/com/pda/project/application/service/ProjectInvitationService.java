@@ -3,6 +3,7 @@ package com.pda.project.application.service;
 import com.pda.project.domain.entity.Project;
 import com.pda.project.ProjectInvitationEvents;
 import com.pda.project.ProjectInvitationOnboarding;
+import com.pda.project.ProjectTeamDirectory;
 import com.pda.project.domain.entity.ProjectInvitation;
 import com.pda.project.domain.entity.ProjectMembership;
 import com.pda.project.domain.enums.InvitationStatus;
@@ -62,12 +63,13 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
     private final Clock clock;
     private final String frontendUrl;
     private final ApplicationEventPublisher events;
+    private final ProjectTeamDirectory teams;
 
     public ProjectInvitationService(ProjectRepository projects, ProjectMembershipRepository memberships,
                                     ProjectInvitationRepository invitations, UserAccounts users,
                                     ObjectProvider<ProjectInvitationMailPort> mailProvider, Clock clock,
                                     @Value("${FRONTEND_URL}") String frontendUrl,
-                                    ApplicationEventPublisher events) {
+                                    ApplicationEventPublisher events, ProjectTeamDirectory teams) {
         this.projects = projects;
         this.memberships = memberships;
         this.invitations = invitations;
@@ -76,21 +78,18 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
         this.clock = clock;
         this.frontendUrl = frontendUrl;
         this.events = events;
+        this.teams = teams;
     }
 
     /** The raw token is returned exactly once, to be delivered out-of-band (mail, in HMZ-PROJ-16); never persisted. */
     public record CreatedInvitation(ProjectInvitation invitation, String rawToken) {}
 
+    /** Every invitation joins a team; the invitee lands in it when the invitation is accepted. */
     @Transactional
     public CreatedInvitation inviteRegisteredUser(UUID actorId, UUID projectId, UUID targetUserId,
-                                                  Set<ProjectRole> roles) {
-        return inviteRegisteredUser(actorId, projectId, targetUserId, roles, null);
-    }
-
-    @Transactional
-    public CreatedInvitation inviteRegisteredUser(UUID actorId, UUID projectId, UUID targetUserId,
-                                                  Set<ProjectRole> roles, String message) {
+                                                  Set<ProjectRole> roles, String message, UUID teamId) {
         Project project = requireManager(actorId, projectId);
+        String teamName = requireActiveTeam(projectId, teamId);
         Objects.requireNonNull(targetUserId, "targetUserId is required");
         if (targetUserId.equals(actorId)) throw new IllegalArgumentException("Cannot invite yourself");
         UserAccounts.AuthenticatedUser target = users.findActiveById(targetUserId)
@@ -109,22 +108,18 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
         }
         String rawToken = generateToken();
         ProjectInvitation invitation = ProjectInvitation.forRegisteredUser(projectId, targetUserId, actorId,
-                roles, message, rawToken, clock.instant().plus(INVITATION_TTL));
+                roles, message, rawToken, clock.instant().plus(INVITATION_TTL)).inTeam(teamId);
         ProjectInvitation saved = invitations.saveAndFlush(invitation);
         events.publishEvent(new ProjectInvitationEvents.Created(saved.getId(), projectId, targetUserId, actorId));
-        sendInvitationMailSafely(target.email(), project.getName(), saved, rawToken, false);
+        sendInvitationMailSafely(target.email(), project.getName(), teamName, saved, rawToken, false);
         return new CreatedInvitation(saved, rawToken);
     }
 
     @Transactional
-    public CreatedInvitation inviteByEmail(UUID actorId, UUID projectId, String email, Set<ProjectRole> roles) {
-        return inviteByEmail(actorId, projectId, email, null, null, roles, null);
-    }
-
-    @Transactional
     public CreatedInvitation inviteByEmail(UUID actorId, UUID projectId, String email, String firstName,
-                                           String lastName, Set<ProjectRole> roles, String message) {
+                                           String lastName, Set<ProjectRole> roles, String message, UUID teamId) {
         Project project = requireManager(actorId, projectId);
+        String teamName = requireActiveTeam(projectId, teamId);
         if (email == null || email.isBlank()) throw new IllegalArgumentException("email is required");
         String normalizedEmail = email.strip().toLowerCase(java.util.Locale.ROOT);
         if (normalizedEmail.equals(users.findActiveById(actorId).map(UserAccounts.AuthenticatedUser::email)
@@ -133,7 +128,7 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
         }
         var registered = users.findActiveByEmail(normalizedEmail);
         if (registered.isPresent()) {
-            return inviteRegisteredUser(actorId, projectId, registered.get(), roles, message);
+            return inviteRegisteredUser(actorId, projectId, registered.get(), roles, message, teamId);
         }
         if (users.emailExists(normalizedEmail)) {
             throw new InvitationConflictException("Account is not available for invitation");
@@ -145,9 +140,9 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
                 .isPresent()) throw new InvitationConflictException("An invitation is already pending for this email");
         String rawToken = generateToken();
         ProjectInvitation invitation = ProjectInvitation.forEmail(projectId, normalizedEmail, firstName, lastName,
-                actorId, roles, message, rawToken, clock.instant().plus(INVITATION_TTL));
+                actorId, roles, message, rawToken, clock.instant().plus(INVITATION_TTL)).inTeam(teamId);
         ProjectInvitation saved = invitations.saveAndFlush(invitation);
-        sendInvitationMailSafely(normalizedEmail, project.getName(), saved, rawToken, true);
+        sendInvitationMailSafely(normalizedEmail, project.getName(), teamName, saved, rawToken, true);
         return new CreatedInvitation(saved, rawToken);
     }
 
@@ -157,19 +152,35 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
         return withNicknames(invitations.findByProjectIdAndStatus(projectId, InvitationStatus.PENDING, pageable));
     }
 
+    /** Project invitation history, optionally narrowed to one status. */
     @Transactional(readOnly = true)
-    public Page<InvitationSummary> listProject(UUID actorId, UUID projectId, Pageable pageable) {
+    public Page<InvitationSummary> listProject(UUID actorId, UUID projectId, InvitationStatus status,
+                                               Pageable pageable) {
         requireManager(actorId, projectId);
-        return withNicknames(invitations.findByProjectId(projectId, pageable));
+        return withNicknames(status == null ? invitations.findByProjectId(projectId, pageable)
+                : invitations.findByProjectIdAndStatus(projectId, status, pageable));
     }
 
     private Page<InvitationSummary> withNicknames(Page<ProjectInvitation> page) {
         Set<UUID> targetIds = page.getContent().stream().map(ProjectInvitation::getInvitedUserId)
                 .filter(Objects::nonNull).collect(Collectors.toSet());
         Map<UUID, UserAccounts.AuthenticatedUser> targetUsers = users.findActiveByIds(targetIds);
+        Map<UUID, String> teamNames = teamNames(page.getContent());
         return page.map(invitation -> InvitationSummary.from(invitation,
-                targetUsers.containsKey(invitation.getInvitedUserId())
-                        ? targetUsers.get(invitation.getInvitedUserId()).nickname() : null));
+                nicknameOf(targetUsers, invitation.getInvitedUserId()),
+                invitation.getTeamId() == null ? null : teamNames.get(invitation.getTeamId())));
+    }
+
+    /** E-mail invitations have no target account yet, and the lookup maps are immutable (null keys throw). */
+    private static String nicknameOf(Map<UUID, UserAccounts.AuthenticatedUser> users, UUID userId) {
+        UserAccounts.AuthenticatedUser user = userId == null ? null : users.get(userId);
+        return user == null ? null : user.nickname();
+    }
+
+    private Map<UUID, String> teamNames(List<ProjectInvitation> page) {
+        Set<UUID> teamIds = page.stream().map(ProjectInvitation::getTeamId)
+                .filter(Objects::nonNull).collect(Collectors.toSet());
+        return teamIds.isEmpty() ? Map.of() : teams.teamNames(teamIds);
     }
 
     @Transactional(readOnly = true)
@@ -180,7 +191,10 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
                 .collect(Collectors.toMap(Project::getId, Function.identity()));
         Map<UUID, UserAccounts.AuthenticatedUser> senders = users.findActiveByIds(page.getContent().stream()
                 .map(ProjectInvitation::getInvitedBy).collect(Collectors.toSet()));
-        return page.map(invitation -> new MyInvitationSummary(InvitationSummary.from(invitation),
+        Map<UUID, String> teamNames = teamNames(page.getContent());
+        return page.map(invitation -> new MyInvitationSummary(
+                InvitationSummary.from(invitation, null,
+                        invitation.getTeamId() == null ? null : teamNames.get(invitation.getTeamId())),
                 projectMap.containsKey(invitation.getProjectId())
                         ? projectMap.get(invitation.getProjectId()).getName() : null,
                 senders.containsKey(invitation.getInvitedBy())
@@ -199,7 +213,9 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
                 .map(UserAccounts.AuthenticatedUser::nickname).orElse("PDA");
         return new Preview(project.getName(), inviter, invitation.getInitialRoles(), invitation.getMessage(),
                 invitation.getEmail(), invitation.getInviteeFirstName(), invitation.getInviteeLastName(),
-                invitation.getExpiresAt(), invitation.getStatus().name());
+                invitation.getExpiresAt(), invitation.getStatus().name(),
+                invitation.getTeamId() == null ? null : teams.teamNames(Set.of(invitation.getTeamId()))
+                        .get(invitation.getTeamId()));
     }
 
     @Override
@@ -241,7 +257,7 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
         invitation.accept(clock.instant());
         invitations.saveAndFlush(invitation);
         events.publishEvent(new ProjectInvitationEvents.Accepted(invitation.getId(), projectId, userId,
-                invitation.getInvitedBy()));
+                invitation.getInvitedBy(), invitation.getTeamId(), saved.getId()));
         return MemberSummary.from(saved, nickname);
     }
 
@@ -269,12 +285,15 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
         invitations.saveAndFlush(current);
 
         String rawToken = generateToken();
+        String teamName = current.getTeamId() == null ? null
+                : teams.teamNames(Set.of(current.getTeamId())).get(current.getTeamId());
         ProjectInvitation next = current.getInvitedUserId() == null
                 ? ProjectInvitation.forEmail(projectId, current.getEmail(), current.getInviteeFirstName(),
                         current.getInviteeLastName(), actorId, current.getInitialRoles(), current.getMessage(),
                         rawToken, clock.instant().plus(INVITATION_TTL))
                 : ProjectInvitation.forRegisteredUser(projectId, current.getInvitedUserId(), actorId,
                         current.getInitialRoles(), current.getMessage(), rawToken, clock.instant().plus(INVITATION_TTL));
+        if (current.getTeamId() != null) next.inTeam(current.getTeamId());
         ProjectInvitation saved = invitations.saveAndFlush(next);
         if (saved.getInvitedUserId() != null) events.publishEvent(new ProjectInvitationEvents.Created(
                 saved.getId(), projectId, saved.getInvitedUserId(), actorId));
@@ -283,7 +302,7 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
                 : users.findActiveById(current.getInvitedUserId())
                         .map(UserAccounts.AuthenticatedUser::email).orElse(null);
         if (recipientEmail != null) {
-            sendInvitationMailSafely(recipientEmail, project.getName(), saved, rawToken,
+            sendInvitationMailSafely(recipientEmail, project.getName(), teamName, saved, rawToken,
                     saved.getInvitedUserId() == null);
         }
         return new CreatedInvitation(saved, rawToken);
@@ -354,7 +373,7 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
         invitation.accept(clock.instant());
         invitations.saveAndFlush(invitation);
         events.publishEvent(new ProjectInvitationEvents.Accepted(invitation.getId(), projectId,
-                actorId, invitation.getInvitedBy()));
+                actorId, invitation.getInvitedBy(), invitation.getTeamId(), saved.getId()));
         return MemberSummary.from(saved, nickname);
     }
 
@@ -394,6 +413,13 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
         return invitation;
     }
 
+    /** Returns the team name (for the mail); a missing or foreign team is reported as not found. */
+    private String requireActiveTeam(UUID projectId, UUID teamId) {
+        if (teamId == null) throw new IllegalArgumentException("teamId is required");
+        if (!teams.isActiveTeam(projectId, teamId)) throw new NoSuchElementException("Team not found");
+        return teams.teamNames(Set.of(teamId)).get(teamId);
+    }
+
     private Project requireManager(UUID actorId, UUID projectId) {
         Objects.requireNonNull(actorId, "actorId is required");
         Objects.requireNonNull(projectId, "projectId is required");
@@ -415,7 +441,7 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
      * unrelated flow enabled MAIL_ENABLED. Any failure here (missing config, transport error) is swallowed: mail
      * being disabled or broken must never break the invitation flow itself.
      */
-    private void sendInvitationMailSafely(String recipientEmail, String projectName,
+    private void sendInvitationMailSafely(String recipientEmail, String projectName, String teamName,
                                           ProjectInvitation invitation, String rawToken, boolean external) {
         UUID invitationId = invitation.getId();
         UUID projectId = invitation.getProjectId();
@@ -423,8 +449,8 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
         Set<ProjectRole> roles = invitation.getInitialRoles();
         String personalMessage = invitation.getMessage();
         java.time.Instant expiresAt = invitation.getExpiresAt();
-        Runnable dispatch = () -> dispatchInvitationMail(recipientEmail, projectName, invitationId, projectId,
-                invitedBy, roles, personalMessage, expiresAt, rawToken, external);
+        Runnable dispatch = () -> dispatchInvitationMail(recipientEmail, projectName, teamName, invitationId,
+                projectId, invitedBy, roles, personalMessage, expiresAt, rawToken, external);
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override public void afterCommit() { dispatch.run(); }
@@ -434,8 +460,8 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
         }
     }
 
-    private void dispatchInvitationMail(String recipientEmail, String projectName, UUID invitationId,
-            UUID projectId, UUID invitedBy, Set<ProjectRole> roles, String personalMessage,
+    private void dispatchInvitationMail(String recipientEmail, String projectName, String teamName,
+            UUID invitationId, UUID projectId, UUID invitedBy, Set<ProjectRole> roles, String personalMessage,
             java.time.Instant expiresAt, String rawToken, boolean external) {
         try {
             ProjectInvitationMailPort mail = mailProvider.getIfAvailable();
@@ -445,7 +471,7 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
                         + "&token=" + rawToken;
                 String inviterName = users.findActiveById(invitedBy)
                         .map(UserAccounts.AuthenticatedUser::nickname).orElse("PDA");
-                mail.sendInvitation(recipientEmail, projectName, inviterName, roles,
+                mail.sendInvitation(recipientEmail, projectName, teamName, inviterName, roles,
                         personalMessage, expiresAt, link);
             }
         } catch (RuntimeException exception) {

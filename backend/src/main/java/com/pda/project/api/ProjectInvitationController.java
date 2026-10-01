@@ -8,6 +8,7 @@ import com.pda.project.api.dto.response.MemberResponse;
 import com.pda.project.api.dto.response.PageResponse;
 import com.pda.project.application.service.ProjectInvitationService;
 import com.pda.project.application.service.ProjectInvitationService.CreatedInvitation;
+import com.pda.project.domain.enums.InvitationStatus;
 import com.pda.user.UserAccounts;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -49,12 +50,14 @@ public class ProjectInvitationController {
     }
 
     @GetMapping("/all")
-    @Operation(summary = "List project invitation history including rejections", description = "PROJECT_MANAGER only; paginated")
+    @Operation(summary = "List project invitation history including rejections",
+            description = "PROJECT_MANAGER only; paginated; optional status filter")
     public PageResponse<InvitationResponse> listAll(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
                                                     @PathVariable UUID projectId,
+                                                    @RequestParam(required = false) InvitationStatus status,
                                                     @RequestParam(defaultValue = "0") int page,
                                                     @RequestParam(defaultValue = "20") int size) {
-        return PageResponse.from(invitations.listProject(AuthenticatedActor.id(principal), projectId,
+        return PageResponse.from(invitations.listProject(AuthenticatedActor.id(principal), projectId, status,
                 pageRequest(page, size)), InvitationResponse::from);
     }
 
@@ -72,9 +75,10 @@ public class ProjectInvitationController {
         }
         UUID actorId = AuthenticatedActor.id(principal);
         CreatedInvitation created = hasUserId
-                ? invitations.inviteRegisteredUser(actorId, projectId, request.userId(), request.roles(), request.message())
+                ? invitations.inviteRegisteredUser(actorId, projectId, request.userId(), request.roles(),
+                        request.message(), request.teamId())
                 : invitations.inviteByEmail(actorId, projectId, request.email(), request.firstName(),
-                        request.lastName(), request.roles(), request.message());
+                        request.lastName(), request.roles(), request.message(), request.teamId());
         return ResponseEntity.status(HttpStatus.CREATED).header("Cache-Control", "no-store")
                 .body(CreatedInvitationResponse.from(created));
     }

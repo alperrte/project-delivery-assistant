@@ -1,5 +1,7 @@
 # PDA Frontend — Teams Member Page Refactor
 
+> **Yerini aldı (2026-10-01):** General Team kaldırıldı. Kimse ekipsiz kalmaz, davetler ekip üzerinden gider ve Ekipler sayfası yeniden tasarlandı. Güncel sözleşme için `SECURITY.md` §11, `api.md` ve `docs/compliation/2026-10-01-ekipler-sayfasi.md` dosyalarına bak.
+
 PDA projesindeki mevcut **Ekipler / Teams** sayfasını aşağıdaki yeni kullanıcı deneyimine göre refactor et.
 
 Önce mevcut implementation'ı incele:

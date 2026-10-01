@@ -40,4 +40,6 @@ Modüller birbirinin repository implementasyonunu doğrudan kullanmaz. Başka mo
 
 `V33__external_project_invitations.sql` davetlere davet edilenin adını, soyadını ve en çok 100 karakterlik isteğe bağlı mesajı ekler; kullanıcı tablosuna da ad ve soyad ekler. Eski kullanıcı/davet kayıtları için bu alanlar nullable kalır. Bekleyen e-posta davetlerinde `(project_id, lower(email))`, kullanıcı e-postalarında `lower(email)` benzersiz indeksleri yinelenen kimlikleri engeller. Ham davet token'ı saklanmaz; `project_invitations.token_hash` kalır. Kabul akışı aynı transaction içinde kullanıcı ve proje üyeliğini oluşturur; General Team üyeliği aktif proje üyeliğinden türetilir.
 
+`V35__teams_without_general.sql` `squads.updated_by` (backfill `created_by`) ve `project_invitations.team_id` ekler. Mevcut General Team'ler normal ekibe dönüşür: hiçbir özel ekipte olmayan aktif proje üyeleri ona `squad_members` satırı olarak yazılır (`added_by = projects.created_by`, `added_at = joined_at`), `ck_squads_general_root`, `uk_squads_general_per_project` ve `is_general` kaldırılır. Bekleyen eski davetler projelerinin eski General Team'ine bağlanır; `teamId` zorunluluğunu yeni davetlerde servis katmanı sağlar.
+
 İlgili kararlar: [0001](decisions/0001-modular-monolith.md), [0002](decisions/0002-postgresql.md).

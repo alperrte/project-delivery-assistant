@@ -41,19 +41,19 @@ class SquadDomainTest {
     void archiveBlocksFurtherUpdatesAndIsIdempotent() {
         Squad squad = Squad.create(projectId, "Frontend Squad", null, creatorId);
 
-        squad.archive();
+        squad.archive(creatorId);
 
         assertNotNull(squad.getArchivedAt());
         assertTrue(!squad.isActive());
-        squad.archive();
-        assertThrows(IllegalStateException.class, () -> squad.updateDetails("New name", null));
+        squad.archive(creatorId);
+        assertThrows(IllegalStateException.class, () -> squad.updateDetails("New name", null, creatorId));
     }
 
     @Test
     void updateDetailsReplacesNameAndDescription() {
         Squad squad = Squad.create(projectId, "Original", "Original description", creatorId);
 
-        squad.updateDetails("Renamed", null);
+        squad.updateDetails("Renamed", null, creatorId);
 
         assertEquals("Renamed", squad.getName());
         assertNull(squad.getDescription());

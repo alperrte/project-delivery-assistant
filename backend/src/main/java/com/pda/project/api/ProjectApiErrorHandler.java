@@ -74,9 +74,17 @@ public class ProjectApiErrorHandler {
         return problem(HttpStatus.CONFLICT, "Resource conflicts with existing data");
     }
 
-    @ExceptionHandler({MembershipConflictException.class, IllegalStateException.class})
-    ResponseEntity<ProblemDetail> membershipConflict() {
+    @ExceptionHandler(IllegalStateException.class)
+    ResponseEntity<ProblemDetail> illegalState() {
         return problem(HttpStatus.CONFLICT, "Membership change conflicts with project rules");
+    }
+
+    @ExceptionHandler(MembershipConflictException.class)
+    ResponseEntity<ProblemDetail> membershipConflict(MembershipConflictException exception) {
+        ProblemDetail body = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,
+                "Membership change conflicts with project rules");
+        if (exception.code() != null) body.setProperty("code", exception.code());
+        return ResponseEntity.status(HttpStatus.CONFLICT).header("Cache-Control", "no-store").body(body);
     }
 
     @ExceptionHandler(InvitationConflictException.class)

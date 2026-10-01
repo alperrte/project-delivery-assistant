@@ -16,7 +16,7 @@ public interface ProjectInvitationMailPort {
     /** Best-effort: implementations must not throw for a transport failure; the invitation flow must not break. */
     void sendInvitation(String recipientEmail, String projectName, String invitationLink);
 
-    default void sendInvitation(String recipientEmail, String projectName, String inviterName,
+    default void sendInvitation(String recipientEmail, String projectName, String teamName, String inviterName,
             Set<ProjectRole> roles, String personalMessage, Instant expiresAt, String invitationLink) {
         sendInvitation(recipientEmail, projectName, invitationLink);
     }

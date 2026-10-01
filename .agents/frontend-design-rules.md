@@ -146,6 +146,13 @@ Giriş, kayıt ve şifre sıfırlama ekranları arka plan fotoğrafı üzerinde 
 - Metinler `next-intl` ile üç dilde (tr, en, de) tutulur; UI'a sabit metin yazma.
 - Sayfa yüksekliği için `min-h-[100dvh]`; yatay taşma olmamalı (`body` `overflow-x-hidden`).
 
+## Tam sayfa form, görünüm seçici, tablo ve düzenleme modu
+
+- Ekip oluşturma/düzenleme proje oluşturma deseniyle aynıdır: tam sayfa form, 7/5 ızgara, yapışkan canlı önizleme (`TeamCard preview`), alt aksiyon çubuğu, `beforeunload` koruması. Dialog yalnız kısa onay ve tek alanlı işlemler içindir.
+- Liste/şema görünümü `Tabs` ile segment olarak sunulur, seçim `?view=` URL'inde ve `localStorage`'da tutulur (storage erişimi try/catch, `useSyncExternalStore` ile okunur). Org şeması saf CSS (`.org-tree`) ve gerçek linklerdir; kütüphane yok.
+- Kartın tamamı tıklanabilir (stretched link); düzenle/arşivle ikon butonları `relative z-10` ile link üstünde kalır ve tooltip taşır.
+- Veri tablosu: `divide-y`, zebra yok, `md` altında yığılmış liste. Filtre, sıralama ve arama durumu istemcide tutulur. Düzenleme modu tabloya "İşlemler" sütunu ekler; kilitli eylemler nedenini söyleyen tooltip'li kilit ikonu gösterir.
+
 ## Yeni sayfa veya bileşen eklerken kontrol listesi
 
 1. `globals.css` dosyasını oku; ihtiyacın olan token zaten var mı bak.

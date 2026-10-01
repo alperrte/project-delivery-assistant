@@ -11,8 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { errorKey } from "@/lib/api/error-message";
-import { InvitationsPanel } from "@/features/invitations/components/invitations-panel";
-import { SquadList } from "@/features/squads/components/squad-list";
+import { InvitationsPage } from "@/features/invitations/components/invitations-page";
+import { TeamsPage } from "@/features/squads/components/teams-page";
 import { CriteriaList } from "@/features/criteria/components/criteria-list";
 import { RepositorySettings } from "@/features/repository/components/repository-settings";
 import { projectsApi } from "../api";
@@ -75,10 +75,8 @@ export function ProjectDetail({ slug }: { slug: string }) {
           </div>
           <TabsContent value="overview"><ProjectOverview project={project} isManager={isManager} onNavigate={setSection} /></TabsContent>
           <TabsContent value="criteria"><CriteriaList projectId={project.id} isManager={isManager} /></TabsContent>
-          <TabsContent value="teams" className="space-y-8">
-            <SquadList projectId={project.id} projectSlug={project.slug} isManager={isManager} />
-            {isManager && <InvitationsPanel projectId={project.id} />}
-          </TabsContent>
+          <TabsContent value="teams"><TeamsPage project={project} isManager={isManager} /></TabsContent>
+          {isManager && <TabsContent value="invitations"><InvitationsPage projectId={project.id} /></TabsContent>}
           <TabsContent value="repository"><RepositorySettings projectId={project.id} isManager={isManager} /></TabsContent>
           {isManager && <TabsContent value="settings"><ProjectSettingsForm project={project} /></TabsContent>}
         </div>

@@ -37,6 +37,15 @@ public interface ProjectAccess {
     /** Batch view for TeamMembership IDs; excludes removed and cross-project rows. */
     Map<UUID, ProjectMemberView> membersByIds(UUID projectId, Set<UUID> membershipIds);
 
-    /** Active project members, paginated at the database for the General Team. */
+    /** Active project members, paginated at the database. */
     Page<ProjectMemberView> members(UUID projectId, Pageable pageable);
+
+    /** Active membership id by user id for the supplied users, in one lookup; non-members are absent. */
+    Map<UUID, UUID> activeMembershipIds(UUID projectId, Set<UUID> userIds);
+
+    /** The supplied users that currently hold a PENDING invitation to this project, in one lookup. */
+    Set<UUID> pendingInviteeIds(UUID projectId, Set<UUID> userIds);
+
+    /** Cancels the PENDING invitations that would add someone to the team; returns how many were cancelled. */
+    int cancelPendingInvitationsForTeam(UUID projectId, UUID teamId);
 }

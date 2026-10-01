@@ -54,8 +54,8 @@ public class Squad {
     @Column(name = "parent_squad_id")
     private UUID parentSquadId;
 
-    @Column(name = "is_general", nullable = false)
-    private boolean general;
+    @Column(name = "updated_by", nullable = false)
+    private UUID updatedBy;
 
     protected Squad() {
         // JPA
@@ -67,32 +67,35 @@ public class Squad {
         squad.name = requiredText(name, NAME_LIMIT, "name");
         squad.description = optionalText(description, DESCRIPTION_LIMIT, "description");
         squad.createdBy = Objects.requireNonNull(createdBy, "createdBy is required");
+        squad.updatedBy = createdBy;
         return squad;
     }
 
-    public static Squad general(UUID projectId, UUID creator) {
-        Squad squad = create(projectId, "General Team", null, creator);
-        squad.general = true;
-        return squad;
-    }
-
-    public void moveUnder(UUID parentId) {
+    /** A {@code null} parent makes the team a top-level team. */
+    public void moveUnder(UUID parentId, UUID actor) {
         requireActive();
-        if (general) throw new IllegalStateException("General Team cannot be moved");
         if (id != null && id.equals(parentId)) throw new IllegalArgumentException("Team cannot parent itself");
-        parentSquadId = Objects.requireNonNull(parentId);
+        parentSquadId = parentId;
+        touch(actor);
     }
 
-    public void updateDetails(String name, String description) {
+    public void updateDetails(String name, String description, UUID actor) {
         requireActive();
         this.name = requiredText(name, NAME_LIMIT, "name");
         this.description = optionalText(description, DESCRIPTION_LIMIT, "description");
+        touch(actor);
     }
 
-    public void archive() {
-        if (general) throw new IllegalStateException("General Team cannot be deleted");
+    /** Records who last changed the team; the timestamp follows through {@code @PreUpdate}. */
+    public void touch(UUID actor) {
+        this.updatedBy = Objects.requireNonNull(actor, "actor is required");
+        this.updatedAt = Instant.now();
+    }
+
+    public void archive(UUID actor) {
         if (archivedAt == null) {
             archivedAt = Instant.now();
+            touch(actor);
         }
     }
 
@@ -138,7 +141,7 @@ public class Squad {
 
     public UUID getId() { return id; }
     public UUID getParentSquadId() { return parentSquadId; }
-    public boolean isGeneral() { return general; }
+    public UUID getUpdatedBy() { return updatedBy; }
     public UUID getProjectId() { return projectId; }
     public String getName() { return name; }
     public String getDescription() { return description; }

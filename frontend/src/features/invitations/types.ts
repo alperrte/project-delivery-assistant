@@ -17,6 +17,8 @@ export type Invitation = {
   rejectionMessage: string | null;
   createdAt: string;
   expiresAt: string;
+  teamId: string | null;
+  teamName: string | null;
 };
 
 export type CreatedInvitation = { invitationId: string; token: string; expiresAt: string };
