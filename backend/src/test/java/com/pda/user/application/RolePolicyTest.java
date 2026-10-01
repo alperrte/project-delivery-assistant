@@ -21,6 +21,18 @@ class RolePolicyTest {
             ProjectRole.UI_UX_DEVELOPER, ProjectRole.ANALYST);
 
     @Test
+    void onlyTheProjectManagerMayManageProjectWideReminders() {
+        assertTrue(RolePolicy.allows(Set.of(ProjectRole.PROJECT_MANAGER), ProjectPermission.REMINDER_MANAGE));
+        for (ProjectRole role : ProjectRole.values()) {
+            if (role != ProjectRole.PROJECT_MANAGER) {
+                assertFalse(RolePolicy.allows(Set.of(role), ProjectPermission.REMINDER_MANAGE), role.name());
+                // Every contributor can still see the project, which is all a personal reminder needs.
+                assertTrue(RolePolicy.allows(Set.of(role), ProjectPermission.PROJECT_VIEW), role.name());
+            }
+        }
+    }
+
+    @Test
     void projectManagerHoldsEveryProjectPermission() {
         assertEquals(EnumSet.allOf(ProjectPermission.class),
                 RolePolicy.permissions(Set.of(ProjectRole.PROJECT_MANAGER)));

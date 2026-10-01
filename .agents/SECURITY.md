@@ -430,6 +430,30 @@ Swagger check path: `/swagger-ui/index.html` with `API_DOCS_ENABLED=true`: `GET 
 
 ---
 
+### Project calendar reminders (2026-10-01)
+
+New migration `V35__project_reminders.sql` (`project_reminders`, one index `(project_id, reminder_date)`); no new ENV key or dependency. New module `com.pda.reminder`; membership comes only from `ProjectAccess`. One new `ProjectPermission`: `REMINDER_MANAGE` (held by `PROJECT_MANAGER` only, through `RolePolicy`'s `allOf`). A personal reminder needs nothing beyond being an active member. The new routes are listed in `SecurityBaselineConfiguration` (the default stays deny-all); `PATCH` was already an allowed CORS method.
+
+A reminder has a `scope` fixed at creation: `PERSONAL` (visible to its creator only) or `PROJECT` (visible to every active member). Dates travel as plain `YYYY-MM-DD` (`date`) and optional `HH:mm` (`time`), never as timestamps, so a day cannot shift with the timezone. The caller is always the authenticated principal; there is no recipient field.
+
+| Endpoint | Auth / scope | Input | Success | Important errors |
+| --- | --- | --- | --- | --- |
+| `GET /api/v1/projects/{projectId}/reminders?from&to` | active member | `from`, `to` (`YYYY-MM-DD`, a range of at most 93 days) | `200` array: every `PROJECT` reminder + the caller's own `PERSONAL` ones in range, ordered by date, time, creation | `400` missing/invalid/too wide range, `403` not a member |
+| `POST /api/v1/projects/{projectId}/reminders` | active member + CSRF; scope `PROJECT` needs `REMINDER_MANAGE` | `title` (1-100), `description` (max 500, optional), `type`, `scope` (optional, default `PERSONAL`), `date`, `time` (optional) | `201` | `400` validation / unknown `type` or `scope` / date more than one day in the past, `403` member asking for `PROJECT` or no CSRF |
+| `GET /api/v1/projects/{projectId}/reminders/{reminderId}` | active member | none | `200` | `404` unknown id, another project's id, or someone else's `PERSONAL` reminder (existence is not revealed) |
+| `PATCH /api/v1/projects/{projectId}/reminders/{reminderId}` | `PERSONAL`: its creator; `PROJECT`: `REMINDER_MANAGE`; CSRF | `title`, `description`, `type`, `date`, `time` replace the editable fields (no `scope`; it is immutable) | `200` | `400`, `403` member editing a `PROJECT` reminder, `404` |
+| `DELETE /api/v1/projects/{projectId}/reminders/{reminderId}` | same as PATCH + CSRF | none | `204` | `403`, `404` |
+
+`type` is one of `MEETING`, `DEADLINE`, `PRESENTATION`, `REVIEW`, `DELIVERY`, `WORK`, `OTHER`. The backend returns only the enum name; icons and labels live in the frontend (`reminderTypeConfig`, `reminders.types.*`). "In the past" tolerates one day (the server clock is UTC), and an edit that leaves the date unchanged is never rejected for being old. A reminder is looked up by `(projectId, reminderId)`, so `/projects/B/reminders/{id of an A reminder}` is a `404`.
+
+**When a member leaves the project.** Reminders are not deleted. Every operation starts with the active-membership check, so a removed member gets `403` on list, detail, create, edit and delete, including for their own `PERSONAL` reminders, and no one else can see those (`404` for another member, as before). The rows stay in `project_reminders` unchanged. `PROJECT` reminders belong to the project: they keep working for everyone else, a remaining manager can still edit or delete them, and `creator.nickname` becomes `null` once the creator has left (`creator.userId` stays). If the same user is added back, their membership is reactivated and their earlier `PERSONAL` reminders are visible to them again. Covered by `ReminderApiIntegrationTest` (`aRemovedMembersPersonalRemindersAreKeptButNoLongerReachableByThem`, `aProjectReminderOutlivesTheManagerWhoCreatedItAndStaysManageable`).
+
+Where the permission and the routes live. `REMINDER_MANAGE` is in `com.pda.user.ProjectPermission` and is granted by `RolePolicy` (the documented single source of truth for what a role may do); the three write routes are in `SecurityBaselineConfiguration`'s central allow-list (default deny-all). That is where squad, criteria, repository, task and notification already declared theirs, so no new shared structure was introduced; the `reminder` module itself only depends on the public `ProjectAccess` contract (checked by `ModularityTest`).
+
+Swagger check path: `/swagger-ui/index.html` with `API_DOCS_ENABLED=true`: `GET /api/v1/auth/csrf`, log in, pick a `projectId`, call `POST` without `scope`, then with `"scope":"PROJECT"` as a non-manager (expect `403`).
+
+---
+
 ### Task Service backend endpoints (F5)
 
 Swagger check path: `/swagger-ui/index.html` with `API_DOCS_ENABLED=true`. Call `GET /api/v1/auth/csrf`, log in, create/select an active project, then use the endpoints below. All mutations require the `X-XSRF-TOKEN` header and `PDA_ACCESS` HttpOnly cookie. `ADMIN` alone grants no project access. All routes are project scoped and return `ProblemDetail` on errors.

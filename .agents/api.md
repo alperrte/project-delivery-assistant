@@ -1,5 +1,9 @@
 # API rehberi
 
+## Proje takvim anımsatıcıları (2026-10-01)
+
+`/api/v1/projects/{projectId}/reminders` altında tarih aralığıyla liste (`from`, `to`), detay, oluşturma, `PATCH` ile düzenleme ve silme sunulur. Anımsatıcı bir göreve değil takvime aittir; kapsamı oluşturulurken sabitlenir: `PERSONAL` yalnız yaratıcıya, `PROJECT` tüm aktif üyelere görünür ve yalnız `PROJECT_MANAGER` (`REMINDER_MANAGE`) oluşturur/düzenler/siler. Yöntem, body, yetki ve hata matrisi `SECURITY.md` §11'dedir; tablo `database.md` V35'tedir.
+
 ## Teams ve alıcı davetleri (2026-09-30)
 
 Uygulanan yeni proje kapsamlı API `/api/v1/projects/{projectId}/teams` altında General/custom ekip listeleme, detay, create/update/parent taşıma/archive ve ekip üyeliği işlemleridir. General Team aktif `ProjectMembership` üyelerini yansıtır. `/api/v1/project-invitations/me` yalnız alıcının davetlerini; `/{invitationId}/accept|reject` yalnız o hesabın yanıtını sunar. `GET /api/v1/projects/{projectId}/invitations/all` yöneticinin geçmişini ve ret mesajını döner. Mevcut üyelik/rol endpointleri Project yetkisinde kalır; `/squads` uyumluluk yolu devam eder. Yöntem, body, yetki ve hata matrisi `SECURITY.md` §11'de, uçtan uca örnekler teslim kaydındadır.

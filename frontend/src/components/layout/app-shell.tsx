@@ -125,13 +125,14 @@ export function AppShell({ children }: { children: ReactNode }) {
             {!narrow && <span>{tw("tasks")}</span>}
           </div>
           <Link
-            href="/dashboard#calendar"
+            href="/calendar"
             onClick={() => setMenuOpen(false)}
             title={narrow ? tw("calendar") : undefined}
             aria-label={narrow ? tw("calendar") : undefined}
-            className={cn("flex items-center gap-3 rounded-md py-2.5 text-[13px] text-muted-foreground hover:bg-muted hover:text-foreground", narrow ? "justify-center px-0" : "px-3")}
+            aria-current={pathname === "/calendar" ? "page" : undefined}
+            className={navItemClass(pathname === "/calendar", cn("flex items-center gap-3 rounded-md py-2.5 text-[13px] hover:bg-muted hover:text-foreground", narrow ? "justify-center px-0" : "px-3"))}
           >
-            <CalendarBlank size={19} aria-hidden="true" />
+            <CalendarBlank size={19} weight={pathname === "/calendar" ? "fill" : "regular"} aria-hidden="true" />
             {!narrow && tw("calendar")}
           </Link>
         </nav>

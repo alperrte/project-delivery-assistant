@@ -26,6 +26,8 @@ public enum ProjectPermission {
     ISSUE_PARTICIPATE,
     /** Manage other people's issues and comments. */
     ISSUE_MANAGE,
+    /** Create, edit and delete project-wide calendar reminders; personal reminders only need PROJECT_VIEW. */
+    REMINDER_MANAGE,
     /** Create and update test reports and results. */
     TEST_REPORT_WRITE
 }

@@ -506,6 +506,10 @@
     },
     "description": "Proje içinde birlikte çalışan ekipleri oluşturun ve yönetin.",
     "noDescription": "Bu ekip için henüz açıklama eklenmedi.",
+    "newPage": {
+      "description": "Ekibe bir ad ve kısa bir açıklama verin. Üyeleri ekip oluşturulduktan sonra ekleyebilirsiniz.",
+      "notAllowed": "Ekip oluşturmak için proje yöneticisi olmanız gerekir."
+    },
     "manageMembers": "Üyeler",
     "edit": "Düzenle",
     "emptyDescription": "Proje üyelerini birlikte çalışacakları ekiplerde düzenleyin.",
@@ -627,6 +631,91 @@
     "success": "Şifreniz güncellendi. Şimdi giriş yapabilirsiniz.",
     "backToLogin": "Girişe dön"
   },
+  "calendarPage": {
+    "description": "Seçili projenin anımsatıcılarını ve hedef bitiş tarihini ay ay takip et.",
+    "today": "Bugün",
+    "create": "Anımsatıcı oluştur",
+    "project": "Proje",
+    "selectProject": "Proje seçin",
+    "projectDeadline": "Projenin hedef bitiş tarihi",
+    "noRemindersForDay": "Bu gün için anımsatıcı yok.",
+    "noProjectTitle": "Takvim bir projeye bağlıdır",
+    "noProjectDescription": "Anımsatıcı oluşturmak için önce bir proje oluşturun veya bir projeye katılın.",
+    "projectNotFound": "Seçili proje bulunamadı. Yukarıdan başka bir proje seçin.",
+    "loadError": "Anımsatıcılar yüklenemedi.",
+    "openCalendar": "Takvimi aç"
+  },
+  "reminders": {
+    "types": {
+      "MEETING": "Toplantı",
+      "DEADLINE": "Son tarih",
+      "PRESENTATION": "Sunum",
+      "REVIEW": "İnceleme",
+      "DELIVERY": "Teslimat",
+      "WORK": "Çalışma",
+      "OTHER": "Diğer"
+    },
+    "scope": { "PERSONAL": "Kişisel", "PROJECT": "Proje geneli" },
+    "createdBy": "{name} oluşturdu",
+    "toasts": {
+      "created": "Anımsatıcı oluşturuldu.",
+      "updated": "Anımsatıcı güncellendi.",
+      "deleted": "Anımsatıcı silindi."
+    },
+    "actions": {
+      "edit": "Düzenle",
+      "editNamed": "{title} anımsatıcısını düzenle",
+      "delete": "Sil",
+      "deleteNamed": "{title} anımsatıcısını sil",
+      "deleteTitle": "Bu anımsatıcı silinsin mi?",
+      "deleteDescription": "“{title}” kalıcı olarak silinir.",
+      "cancel": "Vazgeç"
+    },
+    "form": {
+      "back": "Takvime dön",
+      "createTitle": "Anımsatıcı oluştur",
+      "createDescription": "Seçili projenin takvimine önemli bir tarih ekleyin.",
+      "editTitle": "Anımsatıcıyı düzenle",
+      "editDescription": "Anımsatıcının ad, tür, tarih veya saatini güncelleyin.",
+      "scopeLabel": "Anımsatıcı kimin için?",
+      "scopePersonal": "Kendim için",
+      "scopePersonalHint": "Yalnızca siz görürsünüz.",
+      "scopeProject": "Projedeki herkes için",
+      "scopeProjectHint": "Projenin tüm üyeleri görür.",
+      "scopeFixed": "Kapsam oluşturulduktan sonra değiştirilemez.",
+      "title": "Anımsatıcı adı",
+      "titlePlaceholder": "Örn. Sprint toplantısı",
+      "descriptionLabel": "Açıklama",
+      "descriptionPlaceholder": "İsteğe bağlı",
+      "type": "Anımsatıcı türü",
+      "typePlaceholder": "Tür seçin",
+      "date": "Tarih",
+      "time": "Saat (isteğe bağlı)",
+      "cancel": "Vazgeç",
+      "create": "Oluştur",
+      "save": "Kaydet",
+      "noProject": "Anımsatıcı oluşturmak için önce takvimde bir proje seçin.",
+      "notFound": "Bu anımsatıcı bulunamadı."
+    },
+    "validation": {
+      "titleRequired": "Anımsatıcı adı zorunlu.",
+      "titleMax": "Ad en fazla 100 karakter olabilir.",
+      "descriptionMax": "Açıklama en fazla 500 karakter olabilir.",
+      "typeRequired": "Bir anımsatıcı türü seçin.",
+      "dateRequired": "Tarih zorunlu.",
+      "dateInvalid": "Geçerli bir tarih girin.",
+      "datePast": "Geçmiş bir tarihe anımsatıcı eklenemez.",
+      "timeInvalid": "Geçerli bir saat girin."
+    }
+  },
+  "account": {
+    "title": "Hesap ayarları",
+    "description": "Hesap bilgilerinizi görüntüleyin ve şifrenizi yönetin.",
+    "profile": "Profil",
+    "nickname": "Kullanıcı adı",
+    "email": "E-posta",
+    "security": "Güvenlik"
+  },
   "changePassword": {
     "title": "Şifrenizi güncelleyin",
     "subtitleRequired": "Devam etmeden önce şifrenizi değiştirmeniz gerekiyor.",
@@ -671,9 +760,7 @@
     "expandSidebar": "Kenar çubuğunu genişlet",
     "previousMonth": "Önceki ay",
     "nextMonth": "Sonraki ay",
-    "targetDate": "Hedef bitiş tarihi",
-    "noDeadlines": "Bu gün için proje teslim tarihi yok.",
-    "calendarScope": "Takvim bu sayfadaki projelerin hedef bitiş tarihlerini gösterir.",
+    "calendarScope": "Takvim seçili projenin anımsatıcılarını ve hedef bitiş tarihini gösterir.",
     "create": "Proje oluştur",
     "updates": "Son güncellemeler",
     "projectUpdated": "Proje güncellendi",

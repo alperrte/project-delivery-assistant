@@ -1,6 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
-import { registerUser, login, createProject, uniqueUser } from "./helpers";
-import { MANAGER_STORAGE } from "./global-setup";
+import { readFileSync } from "node:fs";
+import { createProject } from "./helpers";
+import { MANAGER_STORAGE, MEMBER_STORAGE, MEMBER_USER_FILE } from "./global-setup";
 
 /**
  * HMZ-PROJ-52 flows covered here (two users: PROJECT_MANAGER + a contributor):
@@ -17,13 +18,14 @@ test.describe.serial("Invitation, roles, squad, and denial checks", () => {
   let projectId: string;
   let invitationId: string;
   let token: string;
-  let member: { email: string; nickname: string; password: string };
+  // The shared second account from global-setup: already registered and signed in, so no extra /auth/register call.
+  const member: { email: string; nickname: string } = JSON.parse(readFileSync(MEMBER_USER_FILE, "utf-8"));
   let memberUserId: string;
   const projectName = `E2E Invite Project ${Date.now()}`;
 
   test.beforeAll(async ({ browser }) => {
     const managerContext = await browser.newContext({ storageState: MANAGER_STORAGE });
-    const memberContext = await browser.newContext();
+    const memberContext = await browser.newContext({ storageState: MEMBER_STORAGE });
     managerPage = await managerContext.newPage();
     memberPage = await memberContext.newPage();
   });
@@ -33,11 +35,8 @@ test.describe.serial("Invitation, roles, squad, and denial checks", () => {
     await memberPage.close();
   });
 
-  test("manager (already authenticated) creates a project; contributor account is registered", async () => {
+  test("manager (already authenticated) creates a project", async () => {
     slug = await createProject(managerPage, projectName);
-
-    member = uniqueUser("member");
-    await registerUser(memberPage, member);
   });
 
   test("manager searches, invites the contributor, and captures the invitation token", async () => {
@@ -69,8 +68,8 @@ test.describe.serial("Invitation, roles, squad, and denial checks", () => {
     await expect(managerPage.getByText("Davet gönderildi.")).toBeVisible();
   });
 
-  test("contributor logs in, accepts the invitation, and becomes a member", async () => {
-    await login(memberPage, member.email, member.password);
+  test("contributor accepts the invitation and becomes a member", async () => {
+    await memberPage.goto("/projects");
 
     memberUserId = await memberPage.evaluate(async () => {
       const res = await fetch("http://localhost:8080/api/v1/auth/me", { credentials: "include" });
@@ -148,10 +147,13 @@ test.describe.serial("Invitation, roles, squad, and denial checks", () => {
 
   test("manager creates a squad and adds the contributor to it", async () => {
     await managerPage.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Ekipler" }).click();
-    await managerPage.getByRole("button", { name: /^Yeni ekip$/ }).click();
+    await managerPage.getByRole("link", { name: /^Yeni ekip$/ }).click();
+    await expect(managerPage).toHaveURL(new RegExp(`/projects/${slug}/teams/new$`));
+    await expect(managerPage.getByRole("dialog")).toHaveCount(0);
     await managerPage.locator("#squad-name").fill("E2E Squad");
-    await managerPage.getByRole("dialog").getByRole("button", { name: /^Oluştur$/ }).click();
+    await managerPage.getByRole("button", { name: /^Oluştur$/ }).click();
     await expect(managerPage.getByText("Ekip oluşturuldu.")).toBeVisible();
+    await expect(managerPage).toHaveURL(new RegExp(`/projects/${slug}\\?section=teams$`));
 
     await managerPage.getByRole("link", { name: /E2E Squad üyeleri/ }).click();
     await expect(managerPage).toHaveURL(new RegExp(`/projects/${slug}/teams/[^/]+/members$`));

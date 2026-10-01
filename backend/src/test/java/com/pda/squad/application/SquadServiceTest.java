@@ -1,14 +1,15 @@
 package com.pda.squad.application;
 
-import com.pda.BackendApplication;
-import com.pda.project.application.service.ProjectMembershipService;
-import com.pda.project.application.service.ProjectService;
-import com.pda.squad.application.service.SquadConflictException;
-import com.pda.squad.application.service.SquadMemberSummary;
-import com.pda.squad.application.service.SquadService;
-import com.pda.squad.domain.entity.Squad;
-import com.pda.user.ProjectRole;
-import com.pda.user.UserAccounts;
+import java.security.SecureRandom;
+import java.util.Base64;
+import java.util.NoSuchElementException;
+import java.util.Set;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,16 +22,15 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
-import java.security.SecureRandom;
-import java.util.Base64;
-import java.util.NoSuchElementException;
-import java.util.Set;
-import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import com.pda.BackendApplication;
+import com.pda.project.application.service.ProjectMembershipService;
+import com.pda.project.application.service.ProjectService;
+import com.pda.squad.application.service.SquadConflictException;
+import com.pda.squad.application.service.SquadMemberSummary;
+import com.pda.squad.application.service.SquadService;
+import com.pda.squad.domain.entity.Squad;
+import com.pda.user.ProjectRole;
+import com.pda.user.UserAccounts;
 
 @SpringBootTest(classes = BackendApplication.class)
 @Testcontainers(disabledWithoutDocker = true)
