@@ -76,7 +76,7 @@ function refreshSession(): Promise<boolean> {
   return refreshing;
 }
 
-const NO_REFRESH = ["/auth/login", "/auth/register", "/auth/refresh", "/auth/logout"];
+const NO_REFRESH = ["/auth/login", "/auth/register", "/auth/register/invitation", "/auth/refresh", "/auth/logout"];
 
 export async function apiRequest<T = void>(
   path: string,

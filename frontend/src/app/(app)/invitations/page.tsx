@@ -58,6 +58,7 @@ export default function MyInvitationsPage() {
                   <Badge variant="secondary">{t(`statusValues.${invitation.status}`)}</Badge>
                 </div>
                 <div className="flex flex-wrap gap-1">{invitation.initialRoles.map((role) => <Badge key={role} variant="secondary">{tr(role)}</Badge>)}</div>
+                {invitation.message && <p className="text-sm text-muted-foreground">{invitation.message}</p>}
                 {invitation.status === "PENDING" && (
                   <div className="space-y-2 border-t pt-3">
                     <Textarea

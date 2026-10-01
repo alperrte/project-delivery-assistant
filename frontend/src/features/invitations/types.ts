@@ -7,6 +7,10 @@ export type Invitation = {
   projectId: string;
   invitedUserId: string | null;
   email: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  message: string | null;
+  nickname: string | null;
   invitedBy: string;
   initialRoles: ProjectRole[];
   status: InvitationStatus;
@@ -16,6 +20,20 @@ export type Invitation = {
 };
 
 export type CreatedInvitation = { invitationId: string; token: string; expiresAt: string };
+
+export type ExternalInvitationPreview = {
+  projectName: string;
+  inviterName: string;
+  roles: ProjectRole[];
+  message: string | null;
+  email: string;
+  firstName: string;
+  lastName: string;
+  expiresAt: string;
+  status: "PENDING";
+};
+
+export type AcceptedExternalInvitation = { projectId: string; projectSlug: string };
 
 export type MyInvitation = {
   id: string;
@@ -27,4 +45,5 @@ export type MyInvitation = {
   status: InvitationStatus;
   createdAt: string;
   expiresAt: string;
+  message: string | null;
 };

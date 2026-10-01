@@ -74,7 +74,9 @@ export function LoginForm({ children }: { children?: ReactNode }) {
       writeRememberedEmail(remember ? credentials.email : null);
       const me = await authApi.me();
       queryClient.setQueryData(sessionQueryKey, me);
-      router.replace(me.mustChangePassword ? "/change-password" : "/dashboard");
+      const invitation = new URLSearchParams(window.location.hash.slice(1)).get("invitation");
+      router.replace(me.mustChangePassword ? "/change-password" : invitation
+        ? `/register#invitation=${encodeURIComponent(invitation)}` : "/dashboard");
     } catch (err) {
       setFormError(te(errorKey(err)));
       shake();
