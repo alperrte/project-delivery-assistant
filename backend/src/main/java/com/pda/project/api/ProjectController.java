@@ -46,16 +46,19 @@ public class ProjectController {
             @AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
             @Valid @RequestBody CreateProjectRequest request) {
         ProjectResponse response = ProjectResponse.from(projects.create(AuthenticatedActor.id(principal),
-                request.name(), request.description(), request.organizationId()));
+                request.name(), request.description(), request.organizationId(), request.projectType(),
+                request.tagline(), request.techStack()));
         return ResponseEntity.created(URI.create("/api/v1/projects/" + response.id())).body(response);
     }
 
     @GetMapping
-    @Operation(summary = "List own projects", description = "Only active projects with a membership are returned.")
+    @Operation(summary = "List own projects", description = "Only active projects with a membership are returned. "
+            + "Each item also carries the card data (team count and preview, last editor), aggregated for the "
+            + "whole page in a fixed number of queries.")
     public PageResponse<ProjectResponse> list(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
                                               @RequestParam(defaultValue = "0") int page,
                                               @RequestParam(defaultValue = "20") int size) {
-        return PageResponse.from(projects.list(AuthenticatedActor.id(principal), pageRequest(page, size)),
+        return PageResponse.from(projects.listCards(AuthenticatedActor.id(principal), pageRequest(page, size)),
                 ProjectResponse::from);
     }
 
@@ -90,7 +93,8 @@ public class ProjectController {
                                   @Valid @RequestBody UpdateProjectRequest request) {
         return ProjectResponse.from(projects.update(AuthenticatedActor.id(principal), projectId,
                 request.name(), request.description(), request.priority(), request.status(), request.startDate(),
-                request.targetEndDate(), request.projectGoal(), request.techStack(), request.organizationId()));
+                request.targetEndDate(), request.projectGoal(), request.techStack(), request.organizationId(),
+                request.projectType(), request.tagline()));
     }
 
     @PostMapping("/{projectId}/archive")

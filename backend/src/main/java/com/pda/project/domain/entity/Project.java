@@ -2,6 +2,7 @@ package com.pda.project.domain.entity;
 
 import com.pda.project.domain.enums.ProjectPriority;
 import com.pda.project.domain.enums.ProjectStatus;
+import com.pda.project.domain.enums.ProjectType;
 import com.pda.project.domain.enums.ProjectVisibility;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -33,6 +34,7 @@ public class Project {
 
     private static final int NAME_LIMIT = 160;
     private static final int SLUG_LIMIT = 100;
+    private static final int TAGLINE_LIMIT = 120;
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -75,6 +77,13 @@ public class Project {
     @Column(name = "organization_id")
     private UUID organizationId;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "project_type", nullable = false, length = 16)
+    private ProjectType projectType = ProjectType.OTHER;
+
+    @Column(length = TAGLINE_LIMIT)
+    private String tagline;
+
     @Column(name = "created_by", nullable = false, updatable = false)
     private UUID createdBy;
 
@@ -83,6 +92,13 @@ public class Project {
 
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
+
+    @Column(name = "updated_by")
+    private UUID updatedBy;
+
+    /** Set whenever a logo is stored; doubles as the cache-busting version of the logo URL. Null means no logo. */
+    @Column(name = "logo_updated_at")
+    private Instant logoUpdatedAt;
 
     @Column(name = "archived_at")
     private Instant archivedAt;
@@ -96,16 +112,58 @@ public class Project {
 
     public static Project create(String name, String slug, String description, UUID createdBy,
                                  UUID organizationId) {
+        return create(name, slug, description, createdBy, organizationId, null, null, null);
+    }
+
+    public static Project create(String name, String slug, String description, UUID createdBy,
+                                 UUID organizationId, ProjectType projectType, String tagline, String techStack) {
         Project project = new Project();
         project.name = requiredText(name, NAME_LIMIT, "name");
         project.slug = validSlug(slug);
         project.description = optionalText(description, 2000, "description");
         project.createdBy = Objects.requireNonNull(createdBy, "createdBy is required");
+        project.updatedBy = createdBy;
         project.organizationId = organizationId;
+        project.projectType = projectType == null ? ProjectType.OTHER : projectType;
+        project.tagline = optionalText(tagline, TAGLINE_LIMIT, "tagline");
+        project.techStack = optionalText(techStack, 1000, "techStack");
         project.status = ProjectStatus.PLANNING;
         project.priority = ProjectPriority.MEDIUM;
         project.visibility = ProjectVisibility.PRIVATE;
         return project;
+    }
+
+    /** Type and tagline are edited together with the other details; a null type keeps the current one. */
+    public void updateIdentity(ProjectType projectType, String tagline) {
+        if (archivedAt != null) {
+            throw new IllegalStateException("Archived projects cannot be changed");
+        }
+        String validTagline = optionalText(tagline, TAGLINE_LIMIT, "tagline");
+        if (projectType != null) {
+            this.projectType = projectType;
+        }
+        this.tagline = validTagline;
+    }
+
+    /** Records who changed the project last; the timestamp itself is maintained by {@code @PreUpdate}. */
+    public void touch(UUID actor) {
+        this.updatedBy = Objects.requireNonNull(actor, "actor is required");
+    }
+
+    public void logoStored(UUID actor, Instant at) {
+        if (archivedAt != null) {
+            throw new IllegalStateException("Archived projects cannot be changed");
+        }
+        this.logoUpdatedAt = Objects.requireNonNull(at, "at is required");
+        touch(actor);
+    }
+
+    public void logoRemoved(UUID actor) {
+        if (archivedAt != null) {
+            throw new IllegalStateException("Archived projects cannot be changed");
+        }
+        this.logoUpdatedAt = null;
+        touch(actor);
     }
 
     public void updateDetails(String name, String description, ProjectPriority priority,
@@ -205,8 +263,12 @@ public class Project {
     public String getTechStack() { return techStack; }
     public ProjectVisibility getVisibility() { return visibility; }
     public UUID getOrganizationId() { return organizationId; }
+    public ProjectType getProjectType() { return projectType; }
+    public String getTagline() { return tagline; }
     public UUID getCreatedBy() { return createdBy; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
+    public UUID getUpdatedBy() { return updatedBy; }
+    public Instant getLogoUpdatedAt() { return logoUpdatedAt; }
     public Instant getArchivedAt() { return archivedAt; }
 }

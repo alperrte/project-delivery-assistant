@@ -1,7 +1,14 @@
 import { z } from "zod";
+import { MAX_TECH_SELECTION } from "./tech-catalog";
+import { PROJECT_TYPES } from "./types";
+
+export const TAGLINE_MAX = 120;
 
 export const createProjectSchema = z.object({
-  name: z.string().min(1, "required").max(160, "maxLength"),
+  name: z.string().trim().min(1, "required").max(160, "maxLength"),
+  tagline: z.string().max(TAGLINE_MAX, "maxLength").optional(),
+  projectType: z.enum(PROJECT_TYPES, { error: "required" }),
+  techStack: z.array(z.string()).max(MAX_TECH_SELECTION, "maxLength"),
   description: z.string().max(2000, "maxLength").optional(),
   organizationId: z.string().uuid().optional(),
 });
@@ -22,6 +29,8 @@ export const projectSettingsSchema = z
     projectGoal: z.string().max(2000, "maxLength").optional(),
     techStack: z.string().max(1000, "maxLength").optional(),
     organizationId: z.string().uuid().optional(),
+    projectType: z.enum(PROJECT_TYPES),
+    tagline: z.string().max(TAGLINE_MAX, "maxLength").optional(),
   })
   .refine((v) => !v.startDate || !v.targetEndDate || v.targetEndDate >= v.startDate, {
     path: ["targetEndDate"],

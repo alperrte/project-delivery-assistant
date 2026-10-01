@@ -18,7 +18,10 @@
       "total": "{count, plural, one {# Eintrag} other {# Einträge}}",
       "previous": "Zurück",
       "next": "Weiter",
-      "pageOf": "Seite {page} von {totalPages}"
+      "pageOf": "Seite {page} von {totalPages}",
+      "navLabel": "Seitennavigation",
+      "pageNumber": "Seite {page}",
+      "showing": "{from}-{to} werden angezeigt"
     },
     "showPassword": "Passwort anzeigen",
     "hidePassword": "Passwort verbergen"
@@ -38,7 +41,10 @@
     "mailUnavailable": "Das Mailsystem ist vorübergehend nicht verfügbar. Bitte versuchen Sie es später erneut.",
     "currentPasswordIncorrect": "Ihr aktuelles Passwort ist falsch.",
     "passwordUnchanged": "Das neue Passwort darf nicht mit Ihrem aktuellen Passwort übereinstimmen.",
-    "accountUnavailable": "Ihr Konto ist derzeit nicht verfügbar."
+    "accountUnavailable": "Ihr Konto ist derzeit nicht verfügbar.",
+    "PROJECT_LOGO_INVALID_TYPE": "Das Logo muss eine PNG-, JPEG- oder WebP-Datei sein.",
+    "PROJECT_LOGO_TOO_LARGE": "Das Logo darf höchstens 512 KB groß sein.",
+    "PROJECT_LOGO_EMPTY": "Die Logodatei ist leer."
   },
   "app": {
     "nav": {
@@ -97,7 +103,23 @@
     }
   },
   "projects": {
-    "card": { "technology": "Technologie", "noTechnology": "Keine Technologie angegeben", "team": "Team", "teamUnavailable": "Teamdaten konnten nicht geladen werden.", "members": "{count, plural, one {# Mitglied} other {# Mitglieder}}", "lastUpdate": "Letzte Änderung", "open": "Projekt öffnen", "openNamed": "Projekt {name} öffnen" },
+    "card": {
+      "technology": "Technologie",
+      "noTechnology": "Keine Technologie angegeben",
+      "team": "Team",
+      "members": "{count, plural, one {# Mitglied} other {# Mitglieder}}",
+      "lastUpdate": "Letzte Änderung",
+      "updatedBy": "{date} · {name}",
+      "open": "Projekt öffnen",
+      "openNamed": "Projekt {name} öffnen",
+      "types": {
+        "WEB": "Web",
+        "MOBILE": "Mobil",
+        "AI": "KI",
+        "DESKTOP": "Desktop",
+        "OTHER": "Sonstiges"
+      }
+    },
     "cardLabel": "PROJEKT",
     "cardNoDescription": "Noch keine Beschreibung hinzugefügt.",
     "cardGoal": "Ziel",
@@ -108,15 +130,115 @@
     "emptyTitle": "Noch keine Projekte",
     "emptyDescription": "Erstellen Sie Ihr erstes Projekt, um zu beginnen.",
     "columns": { "name": "Name", "status": "Status", "priority": "Priorität", "techStack": "Technologie", "updatedAt": "Aktualisiert" },
-    "form": {
-      "createTitle": "Neues Projekt",
-      "name": "Name",
-      "description": "Beschreibung",
-      "organization": "Organisation",
-      "organizationNone": "Keine Organisation",
-      "cancel": "Abbrechen",
-      "create": "Erstellen",
-      "created": "Projekt erstellt."
+    "emptyAction": "Erstes Projekt erstellen",
+    "newPage": {
+      "title": "Neues Projekt",
+      "description": "Legen Sie die Identität des Projekts fest. Die Karte rechts zeigt, wie es in der Liste aussehen wird.",
+      "sections": {
+        "identity": {
+          "title": "Identität",
+          "description": "Logo, Name und Slogan erscheinen oben auf der Karte."
+        },
+        "type": {
+          "title": "Projektart",
+          "description": "Die Art erscheint als Badge auf der Karte und bestimmt die Technologie-Vorschläge."
+        },
+        "technology": {
+          "title": "Technologien",
+          "description": "Auf der Karte erscheinen nur die Logos. Wählen Sie bis zu {max}."
+        },
+        "details": {
+          "title": "Details",
+          "description": "Organisation und Beschreibung sind optional."
+        }
+      },
+      "logo": {
+        "label": "Logo",
+        "hint": "PNG, JPEG oder WebP, höchstens 512 KB. Ohne Logo wird der erste Buchstabe des Namens verwendet.",
+        "choose": "Logo hochladen",
+        "change": "Ändern",
+        "remove": "Entfernen",
+        "drop": "Datei hier ablegen oder auswählen",
+        "invalidType": "Laden Sie eine PNG-, JPEG- oder WebP-Datei hoch.",
+        "tooLarge": "Das Logo darf höchstens 512 KB groß sein."
+      },
+      "name": {
+        "label": "Projektname",
+        "placeholder": "z. B. Lieferportal",
+        "address": "Adresse: /projects/{slug}"
+      },
+      "tagline": {
+        "label": "Slogan",
+        "optional": "Optional",
+        "placeholder": "Beschreiben Sie das Projekt in einem Satz",
+        "counter": "{count}/{max}"
+      },
+      "technology": {
+        "search": "Technologien suchen",
+        "searchPlaceholder": "Technologien suchen",
+        "noResults": "Keine passende Technologie.",
+        "selected": "{count}/{max} ausgewählt",
+        "otherSelections": "Weitere Auswahl",
+        "categories": {
+          "frontend": "Frontend",
+          "backend": "Backend",
+          "database": "Datenbank",
+          "infrastructure": "Infrastruktur",
+          "app": "App",
+          "tools": "Werkzeuge",
+          "backendService": "Backend und Cloud",
+          "data": "Daten",
+          "language": "Sprache und Umgebung",
+          "framework": "Modelle und Frameworks",
+          "provider": "Modellanbieter",
+          "services": "Dienste und Daten",
+          "desktop": "Desktop",
+          "all": "Alle Technologien"
+        }
+      },
+      "details": {
+        "organization": "Organisation",
+        "organizationNone": "Keine Organisation",
+        "description": "Beschreibung",
+        "descriptionPlaceholder": "Was macht dieses Projekt und für wen?"
+      },
+      "preview": {
+        "title": "Vorschau",
+        "caption": "So sieht die Karte in der Liste aus.",
+        "you": "Sie",
+        "now": "Gerade eben",
+        "namePlaceholder": "Projektname",
+        "taglinePlaceholder": "Ihr Slogan erscheint hier",
+        "show": "Vorschau anzeigen"
+      },
+      "actions": {
+        "cancel": "Abbrechen",
+        "submit": "Projekt erstellen",
+        "created": "Projekt erstellt.",
+        "logoFailed": "Das Logo konnte nicht hochgeladen werden. Sie können es in den Projekteinstellungen erneut versuchen."
+      },
+      "types": {
+        "WEB": {
+          "name": "Web",
+          "description": "Website oder App im Browser"
+        },
+        "MOBILE": {
+          "name": "Mobil",
+          "description": "iOS- oder Android-App"
+        },
+        "AI": {
+          "name": "KI",
+          "description": "Modell, Agent oder datengetriebenes Produkt"
+        },
+        "DESKTOP": {
+          "name": "Desktop",
+          "description": "Windows-, macOS- oder Linux-App"
+        },
+        "OTHER": {
+          "name": "Sonstiges",
+          "description": "Andere Projektarten"
+        }
+      }
     },
     "detail": {
       "selectedProject": "Ausgewähltes Projekt",
@@ -228,6 +350,9 @@
       "discard": "Änderungen verwerfen",
       "dangerTitle": "Projekt archivieren",
       "dangerDescription": "Ein archiviertes Projekt kann nicht mehr geändert werden und wird aus aktiven Listen ausgeblendet. Das lässt sich nicht rückgängig machen.",
+      "tagline": "Slogan",
+      "taglinePlaceholder": "Beschreiben Sie das Projekt in einem Satz",
+      "type": "Projektart",
       "sections": {
         "general": { "title": "Allgemein", "description": "Name, Beschreibung und Ziel des Projekts. Sichtbar in Listen und im Projektkopf." },
         "planning": { "title": "Planung", "description": "Status, Priorität und Termine. Eine Organisation gruppiert das Projekt unter einem Arbeitsbereich." },

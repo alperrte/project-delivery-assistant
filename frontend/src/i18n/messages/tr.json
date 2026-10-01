@@ -18,7 +18,10 @@
       "total": "{count, plural, one {# kayıt} other {# kayıt}}",
       "previous": "Önceki",
       "next": "Sonraki",
-      "pageOf": "Sayfa {page} / {totalPages}"
+      "pageOf": "Sayfa {page} / {totalPages}",
+      "navLabel": "Sayfalama",
+      "pageNumber": "Sayfa {page}",
+      "showing": "{from}-{to} arası gösteriliyor"
     },
     "showPassword": "Şifreyi göster",
     "hidePassword": "Şifreyi gizle"
@@ -38,7 +41,10 @@
     "mailUnavailable": "Posta sistemi şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.",
     "currentPasswordIncorrect": "Mevcut şifreniz hatalı.",
     "passwordUnchanged": "Yeni şifre mevcut şifreyle aynı olamaz.",
-    "accountUnavailable": "Hesabınız şu anda kullanılamıyor."
+    "accountUnavailable": "Hesabınız şu anda kullanılamıyor.",
+    "PROJECT_LOGO_INVALID_TYPE": "Logo PNG, JPEG veya WebP olmalıdır.",
+    "PROJECT_LOGO_TOO_LARGE": "Logo en fazla 512 KB olabilir.",
+    "PROJECT_LOGO_EMPTY": "Logo dosyası boş."
   },
   "app": {
     "nav": {
@@ -97,7 +103,23 @@
     }
   },
   "projects": {
-    "card": { "technology": "Teknoloji", "noTechnology": "Teknoloji belirtilmedi", "team": "Ekip", "teamUnavailable": "Ekip bilgisi yüklenemedi.", "members": "{count} üye", "lastUpdate": "Son güncelleme", "open": "Projeyi aç", "openNamed": "{name} projesini aç" },
+    "card": {
+      "technology": "Teknoloji",
+      "noTechnology": "Teknoloji belirtilmedi",
+      "team": "Ekip",
+      "members": "{count} üye",
+      "lastUpdate": "Son güncelleme",
+      "updatedBy": "{date} · {name}",
+      "open": "Projeyi aç",
+      "openNamed": "{name} projesini aç",
+      "types": {
+        "WEB": "Web",
+        "MOBILE": "Mobil",
+        "AI": "AI",
+        "DESKTOP": "Masaüstü",
+        "OTHER": "Diğer"
+      }
+    },
     "cardLabel": "PROJE",
     "cardNoDescription": "Henüz açıklama eklenmedi.",
     "cardGoal": "Hedef",
@@ -108,15 +130,115 @@
     "emptyTitle": "Henüz proje yok",
     "emptyDescription": "Başlamak için ilk projenizi oluşturun.",
     "columns": { "name": "Ad", "status": "Durum", "priority": "Öncelik", "techStack": "Teknoloji", "updatedAt": "Güncelleme" },
-    "form": {
-      "createTitle": "Yeni proje",
-      "name": "Ad",
-      "description": "Açıklama",
-      "organization": "Organizasyon",
-      "organizationNone": "Organizasyon yok",
-      "cancel": "Vazgeç",
-      "create": "Oluştur",
-      "created": "Proje oluşturuldu."
+    "emptyAction": "İlk projenizi oluşturun",
+    "newPage": {
+      "title": "Yeni proje",
+      "description": "Projenin kimliğini belirleyin. Sağdaki kart, projenin listede nasıl görüneceğini gösterir.",
+      "sections": {
+        "identity": {
+          "title": "Kimlik",
+          "description": "Logo, ad ve slogan kartın üst kısmında görünür."
+        },
+        "type": {
+          "title": "Proje türü",
+          "description": "Tür kartta rozet olarak görünür ve teknoloji önerilerini belirler."
+        },
+        "technology": {
+          "title": "Teknolojiler",
+          "description": "Kartta yalnızca logoları görünür. En fazla {max} teknoloji seçebilirsiniz."
+        },
+        "details": {
+          "title": "Detaylar",
+          "description": "Organizasyon ve açıklama isteğe bağlıdır."
+        }
+      },
+      "logo": {
+        "label": "Logo",
+        "hint": "PNG, JPEG veya WebP, en fazla 512 KB. Logo yoksa adın ilk harfi kullanılır.",
+        "choose": "Logo yükle",
+        "change": "Değiştir",
+        "remove": "Kaldır",
+        "drop": "Dosyayı buraya bırakın veya seçin",
+        "invalidType": "Yalnızca PNG, JPEG veya WebP yükleyin.",
+        "tooLarge": "Logo en fazla 512 KB olabilir."
+      },
+      "name": {
+        "label": "Proje adı",
+        "placeholder": "ör. Teslimat Portalı",
+        "address": "Adres: /projects/{slug}"
+      },
+      "tagline": {
+        "label": "Slogan",
+        "optional": "İsteğe bağlı",
+        "placeholder": "Projeyi tek cümleyle anlatın",
+        "counter": "{count}/{max}"
+      },
+      "technology": {
+        "search": "Teknoloji ara",
+        "searchPlaceholder": "Teknoloji ara",
+        "noResults": "Eşleşen teknoloji yok.",
+        "selected": "{count}/{max} seçildi",
+        "otherSelections": "Diğer seçimler",
+        "categories": {
+          "frontend": "Arayüz",
+          "backend": "Sunucu",
+          "database": "Veritabanı",
+          "infrastructure": "Altyapı",
+          "app": "Uygulama",
+          "tools": "Araçlar",
+          "backendService": "Sunucu ve bulut",
+          "data": "Veri",
+          "language": "Dil ve ortam",
+          "framework": "Model ve çerçeve",
+          "provider": "Model sağlayıcı",
+          "services": "Servis ve veri",
+          "desktop": "Masaüstü",
+          "all": "Tüm teknolojiler"
+        }
+      },
+      "details": {
+        "organization": "Organizasyon",
+        "organizationNone": "Organizasyon yok",
+        "description": "Açıklama",
+        "descriptionPlaceholder": "Bu proje ne yapıyor, kimin için?"
+      },
+      "preview": {
+        "title": "Önizleme",
+        "caption": "Kart listede böyle görünecek.",
+        "you": "Siz",
+        "now": "Şimdi",
+        "namePlaceholder": "Proje adı",
+        "taglinePlaceholder": "Slogan burada görünür",
+        "show": "Önizlemeyi göster"
+      },
+      "actions": {
+        "cancel": "Vazgeç",
+        "submit": "Projeyi oluştur",
+        "created": "Proje oluşturuldu.",
+        "logoFailed": "Logo yüklenemedi. Proje ayarlarından tekrar deneyebilirsiniz."
+      },
+      "types": {
+        "WEB": {
+          "name": "Web",
+          "description": "Tarayıcıda çalışan site veya uygulama"
+        },
+        "MOBILE": {
+          "name": "Mobil",
+          "description": "iOS ve Android uygulaması"
+        },
+        "AI": {
+          "name": "AI",
+          "description": "Model, ajan veya veri odaklı ürün"
+        },
+        "DESKTOP": {
+          "name": "Masaüstü",
+          "description": "Windows, macOS veya Linux uygulaması"
+        },
+        "OTHER": {
+          "name": "Diğer",
+          "description": "Diğer türdeki projeler"
+        }
+      }
     },
     "detail": {
       "selectedProject": "Seçili proje",
@@ -228,6 +350,9 @@
       "discard": "Değişiklikleri at",
       "dangerTitle": "Projeyi arşivle",
       "dangerDescription": "Arşivlenen proje değiştirilemez ve aktif listelerden gizlenir. Bu işlem geri alınamaz.",
+      "tagline": "Slogan",
+      "taglinePlaceholder": "Projeyi tek cümleyle anlatın",
+      "type": "Proje türü",
       "sections": {
         "general": { "title": "Genel", "description": "Projenin adı, açıklaması ve hedefi. Liste ve proje başlığında görünür." },
         "planning": { "title": "Planlama", "description": "Durum, öncelik ve tarihler. Organizasyon projeyi bir çalışma alanı altında gruplar." },

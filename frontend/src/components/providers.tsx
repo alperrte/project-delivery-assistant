@@ -4,6 +4,7 @@ import { useState, type ReactNode } from "react";
 import { ThemeProvider } from "next-themes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeTransitionOverlay } from "@/components/layout/theme-transition";
 
 /**
@@ -36,7 +37,7 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       <QueryClientProvider client={queryClient}>
-        {children}
+        <TooltipProvider delay={150}>{children}</TooltipProvider>
         <Toaster position="top-center" />
         <ThemeTransitionOverlay />
       </QueryClientProvider>

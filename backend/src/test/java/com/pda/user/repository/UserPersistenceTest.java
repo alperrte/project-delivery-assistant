@@ -58,17 +58,19 @@ class UserPersistenceTest {
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Test
-    void userIsPersistedWithHashAndCaseSensitiveIdentity() {
+    void userIsPersistedWithHashAndCaseInsensitiveEmailIsUnique() {
         User upper = users.saveAndFlush(User.registerLocal("Alper@example.test", "Alper", "sample-password", passwordEncoder));
-        users.saveAndFlush(User.registerLocal("alper@example.test", "alper", "other-password", passwordEncoder));
 
         String persistedHash = jdbc.queryForObject("SELECT password_hash FROM users WHERE id = ?", String.class, upper.getId());
         assertNotEquals("sample-password", persistedHash);
         assertTrue(passwordEncoder.matches("sample-password", persistedHash));
         assertTrue(users.existsByEmail("Alper@example.test"));
-        assertTrue(users.existsByEmail("alper@example.test"));
-        assertFalse(users.existsByEmail("ALPER@example.test"));
+        assertFalse(users.existsByEmail("alper@example.test"));
         assertTrue(upper.getCreatedAt() != null && upper.getUpdatedAt() != null);
+
+        // V33 (uk_users_email_ci): the same address in another letter case is a duplicate account.
+        assertThrows(DataIntegrityViolationException.class, () -> users.saveAndFlush(
+                User.registerLocal("alper@example.test", "alper", "other-password", passwordEncoder)));
     }
 
     @Test

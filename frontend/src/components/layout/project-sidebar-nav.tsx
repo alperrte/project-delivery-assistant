@@ -29,7 +29,9 @@ export function ProjectSidebarNav({ onNavigate, collapsed }: { onNavigate: () =>
   const searchParams = useSearchParams();
   const { data: user } = useSession();
   const teamMembersRoute = /^\/projects\/([^/]+)\/teams\/[^/]+\/members$/.exec(pathname);
-  const routeSlug = /^\/projects\/([^/]+)$/.exec(pathname)?.[1] ?? teamMembersRoute?.[1];
+  // `/projects/new` is the create page, not a project called "new"; the sidebar keeps the last selected project there.
+  const detailSlug = /^\/projects\/([^/]+)$/.exec(pathname)?.[1];
+  const routeSlug = (detailSlug === "new" ? undefined : detailSlug) ?? teamMembersRoute?.[1];
   const rememberedSlug = useSyncExternalStore(
     subscribeToSelection,
     () => user?.id ? sessionStorage.getItem(`pda:last-project:${user.id}`) : null,

@@ -51,20 +51,21 @@ export async function createProject(
   name: string,
   opts: { organizationName?: string } = {},
 ): Promise<string> {
-  await page.goto("/projects");
-  await page.getByRole("button", { name: /^Yeni proje$/ }).click();
+  await page.goto("/projects/new");
   await page.locator("#project-name").fill(name);
+  await page.getByRole("radio", { name: /^Web/ }).click();
 
   if (opts.organizationName) {
-    const orgSelect = page.getByRole("dialog").getByRole("combobox");
+    const orgSelect = page.getByRole("combobox");
     if (await orgSelect.isVisible().catch(() => false)) {
       await orgSelect.click();
       await page.getByRole("option", { name: opts.organizationName }).click();
     }
   }
 
-  await page.getByRole("dialog").getByRole("button", { name: /^Oluştur$/ }).click();
-  await expect(page).toHaveURL(/\/projects\/[^/]+$/, { timeout: 15_000 });
+  await page.getByRole("button", { name: /^Projeyi oluştur$/ }).click();
+  // The create page itself is `/projects/new`, so the new project is the first detail URL that is not "new".
+  await expect(page).toHaveURL(/\/projects\/(?!new$)[^/]+$/, { timeout: 15_000 });
   const url = new URL(page.url());
   return url.pathname.split("/").pop()!;
 }

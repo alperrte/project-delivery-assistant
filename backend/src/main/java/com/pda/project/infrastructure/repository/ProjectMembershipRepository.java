@@ -37,6 +37,19 @@ public interface ProjectMembershipRepository extends JpaRepository<ProjectMember
             + "and m.status = com.pda.project.domain.enums.MembershipStatus.ACTIVE group by m.projectId")
     List<Object[]> countActiveByProjectIds(@Param("projectIds") Collection<UUID> projectIds);
 
+    /**
+     * First {@code limit} active members per project, project managers first and then by join date, as
+     * {@code [project_id, user_id]} rows. One window-function query for the whole page, so the cost does not grow
+     * with the number of projects.
+     */
+    @Query(value = "select t.project_id, t.user_id from ("
+            + "select m.project_id, m.user_id, row_number() over (partition by m.project_id order by "
+            + "case when exists (select 1 from project_membership_roles r where r.membership_id = m.id "
+            + "and r.role = 'PROJECT_MANAGER') then 0 else 1 end, m.joined_at, m.user_id) as rn "
+            + "from project_memberships m where m.project_id in (:projectIds) and m.status = 'ACTIVE') t "
+            + "where t.rn <= :limit order by t.project_id, t.rn", nativeQuery = true)
+    List<Object[]> findPreviewMembers(@Param("projectIds") Collection<UUID> projectIds, @Param("limit") int limit);
+
     @Query("select count(m) from ProjectMembership m join m.roles role where m.projectId = :projectId "
             + "and m.status = :status and role = :role")
     long countWithRole(@Param("projectId") UUID projectId, @Param("status") MembershipStatus status,

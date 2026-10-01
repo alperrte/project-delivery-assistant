@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import { Plus } from "@phosphor-icons/react";
@@ -8,50 +9,80 @@ import { PageHeader } from "@/components/common/page-header";
 import { EmptyState } from "@/components/common/empty-state";
 import { EntityGrid } from "@/components/common/entity-card";
 import { PaginationBar } from "@/components/common/pagination-bar";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { errorKey } from "@/lib/api/error-message";
-import { projectsApi } from "../api";
-import { ProjectCreateDialog } from "./project-create-dialog";
+import { PROJECT_PAGE_SIZE, projectsApi } from "../api";
 import { ProjectCard } from "./project-card";
+
+/** `?page=` is one based in the URL and zero based in the API; anything unusable falls back to the first page. */
+function pageFromParam(value: string | null): number {
+  const parsed = Number.parseInt(value ?? "", 10);
+  return Number.isFinite(parsed) && parsed > 1 ? parsed - 1 : 0;
+}
+
+function ProjectCardSkeleton() {
+  return (
+    <div className="w-full rounded-xl border bg-card p-2" aria-hidden="true">
+      <Skeleton className="h-36 w-full rounded-lg" />
+      <div className="space-y-4 px-2 pt-4 pb-2">
+        <Skeleton className="h-8 w-3/4" />
+        <Skeleton className="h-8 w-1/2" />
+        <Skeleton className="h-5 w-2/3" />
+        <Skeleton className="h-9 w-full" />
+      </div>
+    </div>
+  );
+}
 
 export function ProjectList() {
   const t = useTranslations("projects");
   const te = useTranslations("errors");
-  const [page, setPage] = useState(0);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const page = pageFromParam(searchParams.get("page"));
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["projects", page],
     queryFn: () => projectsApi.list(page),
   });
 
+  function goToPage(next: number) {
+    router.push(next > 0 ? `${pathname}?page=${next + 1}` : pathname);
+    window.scrollTo({ top: 0 });
+  }
+
+  const createLink = (
+    <Link href="/projects/new" className={buttonVariants()}>
+      <Plus data-icon="inline-start" size={16} aria-hidden="true" />
+      {t("create")}
+    </Link>
+  );
+
   return (
     <div>
-      <PageHeader
-        title={t("title")}
-        description={t("description")}
-        action={
-          <ProjectCreateDialog
-            trigger={
-              <Button>
-                <Plus data-icon="inline-start" size={16} />
-                {t("create")}
-              </Button>
-            }
-          />
-        }
-      />
+      <PageHeader title={t("title")} description={t("description")} action={createLink} />
 
       {isLoading && (
         <EntityGrid>
-          {[0, 1, 2].map((key) => <li key={key}><Skeleton className="h-[26rem] w-full rounded-xl" /></li>)}
+          {Array.from({ length: 6 }, (_, key) => <li key={key} className="flex"><ProjectCardSkeleton /></li>)}
         </EntityGrid>
       )}
 
       {isError && <p className="text-sm text-destructive">{te(errorKey(error))}</p>}
 
       {data && data.content.length === 0 && (
-        <EmptyState title={t("emptyTitle")} description={t("emptyDescription")} />
+        <EmptyState
+          title={t("emptyTitle")}
+          description={t("emptyDescription")}
+          action={
+            <Link href="/projects/new" className={buttonVariants()}>
+              <Plus data-icon="inline-start" size={16} aria-hidden="true" />
+              {t("emptyAction")}
+            </Link>
+          }
+        />
       )}
 
       {data && data.content.length > 0 && (
@@ -63,7 +94,8 @@ export function ProjectList() {
             page={data.page}
             totalPages={data.totalPages}
             totalElements={data.totalElements}
-            onPageChange={setPage}
+            pageSize={PROJECT_PAGE_SIZE}
+            onPageChange={goToPage}
           />
         </>
       )}
