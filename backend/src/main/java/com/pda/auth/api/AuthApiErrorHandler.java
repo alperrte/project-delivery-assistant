@@ -11,6 +11,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @RestControllerAdvice(basePackages = "com.pda.auth.api")
 public class AuthApiErrorHandler {
@@ -48,6 +49,11 @@ public class AuthApiErrorHandler {
     @ExceptionHandler(UserRegistrationConflictException.class)
     ResponseEntity<ProblemDetail> conflict() {
         return problem(HttpStatus.CONFLICT, "Account identity is unavailable");
+    }
+
+    @ExceptionHandler(NoSuchElementException.class)
+    ResponseEntity<ProblemDetail> invitationUnavailable() {
+        return problem(HttpStatus.NOT_FOUND, "Invitation not found");
     }
 
     @ExceptionHandler(VerificationMailUnavailableException.class)

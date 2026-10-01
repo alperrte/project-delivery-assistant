@@ -40,6 +40,12 @@ public class User {
     @Column(nullable = false, length = 320)
     private String email;
 
+    @Column(name = "first_name", length = 100)
+    private String firstName;
+
+    @Column(name = "last_name", length = 100)
+    private String lastName;
+
     @NotBlank
     @Pattern(regexp = "[\\p{L}\\p{N}_]{3,32}")
     @Column(nullable = false, length = 32)
@@ -96,6 +102,15 @@ public class User {
                                            BCryptPasswordEncoder passwordEncoder) {
         User user = registerLocal(email, nickname, rawPassword, passwordEncoder);
         user.accountStatus = AccountStatus.ACTIVE;
+        return user;
+    }
+
+    public static User registerInvitedLocal(String email, String nickname, String rawPassword,
+                                            String firstName, String lastName,
+                                            BCryptPasswordEncoder passwordEncoder) {
+        User user = registerLocalActive(email, nickname, rawPassword, passwordEncoder);
+        user.firstName = firstName;
+        user.lastName = lastName;
         return user;
     }
 
@@ -173,6 +188,8 @@ public class User {
 
     public UUID getId() { return id; }
     public String getEmail() { return email; }
+    public String getFirstName() { return firstName; }
+    public String getLastName() { return lastName; }
     public String getNickname() { return nickname; }
     public AccountStatus getAccountStatus() { return accountStatus; }
     public EmailVerificationStatus getEmailVerificationStatus() { return emailVerificationStatus; }

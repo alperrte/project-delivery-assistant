@@ -10,6 +10,7 @@ import java.util.UUID;
 /** Public User module contract for Auth use cases. */
 public interface UserAccounts {
     UUID registerLocal(String email, String nickname, String rawPassword);
+    UUID registerInvitedLocal(String email, String nickname, String rawPassword, String firstName, String lastName);
     Optional<UUID> findPendingByEmail(String email);
     boolean activateVerifiedEmail(UUID userId);
     Optional<AuthenticatedUser> authenticateLocal(String email, String password);
@@ -42,6 +43,7 @@ public interface UserAccounts {
 
     /** ACTIVE user id for that email (case-sensitive, matching {@code authenticateLocal}), or empty otherwise. */
     Optional<UUID> findActiveByEmail(String email);
+    boolean emailExists(String email);
 
     /**
      * Replaces the password of an ACTIVE account WITHOUT checking the current one — reserved for flows that

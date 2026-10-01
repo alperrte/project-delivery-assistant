@@ -1,5 +1,9 @@
 package com.pda.project.application.service;
 
+import java.time.Instant;
+import java.util.Set;
+import com.pda.user.ProjectRole;
+
 /**
  * Project-owned mail port for invitation notifications (HMZ-PROJ-16). Kept separate from Auth's
  * {@code VerificationMailPort}, which is narrowly scoped to verification codes; consolidating both behind one
@@ -11,4 +15,9 @@ public interface ProjectInvitationMailPort {
 
     /** Best-effort: implementations must not throw for a transport failure; the invitation flow must not break. */
     void sendInvitation(String recipientEmail, String projectName, String invitationLink);
+
+    default void sendInvitation(String recipientEmail, String projectName, String inviterName,
+            Set<ProjectRole> roles, String personalMessage, Instant expiresAt, String invitationLink) {
+        sendInvitation(recipientEmail, projectName, invitationLink);
+    }
 }

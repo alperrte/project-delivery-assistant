@@ -126,12 +126,14 @@ public class SecurityBaselineConfiguration {
                     }
                     authorize.requestMatchers(HttpMethod.GET, "/actuator/health", "/api/v1/auth/csrf").permitAll()
                             .requestMatchers(HttpMethod.GET, "/api/v1/project-invitations/me").authenticated()
+                            .requestMatchers(HttpMethod.POST, "/api/v1/project-invitations/external/preview").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/api/v1/project-invitations/external/accept").authenticated()
                             .requestMatchers(HttpMethod.POST, "/api/v1/project-invitations/*/accept",
                                     "/api/v1/project-invitations/*/reject").authenticated()
                             .requestMatchers(HttpMethod.GET, "/api/v1/auth/oauth/identities").authenticated()
                             .requestMatchers(HttpMethod.POST, "/api/v1/auth/oauth/*/link",
                                     "/api/v1/auth/oauth/*/unlink").authenticated()
-                            .requestMatchers(HttpMethod.POST, "/api/v1/auth/register",
+                            .requestMatchers(HttpMethod.POST, "/api/v1/auth/register", "/api/v1/auth/register/invitation",
                                     "/api/v1/auth/login", "/api/v1/auth/refresh",
                                     "/api/v1/auth/logout", "/api/v1/auth/password/forgot",
                                     "/api/v1/auth/password/reset").permitAll()

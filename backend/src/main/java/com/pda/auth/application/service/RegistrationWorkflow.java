@@ -4,6 +4,7 @@ import com.pda.auth.domain.entity.EmailVerificationChallenge;
 import com.pda.auth.domain.entity.EmailVerificationChallenge.AttemptResult;
 import com.pda.auth.infrastructure.repository.EmailVerificationChallengeRepository;
 import com.pda.user.UserAccounts;
+import com.pda.project.ProjectInvitationOnboarding;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -17,14 +18,17 @@ import org.springframework.transaction.annotation.Transactional;
 public class RegistrationWorkflow {
 
     private final UserAccounts users;
+    private final ProjectInvitationOnboarding invitations;
     private final EmailVerificationChallengeRepository challenges;
     private final VerificationCodeHasher codes;
     private final ObjectProvider<VerificationMailPort> mail;
     private final Clock clock;
 
-    public RegistrationWorkflow(UserAccounts users, EmailVerificationChallengeRepository challenges,
+    public RegistrationWorkflow(UserAccounts users, ProjectInvitationOnboarding invitations,
+                                EmailVerificationChallengeRepository challenges,
                                 VerificationCodeHasher codes, ObjectProvider<VerificationMailPort> mail, Clock clock) {
         this.users = users;
+        this.invitations = invitations;
         this.challenges = challenges;
         this.codes = codes;
         this.mail = mail;
@@ -37,6 +41,21 @@ public class RegistrationWorkflow {
             throw new IllegalArgumentException("Password confirmation does not match");
         }
         users.registerLocal(email, nickname, password);
+    }
+
+    @Transactional
+    public ProjectInvitationOnboarding.Accepted registerWithInvitation(String token, String email,
+            String firstName, String lastName, String nickname, String password, String confirmPassword) {
+        if (password == null || !password.equals(confirmPassword)) {
+            throw new IllegalArgumentException("Password confirmation does not match");
+        }
+        var preview = invitations.preview(token);
+        if (!preview.email().equalsIgnoreCase(email.strip())) {
+            throw new IllegalArgumentException("Invitation identity mismatch");
+        }
+        UUID id = users.registerInvitedLocal(preview.email(), nickname, password,
+                preview.firstName(), preview.lastName());
+        return invitations.acceptNewAccount(token, id, email, firstName, lastName);
     }
 
     @Transactional

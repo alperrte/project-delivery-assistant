@@ -44,7 +44,8 @@ final class ProjectInvitationRateLimitFilter extends OncePerRequestFilter {
         }
         String path = request.getRequestURI().substring(request.getContextPath().length());
         return !CREATE.matcher(path).matches() && !RESEND_ACCEPT_REJECT.matcher(path).matches()
-                && !MY_RESPONSE.matcher(path).matches();
+                && !MY_RESPONSE.matcher(path).matches()
+                && !"/api/v1/project-invitations/external/accept".equals(path);
     }
 
     @Override

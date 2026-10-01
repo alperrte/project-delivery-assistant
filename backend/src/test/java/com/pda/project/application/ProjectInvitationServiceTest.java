@@ -145,13 +145,13 @@ class ProjectInvitationServiceTest {
     }
 
     @Test
-    void emailInvitationRequiresRegisteredAccountAndOnlyRecipientMayReject() {
+    void emailInvitationFindsRegisteredAccountAndOnlyRecipientMayReject() {
         UUID manager = registerUser("manager4");
         UUID projectId = projectService.create(manager, "Email invite project", null, null).getId();
         UUID target = registerUser("target4");
         String email = users.findActiveById(target).orElseThrow().email();
 
-        assertThrows(NoSuchElementException.class, () -> invitationService.inviteByEmail(manager, projectId,
+        assertThrows(IllegalArgumentException.class, () -> invitationService.inviteByEmail(manager, projectId,
                 "outside@example.test", Set.of(ProjectRole.ANALYST)));
         CreatedInvitation created = invitationService.inviteByEmail(manager, projectId, email,
                 Set.of(ProjectRole.ANALYST));
@@ -166,6 +166,51 @@ class ProjectInvitationServiceTest {
         invitationService.reject(target, projectId, created.invitation().getId(), created.rawToken());
         assertEquals(InvitationStatus.REJECTED,
                 invitations.findById(created.invitation().getId()).orElseThrow().getStatus());
+    }
+
+    @Test
+    void externalInvitationPreviewAndRegistrationCreateMembershipOnce() {
+        UUID manager = registerUser("externalmanager");
+        UUID projectId = projectService.create(manager, "External project", null, null).getId();
+        CreatedInvitation created = invitationService.inviteByEmail(manager, projectId,
+                " Outside@example.test ", "Ahmet", "Yılmaz", Set.of(ProjectRole.TESTER), "Join us");
+        assertNull(created.invitation().getInvitedUserId());
+        assertEquals("outside@example.test", created.invitation().getEmail());
+        assertEquals("Join us", invitationService.preview(created.rawToken()).message());
+        assertThrows(NoSuchElementException.class, () -> invitationService.preview("wrong-token"));
+        assertEquals(0L, notificationCount(created.invitation().getId(), "PROJECT_INVITATION_CREATED"));
+
+        UUID target = users.registerInvitedLocal("outside@example.test", "outside_user", "password123",
+                "Ahmet", "Yılmaz");
+        assertThrows(IllegalArgumentException.class, () -> invitationService.acceptNewAccount(created.rawToken(),
+                target, "outside@example.test", "Mehmet", "Yılmaz"));
+        invitationService.acceptNewAccount(created.rawToken(), target, "outside@example.test", "ahmet", "YILMAZ");
+        assertEquals(InvitationStatus.ACCEPTED,
+                invitations.findById(created.invitation().getId()).orElseThrow().getStatus());
+        assertEquals(Set.of("TESTER"), membershipRoles(projectId, target));
+        assertEquals(1L, notificationCount(created.invitation().getId(), "PROJECT_INVITATION_ACCEPTED"));
+        assertThrows(NoSuchElementException.class, () -> invitationService.preview(created.rawToken()));
+        assertThrows(NoSuchElementException.class, () -> invitationService.acceptExistingAccount(created.rawToken(), target));
+    }
+
+    @Test
+    void externalInviteCanBeAcceptedByMatchingAccountCreatedAfterInviteAndResendRotatesToken() {
+        UUID manager = registerUser("racemanager");
+        UUID projectId = projectService.create(manager, "Race project", null, null).getId();
+        String email = "race-" + UUID.randomUUID() + "@example.test";
+        CreatedInvitation first = invitationService.inviteByEmail(manager, projectId, email,
+                "İrem", "Öz", Set.of(ProjectRole.BACKEND_DEVELOPER), null);
+        CreatedInvitation resent = invitationService.resend(manager, projectId, first.invitation().getId());
+        assertNotEquals(first.rawToken(), resent.rawToken());
+        assertThrows(NoSuchElementException.class, () -> invitationService.preview(first.rawToken()));
+
+        UUID account = users.registerLocal(email, "race_" + UUID.randomUUID().toString().substring(0, 8),
+                "password123");
+        UUID other = registerUser("raceother");
+        assertThrows(AccessDeniedException.class, () -> invitationService.acceptExistingAccount(resent.rawToken(), other));
+        invitationService.acceptExistingAccount(resent.rawToken(), account);
+        assertEquals(Set.of("BACKEND_DEVELOPER"), membershipRoles(projectId, account));
+        assertThrows(NoSuchElementException.class, () -> invitationService.acceptExistingAccount(resent.rawToken(), account));
     }
 
     @Test
@@ -231,17 +276,20 @@ class ProjectInvitationServiceTest {
         CreatedInvitation created = invitationService.inviteRegisteredUser(manager, projectId, target,
                 Set.of(ProjectRole.TESTER));
         Mockito.verify(mailPort).sendInvitation(Mockito.contains("mailtarget"), Mockito.eq("Mail invite project"),
+                Mockito.anyString(), Mockito.anySet(), Mockito.isNull(), Mockito.any(),
                 Mockito.contains(created.rawToken()));
 
         Mockito.reset(mailPort);
         Mockito.when(mailPort.available()).thenReturn(true);
         Mockito.doThrow(new RuntimeException("SMTP down")).when(mailPort)
-                .sendInvitation(Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+                .sendInvitation(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(),
+                        Mockito.anySet(), Mockito.isNull(), Mockito.any(), Mockito.anyString());
 
         // A mail transport failure must not break resend: the invitation itself is still rotated successfully.
         CreatedInvitation resent = invitationService.resend(manager, projectId, created.invitation().getId());
         assertEquals(InvitationStatus.PENDING, resent.invitation().getStatus());
-        Mockito.verify(mailPort).sendInvitation(Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+        Mockito.verify(mailPort).sendInvitation(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(),
+                Mockito.anySet(), Mockito.isNull(), Mockito.any(), Mockito.anyString());
     }
 
     @Test
@@ -256,7 +304,7 @@ class ProjectInvitationServiceTest {
                 Set.of(ProjectRole.ANALYST));
         assertEquals(InvitationStatus.PENDING, created.invitation().getStatus());
         Mockito.verify(mailPort, Mockito.never()).sendInvitation(Mockito.anyString(), Mockito.anyString(),
-                Mockito.anyString());
+                Mockito.anyString(), Mockito.anySet(), Mockito.isNull(), Mockito.any(), Mockito.anyString());
     }
 
     @Test
@@ -308,5 +356,16 @@ class ProjectInvitationServiceTest {
         String suffix = UUID.randomUUID().toString().replace("-", "").substring(0, 10);
         return users.registerLocal(prefix + suffix + "@example.test", prefix + "_" + suffix,
                 UUID.randomUUID().toString());
+    }
+
+    private Set<String> membershipRoles(UUID projectId, UUID userId) {
+        return Set.copyOf(jdbc.queryForList("SELECT role FROM project_membership_roles WHERE membership_id = "
+                + "(SELECT id FROM project_memberships WHERE project_id = ? AND user_id = ?)",
+                String.class, projectId, userId));
+    }
+
+    private long notificationCount(UUID invitationId, String type) {
+        return jdbc.queryForObject("SELECT count(*) FROM notifications WHERE resource_id = ? AND type = ?",
+                Long.class, invitationId, type);
     }
 }

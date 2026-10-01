@@ -1,6 +1,9 @@
 package com.pda.project.infrastructure.mail;
 
 import com.pda.project.application.service.ProjectInvitationMailPort;
+import com.pda.user.ProjectRole;
+import java.time.Instant;
+import java.util.Set;
 import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,6 +70,12 @@ public class SmtpProjectInvitationMailAdapter implements ProjectInvitationMailPo
 
     @Override
     public void sendInvitation(String recipientEmail, String projectName, String invitationLink) {
+        sendInvitation(recipientEmail, projectName, "PDA", Set.of(), null, null, invitationLink);
+    }
+
+    @Override
+    public void sendInvitation(String recipientEmail, String projectName, String inviterName,
+            Set<ProjectRole> roles, String personalMessage, Instant expiresAt, String invitationLink) {
         if (sender == null) {
             return;
         }
@@ -74,8 +83,11 @@ public class SmtpProjectInvitationMailAdapter implements ProjectInvitationMailPo
         message.setFrom(fromAddress);
         message.setTo(recipientEmail);
         message.setSubject("You're invited to join " + projectName + " on PDA");
-        message.setText("You have been invited to join the project \"" + projectName + "\" on PDA.\n\n"
-                + "Open this link to respond: " + invitationLink + "\n\n"
+        message.setText(inviterName + " invited you to join the project \"" + projectName + "\" on PDA.\n"
+                + "Roles: " + roles + "\n"
+                + (personalMessage == null ? "" : "Message: " + personalMessage + "\n")
+                + (expiresAt == null ? "" : "Invitation expires: " + expiresAt + "\n")
+                + "\nOpen this link to respond: " + invitationLink + "\n\n"
                 + "If you did not expect this invitation, you can ignore this email.");
         try {
             sender.send(message);

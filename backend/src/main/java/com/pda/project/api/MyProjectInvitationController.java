@@ -33,7 +33,7 @@ public class MyProjectInvitationController {
         return PageResponse.from(invitations.listMine(AuthenticatedActor.id(principal), page(page, size)), item -> {
             InvitationSummary i = item.invitation();
             return new MyInvitationResponse(i.id(), i.projectId(), item.projectName(), i.invitedBy(),
-                    item.invitedByNickname(), i.initialRoles(), i.status(), i.createdAt(), i.expiresAt());
+                    item.invitedByNickname(), i.initialRoles(), i.status(), i.createdAt(), i.expiresAt(), i.message());
         });
     }
 
@@ -61,5 +61,6 @@ public class MyProjectInvitationController {
     public record RejectRequest(@Size(max = 500) String message) {}
     public record MyInvitationResponse(UUID id, UUID projectId, String projectName, UUID invitedBy,
                                        String invitedByNickname, Set<ProjectRole> initialRoles,
-                                       InvitationStatus status, Instant createdAt, Instant expiresAt) {}
+                                       InvitationStatus status, Instant createdAt, Instant expiresAt,
+                                       String message) {}
 }
