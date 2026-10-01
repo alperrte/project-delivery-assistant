@@ -86,7 +86,7 @@ export function InvitationsPanel({ projectId }: { projectId: string }) {
             <TableBody>
               {data.content.map((invitation) => (
                 <TableRow key={invitation.id}>
-                  <TableCell className="font-medium"><span className="flex items-center gap-3"><span className="grid size-8 shrink-0 place-items-center rounded-full border border-primary/25 bg-primary/15 text-xs font-bold text-primary">{(invitation.email ?? invitation.invitedUserId ?? "?").slice(0, 1).toLocaleUpperCase(locale)}</span><span>{invitation.email ?? invitation.invitedUserId}</span></span></TableCell>
+                  <TableCell className="font-medium"><span className="flex items-center gap-3"><span className="grid size-8 shrink-0 place-items-center rounded-full border border-primary/25 bg-primary/15 text-xs font-bold text-primary">{(invitation.firstName ?? invitation.nickname ?? invitation.email ?? "?").slice(0, 1).toLocaleUpperCase(locale)}</span><span>{invitation.firstName ? <><span className="block">{invitation.firstName} {invitation.lastName}</span><span className="block text-xs text-muted-foreground">{invitation.email}</span></> : invitation.nickname ?? invitation.email ?? t("registeredTarget")}</span></span></TableCell>
                   <TableCell><div className="flex flex-wrap gap-1">{invitation.initialRoles.map((role) => <Badge key={role} variant="secondary">{tr(role)}</Badge>)}</div></TableCell>
                   <TableCell className="text-muted-foreground">{new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(invitation.createdAt))}</TableCell>
                   <TableCell>
@@ -102,6 +102,7 @@ export function InvitationsPanel({ projectId }: { projectId: string }) {
                       {t(`statusValues.${invitation.status}`)}
                     </Badge>
                     {invitation.rejectionMessage && <p className="mt-1 max-w-56 text-xs text-muted-foreground">{invitation.rejectionMessage}</p>}
+                    {invitation.message && <p className="mt-1 max-w-56 text-xs text-muted-foreground">{invitation.message}</p>}
                   </TableCell>
                   <TableCell className="text-right">
                     {invitation.status === "PENDING" && (

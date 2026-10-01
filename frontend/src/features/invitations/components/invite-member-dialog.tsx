@@ -28,6 +28,11 @@ export function InviteMemberDialog({ trigger, projectId }: { trigger: ReactNode;
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [selectedUser, setSelectedUser] = useState<UserSearchResult | null>(null);
+  const [external, setExternal] = useState(false);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
   const [roles, setRoles] = useState<Set<ProjectRole>>(new Set());
   const queryClient = useQueryClient();
 
@@ -38,7 +43,9 @@ export function InviteMemberDialog({ trigger, projectId }: { trigger: ReactNode;
   });
 
   const mutation = useMutation({
-    mutationFn: () => invitationsApi.create(projectId, { userId: selectedUser!.userId, roles: Array.from(roles) }),
+    mutationFn: () => invitationsApi.create(projectId, external
+      ? { email: email.trim(), firstName: firstName.trim(), lastName: lastName.trim(), roles: Array.from(roles), message }
+      : { userId: selectedUser!.userId, roles: Array.from(roles), message }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects", projectId, "invitations"] });
       toast.success(t("sent"));
@@ -51,6 +58,11 @@ export function InviteMemberDialog({ trigger, projectId }: { trigger: ReactNode;
   function reset() {
     setQuery("");
     setSelectedUser(null);
+    setExternal(false);
+    setFirstName("");
+    setLastName("");
+    setEmail("");
+    setMessage("");
     setRoles(new Set());
   }
 
@@ -77,7 +89,16 @@ export function InviteMemberDialog({ trigger, projectId }: { trigger: ReactNode;
           <DialogTitle>{t("inviteTitle")}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-1.5">
+        <div className="flex gap-2">
+          <Button type="button" variant={external ? "outline" : "default"} onClick={() => setExternal(false)}>{t("registeredUser")}</Button>
+          <Button type="button" variant={external ? "default" : "outline"} onClick={() => setExternal(true)}>{t("newUser")}</Button>
+        </div>
+
+        {external ? <div className="space-y-3">
+          <div><Label htmlFor="invite-first-name">{t("firstName")}</Label><Input id="invite-first-name" maxLength={100} value={firstName} onChange={(e) => setFirstName(e.target.value)} /></div>
+          <div><Label htmlFor="invite-last-name">{t("lastName")}</Label><Input id="invite-last-name" maxLength={100} value={lastName} onChange={(e) => setLastName(e.target.value)} /></div>
+          <div><Label htmlFor="invite-email">{t("email")}</Label><Input id="invite-email" type="email" maxLength={320} value={email} onChange={(e) => setEmail(e.target.value)} /></div>
+        </div> : <div className="space-y-1.5">
           <Label>{t("searchLabel")}</Label>
           {selectedUser ? (
             <div className="flex items-center justify-between rounded-md border px-2.5 py-1.5 text-sm">
@@ -108,7 +129,7 @@ export function InviteMemberDialog({ trigger, projectId }: { trigger: ReactNode;
               )}
             </>
           )}
-        </div>
+        </div>}
 
         <div className="space-y-1.5">
           <Label>{t("rolesLabel")}</Label>
@@ -122,11 +143,17 @@ export function InviteMemberDialog({ trigger, projectId }: { trigger: ReactNode;
           </div>
         </div>
 
+        <div className="space-y-1.5">
+          <Label htmlFor="invite-message">{t("message")}</Label>
+          <textarea id="invite-message" className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm" maxLength={100} rows={3} value={message} onChange={(e) => setMessage(e.target.value)} />
+          <p className="text-right text-xs text-muted-foreground">{message.length} / 100</p>
+        </div>
+
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>
             {t("cancel")}
           </Button>
-          <Button onClick={() => mutation.mutate()} disabled={!selectedUser || roles.size === 0 || mutation.isPending}>
+          <Button onClick={() => mutation.mutate()} disabled={(!external && !selectedUser) || (external && (!firstName.trim() || !lastName.trim() || !email.trim())) || roles.size === 0 || mutation.isPending}>
             {mutation.isPending && <CircleNotch size={16} className="animate-spin" />}
             {t("send")}
           </Button>
