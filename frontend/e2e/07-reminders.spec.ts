@@ -195,6 +195,9 @@ test.describe.serial("Project reminders", () => {
     });
     const phone = await touch.newPage();
     await phone.goto(`/projects/${slug}`);
+    await expect.poll(() => phone.evaluate((selectedSlug) =>
+      Object.keys(sessionStorage).some((key) => key.startsWith("pda:last-project:") && sessionStorage.getItem(key) === selectedSlug),
+    slug)).toBe(true);
     await phone.goto("/calendar");
 
     // Two icons fit the narrow cell; the day button's own accessible name already carries every title.

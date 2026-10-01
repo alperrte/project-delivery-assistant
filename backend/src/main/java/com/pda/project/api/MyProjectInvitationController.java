@@ -3,6 +3,7 @@ package com.pda.project.api;
 import com.pda.project.api.dto.response.MemberResponse;
 import com.pda.project.api.dto.response.PageResponse;
 import com.pda.project.application.service.ProjectInvitationService;
+import com.pda.project.application.service.ProjectLogoService;
 import com.pda.project.application.service.InvitationSummary;
 import com.pda.project.domain.enums.InvitationStatus;
 import com.pda.user.ProjectRole;
@@ -13,6 +14,8 @@ import jakarta.validation.constraints.Size;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import java.time.Instant;
@@ -33,8 +36,28 @@ public class MyProjectInvitationController {
         return PageResponse.from(invitations.listMine(AuthenticatedActor.id(principal), page(page, size)), item -> {
             InvitationSummary i = item.invitation();
             return new MyInvitationResponse(i.id(), i.projectId(), item.projectName(), i.invitedBy(),
-                    item.invitedByNickname(), i.initialRoles(), i.status(), i.createdAt(), i.expiresAt(), i.message());
+                    item.invitedByNickname(), i.initialRoles(), i.status(), i.createdAt(), i.expiresAt(),
+                    i.message(), i.teamName());
         });
+    }
+
+    @GetMapping("/{invitationId}/preview")
+    @Operation(summary = "Preview the project of my invitation", description = "Recipient only; card-level data, no project membership granted")
+    public ResponseEntity<ProjectInvitationService.InvitationProjectPreview> preview(
+            @AuthenticationPrincipal UserAccounts.AuthenticatedUser principal, @PathVariable UUID invitationId) {
+        return ResponseEntity.ok().header(HttpHeaders.CACHE_CONTROL, "private, no-store")
+                .body(invitations.previewMine(AuthenticatedActor.id(principal), invitationId));
+    }
+
+    @GetMapping("/{invitationId}/logo")
+    @Operation(summary = "Preview the project logo of my invitation", description = "Recipient only; no project membership granted")
+    public ResponseEntity<byte[]> previewLogo(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
+                                              @PathVariable UUID invitationId) {
+        ProjectLogoService.StoredLogo logo = invitations.previewLogoMine(AuthenticatedActor.id(principal), invitationId);
+        return ResponseEntity.ok().contentType(MediaType.parseMediaType(logo.contentType()))
+                .header("X-Content-Type-Options", "nosniff")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"logo\"")
+                .header(HttpHeaders.CACHE_CONTROL, "private, no-store").body(logo.data());
     }
 
     @PostMapping("/{invitationId}/accept")
@@ -62,5 +85,5 @@ public class MyProjectInvitationController {
     public record MyInvitationResponse(UUID id, UUID projectId, String projectName, UUID invitedBy,
                                        String invitedByNickname, Set<ProjectRole> initialRoles,
                                        InvitationStatus status, Instant createdAt, Instant expiresAt,
-                                       String message) {}
+                                       String message, String teamName) {}
 }

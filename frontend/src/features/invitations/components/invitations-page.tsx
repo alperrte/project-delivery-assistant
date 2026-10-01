@@ -19,6 +19,7 @@ import { AddTeamMemberDialog } from "@/features/squads/components/add-team-membe
 import { errorKey } from "@/lib/api/error-message";
 import { invitationsApi } from "../api";
 import type { Invitation, InvitationStatus } from "../types";
+import { InvitationStatusBadge } from "./invitation-status-badge";
 
 const PAGE_SIZE = 20;
 export const INVITATION_TABS = ["PENDING", "ACCEPTED", "REJECTED", "CANCELLED"] as const satisfies readonly InvitationStatus[];
@@ -50,20 +51,9 @@ function Target({ invitation }: { invitation: Invitation }) {
 }
 
 function StatusBadge({ invitation }: { invitation: Invitation }) {
-  const t = useTranslations("invitations");
   return (
     <div className="space-y-1">
-      <Badge
-        className={
-          invitation.status === "ACCEPTED"
-            ? "border border-success/25 bg-success/10 text-success"
-            : invitation.status === "PENDING"
-              ? "border border-primary/25 bg-primary/10 text-primary"
-              : "border border-border bg-muted text-muted-foreground"
-        }
-      >
-        {t(`statusValues.${invitation.status}`)}
-      </Badge>
+      <InvitationStatusBadge status={invitation.status} />
       {invitation.rejectionMessage && <p className="max-w-56 text-xs text-muted-foreground">{invitation.rejectionMessage}</p>}
     </div>
   );

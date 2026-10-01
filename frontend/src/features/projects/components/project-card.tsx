@@ -49,8 +49,10 @@ export function ProjectMark({ name, src }: { name: string; src: string | null })
   return <>{(name.trim().slice(0, 1) || "?").toLocaleUpperCase(locale)}</>;
 }
 
-function logoSource(project: Pick<Project, "id" | "logoVersion">, preview?: ProjectCardPreview): string | null {
+function logoSource(project: Pick<Project, "id" | "logoVersion">, preview?: ProjectCardPreview,
+                    invitationLogoSrc?: string | null): string | null {
   if (preview) return preview.logoSrc;
+  if (invitationLogoSrc !== undefined) return invitationLogoSrc;
   return project.logoVersion == null ? null : projectLogoUrl(project.id, project.logoVersion);
 }
 
@@ -90,7 +92,12 @@ function TechStrip({ labels }: { labels: string[] }) {
   );
 }
 
-export function ProjectCard({ project, preview }: { project: ProjectCardData; preview?: ProjectCardPreview }) {
+export function ProjectCard({ project, preview, invitationPreview }: {
+  project: ProjectCardData;
+  preview?: ProjectCardPreview;
+  /** Recipient-scoped logo URL. The invitation view never renders the project-open action. */
+  invitationPreview?: { logoSrc: string | null };
+}) {
   const t = useTranslations("projects");
   const locale = useLocale();
   const date = new Intl.DateTimeFormat(locale, { dateStyle: "medium" });
@@ -98,11 +105,12 @@ export function ProjectCard({ project, preview }: { project: ProjectCardData; pr
   const team = project.team;
   const when = preview?.updatedLabel ?? date.format(new Date(project.updatedAt));
   const updated = project.updatedBy ? t("card.updatedBy", { date: when, name: project.updatedBy.nickname }) : when;
+  const logo = logoSource(project, preview, invitationPreview?.logoSrc);
 
   return (
     <EntityCard
       tone={projectStatusTone(project.status)}
-      mark={<ProjectMark key={logoSource(project, preview) ?? "none"} name={project.name} src={logoSource(project, preview)} />}
+      mark={<ProjectMark key={logo ?? "none"} name={project.name} src={logo} />}
       title={project.name}
       description={project.tagline || project.description || project.projectGoal || t("cardNoDescription")}
       badge={
@@ -117,7 +125,7 @@ export function ProjectCard({ project, preview }: { project: ProjectCardData; pr
           )}
         </div>
       }
-      className={preview ? "hover:translate-y-0 hover:border-border hover:shadow-none motion-safe:hover:translate-y-0" : undefined}
+      className={preview || invitationPreview ? "hover:translate-y-0 hover:border-border hover:shadow-none motion-safe:hover:translate-y-0" : undefined}
     >
       <EntityCardSection label={t("card.technology")}>
         {tech.length === 0 ? (
@@ -143,7 +151,7 @@ export function ProjectCard({ project, preview }: { project: ProjectCardData; pr
         </p>
       </EntityCardSection>
 
-      <EntityCardFooter>
+      {!invitationPreview && <EntityCardFooter>
         {preview ? (
           <span
             aria-disabled="true"
@@ -159,7 +167,7 @@ export function ProjectCard({ project, preview }: { project: ProjectCardData; pr
             ariaLabel={t("card.openNamed", { name: project.name })}
           />
         )}
-      </EntityCardFooter>
+      </EntityCardFooter>}
     </EntityCard>
   );
 }
