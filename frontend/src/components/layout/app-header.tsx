@@ -81,14 +81,19 @@ export function AppHeader({
                   <span className="grid size-7 shrink-0 place-items-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground">
                     {user?.nickname?.slice(0, 2).toUpperCase()}
                   </span>
-                  <span className="hidden truncate sm:block">{user?.nickname}</span>
+                  <span className="hidden truncate sm:block" title={user?.nickname}>{user?.nickname}</span>
                   <CaretDown size={13} aria-hidden="true" />
                   <span className="sr-only">{tw("account")}</span>
                 </Button>
               }
             />
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem disabled className="opacity-100">{user?.email}</DropdownMenuItem>
+            {/* The popup defaults to the trigger's width; the identity block needs room for a full e-mail. */}
+            <DropdownMenuContent align="end" className="w-auto min-w-56 max-w-[min(20rem,calc(100vw-1.5rem))]">
+              <div className="min-w-0 px-2.5 py-2">
+                <p className="break-words text-sm font-medium text-foreground">{user?.nickname}</p>
+                <p className="break-all text-xs text-muted-foreground">{user?.email}</p>
+              </div>
+              <DropdownMenuSeparator />
               <DropdownMenuItem render={<Link href="/account" />}>{tw("settings")}</DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem variant="destructive" onClick={onLogout}>
