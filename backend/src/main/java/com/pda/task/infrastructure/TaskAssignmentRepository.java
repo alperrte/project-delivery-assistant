@@ -15,7 +15,10 @@ public interface TaskAssignmentRepository extends JpaRepository<TaskAssignment, 
             + "(select t.id from Task t where t.projectId = :projectId and t.archivedAt is null)")
     List<TaskAssignment> findActiveByProjectAndTaskIds(@Param("projectId") UUID projectId,
                                                         @Param("taskIds") Collection<UUID> taskIds);
+    @Query("select a from TaskAssignment a where a.taskId in :taskIds")
+    List<TaskAssignment> findByTaskIds(@Param("taskIds") Collection<UUID> taskIds);
     boolean existsByTaskIdAndUserId(UUID taskId, UUID userId);
+    long countByTaskId(UUID taskId);
 
     @Query("select a from TaskAssignment a where a.userId = :userId and a.taskId in "
             + "(select t.id from Task t where t.projectId = :projectId)")

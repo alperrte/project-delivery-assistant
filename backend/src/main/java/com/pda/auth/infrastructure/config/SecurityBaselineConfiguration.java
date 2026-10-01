@@ -110,6 +110,7 @@ public class SecurityBaselineConfiguration {
                                     || path.startsWith("/api/v1/auth/oauth/")
                                     || path.equals("/api/v1/projects") || path.startsWith("/api/v1/projects/")
                                     || path.equals("/api/v1/organizations") || path.startsWith("/api/v1/organizations/")
+                                    || path.startsWith("/api/v1/tasks/")
                                     || path.equals("/api/v1/project-invitations/me")
                                     || path.startsWith("/api/v1/project-invitations/")
                                     || path.equals("/api/v1/notifications") || path.startsWith("/api/v1/notifications/");
@@ -175,6 +176,36 @@ public class SecurityBaselineConfiguration {
                                     "/api/v1/projects/*/criteria/reorder",
                                     "/api/v1/projects/*/reminders",
                                     "/api/v1/projects/*/repository").authenticated()
+                            .requestMatchers(HttpMethod.POST, "/api/v1/projects/*/labels",
+                                    "/api/v1/projects/*/sprints",
+                                    "/api/v1/projects/*/sprints/*/start",
+                                    "/api/v1/projects/*/sprints/*/complete",
+                                    "/api/v1/projects/*/tasks/*/comments",
+                                    "/api/v1/projects/*/tasks/*/relations",
+                                    "/api/v1/projects/*/tasks/*/attachments",
+                                    "/api/v1/projects/*/tasks/*/worklogs",
+                                    "/api/v1/projects/*/tasks/*/checklist",
+                                    "/api/v1/projects/*/tasks/*/claim",
+                                    "/api/v1/projects/*/tasks/*/release").authenticated()
+                            .requestMatchers(HttpMethod.PUT, "/api/v1/projects/*/tasks/*/labels",
+                                    "/api/v1/projects/*/tasks/*/sprint",
+                                    "/api/v1/projects/*/tasks/*/watch",
+                                    "/api/v1/projects/*/tasks/*/checklist/order").authenticated()
+                            .requestMatchers(HttpMethod.DELETE, "/api/v1/projects/*/labels/*",
+                                    "/api/v1/projects/*/sprints/*",
+                                    "/api/v1/projects/*/tasks/*/watch",
+                                    "/api/v1/projects/*/tasks/*/comments/*",
+                                    "/api/v1/projects/*/tasks/*/relations/*",
+                                    "/api/v1/projects/*/tasks/*/attachments/*",
+                                    "/api/v1/projects/*/tasks/*/worklogs/*",
+                                    "/api/v1/projects/*/tasks/*/checklist/*").authenticated()
+                            .requestMatchers(HttpMethod.PATCH, "/api/v1/projects/*/labels/*",
+                                    "/api/v1/projects/*/sprints/*",
+                                    "/api/v1/projects/*/tasks/*/comments/*",
+                                    "/api/v1/projects/*/tasks/*/worklogs/*",
+                                    "/api/v1/projects/*/tasks/*/checklist/*").authenticated()
+                            .requestMatchers(HttpMethod.GET, "/api/v1/tasks/mine", "/api/v1/tasks/counts",
+                                    "/api/v1/tasks/pool").authenticated()
                             .requestMatchers(HttpMethod.PUT, "/api/v1/projects/*",
                                     "/api/v1/projects/*/tasks/*/assignees",
                                     "/api/v1/organizations/*",
@@ -230,6 +261,7 @@ public class SecurityBaselineConfiguration {
         source.registerCorsConfiguration("/api/v1/admin/**", configuration);
         source.registerCorsConfiguration("/api/v1/projects", configuration);
         source.registerCorsConfiguration("/api/v1/projects/**", configuration);
+        source.registerCorsConfiguration("/api/v1/tasks/**", configuration);
         source.registerCorsConfiguration("/api/v1/organizations", configuration);
         source.registerCorsConfiguration("/api/v1/organizations/**", configuration);
         source.registerCorsConfiguration("/api/v1/notifications/**", configuration);

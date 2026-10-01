@@ -6,6 +6,10 @@
 **Mimari:** Modular Monolith  
 **Not:** Projede günlük dilde “Task Service” denebilir; teknik olarak ayrı deploy edilen microservice değil, `com.pda.task` iş modülüdür.
 
+## Backend genişletmesi (2026-10-02)
+
+Task backend, planın F5-00–F5-06 çekirdeğinin üstüne genişletildi: saatli deadline + hatırlatma, görev havuzu (`claim`/`release`), alt görev ve checklist, yorum/@bahsetme/aktivite, etiket ve tahmin puanı, ilişkiler, izleyiciler, dosya ekleri, sprintler, zaman kayıtları ve projeler arası Görevlerim (`/api/v1/tasks/mine`). Migration'lar `V37`–`V46`. `dueDate` yerine `deadlineAt` kullanılır. Ayrıntı `.agents/SECURITY.md` §11 "Task Service genişletmesi" ve `docs/compliation/2026-10-02-gorev-servisi-backend.md` içindedir. Frontend (F5-07/08 ve yeni ekranlar) sonraki iştir.
+
 ## Backend teslim durumu (2026-09-29)
 
 F5-00–F5-06 kapsamındaki Task backend kodu tamamlandı. Güncel ve uygulanmış sözleşme için kod ile [F5-00 contract notunu](../../docs/plans/F5_TASK_CONTRACT_FREEZE.md) esas alın. Bu planın eski `OWNER/MANAGER/MEMBER/VIEWER` matrisi mevcut rol modeli değildir; gerçek yetkiler `ProjectPermission.TASK_MANAGE` ve atanmış üyede `TASK_WORK` üzerinden uygulanır. Global `ADMIN` proje yetkisi vermez.

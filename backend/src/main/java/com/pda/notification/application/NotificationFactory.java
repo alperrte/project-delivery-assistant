@@ -13,8 +13,14 @@ public class NotificationFactory {
             case TASK_UNASSIGNED -> "Task assignment removed";
             case TASK_STATUS_CHANGED -> "Task status changed";
             case TASK_PRIORITY_CHANGED -> "Task priority changed";
-            case TASK_DUE_DATE_CHANGED -> "Task due date changed";
+            case TASK_DUE_DATE_CHANGED -> "Task deadline changed";
             case TASK_BLOCKED -> "Task blocked";
+            case TASK_DEADLINE_SOON -> "Task deadline approaching";
+            case TASK_OVERDUE -> "Task overdue";
+            case TASK_CLAIMED -> "Task claimed";
+            case TASK_RELEASED -> "Task returned to the pool";
+            case TASK_MENTIONED -> "You were mentioned";
+            case TASK_COMMENTED -> "New task comment";
             case PROJECT_MEMBER_ADDED -> "Added to project";
             case PROJECT_MEMBER_REMOVED -> "Removed from project";
             case PROJECT_ROLE_CHANGED -> "Project role changed";
@@ -27,10 +33,16 @@ public class NotificationFactory {
         String message = switch (type) {
             case TASK_ASSIGNED -> "You were assigned to a task.";
             case TASK_UNASSIGNED -> "You were unassigned from a task.";
-            case TASK_STATUS_CHANGED -> "A task assigned to you changed status.";
-            case TASK_PRIORITY_CHANGED -> "A task assigned to you changed priority.";
-            case TASK_DUE_DATE_CHANGED -> "A task assigned to you changed due date.";
-            case TASK_BLOCKED -> "A task assigned to you was blocked.";
+            case TASK_STATUS_CHANGED -> "A task you follow changed status.";
+            case TASK_PRIORITY_CHANGED -> "A task you follow changed priority.";
+            case TASK_DUE_DATE_CHANGED -> "A task you follow changed its deadline.";
+            case TASK_BLOCKED -> "A task you follow was blocked.";
+            case TASK_DEADLINE_SOON -> "A task you follow is due within 24 hours.";
+            case TASK_OVERDUE -> "A task you follow passed its deadline.";
+            case TASK_CLAIMED -> "A task you follow was claimed from the pool.";
+            case TASK_RELEASED -> "A task you follow was returned to the pool.";
+            case TASK_MENTIONED -> "You were mentioned in a task comment.";
+            case TASK_COMMENTED -> "A task you follow has a new comment.";
             case PROJECT_MEMBER_ADDED -> "You were added to a project.";
             case PROJECT_MEMBER_REMOVED -> "Your project membership was removed.";
             case PROJECT_ROLE_CHANGED -> "Your project role was changed.";

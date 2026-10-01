@@ -195,6 +195,12 @@ test.describe.serial("Project reminders", () => {
     });
     const phone = await touch.newPage();
     await phone.goto(`/projects/${slug}`);
+    // The calendar follows the project remembered for this browser session. That is written once the session has
+    // loaded, so leaving too early would fall back to the member's first project instead of this one.
+    await phone.waitForFunction(
+      (expected) => Object.keys(sessionStorage).some((key) => key.startsWith("pda:last-project:") && sessionStorage.getItem(key) === expected),
+      slug,
+    );
     await phone.goto("/calendar");
 
     // Two icons fit the narrow cell; the day button's own accessible name already carries every title.

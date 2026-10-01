@@ -1,4 +1,8 @@
 ﻿# Mimari kısa özet
+## Task Service genişletmesi (2026-10-02)
+
+`com.pda.task` artık alt görev, checklist, yorum/bahsetme, aktivite, etiket, ilişki, izleyici, dosya eki, zaman kaydı, görev havuzu ve (`task.sprint.*`) sprint içerir. Task, Project ile yalnız `ProjectAccess`, `ProjectTaskContext`, `ProjectSummaryView` ve `ProjectMemberRemovedEvent` üzerinden; ekip bilgisiyle `ProjectTeamDirectory` portu üzerinden konuşur (Squad uygular, Task Squad'ı import etmez). Notification yalnız `com.pda.task.TaskEvents` olaylarını `AFTER_COMMIT` dinler. `TaskDeadlineScheduler` (`@Scheduled`, `pda.task.deadline-scan-interval`) saatli deadline için 24 saat kala ve gecikme hatırlatması üretir; çift bildirimi koşullu `UPDATE ... WHERE ... IS NULL` önler, böylece birden çok instance güvenlidir. Görevlerim (`/api/v1/tasks/mine`) kimliği yalnız principal'dan alır ve yalnız aktif projelerin kendi görevlerini döner. Ayrıntı: `SECURITY.md` §11.
+
 ## Teams ve Invitations arayüzü (2026-09-30)
 
 Proje navigasyonundaki ayrı Members, Invitations ve Squads girişleri birleşik Teams bölümüne dönüştürüldü. Teams ana ekranı ekip kartları ve proje davetlerini gösterir; ekip üyeleri proje slug'ı altında `/projects/[slug]/teams/[teamId]/members` sayfasında listelenir. Rol düzenleme ProjectMembership API'sini, ekip üyeliği işlemleri /teams API'sini kullanır. Kullanıcının kendi davetleri /invitations sayfasındadır.
