@@ -7,7 +7,9 @@ import com.pda.task.infrastructure.TaskAssignmentRepository;
 import com.pda.task.infrastructure.TaskRepository;
 import com.pda.task.infrastructure.TaskKeyCounter;
 import com.pda.task.domain.Task;
+import com.pda.task.domain.TaskDraft;
 import com.pda.task.domain.TaskPriority;
+import com.pda.task.application.TaskCommand;
 import com.pda.task.application.TaskService;
 import com.pda.user.ProjectRole;
 import com.pda.user.UserAccounts;
@@ -74,8 +76,9 @@ class TaskApiIntegrationTest {
         Account manager = account("archived");
         Account outsider = account("archivedoutsider");
         UUID project = project(manager, csrf, "Archived task project");
-        Task stale = tasks.create(project, manager.id(), "Original", null, null, null, null);
-        tasks.update(project, stale.getId(), manager.id(), "Updated", null, TaskPriority.MEDIUM, null, null);
+        UUID taskId = tasks.create(project, manager.id(), command("Original")).id();
+        Task stale = taskRepository.findById(taskId).orElseThrow();
+        tasks.update(project, taskId, manager.id(), command("Updated"));
         assertThrows(ObjectOptimisticLockingFailureException.class, () -> taskRepository.saveAndFlush(stale));
         mvc.perform(post("/api/v1/projects/" + project + "/archive").cookie(csrf, manager.access())
                 .header("X-XSRF-TOKEN", csrf.getValue())).andExpect(status().isNoContent());
@@ -96,7 +99,7 @@ class TaskApiIntegrationTest {
         try (var executor = Executors.newFixedThreadPool(6)) {
             List<Future<String>> results = java.util.stream.IntStream.range(0, 6)
                     .mapToObj(i -> executor.submit(() -> tasks.create(project, manager.id(),
-                            "Task " + i, null, null, null, null).getTaskKey())).toList();
+                            command("Task " + i)).taskKey())).toList();
             Set<String> keys = new java.util.HashSet<>();
             for (Future<String> result : results) keys.add(result.get());
             assertEquals(6, keys.size());
@@ -136,13 +139,13 @@ class TaskApiIntegrationTest {
         assertTrue(key.startsWith("TASK-PROJECT-") && key.endsWith("-1"));
         mvc.perform(patch(base + "/" + task).cookie(csrf, manager.access())
                 .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
-                .content("{\"title\":\"Updated task\",\"priority\":\"CRITICAL\",\"startDate\":\"2026-10-01\",\"dueDate\":\"2026-10-03\"}"))
+                .content("{\"title\":\"Updated task\",\"priority\":\"CRITICAL\",\"startDate\":\"2026-10-01\",\"deadlineAt\":\"2026-10-03T18:30:00+03:00\"}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.title").value("Updated task"))
                 .andExpect(jsonPath("$.priority").value("CRITICAL"));
         mvc.perform(patch(base + "/" + task).cookie(csrf, manager.access())
                 .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
-                .content("{\"title\":\"Bad dates\",\"priority\":\"HIGH\",\"startDate\":\"2026-10-03\",\"dueDate\":\"2026-10-01\"}"))
-                .andExpect(status().isBadRequest());
+                .content("{\"title\":\"Bad dates\",\"priority\":\"HIGH\",\"startDate\":\"2026-10-03\",\"deadlineAt\":\"2026-10-01T09:00:00+03:00\"}"))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("TASK_DATES_INVALID"));
         mvc.perform(get("/api/v1/projects/" + other + "/tasks/" + task).cookie(manager.access()))
                 .andExpect(status().isNotFound());
         mvc.perform(get(base + "/" + task).cookie(outsider.access())).andExpect(status().isForbidden());
@@ -213,6 +216,10 @@ class TaskApiIntegrationTest {
         mvc.perform(patch(base + "/" + task + "/status").cookie(csrf, manager.access())
                 .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
                 .content("{\"status\":\"IN_PROGRESS\"}")).andExpect(status().isConflict());
+    }
+
+    private static TaskCommand command(String title) {
+        return new TaskCommand(TaskDraft.basic(title, null, TaskPriority.MEDIUM), null, null, null, null, null);
     }
 
     private UUID project(Account actor, Cookie csrf, String name) throws Exception {

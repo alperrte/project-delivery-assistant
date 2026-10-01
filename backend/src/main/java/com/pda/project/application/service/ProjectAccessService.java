@@ -3,6 +3,7 @@ package com.pda.project.application.service;
 import com.pda.project.ProjectAccess;
 import com.pda.project.ProjectTaskContext;
 import com.pda.project.ProjectMemberView;
+import com.pda.project.ProjectSummaryView;
 import com.pda.project.domain.enums.MembershipStatus;
 import com.pda.project.domain.entity.ProjectInvitation;
 import com.pda.project.infrastructure.repository.ProjectInvitationRepository;
@@ -152,6 +153,23 @@ public class ProjectAccessService implements ProjectAccess {
     public Set<UUID> pendingInviteeIds(UUID projectId, Set<UUID> userIds) {
         if (projectId == null || userIds == null || userIds.isEmpty()) return Set.of();
         return Set.copyOf(invitations.findPendingInviteeIds(projectId, userIds));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProjectSummaryView> activeProjectsForUser(UUID userId) {
+        if (userId == null) return List.of();
+        List<ProjectMembership> mine = memberships.findActiveByUser(userId);
+        if (mine.isEmpty()) return List.of();
+        Map<UUID, ProjectMembership> byProject = mine.stream()
+                .collect(Collectors.toMap(ProjectMembership::getProjectId, Function.identity(), (a, b) -> a));
+        return projects.findAllById(byProject.keySet()).stream()
+                .filter(project -> project.getArchivedAt() == null)
+                .map(project -> new ProjectSummaryView(project.getId(), project.getSlug(), project.getName(),
+                        project.getLogoUpdatedAt() == null ? null : project.getLogoUpdatedAt().toEpochMilli(),
+                        RolePolicy.permissions(byProject.get(project.getId()).getRoles())))
+                .sorted(java.util.Comparator.comparing(ProjectSummaryView::name, String.CASE_INSENSITIVE_ORDER))
+                .toList();
     }
 
     @Override

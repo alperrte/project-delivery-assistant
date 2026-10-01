@@ -1,5 +1,9 @@
 # API rehberi
 
+## Task Service genişletmesi (2026-10-02)
+
+Task API'si Linear/Jira düzeyine genişletildi: sunucu tarafı liste filtreleri (`status`, `priority`, `assigneeId`, `unassigned`, `q`, `labelId`, `sprintId`/`backlog`, `pool`, `parentId`/`topLevel`, `overdue`, `blocked`), `dueDate` yerine saatli `deadlineAt`, alt görevler, checklist, yorum + `@[userId]` bahsetme, birleşik aktivite akışı (`filter=ALL|COMMENTS|EVENTS`), etiketler (`/projects/{id}/labels`), tahmin puanı ve süre tahmini, ilişkiler (`BLOCKS|RELATES|DUPLICATES`), izleyiciler, dosya ekleri (multipart `file`), sprintler (`/projects/{id}/sprints`), zaman kayıtları ve görev havuzu (`claim`/`release`). Projeler arası uçlar: `GET /api/v1/tasks/mine` (Görevlerim; `scope=OPEN|DONE|ALL` büyük harfli, kimlik yalnız oturumdan), `GET /api/v1/tasks/counts`, `GET /api/v1/tasks/pool`. Enum sorgu değerleri büyük/küçük harfe duyarlıdır. Hata gövdesi `ProblemDetail` + sabit `code` alanıdır; kod listesi ve yetki matrisi `SECURITY.md` §11'dedir. Deadline hatırlatmaları `TaskDeadlineScheduler` ile gelir (`pda.task.deadline-scan-interval`, varsayılan `PT5M`). Worklog `workDate` en fazla UTC bugün + 1 gün olabilir (UTC'nin ilerisindeki kullanıcı "bugün"ü kaydedebilsin diye).
+
 ## Proje takvim anımsatıcıları (2026-10-01)
 
 `/api/v1/projects/{projectId}/reminders` altında tarih aralığıyla liste (`from`, `to`), detay, oluşturma, `PATCH` ile düzenleme ve silme sunulur. Anımsatıcı bir göreve değil takvime aittir; kapsamı oluşturulurken sabitlenir: `PERSONAL` yalnız yaratıcıya, `PROJECT` tüm aktif üyelere görünür ve yalnız `PROJECT_MANAGER` (`REMINDER_MANAGE`) oluşturur/düzenler/siler. Yöntem, body, yetki ve hata matrisi `SECURITY.md` §11'dedir; tablo `database.md` V35'tedir.

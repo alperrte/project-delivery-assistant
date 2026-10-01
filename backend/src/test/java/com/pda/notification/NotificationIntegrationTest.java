@@ -8,7 +8,9 @@ import com.pda.project.application.service.ProjectInvitationService;
 import com.pda.project.application.service.ProjectService;
 import com.pda.squad.application.service.SquadService;
 import com.pda.task.TaskEvents;
+import com.pda.task.application.TaskCommand;
 import com.pda.task.application.TaskService;
+import com.pda.task.domain.TaskDraft;
 import com.pda.task.domain.TaskPriority;
 import com.pda.task.domain.TaskStatus;
 import com.pda.user.ProjectRole;
@@ -31,7 +33,6 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 import java.security.SecureRandom;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.util.Base64;
 import java.util.Set;
 import java.util.UUID;
@@ -98,7 +99,7 @@ class NotificationIntegrationTest {
         memberships.addMember(manager, project, b, Set.of(ProjectRole.TESTER));
         assertEquals(1, notifications.unreadCount(a));
         assertEquals(1, notifications.unreadCount(b));
-        UUID task = tasks.create(project, manager, "First task", null, null, null, null).getId();
+        UUID task = tasks.create(project, manager, command("First task", TaskPriority.MEDIUM, null)).id();
         tasks.replaceAssignees(project, task, manager, Set.of(a, b, manager));
         assertEquals(2, notifications.unreadCount(a));
         assertEquals(2, notifications.unreadCount(b));
@@ -116,8 +117,7 @@ class NotificationIntegrationTest {
         assertEquals(1, notifications.markAllRead(a));
         assertEquals(0, notifications.unreadCount(a));
         assertEquals(2, notifications.unreadCount(b));
-        tasks.update(project, task, manager, "First task", null, TaskPriority.HIGH,
-                null, LocalDate.now().plusDays(7));
+        tasks.update(project, task, manager, command("First task", TaskPriority.HIGH, Instant.now().plusSeconds(7 * 86400L)));
         tasks.changeStatus(project, task, manager, TaskStatus.TODO);
         tasks.setBlocked(project, task, manager, true, "Dependency pending");
         tasks.replaceAssignees(project, task, manager, Set.of(a, manager));
@@ -131,7 +131,7 @@ class NotificationIntegrationTest {
         UUID project = projects.create(manager, "Rollback notification " + UUID.randomUUID(), null, null).getId();
         memberships.addMember(manager, project, member, Set.of(ProjectRole.TESTER));
         assertEquals(1, notifications.unreadCount(member));
-        UUID task = tasks.create(project, manager, "Rollback task", null, null, null, null).getId();
+        UUID task = tasks.create(project, manager, command("Rollback task", TaskPriority.MEDIUM, null)).id();
         transaction.executeWithoutResult(status -> {
             events.publishEvent(new TaskEvents.TaskAssignedEvent(task, project, member, manager, Instant.now()));
             status.setRollbackOnly();
@@ -164,6 +164,11 @@ class NotificationIntegrationTest {
         invitations.acceptMine(recipient, second.invitation().getId());
         assertEquals(1, notifications.list(manager, true, NotificationType.PROJECT_INVITATION_ACCEPTED, 0, 20)
                 .getTotalElements());
+    }
+
+    private static TaskCommand command(String title, TaskPriority priority, Instant deadlineAt) {
+        return new TaskCommand(new TaskDraft(title, null, priority, null, deadlineAt, null, null),
+                null, null, null, null, null);
     }
 
     private UUID user() {

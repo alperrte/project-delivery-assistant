@@ -46,6 +46,30 @@ public class NotificationEventListener {
         saveAll(e.assigneeIds(), e.blockedBy(), e.projectId(), e.taskId(), NotificationType.TASK_BLOCKED);
     }
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void deadlineSoon(TaskEvents.TaskDeadlineSoonEvent e) {
+        saveAll(e.recipientIds(), null, e.projectId(), e.taskId(), NotificationType.TASK_DEADLINE_SOON);
+    }
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void overdue(TaskEvents.TaskOverdueEvent e) {
+        saveAll(e.recipientIds(), null, e.projectId(), e.taskId(), NotificationType.TASK_OVERDUE);
+    }
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void claimed(TaskEvents.TaskClaimedEvent e) {
+        saveAll(e.recipientIds(), e.claimedBy(), e.projectId(), e.taskId(), NotificationType.TASK_CLAIMED);
+    }
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void released(TaskEvents.TaskReleasedEvent e) {
+        saveAll(e.recipientIds(), e.releasedBy(), e.projectId(), e.taskId(), NotificationType.TASK_RELEASED);
+    }
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void commented(TaskEvents.TaskCommentedEvent e) {
+        saveAll(e.recipientIds(), e.authorId(), e.projectId(), e.taskId(), NotificationType.TASK_COMMENTED);
+    }
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void mentioned(TaskEvents.TaskMentionedEvent e) {
+        saveAll(e.mentionedUserIds(), e.authorId(), e.projectId(), e.taskId(), NotificationType.TASK_MENTIONED);
+    }
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void projectAdded(ProjectMembershipEvents.MemberAdded e) {
         writer.save(e.userId(), e.addedBy(), e.projectId(), ResourceType.PROJECT, e.projectId(), NotificationType.PROJECT_MEMBER_ADDED);
     }

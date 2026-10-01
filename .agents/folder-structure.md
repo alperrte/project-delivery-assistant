@@ -1,4 +1,8 @@
 ﻿# Klasör yapısı kısa rehberi
+## Task genişletmesi yolları (2026-10-02)
+
+`task/api/` altında `TaskController`, `MyTasksController`, `TaskChecklistController` (+claim/release), `TaskCommentController`, `TaskRelationController`, `TaskWatcherController`, `TaskWorklogController`, `TaskAttachmentController`, `LabelController`; `task/application/` altında ilgili `*Service` sınıfları, `TaskDeadlineScheduler/Service`, `AttachmentPolicy`, `TaskSupport`, `TaskViewAssembler`; sprint ayrı alt pakettedir (`task/sprint/{api,application,domain,infrastructure}`). `project/ProjectSummaryView` yeni public sözleşmedir. Migration'lar `V37`–`V46` (`task_*`, `project_labels`, `sprints`). Testler `backend/src/test/java/com/pda/task/` altında `TaskTestBase` etrafındadır.
+
 ## Teams ve davet ekranları (2026-09-30)
 
 Birleşik Teams bölümü `frontend/src/features/projects/components/project-detail.tsx` içinde; ekip üyeleri route'u `frontend/src/app/(app)/projects/[slug]/teams/[teamId]/members/page.tsx`, sayfa ve ekip API bileşenleri `frontend/src/features/squads/` altındadır. Kullanıcı davet sayfası `frontend/src/app/(app)/invitations/page.tsx` içindedir. Proje sidebar tanımı `frontend/src/features/projects/project-sections.ts` ve nested route seçimi `frontend/src/components/layout/project-sidebar-nav.tsx` dosyalarındadır.

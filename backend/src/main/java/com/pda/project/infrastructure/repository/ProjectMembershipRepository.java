@@ -32,6 +32,10 @@ public interface ProjectMembershipRepository extends JpaRepository<ProjectMember
     List<ProjectMembership> findActiveByUserIds(@Param("projectId") UUID projectId,
                                                 @Param("userIds") Collection<UUID> userIds);
 
+    @Query("select m from ProjectMembership m where m.userId = :userId "
+            + "and m.status = com.pda.project.domain.enums.MembershipStatus.ACTIVE")
+    List<ProjectMembership> findActiveByUser(@Param("userId") UUID userId);
+
     Page<ProjectMembership> findByProjectIdAndStatus(UUID projectId, MembershipStatus status,
                                                      Pageable pageable);
 

@@ -46,6 +46,9 @@ public interface ProjectAccess {
     /** The supplied users that currently hold a PENDING invitation to this project, in one lookup. */
     Set<UUID> pendingInviteeIds(UUID projectId, Set<UUID> userIds);
 
+    /** Active (non-archived) projects the user is an active member of, with the permissions held in each. */
+    java.util.List<ProjectSummaryView> activeProjectsForUser(UUID userId);
+
     /** Cancels the PENDING invitations that would add someone to the team; returns how many were cancelled. */
     int cancelPendingInvitationsForTeam(UUID projectId, UUID teamId);
 }

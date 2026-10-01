@@ -465,10 +465,10 @@ Swagger check path: `/swagger-ui/index.html` with `API_DOCS_ENABLED=true`. Call 
 
 | Endpoint | Auth / scope | Safe input | Success | Important errors |
 | --- | --- | --- | --- | --- |
-| `POST /api/v1/projects/{projectId}/tasks` | `TASK_MANAGE` | `{ "title": "Prepare demo", "priority": "HIGH" }`; optional description/startDate/dueDate | `201`, Task with stable `taskKey`, number and assignee IDs | `400` fields/dates, `401`, `403`, `404` project, `409` archived project |
-| `GET /api/v1/projects/{projectId}/tasks` | `PROJECT_VIEW` | `page=0&size=20&sort=updatedAt,desc`; sort fields: taskNumber/createdAt/updatedAt/dueDate | `200`, page, excludes archived tasks | `400` page/sort, `401`, `403`, `404` project |
+| `POST /api/v1/projects/{projectId}/tasks` | `TASK_MANAGE` | `{ "title": "Prepare demo", "priority": "HIGH" }`; optional description/startDate/deadlineAt (see the 2026-10-02 section) | `201`, Task with stable `taskKey`, number and assignee IDs | `400` fields/dates, `401`, `403`, `404` project, `409` archived project |
+| `GET /api/v1/projects/{projectId}/tasks` | `PROJECT_VIEW` | `page=0&size=20&sort=updatedAt,desc`; sort fields: taskNumber/createdAt/updatedAt/deadlineAt/priority | `200`, page, excludes archived tasks | `400` page/sort, `401`, `403`, `404` project |
 | `GET /api/v1/projects/{projectId}/tasks/{taskId}` | `PROJECT_VIEW` | UUID path | `200`, Task including `assigneeIds` | `401`, `403`, `404` scoped/archived task |
-| `PATCH /api/v1/projects/{projectId}/tasks/{taskId}` | `TASK_MANAGE` | `{ "title": "Prepare final demo", "priority": "HIGH", "description": null, "startDate": null, "dueDate": null }` (full basic-field replacement) | `200`, updated Task | `400`, `401`, `403`, `404`, `409` archived/optimistic conflict |
+| `PATCH /api/v1/projects/{projectId}/tasks/{taskId}` | `TASK_MANAGE` | `{ "title": "Prepare final demo", "priority": "HIGH", "description": null, "startDate": null, "deadlineAt": null }` (full basic-field replacement) | `200`, updated Task | `400`, `401`, `403`, `404`, `409` archived/optimistic conflict |
 | `PUT /api/v1/projects/{projectId}/tasks/{taskId}/assignees` | `TASK_MANAGE` | `{ "assigneeIds": ["<active-member-uuid>"] }`; empty array clears | `200`, replacement UUID set | `400` nonmember/invalid ID, `401`, `403`, `404`, `409` archived |
 | `PATCH /api/v1/projects/{projectId}/tasks/{taskId}/status` | `TASK_MANAGE` or assigned `TASK_WORK` | `{ "status": "TODO" }` | `200`, Task; true change adds one history row | `400`, `401`, `403`, `404`, `409` invalid transition/archived |
 | `PATCH /api/v1/projects/{projectId}/tasks/{taskId}/blocked` | `TASK_MANAGE` or assigned `TASK_WORK` | `{ "blocked": true, "reason": "Awaiting review" }` | `200`, Task; no status history | `400`, `401`, `403`, `404`, `409` DONE/archived |
@@ -476,6 +476,43 @@ Swagger check path: `/swagger-ui/index.html` with `API_DOCS_ENABLED=true`. Call 
 | `DELETE /api/v1/projects/{projectId}/tasks/{taskId}` | `TASK_MANAGE` | UUID path | `204`, soft archived | `401`, `403`, `404`, `409` archived |
 
 `TaskPriority` defaults to `MEDIUM`; new tasks start `BACKLOG` and unblocked. The existing role model governs Task: `PROJECT_MANAGER` holds `TASK_MANAGE`; contributors and `TESTER` hold `TASK_WORK` for tasks actively assigned to them. Cross-project task IDs return `404` to callers who can read the path project.
+
+### Task Service genişletmesi (2026-10-02, V37–V46)
+
+Swagger check path: `/swagger-ui/index.html` with `API_DOCS_ENABLED=true`. `GET /api/v1/auth/csrf`, log in, pick a `projectId`, then walk: create task (with `deadlineAt`, `labelIds`, `assigneeIds`) → `PUT .../labels` → pool task (`"pool":{"open":true}`) → second user `POST .../claim` → comment with `@[uuid]` → `POST .../attachments` (multipart `file`) and `GET .../attachments/{id}/content` (check `nosniff`, `Content-Security-Policy: sandbox`, `Cache-Control: private`) → sprint create/start/complete → `GET /api/v1/tasks/mine`. Every route requires the `PDA_ACCESS` HttpOnly cookie; every mutation also needs `X-XSRF-TOKEN`. Unauthenticated callers get `401`, non-members `403` (`404` for archived or unknown projects). Global `ADMIN` grants nothing. A task or child id that belongs to another project returns `404`. Errors are `ProblemDetail` with a stable `code`; bodies never carry stack traces, SQL or file bytes.
+
+`dueDate` was replaced by `deadlineAt` (ISO-8601 instant). V37 converted existing `due_date` rows to 23:59 `Europe/Istanbul`. Enum query values are case-sensitive and upper-case (`scope=OPEN|DONE|ALL`).
+
+| Endpoint | Auth / scope | Notes | Important errors |
+| --- | --- | --- | --- |
+| `GET /api/v1/projects/{projectId}/tasks` | `PROJECT_VIEW` | Server-side filters `status[]`, `priority[]`, `assigneeId`, `unassigned`, `q` (2–100 chars, `%`/`_` escaped), `labelId[]`, `sprintId`/`backlog`, `pool`, `parentId`/`topLevel`, `overdue`, `blocked`; sort `taskNumber/createdAt/updatedAt/deadlineAt/priority`; `size` ≤ 100 | `400` filter/sort/size |
+| `POST` / `PATCH /api/v1/projects/{projectId}/tasks[/{taskId}]` | `TASK_MANAGE` | `assigneeIds` ≤ 20, `labelIds` ≤ 10, `parentTaskId`, `sprintId`, `estimatePoints` (0,1,2,3,5,8,13,21), `timeEstimateMinutes`, `deadlineAt`, `pool{open,teamId}`; description ≤ 10000 | `TASK_INVALID_PARENT`, `TASK_INVALID_ESTIMATE`, `TASK_DATES_INVALID`, `TASK_POOL_HAS_ASSIGNEE`, `TASK_POOL_TEAM_INVALID`, `TASK_DONE_CANNOT_POOL`, `TASK_LABEL_INVALID`, `SPRINT_INVALID`, `SPRINT_COMPLETED` |
+| `GET /api/v1/projects/{projectId}/tasks/{taskId}/subtasks` | `PROJECT_VIEW` | One level only; archiving a parent archives its subtasks | – |
+| `PUT .../tasks/{taskId}/labels` | `TASK_MANAGE` | At most 10 active project labels | `TASK_LABEL_INVALID`, `TASK_LABEL_LIMIT` |
+| `PUT .../tasks/{taskId}/sprint` | `TASK_MANAGE` | `{ "sprintId": null }` = backlog | `SPRINT_INVALID`, `SPRINT_COMPLETED`, `SPRINT_ARCHIVED` |
+| `POST .../tasks/{taskId}/claim` | `TASK_WORK` | Row-locked and atomic; team-targeted pool needs active team membership | `TASK_NOT_IN_POOL`, `TASK_ALREADY_CLAIMED` (409), `TASK_POOL_TEAM_ONLY` (403) |
+| `POST .../tasks/{taskId}/release` | sole assignee who claimed it | Task returns to the pool | `TASK_NOT_RELEASABLE` |
+| `GET/POST .../tasks/{taskId}/checklist`, `PATCH/DELETE .../checklist/{itemId}`, `PUT .../checklist/order` | read `PROJECT_VIEW`; write `TASK_MANAGE` or assigned `TASK_WORK` | Text ≤ 200, 50 items, order must list every item | `TASK_CHECKLIST_LIMIT`, `400` |
+| `GET/POST .../tasks/{taskId}/comments`, `PATCH/DELETE .../comments/{commentId}` | read `PROJECT_VIEW`; write `TASK_WORK` | Plain text ≤ 10000; `@[uuid]` mentions, ≤ 20, only active members (others stay plain text); edit by author; soft delete by author or `ISSUE_MANAGE`; deleted comments carry no body | `TASK_TOO_MANY_MENTIONS`, `TASK_COMMENT_DELETED`, `403` |
+| `GET .../tasks/{taskId}/activity` | `PROJECT_VIEW` | `filter=ALL\|COMMENTS\|EVENTS`, paged | `400` |
+| `GET/POST .../tasks/{taskId}/relations`, `DELETE .../relations/{relationId}` | read `PROJECT_VIEW`; write `TASK_MANAGE` or assigned `TASK_WORK` on the source | Types `BLOCKS`, `RELATES`, `DUPLICATES`; same project only | `TASK_RELATION_INVALID`, `TASK_RELATION_EXISTS`, `TASK_RELATION_CYCLE` |
+| `GET .../tasks/{taskId}/watchers`, `PUT/DELETE .../tasks/{taskId}/watch` | `PROJECT_VIEW`, caller only | Idempotent; creator, assignees, claimer, commenters and mentioned users watch automatically | – |
+| `GET/POST .../tasks/{taskId}/worklogs`, `PATCH/DELETE .../worklogs/{worklogId}` | read `PROJECT_VIEW`; add `TASK_MANAGE` or assigned `TASK_WORK`; edit/delete owner or `TASK_MANAGE` | 1–1440 minutes; `workDate` at most one day past the UTC date; soft delete | `WORKLOG_INVALID`, `TASK_ARCHIVED` |
+| `GET/POST .../tasks/{taskId}/attachments`, `GET .../attachments/{id}/content`, `DELETE .../attachments/{id}` | list/download `PROJECT_VIEW`; upload `TASK_WORK`; delete uploader or `TASK_MANAGE` | See the attachment threat note below | `TASK_ATTACHMENT_TYPE`, `TASK_ATTACHMENT_INVALID`, `TASK_ATTACHMENT_TOO_LARGE`, `TASK_ATTACHMENT_LIMIT` |
+| `GET/POST /api/v1/projects/{projectId}/labels`, `PATCH/DELETE .../labels/{labelId}` | read `PROJECT_VIEW`; write `LABEL_MANAGE` | Name ≤ 40, unique per project (case-insensitive); color is a fixed token (`slate\|red\|orange\|amber\|green\|teal\|blue\|violet\|pink`), free hex is rejected; archive keeps existing task tags | `LABEL_NAME_EXISTS` |
+| `GET/POST /api/v1/projects/{projectId}/sprints`, `GET/PATCH/DELETE .../sprints/{sprintId}`, `POST .../start`, `POST .../complete`, `GET .../summary` | read `PROJECT_VIEW`; write `TASK_MANAGE` | One `ACTIVE` sprint per project (partial unique index); `complete` takes `moveOpenTasksTo` = sprint UUID or `BACKLOG`; delete only a planned sprint without tasks; summary returns totals, status split, logged minutes and burndown | `SPRINT_INVALID`, `SPRINT_NOT_PLANNED`, `SPRINT_NOT_ACTIVE`, `SPRINT_ACTIVE_EXISTS`, `SPRINT_COMPLETED`, `SPRINT_NOT_EMPTY` |
+| `GET /api/v1/tasks/mine` | authenticated; caller identity comes from the principal only, there is no `userId` parameter | `scope=OPEN\|DONE\|ALL`, `status[]`, `projectId`, `overdue`, `sprint=active`, `sort=deadlineAt\|updatedAt\|priority`, `direction`, `page`, `size` ≤ 100; only active projects and non-archived tasks assigned to the caller; `counts{open,overdue,dueSoon,blocked,poolAvailable}` | `400` unknown sort/size |
+| `GET /api/v1/tasks/counts`, `GET /api/v1/tasks/pool` | authenticated | Counts for the caller; claimable pool tasks across the caller's active projects, filtered by team target | – |
+
+**Authorization rule of thumb.** `PROJECT_MANAGER` holds every task permission. A member holding `TASK_WORK` (contributors and `TESTER`) can act only on tasks assigned to them, and can always comment, watch, upload and claim. Task data of another user is never returned by `/tasks/mine`.
+
+**Deadline reminders.** `TaskDeadlineScheduler` scans every `pda.task.deadline-scan-interval` (default `PT5M`, env `TASK_DEADLINE_SCAN_INTERVAL`, no `.env` change). Each reminder first wins a conditional `UPDATE ... WHERE deadline_reminded_at IS NULL`, so several instances never notify twice. `TASK_DEADLINE_SOON` (24 h before) and `TASK_OVERDUE` go to assignees and watchers, never to the actor. Changing a deadline starts a new reminder cycle.
+
+**Notifications.** Notification consumes only `com.pda.task.TaskEvents` with `@TransactionalEventListener(AFTER_COMMIT)`. A mention notifies only active project members.
+
+**Attachment threat note (approved file upload, see §18).** Risks: stored XSS through SVG/HTML, content sniffing, polyglot files, path traversal through the file name, oversize/zip-bomb style abuse, and cross-project reads. Controls: extension allow-list (png, jpeg, webp, gif, pdf, txt, csv, md, zip, docx, xlsx, pptx) plus magic-byte proof; the client `Content-Type` is ignored; SVG, HTML-like text and files with NUL bytes in text types are rejected; the file name is sanitized (path separators and control characters removed, length capped) and never used as a path, the bytes live in `task_attachment_data` (`BYTEA`) and never on disk; 10 MB per file and 20 per task (multipart limit 11 MB); downloads send `X-Content-Type-Options: nosniff`, `Content-Security-Policy: sandbox`, `Cache-Control: private` and `Content-Disposition: attachment` (only png/jpeg/webp/gif are `inline`); access needs `PROJECT_VIEW` of the owning project and a task id scoped to that project. Open item: there is no dedicated per-user upload rate limit; the existing per-IP limiter does not cover these routes.
+
+**Member removal.** `ProjectMemberRemovedEvent` clears the member's task assignments and watches.
 
 ## 12. Error Handling
 
@@ -600,6 +637,8 @@ When file handling is introduced:
 File attachment/storage is outside PDA V1 unless explicitly approved.
 
 **Approved exception (2026-10-01): project logo.** A single image per project is stored in the database (`project_logos`, `BYTEA`), not on disk, so no path or filename is ever used. The uploaded filename and the client `Content-Type` are ignored; the type is derived from magic bytes (PNG `89 50 4E 47`, JPEG `FF D8 FF`, WebP `RIFF....WEBP`). SVG and GIF are rejected (script/active-content risk). Size is capped at 512 KB (also a DB `CHECK`), empty files are rejected, and the image is served with `nosniff` and `inline` disposition. Any other upload feature still needs its own approval.
+
+**Approved exception (2026-10-02): task attachments.** Files on tasks are stored in the database (`task_attachment_data`, `BYTEA`), never on disk. Type is proven by extension allow-list plus magic bytes, SVG/HTML-like text and NUL-byte text are rejected, the client `Content-Type` and the file name are never trusted (the name is sanitized and only displayed), limits are 10 MB per file and 20 per task, and downloads carry `nosniff`, `CSP: sandbox` and `Cache-Control: private`. Full threat note and endpoint matrix: §11 "Task Service genişletmesi".
 
 ---
 

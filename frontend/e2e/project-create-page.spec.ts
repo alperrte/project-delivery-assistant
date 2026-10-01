@@ -59,6 +59,8 @@ test.describe("Yeni proje sayfası", () => {
     await page.getByRole("button", { name: /^Projeyi oluştur$/ }).click();
     await expect(page).toHaveURL(/\/projects\/(?!new$)[^/]+$/, { timeout: 15_000 });
 
+    // The detail page loads its own /home; let it finish so only requests made by the list page are counted.
+    await page.waitForLoadState("networkidle");
     const homeCalls: string[] = [];
     page.on("request", (request) => {
       if (/\/projects\/[^/]+\/home/.test(request.url())) homeCalls.push(request.url());

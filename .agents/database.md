@@ -1,5 +1,20 @@
 # Veritabanı ve kalıcılık
 
+## V37–V46 Task genişletmesi (2026-10-02)
+
+- `V37__task_deadline.sql`: `tasks.deadline_at TIMESTAMPTZ` (mevcut `due_date` değerleri `Europe/Istanbul` 23:59 olarak taşınır, `due_date` ve `ck_tasks_dates` kalkar), `deadline_reminded_at`, `deadline_overdue_notified_at` ve açık görevler için kısmi `deadline_at` indeksi.
+- `V38__task_pool.sql`: `pool_open`, `pool_team_id` (`squads` FK), `claimed_from_pool`; havuz kısmi indeksi. Havuz görevinin ataması boş olmalıdır, kuralı servis korur.
+- `V39__task_subtasks_checklist.sql`: `parent_task_id` (tek seviye) ve `task_checklist_items`.
+- `V40__task_comments_activity.sql`: `task_comments`, `task_comment_mentions`, `task_activities` (`task_status_history` backfill edilir, tablo kalır).
+- `V41__task_labels_estimates.sql`: `project_labels` (proje içinde `lower(name)` benzersiz, renk sabit token), `task_labels`, `estimate_points` (CHECK 0,1,2,3,5,8,13,21), `time_estimate_minutes`.
+- `V42__task_relations.sql`: `task_relations` (`BLOCKS|RELATES|DUPLICATES`, `(source,target,type)` benzersiz).
+- `V43__task_watchers.sql`: `task_watchers` (PK `(task_id,user_id)`).
+- `V44__task_attachments.sql`: `task_attachments` (meta + `sha256`) ve baytları ayıran `task_attachment_data` (`BYTEA`); liste sorguları baytlara dokunmaz.
+- `V45__sprints.sql`: `sprints` (projede tek `ACTIVE` için kısmi unique indeks, `end_date >= start_date`, `version`) ve `tasks.sprint_id`.
+- `V46__task_worklogs.sql`: `task_worklogs` (1–1440 dakika, soft delete).
+
+Başka modüllere (kullanıcı, proje, ekip) giden referanslar Task Java modelinde scalar UUID'dir; üyelik ve ekip doğrulaması servis katmanında `ProjectAccess` ve `ProjectTeamDirectory` portuyla yapılır. Geri dönüş: yeni tablolar silinmemelidir; `due_date` dönüşümü tek yönlüdür (`deadline_at` UTC anıdır).
+
 ## V35 Proje takvim anımsatıcıları
 
 `V35__project_reminders.sql`, `project_reminders` tablosunu ekler: `project_id` (`projects` FK), `creator_user_id`, `title` (100), `description` (500, opsiyonel), `type`, `scope`, `reminder_date` (`DATE`), `reminder_time` (`TIME`, opsiyonel), `created_at`, `updated_at`. `type` ve `scope` değerleri `CHECK` ile sınırlıdır. Tarih ve saat kasıtlı olarak zaman dilimsiz `DATE`/`TIME` tutulur; böylece "3 Ekim" hiçbir dönüşümde 2 Ekim'e kaymaz. Takvim okumaları hep "tek proje + tarih aralığı" olduğundan tek indeks `(project_id, reminder_date)` yeterlidir; PERSONAL/PROJECT görünürlüğü bu dilim üzerinde ucuz bir filtredir.
