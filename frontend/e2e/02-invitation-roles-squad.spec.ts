@@ -1,12 +1,12 @@
 import { test, expect, type Page } from "@playwright/test";
-import { registerUser, login, createProject, uniqueUser } from "./helpers";
+import { registerUser, login, createProject, createTeam, uniqueUser } from "./helpers";
 import { MANAGER_STORAGE } from "./global-setup";
 
 /**
  * HMZ-PROJ-52 flows covered here (two users: PROJECT_MANAGER + a contributor):
  *   3. Search User -> Invite -> Accept -> Membership
  *   4. PROJECT_MANAGER -> Assign Role -> Member sees project
- *   5. PROJECT_MANAGER -> Create Squad -> Add Member
+ *   5. PROJECT_MANAGER -> Create Team -> Add Member (people only ever join through a team)
  *   6. Non-manager -> Project Settings change denied
  *   7. Contributor -> Membership mutation denied
  */
@@ -15,6 +15,7 @@ test.describe.serial("Invitation, roles, squad, and denial checks", () => {
   let memberPage: Page;
   let slug: string;
   let projectId: string;
+  let teamId: string;
   let invitationId: string;
   let token: string;
   let member: { email: string; nickname: string; password: string };
@@ -35,16 +36,18 @@ test.describe.serial("Invitation, roles, squad, and denial checks", () => {
 
   test("manager (already authenticated) creates a project; contributor account is registered", async () => {
     slug = await createProject(managerPage, projectName);
+    // Invitations always target a team, so the first team is created before anyone is invited.
+    teamId = await createTeam(managerPage, slug, "Backend");
 
     member = uniqueUser("member");
     await registerUser(memberPage, member);
   });
 
   test("manager searches, invites the contributor, and captures the invitation token", async () => {
-    await managerPage.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Ekipler" }).click();
-    await managerPage.getByRole("button", { name: /^Üye davet et$/ }).click();
-    await managerPage.getByPlaceholder("Kullanıcı adı veya e-posta ile ara").fill(member.nickname);
-    await managerPage.getByRole("button", { name: new RegExp(member.nickname) }).click();
+    await managerPage.goto(`/projects/${slug}/teams/${teamId}`);
+    await managerPage.getByRole("button", { name: /^Üye ekle$/ }).first().click();
+    await managerPage.getByLabel("Kişi ara").fill(member.nickname);
+    await managerPage.getByRole("button", { name: new RegExp(`${member.nickname} kişisini ekibe davet et`) }).click();
 
     // FRONTEND_DEVELOPER: a non-manager contributor role, second checkbox in PROJECT_ROLES order.
     await managerPage.getByRole("dialog").getByRole("checkbox").nth(2).check();
@@ -53,7 +56,7 @@ test.describe.serial("Invitation, roles, squad, and denial checks", () => {
       managerPage.waitForResponse(
         (res) => res.url().includes("/invitations") && res.request().method() === "POST",
       ),
-      managerPage.getByRole("button", { name: /^Davet gönder$/ }).click(),
+      managerPage.getByRole("dialog").getByRole("button", { name: /^Davet gönder$/ }).click(),
     ]);
 
     const match = response.url().match(/\/projects\/([^/]+)\/invitations$/);
@@ -83,15 +86,15 @@ test.describe.serial("Invitation, roles, squad, and denial checks", () => {
     await memberPage.getByRole("button", { name: /^Kabul et$/ }).click();
     await expect(memberPage.getByText("Projeye katıldınız.")).toBeVisible();
 
-    await managerPage.goto(`/projects/${slug}?section=teams`);
-    await managerPage.getByRole("link", { name: /General Team üyeleri/ }).click();
-    await expect(managerPage).toHaveURL(new RegExp(`/projects/${slug}/teams/[^/]+/members$`));
+    // Accepting puts the person into the project and the invited team in one step.
+    await managerPage.goto(`/projects/${slug}/teams/${teamId}`);
     await expect(managerPage.getByRole("row", { name: new RegExp(member.nickname) })).toBeVisible();
   });
 
   test("manager assigns an additional role; member sees the project in their own list", async () => {
+    await managerPage.getByRole("button", { name: /^Ekibi düzenle$/ }).click();
     const row = managerPage.getByRole("row", { name: new RegExp(member.nickname) });
-    await row.getByRole("button", { name: "Rolleri düzenle" }).click();
+    await row.getByRole("button", { name: /kişisinin rollerini düzenle/ }).click();
     // TESTER is index 6 in PROJECT_ROLES.
     await managerPage.getByRole("dialog").getByRole("checkbox").nth(6).check();
     await managerPage.getByRole("dialog").getByRole("button", { name: /^Kaydet$/ }).click();
@@ -123,8 +126,11 @@ test.describe.serial("Invitation, roles, squad, and denial checks", () => {
   });
 
   test("contributor cannot mutate membership (UI hidden and API denies)", async () => {
-    await expect(memberPage.getByRole("button", { name: "Rolleri düzenle" })).toHaveCount(0);
-    await expect(memberPage.getByRole("button", { name: "Çıkar" })).toHaveCount(0);
+    await memberPage.goto(`/projects/${slug}/teams/${teamId}`);
+    await expect(memberPage.getByRole("row", { name: new RegExp(member.nickname) })).toBeVisible();
+    await expect(memberPage.getByRole("button", { name: /^Ekibi düzenle$/ })).toHaveCount(0);
+    await expect(memberPage.getByRole("button", { name: /kişisinin rollerini düzenle/ })).toHaveCount(0);
+    await expect(memberPage.getByRole("button", { name: /kişisini ekipten çıkar/ })).toHaveCount(0);
 
     const status = await memberPage.evaluate(
       async ({ id, userId }) => {
@@ -146,23 +152,20 @@ test.describe.serial("Invitation, roles, squad, and denial checks", () => {
     expect(status).toBe(403);
   });
 
-  test("manager creates a squad and adds the contributor to it", async () => {
-    await managerPage.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Ekipler" }).click();
-    await managerPage.getByRole("button", { name: /^Yeni ekip$/ }).click();
-    await managerPage.locator("#squad-name").fill("E2E Squad");
-    await managerPage.getByRole("dialog").getByRole("button", { name: /^Oluştur$/ }).click();
-    await expect(managerPage.getByText("Ekip oluşturuldu.")).toBeVisible();
-
-    await managerPage.getByRole("link", { name: /E2E Squad üyeleri/ }).click();
-    await expect(managerPage).toHaveURL(new RegExp(`/projects/${slug}/teams/[^/]+/members$`));
-    await managerPage.reload();
+  test("manager creates a second team and moves the contributor in and out of it", async () => {
+    // The contributor is already in Backend, so leaving the new team is allowed (a last team could not be left).
+    await createTeam(managerPage, slug, "E2E Squad");
     await managerPage.getByRole("button", { name: /^Üye ekle$/ }).first().click();
-    await managerPage.getByRole("dialog").getByRole("button", { name: new RegExp(`${member.nickname} kişisini ekibe ekle`) }).click();
+    await managerPage.getByLabel("Kişi ara").fill(member.nickname);
+    await managerPage.getByRole("button", { name: new RegExp(`${member.nickname} kişisini ekibe ekle`) }).click();
     await expect(managerPage.getByRole("row", { name: new RegExp(member.nickname) })).toBeVisible();
-    await managerPage.getByRole("button", { name: "Ekipten çıkar" }).click();
+
+    await managerPage.getByRole("button", { name: /^Ekibi düzenle$/ }).click();
+    await managerPage.getByRole("button", { name: new RegExp(`${member.nickname} kişisini ekipten çıkar`) }).click();
     await managerPage.getByRole("dialog").getByRole("button", { name: "Ekipten çıkar" }).click();
     await expect(managerPage.getByRole("row", { name: new RegExp(member.nickname) })).toHaveCount(0);
-    await managerPage.getByRole("link", { name: "Ekiplere dön" }).click();
+
+    await managerPage.getByRole("navigation", { name: "Konum" }).getByRole("link", { name: "Ekipler" }).click();
     await expect(managerPage).toHaveURL(`/projects/${slug}?section=teams`);
   });
 });

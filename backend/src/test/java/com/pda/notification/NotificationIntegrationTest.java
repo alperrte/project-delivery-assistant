@@ -140,24 +140,27 @@ class NotificationIntegrationTest {
         memberships.addRole(manager, project, member, ProjectRole.ANALYST);
         memberships.addRole(manager, project, member, ProjectRole.ANALYST);
         assertEquals(2, notifications.unreadCount(member));
-        UUID squad = squads.create(manager, project, "Notification squad", null).getId();
+        UUID anchor = squads.create(manager, project, "Anchor team", null, null, true).getId();
+        UUID squad = squads.create(manager, project, "Notification squad", null, null, false).getId();
+        squads.addMember(manager, project, anchor, member);
         squads.addMember(manager, project, squad, member);
         squads.removeMember(manager, project, squad, member);
-        assertEquals(4, notifications.unreadCount(member));
-        memberships.removeMember(manager, project, member);
         assertEquals(5, notifications.unreadCount(member));
+        memberships.removeMember(manager, project, member);
+        assertEquals(6, notifications.unreadCount(member));
     }
 
     @Test void invitationNotificationsFollowRecipientAndSender() {
         UUID manager = user(); UUID recipient = user();
         UUID project = projects.create(manager, "Invitation notification " + UUID.randomUUID(), null, null).getId();
-        var first = invitations.inviteRegisteredUser(manager, project, recipient, Set.of(ProjectRole.TESTER));
+        UUID team = squads.create(manager, project, "Invitation team", null, null, true).getId();
+        var first = invitations.inviteRegisteredUser(manager, project, recipient, Set.of(ProjectRole.TESTER), null, team);
         assertEquals(1, notifications.list(recipient, true, NotificationType.PROJECT_INVITATION_CREATED, 0, 20)
                 .getTotalElements());
         invitations.rejectMine(recipient, first.invitation().getId(), "Unavailable");
         assertEquals(1, notifications.list(manager, true, NotificationType.PROJECT_INVITATION_REJECTED, 0, 20)
                 .getTotalElements());
-        var second = invitations.inviteRegisteredUser(manager, project, recipient, Set.of(ProjectRole.TESTER));
+        var second = invitations.inviteRegisteredUser(manager, project, recipient, Set.of(ProjectRole.TESTER), null, team);
         invitations.acceptMine(recipient, second.invitation().getId());
         assertEquals(1, notifications.list(manager, true, NotificationType.PROJECT_INVITATION_ACCEPTED, 0, 20)
                 .getTotalElements());

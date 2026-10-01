@@ -44,7 +44,14 @@
     "accountUnavailable": "Ihr Konto ist derzeit nicht verfügbar.",
     "PROJECT_LOGO_INVALID_TYPE": "Das Logo muss eine PNG-, JPEG- oder WebP-Datei sein.",
     "PROJECT_LOGO_TOO_LARGE": "Das Logo darf höchstens 512 KB groß sein.",
-    "PROJECT_LOGO_EMPTY": "Die Logodatei ist leer."
+    "PROJECT_LOGO_EMPTY": "Die Logodatei ist leer.",
+    "TEAM_MEMBER_EXISTS": "Diese Person ist bereits im Team.",
+    "TEAM_CIRCULAR_PARENT": "Ein Team kann nicht unter eines seiner eigenen Unterteams verschoben werden.",
+    "TEAM_HAS_CHILDREN": "Ein Team mit Unterteams kann nicht archiviert werden. Verschieben oder archivieren Sie zuerst die Unterteams.",
+    "TEAM_LAST_MEMBERSHIP": "Diese Person hat kein anderes Team. Entfernen Sie sie stattdessen aus dem Projekt.",
+    "TEAM_ARCHIVE_WOULD_ORPHAN": "Das Archivieren dieses Teams würde einige Personen ohne Team lassen.",
+    "PROJECT_OWNER_PROTECTED": "Der Gründer kann nicht aus dem Projekt entfernt werden und die Rolle Projektmanager nicht verlieren.",
+    "LAST_PROJECT_MANAGER": "Das Projekt muss mindestens einen Projektmanager behalten."
   },
   "app": {
     "nav": {
@@ -68,14 +75,20 @@
     "ANALYST": "Analyst"
   },
   "organizations": {
-    "card": { "lastUpdate": "Letzte Änderung", "openNamed": "Organisation {name} öffnen" },
+    "card": {
+      "lastUpdate": "Letzte Änderung",
+      "openNamed": "Organisation {name} öffnen"
+    },
     "cardLabel": "ORGANISATION",
     "cardNoDescription": "Noch keine Beschreibung hinzugefügt.",
     "cardOpen": "Arbeitsbereich öffnen",
     "cardCreated": "Erstellt: {date}",
     "backToOrganizations": "Alle Organisationen",
     "projectsLabel": "Arbeitsbereich",
-    "statusValues": { "ACTIVE": "Aktiv", "ARCHIVED": "Archiviert" },
+    "statusValues": {
+      "ACTIVE": "Aktiv",
+      "ARCHIVED": "Archiviert"
+    },
     "title": "Organisationen",
     "description": "Gruppieren Sie Ihre Projekte unter einer Organisation oder lassen Sie sie eigenständig.",
     "create": "Neue Organisation",
@@ -89,7 +102,11 @@
     "noProjects": "Diese Organisation hat noch keine Projekte.",
     "emptyTitle": "Noch keine Organisationen",
     "emptyDescription": "Erstellen Sie eine, um verwandte Projekte zu gruppieren.",
-    "columns": { "name": "Name", "status": "Status", "updatedAt": "Aktualisiert" },
+    "columns": {
+      "name": "Name",
+      "status": "Status",
+      "updatedAt": "Aktualisiert"
+    },
     "form": {
       "createTitle": "Neue Organisation",
       "editTitle": "Organisation bearbeiten",
@@ -129,7 +146,13 @@
     "create": "Neues Projekt",
     "emptyTitle": "Noch keine Projekte",
     "emptyDescription": "Erstellen Sie Ihr erstes Projekt, um zu beginnen.",
-    "columns": { "name": "Name", "status": "Status", "priority": "Priorität", "techStack": "Technologie", "updatedAt": "Aktualisiert" },
+    "columns": {
+      "name": "Name",
+      "status": "Status",
+      "priority": "Priorität",
+      "techStack": "Technologie",
+      "updatedAt": "Aktualisiert"
+    },
     "emptyAction": "Erstes Projekt erstellen",
     "newPage": {
       "title": "Neues Projekt",
@@ -256,7 +279,8 @@
         "squads": "Teams",
         "repository": "Repository",
         "settings": "Einstellungen"
-      }
+      },
+      "pendingInvitations": "{count, plural, one {# offene Einladung} other {# offene Einladungen}}"
     },
     "overview": {
       "recentCriteriaActivity": "Letzte Kriterienaktivitäten",
@@ -275,7 +299,6 @@
       "squads": "Teams",
       "viewSquads": "Teams anzeigen",
       "invitations": "Einladungen",
-      "allInvitations": "Einladungen gesamt",
       "connected": "Verbunden",
       "criteriaSnapshot": "Kriterienstatus",
       "viewAll": "Alle anzeigen",
@@ -309,14 +332,20 @@
         "COMPLETED": "Abgeschlossen",
         "ARCHIVED": "Archiviert"
       },
-      "priorityValues": { "LOW": "Niedrig", "MEDIUM": "Mittel", "HIGH": "Hoch", "CRITICAL": "Kritisch" },
+      "priorityValues": {
+        "LOW": "Niedrig",
+        "MEDIUM": "Mittel",
+        "HIGH": "Hoch",
+        "CRITICAL": "Kritisch"
+      },
       "teamMembers": "{count, plural, one {# Mitglied} other {# Mitglieder}}",
       "managedBy": "Geleitet von {names}",
       "due": "Fällig am {date}",
       "criteriaProgress": "Erfolgskriterien",
       "repository": "Repository",
       "noRepository": "Kein Repository verbunden",
-      "githubUnavailable": "GitHub ist vorübergehend nicht verfügbar"
+      "githubUnavailable": "GitHub ist vorübergehend nicht verfügbar",
+      "pendingInvitations": "Offene Einladungen"
     },
     "settings": {
       "title": "Projekteinstellungen",
@@ -329,9 +358,19 @@
       "name": "Name",
       "description": "Beschreibung",
       "status": "Status",
-      "statusValues": { "PLANNING": "Planung", "ACTIVE": "Aktiv", "ON_HOLD": "Pausiert", "COMPLETED": "Abgeschlossen" },
+      "statusValues": {
+        "PLANNING": "Planung",
+        "ACTIVE": "Aktiv",
+        "ON_HOLD": "Pausiert",
+        "COMPLETED": "Abgeschlossen"
+      },
       "priority": "Priorität",
-      "priorityValues": { "LOW": "Niedrig", "MEDIUM": "Mittel", "HIGH": "Hoch", "CRITICAL": "Kritisch" },
+      "priorityValues": {
+        "LOW": "Niedrig",
+        "MEDIUM": "Mittel",
+        "HIGH": "Hoch",
+        "CRITICAL": "Kritisch"
+      },
       "startDate": "Startdatum",
       "targetEndDate": "Geplantes Enddatum",
       "organization": "Organisation",
@@ -354,17 +393,34 @@
       "taglinePlaceholder": "Beschreiben Sie das Projekt in einem Satz",
       "type": "Projektart",
       "sections": {
-        "general": { "title": "Allgemein", "description": "Name, Beschreibung und Ziel des Projekts. Sichtbar in Listen und im Projektkopf." },
-        "planning": { "title": "Planung", "description": "Status, Priorität und Termine. Eine Organisation gruppiert das Projekt unter einem Arbeitsbereich." },
-        "technology": { "title": "Technologie", "description": "Verwendete Sprachen, Frameworks und Werkzeuge." },
-        "danger": { "title": "Gefahrenbereich", "description": "Aktionen, die sich nicht rückgängig machen lassen." }
+        "general": {
+          "title": "Allgemein",
+          "description": "Name, Beschreibung und Ziel des Projekts. Sichtbar in Listen und im Projektkopf."
+        },
+        "planning": {
+          "title": "Planung",
+          "description": "Status, Priorität und Termine. Eine Organisation gruppiert das Projekt unter einem Arbeitsbereich."
+        },
+        "technology": {
+          "title": "Technologie",
+          "description": "Verwendete Sprachen, Frameworks und Werkzeuge."
+        },
+        "danger": {
+          "title": "Gefahrenbereich",
+          "description": "Aktionen, die sich nicht rückgängig machen lassen."
+        }
       }
     }
   },
   "criteria": {
     "title": "Erfolgskriterien",
     "description": "Verwalten Sie die Erfolgskriterien und ihren Fortschritt.",
-    "filters": { "label": "Kriterienfilter", "all": "Alle", "completed": "Abgeschlossen", "remaining": "Offen" },
+    "filters": {
+      "label": "Kriterienfilter",
+      "all": "Alle",
+      "completed": "Abgeschlossen",
+      "remaining": "Offen"
+    },
     "search": "Kriterien suchen...",
     "noResults": "Keine passenden Kriterien gefunden.",
     "create": "Neues Kriterium",
@@ -413,11 +469,13 @@
     "description": "Sehen Sie die Mitglieder, Rollen und Beitrittsdaten dieses Projekts.",
     "emptyDescription": "Personen, die diesem Projekt beitreten, und ihre Rollen erscheinen hier.",
     "emptyTitle": "Noch keine Mitglieder",
-    "columns": { "member": "Mitglied", "roles": "Rollen", "joinedAt": "Beigetreten", "actions": "Aktionen" },
+    "columns": {
+      "member": "Mitglied",
+      "roles": "Rollen",
+      "joinedAt": "Beigetreten",
+      "actions": "Aktionen"
+    },
     "editRolesTitle": "Rollen bearbeiten",
-    "remove": "Entfernen",
-    "removeConfirmTitle": "Dieses Mitglied entfernen?",
-    "removeConfirmDescription": "Diese Person verliert sofort den Zugriff auf das Projekt.",
     "cancel": "Abbrechen",
     "save": "Speichern",
     "rolesUpdated": "Rollen aktualisiert."
@@ -443,13 +501,26 @@
     "rejectionMessage": "Grund für die Ablehnung (optional)",
     "acceptSuccess": "Einladung angenommen.",
     "rejectSuccess": "Einladung abgelehnt.",
-    "statusValues": { "PENDING": "Ausstehend", "ACCEPTED": "Angenommen", "REJECTED": "Abgelehnt", "CANCELLED": "Abgebrochen", "EXPIRED": "Abgelaufen" },
+    "statusValues": {
+      "PENDING": "Ausstehend",
+      "ACCEPTED": "Angenommen",
+      "REJECTED": "Abgelehnt",
+      "CANCELLED": "Abgebrochen",
+      "EXPIRED": "Abgelaufen"
+    },
     "emptyDescription": "Laden Sie ein Projektmitglied ein, um Ihr Team zu erweitern.",
     "pendingTitle": "Projekteinladungen",
     "description": "Verwalten Sie Einladungen, Rollen und Status.",
     "invite": "Mitglied einladen",
     "emptyTitle": "Noch keine Einladungen",
-    "columns": { "target": "Eingeladen", "roles": "Rollen", "sentAt": "Einladungsdatum", "status": "Status", "actions": "Aktionen" },
+    "columns": {
+      "target": "Eingeladen",
+      "roles": "Rollen",
+      "sentAt": "Einladungsdatum",
+      "status": "Status",
+      "actions": "Aktionen",
+      "team": "Team"
+    },
     "resend": "Erneut senden",
     "resent": "Einladung erneut gesendet.",
     "cancel": "Stornieren",
@@ -471,67 +542,219 @@
       "acceptedMessage": "Sie sind dem Projekt beigetreten.",
       "rejectedMessage": "Sie haben die Einladung abgelehnt.",
       "goToProjects": "Zu den Projekten"
+    },
+    "pageTitle": "Projekteinladungen",
+    "pageDescription": "Verwalten Sie gesendete Einladungen, ihre Zielteams und ihren Status.",
+    "tabsLabel": "Einladungsstatus",
+    "listLabel": "Einladungen",
+    "retry": "Erneut versuchen",
+    "resendNamed": "Einladung an {name} erneut senden",
+    "cancelNamed": "Einladung an {name} stornieren",
+    "cancelTitle": "Einladung an {name} stornieren?",
+    "cancelDescription": "Der Einladungslink wird ungültig. Sie können die Person später erneut einladen.",
+    "noTeam": "Kein Team",
+    "empty": {
+      "PENDING": {
+        "title": "Keine offenen Einladungen",
+        "description": "Eine neue Einladung erscheint hier, sobald Sie sie senden."
+      },
+      "ACCEPTED": {
+        "title": "Keine angenommenen Einladungen",
+        "description": "Angenommene Einladungen werden hier aufgelistet."
+      },
+      "REJECTED": {
+        "title": "Keine abgelehnten Einladungen",
+        "description": "Abgelehnte Einladungen und ihre Gründe werden hier aufgelistet."
+      },
+      "CANCELLED": {
+        "title": "Keine stornierten Einladungen",
+        "description": "Stornierte Einladungen werden hier aufgelistet."
+      }
     }
   },
   "squads": {
-    "card": { "members": "Mitglieder", "lastUpdate": "Letzte Änderung" },
-    "membersPage": {
-      "back": "Zurück zu Teams",
-      "teams": "Teams",
-      "description": "Mitglieder dieses Teams und ihre Projektrollen ansehen und verwalten.",
-      "memberCount": "{count, plural, one {# Mitglied} other {# Mitglieder}}",
-      "member": "Mitglied",
-      "roles": "Projektrollen",
-      "joinedAt": "Im Team seit",
-      "actions": "Aktionen",
-      "add": "Mitglied hinzufügen",
-      "addTitle": "Projektmitglied hinzufügen",
-      "addDescription": "Nur Personen, die bereits dem Projekt angehören, können diesem Team beitreten.",
-      "addPerson": "{name} zum Team hinzufügen",
-      "alreadyAdded": "Im Team",
-      "added": "Mitglied zum Team hinzugefügt.",
-      "noCandidates": "Keine Projektmitglieder auf dieser Seite.",
-      "emptyTitle": "Noch keine Mitglieder in diesem Team",
-      "emptyCustom": "Fügen Sie zunächst ein bestehendes Projektmitglied hinzu.",
-      "emptyGeneral": "Personen, die dem Projekt beitreten, erscheinen hier.",
-      "removeFromTeam": "Aus Team entfernen",
-      "removeFromTeamTitle": "Dieses Mitglied aus dem Team entfernen?",
-      "removeFromTeamDescription": "Die Person bleibt im Projekt und verlässt nur dieses Team.",
-      "removedFromTeam": "Mitglied aus dem Team entfernt.",
-      "removeFromProject": "Aus Projekt entfernen",
-      "removeFromProjectTitle": "Dieses Mitglied aus dem Projekt entfernen?",
-      "removeFromProjectDescription": "Die Person verliert den Zugriff auf das Projekt und seine Teams.",
-      "removedFromProject": "Mitglied aus dem Projekt entfernt.",
-      "retry": "Erneut versuchen"
-    },
-    "description": "Erstellen und verwalten Sie Teams, die an diesem Projekt arbeiten.",
-    "noDescription": "Für dieses Team wurde noch keine Beschreibung hinzugefügt.",
-    "manageMembers": "Mitglieder",
-    "edit": "Bearbeiten",
-    "emptyDescription": "Organisieren Sie Projektmitglieder in Teams, die zusammenarbeiten.",
     "title": "Teams",
+    "description": "Erstellen und verwalten Sie die Teams, die im Projekt zusammenarbeiten. Personen werden über Teams eingeladen.",
     "create": "Neues Team",
-    "emptyTitle": "Noch keine Teams",
-    "archive": "Archivieren",
-    "archiveConfirmTitle": "Dieses Team archivieren?",
     "cancel": "Abbrechen",
-    "columns": { "name": "Name", "actions": "Aktionen" },
-    "form": {
-      "createTitle": "Neues Team",
-      "editTitle": "Team bearbeiten",
-      "name": "Name",
-      "description": "Beschreibung",
-      "cancel": "Abbrechen",
-      "create": "Erstellen",
-      "save": "Speichern",
-      "created": "Team erstellt.",
-      "updated": "Team aktualisiert."
+    "emptyTitle": "Noch keine Teams",
+    "emptyDescription": "Erstellen Sie Ihr erstes Team. Personen werden über Teams eingeladen.",
+    "emptyViewerDescription": "In diesem Projekt wurde noch kein Team erstellt.",
+    "view": {
+      "label": "Ansicht",
+      "list": "Liste",
+      "chart": "Schema"
     },
-    "members": {
-      "title": "Mitglieder von {name}",
-      "searchPlaceholder": "Projektmitglieder durchsuchen",
-      "emptyTitle": "Noch keine Mitglieder in diesem Team",
-      "remove": "Entfernen"
+    "card": {
+      "members": "Mitglieder",
+      "memberCount": "{count, plural, one {# Mitglied} other {# Mitglieder}}",
+      "noMembers": "Noch keine Mitglieder",
+      "lastUpdate": "Letzte Aktualisierung",
+      "updatedBy": "{date} · {name}",
+      "lastJoined": "Zuletzt beigetreten",
+      "joinedBy": "{name} · {when}",
+      "nobodyJoined": "Noch niemand beigetreten",
+      "noDescription": "Keine Beschreibung hinzugefügt",
+      "namePlaceholder": "Teamname",
+      "parent": "Übergeordnetes Team: {name}",
+      "open": "Team öffnen",
+      "openNamed": "Team {name} öffnen",
+      "edit": "Bearbeiten",
+      "editNamed": "Team {name} bearbeiten"
+    },
+    "archive": {
+      "label": "Team {name} archivieren",
+      "button": "Archivieren",
+      "title": "{name} archivieren?",
+      "description": "Ein archiviertes Team verschwindet aus der Liste und seine offenen Einladungen werden storniert. Mitglieder bleiben im Projekt.",
+      "done": "Team archiviert.",
+      "orphan": "Dieses Team kann nicht archiviert werden, weil diese Personen kein anderes Team haben: {names}. Fügen Sie sie zuerst einem anderen Team hinzu."
+    },
+    "chart": {
+      "label": "Organigramm der Teams",
+      "openTeam": "Team {name} öffnen",
+      "members": "{count, plural, one {# Mitglied} other {# Mitglieder}}"
+    },
+    "form": {
+      "title": "Neues Team",
+      "editTitle": "Team bearbeiten",
+      "description": "Legen Sie die Identität des Teams fest. Die Karte rechts zeigt, wie es in der Liste aussehen wird.",
+      "editDescription": "Aktualisieren Sie Name, Beschreibung und übergeordnetes Team.",
+      "back": "Zurück zu den Teams",
+      "cancel": "Abbrechen",
+      "submit": "Team erstellen",
+      "save": "Änderungen speichern",
+      "created": "Team erstellt.",
+      "saved": "Team aktualisiert.",
+      "optional": "Optional",
+      "counter": "{count}/{max}",
+      "sections": {
+        "identity": {
+          "title": "Identität",
+          "description": "Name und Beschreibung erscheinen oben auf der Karte. Das Logo stammt vom Projekt."
+        },
+        "placement": {
+          "title": "Position",
+          "description": "Wählen Sie, wo das Team im Organigramm steht."
+        },
+        "membership": {
+          "title": "Mitgliedschaft",
+          "description": "Wählen Sie, ob Sie sich selbst zum Team hinzufügen."
+        }
+      },
+      "name": {
+        "label": "Teamname",
+        "placeholder": "z. B. Backend-Team"
+      },
+      "descriptionField": {
+        "label": "Was macht dieses Team?",
+        "placeholder": "Beschreiben Sie kurz die Verantwortung des Teams"
+      },
+      "parent": {
+        "label": "Übergeordnetes Team",
+        "none": "Oberste Ebene",
+        "hint": "Das übergeordnete Team erscheint nur im Organigramm und auf der Karte; Mitgliedschaft und Rechte werden nicht vererbt."
+      },
+      "includeCreator": {
+        "label": "Mich ebenfalls zu diesem Team hinzufügen",
+        "hint": "Das Team bleibt leer, solange Sie niemanden hinzufügen.",
+        "locked": "Da dies das erste Team des Projekts ist, werden Sie hinzugefügt. Jedes Mitglied muss mindestens einem Team angehören."
+      },
+      "preview": {
+        "title": "Vorschau",
+        "caption": "So wird die Karte in der Liste aussehen.",
+        "now": "Gerade eben · Sie",
+        "joinedNow": "Gerade eben",
+        "show": "Vorschau anzeigen",
+        "you": "Sie"
+      }
+    },
+    "addMember": {
+      "button": "Mitglied hinzufügen",
+      "title": "Mitglied zum Team hinzufügen",
+      "description": "Suchen Sie die Person nach Namen. Ist sie nicht im Projekt, wird sie in dieses Team eingeladen.",
+      "team": "Team",
+      "teamPlaceholder": "Team auswählen",
+      "modeLabel": "Art des Hinzufügens",
+      "modeUser": "PDA-Nutzer",
+      "modeEmail": "Per E-Mail einladen",
+      "searchLabel": "Person suchen",
+      "searchPlaceholder": "Mindestens 2 Zeichen eingeben",
+      "pickTeamFirst": "Wählen Sie zuerst ein Team",
+      "noResults": "Kein passender Nutzer gefunden.",
+      "results": "Suchergebnisse",
+      "addNamed": "{name} zum Team hinzufügen",
+      "addAction": "Zum Team hinzufügen",
+      "inviteNamed": "{name} in das Team einladen",
+      "inviteAction": "Einladen",
+      "inTeam": "Im Team",
+      "alreadyInvited": "Einladung ausstehend",
+      "outsideProject": "{name} ist nicht im Projekt. Mit der Annahme tritt die Person dem Projekt und diesem Team gleichzeitig bei.",
+      "added": "Person zum Team hinzugefügt.",
+      "cancel": "Abbrechen"
+    },
+    "detail": {
+      "backToTeams": "Zurück zu den Teams",
+      "retry": "Erneut versuchen",
+      "breadcrumb": "Brotkrumen",
+      "teams": "Teams",
+      "noDescription": "Für dieses Team wurde keine Beschreibung hinzugefügt.",
+      "meta": {
+        "members": "{count, plural, one {# Mitglied} other {# Mitglieder}}",
+        "parent": "Übergeordnetes Team:",
+        "updated": "Zuletzt aktualisiert {date} · {name}",
+        "lastJoined": "Zuletzt beigetreten {name}, {when}"
+      },
+      "editTeam": "Team bearbeiten",
+      "editMode": {
+        "title": "Bearbeitungsmodus",
+        "hint": "Rollen gelten projektweit.",
+        "editInfo": "Teamdetails bearbeiten",
+        "done": "Fertig"
+      },
+      "searchLabel": "Mitglieder durchsuchen",
+      "searchPlaceholder": "Nach Name oder E-Mail suchen",
+      "roleFilter": "Rolle",
+      "sort": {
+        "label": "Sortierung",
+        "joined_desc": "Beitritt: neueste zuerst",
+        "joined_asc": "Beitritt: älteste zuerst",
+        "name": "Name: A-Z"
+      },
+      "clearFilters": "Filter zurücksetzen",
+      "emptyTitle": "Dieses Team hat noch keine Mitglieder",
+      "emptyDescription": "Fügen Sie jemanden aus dem Projekt hinzu oder laden Sie neue Personen ein.",
+      "emptyViewerDescription": "Diesem Team wurde noch niemand hinzugefügt.",
+      "noMatchesTitle": "Keine passenden Mitglieder",
+      "noMatchesDescription": "Versuchen Sie, die Suche oder den Rollenfilter zu ändern.",
+      "founder": "Gründer",
+      "you": "(Sie)",
+      "noOtherTeams": "Kein anderes Team",
+      "moreTeams": "+{count}",
+      "listLabel": "Teammitglieder",
+      "columns": {
+        "member": "Mitglied",
+        "roles": "Projektrollen",
+        "otherTeams": "Weitere Teams",
+        "joined": "Teambeitritt",
+        "actions": "Aktionen"
+      },
+      "actions": {
+        "editRoles": "Rollen von {name} bearbeiten",
+        "editRolesHint": "Rollen bearbeiten (projektweit)",
+        "lastTeam": "Diese Person hat kein anderes Team. Sie aus dem Team zu entfernen bedeutet, sie aus dem Projekt zu entfernen.",
+        "removeFromTeam": "{name} aus dem Team entfernen",
+        "removeFromTeamShort": "Aus Team entfernen",
+        "removeFromTeamTitle": "{name} aus dem Team entfernen?",
+        "removeFromTeamDescription": "Die Person bleibt im Projekt und behält Zugriff auf ihre anderen Teams. Sie wird nur aus {team} entfernt.",
+        "removedFromTeam": "Person aus dem Team entfernt.",
+        "founderLocked": "Der Gründer des Projekts kann nicht aus dem Projekt entfernt werden.",
+        "removeFromProject": "{name} aus dem Projekt entfernen",
+        "removeFromProjectShort": "Aus Projekt entfernen",
+        "removeFromProjectTitle": "{name} aus dem Projekt entfernen?",
+        "removeFromProjectDescription": "{name} wird aus dem Projekt und diesen Teams entfernt: {teams}. Zum erneuten Beitritt ist eine neue Einladung nötig.",
+        "removedFromProject": "Person aus dem Projekt entfernt."
+      }
     }
   },
   "oauth": {

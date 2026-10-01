@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { ArrowRight, CalendarBlank } from "@phosphor-icons/react";
 import { EntityCard, EntityCardFooter, EntityCardLink, EntityCardSection, EntityStatusPill } from "@/components/common/entity-card";
-import { Avatar } from "@/components/ui/avatar";
+import { AvatarStack } from "@/components/common/avatar-stack";
 import { buttonVariants } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -25,7 +25,6 @@ import { ProjectTypeBadge } from "./project-type";
 import { TechLogo, toTechLabels } from "./tech-logo";
 
 const MAX_TECH_LOGOS = 6;
-const MAX_AVATARS = 5;
 
 export type ProjectCardData = Pick<
   Project,
@@ -97,8 +96,6 @@ export function ProjectCard({ project, preview }: { project: ProjectCardData; pr
   const date = new Intl.DateTimeFormat(locale, { dateStyle: "medium" });
   const tech = parseTechStack(project.techStack);
   const team = project.team;
-  const members = team?.preview.slice(0, MAX_AVATARS) ?? [];
-  const extra = team ? Math.max(team.memberCount - members.length, 0) : 0;
   const when = preview?.updatedLabel ?? date.format(new Date(project.updatedAt));
   const updated = project.updatedBy ? t("card.updatedBy", { date: when, name: project.updatedBy.nickname }) : when;
 
@@ -133,16 +130,7 @@ export function ProjectCard({ project, preview }: { project: ProjectCardData; pr
       {team && (
         <EntityCardSection label={t("card.team")}>
           <div className="flex items-center gap-3">
-            <div className="flex -space-x-2" aria-hidden="true">
-              {members.map((member) => (
-                <Avatar key={member.userId} name={member.nickname} className="bg-muted text-foreground" />
-              ))}
-              {extra > 0 && (
-                <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-medium text-muted-foreground ring-2 ring-card">
-                  +{extra}
-                </span>
-              )}
-            </div>
+            <AvatarStack people={team.preview} total={team.memberCount} />
             <span className="text-sm text-muted-foreground">{t("card.members", { count: team.memberCount })}</span>
           </div>
         </EntityCardSection>

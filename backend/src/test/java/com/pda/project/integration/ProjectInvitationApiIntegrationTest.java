@@ -3,6 +3,7 @@ package com.pda.project.integration;
 import com.jayway.jsonpath.JsonPath;
 import com.pda.BackendApplication;
 import com.pda.project.application.service.ProjectMembershipService;
+import com.pda.squad.application.service.SquadService;
 import com.pda.user.ProjectRole;
 import com.pda.user.UserAccounts;
 import jakarta.servlet.http.Cookie;
@@ -22,6 +23,8 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 
 import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -59,6 +62,9 @@ class ProjectInvitationApiIntegrationTest {
     @Autowired MockMvc mvc;
     @Autowired UserAccounts users;
     @Autowired ProjectMembershipService memberships;
+    @Autowired SquadService squads;
+
+    private final Map<UUID, UUID> teamByProject = new HashMap<>();
 
     @Test
     void externalInvitationRegistrationRequiresMatchingIdentityAndConsumesToken() throws Exception {
@@ -69,10 +75,16 @@ class ProjectInvitationApiIntegrationTest {
         var created = mvc.perform(post("/api/v1/projects/" + projectId + "/invitations")
                         .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\":\"" + email + "\",\"firstName\":\"İrem\",\"lastName\":\"Öz\","
+                        .content("{\"teamId\":\"" + team(projectId) + "\",\"email\":\"" + email + "\",\"firstName\":\"İrem\",\"lastName\":\"Öz\","
                                 + "\"roles\":[\"TESTER\"],\"message\":\"Join us\"}"))
                 .andExpect(status().isCreated()).andReturn().getResponse();
         String token = JsonPath.read(created.getContentAsString(), "$.token");
+
+        // An e-mail invitation has no target account yet; the manager history must still list it with its team.
+        mvc.perform(get("/api/v1/projects/" + projectId + "/invitations/all?status=PENDING").cookie(manager.access()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].teamName").isNotEmpty());
 
         mvc.perform(post("/api/v1/project-invitations/external/preview")
                         .cookie(csrf).header("X-XSRF-TOKEN", csrf.getValue())
@@ -115,7 +127,7 @@ class ProjectInvitationApiIntegrationTest {
         var created = mvc.perform(post("/api/v1/projects/" + projectId + "/invitations")
                         .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"userId\":\"" + target.id() + "\",\"roles\":[\"TESTER\"]}"))
+                        .content("{\"userId\":\"" + target.id() + "\",\"teamId\":\"" + team(projectId) + "\",\"roles\":[\"TESTER\"]}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.token").isNotEmpty())
                 .andReturn().getResponse();
@@ -162,16 +174,16 @@ class ProjectInvitationApiIntegrationTest {
 
         mvc.perform(post("/api/v1/projects/" + projectId + "/invitations")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"userId\":\"" + target.id() + "\",\"roles\":[\"TESTER\"]}"))
+                        .content("{\"userId\":\"" + target.id() + "\",\"teamId\":\"" + team(projectId) + "\",\"roles\":[\"TESTER\"]}"))
                 .andExpect(status().isForbidden());
         mvc.perform(post("/api/v1/projects/" + projectId + "/invitations")
                         .cookie(csrf, moderator.access()).header("X-XSRF-TOKEN", csrf.getValue())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"userId\":\"" + target.id() + "\",\"roles\":[\"TESTER\"]}"))
+                        .content("{\"userId\":\"" + target.id() + "\",\"teamId\":\"" + team(projectId) + "\",\"roles\":[\"TESTER\"]}"))
                 .andExpect(status().isForbidden());
         mvc.perform(post("/api/v1/projects/" + projectId + "/invitations")
                         .cookie(manager.access()).contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"userId\":\"" + target.id() + "\",\"roles\":[\"TESTER\"]}"))
+                        .content("{\"userId\":\"" + target.id() + "\",\"teamId\":\"" + team(projectId) + "\",\"roles\":[\"TESTER\"]}"))
                 .andExpect(status().isForbidden());
         // Neither userId nor email set.
         mvc.perform(post("/api/v1/projects/" + projectId + "/invitations")
@@ -182,7 +194,7 @@ class ProjectInvitationApiIntegrationTest {
         var created = mvc.perform(post("/api/v1/projects/" + projectId + "/invitations")
                         .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"userId\":\"" + target.id() + "\",\"roles\":[\"TESTER\"]}"))
+                        .content("{\"userId\":\"" + target.id() + "\",\"teamId\":\"" + team(projectId) + "\",\"roles\":[\"TESTER\"]}"))
                 .andExpect(status().isCreated()).andReturn().getResponse();
         UUID invitationId = UUID.fromString(JsonPath.read(created.getContentAsString(), "$.invitationId"));
         String firstToken = JsonPath.read(created.getContentAsString(), "$.token");
@@ -191,7 +203,7 @@ class ProjectInvitationApiIntegrationTest {
         mvc.perform(post("/api/v1/projects/" + projectId + "/invitations")
                         .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"userId\":\"" + target.id() + "\",\"roles\":[\"ANALYST\"]}"))
+                        .content("{\"userId\":\"" + target.id() + "\",\"teamId\":\"" + team(projectId) + "\",\"roles\":[\"ANALYST\"]}"))
                 .andExpect(status().isConflict());
 
         mvc.perform(post("/api/v1/projects/" + projectId + "/invitations/" + invitationId + "/resend")
@@ -235,7 +247,7 @@ class ProjectInvitationApiIntegrationTest {
         var created = mvc.perform(post("/api/v1/projects/" + projectId + "/invitations")
                         .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"userId\":\"" + target.id() + "\",\"roles\":[\"TESTER\"]}"))
+                        .content("{\"userId\":\"" + target.id() + "\",\"teamId\":\"" + team(projectId) + "\",\"roles\":[\"TESTER\"]}"))
                 .andExpect(status().isCreated()).andReturn().getResponse();
         UUID invitationId = UUID.fromString(JsonPath.read(created.getContentAsString(), "$.invitationId"));
         String token = JsonPath.read(created.getContentAsString(), "$.token");
@@ -258,7 +270,7 @@ class ProjectInvitationApiIntegrationTest {
         var emailInvite = mvc.perform(post("/api/v1/projects/" + projectId + "/invitations")
                         .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"userId\":\"" + claimant.id() + "\",\"roles\":[\"ANALYST\"]}"))
+                        .content("{\"userId\":\"" + claimant.id() + "\",\"teamId\":\"" + team(projectId) + "\",\"roles\":[\"ANALYST\"]}"))
                 .andExpect(status().isCreated()).andReturn().getResponse();
         UUID emailInvitationId = UUID.fromString(JsonPath.read(emailInvite.getContentAsString(), "$.invitationId"));
         String emailToken = JsonPath.read(emailInvite.getContentAsString(), "$.token");
@@ -285,7 +297,7 @@ class ProjectInvitationApiIntegrationTest {
         var created = mvc.perform(post("/api/v1/projects/" + projectId + "/invitations")
                         .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"userId\":\"" + recipient.id() + "\",\"roles\":[\"TESTER\"]}"))
+                        .content("{\"userId\":\"" + recipient.id() + "\",\"teamId\":\"" + team(projectId) + "\",\"roles\":[\"TESTER\"]}"))
                 .andExpect(status().isCreated()).andReturn().getResponse();
         UUID invitationId = UUID.fromString(JsonPath.read(created.getContentAsString(), "$.invitationId"));
 
@@ -318,7 +330,7 @@ class ProjectInvitationApiIntegrationTest {
         var created = mvc.perform(post("/api/v1/projects/" + projectId + "/invitations")
                         .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"userId\":\"" + target.id() + "\",\"roles\":[\"TESTER\"]}"))
+                        .content("{\"userId\":\"" + target.id() + "\",\"teamId\":\"" + team(projectId) + "\",\"roles\":[\"TESTER\"]}"))
                 .andExpect(status().isCreated()).andReturn().getResponse();
         UUID invitationId = UUID.fromString(JsonPath.read(created.getContentAsString(), "$.invitationId"));
         String token = JsonPath.read(created.getContentAsString(), "$.token");
@@ -367,7 +379,13 @@ class ProjectInvitationApiIntegrationTest {
                         .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"" + name + "\"}"))
                 .andExpect(status().isCreated()).andReturn().getResponse();
-        return UUID.fromString(JsonPath.read(response.getContentAsString(), "$.id"));
+        UUID projectId = UUID.fromString(JsonPath.read(response.getContentAsString(), "$.id"));
+        teamByProject.put(projectId, squads.create(actor.id(), projectId, "Core", null, null, true).getId());
+        return projectId;
+    }
+
+    private UUID team(UUID projectId) {
+        return teamByProject.get(projectId);
     }
 
     private Account account(String prefix) throws Exception {

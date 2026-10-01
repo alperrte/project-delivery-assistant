@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import jakarta.persistence.LockModeType;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -35,4 +37,13 @@ public interface ProjectInvitationRepository extends JpaRepository<ProjectInvita
     Page<ProjectInvitation> findByInvitedUserId(UUID invitedUserId, Pageable pageable);
 
     Page<ProjectInvitation> findByProjectId(UUID projectId, Pageable pageable);
+
+    @Query("select i.invitedUserId from ProjectInvitation i where i.projectId = :projectId "
+            + "and i.status = com.pda.project.domain.enums.InvitationStatus.PENDING and i.invitedUserId in :userIds")
+    List<UUID> findPendingInviteeIds(UUID projectId, Collection<UUID> userIds);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select i from ProjectInvitation i where i.projectId = :projectId and i.teamId = :teamId "
+            + "and i.status = com.pda.project.domain.enums.InvitationStatus.PENDING")
+    List<ProjectInvitation> lockPendingForTeam(UUID projectId, UUID teamId);
 }

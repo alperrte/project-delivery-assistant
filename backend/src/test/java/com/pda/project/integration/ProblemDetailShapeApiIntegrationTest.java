@@ -3,6 +3,7 @@ package com.pda.project.integration;
 import com.jayway.jsonpath.JsonPath;
 import com.pda.BackendApplication;
 import com.pda.project.application.service.ProjectMembershipService;
+import com.pda.squad.application.service.SquadService;
 import com.pda.user.ProjectRole;
 import com.pda.user.UserAccounts;
 import jakarta.servlet.http.Cookie;
@@ -64,6 +65,7 @@ class ProblemDetailShapeApiIntegrationTest {
 
     @Autowired MockMvc mvc;
     @Autowired UserAccounts users;
+    @Autowired SquadService squads;
     @Autowired ProjectMembershipService memberships;
 
     @Test
@@ -120,11 +122,12 @@ class ProblemDetailShapeApiIntegrationTest {
         Account manager = account("pdinvmanager");
         Account target = account("pdinvtarget");
         UUID projectId = createProject(manager, csrf, "ProblemDetail invite project");
+        UUID teamId = squads.create(manager.id(), projectId, "Core", null, null, true).getId();
 
         // 400: neither userId nor email set.
         mvc.perform(post("/api/v1/projects/" + projectId + "/invitations")
                         .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
-                        .contentType(MediaType.APPLICATION_JSON).content("{\"roles\":[\"TESTER\"]}"))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"teamId\":\"" + teamId + "\",\"roles\":[\"TESTER\"]}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.detail").value("Invalid request"));
@@ -132,7 +135,7 @@ class ProblemDetailShapeApiIntegrationTest {
         var created = mvc.perform(post("/api/v1/projects/" + projectId + "/invitations")
                         .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"userId\":\"" + target.id() + "\",\"roles\":[\"TESTER\"]}"))
+                        .content("{\"userId\":\"" + target.id() + "\",\"teamId\":\"" + teamId + "\",\"roles\":[\"TESTER\"]}"))
                 .andExpect(status().isCreated()).andReturn().getResponse();
         UUID invitationId = UUID.fromString(JsonPath.read(created.getContentAsString(), "$.invitationId"));
 
@@ -154,7 +157,7 @@ class ProblemDetailShapeApiIntegrationTest {
         mvc.perform(post("/api/v1/projects/" + projectId + "/invitations")
                         .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"userId\":\"" + target.id() + "\",\"roles\":[\"ANALYST\"]}"))
+                        .content("{\"userId\":\"" + target.id() + "\",\"teamId\":\"" + teamId + "\",\"roles\":[\"ANALYST\"]}"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.status").value(409))
                 .andExpect(jsonPath("$.detail").value("Invitation conflicts with existing project rules"));

@@ -5,6 +5,8 @@ export class ApiError extends Error {
     public readonly status: number,
     public readonly code?: string,
     public readonly invalidFields?: Record<string, string>,
+    /** The whole ProblemDetail body, for errors that carry extra properties (e.g. `members`). */
+    public readonly body?: Record<string, unknown>,
   ) {
     super(code ?? `http_${status}`);
     this.name = "ApiError";
@@ -37,7 +39,7 @@ async function ensureCsrf(force = false): Promise<{ headerName: string; token: s
 }
 
 async function toApiError(res: Response): Promise<ApiError> {
-  let body: { code?: string; invalidFields?: Record<string, string> | { field: string; message: string }[] } = {};
+  let body: { code?: string; invalidFields?: Record<string, string> | { field: string; message: string }[] } & Record<string, unknown> = {};
   try {
     body = await res.json();
   } catch {
@@ -49,7 +51,7 @@ async function toApiError(res: Response): Promise<ApiError> {
   } else if (body.invalidFields) {
     fields = body.invalidFields;
   }
-  return new ApiError(res.status, body.code, fields);
+  return new ApiError(res.status, body.code, fields, body);
 }
 
 async function send(path: string, init: RequestInit, method: string): Promise<Response> {

@@ -63,7 +63,7 @@ public class SquadController {
     @Operation(summary = "Get an active squad", description = "Project members only.")
     public SquadResponse detail(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
                                @PathVariable UUID projectId, @PathVariable UUID squadId) {
-        return SquadResponse.from(squads.detail(actorId(principal), projectId, squadId));
+        return SquadResponse.from(squads.detail(actorId(principal), projectId, squadId).team());
     }
 
     @PutMapping("/{squadId}")
@@ -72,7 +72,7 @@ public class SquadController {
                                @PathVariable UUID projectId, @PathVariable UUID squadId,
                                @Valid @RequestBody UpdateSquadRequest request) {
         return SquadResponse.from(squads.update(actorId(principal), projectId, squadId, request.name(),
-                request.description()));
+                request.description()).team());
     }
 
     @PostMapping("/{squadId}/archive")

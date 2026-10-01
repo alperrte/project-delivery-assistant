@@ -12,24 +12,11 @@ import java.util.UUID;
 public record InvitationResponse(UUID id, UUID projectId, UUID invitedUserId, String email, UUID invitedBy,
                                  Set<ProjectRole> initialRoles, InvitationStatus status, Instant createdAt,
                                  Instant expiresAt, String rejectionMessage, String firstName, String lastName,
-                                 String message, String nickname) {
-    public InvitationResponse(UUID id, UUID projectId, UUID invitedUserId, String email, UUID invitedBy,
-                              Set<ProjectRole> initialRoles, InvitationStatus status, Instant createdAt,
-                              Instant expiresAt, String rejectionMessage, String firstName, String lastName,
-                              String message) {
-        this(id, projectId, invitedUserId, email, invitedBy, initialRoles, status, createdAt,
-                expiresAt, rejectionMessage, firstName, lastName, message, null);
-    }
-    public InvitationResponse(UUID id, UUID projectId, UUID invitedUserId, String email, UUID invitedBy,
-                              Set<ProjectRole> initialRoles, InvitationStatus status, Instant createdAt,
-                              Instant expiresAt, String rejectionMessage) {
-        this(id, projectId, invitedUserId, email, invitedBy, initialRoles, status, createdAt,
-                expiresAt, rejectionMessage, null, null, null, null);
-    }
+                                 String message, String nickname, UUID teamId, String teamName) {
     public static InvitationResponse from(InvitationSummary summary) {
         return new InvitationResponse(summary.id(), summary.projectId(), summary.invitedUserId(), summary.email(),
                 summary.invitedBy(), summary.initialRoles(), summary.status(), summary.createdAt(),
                 summary.expiresAt(), summary.rejectionMessage(), summary.firstName(), summary.lastName(),
-                summary.message(), summary.nickname());
+                summary.message(), summary.nickname(), summary.teamId(), summary.teamName());
     }
 }

@@ -1,8 +1,8 @@
 import { test, expect, type Page } from "@playwright/test";
-import { createProject, uniqueUser } from "./helpers";
+import { createProject, createTeam, uniqueUser } from "./helpers";
 import { MANAGER_STORAGE } from "./global-setup";
 
-test("external invitation registers an account and joins General Team with invited role", async ({ browser }) => {
+test("external invitation registers an account and joins the invited team with the invited role", async ({ browser }) => {
   const managerContext = await browser.newContext({ storageState: MANAGER_STORAGE });
   const inviteeContext = await browser.newContext();
   const manager: Page = await managerContext.newPage();
@@ -12,10 +12,10 @@ test("external invitation registers an account and joins General Team with invit
 
   try {
     const slug = await createProject(manager, projectName);
-    await manager.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Ekipler" }).click();
-    await manager.getByRole("button", { name: /^Üye davet et$/ }).click();
+    const teamId = await createTeam(manager, slug, "Backend");
+    await manager.getByRole("button", { name: /^Üye ekle$/ }).first().click();
     const dialog = manager.getByRole("dialog");
-    await dialog.getByRole("button", { name: "Yeni PDA kullanıcısı" }).click();
+    await dialog.getByRole("tab", { name: "E-posta ile davet" }).click();
     await dialog.getByLabel("Ad", { exact: true }).fill("Çağrı");
     await dialog.getByLabel("Soyad").fill("Şahin");
     await dialog.getByLabel("E-posta").fill(user.email);
@@ -38,8 +38,7 @@ test("external invitation registers an account and joins General Team with invit
     await invitee.getByRole("button", { name: "Kayıt ol ve projeye katıl" }).click();
     await expect(invitee).toHaveURL(new RegExp(`/projects/${slug}$`), { timeout: 20_000 });
 
-    await manager.goto(`/projects/${slug}?section=teams`);
-    await manager.getByRole("link", { name: /General Team üyeleri/ }).click();
+    await manager.goto(`/projects/${slug}/teams/${teamId}`);
     await expect(manager.getByRole("row", { name: new RegExp(user.nickname) })).toBeVisible();
     await expect(manager.getByRole("row", { name: new RegExp(user.nickname) }).getByText("Test Uzmanı")).toBeVisible();
   } finally {

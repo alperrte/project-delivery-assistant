@@ -1,5 +1,7 @@
 # PDA Project Service — Teams, Membership & Invitations Refactor
 
+> **Yerini aldı (2026-10-01):** General Team kaldırıldı. Kimse ekipsiz kalmaz, davetler ekip üzerinden gider ve Ekipler sayfası yeniden tasarlandı. Güncel sözleşme için `SECURITY.md` §11, `api.md` ve `docs/compliation/2026-10-01-ekipler-sayfasi.md` dosyalarına bak.
+
 PDA (**Project Delivery Assistant**) projesinde `project-service` backendine geri dönüyoruz.
 
 Mevcut Project Service implementasyonunu önce detaylı şekilde incele. Özellikle:

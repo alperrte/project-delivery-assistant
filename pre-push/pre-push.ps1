@@ -119,7 +119,8 @@ Get-Content ".env" | ForEach-Object {
 # ------------------------------------------------------------
 
 Run-Step "Git whitespace / conflict check" {
-    git diff --check
+    # Satir sonu (LF/CRLF) uyarilari bu adimi bozmasin; yalnizca bosluk ve conflict hatalari denetlenir.
+    git -c core.safecrlf=false diff --check
 }
 
 $trackedEnv = git ls-files .env

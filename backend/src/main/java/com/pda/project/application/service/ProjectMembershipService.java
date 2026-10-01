@@ -1,5 +1,6 @@
 package com.pda.project.application.service;
 
+import com.pda.project.domain.entity.Project;
 import com.pda.project.domain.entity.ProjectMembership;
 import com.pda.project.ProjectMemberRemovedEvent;
 import com.pda.project.ProjectMembershipEvents;
@@ -99,13 +100,14 @@ public class ProjectMembershipService {
 
     @Transactional
     public MemberSummary replaceRoles(UUID actorId, UUID projectId, UUID userId, Set<ProjectRole> roles) {
-        lockForManager(actorId, projectId);
+        Project project = lockForManager(actorId, projectId);
         ProjectMembership member = activeMember(projectId, userId);
         Set<ProjectRole> before = member.getRoles();
         if (roles == null || roles.isEmpty()) {
             throw new IllegalArgumentException("at least one role is required");
         }
         if (member.hasRole(ProjectRole.PROJECT_MANAGER) && !roles.contains(ProjectRole.PROJECT_MANAGER)) {
+            requireNotOwner(project, userId);
             requireAnotherManager(projectId);
         }
         member.replaceRoles(roles);
@@ -117,9 +119,10 @@ public class ProjectMembershipService {
 
     @Transactional
     public MemberSummary removeRole(UUID actorId, UUID projectId, UUID userId, ProjectRole role) {
-        lockForManager(actorId, projectId);
+        Project project = lockForManager(actorId, projectId);
         ProjectMembership member = activeMember(projectId, userId);
         if (role == ProjectRole.PROJECT_MANAGER && member.hasRole(role)) {
+            requireNotOwner(project, userId);
             requireAnotherManager(projectId);
         }
         member.removeRole(role);
@@ -130,8 +133,9 @@ public class ProjectMembershipService {
 
     @Transactional
     public void removeMember(UUID actorId, UUID projectId, UUID userId) {
-        lockForManager(actorId, projectId);
+        Project project = lockForManager(actorId, projectId);
         ProjectMembership member = activeMember(projectId, userId);
+        requireNotOwner(project, userId);
         if (member.hasRole(ProjectRole.PROJECT_MANAGER)) {
             requireAnotherManager(projectId);
         }
@@ -143,15 +147,26 @@ public class ProjectMembershipService {
 
     private void requireAnotherManager(UUID projectId) {
         if (memberships.countWithRole(projectId, MembershipStatus.ACTIVE, ProjectRole.PROJECT_MANAGER) <= 1) {
-            throw new MembershipConflictException("The last Project Manager must remain assigned");
+            throw new MembershipConflictException("The last Project Manager must remain assigned",
+                    MembershipConflictException.LAST_PROJECT_MANAGER);
         }
     }
 
-    private void lockForManager(UUID actorId, UUID projectId) {
+    /** The founder stays in the project and keeps the Project Manager role; teams stay free. */
+    private static void requireNotOwner(Project project, UUID userId) {
+        if (userId.equals(project.getCreatedBy())) {
+            throw new MembershipConflictException("The project founder cannot be removed",
+                    MembershipConflictException.OWNER_PROTECTED);
+        }
+    }
+
+    private Project lockForManager(UUID actorId, UUID projectId) {
         requireManager(actorId, projectId);
         Objects.requireNonNull(projectId, "projectId is required");
-        projects.lockActive(projectId).orElseThrow(() -> new NoSuchElementException("Project not found"));
+        Project project = projects.lockActive(projectId)
+                .orElseThrow(() -> new NoSuchElementException("Project not found"));
         requireManager(actorId, projectId);
+        return project;
     }
 
     private void activeProject(UUID projectId) {

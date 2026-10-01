@@ -70,11 +70,11 @@ public class SmtpProjectInvitationMailAdapter implements ProjectInvitationMailPo
 
     @Override
     public void sendInvitation(String recipientEmail, String projectName, String invitationLink) {
-        sendInvitation(recipientEmail, projectName, "PDA", Set.of(), null, null, invitationLink);
+        sendInvitation(recipientEmail, projectName, null, "PDA", Set.of(), null, null, invitationLink);
     }
 
     @Override
-    public void sendInvitation(String recipientEmail, String projectName, String inviterName,
+    public void sendInvitation(String recipientEmail, String projectName, String teamName, String inviterName,
             Set<ProjectRole> roles, String personalMessage, Instant expiresAt, String invitationLink) {
         if (sender == null) {
             return;
@@ -84,6 +84,7 @@ public class SmtpProjectInvitationMailAdapter implements ProjectInvitationMailPo
         message.setTo(recipientEmail);
         message.setSubject("You're invited to join " + projectName + " on PDA");
         message.setText(inviterName + " invited you to join the project \"" + projectName + "\" on PDA.\n"
+                + (teamName == null ? "" : "Team: " + teamName + "\n")
                 + "Roles: " + roles + "\n"
                 + (personalMessage == null ? "" : "Message: " + personalMessage + "\n")
                 + (expiresAt == null ? "" : "Invitation expires: " + expiresAt + "\n")

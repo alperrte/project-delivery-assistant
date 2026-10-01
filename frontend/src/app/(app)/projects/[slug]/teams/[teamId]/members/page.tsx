@@ -1,10 +1,7 @@
-import { TeamMembersPage } from "@/features/squads/components/team-members-page";
+import { redirect } from "next/navigation";
 
-export default async function ProjectTeamMembersRoute({
-  params,
-}: {
-  params: Promise<{ slug: string; teamId: string }>;
-}) {
+// The member list moved onto the team page itself; this keeps old links and bookmarks working.
+export default async function LegacyTeamMembersRoute({ params }: { params: Promise<{ slug: string; teamId: string }> }) {
   const { slug, teamId } = await params;
-  return <TeamMembersPage slug={slug} teamId={teamId} />;
+  redirect(`/projects/${slug}/teams/${teamId}`);
 }

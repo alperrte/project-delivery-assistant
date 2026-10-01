@@ -44,7 +44,14 @@
     "accountUnavailable": "Hesabınız şu anda kullanılamıyor.",
     "PROJECT_LOGO_INVALID_TYPE": "Logo PNG, JPEG veya WebP olmalıdır.",
     "PROJECT_LOGO_TOO_LARGE": "Logo en fazla 512 KB olabilir.",
-    "PROJECT_LOGO_EMPTY": "Logo dosyası boş."
+    "PROJECT_LOGO_EMPTY": "Logo dosyası boş.",
+    "TEAM_MEMBER_EXISTS": "Bu kişi zaten ekipte.",
+    "TEAM_CIRCULAR_PARENT": "Bir ekip kendi alt ekibinin altına taşınamaz.",
+    "TEAM_HAS_CHILDREN": "Alt ekibi olan bir ekip arşivlenemez. Önce alt ekipleri taşıyın veya arşivleyin.",
+    "TEAM_LAST_MEMBERSHIP": "Bu kişinin başka ekibi yok. Ekipten çıkarmak yerine projeden çıkarın.",
+    "TEAM_ARCHIVE_WOULD_ORPHAN": "Bu ekip arşivlenirse bazı kişiler ekipsiz kalır.",
+    "PROJECT_OWNER_PROTECTED": "Projenin kurucusu projeden çıkarılamaz ve Proje Yöneticisi rolü alınamaz.",
+    "LAST_PROJECT_MANAGER": "Projede en az bir Proje Yöneticisi kalmalıdır."
   },
   "app": {
     "nav": {
@@ -68,14 +75,20 @@
     "ANALYST": "Analist"
   },
   "organizations": {
-    "card": { "lastUpdate": "Son güncelleme", "openNamed": "{name} organizasyonunu aç" },
+    "card": {
+      "lastUpdate": "Son güncelleme",
+      "openNamed": "{name} organizasyonunu aç"
+    },
     "cardLabel": "ORGANİZASYON",
     "cardNoDescription": "Henüz açıklama eklenmedi.",
     "cardOpen": "Çalışma alanını aç",
     "cardCreated": "Oluşturulma: {date}",
     "backToOrganizations": "Tüm organizasyonlar",
     "projectsLabel": "Çalışma alanı",
-    "statusValues": { "ACTIVE": "Aktif", "ARCHIVED": "Arşivlendi" },
+    "statusValues": {
+      "ACTIVE": "Aktif",
+      "ARCHIVED": "Arşivlendi"
+    },
     "title": "Organizasyonlar",
     "description": "Projelerinizi bir organizasyon altında gruplayın veya bağımsız tutun.",
     "create": "Yeni organizasyon",
@@ -89,7 +102,11 @@
     "noProjects": "Bu organizasyonun henüz projesi yok.",
     "emptyTitle": "Henüz organizasyon yok",
     "emptyDescription": "İlişkili projeleri bir arada tutmak için bir tane oluşturun.",
-    "columns": { "name": "Ad", "status": "Durum", "updatedAt": "Güncelleme" },
+    "columns": {
+      "name": "Ad",
+      "status": "Durum",
+      "updatedAt": "Güncelleme"
+    },
     "form": {
       "createTitle": "Yeni organizasyon",
       "editTitle": "Organizasyonu düzenle",
@@ -129,7 +146,13 @@
     "create": "Yeni proje",
     "emptyTitle": "Henüz proje yok",
     "emptyDescription": "Başlamak için ilk projenizi oluşturun.",
-    "columns": { "name": "Ad", "status": "Durum", "priority": "Öncelik", "techStack": "Teknoloji", "updatedAt": "Güncelleme" },
+    "columns": {
+      "name": "Ad",
+      "status": "Durum",
+      "priority": "Öncelik",
+      "techStack": "Teknoloji",
+      "updatedAt": "Güncelleme"
+    },
     "emptyAction": "İlk projenizi oluşturun",
     "newPage": {
       "title": "Yeni proje",
@@ -256,7 +279,8 @@
         "squads": "Ekipler",
         "repository": "Depo",
         "settings": "Ayarlar"
-      }
+      },
+      "pendingInvitations": "{count} bekleyen davet"
     },
     "overview": {
       "recentCriteriaActivity": "Son kriter hareketleri",
@@ -275,7 +299,6 @@
       "squads": "Ekipler",
       "viewSquads": "Ekipleri görüntüle",
       "invitations": "Davetler",
-      "allInvitations": "Toplam davet",
       "connected": "Bağlı",
       "criteriaSnapshot": "Kriter durumu",
       "viewAll": "Tümünü gör",
@@ -309,14 +332,20 @@
         "COMPLETED": "Tamamlandı",
         "ARCHIVED": "Arşivlendi"
       },
-      "priorityValues": { "LOW": "Düşük", "MEDIUM": "Orta", "HIGH": "Yüksek", "CRITICAL": "Kritik" },
+      "priorityValues": {
+        "LOW": "Düşük",
+        "MEDIUM": "Orta",
+        "HIGH": "Yüksek",
+        "CRITICAL": "Kritik"
+      },
       "teamMembers": "{count, plural, one {# üye} other {# üye}}",
       "managedBy": "Yönetici: {names}",
       "due": "Teslim: {date}",
       "criteriaProgress": "Başarı kriterleri",
       "repository": "Depo",
       "noRepository": "Bağlı depo yok",
-      "githubUnavailable": "GitHub geçici olarak erişilemez durumda"
+      "githubUnavailable": "GitHub geçici olarak erişilemez durumda",
+      "pendingInvitations": "Bekleyen davet"
     },
     "settings": {
       "title": "Proje ayarları",
@@ -329,9 +358,19 @@
       "name": "Ad",
       "description": "Açıklama",
       "status": "Durum",
-      "statusValues": { "PLANNING": "Planlama", "ACTIVE": "Aktif", "ON_HOLD": "Beklemede", "COMPLETED": "Tamamlandı" },
+      "statusValues": {
+        "PLANNING": "Planlama",
+        "ACTIVE": "Aktif",
+        "ON_HOLD": "Beklemede",
+        "COMPLETED": "Tamamlandı"
+      },
       "priority": "Öncelik",
-      "priorityValues": { "LOW": "Düşük", "MEDIUM": "Orta", "HIGH": "Yüksek", "CRITICAL": "Kritik" },
+      "priorityValues": {
+        "LOW": "Düşük",
+        "MEDIUM": "Orta",
+        "HIGH": "Yüksek",
+        "CRITICAL": "Kritik"
+      },
       "startDate": "Başlangıç tarihi",
       "targetEndDate": "Hedef bitiş tarihi",
       "organization": "Organizasyon",
@@ -354,17 +393,34 @@
       "taglinePlaceholder": "Projeyi tek cümleyle anlatın",
       "type": "Proje türü",
       "sections": {
-        "general": { "title": "Genel", "description": "Projenin adı, açıklaması ve hedefi. Liste ve proje başlığında görünür." },
-        "planning": { "title": "Planlama", "description": "Durum, öncelik ve tarihler. Organizasyon projeyi bir çalışma alanı altında gruplar." },
-        "technology": { "title": "Teknoloji", "description": "Kullanılan dil, çerçeve ve araçlar." },
-        "danger": { "title": "Tehlikeli bölge", "description": "Geri alınamayan işlemler." }
+        "general": {
+          "title": "Genel",
+          "description": "Projenin adı, açıklaması ve hedefi. Liste ve proje başlığında görünür."
+        },
+        "planning": {
+          "title": "Planlama",
+          "description": "Durum, öncelik ve tarihler. Organizasyon projeyi bir çalışma alanı altında gruplar."
+        },
+        "technology": {
+          "title": "Teknoloji",
+          "description": "Kullanılan dil, çerçeve ve araçlar."
+        },
+        "danger": {
+          "title": "Tehlikeli bölge",
+          "description": "Geri alınamayan işlemler."
+        }
       }
     }
   },
   "criteria": {
     "title": "Başarı kriterleri",
     "description": "Projenin başarı ölçütlerini ve tamamlanma durumunu yönetin.",
-    "filters": { "label": "Kriter filtresi", "all": "Tümü", "completed": "Tamamlanan", "remaining": "Devam eden" },
+    "filters": {
+      "label": "Kriter filtresi",
+      "all": "Tümü",
+      "completed": "Tamamlanan",
+      "remaining": "Devam eden"
+    },
     "search": "Kriter ara...",
     "noResults": "Aramanıza uygun kriter bulunamadı.",
     "create": "Yeni kriter",
@@ -413,11 +469,13 @@
     "description": "Bu projedeki kişileri, rollerini ve katılım tarihlerini görüntüleyin.",
     "emptyDescription": "Projeye katılan kişiler ve rolleri burada görünecek.",
     "emptyTitle": "Henüz üye yok",
-    "columns": { "member": "Üye", "roles": "Roller", "joinedAt": "Katılım tarihi", "actions": "İşlemler" },
+    "columns": {
+      "member": "Üye",
+      "roles": "Roller",
+      "joinedAt": "Katılım tarihi",
+      "actions": "İşlemler"
+    },
     "editRolesTitle": "Rolleri düzenle",
-    "remove": "Çıkar",
-    "removeConfirmTitle": "Bu üye çıkarılsın mı?",
-    "removeConfirmDescription": "Bu kişi projeye erişimini hemen kaybeder.",
     "cancel": "Vazgeç",
     "save": "Kaydet",
     "rolesUpdated": "Roller güncellendi."
@@ -443,13 +501,26 @@
     "rejectionMessage": "Reddetme nedeni (isteğe bağlı)",
     "acceptSuccess": "Davet kabul edildi.",
     "rejectSuccess": "Davet reddedildi.",
-    "statusValues": { "PENDING": "Bekliyor", "ACCEPTED": "Kabul edildi", "REJECTED": "Reddedildi", "CANCELLED": "İptal edildi", "EXPIRED": "Süresi doldu" },
+    "statusValues": {
+      "PENDING": "Bekliyor",
+      "ACCEPTED": "Kabul edildi",
+      "REJECTED": "Reddedildi",
+      "CANCELLED": "İptal edildi",
+      "EXPIRED": "Süresi doldu"
+    },
     "emptyDescription": "Ekibinizi büyütmek için bir proje üyesi davet edin.",
     "pendingTitle": "Proje davetleri",
     "description": "Gönderilen davetleri, rollerini ve durumlarını yönetin.",
     "invite": "Üye davet et",
     "emptyTitle": "Henüz davet yok",
-    "columns": { "target": "Davet edilen", "roles": "Roller", "sentAt": "Davet tarihi", "status": "Durum", "actions": "İşlemler" },
+    "columns": {
+      "target": "Davet edilen",
+      "roles": "Roller",
+      "sentAt": "Davet tarihi",
+      "status": "Durum",
+      "actions": "İşlemler",
+      "team": "Ekip"
+    },
     "resend": "Yeniden gönder",
     "resent": "Davet yeniden gönderildi.",
     "cancel": "İptal et",
@@ -471,67 +542,219 @@
       "acceptedMessage": "Projeye katıldınız.",
       "rejectedMessage": "Daveti reddettiniz.",
       "goToProjects": "Projelere git"
+    },
+    "pageTitle": "Proje davetleri",
+    "pageDescription": "Gönderilen davetleri, hedef ekiplerini ve durumlarını yönetin.",
+    "tabsLabel": "Davet durumu",
+    "listLabel": "Davetler",
+    "retry": "Tekrar dene",
+    "resendNamed": "{name} davetini yeniden gönder",
+    "cancelNamed": "{name} davetini iptal et",
+    "cancelTitle": "{name} daveti iptal edilsin mi?",
+    "cancelDescription": "Davet bağlantısı geçersiz olur. İsterseniz sonra yeniden davet edebilirsiniz.",
+    "noTeam": "Ekip yok",
+    "empty": {
+      "PENDING": {
+        "title": "Bekleyen davet yok",
+        "description": "Yeni bir davet gönderdiğinizde burada görünür."
+      },
+      "ACCEPTED": {
+        "title": "Kabul edilen davet yok",
+        "description": "Kabul edilen davetler burada listelenir."
+      },
+      "REJECTED": {
+        "title": "Reddedilen davet yok",
+        "description": "Reddedilen davetler ve nedenleri burada listelenir."
+      },
+      "CANCELLED": {
+        "title": "İptal edilen davet yok",
+        "description": "İptal edilen davetler burada listelenir."
+      }
     }
   },
   "squads": {
-    "card": { "members": "Üyeler", "lastUpdate": "Son güncelleme" },
-    "membersPage": {
-      "back": "Ekiplere dön",
-      "teams": "Ekipler",
-      "description": "Bu ekipteki üyeleri ve proje rollerini görüntüleyin ve yönetin.",
-      "memberCount": "{count} üye",
-      "member": "Üye",
-      "roles": "Proje rolleri",
-      "joinedAt": "Ekibe katılım",
-      "actions": "İşlemler",
-      "add": "Üye ekle",
-      "addTitle": "Ekibe proje üyesi ekle",
-      "addDescription": "Yalnızca projeye zaten katılmış kişiler bu ekibe eklenebilir.",
-      "addPerson": "{name} kişisini ekibe ekle",
-      "alreadyAdded": "Ekipte",
-      "added": "Üye ekibe eklendi.",
-      "noCandidates": "Bu sayfada proje üyesi yok.",
-      "emptyTitle": "Bu ekipte henüz üye yok",
-      "emptyCustom": "Proje üyelerinden birini bu ekibe ekleyerek başlayabilirsiniz.",
-      "emptyGeneral": "Projeye katılan üyeler burada görünür.",
-      "removeFromTeam": "Ekipten çıkar",
-      "removeFromTeamTitle": "Bu üye ekipten çıkarılsın mı?",
-      "removeFromTeamDescription": "Kişi projede kalır, yalnızca bu ekipten çıkarılır.",
-      "removedFromTeam": "Üye ekipten çıkarıldı.",
-      "removeFromProject": "Projeden çıkar",
-      "removeFromProjectTitle": "Bu üye projeden çıkarılsın mı?",
-      "removeFromProjectDescription": "Kişi projeye ve ekiplerine erişimini kaybeder.",
-      "removedFromProject": "Üye projeden çıkarıldı.",
-      "retry": "Tekrar dene"
-    },
-    "description": "Proje içinde birlikte çalışan ekipleri oluşturun ve yönetin.",
-    "noDescription": "Bu ekip için henüz açıklama eklenmedi.",
-    "manageMembers": "Üyeler",
-    "edit": "Düzenle",
-    "emptyDescription": "Proje üyelerini birlikte çalışacakları ekiplerde düzenleyin.",
     "title": "Ekipler",
+    "description": "Projede birlikte çalışan ekipleri oluşturun ve yönetin. Üyeler ekipler üzerinden davet edilir.",
     "create": "Yeni ekip",
-    "emptyTitle": "Henüz ekip yok",
-    "archive": "Arşivle",
-    "archiveConfirmTitle": "Bu ekip arşivlensin mi?",
     "cancel": "Vazgeç",
-    "columns": { "name": "Ad", "actions": "İşlemler" },
-    "form": {
-      "createTitle": "Yeni ekip",
-      "editTitle": "Ekibi düzenle",
-      "name": "Ad",
-      "description": "Açıklama",
-      "cancel": "Vazgeç",
-      "create": "Oluştur",
-      "save": "Kaydet",
-      "created": "Ekip oluşturuldu.",
-      "updated": "Ekip güncellendi."
+    "emptyTitle": "Henüz ekip yok",
+    "emptyDescription": "İlk ekibinizi oluşturun. Üyeler ekipler üzerinden davet edilir.",
+    "emptyViewerDescription": "Bu projede henüz ekip oluşturulmadı.",
+    "view": {
+      "label": "Görünüm",
+      "list": "Liste",
+      "chart": "Şema"
     },
-    "members": {
-      "title": "{name} üyeleri",
-      "searchPlaceholder": "Proje üyelerinde ara",
+    "card": {
+      "members": "Üyeler",
+      "memberCount": "{count} üye",
+      "noMembers": "Henüz üye yok",
+      "lastUpdate": "Son güncelleme",
+      "updatedBy": "{date} · {name}",
+      "lastJoined": "Son katılan",
+      "joinedBy": "{name} · {when}",
+      "nobodyJoined": "Henüz kimse katılmadı",
+      "noDescription": "Açıklama eklenmedi",
+      "namePlaceholder": "Ekip adı",
+      "parent": "Üst ekip: {name}",
+      "open": "Ekibi aç",
+      "openNamed": "{name} ekibini aç",
+      "edit": "Düzenle",
+      "editNamed": "{name} ekibini düzenle"
+    },
+    "archive": {
+      "label": "{name} ekibini arşivle",
+      "button": "Arşivle",
+      "title": "{name} arşivlensin mi?",
+      "description": "Arşivlenen ekip listeden kalkar ve bekleyen davetleri iptal edilir. Üyeler projede kalır.",
+      "done": "Ekip arşivlendi.",
+      "orphan": "Şu kişilerin başka ekibi olmadığı için arşivlenemiyor: {names}. Önce onları başka bir ekibe ekleyin."
+    },
+    "chart": {
+      "label": "Ekip organizasyon şeması",
+      "openTeam": "{name} ekibini aç",
+      "members": "{count} üye"
+    },
+    "form": {
+      "title": "Yeni ekip",
+      "editTitle": "Ekibi düzenle",
+      "description": "Ekibin kimliğini belirleyin. Sağdaki kart, ekibin listede nasıl görüneceğini gösterir.",
+      "editDescription": "Ad, açıklama ve üst ekibi güncelleyin.",
+      "back": "Ekiplere dön",
+      "cancel": "Vazgeç",
+      "submit": "Ekibi oluştur",
+      "save": "Değişiklikleri kaydet",
+      "created": "Ekip oluşturuldu.",
+      "saved": "Ekip güncellendi.",
+      "optional": "İsteğe bağlı",
+      "counter": "{count}/{max}",
+      "sections": {
+        "identity": {
+          "title": "Kimlik",
+          "description": "Ad ve açıklama kartın üst kısmında görünür. Logo projeden gelir."
+        },
+        "placement": {
+          "title": "Konum",
+          "description": "Ekibin organizasyon şemasında nerede durduğunu seçin."
+        },
+        "membership": {
+          "title": "Üyelik",
+          "description": "Kendinizi ekibe ekleyip eklemeyeceğinizi seçin."
+        }
+      },
+      "name": {
+        "label": "Ekip adı",
+        "placeholder": "ör. Backend Ekibi"
+      },
+      "descriptionField": {
+        "label": "Bu ekip ne yapar?",
+        "placeholder": "Ekibin sorumluluğunu kısaca anlatın"
+      },
+      "parent": {
+        "label": "Üst ekip",
+        "none": "En üst seviye",
+        "hint": "Üst ekip yalnızca şemada ve kartta görünür; üyelik veya yetki devralınmaz."
+      },
+      "includeCreator": {
+        "label": "Beni de bu ekibe ekle",
+        "hint": "Ekip, siz eklemedikçe boş kalır.",
+        "locked": "Projedeki ilk ekip olduğu için siz de bu ekibe eklenirsiniz. Her üye en az bir ekipte olmalıdır."
+      },
+      "preview": {
+        "title": "Önizleme",
+        "caption": "Kart listede böyle görünecek.",
+        "now": "Şimdi · siz",
+        "joinedNow": "Şimdi",
+        "show": "Önizlemeyi göster",
+        "you": "Siz"
+      }
+    },
+    "addMember": {
+      "button": "Üye ekle",
+      "title": "Ekibe üye ekle",
+      "description": "Kişiyi adıyla arayın. Projede değilse bu ekibe davet edilir.",
+      "team": "Ekip",
+      "teamPlaceholder": "Ekip seçin",
+      "modeLabel": "Ekleme yöntemi",
+      "modeUser": "PDA kullanıcısı",
+      "modeEmail": "E-posta ile davet",
+      "searchLabel": "Kişi ara",
+      "searchPlaceholder": "En az 2 karakter yazın",
+      "pickTeamFirst": "Önce bir ekip seçin",
+      "noResults": "Eşleşen kullanıcı bulunamadı.",
+      "results": "Arama sonuçları",
+      "addNamed": "{name} kişisini ekibe ekle",
+      "addAction": "Ekibe ekle",
+      "inviteNamed": "{name} kişisini ekibe davet et",
+      "inviteAction": "Davet et",
+      "inTeam": "Ekipte",
+      "alreadyInvited": "Davet bekliyor",
+      "outsideProject": "{name} projede değil. Davet kabul edilince projeye ve bu ekibe birlikte katılır.",
+      "added": "Kişi ekibe eklendi.",
+      "cancel": "Vazgeç"
+    },
+    "detail": {
+      "backToTeams": "Ekiplere dön",
+      "retry": "Tekrar dene",
+      "breadcrumb": "Konum",
+      "teams": "Ekipler",
+      "noDescription": "Bu ekip için açıklama eklenmedi.",
+      "meta": {
+        "members": "{count} üye",
+        "parent": "Üst ekip:",
+        "updated": "Son güncelleme {date} · {name}",
+        "lastJoined": "Son katılan {name}, {when}"
+      },
+      "editTeam": "Ekibi düzenle",
+      "editMode": {
+        "title": "Düzenleme modu",
+        "hint": "Roller proje genelinde geçerlidir.",
+        "editInfo": "Ekip bilgilerini düzenle",
+        "done": "Bitti"
+      },
+      "searchLabel": "Üyelerde ara",
+      "searchPlaceholder": "Ad veya e-posta ara",
+      "roleFilter": "Rol",
+      "sort": {
+        "label": "Sıralama",
+        "joined_desc": "Katılım: yeniden eskiye",
+        "joined_asc": "Katılım: eskiden yeniye",
+        "name": "Ad: A-Z"
+      },
+      "clearFilters": "Filtreleri temizle",
       "emptyTitle": "Bu ekipte henüz üye yok",
-      "remove": "Çıkar"
+      "emptyDescription": "Projedeki birini ekleyin veya projeye yeni birini davet edin.",
+      "emptyViewerDescription": "Bu ekibe henüz kimse eklenmedi.",
+      "noMatchesTitle": "Eşleşen üye yok",
+      "noMatchesDescription": "Arama veya rol filtresini değiştirmeyi deneyin.",
+      "founder": "Kurucu",
+      "you": "(siz)",
+      "noOtherTeams": "Başka ekibi yok",
+      "moreTeams": "+{count}",
+      "listLabel": "Ekip üyeleri",
+      "columns": {
+        "member": "Üye",
+        "roles": "Proje rolleri",
+        "otherTeams": "Diğer ekipler",
+        "joined": "Ekibe katılım",
+        "actions": "İşlemler"
+      },
+      "actions": {
+        "editRoles": "{name} kişisinin rollerini düzenle",
+        "editRolesHint": "Rolleri düzenle (proje genelinde)",
+        "lastTeam": "Bu kişinin başka ekibi yok. Ekipten çıkarmak projeden çıkarmak demektir.",
+        "removeFromTeam": "{name} kişisini ekipten çıkar",
+        "removeFromTeamShort": "Ekipten çıkar",
+        "removeFromTeamTitle": "{name} ekipten çıkarılsın mı?",
+        "removeFromTeamDescription": "Kişi projede kalır ve diğer ekiplerine erişmeye devam eder. Yalnızca {team} ekibinden çıkarılır.",
+        "removedFromTeam": "Kişi ekipten çıkarıldı.",
+        "founderLocked": "Projenin kurucusu projeden çıkarılamaz.",
+        "removeFromProject": "{name} kişisini projeden çıkar",
+        "removeFromProjectShort": "Projeden çıkar",
+        "removeFromProjectTitle": "{name} projeden çıkarılsın mı?",
+        "removeFromProjectDescription": "{name} projeden ve şu ekiplerden çıkarılır: {teams}. Tekrar katılması için yeni bir davet gerekir.",
+        "removedFromProject": "Kişi projeden çıkarıldı."
+      }
     }
   },
   "oauth": {
