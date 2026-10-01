@@ -85,9 +85,13 @@ test.describe.serial("Project reminders", () => {
 
     await memberPage.goto("/projects");
     const me = (await api(memberPage, "GET", "/auth/me")).json as { id: string };
+    // An invitation names the team the invitee joins, so the project needs one first.
+    const team = await api(managerPage, "POST", `/projects/${projectId}/teams`, { name: "E2E Team" });
+    expect(team.status).toBe(201);
     const invite = await api(managerPage, "POST", `/projects/${projectId}/invitations`, {
       userId: me.id,
       roles: ["FRONTEND_DEVELOPER"],
+      teamId: (team.json as { id: string }).id,
     });
     expect(invite.status).toBe(201);
     const { invitationId, token } = invite.json as { invitationId: string; token: string };

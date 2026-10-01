@@ -15,6 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { navItemClass } from "./nav-item";
 import { cn } from "@/lib/utils";
 import { authApi } from "@/features/auth/api";
+import { SESSION_EXPIRED_EVENT } from "@/lib/api/client";
 import { sessionQueryKey, useSession } from "@/features/auth/hooks/use-session";
 
 const NAV_LINKS = [
@@ -60,6 +61,16 @@ export function AppShell({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (isError) router.replace("/login");
   }, [isError, router]);
+
+  // The access token is renewed transparently; this only fires when the session itself is over.
+  useEffect(() => {
+    const sessionEnded = () => {
+      queryClient.removeQueries({ queryKey: sessionQueryKey });
+      router.replace("/login");
+    };
+    window.addEventListener(SESSION_EXPIRED_EVENT, sessionEnded);
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, sessionEnded);
+  }, [queryClient, router]);
 
   async function handleLogout() {
     try {

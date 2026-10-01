@@ -1,5 +1,8 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/api/v1";
 
+/** Fired on `window` when a request is still unauthenticated after the session renewal failed. */
+export const SESSION_EXPIRED_EVENT = "pda:session-expired";
+
 export class ApiError extends Error {
   constructor(
     public readonly status: number,
@@ -102,8 +105,15 @@ export async function apiRequest<T = void>(
     }
   }
 
-  if (res.status === 401 && !NO_REFRESH.includes(path) && (await refreshSession())) {
-    res = await send(path, init, method);
+  if (res.status === 401 && !NO_REFRESH.includes(path)) {
+    if (await refreshSession()) {
+      res = await send(path, init, method);
+    }
+    // Still unauthenticated after a renewal attempt: the session is really over (refresh cookie expired or
+    // revoked). Tell the app so it can send the user to the login page instead of showing an unrelated error.
+    if (res.status === 401 && typeof window !== "undefined") {
+      window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
+    }
   }
 
   if (!res.ok) throw await toApiError(res);

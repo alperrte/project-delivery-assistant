@@ -494,6 +494,13 @@ PDA uses a consistent Spring `ProblemDetail`-based API error model.
 
 Client-facing errors should contain only the information required to understand and correct the request.
 
+### 401 versus 403
+
+- **401**: the request has no valid session (no access cookie, or an expired or invalid one). Every route the application serves answers this way: auth, admin, notifications, invitations, and, since 2026-10-01, all `/api/v1/projects/**` (including tasks, teams, squads, criteria, members, reminders) and `/api/v1/organizations/**` routes. The access token lives 15 minutes, so the SPA must be able to recognise this case: its API client answers a 401 by renewing the session once through `POST /api/v1/auth/refresh` and repeating the request.
+- **403**: the caller is signed in but not allowed (role, membership, CSRF), and the answer for routes that are unknown or switched off (deny-all, e.g. API docs when disabled).
+
+Project and organization routes used to answer 403 to an expired access token because they were missing from the entry point's route list in `SecurityBaselineConfiguration`. The client only renews on 401, so the user saw "you are not allowed to do this" until a page reload (`/auth/me` is on the list, so the reload renewed the session). A new route that serves a controller must be added to that list. Covered by `e2e/08-session-expiry.spec.ts` and the anonymous-request assertions in the project, squad and reminder integration tests.
+
 ---
 
 ## 13. Security Logging and Audit

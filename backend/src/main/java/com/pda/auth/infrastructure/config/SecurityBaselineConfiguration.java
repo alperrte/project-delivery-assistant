@@ -97,14 +97,19 @@ public class SecurityBaselineConfiguration {
                 .exceptionHandling(errors -> errors
                         .authenticationEntryPoint((request, response, failure) -> {
                             String path = request.getRequestURI().substring(request.getContextPath().length());
+                            // Routes the application really serves answer a missing/expired session with 401, so the
+                            // client can tell "renew the session" from "not allowed" (403, from the access-denied
+                            // handler below) by the status alone. Anything else (unknown or switched-off routes) stays
+                            // 403. Project and organization routes used to be missing here, so an expired access token
+                            // made them answer 403, which the SPA showed as a permission error until the page reloaded.
                             boolean unauthenticated = "GET".equals(request.getMethod())
                                     && "/api/v1/auth/me".equals(path)
                                     || path.startsWith("/api/v1/auth/sessions")
                                     || path.startsWith("/api/v1/admin/")
                                     || "/api/v1/auth/password/change".equals(path)
                                     || path.startsWith("/api/v1/auth/oauth/")
-                                    || path.matches("/api/v1/projects/[^/]+/tasks(?:/.*)?")
-                                    || path.matches("/api/v1/projects/[^/]+/teams(?:/.*)?")
+                                    || path.equals("/api/v1/projects") || path.startsWith("/api/v1/projects/")
+                                    || path.equals("/api/v1/organizations") || path.startsWith("/api/v1/organizations/")
                                     || path.equals("/api/v1/project-invitations/me")
                                     || path.startsWith("/api/v1/project-invitations/")
                                     || path.equals("/api/v1/notifications") || path.startsWith("/api/v1/notifications/");

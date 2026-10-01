@@ -326,8 +326,11 @@ class ReminderApiIntegrationTest {
         UUID id = idOf(create(f.member, f.projectId, json("Gizli", "WORK", null, day, null)).andReturn());
         Cookie csrf = csrfCookie();
 
-        // Like every project route, an anonymous request is refused (403) before it reaches the service.
-        mvc.perform(get(listUrl(f.projectId, day, day))).andExpect(status().isForbidden());
+        // Like every project route, an anonymous request (no or expired session) is a 401 so the client can renew it.
+        mvc.perform(get(listUrl(f.projectId, day, day))).andExpect(status().isUnauthorized());
+        // An expired or garbage access token is the same as no session: 401, not "not allowed".
+        mvc.perform(get(listUrl(f.projectId, day, day)).cookie(new Cookie("PDA_ACCESS", "not-a-valid-token")))
+                .andExpect(status().isUnauthorized());
         mvc.perform(post(base(f.projectId)).contentType(MediaType.APPLICATION_JSON)
                         .content(json("Anonim", "WORK", null, day, null)))
                 .andExpect(status().isForbidden());

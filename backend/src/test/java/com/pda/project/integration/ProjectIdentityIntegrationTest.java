@@ -263,7 +263,7 @@ class ProjectIdentityIntegrationTest {
                         .header("X-XSRF-TOKEN", csrf.getValue()))
                 .andExpect(status().isForbidden());
         // Unauthenticated.
-        mvc.perform(get("/api/v1/projects/" + projectId + "/logo")).andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/projects/" + projectId + "/logo")).andExpect(status().isUnauthorized());
     }
 
     private static MockMultipartHttpServletRequestBuilder upload(UUID projectId, byte[] data, String filename) {

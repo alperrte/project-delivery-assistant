@@ -239,7 +239,7 @@ class SquadApiIntegrationTest {
         UUID projectId = createProject(manager, csrf, "Squad scope project");
         UUID otherProjectId = createProject(manager, csrf, "Other scope project");
 
-        mvc.perform(get("/api/v1/projects/" + projectId + "/squads")).andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/projects/" + projectId + "/squads")).andExpect(status().isUnauthorized());
         mvc.perform(get("/api/v1/projects/" + projectId + "/squads").cookie(outsider.access()))
                 .andExpect(status().isForbidden());
 
