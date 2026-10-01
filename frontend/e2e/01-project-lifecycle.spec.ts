@@ -44,7 +44,7 @@ test.describe.serial("Project lifecycle (manager)", () => {
   test("edit settings, add criterion, complete it", async () => {
     await page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Ayarlar" }).click();
 
-    await page.getByRole("combobox").first().click();
+    await page.getByRole("combobox", { name: "Durum" }).click();
     await page.getByRole("option", { name: "Aktif" }).click();
     await page.getByRole("button", { name: /^Değişiklikleri kaydet$/ }).click();
     await expect(page.getByText("Ayarlar kaydedildi.")).toBeVisible();
