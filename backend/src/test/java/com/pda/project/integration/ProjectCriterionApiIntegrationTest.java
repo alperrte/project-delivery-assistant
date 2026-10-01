@@ -148,7 +148,7 @@ class ProjectCriterionApiIntegrationTest {
         UUID projectId = createProject(manager, csrf, "Criteria scope project");
         UUID otherProjectId = createProject(manager, csrf, "Other criteria project");
 
-        mvc.perform(get("/api/v1/projects/" + projectId + "/criteria")).andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/projects/" + projectId + "/criteria")).andExpect(status().isUnauthorized());
 
         var created = mvc.perform(post("/api/v1/projects/" + projectId + "/criteria")
                         .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())

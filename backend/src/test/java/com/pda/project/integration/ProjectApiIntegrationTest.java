@@ -104,7 +104,7 @@ class ProjectApiIntegrationTest {
         mvc.perform(get("/api/v1/projects").cookie(manager.access()))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(1));
         mvc.perform(get("/api/v1/projects"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
         mvc.perform(get("/api/v1/projects").cookie(outsider.access()))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(0));
         mvc.perform(get("/api/v1/projects/" + projectId).cookie(outsider.access()))
@@ -367,7 +367,7 @@ class ProjectApiIntegrationTest {
                 UUID.randomUUID().toString());
 
         mvc.perform(get("/api/v1/projects/" + projectId + "/members/search?query=findable_" + suffix))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
         mvc.perform(get("/api/v1/projects/" + projectId + "/members/search?query=findable_" + suffix)
                         .cookie(moderator.access()))
                 .andExpect(status().isForbidden());

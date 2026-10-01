@@ -1,6 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
-import { registerUser, login, createProject, createTeam, uniqueUser } from "./helpers";
-import { MANAGER_STORAGE } from "./global-setup";
+import { readFileSync } from "node:fs";
+import { login, createProject, createTeam } from "./helpers";
+import { MANAGER_STORAGE, MEMBER_USER_FILE } from "./global-setup";
 
 /**
  * HMZ-PROJ-52 flows covered here (two users: PROJECT_MANAGER + a contributor):
@@ -34,13 +35,14 @@ test.describe.serial("Invitation, roles, squad, and denial checks", () => {
     await memberPage.close();
   });
 
-  test("manager (already authenticated) creates a project; contributor account is registered", async () => {
+  test("manager (already authenticated) creates a project; the shared contributor account is loaded", async () => {
     slug = await createProject(managerPage, projectName);
     // Invitations always target a team, so the first team is created before anyone is invited.
     teamId = await createTeam(managerPage, slug, "Backend");
 
-    member = uniqueUser("member");
-    await registerUser(memberPage, member);
+    // The contributor is the shared account from global-setup, so this spec adds no /auth/register call
+    // (AuthRateLimitFilter allows only 5 per 10 minutes per path and IP).
+    member = JSON.parse(readFileSync(MEMBER_USER_FILE, "utf-8"));
   });
 
   test("manager searches, invites the contributor, and captures the invitation token", async () => {

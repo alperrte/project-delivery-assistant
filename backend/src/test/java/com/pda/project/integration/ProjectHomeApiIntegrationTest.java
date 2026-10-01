@@ -81,7 +81,7 @@ class ProjectHomeApiIntegrationTest {
         mvc.perform(get("/api/v1/projects/" + projectId + "/home").cookie(outsider.access()))
                 .andExpect(status().isForbidden());
         mvc.perform(get("/api/v1/projects/" + projectId + "/home"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
 
         mvc.perform(get("/api/v1/projects/" + projectId + "/home").cookie(contributor.access()))
                 .andExpect(status().isOk())

@@ -112,8 +112,8 @@ class ProblemDetailShapeApiIntegrationTest {
                 .andExpect(jsonPath("$.status").value(409))
                 .andExpect(jsonPath("$.detail").value("Membership change conflicts with project rules"));
 
-        // Project endpoints never answer 401: an unauthenticated call is always 403.
-        mvc.perform(get("/api/v1/projects/" + projectId)).andExpect(status().isForbidden());
+        // An unauthenticated call (no or expired session) is a 401, so a client can renew the session; 403 is for signed-in users.
+        mvc.perform(get("/api/v1/projects/" + projectId)).andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -247,7 +247,7 @@ class ProblemDetailShapeApiIntegrationTest {
                 .andExpect(jsonPath("$.status").value(409))
                 .andExpect(jsonPath("$.detail").value("Squad change conflicts with existing state"));
 
-        mvc.perform(get("/api/v1/projects/" + projectId + "/squads")).andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/projects/" + projectId + "/squads")).andExpect(status().isUnauthorized());
     }
 
     @Test
