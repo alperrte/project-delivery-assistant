@@ -62,6 +62,7 @@
     "ANALYST": "Analyst"
   },
   "organizations": {
+    "card": { "lastUpdate": "Letzte Änderung", "openNamed": "Organisation {name} öffnen" },
     "cardLabel": "ORGANISATION",
     "cardNoDescription": "Noch keine Beschreibung hinzugefügt.",
     "cardOpen": "Arbeitsbereich öffnen",
@@ -96,6 +97,7 @@
     }
   },
   "projects": {
+    "card": { "technology": "Technologie", "noTechnology": "Keine Technologie angegeben", "team": "Team", "teamUnavailable": "Teamdaten konnten nicht geladen werden.", "members": "{count, plural, one {# Mitglied} other {# Mitglieder}}", "lastUpdate": "Letzte Änderung", "open": "Projekt öffnen", "openNamed": "Projekt {name} öffnen" },
     "cardLabel": "PROJEKT",
     "cardNoDescription": "Noch keine Beschreibung hinzugefügt.",
     "cardGoal": "Ziel",
@@ -121,7 +123,6 @@
       "changeProject": "Wechseln",
       "chooseProject": "Projekt auswählen",
       "createdAt": "Erstellt: {date}",
-      "edit": "Bearbeiten",
       "eyebrow": "Projektarbeitsbereich",
       "navigation": "Projektmenü",
       "tabs": {
@@ -215,7 +216,24 @@
       "organizationNone": "Keine Organisation",
       "goal": "Projektziel",
       "techStack": "Tech-Stack",
-      "save": "Änderungen speichern"
+      "save": "Änderungen speichern",
+      "namePlaceholder": "z. B. PDA Web Platform",
+      "descriptionPlaceholder": "Was macht dieses Projekt und für wen?",
+      "goalPlaceholder": "Was sollen wir erreicht haben, wenn das Projekt fertig ist?",
+      "goalHint": "Das gemeinsame Ziel des Teams. Wird im Projektkopf angezeigt, wenn es keine Beschreibung gibt.",
+      "techStackHint": "Eingeben und mit Enter oder Komma hinzufügen. Wird als Badge auf der Projektkarte angezeigt.",
+      "techStackPlaceholder": "z. B. Spring Boot",
+      "techStackRemove": "{name} entfernen",
+      "unsaved": "Es gibt ungespeicherte Änderungen",
+      "discard": "Änderungen verwerfen",
+      "dangerTitle": "Projekt archivieren",
+      "dangerDescription": "Ein archiviertes Projekt kann nicht mehr geändert werden und wird aus aktiven Listen ausgeblendet. Das lässt sich nicht rückgängig machen.",
+      "sections": {
+        "general": { "title": "Allgemein", "description": "Name, Beschreibung und Ziel des Projekts. Sichtbar in Listen und im Projektkopf." },
+        "planning": { "title": "Planung", "description": "Status, Priorität und Termine. Eine Organisation gruppiert das Projekt unter einem Arbeitsbereich." },
+        "technology": { "title": "Technologie", "description": "Verwendete Sprachen, Frameworks und Werkzeuge." },
+        "danger": { "title": "Gefahrenbereich", "description": "Aktionen, die sich nicht rückgängig machen lassen." }
+      }
     }
   },
   "criteria": {
@@ -331,6 +349,7 @@
     }
   },
   "squads": {
+    "card": { "members": "Mitglieder", "lastUpdate": "Letzte Änderung" },
     "membersPage": {
       "back": "Zurück zu Teams",
       "teams": "Teams",
