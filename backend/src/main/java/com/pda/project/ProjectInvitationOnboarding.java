@@ -8,7 +8,8 @@ import com.pda.user.ProjectRole;
 /** Public Project contract used by Auth during invitation-based registration. */
 public interface ProjectInvitationOnboarding {
     record Preview(String projectName, String inviterName, Set<ProjectRole> roles, String message,
-                   String email, String firstName, String lastName, Instant expiresAt, String status) {}
+                   String email, String firstName, String lastName, Instant expiresAt, String status,
+                   String teamName) {}
     record Accepted(UUID projectId, String projectSlug) {}
 
     Preview preview(String token);

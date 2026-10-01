@@ -232,21 +232,24 @@ Swagger kontrolü: `API_DOCS_ENABLED=true` ile `/swagger-ui/index.html`; önce `
 
 | Endpoint | Yetki | Güvenli örnek girdi | Başarı | Önemli hatalar |
 | --- | --- | --- | --- | --- |
-| `GET /api/v1/projects/{projectId}/teams` | `PROJECT_VIEW` | `?page=0&size=20` | `200` sayfalı ekipler, `general`, `parentTeamId`, `memberCount` | `400`, `401`, `403` |
+| `GET /api/v1/projects/{projectId}/teams` | `PROJECT_VIEW` | `?page=0&size=20` | `200` sayfalı ekipler, `parentTeamId`, `memberCount`, `updatedBy`, `memberPreview`, `lastJoined` | `400`, `401`, `403` |
 | `GET /api/v1/projects/{projectId}/teams/{teamId}` | `PROJECT_VIEW` | UUID path | `200` ekip | `401`, `403`, `404` |
-| `POST /api/v1/projects/{projectId}/teams` | `SQUAD_MANAGE` | `{"name":"Backend","parentTeamId":"<general-team-uuid>"}` | `201` ekip | `400`, `401`, `403`, `404` parent |
-| `PUT /api/v1/projects/{projectId}/teams/{teamId}` | `SQUAD_MANAGE` | `{"name":"API","description":"Services"}` | `200` ekip | `400`, `403`, `404`, `409` General Team |
-| `PUT /api/v1/projects/{projectId}/teams/{teamId}/parent` | `SQUAD_MANAGE` | `{"parentTeamId":"<team-uuid>"}` | `200` ekip | `400`, `403`, `404`, `409` döngü/General |
-| `DELETE /api/v1/projects/{projectId}/teams/{teamId}` | `SQUAD_MANAGE` | UUID path | `204` | `403`, `404`, `409` General/aktif alt ekip |
+| `POST /api/v1/projects/{projectId}/teams` | `SQUAD_MANAGE` | `{"name":"Backend","description":"API","parentTeamId":null,"includeCreator":true}` | `201` ekip; ilk ekipte oluşturan zorla eklenir | `400`, `401`, `403`, `404` parent |
+| `PUT /api/v1/projects/{projectId}/teams/{teamId}` | `SQUAD_MANAGE` | `{"name":"API","description":"Services"}` | `200` ekip | `400`, `403`, `404` |
+| `PUT /api/v1/projects/{projectId}/teams/{teamId}/parent` | `SQUAD_MANAGE` | `{"parentTeamId":"<team-uuid>"}` | `200` ekip | `400`, `403`, `404`, `409` `TEAM_CIRCULAR_PARENT` |
+| `DELETE /api/v1/projects/{projectId}/teams/{teamId}` | `SQUAD_MANAGE` | UUID path | `204` | `403`, `404`, `409` `TEAM_HAS_CHILDREN`, `TEAM_ARCHIVE_WOULD_ORPHAN` (ekipsiz kalacak üye adları body'de); bekleyen davetler iptal edilir |
+| `GET /api/v1/projects/{projectId}/teams/{teamId}/candidates` | `SQUAD_MANAGE` | `?q=ali` (en az 2 karakter, en çok 20 sonuç) | `200` `[{userId,nickname,status}]`, `status`: `TEAM_MEMBER`, `PROJECT_MEMBER`, `INVITED`, `NONE` | `400`, `403`, `404` |
 | `GET /api/v1/projects/{projectId}/teams/{teamId}/members` | `PROJECT_VIEW` | `?page=0&size=20` | `200` sayfalı nickname/email/project roles | `400`, `403`, `404` |
-| `POST /api/v1/projects/{projectId}/teams/{teamId}/members` | `SQUAD_MANAGE` | `{"userId":"<active-project-member-uuid>"}` | `201` üye | `400`, `403`, `404`, `409` tekrar/General |
-| `DELETE /api/v1/projects/{projectId}/teams/{teamId}/members/{userId}` | `SQUAD_MANAGE` | UUID path | `204` | `403`, `404`, `409` General |
+| `POST /api/v1/projects/{projectId}/teams/{teamId}/members` | `SQUAD_MANAGE` | `{"userId":"<active-project-member-uuid>"}` | `201` üye | `400`, `403`, `404`, `409` `TEAM_MEMBER_EXISTS` |
+| `DELETE /api/v1/projects/{projectId}/teams/{teamId}/members/{userId}` | `SQUAD_MANAGE` | UUID path | `204` | `403`, `404`, `409` `TEAM_LAST_MEMBERSHIP` |
 | `GET /api/v1/project-invitations/me` | Oturum sahibi | `?page=0&size=20` | `200` yalnız kendine gelen davetler | `400`, `401` |
 | `POST /api/v1/project-invitations/{invitationId}/accept` | Yalnız davet edilen hesap | Body yok | `200` project membership | `401`, `403` CSRF, `404` başka alıcı, `409` beklemiyor/üye |
 | `POST /api/v1/project-invitations/{invitationId}/reject` | Yalnız davet edilen hesap | `{"message":"Şu an uygun değilim"}`; isteğe bağlı, en çok 500 | `204` | `400`, `401`, `403` CSRF, `404` başka alıcı, `409` beklemiyor |
-| `GET /api/v1/projects/{projectId}/invitations/all` | Project Manager | `?page=0&size=20` | `200` durum ve rejectionMessage içeren sayfalı geçmiş | `400`, `401`, `403` |
+| `GET /api/v1/projects/{projectId}/invitations/all` | Project Manager | `?status=PENDING&page=0&size=20` | `200` durum ve rejectionMessage içeren sayfalı geçmiş | `400`, `401`, `403` |
 
-Mevcut `POST .../invitations` artık yalnız aktif kayıtlı `userId` veya kayıtlı hesap e-postasını kabul eder (`{"userId":"<registered-user-uuid>","roles":["TESTER"]}` → `201`; bilinmeyen hesap `404`, tekrar/aktif üye `409`). Eski tokenlı accept/reject yolları yalnız gerçek hedef hesap için çalışır. Yeni davet yanıt yolları da 10 istek/10 dakika/IP/yol hız sınırına dahildir (`429`). `.env`, auth cookie, CSRF veya rol matrisi değişmedi.
+Mevcut `POST .../invitations` artık zorunlu `teamId` (projenin aktif ekibi; başka projenin ekibi `404`, eksik `400`) taşır ve aktif kayıtlı `userId` veya e-posta kabul eder (`{"userId":"<registered-user-uuid>","roles":["TESTER"]}` → `201`; bilinmeyen hesap `404`, tekrar/aktif üye `409`). Eski tokenlı accept/reject yolları yalnız gerçek hedef hesap için çalışır. Yeni davet yanıt yolları da 10 istek/10 dakika/IP/yol hız sınırına dahildir (`429`). `.env`, auth cookie, CSRF veya rol matrisi değişmedi.
+
+Ekipler yeniden tasarımı (2026-10-01): proje kurucusu `projects.created_by` projeden çıkarılamaz ve Project Manager rolü düşürülemez (`409` `PROJECT_OWNER_PROTECTED`); son Project Manager `409` `LAST_PROJECT_MANAGER` döner. `candidates` yalnız aktif kullanıcı adı döner, e-posta sızdırmaz. Dış davet önizlemesi ve kabul yanıtı ekip adını açığa çıkarmaz.
 
 ### Notification Service endpoints
 

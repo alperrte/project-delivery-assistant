@@ -18,29 +18,18 @@ import java.util.UUID;
 public record InvitationSummary(UUID id, UUID projectId, UUID invitedUserId, String email, UUID invitedBy,
                                 Set<ProjectRole> initialRoles, InvitationStatus status, Instant createdAt,
                                 Instant expiresAt, String rejectionMessage, String firstName, String lastName,
-                                String message, String nickname) {
-    public InvitationSummary(UUID id, UUID projectId, UUID invitedUserId, String email, UUID invitedBy,
-                             Set<ProjectRole> initialRoles, InvitationStatus status, Instant createdAt,
-                             Instant expiresAt, String rejectionMessage, String firstName, String lastName,
-                             String message) {
-        this(id, projectId, invitedUserId, email, invitedBy, initialRoles, status, createdAt,
-                expiresAt, rejectionMessage, firstName, lastName, message, null);
-    }
-    public InvitationSummary(UUID id, UUID projectId, UUID invitedUserId, String email, UUID invitedBy,
-                             Set<ProjectRole> initialRoles, InvitationStatus status, Instant createdAt,
-                             Instant expiresAt, String rejectionMessage) {
-        this(id, projectId, invitedUserId, email, invitedBy, initialRoles, status, createdAt,
-                expiresAt, rejectionMessage, null, null, null, null);
-    }
+                                String message, String nickname, UUID teamId, String teamName) {
+
     public static InvitationSummary from(ProjectInvitation invitation) {
-        return from(invitation, null);
+        return from(invitation, null, null);
     }
 
-    public static InvitationSummary from(ProjectInvitation invitation, String nickname) {
+    public static InvitationSummary from(ProjectInvitation invitation, String nickname, String teamName) {
         return new InvitationSummary(invitation.getId(), invitation.getProjectId(), invitation.getInvitedUserId(),
                 invitation.getEmail(), invitation.getInvitedBy(), invitation.getInitialRoles(),
                 invitation.getStatus(), invitation.getCreatedAt(), invitation.getExpiresAt(),
                 invitation.getRejectionMessage(), invitation.getInviteeFirstName(),
-                invitation.getInviteeLastName(), invitation.getMessage(), nickname);
+                invitation.getInviteeLastName(), invitation.getMessage(), nickname,
+                invitation.getTeamId(), teamName);
     }
 }

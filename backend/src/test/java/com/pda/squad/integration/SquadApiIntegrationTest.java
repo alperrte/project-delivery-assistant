@@ -3,6 +3,7 @@ package com.pda.squad.integration;
 import com.jayway.jsonpath.JsonPath;
 import com.pda.BackendApplication;
 import com.pda.project.application.service.ProjectMembershipService;
+import com.pda.squad.application.service.SquadService;
 import com.pda.user.ProjectRole;
 import com.pda.user.UserAccounts;
 import jakarta.servlet.http.Cookie;
@@ -58,6 +59,7 @@ class SquadApiIntegrationTest {
     @Autowired MockMvc mvc;
     @Autowired UserAccounts users;
     @Autowired ProjectMembershipService memberships;
+    @Autowired SquadService squadService;
 
     @Test
     void managerManagesSquadLifecycleWhileContributorOnlyViews() throws Exception {
@@ -66,6 +68,9 @@ class SquadApiIntegrationTest {
         Account contributor = account("sqhttpcontrib");
         UUID projectId = createProject(manager, csrf, "Squad HTTP project");
         memberships.addMember(manager.id(), projectId, contributor.id(), Set.of(ProjectRole.BACKEND_DEVELOPER));
+        // Everyone belongs to at least one team, so the squad under test is never anyone else's last one.
+        UUID anchor = squadService.create(manager.id(), projectId, "Anchor", null, null, true).getId();
+        squadService.addMember(manager.id(), projectId, anchor, contributor.id());
 
         mvc.perform(post("/api/v1/projects/" + projectId + "/squads")
                         .cookie(csrf, contributor.access()).header("X-XSRF-TOKEN", csrf.getValue())
@@ -86,7 +91,7 @@ class SquadApiIntegrationTest {
         UUID squadId = UUID.fromString(JsonPath.read(created.getContentAsString(), "$.id"));
 
         mvc.perform(get("/api/v1/projects/" + projectId + "/squads").cookie(contributor.access()))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(1));
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(2));
         mvc.perform(get("/api/v1/projects/" + projectId + "/squads/" + squadId).cookie(contributor.access()))
                 .andExpect(status().isOk());
 
@@ -146,61 +151,84 @@ class SquadApiIntegrationTest {
         mvc.perform(get("/api/v1/projects/" + projectId + "/squads/" + squadId).cookie(manager.access()))
                 .andExpect(status().isNotFound());
         mvc.perform(get("/api/v1/projects/" + projectId + "/squads").cookie(manager.access()))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(0));
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(1));
     }
 
     @Test
-    void teamsHaveGeneralRootAndRejectCyclesAndStaleMemberships() throws Exception {
+    void teamsStartEmptyRejectCyclesAndKeepEveryoneInAtLeastOneTeam() throws Exception {
         Cookie csrf = csrfCookie();
         Account manager = account("teamsmanager");
         Account member = account("teamsmember");
         UUID projectId = createProject(manager, csrf, "Teams hierarchy project");
         memberships.addMember(manager.id(), projectId, member.id(), Set.of(ProjectRole.BACKEND_DEVELOPER));
+        String base = "/api/v1/projects/" + projectId + "/teams";
 
-        mvc.perform(get("/api/v1/projects/" + projectId + "/teams"))
-                .andExpect(status().isUnauthorized());
+        mvc.perform(get(base)).andExpect(status().isUnauthorized());
+        // No automatic team: the project starts without one.
+        mvc.perform(get(base).cookie(member.access()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(0));
 
-        var listed = mvc.perform(get("/api/v1/projects/" + projectId + "/teams").cookie(member.access()))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(1))
-                .andExpect(jsonPath("$.content[0].general").value(true))
-                .andExpect(jsonPath("$.content[0].memberCount").value(2)).andReturn().getResponse();
-        UUID generalId = UUID.fromString(JsonPath.read(listed.getContentAsString(), "$.content[0].id"));
-        mvc.perform(get("/api/v1/projects/" + projectId + "/teams/" + generalId + "/members")
-                        .cookie(member.access()))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(2));
-        mvc.perform(delete("/api/v1/projects/" + projectId + "/teams/" + generalId)
-                        .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue()))
-                .andExpect(status().isConflict());
-
-        var parentCreated = mvc.perform(post("/api/v1/projects/" + projectId + "/teams")
-                        .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
-                        .contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Development\"}"))
-                .andExpect(status().isCreated()).andExpect(jsonPath("$.parentTeamId").value(generalId.toString()))
-                .andReturn().getResponse();
-        UUID parentId = UUID.fromString(JsonPath.read(parentCreated.getContentAsString(), "$.id"));
-        var childCreated = mvc.perform(post("/api/v1/projects/" + projectId + "/teams")
+        // The first team always contains its creator, even when the request says otherwise.
+        var parentCreated = mvc.perform(post(base)
                         .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"Backend\",\"parentTeamId\":\"" + parentId + "\"}"))
-                .andExpect(status().isCreated()).andReturn().getResponse();
+                        .content("{\"name\":\"Development\",\"includeCreator\":false}"))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.parentTeamId").doesNotExist())
+                .andExpect(jsonPath("$.memberCount").value(1))
+                .andExpect(jsonPath("$.updatedBy.userId").value(manager.id().toString()))
+                .andExpect(jsonPath("$.memberPreview.length()").value(1))
+                .andExpect(jsonPath("$.lastJoined.userId").value(manager.id().toString()))
+                .andReturn().getResponse();
+        UUID parentId = UUID.fromString(JsonPath.read(parentCreated.getContentAsString(), "$.id"));
+        var childCreated = mvc.perform(post(base)
+                        .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Backend\",\"parentTeamId\":\"" + parentId
+                                + "\",\"includeCreator\":false}"))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.memberCount").value(0))
+                .andExpect(jsonPath("$.lastJoined").doesNotExist()).andReturn().getResponse();
         UUID childId = UUID.fromString(JsonPath.read(childCreated.getContentAsString(), "$.id"));
-        mvc.perform(put("/api/v1/projects/" + projectId + "/teams/" + parentId + "/parent")
+
+        mvc.perform(put(base + "/" + parentId + "/parent")
                         .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"parentTeamId\":\"" + childId + "\"}"))
-                .andExpect(status().isConflict());
-        mvc.perform(post("/api/v1/projects/" + projectId + "/teams/" + childId + "/members")
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("TEAM_CIRCULAR_PARENT"));
+        mvc.perform(delete(base + "/" + parentId)
+                        .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("TEAM_HAS_CHILDREN"));
+
+        mvc.perform(post(base + "/" + childId + "/members")
                         .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"userId\":\"" + member.id() + "\"}"))
-                .andExpect(status().isCreated());
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.otherTeams.length()").value(0));
+        // The child is the only team of that member, so they cannot be taken out of it.
+        mvc.perform(delete(base + "/" + childId + "/members/" + member.id())
+                        .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("TEAM_LAST_MEMBERSHIP"));
+        // Archiving the child would orphan them as well, and the response names who.
+        mvc.perform(delete(base + "/" + childId)
+                        .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("TEAM_ARCHIVE_WOULD_ORPHAN"))
+                .andExpect(jsonPath("$.members.length()").value(1));
+
+        // Leaving the project takes the team membership with it.
         memberships.removeMember(manager.id(), projectId, member.id());
-        mvc.perform(get("/api/v1/projects/" + projectId + "/teams/" + childId + "/members")
-                        .cookie(manager.access()))
+        mvc.perform(get(base + "/" + childId + "/members").cookie(manager.access()))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(0));
-        mvc.perform(get("/api/v1/projects/" + projectId + "/teams/" + generalId + "/members")
+        mvc.perform(get(base + "/" + childId + "/candidates").param("q", member.nickname())
                         .cookie(manager.access()))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(1));
+                .andExpect(status().isOk()).andExpect(jsonPath("$[0].status").value("NONE"));
+        mvc.perform(get(base + "/" + childId + "/candidates").param("q", "t").cookie(manager.access()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(0));
+        mvc.perform(delete(base + "/" + childId)
+                        .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isNoContent());
+        // The manager is only in the parent team, so it cannot be archived either.
+        mvc.perform(delete(base + "/" + parentId)
+                        .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("TEAM_ARCHIVE_WOULD_ORPHAN"));
     }
 
     @Test
@@ -285,7 +313,7 @@ class SquadApiIntegrationTest {
                 .andExpect(status().isOk()).andReturn().getResponse();
         Cookie access = cookie(login.getHeaders(HttpHeaders.SET_COOKIE), "PDA_ACCESS");
         assertFalse(access.getValue().isBlank());
-        return new Account(id, access);
+        return new Account(id, access, "u" + suffix);
     }
 
     private Cookie csrfCookie() throws Exception {
@@ -301,6 +329,6 @@ class SquadApiIntegrationTest {
         return new Cookie(name, value);
     }
 
-    private record Account(UUID id, Cookie access) {
+    private record Account(UUID id, Cookie access, String nickname) {
     }
 }

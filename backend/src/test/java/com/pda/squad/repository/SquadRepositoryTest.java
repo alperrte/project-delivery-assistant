@@ -59,7 +59,7 @@ class SquadRepositoryTest {
         UUID projectId = newProject();
         Squad active = squads.saveAndFlush(Squad.create(projectId, "Active Squad", null, UUID.randomUUID()));
         Squad archived = squads.saveAndFlush(Squad.create(projectId, "Old Squad", null, UUID.randomUUID()));
-        archived.archive();
+        archived.archive(UUID.randomUUID());
         squads.saveAndFlush(archived);
 
         assertEquals(1, squads.findByProjectIdAndArchivedAtIsNull(projectId, PageRequest.of(0, 10))

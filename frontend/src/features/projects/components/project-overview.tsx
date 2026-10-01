@@ -11,14 +11,14 @@ import { Avatar } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { errorKey } from "@/lib/api/error-message";
 import { criteriaApi } from "@/features/criteria/api";
-import { invitationsApi } from "@/features/invitations/api";
+import { usePendingInvitationCount } from "@/features/invitations/hooks";
 import { squadsApi } from "@/features/squads/api";
 import { membersApi } from "../members-api";
 import { projectsApi } from "../api";
 import type { Project } from "../types";
 import { ProjectCriteriaActivity, ProjectCriteriaTrend } from "./project-criteria-insights";
 
-type OverviewSection = "criteria" | "teams" | "repository" | "settings";
+type OverviewSection = "criteria" | "teams" | "invitations" | "repository" | "settings";
 
 function RailRow({ label, value, onClick, leading }: { label: string; value: string; onClick: () => void; leading: React.ReactNode }) {
   return (
@@ -60,13 +60,9 @@ export function ProjectOverview({ project, isManager, onNavigate }: {
   });
   const { data: squads } = useQuery({
     queryKey: ["projects", project.id, "squads", 0],
-    queryFn: () => squadsApi.list(project.id, 0),
+    queryFn: () => squadsApi.list(project.id, 0, 1),
   });
-  const { data: invitations } = useQuery({
-    queryKey: ["projects", project.id, "invitations", 0],
-    queryFn: () => invitationsApi.list(project.id, 0),
-    enabled: isManager,
-  });
+  const { data: pendingInvitations } = usePendingInvitationCount(project.id, isManager);
   const { data: members } = useQuery({
     queryKey: ["projects", project.id, "members", 0],
     queryFn: () => membersApi.list(project.id, 0, 5),
@@ -175,9 +171,9 @@ export function ProjectOverview({ project, isManager, onNavigate }: {
           {isManager && (
             <RailRow
               label={t("invitations")}
-              value={t("allInvitations")}
-              onClick={() => onNavigate("teams")}
-              leading={<span className="font-mono text-sm font-semibold tabular-nums text-foreground">{invitations?.totalElements ?? "—"}</span>}
+              value={t("pendingInvitations")}
+              onClick={() => onNavigate("invitations")}
+              leading={<span className="font-mono text-sm font-semibold tabular-nums text-foreground">{pendingInvitations ?? "—"}</span>}
             />
           )}
           <RailRow

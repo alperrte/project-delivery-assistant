@@ -22,6 +22,14 @@ const project = {
   visibility: "PRIVATE",
 };
 
+const team = {
+  id: "backend-team", projectId: "responsive-project", name: "Backend", description: null, parentTeamId: null,
+  memberCount: 1, createdBy: "responsive-user", createdAt: "2026-09-28T00:00:00Z", updatedAt: "2026-09-28T00:00:00Z",
+  updatedBy: { userId: "responsive-user", nickname: "testuser" },
+  memberPreview: [{ userId: "responsive-user", nickname: "testuser" }],
+  lastJoined: { userId: "responsive-user", nickname: "testuser", joinedAt: "2026-09-28T00:00:00Z" },
+};
+
 test("project sections use the shared sidebar on desktop and its mobile drawer", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.route("**/api/v1/**", async (route) => {
@@ -35,9 +43,9 @@ test("project sections use the shared sidebar on desktop and its mobile drawer",
     };
     if (path === "/api/v1/projects/responsive-project/members/responsive-user") data = { userId: "responsive-user", nickname: "testuser", roles: ["PROJECT_MANAGER"], joinedAt: "2026-09-28T00:00:00Z" };
     if (path === "/api/v1/projects/responsive-project/members") data = { content: [{ userId: "responsive-user", nickname: "testuser", roles: ["PROJECT_MANAGER"], joinedAt: "2026-09-28T00:00:00Z" }], page: 0, totalPages: 1, totalElements: 1 };
-    if (path === "/api/v1/projects/responsive-project/teams") data = { content: [{ id: "general-team", projectId: "responsive-project", name: "General Team", description: null, parentTeamId: null, general: true, memberCount: 1, createdBy: "responsive-user", createdAt: "2026-09-28T00:00:00Z", updatedAt: "2026-09-28T00:00:00Z", archivedAt: null }], page: 0, totalPages: 1, totalElements: 1 };
-    if (path === "/api/v1/projects/responsive-project/teams/general-team") data = { id: "general-team", projectId: "responsive-project", name: "General Team", description: null, parentTeamId: null, general: true, memberCount: 1, createdBy: "responsive-user", createdAt: "2026-09-28T00:00:00Z", updatedAt: "2026-09-28T00:00:00Z", archivedAt: null };
-    if (path === "/api/v1/projects/responsive-project/teams/general-team/members") data = { content: [{ userId: "responsive-user", nickname: "testuser", email: "test@example.com", roles: ["PROJECT_MANAGER"], addedBy: "responsive-user", addedAt: "2026-09-28T00:00:00Z" }], page: 0, totalPages: 1, totalElements: 1 };
+    if (path === "/api/v1/projects/responsive-project/teams") data = { content: [team], page: 0, totalPages: 1, totalElements: 1 };
+    if (path === "/api/v1/projects/responsive-project/teams/backend-team") data = team;
+    if (path === "/api/v1/projects/responsive-project/teams/backend-team/members") data = { content: [{ userId: "responsive-user", nickname: "testuser", email: "test@example.com", roles: ["PROJECT_MANAGER"], addedBy: "responsive-user", addedAt: "2026-09-28T00:00:00Z", otherTeams: [] }], page: 0, totalPages: 1, totalElements: 1 };
     if (path === "/api/v1/projects/responsive-project/criteria") data = [];
 
     await route.fulfill({
@@ -59,7 +67,7 @@ test("project sections use the shared sidebar on desktop and its mobile drawer",
 
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Ekipler" }).click();
-  await page.getByRole("link", { name: /General Team üyeleri/ }).click();
+  await page.getByRole("link", { name: /Backend ekibini aç/ }).first().click();
   await expect(page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Ekipler" })).toHaveAttribute("aria-current", "page");
   await expect(page.getByRole("row", { name: /testuser/ })).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });

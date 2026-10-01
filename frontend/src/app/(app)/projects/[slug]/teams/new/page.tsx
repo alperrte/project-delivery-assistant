@@ -1,6 +1,6 @@
-import { TeamCreatePage } from "@/features/squads/components/team-create-page";
+import { TeamFormPage } from "@/features/squads/components/team-form-page";
 
-export default async function NewProjectTeamRoute({ params }: { params: Promise<{ slug: string }> }) {
+export default async function NewTeamRoute({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  return <TeamCreatePage slug={slug} />;
+  return <TeamFormPage slug={slug} />;
 }

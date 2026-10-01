@@ -1,6 +1,8 @@
 package com.pda.squad.api;
 
 import com.pda.squad.application.service.SquadService;
+import com.pda.squad.application.service.TeamCandidate;
+import com.pda.squad.application.service.TeamView;
 import com.pda.squad.api.dto.response.PageResponse;
 import com.pda.squad.api.dto.response.SquadMemberResponse;
 import com.pda.squad.domain.entity.Squad;
@@ -10,7 +12,6 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +20,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -29,64 +29,71 @@ public class TeamController {
     public TeamController(SquadService teams) { this.teams = teams; }
 
     @GetMapping
-    @Operation(summary = "List project teams including General Team", description = "PROJECT_VIEW; paginated")
+    @Operation(summary = "List project teams", description = "PROJECT_VIEW; paginated; cards carry member preview and last update")
     public PageResponse<TeamResponse> list(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
                                            @PathVariable UUID projectId,
                                            @RequestParam(defaultValue = "0") int page,
                                            @RequestParam(defaultValue = "20") int size) {
-        UUID actor = actor(principal);
-        Page<Squad> result = teams.listTeams(actor, projectId, page(page, size));
-        Map<UUID, Long> counts = teams.memberCounts(actor, projectId, result.getContent());
-        return PageResponse.from(result, team -> TeamResponse.from(team, counts.getOrDefault(team.getId(), 0L)));
+        return PageResponse.from(teams.listTeams(actor(principal), projectId, page(page, size)), TeamResponse::from);
     }
 
     @GetMapping("/{teamId}")
     @Operation(summary = "Get project team", description = "PROJECT_VIEW")
     public TeamResponse detail(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
                                @PathVariable UUID projectId, @PathVariable UUID teamId) {
-        UUID actor = actor(principal);
-        Squad team = teams.detail(actor, projectId, teamId);
-        return TeamResponse.from(team, teams.memberCounts(actor, projectId, List.of(team))
-                .getOrDefault(teamId, 0L));
+        return TeamResponse.from(teams.detail(actor(principal), projectId, teamId));
     }
 
     @PostMapping
-    @Operation(summary = "Create a project team", description = "SQUAD_MANAGE; parent defaults to General Team; CSRF")
+    @Operation(summary = "Create a project team",
+            description = "SQUAD_MANAGE; the first team always includes its creator; CSRF")
     public ResponseEntity<TeamResponse> create(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
                                                 @PathVariable UUID projectId, @Valid @RequestBody TeamRequest request) {
-        Squad team = teams.create(actor(principal), projectId, request.name(), request.description(),
-                request.parentTeamId());
-        return ResponseEntity.status(201).body(TeamResponse.from(team, 0));
+        UUID actor = actor(principal);
+        Squad team = teams.create(actor, projectId, request.name(), request.description(), request.parentTeamId(),
+                request.includeCreator() == null || request.includeCreator());
+        return ResponseEntity.status(201).body(TeamResponse.from(teams.detail(actor, projectId, team.getId())));
     }
 
     @PutMapping("/{teamId}")
-    @Operation(summary = "Rename a project team", description = "SQUAD_MANAGE; CSRF")
+    @Operation(summary = "Update a project team's name and description", description = "SQUAD_MANAGE; CSRF")
     public TeamResponse update(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
                                @PathVariable UUID projectId, @PathVariable UUID teamId,
                                @Valid @RequestBody TeamRequest request) {
-        Squad team = teams.update(actor(principal), projectId, teamId, request.name(), request.description());
-        return TeamResponse.from(team, teams.memberCounts(actor(principal), projectId, List.of(team)).getOrDefault(teamId, 0L));
+        return TeamResponse.from(teams.update(actor(principal), projectId, teamId, request.name(),
+                request.description()));
     }
 
     @PutMapping("/{teamId}/parent")
-    @Operation(summary = "Move a project team", description = "SQUAD_MANAGE; no cycles; CSRF")
+    @Operation(summary = "Move a project team", description = "SQUAD_MANAGE; null parent means top level; no cycles; CSRF")
     public TeamResponse move(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
                              @PathVariable UUID projectId, @PathVariable UUID teamId,
                              @Valid @RequestBody MoveRequest request) {
-        Squad team = teams.move(actor(principal), projectId, teamId, request.parentTeamId());
-        return TeamResponse.from(team, teams.memberCounts(actor(principal), projectId, List.of(team)).getOrDefault(teamId, 0L));
+        return TeamResponse.from(teams.move(actor(principal), projectId, teamId, request.parentTeamId()));
     }
 
     @DeleteMapping("/{teamId}")
-    @Operation(summary = "Archive a project team", description = "SQUAD_MANAGE; child teams must move first; CSRF")
+    @Operation(summary = "Archive a project team",
+            description = "SQUAD_MANAGE; child teams must move first; refused when it would leave a member without a team; CSRF")
     public ResponseEntity<Void> delete(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
                                        @PathVariable UUID projectId, @PathVariable UUID teamId) {
         teams.archive(actor(principal), projectId, teamId);
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/{teamId}/candidates")
+    @Operation(summary = "Search people to add to a team",
+            description = "SQUAD_MANAGE; at least 2 characters, at most 20 results; status says whether to add or invite")
+    public List<CandidateResponse> candidates(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
+                                              @PathVariable UUID projectId, @PathVariable UUID teamId,
+                                              @RequestParam(defaultValue = "") String q) {
+        return teams.candidates(actor(principal), projectId, teamId, q).stream()
+                .map(candidate -> new CandidateResponse(candidate.userId(), candidate.nickname(), candidate.status()))
+                .toList();
+    }
+
     @GetMapping("/{teamId}/members")
-    @Operation(summary = "List team members", description = "PROJECT_VIEW; General Team reflects all active project members")
+    @Operation(summary = "List team members", description = "PROJECT_VIEW; each row lists the member's other teams")
     public PageResponse<SquadMemberResponse> members(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
                                                       @PathVariable UUID projectId, @PathVariable UUID teamId,
                                                       @RequestParam(defaultValue = "0") int page,
@@ -96,7 +103,7 @@ public class TeamController {
     }
 
     @PostMapping("/{teamId}/members")
-    @Operation(summary = "Add an active project member to a custom team", description = "SQUAD_MANAGE; CSRF")
+    @Operation(summary = "Add an active project member to a team", description = "SQUAD_MANAGE; CSRF")
     public ResponseEntity<SquadMemberResponse> addMember(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
                                                           @PathVariable UUID projectId, @PathVariable UUID teamId,
                                                           @Valid @RequestBody MemberRequest request) {
@@ -105,7 +112,8 @@ public class TeamController {
     }
 
     @DeleteMapping("/{teamId}/members/{userId}")
-    @Operation(summary = "Remove member from custom team only", description = "SQUAD_MANAGE; project membership stays; CSRF")
+    @Operation(summary = "Remove member from a team only",
+            description = "SQUAD_MANAGE; refused for the member's last team; project membership stays; CSRF")
     public ResponseEntity<Void> removeMember(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
                                              @PathVariable UUID projectId, @PathVariable UUID teamId,
                                              @PathVariable UUID userId) {
@@ -125,15 +133,26 @@ public class TeamController {
         if (principal == null || principal.id() == null) throw new AccessDeniedException("Authentication required");
         return principal.id();
     }
-    public record TeamRequest(@NotBlank @Size(max = 120) String name,
-                              @Size(max = 2000) String description, UUID parentTeamId) {}
-    public record MoveRequest(@NotNull UUID parentTeamId) {}
+    public record TeamRequest(@NotBlank @Size(max = 120) String name, @Size(max = 2000) String description,
+                              UUID parentTeamId, Boolean includeCreator) {}
+    public record MoveRequest(UUID parentTeamId) {}
     public record MemberRequest(@NotNull UUID userId) {}
+    public record CandidateResponse(UUID userId, String nickname, TeamCandidate.Status status) {}
+    public record UserRefResponse(UUID userId, String nickname) {}
+    public record LastJoinedResponse(UUID userId, String nickname, Instant joinedAt) {}
     public record TeamResponse(UUID id, UUID projectId, String name, String description, UUID parentTeamId,
-                               boolean general, long memberCount, UUID createdBy, Instant createdAt, Instant updatedAt) {
-        static TeamResponse from(Squad team, long count) {
+                               long memberCount, UUID createdBy, Instant createdAt, Instant updatedAt,
+                               UserRefResponse updatedBy, List<UserRefResponse> memberPreview,
+                               LastJoinedResponse lastJoined) {
+        static TeamResponse from(TeamView view) {
+            Squad team = view.team();
             return new TeamResponse(team.getId(), team.getProjectId(), team.getName(), team.getDescription(),
-                    team.getParentSquadId(), team.isGeneral(), count, team.getCreatedBy(), team.getCreatedAt(), team.getUpdatedAt());
+                    team.getParentSquadId(), view.memberCount(), team.getCreatedBy(), team.getCreatedAt(),
+                    team.getUpdatedAt(), new UserRefResponse(view.updatedBy().userId(), view.updatedBy().nickname()),
+                    view.memberPreview().stream()
+                            .map(user -> new UserRefResponse(user.userId(), user.nickname())).toList(),
+                    view.lastJoined() == null ? null : new LastJoinedResponse(view.lastJoined().userId(),
+                            view.lastJoined().nickname(), view.lastJoined().joinedAt()));
         }
     }
 }

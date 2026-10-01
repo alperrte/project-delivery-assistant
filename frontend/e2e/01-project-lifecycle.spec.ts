@@ -1,6 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
-import { createOrganization, createProject } from "./helpers";
+import { createOrganization, createProject, createTeam } from "./helpers";
 import { MANAGER_STORAGE, MANAGER_USER_FILE } from "./global-setup";
 
 /**
@@ -34,8 +34,10 @@ test.describe.serial("Project lifecycle (manager)", () => {
     slug = await createProject(page, projectName, { organizationName: orgName });
     expect(page.url()).toContain(slug);
 
+    // A new project has no teams; the first one is created through the full-page form and lists its founder.
     await page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Ekipler" }).click();
-    await page.getByRole("link", { name: /General Team üyeleri/ }).click();
+    await expect(page.getByText("Henüz ekip yok")).toBeVisible();
+    await createTeam(page, slug, "Backend");
     const row = page.getByRole("row", { name: new RegExp(manager.nickname) });
     await expect(row).toBeVisible();
     await expect(row.getByText("Proje Yöneticisi")).toBeVisible();

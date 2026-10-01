@@ -70,6 +70,15 @@ export async function createProject(
   return url.pathname.split("/").pop()!;
 }
 
+/** Creates a team through the full-page form and returns its id, parsed from the post-create redirect. */
+export async function createTeam(page: Page, slug: string, name: string): Promise<string> {
+  await page.goto(`/projects/${slug}/teams/new`);
+  await page.locator("#team-name").fill(name);
+  await page.getByRole("button", { name: /^Ekibi oluştur$/ }).click();
+  await expect(page).toHaveURL(new RegExp(`/projects/${slug}/teams/(?!new$)[^/]+$`), { timeout: 15_000 });
+  return new URL(page.url()).pathname.split("/").pop()!;
+}
+
 export async function gotoProjectTab(page: Page, slug: string, tabName: string) {
   await page.goto(`/projects/${slug}`);
   await page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: tabName }).click();

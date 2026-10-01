@@ -44,7 +44,14 @@
     "accountUnavailable": "Your account is currently unavailable.",
     "PROJECT_LOGO_INVALID_TYPE": "The logo must be a PNG, JPEG or WebP file.",
     "PROJECT_LOGO_TOO_LARGE": "The logo can be at most 512 KB.",
-    "PROJECT_LOGO_EMPTY": "The logo file is empty."
+    "PROJECT_LOGO_EMPTY": "The logo file is empty.",
+    "TEAM_MEMBER_EXISTS": "This person is already in the team.",
+    "TEAM_CIRCULAR_PARENT": "A team cannot be moved under one of its own sub-teams.",
+    "TEAM_HAS_CHILDREN": "A team with sub-teams cannot be archived. Move or archive the sub-teams first.",
+    "TEAM_LAST_MEMBERSHIP": "This person has no other team. Remove them from the project instead of the team.",
+    "TEAM_ARCHIVE_WOULD_ORPHAN": "Archiving this team would leave some people without a team.",
+    "PROJECT_OWNER_PROTECTED": "The founder cannot be removed from the project or lose the Project Manager role.",
+    "LAST_PROJECT_MANAGER": "The project must keep at least one Project Manager."
   },
   "app": {
     "nav": {
@@ -68,14 +75,20 @@
     "ANALYST": "Analyst"
   },
   "organizations": {
-    "card": { "lastUpdate": "Last update", "openNamed": "Open organization {name}" },
+    "card": {
+      "lastUpdate": "Last update",
+      "openNamed": "Open organization {name}"
+    },
     "cardLabel": "ORGANIZATION",
     "cardNoDescription": "No description added yet.",
     "cardOpen": "Open workspace",
     "cardCreated": "Created: {date}",
     "backToOrganizations": "All organizations",
     "projectsLabel": "Workspace",
-    "statusValues": { "ACTIVE": "Active", "ARCHIVED": "Archived" },
+    "statusValues": {
+      "ACTIVE": "Active",
+      "ARCHIVED": "Archived"
+    },
     "title": "Organizations",
     "description": "Group your projects under an organization, or keep them standalone.",
     "create": "New organization",
@@ -89,7 +102,11 @@
     "noProjects": "This organization has no projects yet.",
     "emptyTitle": "No organizations yet",
     "emptyDescription": "Create one to group related projects together.",
-    "columns": { "name": "Name", "status": "Status", "updatedAt": "Updated" },
+    "columns": {
+      "name": "Name",
+      "status": "Status",
+      "updatedAt": "Updated"
+    },
     "form": {
       "createTitle": "New organization",
       "editTitle": "Edit organization",
@@ -129,7 +146,13 @@
     "create": "New project",
     "emptyTitle": "No projects yet",
     "emptyDescription": "Create your first project to get started.",
-    "columns": { "name": "Name", "status": "Status", "priority": "Priority", "techStack": "Tech stack", "updatedAt": "Updated" },
+    "columns": {
+      "name": "Name",
+      "status": "Status",
+      "priority": "Priority",
+      "techStack": "Tech stack",
+      "updatedAt": "Updated"
+    },
     "emptyAction": "Create your first project",
     "newPage": {
       "title": "New project",
@@ -256,7 +279,8 @@
         "squads": "Squads",
         "repository": "Repository",
         "settings": "Settings"
-      }
+      },
+      "pendingInvitations": "{count, plural, one {# pending invitation} other {# pending invitations}}"
     },
     "overview": {
       "recentCriteriaActivity": "Recent criterion activity",
@@ -275,7 +299,6 @@
       "squads": "Squads",
       "viewSquads": "View squads",
       "invitations": "Invitations",
-      "allInvitations": "Total invitations",
       "connected": "Connected",
       "criteriaSnapshot": "Criteria status",
       "viewAll": "View all",
@@ -309,14 +332,20 @@
         "COMPLETED": "Completed",
         "ARCHIVED": "Archived"
       },
-      "priorityValues": { "LOW": "Low", "MEDIUM": "Medium", "HIGH": "High", "CRITICAL": "Critical" },
+      "priorityValues": {
+        "LOW": "Low",
+        "MEDIUM": "Medium",
+        "HIGH": "High",
+        "CRITICAL": "Critical"
+      },
       "teamMembers": "{count, plural, one {# member} other {# members}}",
       "managedBy": "Managed by {names}",
       "due": "Due {date}",
       "criteriaProgress": "Success criteria",
       "repository": "Repository",
       "noRepository": "No repository connected",
-      "githubUnavailable": "GitHub is temporarily unavailable"
+      "githubUnavailable": "GitHub is temporarily unavailable",
+      "pendingInvitations": "Pending invitations"
     },
     "settings": {
       "title": "Project settings",
@@ -329,9 +358,19 @@
       "name": "Name",
       "description": "Description",
       "status": "Status",
-      "statusValues": { "PLANNING": "Planning", "ACTIVE": "Active", "ON_HOLD": "On hold", "COMPLETED": "Completed" },
+      "statusValues": {
+        "PLANNING": "Planning",
+        "ACTIVE": "Active",
+        "ON_HOLD": "On hold",
+        "COMPLETED": "Completed"
+      },
       "priority": "Priority",
-      "priorityValues": { "LOW": "Low", "MEDIUM": "Medium", "HIGH": "High", "CRITICAL": "Critical" },
+      "priorityValues": {
+        "LOW": "Low",
+        "MEDIUM": "Medium",
+        "HIGH": "High",
+        "CRITICAL": "Critical"
+      },
       "startDate": "Start date",
       "targetEndDate": "Target end date",
       "organization": "Organization",
@@ -354,17 +393,34 @@
       "taglinePlaceholder": "Describe the project in one sentence",
       "type": "Project type",
       "sections": {
-        "general": { "title": "General", "description": "The project's name, description and goal. Shown in lists and the project header." },
-        "planning": { "title": "Planning", "description": "Status, priority and dates. An organization groups the project under a workspace." },
-        "technology": { "title": "Technology", "description": "Languages, frameworks and tools in use." },
-        "danger": { "title": "Danger zone", "description": "Actions that cannot be undone." }
+        "general": {
+          "title": "General",
+          "description": "The project's name, description and goal. Shown in lists and the project header."
+        },
+        "planning": {
+          "title": "Planning",
+          "description": "Status, priority and dates. An organization groups the project under a workspace."
+        },
+        "technology": {
+          "title": "Technology",
+          "description": "Languages, frameworks and tools in use."
+        },
+        "danger": {
+          "title": "Danger zone",
+          "description": "Actions that cannot be undone."
+        }
       }
     }
   },
   "criteria": {
     "title": "Success criteria",
     "description": "Manage the project's success criteria and completion status.",
-    "filters": { "label": "Criteria filter", "all": "All", "completed": "Completed", "remaining": "Remaining" },
+    "filters": {
+      "label": "Criteria filter",
+      "all": "All",
+      "completed": "Completed",
+      "remaining": "Remaining"
+    },
     "search": "Search criteria...",
     "noResults": "No criteria match your search.",
     "create": "New criterion",
@@ -413,11 +469,13 @@
     "description": "View the people in this project, their roles and join dates.",
     "emptyDescription": "People who join this project and their roles will appear here.",
     "emptyTitle": "No members yet",
-    "columns": { "member": "Member", "roles": "Roles", "joinedAt": "Joined", "actions": "Actions" },
+    "columns": {
+      "member": "Member",
+      "roles": "Roles",
+      "joinedAt": "Joined",
+      "actions": "Actions"
+    },
     "editRolesTitle": "Edit roles",
-    "remove": "Remove",
-    "removeConfirmTitle": "Remove this member?",
-    "removeConfirmDescription": "They will lose access to this project immediately.",
     "cancel": "Cancel",
     "save": "Save",
     "rolesUpdated": "Roles updated."
@@ -443,13 +501,26 @@
     "rejectionMessage": "Reason for declining (optional)",
     "acceptSuccess": "Invitation accepted.",
     "rejectSuccess": "Invitation declined.",
-    "statusValues": { "PENDING": "Pending", "ACCEPTED": "Accepted", "REJECTED": "Rejected", "CANCELLED": "Cancelled", "EXPIRED": "Expired" },
+    "statusValues": {
+      "PENDING": "Pending",
+      "ACCEPTED": "Accepted",
+      "REJECTED": "Rejected",
+      "CANCELLED": "Cancelled",
+      "EXPIRED": "Expired"
+    },
     "emptyDescription": "Invite a project member to grow your team.",
     "pendingTitle": "Project invitations",
     "description": "Manage sent invitations, roles and statuses.",
     "invite": "Invite member",
     "emptyTitle": "No invitations yet",
-    "columns": { "target": "Invited", "roles": "Roles", "sentAt": "Invited on", "status": "Status", "actions": "Actions" },
+    "columns": {
+      "target": "Invited",
+      "roles": "Roles",
+      "sentAt": "Invited on",
+      "status": "Status",
+      "actions": "Actions",
+      "team": "Team"
+    },
     "resend": "Resend",
     "resent": "Invitation resent.",
     "cancel": "Cancel",
@@ -471,38 +542,78 @@
       "acceptedMessage": "You have joined the project.",
       "rejectedMessage": "You declined the invitation.",
       "goToProjects": "Go to projects"
+    },
+    "pageTitle": "Project invitations",
+    "pageDescription": "Manage sent invitations, their target teams and their status.",
+    "tabsLabel": "Invitation status",
+    "listLabel": "Invitations",
+    "retry": "Try again",
+    "resendNamed": "Resend invitation to {name}",
+    "cancelNamed": "Cancel invitation to {name}",
+    "cancelTitle": "Cancel the invitation to {name}?",
+    "cancelDescription": "The invitation link stops working. You can invite them again later.",
+    "noTeam": "No team",
+    "empty": {
+      "PENDING": {
+        "title": "No pending invitations",
+        "description": "A new invitation shows up here once you send it."
+      },
+      "ACCEPTED": {
+        "title": "No accepted invitations",
+        "description": "Accepted invitations are listed here."
+      },
+      "REJECTED": {
+        "title": "No rejected invitations",
+        "description": "Rejected invitations and their reasons are listed here."
+      },
+      "CANCELLED": {
+        "title": "No cancelled invitations",
+        "description": "Cancelled invitations are listed here."
+      }
     }
   },
   "squads": {
-    "card": { "members": "Members", "lastUpdate": "Last update" },
-    "membersPage": {
-      "back": "Back to teams",
-      "teams": "Teams",
-      "description": "View and manage this team's members and their project roles.",
+    "title": "Teams",
+    "description": "Create and manage the teams that work together in the project. People are invited through teams.",
+    "create": "New team",
+    "cancel": "Cancel",
+    "emptyTitle": "No teams yet",
+    "emptyDescription": "Create your first team. People are invited through teams.",
+    "emptyViewerDescription": "No team has been created in this project yet.",
+    "view": {
+      "label": "View",
+      "list": "List",
+      "chart": "Chart"
+    },
+    "card": {
+      "members": "Members",
       "memberCount": "{count, plural, one {# member} other {# members}}",
-      "member": "Member",
-      "roles": "Project roles",
-      "joinedAt": "Joined team",
-      "actions": "Actions",
-      "add": "Add member",
-      "addTitle": "Add a project member",
-      "addDescription": "Only people who have already joined the project can join this team.",
-      "addPerson": "Add {name} to the team",
-      "alreadyAdded": "In team",
-      "added": "Member added to team.",
-      "noCandidates": "No project members on this page.",
-      "emptyTitle": "No members in this team yet",
-      "emptyCustom": "Start by adding someone who is already a project member.",
-      "emptyGeneral": "People who join the project appear here.",
-      "removeFromTeam": "Remove from team",
-      "removeFromTeamTitle": "Remove this member from the team?",
-      "removeFromTeamDescription": "They will stay in the project and leave only this team.",
-      "removedFromTeam": "Member removed from team.",
-      "removeFromProject": "Remove from project",
-      "removeFromProjectTitle": "Remove this member from the project?",
-      "removeFromProjectDescription": "They will lose access to the project and its teams.",
-      "removedFromProject": "Member removed from project.",
-      "retry": "Try again"
+      "noMembers": "No members yet",
+      "lastUpdate": "Last update",
+      "updatedBy": "{date} · {name}",
+      "lastJoined": "Last joined",
+      "joinedBy": "{name} · {when}",
+      "nobodyJoined": "Nobody has joined yet",
+      "noDescription": "No description added",
+      "namePlaceholder": "Team name",
+      "parent": "Parent team: {name}",
+      "open": "Open team",
+      "openNamed": "Open team {name}",
+      "edit": "Edit",
+      "editNamed": "Edit team {name}"
+    },
+    "archive": {
+      "label": "Archive team {name}",
+      "button": "Archive",
+      "title": "Archive {name}?",
+      "description": "An archived team leaves the list and its pending invitations are cancelled. Members stay in the project.",
+      "done": "Team archived.",
+      "orphan": "This team cannot be archived because these people have no other team: {names}. Add them to another team first."
+    },
+    "chart": {
+      "label": "Team organization chart",
+      "openTeam": "Open team {name}",
+      "members": "{count, plural, one {# member} other {# members}}"
     },
     "description": "Create and manage teams working together on this project.",
     "noDescription": "No description has been added for this team.",
@@ -521,21 +632,145 @@
     "cancel": "Cancel",
     "columns": { "name": "Name", "actions": "Actions" },
     "form": {
-      "createTitle": "New squad",
-      "editTitle": "Edit squad",
-      "name": "Name",
-      "description": "Description",
+      "title": "New team",
+      "editTitle": "Edit team",
+      "description": "Define the team's identity. The card on the right shows how it will look in the list.",
+      "editDescription": "Update the name, description and parent team.",
+      "back": "Back to teams",
       "cancel": "Cancel",
-      "create": "Create",
-      "save": "Save",
-      "created": "Squad created.",
-      "updated": "Squad updated."
+      "submit": "Create team",
+      "save": "Save changes",
+      "created": "Team created.",
+      "saved": "Team updated.",
+      "optional": "Optional",
+      "counter": "{count}/{max}",
+      "sections": {
+        "identity": {
+          "title": "Identity",
+          "description": "The name and description appear at the top of the card. The logo comes from the project."
+        },
+        "placement": {
+          "title": "Placement",
+          "description": "Choose where the team sits in the organization chart."
+        },
+        "membership": {
+          "title": "Membership",
+          "description": "Choose whether to add yourself to the team."
+        }
+      },
+      "name": {
+        "label": "Team name",
+        "placeholder": "e.g. Backend Team"
+      },
+      "descriptionField": {
+        "label": "What does this team do?",
+        "placeholder": "Briefly describe the team's responsibility"
+      },
+      "parent": {
+        "label": "Parent team",
+        "none": "Top level",
+        "hint": "The parent team only shows in the chart and on the card; membership and permissions are not inherited."
+      },
+      "includeCreator": {
+        "label": "Add me to this team too",
+        "hint": "The team stays empty unless you add people.",
+        "locked": "As the first team of the project you are added to it. Every member must belong to at least one team."
+      },
+      "preview": {
+        "title": "Preview",
+        "caption": "This is how the card will look in the list.",
+        "now": "Just now · you",
+        "joinedNow": "Just now",
+        "show": "Show preview",
+        "you": "You"
+      }
     },
-    "members": {
-      "title": "{name} members",
-      "searchPlaceholder": "Search project members",
-      "emptyTitle": "No members in this squad yet",
-      "remove": "Remove"
+    "addMember": {
+      "button": "Add member",
+      "title": "Add a member to the team",
+      "description": "Search for a person by name. If they are not in the project they are invited to this team.",
+      "team": "Team",
+      "teamPlaceholder": "Choose a team",
+      "modeLabel": "How to add",
+      "modeUser": "PDA user",
+      "modeEmail": "Invite by e-mail",
+      "searchLabel": "Find a person",
+      "searchPlaceholder": "Type at least 2 characters",
+      "pickTeamFirst": "Choose a team first",
+      "noResults": "No matching user found.",
+      "results": "Search results",
+      "addNamed": "Add {name} to the team",
+      "addAction": "Add to team",
+      "inviteNamed": "Invite {name} to the team",
+      "inviteAction": "Invite",
+      "inTeam": "In the team",
+      "alreadyInvited": "Invitation pending",
+      "outsideProject": "{name} is not in the project. On accepting the invitation they join the project and this team together.",
+      "added": "Person added to the team.",
+      "cancel": "Cancel"
+    },
+    "detail": {
+      "backToTeams": "Back to teams",
+      "retry": "Try again",
+      "breadcrumb": "Breadcrumb",
+      "teams": "Teams",
+      "noDescription": "No description has been added for this team.",
+      "meta": {
+        "members": "{count, plural, one {# member} other {# members}}",
+        "parent": "Parent team:",
+        "updated": "Last updated {date} · {name}",
+        "lastJoined": "Last joined {name}, {when}"
+      },
+      "editTeam": "Edit team",
+      "editMode": {
+        "title": "Edit mode",
+        "hint": "Roles apply project-wide.",
+        "editInfo": "Edit team details",
+        "done": "Done"
+      },
+      "searchLabel": "Search members",
+      "searchPlaceholder": "Search by name or e-mail",
+      "roleFilter": "Role",
+      "sort": {
+        "label": "Sort",
+        "joined_desc": "Joined: newest first",
+        "joined_asc": "Joined: oldest first",
+        "name": "Name: A-Z"
+      },
+      "clearFilters": "Clear filters",
+      "emptyTitle": "This team has no members yet",
+      "emptyDescription": "Add someone from the project or invite someone new to it.",
+      "emptyViewerDescription": "Nobody has been added to this team yet.",
+      "noMatchesTitle": "No matching members",
+      "noMatchesDescription": "Try changing the search or the role filter.",
+      "founder": "Founder",
+      "you": "(you)",
+      "noOtherTeams": "No other team",
+      "moreTeams": "+{count}",
+      "listLabel": "Team members",
+      "columns": {
+        "member": "Member",
+        "roles": "Project roles",
+        "otherTeams": "Other teams",
+        "joined": "Joined team",
+        "actions": "Actions"
+      },
+      "actions": {
+        "editRoles": "Edit roles of {name}",
+        "editRolesHint": "Edit roles (project-wide)",
+        "lastTeam": "This person has no other team. Removing them from the team means removing them from the project.",
+        "removeFromTeam": "Remove {name} from the team",
+        "removeFromTeamShort": "Remove from team",
+        "removeFromTeamTitle": "Remove {name} from the team?",
+        "removeFromTeamDescription": "The person stays in the project and keeps access to their other teams. They are only removed from {team}.",
+        "removedFromTeam": "Person removed from the team.",
+        "founderLocked": "The founder of the project cannot be removed from it.",
+        "removeFromProject": "Remove {name} from the project",
+        "removeFromProjectShort": "Remove from project",
+        "removeFromProjectTitle": "Remove {name} from the project?",
+        "removeFromProjectDescription": "{name} is removed from the project and from these teams: {teams}. A new invitation is needed to rejoin.",
+        "removedFromProject": "Person removed from the project."
+      }
     }
   },
   "oauth": {

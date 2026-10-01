@@ -20,10 +20,6 @@ public interface SquadRepository extends JpaRepository<Squad, UUID> {
 
     long countByProjectIdAndArchivedAtIsNull(UUID projectId);
 
-    Optional<Squad> findByProjectIdAndGeneralTrue(UUID projectId);
-
-    Page<Squad> findByProjectIdAndGeneralFalseAndArchivedAtIsNull(UUID projectId, Pageable pageable);
-
     boolean existsByParentSquadIdAndArchivedAtIsNull(UUID parentSquadId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
