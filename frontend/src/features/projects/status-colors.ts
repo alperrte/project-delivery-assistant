@@ -34,6 +34,21 @@ export function projectPriorityBadgeClass(priority: ProjectPriority): string {
   }
 }
 
+/** Header-band tone of a project/workspace card for a given status. */
+export function projectStatusTone(status: ProjectStatus): "neutral" | "success" | "warning" {
+  switch (status) {
+    case "ACTIVE":
+    case "COMPLETED":
+      return "success";
+    case "ON_HOLD":
+      return "warning";
+    case "ARCHIVED":
+    case "PLANNING":
+    default:
+      return "neutral";
+  }
+}
+
 /** Same semantics as projectStatusBadgeClass, as a plain dot fill for dense table rows. */
 export function projectStatusDotClass(status: ProjectStatus): string {
   switch (status) {

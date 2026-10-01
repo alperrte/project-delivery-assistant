@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useForm, Controller } from "react-hook-form";
@@ -9,16 +10,66 @@ import { CircleNotch, Archive } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/common/page-header";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
+import { TagInput } from "@/components/common/tag-input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { errorKey } from "@/lib/api/error-message";
+import { cn } from "@/lib/utils";
 import { organizationsApi } from "@/features/organizations/api";
 import { projectsApi } from "../api";
 import { projectPriorities, projectSettingsSchema, projectStatuses, type ProjectSettingsValues } from "../schemas";
+import { formatTechStack, parseTechStack } from "../tech-stack";
 import type { Project } from "../types";
+
+const inputClass = "h-10 bg-background px-3";
+const textareaClass = "min-h-20 bg-background px-3 py-2.5 leading-6";
+const selectClass = "w-full bg-background";
+
+/** Empty text fields default to "" (what the inputs hold), otherwise the form reads as dirty on load. */
+function toFormValues(project: Project): ProjectSettingsValues {
+  return {
+    name: project.name,
+    description: project.description ?? "",
+    priority: project.priority,
+    status: project.status === "ARCHIVED" ? "PLANNING" : project.status,
+    startDate: project.startDate ?? "",
+    targetEndDate: project.targetEndDate ?? "",
+    projectGoal: project.projectGoal ?? "",
+    techStack: project.techStack ?? "",
+    organizationId: project.organizationId ?? undefined,
+  };
+}
+
+function SettingsSection({ title, description, children }: { title: string; description: string; children: ReactNode }) {
+  return (
+    <section className="grid gap-5 border-t py-8 first:border-t-0 first:pt-0 md:grid-cols-[minmax(0,13rem)_minmax(0,1fr)] md:gap-12 lg:grid-cols-[minmax(0,16rem)_minmax(0,1fr)]">
+      <div>
+        <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+        <p className="mt-1.5 text-sm leading-5 text-muted-foreground">{description}</p>
+      </div>
+      <div className="min-w-0">{children}</div>
+    </section>
+  );
+}
+
+function Field({
+  id, label, hint, error, className, children,
+}: { id: string; label: string; hint?: string; error?: string; className?: string; children: ReactNode }) {
+  return (
+    <div className={cn("space-y-1.5", className)}>
+      <Label htmlFor={id}>{label}</Label>
+      {children}
+      {error ? (
+        <p id={`${id}-error`} role="alert" className="text-sm text-destructive">{error}</p>
+      ) : hint ? (
+        <p id={`${id}-hint`} className="text-xs leading-5 text-muted-foreground">{hint}</p>
+      ) : null}
+    </div>
+  );
+}
 
 export function ProjectSettingsForm({ project }: { project: Project }) {
   const t = useTranslations("projects.settings");
@@ -41,34 +92,14 @@ export function ProjectSettingsForm({ project }: { project: Project }) {
   } = useForm<ProjectSettingsValues>({
     resolver: zodResolver(projectSettingsSchema),
     mode: "onBlur",
-    defaultValues: {
-      name: project.name,
-      description: project.description ?? undefined,
-      priority: project.priority,
-      status: project.status === "ARCHIVED" ? "PLANNING" : project.status,
-      startDate: project.startDate ?? undefined,
-      targetEndDate: project.targetEndDate ?? undefined,
-      projectGoal: project.projectGoal ?? undefined,
-      techStack: project.techStack ?? undefined,
-      organizationId: project.organizationId ?? undefined,
-    },
+    defaultValues: toFormValues(project),
   });
 
   const save = useMutation({
     mutationFn: (values: ProjectSettingsValues) => projectsApi.update(project.id, values),
     onSuccess: (updated) => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
-      reset({
-        name: updated.name,
-        description: updated.description ?? undefined,
-        priority: updated.priority,
-        status: updated.status === "ARCHIVED" ? "PLANNING" : updated.status,
-        startDate: updated.startDate ?? undefined,
-        targetEndDate: updated.targetEndDate ?? undefined,
-        projectGoal: updated.projectGoal ?? undefined,
-        techStack: updated.techStack ?? undefined,
-        organizationId: updated.organizationId ?? undefined,
-      });
+      reset(toFormValues(updated));
       toast.success(t("saved"));
     },
     onError: (err) => toast.error(te(errorKey(err))),
@@ -84,11 +115,178 @@ export function ProjectSettingsForm({ project }: { project: Project }) {
     onError: (err) => toast.error(te(errorKey(err))),
   });
 
+  const saving = isSubmitting || save.isPending;
+
   return (
-    <div>
-      <PageHeader
-        title={t("title")}
-        action={
+    <div className="max-w-4xl">
+      <PageHeader title={t("title")} />
+
+      <form onSubmit={handleSubmit((values) => save.mutate(values))} noValidate>
+        <SettingsSection title={t("sections.general.title")} description={t("sections.general.description")}>
+          <div className="space-y-5">
+            <Field id="settings-name" label={t("name")} error={errors.name && tv(errors.name.message!)}>
+              <Input
+                id="settings-name"
+                className={inputClass}
+                placeholder={t("namePlaceholder")}
+                aria-invalid={!!errors.name}
+                aria-describedby={errors.name ? "settings-name-error" : undefined}
+                {...register("name")}
+              />
+            </Field>
+            <Field id="settings-description" label={t("description")} error={errors.description && tv(errors.description.message!)}>
+              <Textarea
+                id="settings-description"
+                rows={3}
+                className={textareaClass}
+                placeholder={t("descriptionPlaceholder")}
+                aria-invalid={!!errors.description}
+                {...register("description")}
+              />
+            </Field>
+            <Field id="settings-goal" label={t("goal")} hint={t("goalHint")} error={errors.projectGoal && tv(errors.projectGoal.message!)}>
+              <Textarea
+                id="settings-goal"
+                rows={3}
+                className={textareaClass}
+                placeholder={t("goalPlaceholder")}
+                aria-invalid={!!errors.projectGoal}
+                aria-describedby="settings-goal-hint"
+                {...register("projectGoal")}
+              />
+            </Field>
+          </div>
+        </SettingsSection>
+
+        <SettingsSection title={t("sections.planning.title")} description={t("sections.planning.description")}>
+          <div className="grid gap-5 sm:grid-cols-2">
+            <Field id="settings-status" label={t("status")}>
+              <Controller
+                control={control}
+                name="status"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger id="settings-status" className={selectClass}>
+                      <SelectValue>{(value: (typeof projectStatuses)[number]) => t(`statusValues.${value}`)}</SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {projectStatuses.map((status) => (
+                        <SelectItem key={status} value={status}>{t(`statusValues.${status}`)}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </Field>
+
+            <Field id="settings-priority" label={t("priority")}>
+              <Controller
+                control={control}
+                name="priority"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger id="settings-priority" className={selectClass}>
+                      <SelectValue>{(value: (typeof projectPriorities)[number]) => t(`priorityValues.${value}`)}</SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {projectPriorities.map((priority) => (
+                        <SelectItem key={priority} value={priority}>{t(`priorityValues.${priority}`)}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </Field>
+
+            <Field id="settings-start" label={t("startDate")}>
+              <Input id="settings-start" type="date" className={inputClass} {...register("startDate")} />
+            </Field>
+
+            <Field id="settings-end" label={t("targetEndDate")} error={errors.targetEndDate && tv(errors.targetEndDate.message!)}>
+              <Input
+                id="settings-end"
+                type="date"
+                className={inputClass}
+                aria-invalid={!!errors.targetEndDate}
+                aria-describedby={errors.targetEndDate ? "settings-end-error" : undefined}
+                {...register("targetEndDate")}
+              />
+            </Field>
+
+            {organizations && organizations.content.length > 0 && (
+              <Field id="settings-organization" label={t("organization")} className="sm:col-span-2">
+                <Controller
+                  control={control}
+                  name="organizationId"
+                  render={({ field }) => (
+                    <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                      <SelectTrigger id="settings-organization" className={selectClass}>
+                        <SelectValue placeholder={t("organizationNone")}>
+                          {(value: string) => organizations.content.find((org) => org.id === value)?.name ?? t("organizationNone")}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {organizations.content.map((org) => (
+                          <SelectItem key={org.id} value={org.id}>{org.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </Field>
+            )}
+          </div>
+        </SettingsSection>
+
+        <SettingsSection title={t("sections.technology.title")} description={t("sections.technology.description")}>
+          <Field id="settings-tech" label={t("techStack")} hint={t("techStackHint")} error={errors.techStack && tv(errors.techStack.message!)}>
+            <Controller
+              control={control}
+              name="techStack"
+              render={({ field }) => (
+                <TagInput
+                  id="settings-tech"
+                  value={parseTechStack(field.value)}
+                  onChange={(items) => field.onChange(formatTechStack(items))}
+                  placeholder={t("techStackPlaceholder")}
+                  removeLabel={(tag) => t("techStackRemove", { name: tag })}
+                  aria-describedby="settings-tech-hint"
+                />
+              )}
+            />
+          </Field>
+        </SettingsSection>
+
+        {/* Room for the save bar once it rests at the end of the form; it floats over this gap, not over the fields. */}
+        <div aria-hidden="true" className="h-16" />
+        {isDirty && (
+          <div className="sticky bottom-4 z-20 h-0">
+            <div
+              role="region"
+              aria-label={t("unsaved")}
+              className="absolute inset-x-0 bottom-0 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border-strong bg-popover/95 px-4 py-3 shadow-lg backdrop-blur animate-fade-up"
+            >
+              <p className="text-sm font-medium text-foreground">{t("unsaved")}</p>
+              <div className="flex items-center gap-2">
+                <Button type="button" variant="ghost" disabled={saving} onClick={() => reset()}>
+                  {t("discard")}
+                </Button>
+                <Button type="submit" disabled={saving}>
+                  {save.isPending && <CircleNotch size={16} className="animate-spin" />}
+                  {t("save")}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </form>
+
+      <SettingsSection title={t("sections.danger.title")} description={t("sections.danger.description")}>
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-lg border border-destructive/30 bg-destructive/5 p-4">
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-foreground">{t("dangerTitle")}</p>
+            <p className="mt-0.5 text-sm text-muted-foreground">{t("dangerDescription")}</p>
+          </div>
           <ConfirmDialog
             trigger={
               <Button variant="destructive">
@@ -103,123 +301,8 @@ export function ProjectSettingsForm({ project }: { project: Project }) {
             destructive
             onConfirm={() => archive.mutateAsync()}
           />
-        }
-      />
-
-      <form
-        onSubmit={handleSubmit((values) => save.mutate(values))}
-        noValidate
-        className="grid gap-5 rounded-2xl border bg-card p-6 shadow-sm sm:grid-cols-2 sm:p-8"
-      >
-        <div className="space-y-1.5 sm:col-span-2">
-          <Label htmlFor="settings-name">{t("name")}</Label>
-          <Input id="settings-name" aria-invalid={!!errors.name} {...register("name")} />
-          {errors.name && <p className="text-sm text-destructive">{tv(errors.name.message!)}</p>}
         </div>
-
-        <div className="space-y-1.5 sm:col-span-2">
-          <Label htmlFor="settings-description">{t("description")}</Label>
-          <Textarea id="settings-description" rows={3} {...register("description")} />
-        </div>
-
-        <div className="space-y-1.5">
-          <Label htmlFor="settings-status">{t("status")}</Label>
-          <Controller
-            control={control}
-            name="status"
-            render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger id="settings-status" className="w-full">
-                  <SelectValue>{(value: (typeof projectStatuses)[number]) => t(`statusValues.${value}`)}</SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {projectStatuses.map((status) => (
-                    <SelectItem key={status} value={status}>
-                      {t(`statusValues.${status}`)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          />
-        </div>
-
-        <div className="space-y-1.5">
-          <Label htmlFor="settings-priority">{t("priority")}</Label>
-          <Controller
-            control={control}
-            name="priority"
-            render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger id="settings-priority" className="w-full">
-                  <SelectValue>{(value: (typeof projectPriorities)[number]) => t(`priorityValues.${value}`)}</SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {projectPriorities.map((priority) => (
-                    <SelectItem key={priority} value={priority}>
-                      {t(`priorityValues.${priority}`)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          />
-        </div>
-
-        <div className="space-y-1.5">
-          <Label htmlFor="settings-start">{t("startDate")}</Label>
-          <Input id="settings-start" type="date" {...register("startDate")} />
-        </div>
-
-        <div className="space-y-1.5">
-          <Label htmlFor="settings-end">{t("targetEndDate")}</Label>
-          <Input id="settings-end" type="date" aria-invalid={!!errors.targetEndDate} {...register("targetEndDate")} />
-          {errors.targetEndDate && <p className="text-sm text-destructive">{tv(errors.targetEndDate.message!)}</p>}
-        </div>
-
-        {organizations && organizations.content.length > 0 && (
-          <div className="space-y-1.5 sm:col-span-2">
-            <Label htmlFor="settings-organization">{t("organization")}</Label>
-            <Controller
-              control={control}
-              name="organizationId"
-              render={({ field }) => (
-                <Select value={field.value ?? ""} onValueChange={field.onChange}>
-                  <SelectTrigger id="settings-organization" className="w-full">
-                    <SelectValue placeholder={t("organizationNone")}>
-                      {(value: string) => organizations.content.find((org) => org.id === value)?.name ?? t("organizationNone")}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {organizations.content.map((org) => (
-                      <SelectItem key={org.id} value={org.id}>
-                        {org.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            />
-          </div>
-        )}
-
-        <div className="space-y-1.5 sm:col-span-2">
-          <Label htmlFor="settings-goal">{t("goal")}</Label>
-          <Textarea id="settings-goal" rows={2} {...register("projectGoal")} />
-        </div>
-
-        <div className="space-y-1.5 sm:col-span-2">
-          <Label htmlFor="settings-tech">{t("techStack")}</Label>
-          <Textarea id="settings-tech" rows={2} {...register("techStack")} />
-        </div>
-
-        <div className="sm:col-span-2">
-          <Button type="submit" disabled={isSubmitting || save.isPending || !isDirty}>
-            {save.isPending && <CircleNotch size={16} className="animate-spin" />}
-            {t("save")}
-          </Button>
-        </div>
-      </form>
+      </SettingsSection>
     </div>
   );
 }

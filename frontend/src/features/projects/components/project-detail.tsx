@@ -5,10 +5,9 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import {
-  Users, CalendarBlank, Code, PencilSimple,
+  Users, CalendarBlank, Code,
 } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { errorKey } from "@/lib/api/error-message";
@@ -73,7 +72,6 @@ export function ProjectDetail({ slug }: { slug: string }) {
                 <span className="inline-flex items-center gap-1.5"><Code size={15} aria-hidden="true" />{home?.repository.connected ? `${home.repository.repositoryOwner}/${home.repository.repositoryName}` : tp("noRepository")}</span>
               </div>
             </div>
-            {isManager && <Button variant="outline" className="order-3 h-9 w-full sm:order-none sm:w-auto" onClick={() => setSection("settings")}><PencilSimple size={16} />{t("edit")}</Button>}
           </div>
           <TabsContent value="overview"><ProjectOverview project={project} isManager={isManager} onNavigate={setSection} /></TabsContent>
           <TabsContent value="criteria"><CriteriaList projectId={project.id} isManager={isManager} /></TabsContent>

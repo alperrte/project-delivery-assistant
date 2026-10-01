@@ -62,6 +62,7 @@
     "ANALYST": "Analyst"
   },
   "organizations": {
+    "card": { "lastUpdate": "Last update", "openNamed": "Open organization {name}" },
     "cardLabel": "ORGANIZATION",
     "cardNoDescription": "No description added yet.",
     "cardOpen": "Open workspace",
@@ -96,6 +97,7 @@
     }
   },
   "projects": {
+    "card": { "technology": "Technology", "noTechnology": "No technology listed", "team": "Team", "teamUnavailable": "Team details could not be loaded.", "members": "{count, plural, one {# member} other {# members}}", "lastUpdate": "Last update", "open": "Open project", "openNamed": "Open project {name}" },
     "cardLabel": "PROJECT",
     "cardNoDescription": "No description added yet.",
     "cardGoal": "Goal",
@@ -121,7 +123,6 @@
       "changeProject": "Change",
       "chooseProject": "Choose a project",
       "createdAt": "Created: {date}",
-      "edit": "Edit",
       "eyebrow": "Project workspace",
       "navigation": "Project menu",
       "tabs": {
@@ -215,7 +216,24 @@
       "organizationNone": "No organization",
       "goal": "Project goal",
       "techStack": "Tech stack",
-      "save": "Save changes"
+      "save": "Save changes",
+      "namePlaceholder": "e.g. PDA Web Platform",
+      "descriptionPlaceholder": "What does this project do, and for whom?",
+      "goalPlaceholder": "What should we have achieved when the project is done?",
+      "goalHint": "The team's shared goal. Shown in the project header when there is no description.",
+      "techStackHint": "Type and press Enter or comma to add. Shown as badges on the project card.",
+      "techStackPlaceholder": "e.g. Spring Boot",
+      "techStackRemove": "Remove {name}",
+      "unsaved": "You have unsaved changes",
+      "discard": "Discard changes",
+      "dangerTitle": "Archive project",
+      "dangerDescription": "An archived project can no longer be changed and is hidden from active lists. This cannot be undone.",
+      "sections": {
+        "general": { "title": "General", "description": "The project's name, description and goal. Shown in lists and the project header." },
+        "planning": { "title": "Planning", "description": "Status, priority and dates. An organization groups the project under a workspace." },
+        "technology": { "title": "Technology", "description": "Languages, frameworks and tools in use." },
+        "danger": { "title": "Danger zone", "description": "Actions that cannot be undone." }
+      }
     }
   },
   "criteria": {
@@ -331,6 +349,7 @@
     }
   },
   "squads": {
+    "card": { "members": "Members", "lastUpdate": "Last update" },
     "membersPage": {
       "back": "Back to teams",
       "teams": "Teams",

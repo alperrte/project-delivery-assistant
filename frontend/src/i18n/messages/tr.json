@@ -62,6 +62,7 @@
     "ANALYST": "Analist"
   },
   "organizations": {
+    "card": { "lastUpdate": "Son güncelleme", "openNamed": "{name} organizasyonunu aç" },
     "cardLabel": "ORGANİZASYON",
     "cardNoDescription": "Henüz açıklama eklenmedi.",
     "cardOpen": "Çalışma alanını aç",
@@ -96,6 +97,7 @@
     }
   },
   "projects": {
+    "card": { "technology": "Teknoloji", "noTechnology": "Teknoloji belirtilmedi", "team": "Ekip", "teamUnavailable": "Ekip bilgisi yüklenemedi.", "members": "{count} üye", "lastUpdate": "Son güncelleme", "open": "Projeyi aç", "openNamed": "{name} projesini aç" },
     "cardLabel": "PROJE",
     "cardNoDescription": "Henüz açıklama eklenmedi.",
     "cardGoal": "Hedef",
@@ -121,7 +123,6 @@
       "changeProject": "Değiştir",
       "chooseProject": "Proje seçin",
       "createdAt": "Oluşturulma: {date}",
-      "edit": "Düzenle",
       "eyebrow": "Proje çalışma alanı",
       "navigation": "Proje menüsü",
       "tabs": {
@@ -215,7 +216,24 @@
       "organizationNone": "Organizasyon yok",
       "goal": "Proje hedefi",
       "techStack": "Teknoloji yığını",
-      "save": "Değişiklikleri kaydet"
+      "save": "Değişiklikleri kaydet",
+      "namePlaceholder": "ör. PDA Web Platformu",
+      "descriptionPlaceholder": "Bu proje ne yapıyor, kimin için?",
+      "goalPlaceholder": "Proje bittiğinde neyi başarmış olmalıyız?",
+      "goalHint": "Ekibin ortak hedefi. Proje başlığında açıklama yoksa bu metin gösterilir.",
+      "techStackHint": "Yazıp Enter veya virgül ile ekleyin. Proje kartında rozet olarak görünür.",
+      "techStackPlaceholder": "ör. Spring Boot",
+      "techStackRemove": "{name} teknolojisini kaldır",
+      "unsaved": "Kaydedilmemiş değişiklikler var",
+      "discard": "Değişiklikleri at",
+      "dangerTitle": "Projeyi arşivle",
+      "dangerDescription": "Arşivlenen proje değiştirilemez ve aktif listelerden gizlenir. Bu işlem geri alınamaz.",
+      "sections": {
+        "general": { "title": "Genel", "description": "Projenin adı, açıklaması ve hedefi. Liste ve proje başlığında görünür." },
+        "planning": { "title": "Planlama", "description": "Durum, öncelik ve tarihler. Organizasyon projeyi bir çalışma alanı altında gruplar." },
+        "technology": { "title": "Teknoloji", "description": "Kullanılan dil, çerçeve ve araçlar." },
+        "danger": { "title": "Tehlikeli bölge", "description": "Geri alınamayan işlemler." }
+      }
     }
   },
   "criteria": {
@@ -331,6 +349,7 @@
     }
   },
   "squads": {
+    "card": { "members": "Üyeler", "lastUpdate": "Son güncelleme" },
     "membersPage": {
       "back": "Ekiplere dön",
       "teams": "Ekipler",
