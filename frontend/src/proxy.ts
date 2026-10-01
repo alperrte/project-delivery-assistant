@@ -4,11 +4,11 @@ import { NextResponse, type NextRequest } from "next/server";
  * Edge-level defense-in-depth for route access. This never replaces backend
  * authorization — every API call is still independently checked against the
  * real, HttpOnly `PDA_ACCESS`/`PDA_REFRESH` cookies server-side, and this
- * middleware cannot verify a JWT's signature or expiry without the signing
+ * proxy cannot verify a JWT's signature or expiry without the signing
  * secret. Those two cookies are also deliberately scoped to `Path=/api*`
  * (backend/src/.../AuthCookies.java) so they are never sent on a plain page
  * request in the first place; `PDA_SESSION` is a separate, non-authoritative
- * `Path=/` marker set alongside them purely so this middleware has something
+ * `Path=/` marker set alongside them purely so this proxy has something
  * to check. It carries no token and grants nothing by itself — it only
  * avoids shipping a protected page shell to a browser that plainly has no
  * session, and skips the flash of a loading skeleton before the client-side
@@ -22,7 +22,7 @@ import { NextResponse, type NextRequest } from "next/server";
  */
 const PROTECTED_PATHS = ["/dashboard", "/projects", "/organizations", "/account", "/calendar", "/invitations", "/change-password"];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const authenticated = request.cookies.has("PDA_SESSION");
 
