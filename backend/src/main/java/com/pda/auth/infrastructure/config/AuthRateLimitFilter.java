@@ -37,7 +37,8 @@ final class AuthRateLimitFilter extends OncePerRequestFilter {
         if (!"POST".equals(request.getMethod())) {
             return true;
         }
-        return !"/api/v1/auth/register".equals(path) && !LOGIN_PATH.equals(path)
+        return !"/api/v1/auth/register".equals(path) && !"/api/v1/auth/register/invitation".equals(path)
+                && !"/api/v1/project-invitations/external/preview".equals(path) && !LOGIN_PATH.equals(path)
                 && !REFRESH_PATH.equals(path) && !PASSWORD_CHANGE_PATH.equals(path)
                 && !PASSWORD_FORGOT_PATH.equals(path) && !PASSWORD_RESET_PATH.equals(path);
     }

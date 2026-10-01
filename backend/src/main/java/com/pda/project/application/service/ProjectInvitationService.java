@@ -2,6 +2,7 @@ package com.pda.project.application.service;
 
 import com.pda.project.domain.entity.Project;
 import com.pda.project.ProjectInvitationEvents;
+import com.pda.project.ProjectInvitationOnboarding;
 import com.pda.project.domain.entity.ProjectInvitation;
 import com.pda.project.domain.entity.ProjectMembership;
 import com.pda.project.domain.enums.InvitationStatus;
@@ -23,6 +24,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.security.SecureRandom;
 import java.time.Clock;
@@ -43,7 +46,7 @@ import java.util.stream.Collectors;
  * {@link ProjectMembershipService#addMember}'s reactivate-or-create membership logic.
  */
 @Service
-public class ProjectInvitationService {
+public class ProjectInvitationService implements ProjectInvitationOnboarding {
 
     private static final Logger log = LoggerFactory.getLogger(ProjectInvitationService.class);
 
@@ -81,6 +84,12 @@ public class ProjectInvitationService {
     @Transactional
     public CreatedInvitation inviteRegisteredUser(UUID actorId, UUID projectId, UUID targetUserId,
                                                   Set<ProjectRole> roles) {
+        return inviteRegisteredUser(actorId, projectId, targetUserId, roles, null);
+    }
+
+    @Transactional
+    public CreatedInvitation inviteRegisteredUser(UUID actorId, UUID projectId, UUID targetUserId,
+                                                  Set<ProjectRole> roles, String message) {
         Project project = requireManager(actorId, projectId);
         Objects.requireNonNull(targetUserId, "targetUserId is required");
         if (targetUserId.equals(actorId)) throw new IllegalArgumentException("Cannot invite yourself");
@@ -94,34 +103,73 @@ public class ProjectInvitationService {
                 .isPresent()) {
             throw new InvitationConflictException("An invitation is already pending for this user");
         }
+        if (invitations.findByProjectIdAndEmailAndStatus(projectId, target.email().strip().toLowerCase(java.util.Locale.ROOT),
+                InvitationStatus.PENDING).isPresent()) {
+            throw new InvitationConflictException("An invitation is already pending for this email");
+        }
         String rawToken = generateToken();
         ProjectInvitation invitation = ProjectInvitation.forRegisteredUser(projectId, targetUserId, actorId,
-                roles, rawToken, clock.instant().plus(INVITATION_TTL));
+                roles, message, rawToken, clock.instant().plus(INVITATION_TTL));
         ProjectInvitation saved = invitations.saveAndFlush(invitation);
         events.publishEvent(new ProjectInvitationEvents.Created(saved.getId(), projectId, targetUserId, actorId));
-        sendInvitationMailSafely(target.email(), project.getName(), projectId, saved.getId(), rawToken);
+        sendInvitationMailSafely(target.email(), project.getName(), saved, rawToken, false);
         return new CreatedInvitation(saved, rawToken);
     }
 
     @Transactional
     public CreatedInvitation inviteByEmail(UUID actorId, UUID projectId, String email, Set<ProjectRole> roles) {
+        return inviteByEmail(actorId, projectId, email, null, null, roles, null);
+    }
+
+    @Transactional
+    public CreatedInvitation inviteByEmail(UUID actorId, UUID projectId, String email, String firstName,
+                                           String lastName, Set<ProjectRole> roles, String message) {
+        Project project = requireManager(actorId, projectId);
         if (email == null || email.isBlank()) throw new IllegalArgumentException("email is required");
-        UUID userId = users.findActiveByEmail(email.strip())
-                .orElseThrow(() -> new NoSuchElementException("Registered user not found"));
-        return inviteRegisteredUser(actorId, projectId, userId, roles);
+        String normalizedEmail = email.strip().toLowerCase(java.util.Locale.ROOT);
+        if (normalizedEmail.equals(users.findActiveById(actorId).map(UserAccounts.AuthenticatedUser::email)
+                .map(value -> value.toLowerCase(java.util.Locale.ROOT)).orElse(null))) {
+            throw new IllegalArgumentException("Cannot invite yourself");
+        }
+        var registered = users.findActiveByEmail(normalizedEmail);
+        if (registered.isPresent()) {
+            return inviteRegisteredUser(actorId, projectId, registered.get(), roles, message);
+        }
+        if (users.emailExists(normalizedEmail)) {
+            throw new InvitationConflictException("Account is not available for invitation");
+        }
+        if (firstName == null || firstName.isBlank() || lastName == null || lastName.isBlank()) {
+            throw new IllegalArgumentException("First and last name are required for an external invitation");
+        }
+        if (invitations.findByProjectIdAndEmailAndStatus(projectId, normalizedEmail, InvitationStatus.PENDING)
+                .isPresent()) throw new InvitationConflictException("An invitation is already pending for this email");
+        String rawToken = generateToken();
+        ProjectInvitation invitation = ProjectInvitation.forEmail(projectId, normalizedEmail, firstName, lastName,
+                actorId, roles, message, rawToken, clock.instant().plus(INVITATION_TTL));
+        ProjectInvitation saved = invitations.saveAndFlush(invitation);
+        sendInvitationMailSafely(normalizedEmail, project.getName(), saved, rawToken, true);
+        return new CreatedInvitation(saved, rawToken);
     }
 
     @Transactional(readOnly = true)
     public Page<InvitationSummary> listPending(UUID actorId, UUID projectId, Pageable pageable) {
         requireManager(actorId, projectId);
-        return invitations.findByProjectIdAndStatus(projectId, InvitationStatus.PENDING, pageable)
-                .map(InvitationSummary::from);
+        return withNicknames(invitations.findByProjectIdAndStatus(projectId, InvitationStatus.PENDING, pageable));
     }
 
     @Transactional(readOnly = true)
     public Page<InvitationSummary> listProject(UUID actorId, UUID projectId, Pageable pageable) {
         requireManager(actorId, projectId);
-        return invitations.findByProjectId(projectId, pageable).map(InvitationSummary::from);
+        return withNicknames(invitations.findByProjectId(projectId, pageable));
+    }
+
+    private Page<InvitationSummary> withNicknames(Page<ProjectInvitation> page) {
+        Set<UUID> targetIds = page.getContent().stream().map(ProjectInvitation::getInvitedUserId)
+                .filter(Objects::nonNull).collect(Collectors.toSet());
+        Map<UUID, UserAccounts.AuthenticatedUser> targetUsers = users.findActiveByIds(targetIds);
+        return page.map(invitation -> InvitationSummary.from(invitation,
+                targetUsers.containsKey(invitation.getInvitedUserId())
+                        ? targetUsers.get(invitation.getInvitedUserId()).nickname() : null));
     }
 
     @Transactional(readOnly = true)
@@ -141,28 +189,102 @@ public class ProjectInvitationService {
 
     public record MyInvitationSummary(InvitationSummary invitation, String projectName, String invitedByNickname) {}
 
+    @Override
+    @Transactional(readOnly = true)
+    public Preview preview(String token) {
+        ProjectInvitation invitation = requireExternalToken(token, false);
+        Project project = projects.findByIdAndArchivedAtIsNull(invitation.getProjectId())
+                .orElseThrow(() -> new NoSuchElementException("Invitation not found"));
+        String inviter = users.findActiveById(invitation.getInvitedBy())
+                .map(UserAccounts.AuthenticatedUser::nickname).orElse("PDA");
+        return new Preview(project.getName(), inviter, invitation.getInitialRoles(), invitation.getMessage(),
+                invitation.getEmail(), invitation.getInviteeFirstName(), invitation.getInviteeLastName(),
+                invitation.getExpiresAt(), invitation.getStatus().name());
+    }
+
+    @Override
+    @Transactional
+    public Accepted acceptNewAccount(String token, UUID userId, String email, String firstName, String lastName) {
+        ProjectInvitation invitation = requireExternalToken(token, true);
+        if (!invitation.matchesIdentity(email, firstName, lastName)) {
+            throw new IllegalArgumentException("Invitation identity mismatch");
+        }
+        return acceptedProject(invitation, acceptExternal(userId, invitation));
+    }
+
+    @Override
+    @Transactional
+    public Accepted acceptExistingAccount(String token, UUID userId) {
+        ProjectInvitation invitation = requireExternalToken(token, true);
+        String accountEmail = users.findActiveById(userId).map(UserAccounts.AuthenticatedUser::email)
+                .orElseThrow(() -> new NoSuchElementException("Account not found"));
+        if (!invitation.getEmail().equalsIgnoreCase(accountEmail.strip())) {
+            throw new AccessDeniedException("Invitation is addressed to another account");
+        }
+        return acceptedProject(invitation, acceptExternal(userId, invitation));
+    }
+
+    private MemberSummary acceptExternal(UUID userId, ProjectInvitation invitation) {
+        UUID projectId = invitation.getProjectId();
+        if (projects.findByIdAndArchivedAtIsNull(projectId).isEmpty()) {
+            throw new NoSuchElementException("Project not found");
+        }
+        if (memberships.findByProjectIdAndUserIdAndStatus(projectId, userId, MembershipStatus.ACTIVE).isPresent()) {
+            throw new InvitationConflictException("User is already a project member");
+        }
+        String nickname = users.findActiveById(userId).map(UserAccounts.AuthenticatedUser::nickname)
+                .orElseThrow(() -> new NoSuchElementException("Account not found"));
+        ProjectMembership membership = memberships.findByProjectIdAndUserId(projectId, userId)
+                .map(existing -> { existing.reactivate(invitation.getInitialRoles()); return existing; })
+                .orElseGet(() -> ProjectMembership.active(projectId, userId, invitation.getInitialRoles()));
+        ProjectMembership saved = memberships.saveAndFlush(membership);
+        invitation.accept(clock.instant());
+        invitations.saveAndFlush(invitation);
+        events.publishEvent(new ProjectInvitationEvents.Accepted(invitation.getId(), projectId, userId,
+                invitation.getInvitedBy()));
+        return MemberSummary.from(saved, nickname);
+    }
+
+    private Accepted acceptedProject(ProjectInvitation invitation, MemberSummary ignored) {
+        Project project = projects.findById(invitation.getProjectId()).orElseThrow();
+        return new Accepted(project.getId(), project.getSlug());
+    }
+
+    private ProjectInvitation requireExternalToken(String token, boolean lock) {
+        if (token == null || token.isBlank()) throw new IllegalArgumentException("Token is required");
+        String hash = ProjectInvitation.hashToken(token);
+        ProjectInvitation invitation = (lock ? invitations.lockByTokenHash(hash) : invitations.findByTokenHash(hash))
+                .filter(candidate -> candidate.getInvitedUserId() == null && candidate.matchesToken(token)
+                        && candidate.isPending(clock.instant()))
+                .orElseThrow(() -> new NoSuchElementException("Invitation not found"));
+        return invitation;
+    }
+
     /** Cancels the existing pending invitation and issues a fresh one to the same target with the same roles. */
     @Transactional
     public CreatedInvitation resend(UUID actorId, UUID projectId, UUID invitationId) {
         Project project = requireManager(actorId, projectId);
         ProjectInvitation current = pendingInvitationIn(projectId, invitationId);
-        if (current.getInvitedUserId() == null) {
-            throw new InvitationConflictException("Invitation target must be a registered user");
-        }
         current.cancel(clock.instant());
         invitations.saveAndFlush(current);
 
         String rawToken = generateToken();
-        ProjectInvitation next = ProjectInvitation.forRegisteredUser(projectId, current.getInvitedUserId(), actorId,
-                current.getInitialRoles(), rawToken, clock.instant().plus(INVITATION_TTL));
+        ProjectInvitation next = current.getInvitedUserId() == null
+                ? ProjectInvitation.forEmail(projectId, current.getEmail(), current.getInviteeFirstName(),
+                        current.getInviteeLastName(), actorId, current.getInitialRoles(), current.getMessage(),
+                        rawToken, clock.instant().plus(INVITATION_TTL))
+                : ProjectInvitation.forRegisteredUser(projectId, current.getInvitedUserId(), actorId,
+                        current.getInitialRoles(), current.getMessage(), rawToken, clock.instant().plus(INVITATION_TTL));
         ProjectInvitation saved = invitations.saveAndFlush(next);
         if (saved.getInvitedUserId() != null) events.publishEvent(new ProjectInvitationEvents.Created(
                 saved.getId(), projectId, saved.getInvitedUserId(), actorId));
 
-        String recipientEmail = users.findActiveById(current.getInvitedUserId())
-                .map(UserAccounts.AuthenticatedUser::email).orElse(null);
+        String recipientEmail = current.getInvitedUserId() == null ? current.getEmail()
+                : users.findActiveById(current.getInvitedUserId())
+                        .map(UserAccounts.AuthenticatedUser::email).orElse(null);
         if (recipientEmail != null) {
-            sendInvitationMailSafely(recipientEmail, project.getName(), projectId, saved.getId(), rawToken);
+            sendInvitationMailSafely(recipientEmail, project.getName(), saved, rawToken,
+                    saved.getInvitedUserId() == null);
         }
         return new CreatedInvitation(saved, rawToken);
     }
@@ -237,7 +359,7 @@ public class ProjectInvitationService {
     }
 
     private ProjectInvitation ownPending(UUID actorId, UUID invitationId) {
-        ProjectInvitation invitation = invitations.findById(invitationId)
+        ProjectInvitation invitation = invitations.lockById(invitationId)
                 .filter(candidate -> actorId.equals(candidate.getInvitedUserId()))
                 .orElseThrow(() -> new NoSuchElementException("Invitation not found"));
         if (!invitation.isPending(clock.instant())) throw new InvitationConflictException("Invitation is not pending");
@@ -250,7 +372,7 @@ public class ProjectInvitationService {
         if (rawToken == null || rawToken.isBlank()) {
             throw new IllegalArgumentException("token is required");
         }
-        ProjectInvitation invitation = invitations.findByTokenHash(ProjectInvitation.hashToken(rawToken))
+        ProjectInvitation invitation = invitations.lockByTokenHash(ProjectInvitation.hashToken(rawToken))
                 .filter(candidate -> candidate.matchesToken(rawToken))
                 .filter(candidate -> candidate.getProjectId().equals(projectId)
                         && candidate.getId().equals(invitationId))
@@ -263,7 +385,7 @@ public class ProjectInvitationService {
 
     private ProjectInvitation pendingInvitationIn(UUID projectId, UUID invitationId) {
         Objects.requireNonNull(invitationId, "invitationId is required");
-        ProjectInvitation invitation = invitations.findById(invitationId)
+        ProjectInvitation invitation = invitations.lockById(invitationId)
                 .filter(candidate -> candidate.getProjectId().equals(projectId))
                 .orElseThrow(() -> new NoSuchElementException("Invitation not found"));
         if (!invitation.isPending(clock.instant())) {
@@ -293,17 +415,41 @@ public class ProjectInvitationService {
      * unrelated flow enabled MAIL_ENABLED. Any failure here (missing config, transport error) is swallowed: mail
      * being disabled or broken must never break the invitation flow itself.
      */
-    private void sendInvitationMailSafely(String recipientEmail, String projectName, UUID projectId,
-                                          UUID invitationId, String rawToken) {
+    private void sendInvitationMailSafely(String recipientEmail, String projectName,
+                                          ProjectInvitation invitation, String rawToken, boolean external) {
+        UUID invitationId = invitation.getId();
+        UUID projectId = invitation.getProjectId();
+        UUID invitedBy = invitation.getInvitedBy();
+        Set<ProjectRole> roles = invitation.getInitialRoles();
+        String personalMessage = invitation.getMessage();
+        java.time.Instant expiresAt = invitation.getExpiresAt();
+        Runnable dispatch = () -> dispatchInvitationMail(recipientEmail, projectName, invitationId, projectId,
+                invitedBy, roles, personalMessage, expiresAt, rawToken, external);
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override public void afterCommit() { dispatch.run(); }
+            });
+        } else {
+            dispatch.run();
+        }
+    }
+
+    private void dispatchInvitationMail(String recipientEmail, String projectName, UUID invitationId,
+            UUID projectId, UUID invitedBy, Set<ProjectRole> roles, String personalMessage,
+            java.time.Instant expiresAt, String rawToken, boolean external) {
         try {
             ProjectInvitationMailPort mail = mailProvider.getIfAvailable();
             if (mail != null && mail.available()) {
-                String link = frontendUrl + "/invitations/" + invitationId + "?projectId=" + projectId
+                String link = external ? frontendUrl + "/register#invitation=" + rawToken
+                        : frontendUrl + "/invitations/" + invitationId + "?projectId=" + projectId
                         + "&token=" + rawToken;
-                mail.sendInvitation(recipientEmail, projectName, link);
+                String inviterName = users.findActiveById(invitedBy)
+                        .map(UserAccounts.AuthenticatedUser::nickname).orElse("PDA");
+                mail.sendInvitation(recipientEmail, projectName, inviterName, roles,
+                        personalMessage, expiresAt, link);
             }
         } catch (RuntimeException exception) {
-            log.warn("Project invitation mail dispatch failed; the invitation itself was still created.", exception);
+            log.warn("Project invitation mail dispatch failed; the invitation itself was still created.");
         }
     }
 

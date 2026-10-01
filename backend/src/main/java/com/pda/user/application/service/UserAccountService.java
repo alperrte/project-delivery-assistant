@@ -44,11 +44,26 @@ public class UserAccountService implements UserAccounts {
     @Override
     @Transactional
     public UUID registerLocal(String email, String nickname, String rawPassword) {
-        if (users.existsByEmail(email) || users.existsByNickname(nickname)) {
+        if (users.existsByEmailIgnoreCase(email) || users.existsByNickname(nickname)) {
             throw new UserRegistrationConflictException();
         }
         try {
             return users.saveAndFlush(User.registerLocalActive(email, nickname, rawPassword, passwordEncoder)).getId();
+        } catch (DataIntegrityViolationException exception) {
+            throw new UserRegistrationConflictException();
+        }
+    }
+
+    @Override
+    @Transactional
+    public UUID registerInvitedLocal(String email, String nickname, String rawPassword,
+                                     String firstName, String lastName) {
+        if (users.existsByEmailIgnoreCase(email) || users.existsByNickname(nickname)) {
+            throw new UserRegistrationConflictException();
+        }
+        try {
+            return users.saveAndFlush(User.registerInvitedLocal(email.strip().toLowerCase(java.util.Locale.ROOT),
+                    nickname, rawPassword, firstName, lastName, passwordEncoder)).getId();
         } catch (DataIntegrityViolationException exception) {
             throw new UserRegistrationConflictException();
         }
@@ -189,9 +204,15 @@ public class UserAccountService implements UserAccounts {
     @Override
     @Transactional(readOnly = true)
     public Optional<UUID> findActiveByEmail(String email) {
-        return users.findByEmail(email)
+        return users.findByEmailIgnoreCase(email)
                 .filter(user -> user.getAccountStatus() == AccountStatus.ACTIVE)
                 .map(User::getId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean emailExists(String email) {
+        return email != null && users.existsByEmailIgnoreCase(email.strip());
     }
 
     @Override

@@ -36,4 +36,8 @@ Plan `User`, `Project`, `ProjectMembership`, `Squad`, `Task`, `TaskAssignment`, 
 
 Modüller birbirinin repository implementasyonunu doğrudan kullanmaz. Başka modülün persistence entity'si ortak uygulama modeli yapılmaz; senkron ihtiyaçta hedef modülün public API/contract facade'ı kullanılır.
 
+## V33 dış proje davetleri
+
+`V33__external_project_invitations.sql` davetlere davet edilenin adını, soyadını ve en çok 100 karakterlik isteğe bağlı mesajı ekler; kullanıcı tablosuna da ad ve soyad ekler. Eski kullanıcı/davet kayıtları için bu alanlar nullable kalır. Bekleyen e-posta davetlerinde `(project_id, lower(email))`, kullanıcı e-postalarında `lower(email)` benzersiz indeksleri yinelenen kimlikleri engeller. Ham davet token'ı saklanmaz; `project_invitations.token_hash` kalır. Kabul akışı aynı transaction içinde kullanıcı ve proje üyeliğini oluşturur; General Team üyeliği aktif proje üyeliğinden türetilir.
+
 İlgili kararlar: [0001](decisions/0001-modular-monolith.md), [0002](decisions/0002-postgresql.md).

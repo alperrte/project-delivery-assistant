@@ -27,12 +27,13 @@ class ProjectInvitationDomainTest {
     @Test
     void registeredUserInvitationStartsPendingAndHashesToken() {
         ProjectInvitation invitation = ProjectInvitation.forRegisteredUser(projectId, invitedUserId, invitedBy,
-                Set.of(ProjectRole.TESTER), "raw-token", now.plus(7, ChronoUnit.DAYS));
+                Set.of(ProjectRole.TESTER), "  Welcome  ", "raw-token", now.plus(7, ChronoUnit.DAYS));
 
         assertEquals(InvitationStatus.PENDING, invitation.getStatus());
         assertEquals(invitedUserId, invitation.getInvitedUserId());
         assertNull(invitation.getEmail());
         assertEquals(Set.of(ProjectRole.TESTER), invitation.getInitialRoles());
+        assertEquals("Welcome", invitation.getMessage());
         assertTrue(invitation.matchesToken("raw-token"));
         assertFalse(invitation.matchesToken("wrong-token"));
         assertFalse(invitation.matchesToken(null));
@@ -40,17 +41,42 @@ class ProjectInvitationDomainTest {
 
     @Test
     void emailInvitationRequiresNonBlankEmailAndAtLeastOneRole() {
-        ProjectInvitation invitation = ProjectInvitation.forEmail(projectId, "  invitee@example.test  ", invitedBy,
-                Set.of(ProjectRole.BACKEND_DEVELOPER), "raw-token", now.plus(7, ChronoUnit.DAYS));
+        ProjectInvitation invitation = ProjectInvitation.forEmail(projectId, "  INVITEE@example.test  ",
+                " Ahmet  ", "Yılmaz", invitedBy, Set.of(ProjectRole.BACKEND_DEVELOPER), "  Merhaba  ",
+                "raw-token", now.plus(7, ChronoUnit.DAYS));
         assertEquals("invitee@example.test", invitation.getEmail());
         assertNull(invitation.getInvitedUserId());
+        assertEquals("Ahmet", invitation.getInviteeFirstName());
+        assertEquals("Merhaba", invitation.getMessage());
+        assertTrue(invitation.matchesIdentity("invitee@example.test", "ahmet", "YILMAZ"));
+        assertFalse(invitation.matchesIdentity("invitee@example.test", "Mehmet", "Yılmaz"));
+        assertFalse(invitation.matchesIdentity("invitee@example.test", "Ahmet", "Yilmaz"));
+        assertThrows(IllegalArgumentException.class, () -> ProjectInvitation.forEmail(projectId,
+                "invitee@example.test", "Ahmet", "Yılmaz", invitedBy, Set.of(ProjectRole.TESTER),
+                "x".repeat(101), "too-long-message", now.plus(1, ChronoUnit.DAYS)));
 
-        assertThrows(IllegalArgumentException.class, () -> ProjectInvitation.forEmail(projectId, " ", invitedBy,
-                Set.of(ProjectRole.TESTER), "raw-token", now.plus(1, ChronoUnit.DAYS)));
+        assertThrows(IllegalArgumentException.class, () -> ProjectInvitation.forEmail(projectId, " ", "A", "B", invitedBy,
+                Set.of(ProjectRole.TESTER), null, "raw-token", now.plus(1, ChronoUnit.DAYS)));
         assertThrows(IllegalArgumentException.class, () -> ProjectInvitation.forRegisteredUser(projectId,
                 invitedUserId, invitedBy, Set.of(), "raw-token", now.plus(1, ChronoUnit.DAYS)));
         assertThrows(NullPointerException.class, () -> ProjectInvitation.forRegisteredUser(null, invitedUserId,
                 invitedBy, Set.of(ProjectRole.TESTER), "raw-token", now.plus(1, ChronoUnit.DAYS)));
+    }
+
+    @Test
+    void externalIdentityAndMessagePreserveUnicodeAndEnforceLength() {
+        ProjectInvitation invitation = ProjectInvitation.forEmail(projectId, "  IREM@example.test  ",
+                "  Çağrı  ", "Şahin", invitedBy, Set.of(ProjectRole.TESTER), "  ",
+                "unicode-token", now.plus(7, ChronoUnit.DAYS));
+        assertEquals("irem@example.test", invitation.getEmail());
+        assertNull(invitation.getMessage());
+        assertTrue(invitation.matchesIdentity("IREM@example.test", "çağrı", "ŞAHİN"));
+        assertFalse(invitation.matchesIdentity("irem@example.test", "Cagri", "Şahin"));
+
+        ProjectInvitation maxMessage = ProjectInvitation.forEmail(projectId, "another@example.test",
+                "İrem", "Öz", invitedBy, Set.of(ProjectRole.TESTER), "x".repeat(100),
+                "max-message-token", now.plus(7, ChronoUnit.DAYS));
+        assertEquals(100, maxMessage.getMessage().length());
     }
 
     @Test

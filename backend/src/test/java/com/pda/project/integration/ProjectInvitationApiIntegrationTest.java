@@ -28,6 +28,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -58,6 +59,51 @@ class ProjectInvitationApiIntegrationTest {
     @Autowired MockMvc mvc;
     @Autowired UserAccounts users;
     @Autowired ProjectMembershipService memberships;
+
+    @Test
+    void externalInvitationRegistrationRequiresMatchingIdentityAndConsumesToken() throws Exception {
+        Cookie csrf = csrfCookie();
+        Account manager = account("externalmanager");
+        UUID projectId = createProject(manager, csrf, "External API project");
+        String email = "external-" + UUID.randomUUID() + "@example.test";
+        var created = mvc.perform(post("/api/v1/projects/" + projectId + "/invitations")
+                        .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"" + email + "\",\"firstName\":\"İrem\",\"lastName\":\"Öz\","
+                                + "\"roles\":[\"TESTER\"],\"message\":\"Join us\"}"))
+                .andExpect(status().isCreated()).andReturn().getResponse();
+        String token = JsonPath.read(created.getContentAsString(), "$.token");
+
+        mvc.perform(post("/api/v1/project-invitations/external/preview")
+                        .cookie(csrf).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"token\":\"" + token + "\"}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.projectName").value("External API project"))
+                .andExpect(jsonPath("$.firstName").value("İrem"))
+                .andExpect(jsonPath("$.message").value("Join us"));
+
+        String nickname = "u" + UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+        String body = "{\"token\":\"" + token + "\",\"email\":\"" + email + "\",\"firstName\":\"İrem\","
+                + "\"lastName\":\"Öz\",\"nickname\":\"" + nickname + "\","
+                + "\"password\":\"password123\",\"confirmPassword\":\"password123\"}";
+        mvc.perform(post("/api/v1/auth/register/invitation")
+                        .cookie(csrf).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body.replace("İrem", "Mehmet")))
+                .andExpect(status().isBadRequest());
+        assertTrue(users.findActiveByEmail(email).isEmpty());
+
+        mvc.perform(post("/api/v1/auth/register/invitation")
+                        .cookie(csrf).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.projectId").value(projectId.toString()));
+        assertTrue(users.findActiveByEmail(email).isPresent());
+
+        mvc.perform(post("/api/v1/project-invitations/external/preview")
+                        .cookie(csrf).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"token\":\"" + token + "\"}"))
+                .andExpect(status().isNotFound());
+    }
 
     @Test
     void managerInvitesAndTargetAcceptsIntoMembership() throws Exception {

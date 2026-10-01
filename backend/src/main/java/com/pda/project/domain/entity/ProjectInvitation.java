@@ -25,6 +25,8 @@ import java.time.Instant;
 import java.util.HashSet;
 import java.util.HexFormat;
 import java.util.Objects;
+import java.util.Locale;
+import java.text.Normalizer;
 import java.util.Set;
 import java.util.UUID;
 
@@ -51,6 +53,15 @@ public class ProjectInvitation {
 
     @Column(name = "email", length = 320, updatable = false)
     private String email;
+
+    @Column(name = "invitee_first_name", length = 100, updatable = false)
+    private String inviteeFirstName;
+
+    @Column(name = "invitee_last_name", length = 100, updatable = false)
+    private String inviteeLastName;
+
+    @Column(name = "message", length = 100, updatable = false)
+    private String message;
 
     @Column(name = "invited_by", nullable = false, updatable = false)
     private UUID invitedBy;
@@ -94,21 +105,35 @@ public class ProjectInvitation {
     public static ProjectInvitation forRegisteredUser(UUID projectId, UUID invitedUserId, UUID invitedBy,
                                                       Set<ProjectRole> initialRoles, String rawToken,
                                                       Instant expiresAt) {
+        return forRegisteredUser(projectId, invitedUserId, invitedBy, initialRoles, null, rawToken, expiresAt);
+    }
+
+    public static ProjectInvitation forRegisteredUser(UUID projectId, UUID invitedUserId, UUID invitedBy,
+                                                      Set<ProjectRole> initialRoles, String message,
+                                                      String rawToken, Instant expiresAt) {
         return create(projectId, Objects.requireNonNull(invitedUserId, "invitedUserId is required"), null,
-                invitedBy, initialRoles, rawToken, expiresAt);
+                null, null, invitedBy, initialRoles, message, rawToken, expiresAt);
     }
 
     /** Invitation for someone without a PDA account yet, targeted by email. */
-    public static ProjectInvitation forEmail(UUID projectId, String email, UUID invitedBy,
-                                             Set<ProjectRole> initialRoles, String rawToken, Instant expiresAt) {
+    public static ProjectInvitation forEmail(UUID projectId, String email, String firstName, String lastName,
+                                             UUID invitedBy, Set<ProjectRole> initialRoles, String message,
+                                             String rawToken, Instant expiresAt) {
         if (email == null || email.isBlank()) {
             throw new IllegalArgumentException("email is required");
         }
-        return create(projectId, null, email.strip(), invitedBy, initialRoles, rawToken, expiresAt);
+        if (firstName == null || firstName.isBlank() || lastName == null || lastName.isBlank()) {
+            throw new IllegalArgumentException("first and last name are required");
+        }
+        return create(projectId, null, email.strip().toLowerCase(Locale.ROOT),
+                normalizeName(firstName), normalizeName(lastName), invitedBy, initialRoles, message,
+                rawToken, expiresAt);
     }
 
-    private static ProjectInvitation create(UUID projectId, UUID invitedUserId, String email, UUID invitedBy,
-                                            Set<ProjectRole> initialRoles, String rawToken, Instant expiresAt) {
+    private static ProjectInvitation create(UUID projectId, UUID invitedUserId, String email,
+                                            String firstName, String lastName, UUID invitedBy,
+                                            Set<ProjectRole> initialRoles, String message,
+                                            String rawToken, Instant expiresAt) {
         Objects.requireNonNull(projectId, "projectId is required");
         Objects.requireNonNull(invitedBy, "invitedBy is required");
         Objects.requireNonNull(expiresAt, "expiresAt is required");
@@ -119,6 +144,9 @@ public class ProjectInvitation {
         invitation.projectId = projectId;
         invitation.invitedUserId = invitedUserId;
         invitation.email = email;
+        invitation.inviteeFirstName = firstName;
+        invitation.inviteeLastName = lastName;
+        invitation.message = normalizeMessage(message);
         invitation.invitedBy = invitedBy;
         invitation.initialRoles.addAll(initialRoles);
         invitation.tokenHash = hashToken(rawToken);
@@ -191,10 +219,43 @@ public class ProjectInvitation {
         }
     }
 
+    private static String normalizeMessage(String value) {
+        if (value == null || value.isBlank()) return null;
+        String normalized = value.strip();
+        if (normalized.length() > 100) throw new IllegalArgumentException("Invitation message is too long");
+        return normalized;
+    }
+
+    public static String normalizeName(String value) {
+        if (value == null) throw new IllegalArgumentException("Name is required");
+        String normalized = Normalizer.normalize(value.strip().replaceAll("(?U)\\s+", " "), Normalizer.Form.NFC);
+        if (normalized.isBlank() || normalized.length() > 100) {
+            throw new IllegalArgumentException("Invalid name");
+        }
+        return normalized;
+    }
+
+    public boolean matchesIdentity(String candidateEmail, String firstName, String lastName) {
+        return invitedUserId == null && email != null && candidateEmail != null
+                && email.equals(candidateEmail.strip().toLowerCase(Locale.ROOT))
+                && inviteeFirstName != null && inviteeLastName != null
+                && sameName(inviteeFirstName, normalizeName(firstName))
+                && sameName(inviteeLastName, normalizeName(lastName));
+    }
+
+    private static boolean sameName(String expected, String candidate) {
+        Locale locale = (expected + candidate).matches(".*[İı].*")
+                ? Locale.forLanguageTag("tr-TR") : Locale.ROOT;
+        return expected.toLowerCase(locale).equals(candidate.toLowerCase(locale));
+    }
+
     public UUID getId() { return id; }
     public UUID getProjectId() { return projectId; }
     public UUID getInvitedUserId() { return invitedUserId; }
     public String getEmail() { return email; }
+    public String getInviteeFirstName() { return inviteeFirstName; }
+    public String getInviteeLastName() { return inviteeLastName; }
+    public String getMessage() { return message; }
     public UUID getInvitedBy() { return invitedBy; }
     public Set<ProjectRole> getInitialRoles() { return Set.copyOf(initialRoles); }
     public InvitationStatus getStatus() { return status; }

@@ -1,6 +1,8 @@
 package com.pda.auth.api;
 
 import com.pda.auth.api.dto.request.RegisterRequest;
+import com.pda.auth.api.dto.request.InvitationRegisterRequest;
+import com.pda.project.ProjectInvitationOnboarding;
 import com.pda.auth.application.service.RegistrationWorkflow;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -40,6 +42,16 @@ public class AuthRegistrationController {
         }
         workflow.register(request.email(), request.nickname(), request.password(), request.confirmPassword());
         return ResponseEntity.ok().header("Cache-Control", "no-store").build();
+    }
+
+    @PostMapping("/register/invitation")
+    @Operation(summary = "Register and join a project using an external invitation")
+    public ResponseEntity<ProjectInvitationOnboarding.Accepted> registerInvitation(
+            @Valid @RequestBody InvitationRegisterRequest request) {
+        if (!request.passwordsMatch()) throw new PasswordConfirmationMismatchException();
+        return ResponseEntity.ok().header("Cache-Control", "no-store")
+                .body(workflow.registerWithInvitation(request.token(), request.email(), request.firstName(),
+                        request.lastName(), request.nickname(), request.password(), request.confirmPassword()));
     }
 
 }

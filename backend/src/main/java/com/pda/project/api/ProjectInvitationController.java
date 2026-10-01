@@ -72,18 +72,20 @@ public class ProjectInvitationController {
         }
         UUID actorId = AuthenticatedActor.id(principal);
         CreatedInvitation created = hasUserId
-                ? invitations.inviteRegisteredUser(actorId, projectId, request.userId(), request.roles())
-                : invitations.inviteByEmail(actorId, projectId, request.email(), request.roles());
-        return ResponseEntity.status(HttpStatus.CREATED).body(CreatedInvitationResponse.from(created));
+                ? invitations.inviteRegisteredUser(actorId, projectId, request.userId(), request.roles(), request.message())
+                : invitations.inviteByEmail(actorId, projectId, request.email(), request.firstName(),
+                        request.lastName(), request.roles(), request.message());
+        return ResponseEntity.status(HttpStatus.CREATED).header("Cache-Control", "no-store")
+                .body(CreatedInvitationResponse.from(created));
     }
 
     @PostMapping("/{invitationId}/resend")
     @Operation(summary = "Cancel a pending invitation and reissue it to the same target with a new token",
             description = "PROJECT_MANAGER only. Requires CSRF.")
-    public CreatedInvitationResponse resend(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
+    public ResponseEntity<CreatedInvitationResponse> resend(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
                                            @PathVariable UUID projectId, @PathVariable UUID invitationId) {
-        return CreatedInvitationResponse.from(
-                invitations.resend(AuthenticatedActor.id(principal), projectId, invitationId));
+        return ResponseEntity.ok().header("Cache-Control", "no-store").body(CreatedInvitationResponse.from(
+                invitations.resend(AuthenticatedActor.id(principal), projectId, invitationId)));
     }
 
     @DeleteMapping("/{invitationId}")

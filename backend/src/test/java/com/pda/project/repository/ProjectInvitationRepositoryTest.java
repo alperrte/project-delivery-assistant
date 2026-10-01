@@ -56,8 +56,8 @@ class ProjectInvitationRepositoryTest {
                 UUID.randomUUID(), Set.of(ProjectRole.TESTER), "shared-token", future()));
 
         assertThrows(DataIntegrityViolationException.class, () -> invitations.saveAndFlush(
-                ProjectInvitation.forEmail(projectId, "other@example.test", UUID.randomUUID(),
-                        Set.of(ProjectRole.TESTER), "shared-token", future())));
+                ProjectInvitation.forEmail(projectId, "other@example.test", "Other", "Person", UUID.randomUUID(),
+                        Set.of(ProjectRole.TESTER), null, "shared-token", future())));
     }
 
     @Test
@@ -77,12 +77,12 @@ class ProjectInvitationRepositoryTest {
     @Test
     void onlyOnePendingInvitationPerProjectAndEmailIsAllowed() {
         UUID projectId = newProject();
-        invitations.saveAndFlush(ProjectInvitation.forEmail(projectId, "same@example.test", UUID.randomUUID(),
-                Set.of(ProjectRole.TESTER), "token-three", future()));
+        invitations.saveAndFlush(ProjectInvitation.forEmail(projectId, "same@example.test", "Same", "Person", UUID.randomUUID(),
+                Set.of(ProjectRole.TESTER), null, "token-three", future()));
 
         assertThrows(DataIntegrityViolationException.class, () -> invitations.saveAndFlush(
-                ProjectInvitation.forEmail(projectId, "same@example.test", UUID.randomUUID(),
-                        Set.of(ProjectRole.ANALYST), "token-four", future())));
+                ProjectInvitation.forEmail(projectId, "SAME@example.test", "Same", "Person", UUID.randomUUID(),
+                        Set.of(ProjectRole.ANALYST), null, "token-four", future())));
     }
 
     @Test
@@ -105,12 +105,14 @@ class ProjectInvitationRepositoryTest {
     void invitationRoundTripsRolesAndTimestampsThroughPostgres() {
         UUID projectId = newProject();
         UUID invitedBy = UUID.randomUUID();
-        UUID id = invitations.saveAndFlush(ProjectInvitation.forEmail(projectId, "invitee@example.test", invitedBy,
-                Set.of(ProjectRole.BACKEND_DEVELOPER, ProjectRole.TESTER), "round-trip-token", future())).getId();
+        UUID id = invitations.saveAndFlush(ProjectInvitation.forEmail(projectId, "invitee@example.test", "Invitee", "Person", invitedBy,
+                Set.of(ProjectRole.BACKEND_DEVELOPER, ProjectRole.TESTER), "Join us", "round-trip-token", future())).getId();
         entityManager.clear();
 
         ProjectInvitation stored = invitations.findById(id).orElseThrow();
         assertEquals("invitee@example.test", stored.getEmail());
+        assertEquals("Invitee", stored.getInviteeFirstName());
+        assertEquals("Join us", stored.getMessage());
         assertEquals(invitedBy, stored.getInvitedBy());
         assertEquals(Set.of(ProjectRole.BACKEND_DEVELOPER, ProjectRole.TESTER), stored.getInitialRoles());
         assertTrue(stored.matchesToken("round-trip-token"));

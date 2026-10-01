@@ -11,5 +11,10 @@ import java.util.UUID;
 
 /** Exactly one of {@code userId} or {@code email} must be set; enforced by the controller (not Bean Validation). */
 public record CreateInvitationRequest(UUID userId, @Email @Size(max = 320) String email,
-                                      @NotEmpty Set<@NotNull ProjectRole> roles) {
+                                      @NotEmpty Set<@NotNull ProjectRole> roles,
+                                      @Size(max = 100) String firstName, @Size(max = 100) String lastName,
+                                      @Size(max = 100) String message) {
+    public CreateInvitationRequest(UUID userId, String email, Set<ProjectRole> roles) {
+        this(userId, email, roles, null, null, null);
+    }
 }
