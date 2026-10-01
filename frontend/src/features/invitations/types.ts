@@ -1,4 +1,4 @@
-import type { ProjectRole } from "@/features/projects/types";
+import type { ProjectRole, ProjectStatus, ProjectType } from "@/features/projects/types";
 
 export type InvitationStatus = "PENDING" | "ACCEPTED" | "REJECTED" | "CANCELLED" | "EXPIRED";
 
@@ -48,4 +48,21 @@ export type MyInvitation = {
   createdAt: string;
   expiresAt: string;
   message: string | null;
+  teamName: string | null;
+};
+
+/** The invited account's card-level view; it does not confer project membership. */
+export type InvitationProjectPreview = {
+  projectId: string;
+  slug: string;
+  name: string;
+  tagline: string | null;
+  description: string | null;
+  projectGoal: string | null;
+  status: ProjectStatus;
+  projectType: ProjectType;
+  techStack: string | null;
+  memberCount: number;
+  updatedAt: string;
+  logoVersion: number | null;
 };

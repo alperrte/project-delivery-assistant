@@ -130,7 +130,9 @@ public class SecurityBaselineConfiguration {
                         }
                     }
                     authorize.requestMatchers(HttpMethod.GET, "/actuator/health", "/api/v1/auth/csrf").permitAll()
-                            .requestMatchers(HttpMethod.GET, "/api/v1/project-invitations/me").authenticated()
+                            .requestMatchers(HttpMethod.GET, "/api/v1/project-invitations/me",
+                                    "/api/v1/project-invitations/*/preview",
+                                    "/api/v1/project-invitations/*/logo").authenticated()
                             .requestMatchers(HttpMethod.POST, "/api/v1/project-invitations/external/preview").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/project-invitations/external/accept").authenticated()
                             .requestMatchers(HttpMethod.POST, "/api/v1/project-invitations/*/accept",

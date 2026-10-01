@@ -242,7 +242,9 @@ Swagger kontrolü: `API_DOCS_ENABLED=true` ile `/swagger-ui/index.html`; önce `
 | `GET /api/v1/projects/{projectId}/teams/{teamId}/members` | `PROJECT_VIEW` | `?page=0&size=20` | `200` sayfalı nickname/email/project roles | `400`, `403`, `404` |
 | `POST /api/v1/projects/{projectId}/teams/{teamId}/members` | `SQUAD_MANAGE` | `{"userId":"<active-project-member-uuid>"}` | `201` üye | `400`, `403`, `404`, `409` `TEAM_MEMBER_EXISTS` |
 | `DELETE /api/v1/projects/{projectId}/teams/{teamId}/members/{userId}` | `SQUAD_MANAGE` | UUID path | `204` | `403`, `404`, `409` `TEAM_LAST_MEMBERSHIP` |
-| `GET /api/v1/project-invitations/me` | Oturum sahibi | `?page=0&size=20` | `200` yalnız kendine gelen davetler | `400`, `401` |
+| `GET /api/v1/project-invitations/me` | Oturum sahibi | `?page=0&size=20` | `200` yalnız kendine gelen davetler; `teamName` dahil | `400`, `401` |
+| `GET /api/v1/project-invitations/{invitationId}/preview` | Yalnız davet edilen hesap | Kendi davetinin UUID'si | `200` ad, slug, açıklama, durum, tür, teknoloji, üye sayısı, güncelleme zamanı ve logo sürümü; `Cache-Control: private, no-store` | `401`, `404` başka alıcı/silinmiş proje |
+| `GET /api/v1/project-invitations/{invitationId}/logo` | Yalnız davet edilen hesap | Kendi davetinin UUID'si | `200` proje logosu; `private, no-store`, `nosniff` | `401`, `404` başka alıcı/logo yok |
 | `POST /api/v1/project-invitations/{invitationId}/accept` | Yalnız davet edilen hesap | Body yok | `200` project membership | `401`, `403` CSRF, `404` başka alıcı, `409` beklemiyor/üye |
 | `POST /api/v1/project-invitations/{invitationId}/reject` | Yalnız davet edilen hesap | `{"message":"Şu an uygun değilim"}`; isteğe bağlı, en çok 500 | `204` | `400`, `401`, `403` CSRF, `404` başka alıcı, `409` beklemiyor |
 | `GET /api/v1/projects/{projectId}/invitations/all` | Project Manager | `?status=PENDING&page=0&size=20` | `200` durum ve rejectionMessage içeren sayfalı geçmiş | `400`, `401`, `403` |
