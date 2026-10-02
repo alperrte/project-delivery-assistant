@@ -273,6 +273,7 @@ public class UserAccountService implements UserAccounts {
 
     private static AuthenticatedUser summary(User user) {
         return new AuthenticatedUser(user.getId(), user.getEmail(), user.getNickname(), user.getGlobalRole().name(),
-                user.isMustChangePassword());
+                user.isMustChangePassword(),
+                user.getProfilePhotoUpdatedAt() == null ? null : user.getProfilePhotoUpdatedAt().toEpochMilli());
     }
 }

@@ -1,5 +1,6 @@
 package com.pda.auth.api;
 
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -41,6 +42,15 @@ class SecurityBaselineTest {
         assertTrue(filterChain.getFilters().stream().anyMatch(CsrfFilter.class::isInstance));
         mvc.perform(get("/api/v1/users")).andExpect(status().isForbidden());
         mvc.perform(post("/api/v1/users")).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void anAnonymousRequestToAProtectedRouteCreatesNoServerSideSession() throws Exception {
+        for (String path : new String[] {"/api/v1/projects", "/api/v1/auth/me", "/api/v1/users/me/profile-photo"}) {
+            var result = mvc.perform(get(path)).andReturn();
+            assertNull(result.getRequest().getSession(false), path + " must not create an HttpSession");
+            assertNull(result.getResponse().getCookie("JSESSIONID"), path + " must not set JSESSIONID");
+        }
     }
 
     @Test

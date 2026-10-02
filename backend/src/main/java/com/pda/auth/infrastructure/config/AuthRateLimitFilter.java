@@ -43,6 +43,12 @@ final class AuthRateLimitFilter extends OncePerRequestFilter {
                 && !PASSWORD_FORGOT_PATH.equals(path) && !PASSWORD_RESET_PATH.equals(path);
     }
 
+    private static String routeOf(String path) {
+        if (path.startsWith("/api/v1/auth/oauth2/authorization/")) return "/api/v1/auth/oauth2/authorization";
+        if (path.startsWith("/api/v1/auth/oauth2/callback/")) return "/api/v1/auth/oauth2/callback";
+        return path;
+    }
+
     private static boolean isOAuthRedirect(String path) {
         return path.startsWith("/api/v1/auth/oauth2/authorization/") || path.startsWith("/api/v1/auth/oauth2/callback/");
     }
@@ -50,8 +56,10 @@ final class AuthRateLimitFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain chain) throws ServletException, IOException {
-        String key = request.getRequestURI() + ":" + request.getRemoteAddr();
         String path = request.getRequestURI().substring(request.getContextPath().length());
+        // The key is the route, never the raw URI: the OAuth paths end in a client-chosen segment, and a key per URI
+        // would let one unauthenticated client fill the table and lock everybody else out.
+        String key = routeOf(path) + ":" + request.getRemoteAddr();
         int limit = REFRESH_PATH.equals(path) || isOAuthRedirect(path) ? MAX_REFRESH_REQUESTS
                 : LOGIN_PATH.equals(path) ? MAX_LOGIN_REQUESTS : MAX_REQUESTS;
         if (!allow(key, limit, System.currentTimeMillis())) {

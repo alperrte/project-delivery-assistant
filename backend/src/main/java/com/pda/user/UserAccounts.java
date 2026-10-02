@@ -60,7 +60,12 @@ public interface UserAccounts {
      */
     List<UserSearchResult> searchActiveUsers(String query, int limit);
 
-    record AuthenticatedUser(UUID id, String email, String nickname, String globalRole, boolean mustChangePassword) {}
+    /**
+     * {@code profilePhotoVersion} is the epoch-millisecond version of the user's profile photo (null = no photo), meant
+     * for the cache-busting `?v=` of `/users/{id}/profile-photo`; the photo bytes are never part of the summary.
+     */
+    record AuthenticatedUser(UUID id, String email, String nickname, String globalRole, boolean mustChangePassword,
+                             Long profilePhotoVersion) {}
 
     record UserSearchResult(UUID userId, String nickname) {}
 

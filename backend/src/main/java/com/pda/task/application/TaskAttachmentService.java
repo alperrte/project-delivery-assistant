@@ -87,6 +87,9 @@ public class TaskAttachmentService {
             throw new AccessDeniedException("Attachment permission denied");
         }
         attachment.delete(actor);
+        // The row stays as history, but the stored bytes go with it: nothing reads them again and they would
+        // otherwise pile up for good.
+        data.deleteById(attachmentId);
         support.record(taskId, projectId, actor, ActivityType.ATTACHMENT_REMOVED, "attachment",
                 attachment.getFileName(), null);
         task.touchedBy(actor);

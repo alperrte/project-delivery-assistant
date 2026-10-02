@@ -32,6 +32,7 @@ final class ProjectInvitationRateLimitFilter extends OncePerRequestFilter {
     // Higher than the pre-auth login/register limit (5): these are authenticated, legitimate-manager actions
     // (inviting several teammates in one session) rather than an attacker-facing credential-guessing surface.
     private static final int MAX_REQUESTS = 10;
+    private static final int MAX_REQUESTS_PER_CLIENT = 200;
     private static final int MAX_IPS = 10_000;
 
     private final Map<String, ArrayDeque<Long>> attempts = new HashMap<>();
@@ -52,7 +53,7 @@ final class ProjectInvitationRateLimitFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain chain) throws ServletException, IOException {
         String key = request.getRequestURI() + ":" + request.getRemoteAddr();
-        if (!allow(key, System.currentTimeMillis())) {
+        if (!allow(request.getRemoteAddr(), key, System.currentTimeMillis())) {
             response.setStatus(429);
             response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
             response.setHeader("Cache-Control", "no-store");
@@ -64,7 +65,21 @@ final class ProjectInvitationRateLimitFilter extends OncePerRequestFilter {
         chain.doFilter(request, response);
     }
 
-    private synchronized boolean allow(String remoteAddress, long now) {
+    /**
+     * Two counters per client: one per URI (the limit a manager feels: 10 per project or invitation) and one for all
+     * invitation routes together. The ids in the path are client-chosen and this filter runs before authentication,
+     * so without the total a single client could mint endless URIs, fill the table and lock everybody else out, or
+     * dodge the per-URI limit by changing an id. The total is checked first, so a flood stops adding keys after
+     * {@link #MAX_REQUESTS_PER_CLIENT} requests.
+     */
+    private synchronized boolean allow(String clientAddress, String remoteAddress, long now) {
+        if (!allow("total:" + clientAddress, MAX_REQUESTS_PER_CLIENT, now)) {
+            return false;
+        }
+        return allow(remoteAddress, MAX_REQUESTS, now);
+    }
+
+    private boolean allow(String remoteAddress, int limit, long now) {
         if (++requests % 128 == 0 || attempts.size() >= MAX_IPS) {
             attempts.values().removeIf(times -> {
                 trim(times, now);
@@ -81,7 +96,7 @@ final class ProjectInvitationRateLimitFilter extends OncePerRequestFilter {
         } else {
             trim(times, now);
         }
-        if (times.size() >= MAX_REQUESTS) {
+        if (times.size() >= limit) {
             return false;
         }
         times.addLast(now);

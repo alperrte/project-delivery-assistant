@@ -3,6 +3,7 @@ package com.pda.project.integration;
 import com.jayway.jsonpath.JsonPath;
 import com.pda.BackendApplication;
 import com.pda.project.application.service.ProjectMembershipService;
+import com.pda.shared.TestImages;
 import com.pda.user.ProjectRole;
 import com.pda.user.UserAccounts;
 import jakarta.servlet.http.Cookie;
@@ -51,9 +52,10 @@ class ProjectIdentityIntegrationTest {
     private static final byte[] JWT_KEY = new byte[32];
     static { new SecureRandom().nextBytes(JWT_KEY); }
 
-    private static final byte[] PNG = {(byte) 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0};
-    private static final byte[] JPEG = {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, (byte) 0xE0, 0, 0};
-    private static final byte[] WEBP = {'R', 'I', 'F', 'F', 0, 0, 0, 0, 'W', 'E', 'B', 'P'};
+    // Real images: the server reads the type and the size from the bytes, so fake headers are refused.
+    private static final byte[] PNG = TestImages.png(2, 2);
+    private static final byte[] JPEG = TestImages.jpeg(2, 2);
+    private static final byte[] WEBP = TestImages.webp();
 
     @Container
     static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:17-alpine");
@@ -162,6 +164,23 @@ class ProjectIdentityIntegrationTest {
     }
 
     @Test
+    void listTellsEachMemberWhetherTheyMayEditTheProjectSettings() throws Exception {
+        Cookie csrf = csrfCookie();
+        Account manager = account("canedit");
+        Account analyst = account("cananalyst");
+        UUID projectId = createProject(manager, csrf, "Editable by the manager only");
+        memberships.addMember(manager.id(), projectId, analyst.id(), Set.of(ProjectRole.ANALYST));
+
+        // The pencil on the card is shown from this hint; the settings endpoints still check the permission.
+        mvc.perform(get("/api/v1/projects").cookie(manager.access()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[?(@.id=='" + projectId + "')].canEdit").value(true));
+        mvc.perform(get("/api/v1/projects").cookie(analyst.access()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[?(@.id=='" + projectId + "')].canEdit").value(false));
+    }
+
+    @Test
     void logoRoundTripWithSafeResponseHeaders() throws Exception {
         Cookie csrf = csrfCookie();
         Account manager = account("logo");
@@ -226,6 +245,17 @@ class ProjectIdentityIntegrationTest {
                         .header("X-XSRF-TOKEN", csrf.getValue()))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("PROJECT_LOGO_EMPTY"));
+
+        // A small file that claims to be 10000 x 10000 is refused from its header, before anything decodes it.
+        mvc.perform(upload(projectId, TestImages.pngHeaderClaiming(10_000, 10_000), "bomb.png")
+                        .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("PROJECT_LOGO_DIMENSIONS"));
+        // A fake header (right signature, nothing behind it) is not an image.
+        mvc.perform(upload(projectId, new byte[] {(byte) 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0}, "fake.png")
+                        .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("PROJECT_LOGO_INVALID_TYPE"));
 
         // Nothing was stored by any rejected attempt.
         mvc.perform(get("/api/v1/projects/" + projectId + "/logo").cookie(manager.access()))

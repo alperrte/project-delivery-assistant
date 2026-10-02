@@ -191,10 +191,9 @@ public class ProjectMembershipService {
     }
 
     private MemberSummary toSummary(ProjectMembership membership) {
-        String nickname = users.findActiveById(membership.getUserId())
-                .map(UserAccounts.AuthenticatedUser::nickname)
-                .orElse(null);
-        return MemberSummary.from(membership, nickname);
+        UserAccounts.AuthenticatedUser account = users.findActiveById(membership.getUserId()).orElse(null);
+        return MemberSummary.from(membership, account == null ? null : account.nickname(),
+                account == null ? null : account.profilePhotoVersion());
     }
 
     private ProjectMembership activeMember(UUID projectId, UUID userId) {

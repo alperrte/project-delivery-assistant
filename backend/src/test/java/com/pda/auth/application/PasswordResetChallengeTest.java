@@ -58,6 +58,55 @@ class PasswordResetChallengeTest {
     }
 
     @Test
+    void aUsedChallengeCanBeReplacedByANewCodeForTheNextForgottenPassword() {
+        UUID userId = UUID.randomUUID();
+        Instant now = Instant.now();
+        String first = hasher.newCode();
+        PasswordResetChallenge challenge = PasswordResetChallenge.issue(userId, hasher.hashResetCode(userId, first), now);
+        assertEquals(AttemptResult.VERIFIED, challenge.attempt(hasher.hashResetCode(userId, first), now));
+        assertEquals(AttemptResult.CONSUMED, challenge.attempt(hasher.hashResetCode(userId, first), now));
+
+        // Later the same person forgets again: a new code is issued, the old one stays useless.
+        Instant later = now.plusSeconds(3600);
+        assertTrue(challenge.canResend(later));
+        String second = differentCode(first);
+        challenge.resend(hasher.hashResetCode(userId, second), later);
+        assertEquals(AttemptResult.WRONG, challenge.attempt(hasher.hashResetCode(userId, first), later));
+        assertEquals(AttemptResult.VERIFIED, challenge.attempt(hasher.hashResetCode(userId, second), later));
+    }
+
+    @Test
+    void askingForNewCodesIsNoWayAroundTheHourlyLimitOfWrongGuesses() {
+        UUID userId = UUID.randomUUID();
+        Instant start = Instant.parse("2026-01-01T00:00:00Z");
+        String first = hasher.newCode();
+        PasswordResetChallenge challenge = PasswordResetChallenge.issue(userId, hasher.hashResetCode(userId, first), start);
+        String wrong = differentCode(first);
+        // Two wrong guesses, a new code, three more: five in the window, spread over two codes.
+        for (int i = 0; i < 2; i++) {
+            assertEquals(AttemptResult.WRONG, challenge.attempt(hasher.hashResetCode(userId, wrong), start.plusSeconds(10)));
+        }
+        String second = differentCode(wrong);
+        challenge.resend(hasher.hashResetCode(userId, second), start.plusSeconds(70));
+        for (int i = 0; i < 3; i++) {
+            assertEquals(AttemptResult.WRONG, challenge.attempt(hasher.hashResetCode(userId, wrong), start.plusSeconds(80)));
+        }
+        // Blocked: even the correct code is refused, and a further new code does not lift it.
+        assertTrue(challenge.isBlocked(start.plusSeconds(90)));
+        assertEquals(AttemptResult.TOO_MANY_ATTEMPTS, challenge.attempt(hasher.hashResetCode(userId, second), start.plusSeconds(90)));
+        String third = differentCode(second);
+        challenge.resend(hasher.hashResetCode(userId, third), start.plusSeconds(140));
+        assertEquals(AttemptResult.TOO_MANY_ATTEMPTS, challenge.attempt(hasher.hashResetCode(userId, third), start.plusSeconds(150)));
+
+        // After the hour the block ends and a fresh window starts.
+        Instant later = start.plusSeconds(3700);
+        assertFalse(challenge.isBlocked(later));
+        String fourth = differentCode(third);
+        challenge.resend(hasher.hashResetCode(userId, fourth), later);
+        assertEquals(AttemptResult.VERIFIED, challenge.attempt(hasher.hashResetCode(userId, fourth), later.plusSeconds(1)));
+    }
+
+    @Test
     void resetAndVerificationHashesAreDomainSeparated() {
         UUID userId = UUID.randomUUID();
         String code = hasher.newCode();

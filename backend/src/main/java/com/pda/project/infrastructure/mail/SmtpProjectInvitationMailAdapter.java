@@ -79,22 +79,47 @@ public class SmtpProjectInvitationMailAdapter implements ProjectInvitationMailPo
         if (sender == null) {
             return;
         }
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(fromAddress);
-        message.setTo(recipientEmail);
-        message.setSubject("You're invited to join " + projectName + " on PDA");
-        message.setText(inviterName + " invited you to join the project \"" + projectName + "\" on PDA.\n"
-                + (teamName == null ? "" : "Team: " + teamName + "\n")
-                + "Roles: " + roles + "\n"
-                + (personalMessage == null ? "" : "Message: " + personalMessage + "\n")
-                + (expiresAt == null ? "" : "Invitation expires: " + expiresAt + "\n")
-                + "\nOpen this link to respond: " + invitationLink + "\n\n"
-                + "If you did not expect this invitation, you can ignore this email.");
+        SimpleMailMessage message = compose(fromAddress, recipientEmail, projectName, teamName, inviterName, roles,
+                personalMessage, expiresAt, invitationLink);
         try {
             sender.send(message);
         } catch (MailException exception) {
             log.warn("Failed to send project invitation email; the invitation itself was still created.");
         }
+    }
+
+    /**
+     * Builds the message. Names and texts typed by users end up in the subject and the body, so every line-ending or
+     * other control character is replaced first: a project name containing CR/LF must never be able to add a header
+     * (Bcc, a second Subject ...) to the message.
+     */
+    static SimpleMailMessage compose(String fromAddress, String recipientEmail, String projectName, String teamName,
+            String inviterName, Set<ProjectRole> roles, String personalMessage, Instant expiresAt,
+            String invitationLink) {
+        String project = singleLine(projectName);
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(fromAddress);
+        message.setTo(recipientEmail);
+        message.setSubject("You're invited to join " + project + " on PDA");
+        message.setText(singleLine(inviterName) + " invited you to join the project \"" + project + "\" on PDA.\n"
+                + (teamName == null ? "" : "Team: " + singleLine(teamName) + "\n")
+                + "Roles: " + roles + "\n"
+                + (personalMessage == null ? "" : "Message: " + singleLine(personalMessage) + "\n")
+                + (expiresAt == null ? "" : "Invitation expires: " + expiresAt + "\n")
+                + "\nOpen this link to respond: " + invitationLink + "\n\n"
+                + "If you did not expect this invitation, you can ignore this email.");
+        return message;
+    }
+
+    /** One line of plain text: control characters and Unicode line/paragraph separators become single spaces. */
+    static String singleLine(String text) {
+        if (text == null) return "";
+        StringBuilder clean = new StringBuilder(text.length());
+        text.codePoints().forEach(cp -> {
+            boolean lineBreakLike = Character.isISOControl(cp) || cp == 0x2028 || cp == 0x2029;
+            clean.appendCodePoint(lineBreakLike ? ' ' : cp);
+        });
+        return clean.toString().replaceAll(" {2,}", " ").strip();
     }
 
     private static String required(Environment environment, String key) {

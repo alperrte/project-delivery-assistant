@@ -193,23 +193,51 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
 
     @Transactional(readOnly = true)
     public Page<MyInvitationSummary> listMine(UUID actorId, Pageable pageable) {
-        Page<ProjectInvitation> page = invitations.findByInvitedUserId(actorId, pageable);
+        return listMine(actorId, null, pageable);
+    }
+
+    /**
+     * {@code statusFilter} is either {@code null} (every invitation) or {@link InvitationStatus#PENDING}, which keeps
+     * only invitations the recipient can still answer. A pending invitation past its expiry is reported as
+     * {@link InvitationStatus#EXPIRED}; nothing is written, accepting it still fails as not pending.
+     */
+    @Transactional(readOnly = true)
+    public Page<MyInvitationSummary> listMine(UUID actorId, InvitationStatus statusFilter, Pageable pageable) {
+        Instant now = clock.instant();
+        Page<ProjectInvitation> page;
+        if (statusFilter == null) {
+            page = invitations.findByInvitedUserId(actorId, pageable);
+        } else if (statusFilter == InvitationStatus.PENDING) {
+            page = invitations.findByInvitedUserIdAndStatusAndExpiresAtAfter(actorId, InvitationStatus.PENDING, now,
+                    pageable);
+        } else {
+            throw new IllegalArgumentException("Only the PENDING status filter is supported");
+        }
         Map<UUID, Project> projectMap = projects.findAllById(page.getContent().stream()
                 .map(ProjectInvitation::getProjectId).collect(Collectors.toSet())).stream()
                 .collect(Collectors.toMap(Project::getId, Function.identity()));
         Map<UUID, UserAccounts.AuthenticatedUser> senders = users.findActiveByIds(page.getContent().stream()
                 .map(ProjectInvitation::getInvitedBy).collect(Collectors.toSet()));
         Map<UUID, String> teamNames = teamNames(page.getContent());
-        return page.map(invitation -> new MyInvitationSummary(
-                InvitationSummary.from(invitation, null,
-                        invitation.getTeamId() == null ? null : teamNames.get(invitation.getTeamId())),
-                projectMap.containsKey(invitation.getProjectId())
-                        ? projectMap.get(invitation.getProjectId()).getName() : null,
-                senders.containsKey(invitation.getInvitedBy())
-                        ? senders.get(invitation.getInvitedBy()).nickname() : null));
+        return page.map(invitation -> {
+            InvitationSummary summary = InvitationSummary.from(invitation, null,
+                    invitation.getTeamId() == null ? null : teamNames.get(invitation.getTeamId()));
+            if (invitation.getStatus() == InvitationStatus.PENDING && !invitation.getExpiresAt().isAfter(now)) {
+                summary = summary.withStatus(InvitationStatus.EXPIRED);
+            }
+            // An archived project can no longer be joined, so it is reported like a missing one.
+            Project project = projectMap.get(invitation.getProjectId());
+            return new MyInvitationSummary(summary,
+                    project != null && project.getArchivedAt() == null ? project.getName() : null,
+                    senders.containsKey(invitation.getInvitedBy())
+                            ? senders.get(invitation.getInvitedBy()).nickname() : null,
+                    senders.containsKey(invitation.getInvitedBy())
+                            ? senders.get(invitation.getInvitedBy()).profilePhotoVersion() : null);
+        });
     }
 
-    public record MyInvitationSummary(InvitationSummary invitation, String projectName, String invitedByNickname) {}
+    public record MyInvitationSummary(InvitationSummary invitation, String projectName, String invitedByNickname,
+                                      Long invitedByPhotoVersion) {}
 
     /** Card-level fields only. The recipient may inspect an invitation without becoming a project member. */
     public record InvitationProjectPreview(UUID projectId, String slug, String name, String tagline, String description,
@@ -240,6 +268,8 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
         Objects.requireNonNull(invitationId, "invitationId is required");
         ProjectInvitation invitation = invitations.findById(invitationId)
                 .filter(candidate -> actorId.equals(candidate.getInvitedUserId()))
+                // Once an invitation is cancelled, answered or lapsed, the project is no longer the invitee's to see.
+                .filter(candidate -> candidate.isPending(clock.instant()))
                 .orElseThrow(() -> new NoSuchElementException("Invitation not found"));
         return projects.findByIdAndArchivedAtIsNull(invitation.getProjectId())
                 .orElseThrow(() -> new NoSuchElementException("Project not found"));
@@ -287,10 +317,11 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
         if (projects.findByIdAndArchivedAtIsNull(projectId).isEmpty()) {
             throw new NoSuchElementException("Project not found");
         }
+        requireInviterStillManages(invitation);
         if (memberships.findByProjectIdAndUserIdAndStatus(projectId, userId, MembershipStatus.ACTIVE).isPresent()) {
             throw new InvitationConflictException("User is already a project member");
         }
-        String nickname = users.findActiveById(userId).map(UserAccounts.AuthenticatedUser::nickname)
+        UserAccounts.AuthenticatedUser account = users.findActiveById(userId)
                 .orElseThrow(() -> new NoSuchElementException("Account not found"));
         ProjectMembership membership = memberships.findByProjectIdAndUserId(projectId, userId)
                 .map(existing -> { existing.reactivate(invitation.getInitialRoles()); return existing; })
@@ -300,7 +331,7 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
         invitations.saveAndFlush(invitation);
         events.publishEvent(new ProjectInvitationEvents.Accepted(invitation.getId(), projectId, userId,
                 invitation.getInvitedBy(), invitation.getTeamId(), saved.getId()));
-        return MemberSummary.from(saved, nickname);
+        return MemberSummary.from(saved, account.nickname(), account.profilePhotoVersion());
     }
 
     private Accepted acceptedProject(ProjectInvitation invitation, MemberSummary ignored) {
@@ -399,8 +430,11 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
         if (!actorId.equals(invitation.getInvitedUserId()))
             throw new AccessDeniedException("This invitation is not addressed to you");
         UUID projectId = invitation.getProjectId();
-        String nickname = users.findActiveById(actorId)
-                .map(UserAccounts.AuthenticatedUser::nickname)
+        // An archived project can no longer be joined (the external path already checks this).
+        projects.findByIdAndArchivedAtIsNull(projectId)
+                .orElseThrow(() -> new NoSuchElementException("Project not found"));
+        requireInviterStillManages(invitation);
+        UserAccounts.AuthenticatedUser account = users.findActiveById(actorId)
                 .orElseThrow(() -> new NoSuchElementException("Active user not found"));
         ProjectMembership membership = memberships.findByProjectIdAndUserId(projectId, actorId)
                 .map(existing -> {
@@ -416,7 +450,20 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
         invitations.saveAndFlush(invitation);
         events.publishEvent(new ProjectInvitationEvents.Accepted(invitation.getId(), projectId,
                 actorId, invitation.getInvitedBy(), invitation.getTeamId(), saved.getId()));
-        return MemberSummary.from(saved, nickname);
+        return MemberSummary.from(saved, account.nickname(), account.profilePhotoVersion());
+    }
+
+    /**
+     * The roles an invitation grants were the inviter's to give. If the inviter has since been removed or demoted,
+     * a still-pending invitation must not turn into a membership (otherwise a manager who is on the way out could
+     * leave a PROJECT_MANAGER invitation behind for somebody else).
+     */
+    private void requireInviterStillManages(ProjectInvitation invitation) {
+        boolean stillManages = memberships.findByProjectIdAndUserIdAndStatus(invitation.getProjectId(),
+                        invitation.getInvitedBy(), MembershipStatus.ACTIVE)
+                .map(inviter -> RolePolicy.allows(inviter.getRoles(), ProjectPermission.MEMBER_MANAGE))
+                .orElse(false);
+        if (!stillManages) throw new InvitationConflictException("Invitation is no longer valid");
     }
 
     private ProjectInvitation ownPending(UUID actorId, UUID invitationId) {
@@ -509,8 +556,7 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
             ProjectInvitationMailPort mail = mailProvider.getIfAvailable();
             if (mail != null && mail.available()) {
                 String link = external ? frontendUrl + "/register#invitation=" + rawToken
-                        : frontendUrl + "/invitations/" + invitationId + "?projectId=" + projectId
-                        + "&token=" + rawToken;
+                        : frontendUrl + "/invitations/" + projectId + "/" + invitationId + "?token=" + rawToken;
                 String inviterName = users.findActiveById(invitedBy)
                         .map(UserAccounts.AuthenticatedUser::nickname).orElse("PDA");
                 mail.sendInvitation(recipientEmail, projectName, teamName, inviterName, roles,

@@ -21,7 +21,12 @@ public final class SlugGenerator {
                 .replaceAll("[^a-z0-9]+", "-")
                 .replaceAll("^-|-$", "");
         if (base.isEmpty()) {
-            throw new IllegalArgumentException("name cannot produce a slug");
+            // A name in another script (Cyrillic, CJK, Arabic ...) has letters but no Latin ones; it still gets a
+            // usable address. Only a name with no letters or digits at all (just punctuation) is refused.
+            if (name.codePoints().noneMatch(Character::isLetterOrDigit)) {
+                throw new IllegalArgumentException("name cannot produce a slug");
+            }
+            base = "project";
         }
         if (base.length() > MAX_BASE_LENGTH) {
             base = base.substring(0, MAX_BASE_LENGTH).replaceAll("-+$", "");

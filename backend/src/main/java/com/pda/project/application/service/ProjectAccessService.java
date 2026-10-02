@@ -200,6 +200,6 @@ public class ProjectAccessService implements ProjectAccess {
     private static ProjectMemberView view(ProjectMembership membership, UserAccounts.AuthenticatedUser account) {
         return new ProjectMemberView(membership.getId(), membership.getUserId(),
                 account == null ? null : account.nickname(), account == null ? null : account.email(),
-                membership.getRoles(), membership.getJoinedAt());
+                membership.getRoles(), membership.getJoinedAt(), account == null ? null : account.profilePhotoVersion());
     }
 }

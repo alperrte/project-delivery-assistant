@@ -24,6 +24,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CsrfFilter;
+import org.springframework.security.web.savedrequest.NullRequestCache;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -90,6 +91,9 @@ public class SecurityBaselineConfiguration {
         return http
                 .cors(cors -> cors.configurationSource(corsSource))
                 .csrf(csrf -> csrf.spa())
+                // A 401 must not remember the request in an HttpSession: every anonymous probe would otherwise
+                // allocate a server-side session (JSESSIONID) that lives for 30 minutes. OAuth keeps its own session use.
+                .requestCache(cache -> cache.requestCache(new NullRequestCache()))
                 .addFilterBefore(new AuthRateLimitFilter(), CsrfFilter.class)
                 .addFilterBefore(new ProjectInvitationRateLimitFilter(), CsrfFilter.class)
                 .addFilterBefore(new JwtCookieAuthenticationFilter(tokens, cookies, users, sessions, clock),
@@ -111,6 +115,7 @@ public class SecurityBaselineConfiguration {
                                     || path.equals("/api/v1/projects") || path.startsWith("/api/v1/projects/")
                                     || path.equals("/api/v1/organizations") || path.startsWith("/api/v1/organizations/")
                                     || path.startsWith("/api/v1/tasks/")
+                                    || path.startsWith("/api/v1/users/")
                                     || path.equals("/api/v1/project-invitations/me")
                                     || path.startsWith("/api/v1/project-invitations/")
                                     || path.equals("/api/v1/notifications") || path.startsWith("/api/v1/notifications/");
@@ -150,6 +155,11 @@ public class SecurityBaselineConfiguration {
                             .requestMatchers(HttpMethod.POST, "/api/v1/auth/sessions/*/revoke",
                                     "/api/v1/auth/sessions/revoke-others").authenticated()
                             .requestMatchers(HttpMethod.POST, "/api/v1/auth/password/change").authenticated()
+                            .requestMatchers(HttpMethod.GET, "/api/v1/users/me/preferences",
+                                    "/api/v1/users/me/profile-photo", "/api/v1/users/*/profile-photo").authenticated()
+                            .requestMatchers(HttpMethod.PUT, "/api/v1/users/me/preferences",
+                                    "/api/v1/users/me/profile-photo").authenticated()
+                            .requestMatchers(HttpMethod.DELETE, "/api/v1/users/me/profile-photo").authenticated()
                             .requestMatchers(HttpMethod.GET, "/api/v1/notifications", "/api/v1/notifications/unread-count").authenticated()
                             .requestMatchers(HttpMethod.PATCH, "/api/v1/notifications/read-all",
                                     "/api/v1/notifications/*/read").authenticated()
@@ -216,9 +226,11 @@ public class SecurityBaselineConfiguration {
                                     "/api/v1/projects/*/teams/*",
                                     "/api/v1/projects/*/teams/*/parent",
                                     "/api/v1/projects/*/criteria/*",
-                                    "/api/v1/projects/*/logo").authenticated()
+                                    "/api/v1/projects/*/logo",
+                                    "/api/v1/projects/*/banner").authenticated()
                             .requestMatchers(HttpMethod.DELETE, "/api/v1/projects/*/members/*",
                                     "/api/v1/projects/*/logo",
+                                    "/api/v1/projects/*/banner",
                                     "/api/v1/projects/*/tasks/*",
                                     "/api/v1/projects/*/members/*/roles/*",
                                     "/api/v1/projects/*/invitations/*",
@@ -264,6 +276,7 @@ public class SecurityBaselineConfiguration {
         source.registerCorsConfiguration("/api/v1/projects", configuration);
         source.registerCorsConfiguration("/api/v1/projects/**", configuration);
         source.registerCorsConfiguration("/api/v1/tasks/**", configuration);
+        source.registerCorsConfiguration("/api/v1/users/**", configuration);
         source.registerCorsConfiguration("/api/v1/organizations", configuration);
         source.registerCorsConfiguration("/api/v1/organizations/**", configuration);
         source.registerCorsConfiguration("/api/v1/notifications/**", configuration);

@@ -187,12 +187,14 @@ public class SquadService {
                 .collect(Collectors.toSet());
         Map<UUID, ProjectMemberView> views = ids.isEmpty() ? Map.of() : projects.membersByIds(projectId, ids);
         Map<UUID, List<TeamRef>> others = otherTeams(ids, teamId);
+        // E-mail addresses are for people who manage the members; everybody else sees nicknames only.
+        boolean seesEmail = projects.hasPermission(projectId, actor, ProjectPermission.MEMBER_MANAGE);
         return page.map(row -> {
             ProjectMemberView view = views.get(row.getProjectMembershipId());
             if (view == null) throw new IllegalStateException("Team has stale project membership");
-            return new SquadMemberSummary(view.userId(), view.nickname(), view.email(), view.roles(),
+            return new SquadMemberSummary(view.userId(), view.nickname(), seesEmail ? view.email() : null, view.roles(),
                     row.getAddedBy(), row.getAddedAt(),
-                    others.getOrDefault(row.getProjectMembershipId(), List.of()));
+                    others.getOrDefault(row.getProjectMembershipId(), List.of()), view.profilePhotoVersion());
         });
     }
 
@@ -210,7 +212,8 @@ public class SquadService {
         events.publishEvent(new SquadMembershipEvents.MemberAdded(teamId, projectId, userId, actor, Instant.now()));
         return new SquadMemberSummary(userId, view.nickname(), view.email(), view.roles(),
                 saved.getAddedBy(), saved.getAddedAt(),
-                otherTeams(Set.of(view.membershipId()), teamId).getOrDefault(view.membershipId(), List.of()));
+                otherTeams(Set.of(view.membershipId()), teamId).getOrDefault(view.membershipId(), List.of()),
+                view.profilePhotoVersion());
     }
 
     /** A member's last team cannot be left: that would be removing them from the project, which is a separate act. */
@@ -287,13 +290,14 @@ public class SquadService {
             for (UUID membershipId : newestMembershipIds.getOrDefault(team.getId(), List.of())) {
                 ProjectMemberView member = memberViews.get(membershipId);
                 if (member == null) continue;
-                preview.add(new UserRef(member.userId(), member.nickname()));
+                preview.add(new UserRef(member.userId(), member.nickname(), member.profilePhotoVersion()));
                 if (lastJoined == null)
                     lastJoined = new LastJoined(member.userId(), member.nickname(), joinedAt.get(membershipId));
             }
             UserAccounts.AuthenticatedUser updater = updaters.get(team.getUpdatedBy());
             result.put(team.getId(), new TeamView(team, counts.getOrDefault(team.getId(), 0L),
-                    new UserRef(team.getUpdatedBy(), updater == null ? null : updater.nickname()),
+                    new UserRef(team.getUpdatedBy(), updater == null ? null : updater.nickname(),
+                            updater == null ? null : updater.profilePhotoVersion()),
                     preview, lastJoined));
         }
         return result;

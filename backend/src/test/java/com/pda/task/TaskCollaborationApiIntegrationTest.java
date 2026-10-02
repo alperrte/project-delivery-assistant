@@ -22,6 +22,36 @@ class TaskCollaborationApiIntegrationTest extends TaskTestBase {
 
     private UUID idOf(String body) { return UUID.fromString(JsonPath.read(body, "$.id")); }
 
+    @Test void peopleInTasksAndCommentsCarryOnlyTheirPhotoVersionAndOnlyWhenTheyHaveAPhoto() throws Exception {
+        Account pm = account("photopm");
+        UUID project = project(pm, "Photo project");
+        Account withPhoto = member(project, pm, "photoa");
+        Account withoutPhoto = member(project, pm, "photob");
+        send(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart(
+                        org.springframework.http.HttpMethod.PUT, "/api/v1/users/me/profile-photo")
+                .file(new org.springframework.mock.web.MockMultipartFile("file", "me.png", "image/png",
+                        com.pda.shared.TestImages.png(2, 2))), withPhoto, null).andExpect(status().isOk());
+        UUID task = createTask(project, pm, "{\"title\":\"With faces\",\"assigneeIds\":[\"" + withPhoto.id()
+                + "\",\"" + withoutPhoto.id() + "\"]}");
+        String base = tasksUrl(project) + "/" + task;
+        send(post(base + "/comments"), withPhoto, "{\"body\":\"Mine @[" + withoutPhoto.id() + "]\"}")
+                .andExpect(status().isCreated());
+        send(put(base + "/watch"), withPhoto, null).andExpect(status().isOk());
+
+        String assignees = read(base, pm).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        java.util.List<Object> versions = com.jayway.jsonpath.JsonPath.read(assignees,
+                "$.assignees[?(@.userId=='" + withPhoto.id() + "')].profilePhotoVersion");
+        assertEquals(1, versions.size());
+        org.junit.jupiter.api.Assertions.assertNotNull(versions.get(0), "an assignee with a photo has a version");
+        read(base, pm).andExpect(jsonPath("$.assignees[?(@.userId=='" + withoutPhoto.id() + "')].profilePhotoVersion")
+                .value(org.hamcrest.Matchers.contains(org.hamcrest.Matchers.nullValue())));
+        read(base + "/comments", pm).andExpect(jsonPath("$.content[0].authorPhotoVersion").isNumber())
+                .andExpect(jsonPath("$.content[0].mentions[0].profilePhotoVersion")
+                        .value(org.hamcrest.Matchers.nullValue()));
+        read(base + "/watchers", pm).andExpect(jsonPath("$[?(@.userId=='" + withPhoto.id() + "')].profilePhotoVersion")
+                .value(org.hamcrest.Matchers.hasSize(1)));
+    }
+
     @Test void commentsMentionsWatchersAndTimeline() throws Exception {
         Account pm = account("collabpm");
         UUID project = project(pm, "Collab project");
@@ -61,6 +91,12 @@ class TaskCollaborationApiIntegrationTest extends TaskTestBase {
         read(base + "/comments", a).andExpect(jsonPath("$.content[0].deleted").value(true))
                 .andExpect(jsonPath("$.content[0].body").doesNotExist());
         send(patch(base + "/comments/" + comment), b, "{\"body\":\"again\"}").andExpect(status().isNotFound());
+
+        // A page number so large that page * size overflows an int is just an empty page, not a server error.
+        read(base + "/comments?page=2147483647&size=100", a).andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(0));
+        read(base + "/activity?page=2147483647&size=100", a).andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(0));
 
         send(put(base + "/watch"), outsider, null).andExpect(deniedToOutsider());
         send(delete(base + "/watch"), b, null).andExpect(status().isOk()).andExpect(jsonPath("$.watching").value(false));

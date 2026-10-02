@@ -115,6 +115,7 @@ Because authentication uses cookies, **CSRF protection must not be blindly disab
 - Logout must revoke the appropriate refresh/session state.
 - Reusing an invalidated refresh token must not silently create a new session.
 - Sensitive authentication values must never be logged.
+- An anonymous request (for example a `401` probe) must not allocate a server-side `HttpSession`: the security chain uses `NullRequestCache`, so no `JSESSIONID` is issued outside the OAuth login flow (`SecurityBaselineTest` guards this).
 
 ---
 
@@ -389,6 +390,8 @@ Swagger check path: `/swagger-ui/index.html` with `API_DOCS_ENABLED=true`: `GET 
 | `POST /api/v1/auth/password/forgot` | Public + CSRF | `{email}` | `202` always, regardless of whether the account exists or is active (no enumeration); a 6-digit code is emailed only when it belongs to an active account and the per-account resend cooldown has elapsed | `400` invalid email, `403` CSRF, `429` IP limit (5/10 min), `503` mail temporarily unavailable |
 | `POST /api/v1/auth/password/reset` | Public + CSRF | `{email, code (6 digits), newPassword (8-128), confirmPassword}` | `200`; password replaced, **every session of the account revoked**, a pending forced change (`mustChangePassword`) cleared | `400` invalid fields / confirmation mismatch / wrong or expired code / too many attempts / unknown or inactive account (all reported as the same "code is invalid"-style detail, never distinguishing account existence), `403` CSRF, `429` IP limit (5/10 min) |
 
+**Cumulative wrong-guess limit (V50, 2026-10-03).** Besides the 5 attempts per code, wrong guesses are counted across all codes of the account inside a one-hour window (`window_failures`, `failure_window_started_at`). The 5th wrong guess in the window blocks the reset until the window ends: even the correct code is then refused (`reset_too_many_attempts`) and `forgot` sends no new code, so asking for a fresh code is no way around the limit. The window and counter restart after a successful reset. Trade-off accepted by the product owner: somebody who knows the email can block that account's password reset for up to an hour (the per-IP limit of 5/10 min still applies to them).
+
 Rules: `forgot` checks mail availability before looking up the account, so a `503` never leaks whether the email exists. `reset` never checks the current password (identity is proven by the emailed code instead) and calls the same `UserSessions.revokeAll` used by the admin disable-user flow, so a stolen password immediately loses every existing session, not just future ones. Every `400` from `/password/reset` and `/password/change` carries a machine-readable `ProblemDetail.code` alongside `detail` (`reset_code_invalid`, `reset_code_expired`, `reset_too_many_attempts`, `password_confirmation_mismatch`, `current_password_incorrect`, `password_unchanged`) so the frontend can show a distinct message per case without matching on the human-readable `detail` string; `account_unavailable` on `/password/change` uses the same `code` convention on its `403`.
 ### External project invitation onboarding endpoints
 
@@ -432,6 +435,40 @@ Logo storage is an approved exception to §18 (see there). Bytes live in the sep
 | `GET /api/v1/projects/{projectId}/logo` | `PROJECT_VIEW` | none | `200` image bytes; `Content-Type` is the stored type, `X-Content-Type-Options: nosniff`, `Content-Disposition: inline`, `Cache-Control: private, max-age=31536000, immutable` (URL is versioned with `?v=logoVersion`) | `403` not a member, `404` no logo |
 
 Swagger check path: `/swagger-ui/index.html` with `API_DOCS_ENABLED=true`: `GET /api/v1/auth/csrf`, log in, pick a `projectId` from `GET /api/v1/projects`, then call the endpoints above.
+
+### User preferences endpoints (2026-10-02)
+
+New migration `V48__user_preferences.sql` (`user_preferences`); no new ENV key, dependency or `RolePolicy` action. The data is the caller's own interface defaults (language, theme, animation choices), never another user's: the controller takes the user id only from the authenticated principal and there is no id in the path. The two routes are listed explicitly in `SecurityBaselineConfiguration` (deny-by-default kept), registered for CORS (`/api/v1/users/**`, the SPA calls them from another origin) and answer `401` for a missing or expired session so the client renews it instead of showing a permission error.
+
+| Endpoint | Permission | Input | Success | Failures |
+|---|---|---|---|---|
+| `GET /api/v1/users/me/preferences` | any signed-in user, own data | none | `200` the four saved choices, absent until saved; `Cache-Control: no-store` | `401` |
+| `PUT /api/v1/users/me/preferences` | any signed-in user, own data + CSRF | JSON `locale`, `theme`, `motion`, `themeTransition`, all required | `200` the saved choices | `400` unsupported or missing value, `401`, `403` CSRF |
+
+### Project banner endpoints (2026-10-02)
+
+New migration `V47__project_banners.sql` (`projects.banner_updated_at`, `project_banners`); no new ENV key or dependency and no new `RolePolicy` action: existing `PROJECT_UPDATE` and `PROJECT_VIEW` apply (deny-by-default kept; the two new routes are listed explicitly in `SecurityBaselineConfiguration`). The banner mirrors the logo: same storage, same validation, a larger limit. Approved by the product owner's request for a project cover image; see the exception in §18.
+
+| Endpoint | Permission | Input | Success | Failures |
+|---|---|---|---|---|
+| `PUT /api/v1/projects/{projectId}/banner` | `PROJECT_UPDATE` + CSRF | multipart `file`, max 2 MB | `204` | `400` `PROJECT_BANNER_INVALID_TYPE` / `PROJECT_BANNER_TOO_LARGE` / `PROJECT_BANNER_EMPTY`, `403` role/CSRF, `404` |
+| `DELETE /api/v1/projects/{projectId}/banner` | `PROJECT_UPDATE` + CSRF | none | `204` | `403`, `404` |
+| `GET /api/v1/projects/{projectId}/banner` | `PROJECT_VIEW` | none | `200` image bytes; stored `Content-Type`, `nosniff`, `inline`, `Cache-Control: private, max-age=31536000, immutable` (URL is versioned with `?v=bannerVersion`) | `403` not a member, `404` no banner |
+
+---
+
+### User profile photo endpoints (2026-10-02)
+
+New migration `V49__user_profile_photos.sql` (`users.profile_photo_updated_at`, `user_profile_photos`); no new ENV key, dependency or `RolePolicy` action. Writes always target the signed-in user (`/me`, no user id in the path or the body, so another account's photo cannot be changed); reading a photo by user id is open to any signed-in user because teammates, invitation senders and managers show it as an avatar. The routes are listed explicitly in `SecurityBaselineConfiguration` (deny-by-default kept), registered for CORS (`/api/v1/users/**`) and answer `401` for a missing session. The API never returns storage metadata: `GET /api/v1/auth/me` and the member, team, card and invitation DTOs carry only `profilePhotoVersion` (epoch milliseconds, absent when there is no photo), used as the `?v=` cache buster. Approved by the product owner's request for profile photos; see the exception in §18.
+
+| Endpoint | Permission | Input | Success | Failures |
+|---|---|---|---|---|
+| `PUT /api/v1/users/me/profile-photo` | own account + CSRF | multipart `file`, max 5 MB, PNG/JPEG/WebP | `200` `{profilePhotoVersion}` | `400` `PROFILE_PHOTO_INVALID_TYPE` / `PROFILE_PHOTO_TOO_LARGE` / `PROFILE_PHOTO_EMPTY` / `PROFILE_PHOTO_DIMENSIONS`, `401`, `403` CSRF |
+| `DELETE /api/v1/users/me/profile-photo` | own account + CSRF | none | `204` (also when there was none) | `401`, `403` |
+| `GET /api/v1/users/me/profile-photo` | own account | none | `200` image bytes, `Cache-Control: private, no-cache` | `401`, `404` no photo |
+| `GET /api/v1/users/{userId}/profile-photo` | any signed-in user | none | `200` image bytes; stored `Content-Type`, `nosniff`, `inline`, `Content-Security-Policy: default-src 'none'; sandbox`, `Cache-Control: private, max-age=31536000, immutable` (URL versioned with `?v=profilePhotoVersion`) | `400` malformed id, `401`, `404` no photo or inactive user |
+
+Replacing never leaves an orphan (one row per user, overwritten in place); a refused upload changes nothing. Open items: there is no dedicated per-user upload rate limit, and EXIF data is kept as uploaded (no re-encoding).
 
 ---
 
@@ -510,7 +547,7 @@ Swagger check path: `/swagger-ui/index.html` with `API_DOCS_ENABLED=true`. `GET 
 
 **Notifications.** Notification consumes only `com.pda.task.TaskEvents` with `@TransactionalEventListener(AFTER_COMMIT)`. A mention notifies only active project members.
 
-**Attachment threat note (approved file upload, see §18).** Risks: stored XSS through SVG/HTML, content sniffing, polyglot files, path traversal through the file name, oversize/zip-bomb style abuse, and cross-project reads. Controls: extension allow-list (png, jpeg, webp, gif, pdf, txt, csv, md, zip, docx, xlsx, pptx) plus magic-byte proof; the client `Content-Type` is ignored; SVG, HTML-like text and files with NUL bytes in text types are rejected; the file name is sanitized (path separators and control characters removed, length capped) and never used as a path, the bytes live in `task_attachment_data` (`BYTEA`) and never on disk; 10 MB per file and 20 per task (multipart limit 11 MB); downloads send `X-Content-Type-Options: nosniff`, `Content-Security-Policy: sandbox`, `Cache-Control: private` and `Content-Disposition: attachment` (only png/jpeg/webp/gif are `inline`); access needs `PROJECT_VIEW` of the owning project and a task id scoped to that project. Open item: there is no dedicated per-user upload rate limit; the existing per-IP limiter does not cover these routes.
+**Attachment threat note (approved file upload, see §18).** Risks: stored XSS through SVG/HTML, content sniffing, polyglot files, path traversal through the file name, oversize/zip-bomb style abuse, and cross-project reads. Controls: extension allow-list (png, jpeg, webp, gif, pdf, txt, csv, md, zip, docx, xlsx, pptx) plus magic-byte proof; the client `Content-Type` is ignored; SVG, HTML-like text and files with NUL bytes in text types are rejected; the file name is sanitized (path separators and control characters removed, length capped) and never used as a path, the bytes live in `task_attachment_data` (`BYTEA`) and never on disk; 10 MB per file and 20 per task (multipart limit 11 MB); downloads send `X-Content-Type-Options: nosniff`, `Content-Security-Policy: sandbox`, `Cache-Control: private` and `Content-Disposition: attachment` (only png/jpeg/webp/gif are `inline`); access needs `PROJECT_VIEW` of the owning project and a task id scoped to that project. Image attachments (png, jpeg, webp, gif) are also measured from their header by `ImageSniffer` / the GIF screen size, so a few bytes that claim an enormous picture are refused (`TASK_ATTACHMENT_INVALID`) before any member's browser draws them. Deleting an attachment also deletes its stored bytes. Open item: there is no dedicated per-user upload rate limit or storage quota; the existing per-IP limiter does not cover these routes.
 
 **Member removal.** `ProjectMemberRemovedEvent` clears the member's task assignments and watches.
 
@@ -584,6 +621,8 @@ Sensitive endpoints must receive stricter abuse protection, especially:
 
 Rate limiting must be introduced in a way that does not require unnecessary V1 infrastructure.
 
+The in-memory limiters (`AuthRateLimitFilter`, `ProjectInvitationRateLimitFilter`) run before authentication, so their keys must never be built from client-chosen text. The auth limiter keys on the route (the OAuth paths are folded to their fixed prefix) plus the client address; the invitation limiter keeps a per-URI counter (10 per 10 minutes, the limit a manager feels) and adds a per-client total of 200 per 10 minutes across all invitation routes, so one client can neither fill the table with made-up URIs and lock everybody else out nor dodge the limit by changing an id (`RateLimitFilterKeyTest`). The client address is the direct peer unless `TRUSTED_PROXY_CIDRS` lists the reverse proxy; behind a proxy without it every user shares one bucket.
+
 ---
 
 ## 15. Security Headers
@@ -599,6 +638,8 @@ Where appropriate, production should use protections such as:
 - appropriate Referrer Policy.
 
 A security header must not be disabled merely to hide a frontend integration problem.
+
+The Next.js frontend sets `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin` and a restrictive `Permissions-Policy` for every page (`frontend/next.config.ts`). A Content-Security-Policy is not set yet: Next.js needs a per-request nonce for its inline scripts, which belongs in the proxy (open item).
 
 ---
 
@@ -637,6 +678,10 @@ When file handling is introduced:
 File attachment/storage is outside PDA V1 unless explicitly approved.
 
 **Approved exception (2026-10-01): project logo.** A single image per project is stored in the database (`project_logos`, `BYTEA`), not on disk, so no path or filename is ever used. The uploaded filename and the client `Content-Type` are ignored; the type is derived from magic bytes (PNG `89 50 4E 47`, JPEG `FF D8 FF`, WebP `RIFF....WEBP`). SVG and GIF are rejected (script/active-content risk). Size is capped at 512 KB (also a DB `CHECK`), empty files are rejected, and the image is served with `nosniff` and `inline` disposition. Any other upload feature still needs its own approval.
+
+**Approved exception (2026-10-02): project banner.** A project may carry one cover image, stored in the database exactly like the logo (`project_banners`, `BYTEA`, never on disk, no path or filename used). The filename and client `Content-Type` are ignored; the type is derived from magic bytes through the shared `com.pda.shared.ImageSniffer` (the same one the logo and the profile photo use), SVG and GIF are rejected, the size is capped at 2 MB (also a DB `CHECK`), empty files are rejected, and the image is served with `nosniff` and `inline` disposition. Upload and removal need `PROJECT_UPDATE` and CSRF. Aspect ratio is not enforced on the server; the UI crops with `object-cover`.
+
+**Approved exception (2026-10-02): profile photo.** Every account may carry one profile photo, stored in the database exactly like the logo and banner (`user_profile_photos`, `BYTEA`, one row per user, never on disk, no path, key or filename used or returned). The filename and client `Content-Type` are ignored; the type comes from magic bytes through `ImageSniffer` (PNG, JPEG, WebP only: SVG, GIF and anything else are rejected), the size is capped at 5 MB (also a DB `CHECK`), empty files are rejected, and `ImageSniffer` reads the pixel size from the header (at most 6000 px per side and 24 million pixels) so a small file cannot claim an enormous image (decompression-bomb protection without decoding anything). The same dimension rule now applies to the logo, the banner and the image attachments. Upload and removal only ever concern the signed-in user (`/me` routes) and need CSRF; the image is served with `nosniff`, `inline` disposition, a sandboxing `Content-Security-Policy` and a versioned URL (`?v=profilePhotoVersion`).
 
 **Approved exception (2026-10-02): task attachments.** Files on tasks are stored in the database (`task_attachment_data`, `BYTEA`), never on disk. Type is proven by extension allow-list plus magic bytes, SVG/HTML-like text and NUL-byte text are rejected, the client `Content-Type` and the file name are never trusted (the name is sanitized and only displayed), limits are 10 MB per file and 20 per task, and downloads carry `nosniff`, `CSP: sandbox` and `Cache-Control: private`. Full threat note and endpoint matrix: §11 "Task Service genişletmesi".
 

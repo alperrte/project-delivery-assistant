@@ -138,7 +138,7 @@ public class TeamController {
     public record MoveRequest(UUID parentTeamId) {}
     public record MemberRequest(@NotNull UUID userId) {}
     public record CandidateResponse(UUID userId, String nickname, TeamCandidate.Status status) {}
-    public record UserRefResponse(UUID userId, String nickname) {}
+    public record UserRefResponse(UUID userId, String nickname, Long profilePhotoVersion) {}
     public record LastJoinedResponse(UUID userId, String nickname, Instant joinedAt) {}
     public record TeamResponse(UUID id, UUID projectId, String name, String description, UUID parentTeamId,
                                long memberCount, UUID createdBy, Instant createdAt, Instant updatedAt,
@@ -148,9 +148,10 @@ public class TeamController {
             Squad team = view.team();
             return new TeamResponse(team.getId(), team.getProjectId(), team.getName(), team.getDescription(),
                     team.getParentSquadId(), view.memberCount(), team.getCreatedBy(), team.getCreatedAt(),
-                    team.getUpdatedAt(), new UserRefResponse(view.updatedBy().userId(), view.updatedBy().nickname()),
+                    team.getUpdatedAt(), new UserRefResponse(view.updatedBy().userId(), view.updatedBy().nickname(),
+                            view.updatedBy().profilePhotoVersion()),
                     view.memberPreview().stream()
-                            .map(user -> new UserRefResponse(user.userId(), user.nickname())).toList(),
+                            .map(user -> new UserRefResponse(user.userId(), user.nickname(), user.profilePhotoVersion())).toList(),
                     view.lastJoined() == null ? null : new LastJoinedResponse(view.lastJoined().userId(),
                             view.lastJoined().nickname(), view.lastJoined().joinedAt()));
         }

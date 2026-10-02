@@ -1,5 +1,21 @@
 # Veritabanı ve kalıcılık
 
+## V50 Şifre sıfırlama toplam deneme penceresi (2026-10-03)
+
+`V50__password_reset_failure_window.sql`, `password_reset_challenges` tablosuna `window_failures` (INT, varsayılan 0, CHECK >= 0) ve `failure_window_started_at` (TIMESTAMPTZ, NULL olabilir) ekler. Yeni kod istemek kod başına 5 deneme sayacını sıfırlıyordu; bu iki sütun yanlış tahminleri hesabın tüm kodları boyunca bir saatlik pencerede sayar, penceredeki 5. yanlış tahminden sonra pencere bitene kadar sıfırlama bloklanır. Yalnız ekleme yapar, mevcut satırlar 0 ile başlar.
+
+## V49 Profil fotoğrafı (2026-10-02)
+
+`V49__user_profile_photos.sql`, `users.profile_photo_updated_at` (NULL = fotoğraf yok; API'de `profilePhotoVersion` olarak epoch milisaniye) ve baytları ayıran `user_profile_photos` tablosunu ekler: `user_id` PK (`users` FK, `ON DELETE CASCADE`), `content_type` (`image/png|jpeg|webp` CHECK), `data BYTEA`, `size_bytes` (1–5242880 CHECK), `updated_at`. Kullanıcı başına tek satır tutulur; değiştirmek aynı satırın üzerine yazar, yani sahipsiz bayt kalmaz. Yapı `project_logos` ve `project_banners` ile aynıdır; kullanıcı ve üye listeleri baytlara dokunmaz. Yalnız ekleme yapar, mevcut tablo/veriyi değiştirmez. Görev ekleri silindiğinde artık `task_attachment_data` satırı da silinir (kayıt geçmiş olarak kalır).
+
+## V48 Kullanıcı tercihleri (2026-10-02)
+
+`V48__user_preferences.sql`, `user_preferences` tablosunu ekler: `user_id` PK (`users` FK, `ON DELETE CASCADE`), `locale` (`tr|en|de`), `theme` (`system|light|dark`), `motion` (`system|on|off`), `theme_transition` (boolean) ve `updated_at`. Sütunlar CHECK ile sınırlıdır ve NULL "hiç kaydedilmedi" demektir. Yalnız ekleme yapar, mevcut hiçbir tabloya dokunmaz.
+
+## V47 Proje banner'ı (2026-10-02)
+
+`V47__project_banners.sql`, `projects.banner_updated_at` (NULL = banner yok; API'de `bannerVersion` olarak epoch milisaniye) ve baytları ayıran `project_banners` tablosunu ekler: `project_id` PK (`projects` FK, `ON DELETE CASCADE`), `content_type` (`image/png|jpeg|webp` CHECK), `data BYTEA`, `size_bytes` (1–2097152 CHECK), `updated_at`. Yapı `project_logos` ile aynıdır; liste sorguları baytlara dokunmaz. Yalnız ekleme yapar, mevcut tablo/veriyi değiştirmez.
+
 ## V37–V46 Task genişletmesi (2026-10-02)
 
 - `V37__task_deadline.sql`: `tasks.deadline_at TIMESTAMPTZ` (mevcut `due_date` değerleri `Europe/Istanbul` 23:59 olarak taşınır, `due_date` ve `ck_tasks_dates` kalkar), `deadline_reminded_at`, `deadline_overdue_notified_at` ve açık görevler için kısmi `deadline_at` indeksi.

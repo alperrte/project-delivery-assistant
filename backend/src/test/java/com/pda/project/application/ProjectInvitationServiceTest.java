@@ -281,6 +281,22 @@ class ProjectInvitationServiceTest {
     }
 
     @Test
+    void registeredUserInvitationMailLinksToTheRealInvitationRoute() {
+        Mockito.when(mailPort.available()).thenReturn(true);
+        UUID manager = registerUser("linkmanager");
+        UUID target = registerUser("linktarget");
+        UUID projectId = projectService.create(manager, "Link invite project", null, null).getId();
+
+        CreatedInvitation created = invitationService.inviteRegisteredUser(manager, projectId, target, Set.of(ProjectRole.TESTER), null, team(projectId));
+
+        // The frontend route is /invitations/{projectId}/{invitationId}; any other shape is a 404 for the recipient.
+        String expected = "http://localhost:3000/invitations/" + projectId + "/" + created.invitation().getId()
+                + "?token=" + created.rawToken();
+        Mockito.verify(mailPort).sendInvitation(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(),
+                Mockito.anyString(), Mockito.anySet(), Mockito.isNull(), Mockito.any(), Mockito.eq(expected));
+    }
+
+    @Test
     void invitationCreationSucceedsWhenMailIsUnavailable() {
         Mockito.when(mailPort.available()).thenReturn(false);
         UUID manager = registerUser("nomailmanager");
