@@ -153,6 +153,17 @@ Giriş, kayıt ve şifre sıfırlama ekranları arka plan fotoğrafı üzerinde 
 - Kartın tamamı tıklanabilir (stretched link); düzenle/arşivle ikon butonları `relative z-10` ile link üstünde kalır ve tooltip taşır.
 - Veri tablosu: `divide-y`, zebra yok, `md` altında yığılmış liste. Filtre, sıralama ve arama durumu istemcide tutulur. Düzenleme modu tabloya "İşlemler" sütunu ekler; kilitli eylemler nedenini söyleyen tooltip'li kilit ikonu gösterir.
 
+## Görev yönetimi arayüzü
+
+- Linear çizgisi: sakin, yoğun; kartlar yalnız yükseklik anlam taşıyorsa (pano, havuz), liste `divide-y` satırlarıdır. Satır tek büyük tıklama hedefidir (stretched link), durum menüsü `relative z-10` ile bağımsız kalır.
+- Etiket renkleri sabit `--label-*` token'larından gelir (`slate, red, orange, amber, green, teal, blue, violet, pink`; `workflow.ts` `labelDotClass`). Serbest hex, `bg-white` ya da `bg-slate-*` kullanılmaz. Durum ve öncelik göstergeleri de `workflow.ts` sınıflarından gelir; renk tek başına anlam taşımaz, her zaman metin ya da `sr-only` karşılığı vardır.
+- Deadline tonu: gecikmiş `text-destructive`, 24 saat içinde `text-warning`, diğerleri sessiz.
+- Base UI menülerinde `DropdownMenuLabel` her zaman `DropdownMenuGroup` ya da `DropdownMenuRadioGroup` içinde olmalıdır; aksi halde menü çalışma anında hata verir (`tsc` yakalamaz).
+- Görev anahtarı uzun olabilir; `truncate` ile kısaltılır ve `title` taşır, başlığı satırdan itmez.
+- Pano native HTML5 sürükle-bırak kullanır; her kartın klavye ve dokunmatik alternatifi "Şuna taşı" menüsüdür. Geçersiz sütunlar soluklaşır.
+- Filtre durumu URL'dedir (`?status=`, `?tab=`, `?page=`), böylece görünüm paylaşılır ve yenilemede korunur. Arama yazmayı bitirince (300 ms) uygulanır.
+- Tarih ve saat için native `date`/`time` girdileri ve hızlı seçimler kullanılır; yeni bağımlılık eklenmez.
+
 ## Yeni sayfa veya bileşen eklerken kontrol listesi
 
 1. `globals.css` dosyasını oku; ihtiyacın olan token zaten var mı bak.

@@ -6,9 +6,10 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
-import { Buildings, CaretDown, SquaresFour, House, GearSix, CalendarBlank, CheckCircle, SidebarSimple, EnvelopeSimple } from "@phosphor-icons/react";
+import { Buildings, CaretDown, SquaresFour, House, GearSix, CalendarBlank, SidebarSimple, EnvelopeSimple } from "@phosphor-icons/react";
 import { AppHeader } from "./app-header";
 import { ProjectSidebarNav } from "./project-sidebar-nav";
+import { TasksNavLink } from "./tasks-nav-link";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Logo } from "@/components/common/logo";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -131,10 +132,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           })}
           <ProjectSidebarNav onNavigate={() => setMenuOpen(false)} collapsed={narrow} />
           <div className="my-3 border-t" />
-          <div title={narrow ? tw("tasks") : undefined} className={cn("flex items-center gap-3 py-2.5 text-[13px] text-muted-foreground", narrow ? "justify-center px-0" : "px-3")}>
-            <CheckCircle size={19} aria-hidden="true" />
-            {!narrow && <span>{tw("tasks")}</span>}
-          </div>
+          <TasksNavLink narrow={narrow} onNavigate={() => setMenuOpen(false)} />
           <Link
             href="/calendar"
             onClick={() => setMenuOpen(false)}
