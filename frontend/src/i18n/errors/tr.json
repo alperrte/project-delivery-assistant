@@ -1,0 +1,34 @@
+{
+  "403": {
+    "title": "Bu alana erişimin yok.",
+    "description": "Bu sayfayı görüntülemek için hesabının gerekli yetkiye sahip olması gerekiyor.",
+    "hint": "Proje yöneticinle iletişime geçebilir veya giriş sayfasından hesabını kontrol edebilirsin."
+  },
+  "404": {
+    "title": "Bu sayfayı bulamadık.",
+    "description": "Aradığın adres yanlış yazılmış, içerik kaldırılmış veya artık erişilebilir olmayabilir.",
+    "hint": "Adresi kontrol edebilir ya da ana sayfadan projelerine devam edebilirsin."
+  },
+  "500": {
+    "title": "Bir şeyler yolunda gitmedi.",
+    "description": "PDA bu sayfayı açarken beklenmeyen bir sorunla karşılaştı.",
+    "hint": "Yeniden deneyebilirsin. Sorun devam ederse bize hangi işlem sırasında oluştuğunu bildir."
+  },
+  "503": {
+    "title": "Kısa bir ara veriyoruz.",
+    "description": "PDA şu anda bu isteği karşılayamıyor. Hizmet geçici olarak kullanılamıyor olabilir.",
+    "hint": "Biraz sonra yeniden dene. Bağlantı sorunu varsa internet bağlantını da kontrol edebilirsin."
+  },
+  "common": {
+    "label": "PDA · Bir aksaklık var",
+    "home": "Ana sayfaya dön",
+    "login": "Giriş sayfası",
+    "retry": "Yeniden dene",
+    "contact": "Bize ulaş",
+    "skip": "İçeriğe geç",
+    "next": "Ne yapabilirsin?",
+    "test": "Test hatası oluştur",
+    "testTitle": "500 ekranını test et",
+    "testDescription": "Düğmeye bastığında bu sayfada kontrollü bir test hatası oluşur. Yeniden dene düğmesi bu ekrana geri getirir."
+  }
+}

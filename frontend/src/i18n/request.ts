@@ -18,6 +18,9 @@ export default getRequestConfig(async () => {
   const locale = await resolveLocale();
   return {
     locale,
-    messages: (await import(`./messages/${locale}.json`)).default,
+    messages: {
+      ...(await import(`./messages/${locale}.json`)).default,
+      errorPages: (await import(`./errors/${locale}.json`)).default,
+    },
   };
 });

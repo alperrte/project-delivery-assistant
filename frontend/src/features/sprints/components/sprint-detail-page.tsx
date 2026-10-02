@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { ArrowLeft } from "@phosphor-icons/react";
-import { buttonVariants } from "@/components/ui/button";
+import { PageFailure } from "@/features/errors/page-failure";
+import { ApiError } from "@/lib/api/client";
 import { Progress, ProgressIndicator, ProgressTrack } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageSkeleton, ProjectGate, type ProjectGateContext } from "@/features/tasks/components/project-gate";
@@ -176,7 +177,6 @@ function SprintTasks({ projectId, slug, sprintId, userId, isManager }: { project
 
 function SprintDetailBody({ slug, projectId, isManager, userId, sprintId }: ProjectGateContext & { sprintId: string }) {
   const t = useTranslations("sprints.detail");
-  const te = useTranslations("errors");
   const router = useRouter();
   const format = useTaskFormat();
   const hintId = useId();
@@ -186,16 +186,7 @@ function SprintDetailBody({ slug, projectId, isManager, userId, sprintId }: Proj
 
   if (sprint.isPending) return <PageSkeleton />;
   if (sprint.isError || !sprint.data) {
-    return (
-      <div className="space-y-4">
-        <p role="alert" className="text-sm text-destructive">
-          {te("notFound")}
-        </p>
-        <Link href={`/projects/${slug}/sprints`} className={buttonVariants({ variant: "outline" })}>
-          {t("back")}
-        </Link>
-      </div>
-    );
+    return <PageFailure error={sprint.error ?? new ApiError(404)} onRetry={() => { void sprint.refetch(); }} />;
   }
 
   const data = sprint.data;

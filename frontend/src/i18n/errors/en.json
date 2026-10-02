@@ -1,0 +1,34 @@
+{
+  "403": {
+    "title": "You do not have access here.",
+    "description": "Your account needs the required permission to view this page.",
+    "hint": "Contact your project manager or check your account from the sign-in page."
+  },
+  "404": {
+    "title": "We could not find this page.",
+    "description": "The address may be incorrect, the content may have been removed, or it may no longer be available.",
+    "hint": "Check the address or return home to continue with your projects."
+  },
+  "500": {
+    "title": "Something went wrong.",
+    "description": "PDA encountered an unexpected problem while opening this page.",
+    "hint": "Try again. If the problem persists, tell us which action you were taking."
+  },
+  "503": {
+    "title": "We are taking a short break.",
+    "description": "PDA cannot handle this request right now. The service may be temporarily unavailable.",
+    "hint": "Try again in a moment. If there is a connection problem, check your internet connection too."
+  },
+  "common": {
+    "label": "PDA · Something interrupted your work",
+    "home": "Back to home",
+    "login": "Sign-in page",
+    "retry": "Try again",
+    "contact": "Contact us",
+    "skip": "Skip to content",
+    "next": "What can you do?",
+    "test": "Trigger test error",
+    "testTitle": "Test the 500 screen",
+    "testDescription": "The button triggers a controlled error on this page. Try again returns you to this screen."
+  }
+}
