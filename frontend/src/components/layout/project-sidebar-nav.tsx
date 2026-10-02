@@ -8,8 +8,11 @@ import { useCurrentMember } from "@/features/projects/hooks/use-current-member";
 import { useSelectedProject } from "@/features/projects/hooks/use-selected-project";
 import {
   PROJECT_SECTIONS,
+  TASK_NAV,
   projectSection,
   projectSectionHref,
+  taskNavActive,
+  taskRouteSlug,
 } from "@/features/projects/project-sections";
 import { cn } from "@/lib/utils";
 import { navItemClass } from "./nav-item";
@@ -22,6 +25,7 @@ export function ProjectSidebarNav({
   collapsed?: boolean;
 }) {
   const t = useTranslations("projects.detail");
+  const tn = useTranslations("tasks.nav");
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -38,8 +42,13 @@ export function ProjectSidebarNav({
   // the sidebar keeps the last selected project there.
   const detailSlug = /^\/projects\/([^/]+)$/.exec(pathname)?.[1];
 
+  // Tasks, sprints and labels are real routes of the "Task management" group.
+  const taskActive = taskNavActive(pathname);
+
   const routeSlug =
-    (detailSlug === "new" ? undefined : detailSlug) ?? teamsRoute?.[1];
+    (detailSlug === "new" ? undefined : detailSlug) ??
+    teamsRoute?.[1] ??
+    taskRouteSlug(pathname);
 
   const { slug, project } = useSelectedProject(routeSlug);
 
@@ -50,9 +59,12 @@ export function ProjectSidebarNav({
     isManager,
   );
 
+  // Inside a task route no project section is highlighted; the task group owns the selection.
   const active = teamsRoute
     ? "teams"
-    : projectSection(searchParams.get("section"), isManager);
+    : taskActive
+      ? null
+      : projectSection(searchParams.get("section"), isManager);
 
   const projectPath = slug ? `/projects/${slug}` : null;
 
@@ -60,6 +72,10 @@ export function ProjectSidebarNav({
     (item) =>
       !("managerOnly" in item && item.managerOnly && !isManager) &&
       (!!projectPath || item.value !== "teams"),
+  );
+
+  const taskItems = TASK_NAV.filter(
+    (item) => !("managerOnly" in item && item.managerOnly && !isManager),
   );
 
   if (collapsed) {
@@ -120,6 +136,32 @@ export function ProjectSidebarNav({
                 </Link>
               );
             })}
+
+        {projectPath && (
+          <div className="mt-1 space-y-0.5 border-t border-border pt-1" role="group" aria-label={tn("group")}>
+            {taskItems.map((item) => {
+              const Icon = item.icon;
+              const selected = taskActive === item.value;
+
+              return (
+                <Link
+                  key={item.value}
+                  href={`${projectPath}${item.path}`}
+                  onClick={onNavigate}
+                  title={tn(item.value)}
+                  aria-label={tn(item.value)}
+                  aria-current={selected ? "page" : undefined}
+                  className={navItemClass(
+                    selected,
+                    "flex items-center justify-center rounded-md py-2 hover:bg-muted hover:text-foreground",
+                  )}
+                >
+                  <Icon size={17} weight={selected ? "fill" : "regular"} aria-hidden="true" />
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </div>
     );
   }
@@ -226,6 +268,37 @@ export function ProjectSidebarNav({
           );
         })}
       </div>
+
+      {projectPath && (
+        <div className="ml-2 mt-3 border-l border-border pl-2" role="group" aria-label={tn("group")}>
+          <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+            {tn("group")}
+          </p>
+
+          <div className="space-y-0.5">
+            {taskItems.map((item) => {
+              const Icon = item.icon;
+              const selected = taskActive === item.value;
+
+              return (
+                <Link
+                  key={item.value}
+                  href={`${projectPath}${item.path}`}
+                  onClick={onNavigate}
+                  aria-current={selected ? "page" : undefined}
+                  className={navItemClass(
+                    selected,
+                    "flex items-center gap-3 rounded-md px-3 py-2 text-[13px] hover:bg-muted hover:text-foreground",
+                  )}
+                >
+                  <Icon size={17} weight={selected ? "fill" : "regular"} aria-hidden="true" />
+                  {tn(item.value)}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

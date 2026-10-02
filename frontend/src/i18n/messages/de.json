@@ -51,7 +51,40 @@
     "TEAM_LAST_MEMBERSHIP": "Diese Person hat kein anderes Team. Entfernen Sie sie stattdessen aus dem Projekt.",
     "TEAM_ARCHIVE_WOULD_ORPHAN": "Das Archivieren dieses Teams würde einige Personen ohne Team lassen.",
     "PROJECT_OWNER_PROTECTED": "Der Gründer kann nicht aus dem Projekt entfernt werden und die Rolle Projektmanager nicht verlieren.",
-    "LAST_PROJECT_MANAGER": "Das Projekt muss mindestens einen Projektmanager behalten."
+    "LAST_PROJECT_MANAGER": "Das Projekt muss mindestens einen Projektmanager behalten.",
+    "TASK_ARCHIVED": "Eine archivierte Aufgabe kann nicht geändert werden.",
+    "PROJECT_ARCHIVED": "Ein archiviertes Projekt kann nicht geändert werden.",
+    "TASK_INVALID_TRANSITION": "Die Aufgabe kann nicht direkt in diesen Status wechseln.",
+    "TASK_DONE_CANNOT_BLOCK": "Eine erledigte Aufgabe kann nicht blockiert werden.",
+    "TASK_DONE_CANNOT_POOL": "Eine erledigte Aufgabe kann nicht in den Pool gelegt werden.",
+    "TASK_ALREADY_CLAIMED": "Jemand anderes hat sie gerade übernommen.",
+    "TASK_NOT_RELEASABLE": "Diese Aufgabe kann nicht in den Pool zurückgegeben werden.",
+    "TASK_NOT_IN_POOL": "Diese Aufgabe ist nicht mehr im Pool.",
+    "TASK_POOL_HAS_ASSIGNEE": "Eine Aufgabe mit Zugewiesenen kann nicht in den Pool gelegt werden.",
+    "TASK_POOL_TEAM_ONLY": "Nur Mitglieder des Zielteams können diese Aufgabe übernehmen.",
+    "TASK_POOL_TEAM_INVALID": "Das gewählte Team ist in diesem Projekt nicht aktiv.",
+    "TASK_RELATION_CYCLE": "Diese Beziehung würde einen Zyklus erzeugen.",
+    "TASK_RELATION_EXISTS": "Diese Beziehung besteht bereits.",
+    "TASK_ATTACHMENT_TYPE": "Dieser Dateityp wird nicht unterstützt.",
+    "TASK_ATTACHMENT_INVALID": "Der Dateiinhalt passt nicht zum Typ oder die Datei ist leer.",
+    "TASK_ATTACHMENT_TOO_LARGE": "Eine Datei darf höchstens 10 MB groß sein.",
+    "TASK_ATTACHMENT_LIMIT": "Eine Aufgabe kann höchstens 20 Dateien haben.",
+    "TASK_CHECKLIST_LIMIT": "Eine Checkliste kann höchstens 50 Einträge haben.",
+    "TASK_LABEL_LIMIT": "Eine Aufgabe kann höchstens 10 Labels haben.",
+    "TASK_INVALID_PARENT": "Die übergeordnete Aufgabe ist ungültig. Eine Unteraufgabe kann keine Unteraufgaben haben.",
+    "TASK_INVALID_ESTIMATE": "Die Schätzung ist ungültig.",
+    "TASK_DATES_INVALID": "Die Frist darf nicht vor dem Startdatum liegen.",
+    "TASK_TOO_MANY_ASSIGNEES": "Einer Aufgabe können höchstens 20 Personen zugewiesen werden.",
+    "TASK_ASSIGNEE_NOT_MEMBER": "Die zugewiesene Person muss Mitglied dieses Projekts sein.",
+    "TASK_TOO_MANY_MENTIONS": "Ein Kommentar kann höchstens 20 Personen erwähnen.",
+    "TASK_COMMENT_DELETED": "Dieser Kommentar wurde gelöscht.",
+    "TASK_INVALID_REQUEST": "Die Anfrage ist ungültig. Prüfen Sie Ihre Eingaben.",
+    "SPRINT_ACTIVE_EXISTS": "Dieses Projekt hat bereits einen aktiven Sprint.",
+    "SPRINT_COMPLETED": "Ein abgeschlossener Sprint kann nicht geändert werden.",
+    "SPRINT_NOT_EMPTY": "Ein Sprint mit Aufgaben kann nicht gelöscht werden.",
+    "SPRINT_INVALID": "Die Sprint-Angaben sind ungültig.",
+    "LABEL_NAME_EXISTS": "Ein Label mit diesem Namen existiert bereits.",
+    "WORKLOG_INVALID": "Der Zeiteintrag ist ungültig."
   },
   "app": {
     "nav": {
@@ -881,7 +914,14 @@
     "passwordMatch": "Die Passwörter stimmen nicht überein.",
     "maxLength": "Dieser Wert ist zu lang.",
     "dateOrder": "Das geplante Enddatum darf nicht vor dem Startdatum liegen.",
-    "githubUrl": "Geben Sie eine öffentliche GitHub-Repository-URL ein, z. B. https://github.com/owner/repo."
+    "githubUrl": "Geben Sie eine öffentliche GitHub-Repository-URL ein, z. B. https://github.com/owner/repo.",
+    "number": "Geben Sie eine gültige Zahl ein.",
+    "tooMany": "Sie haben zu viele Einträge gewählt.",
+    "timeNeedsDate": "Wählen Sie zuerst ein Datum, bevor Sie eine Uhrzeit eingeben.",
+    "taskDateOrder": "Die Frist darf nicht vor dem Startdatum liegen.",
+    "timeEstimateRange": "Die Zeitschätzung muss zwischen 1 und 100000 Minuten liegen.",
+    "worklogRange": "Die Zeit muss zwischen 1 und 1440 Minuten liegen.",
+    "sprintDateOrder": "Das Enddatum darf nicht vor dem Startdatum liegen."
   },
   "forgotPassword": {
     "title": "Passwort vergessen?",
@@ -1066,5 +1106,752 @@
     "totalProjects": "Projekte insgesamt",
     "summaryDescription": "Ein Arbeitsbereich für Projektziele, Erfolgskriterien und dein Team.",
     "quickActions": "Schnellaktionen"
+  },
+  "tasks": {
+    "nav": {
+      "group": "Aufgabenverwaltung",
+      "tasks": "Aufgaben",
+      "board": "Board",
+      "pool": "Pool",
+      "sprints": "Sprints",
+      "labels": "Labels"
+    },
+    "common": {
+      "status": {
+        "BACKLOG": "Backlog",
+        "TODO": "Offen",
+        "IN_PROGRESS": "In Arbeit",
+        "IN_REVIEW": "In Prüfung",
+        "TESTING": "Im Test",
+        "DONE": "Erledigt"
+      },
+      "priority": {
+        "LOW": "Niedrig",
+        "MEDIUM": "Mittel",
+        "HIGH": "Hoch",
+        "CRITICAL": "Kritisch"
+      },
+      "sprintStatus": {
+        "PLANNED": "Geplant",
+        "ACTIVE": "Aktiv",
+        "COMPLETED": "Abgeschlossen"
+      },
+      "points": "{count, plural, one {# Punkt} other {# Punkte}}",
+      "deadline": {
+        "overdue": "Überfällig",
+        "soon": "In weniger als 24 Stunden fällig"
+      },
+      "blocked": {
+        "label": "Blockiert",
+        "flag": "Manuell blockiert",
+        "byTask": "Wartet auf eine offene Aufgabe"
+      },
+      "pool": {
+        "project": "Ganzes Projekt"
+      },
+      "unassigned": "Nicht zugewiesen",
+      "statusChanged": "{key} wurde auf „{status}“ gesetzt",
+      "changeStatus": "Status ändern, aktuell: {status}",
+      "moveTo": "Verschieben nach",
+      "durationHm": "{hours} Std. {minutes} Min.",
+      "durationH": "{hours} Std.",
+      "durationM": "{minutes} Min.",
+      "countdown": {
+        "left": {
+          "minutes": "Noch {value} Min.",
+          "hours": "Noch {value} Std.",
+          "days": "Noch {value, plural, one {# Tag} other {# Tage}}"
+        },
+        "late": {
+          "minutes": "{value} Min. überfällig",
+          "hours": "{value} Std. überfällig",
+          "days": "{value, plural, one {# Tag} other {# Tage}} überfällig"
+        }
+      },
+      "subtasksProgress": "{done} von {total} Teilaufgaben erledigt",
+      "checklistProgress": "Checkliste: {done} von {total}",
+      "comments": "{count, plural, one {# Kommentar} other {# Kommentare}}",
+      "attachments": "{count, plural, one {# Anhang} other {# Anhänge}}",
+      "backToProjects": "Zurück zu den Projekten"
+    },
+    "filters": {
+      "label": "Aufgabenfilter",
+      "search": "Aufgaben durchsuchen",
+      "searchPlaceholder": "Titel oder Schlüssel suchen",
+      "searchShort": "Mindestens {min} Zeichen eingeben",
+      "status": "Status",
+      "priority": "Priorität",
+      "assignee": "Zugewiesen",
+      "anyone": "Alle",
+      "me": "Ich",
+      "labels": "Labels",
+      "sprint": "Sprint",
+      "anySprint": "Alle Sprints",
+      "backlog": "Backlog",
+      "overdue": "Überfällig",
+      "blocked": "Blockiert",
+      "clear": "Zurücksetzen",
+      "sortBy": "Sortierung: {field}",
+      "sortLabel": "Sortieren nach",
+      "sort": {
+        "updatedAt": "Zuletzt geändert",
+        "priority": "Priorität",
+        "deadlineAt": "Frist",
+        "createdAt": "Erstellt",
+        "taskNumber": "Nummer"
+      },
+      "direction": {
+        "asc": "Aufsteigend",
+        "desc": "Absteigend"
+      },
+      "groupBy": "Gruppe: {group}",
+      "groupLabel": "Gruppieren nach",
+      "group": {
+        "none": "Keine",
+        "status": "Status",
+        "assignee": "Zugewiesen",
+        "sprint": "Sprint"
+      }
+    },
+    "list": {
+      "title": "Aufgaben",
+      "description": "Alle Aufgaben des Projekts. Filter stehen in der Adresszeile, den Link können Sie teilen.",
+      "create": "Neue Aufgabe",
+      "retry": "Erneut versuchen",
+      "count": "{count, plural, one {# Aufgabe} other {# Aufgaben}}",
+      "groupCount": "{count, plural, one {# Aufgabe} other {# Aufgaben}}",
+      "noMatchTitle": "Keine passenden Aufgaben",
+      "noMatchDescription": "Lockern Sie die Filter oder setzen Sie sie zurück.",
+      "clearFilters": "Filter zurücksetzen",
+      "emptyTitle": "Noch keine Aufgaben",
+      "emptyDescription": "Erstellen Sie die erste Aufgabe und weisen Sie sie zu oder legen Sie sie in den Pool.",
+      "emptyViewerDescription": "Dieses Projekt hat noch keine Aufgaben. Sie erscheinen hier, sobald ein Projektmanager welche anlegt."
+    },
+    "pool": {
+      "title": "Aufgabenpool",
+      "description": "Aufgaben, die noch niemandem gehören und übernommen werden können. Eine übernommene Aufgabe wird Ihnen zugewiesen.",
+      "retry": "Erneut versuchen",
+      "emptyTitle": "Der Pool ist leer",
+      "emptyDescription": "Aufgaben erscheinen hier, sobald ein Projektmanager sie in den Pool legt.",
+      "count": "{count, plural, one {# Aufgabe verfügbar} other {# Aufgaben verfügbar}}",
+      "claimed": "Sie haben {key} übernommen",
+      "teamOnly": "Nur Team {team}",
+      "everyone": "Alle Projektmitglieder",
+      "claim": "Übernehmen"
+    },
+    "board": {
+      "title": "Board",
+      "description": "Ziehen Sie Aufgaben zwischen den Statusspalten. Ablegen ist nur dort möglich, wo der Ablauf es erlaubt.",
+      "toolbar": "Board-Optionen",
+      "sprint": "Sprint",
+      "allTasks": "Alle Aufgaben",
+      "backlog": "Backlog",
+      "onlyMine": "Nur meine",
+      "dragHint": "Mögliche Zielspalten sind hervorgehoben",
+      "retry": "Erneut versuchen",
+      "emptyTitle": "Keine Aufgaben auf dem Board",
+      "emptyDescription": "Für diese Auswahl gibt es nichts. Wählen Sie einen anderen Sprint oder legen Sie eine Aufgabe an.",
+      "emptyMineDescription": "In dieser Auswahl sind Ihnen keine Aufgaben zugewiesen.",
+      "column": "{status}, {count, plural, one {# Aufgabe} other {# Aufgaben}}",
+      "dropHere": "Hier ablegen",
+      "columnEmpty": "Keine Aufgaben",
+      "moveCard": "{key} verschieben"
+    },
+    "form": {
+      "title": "Neue Aufgabe",
+      "editTitle": "Aufgabe bearbeiten",
+      "description": "Beschreiben und planen Sie die Aufgabe und legen Sie fest, wem sie gehört. Die Karte rechts zeigt, wie sie in den Listen aussieht.",
+      "editDescription": "Änderungen werden nach dem Speichern im Verlauf festgehalten und Beobachter werden benachrichtigt.",
+      "back": "Zurück zu den Aufgaben",
+      "cancel": "Abbrechen",
+      "submit": "Aufgabe erstellen",
+      "save": "Änderungen speichern",
+      "saved": "{key} aktualisiert",
+      "created": "{key} erstellt",
+      "loading": "Aufgabe wird geladen",
+      "optional": "Optional",
+      "counter": "{count} / {max}",
+      "sections": {
+        "definition": {
+          "title": "Beschreibung",
+          "description": "Beschreiben Sie kurz und klar, worum es geht."
+        },
+        "planning": {
+          "title": "Planung",
+          "description": "Priorität, Schätzung, Termine, Sprint und Labels."
+        },
+        "assignment": {
+          "title": "Zuweisung",
+          "description": "Weisen Sie die Aufgabe Personen zu oder legen Sie sie in den Pool."
+        },
+        "checklist": {
+          "title": "Checkliste",
+          "description": "Die kleinen Schritte, um die Aufgabe abzuschließen."
+        }
+      },
+      "preview": {
+        "title": "Vorschau",
+        "caption": "So erscheint sie in Liste und Pool.",
+        "show": "Vorschau",
+        "keyPending": "Schlüssel wird beim Erstellen vergeben",
+        "titleEmpty": "Aufgabentitel",
+        "checklist": "{count, plural, one {# Schritt} other {# Schritte}}",
+        "poolNote": "Wartet im Pool auf Übernahme"
+      },
+      "titleField": {
+        "label": "Titel",
+        "placeholder": "z. B. 3-D Secure in den Checkout einbauen"
+      },
+      "descriptionField": {
+        "label": "Beschreibung",
+        "mode": "Beschreibungsansicht",
+        "write": "Schreiben",
+        "preview": "Vorschau",
+        "previewEmpty": "Noch nichts geschrieben",
+        "placeholder": "Fügen Sie Kontext, erwartetes Ergebnis und Abnahmekriterien hinzu."
+      },
+      "parent": {
+        "label": "Übergeordnete Aufgabe",
+        "hint": "Wenn Sie eine wählen, wird diese Aufgabe zur Unteraufgabe. Es wird nur eine Ebene unterstützt.",
+        "locked": "Diese Aufgabe hat Unteraufgaben und kann daher nicht unter eine andere verschoben werden.",
+        "clear": "Übergeordnete Aufgabe entfernen",
+        "placeholder": "Übergeordnete Aufgabe suchen",
+        "search": "Übergeordnete Aufgaben suchen",
+        "loading": "Suche läuft",
+        "noResults": "Keine passenden Aufgaben",
+        "minChars": "Geben Sie mindestens {min} Zeichen ein"
+      },
+      "priority": {
+        "label": "Priorität"
+      },
+      "points": {
+        "label": "Schätzung",
+        "none": "Keine",
+        "hint": "Fibonacci-Skala: Die Abstände wachsen mit dem Aufwand."
+      },
+      "time": {
+        "label": "Zeitschätzung",
+        "hours": "Stunden",
+        "minutes": "Minuten",
+        "hoursUnit": "Std.",
+        "minutesUnit": "Min.",
+        "hint": "Leer lassen, um keine Zeitschätzung zu hinterlegen.",
+        "total": "Insgesamt {minutes} Minuten"
+      },
+      "start": {
+        "label": "Startdatum"
+      },
+      "deadline": {
+        "label": "Frist",
+        "time": "Fristuhrzeit",
+        "quick": "Schnellauswahl für die Frist",
+        "today": "Heute 18:00",
+        "tomorrow": "Morgen 18:00",
+        "friday": "Freitag 18:00",
+        "nextWeek": "Nächste Woche 18:00",
+        "clear": "Zurücksetzen",
+        "hint": "Ohne Uhrzeit gilt das Tagesende (23:59). 24 Stunden vorher und bei Fristablauf wird erinnert."
+      },
+      "sprint": {
+        "label": "Sprint",
+        "none": "Kein Sprint (Backlog)"
+      },
+      "labels": {
+        "label": "Labels",
+        "loading": "Labels werden geladen",
+        "empty": "Dieses Projekt hat noch keine Labels.",
+        "manage": "Labels verwalten",
+        "list": "Labels",
+        "limit": "Sie können bis zu {max} Labels wählen.",
+        "selected": "{count} / {max} Labels gewählt"
+      },
+      "assign": {
+        "label": "Zuweisungsart",
+        "people": "Personen zuweisen",
+        "pool": "In den Pool legen",
+        "poolTeam": "Wer es übernehmen kann",
+        "poolHint": "Eine Pool-Aufgabe hat keinen Bearbeiter. Sie wird der ersten berechtigten Person zugewiesen, die sie übernimmt."
+      },
+      "assignees": {
+        "team": "Nach Team filtern",
+        "allMembers": "Alle Mitglieder",
+        "searchPlaceholder": "Mitglieder suchen",
+        "search": "Mitglieder suchen",
+        "assignMe": "Mir zuweisen",
+        "selectedList": "Zugewiesene",
+        "remove": "{name} entfernen",
+        "list": "Projektmitglieder",
+        "loading": "Mitglieder werden geladen",
+        "none": "Keine passenden Mitglieder",
+        "limit": "Sie können bis zu {max} Personen zuweisen.",
+        "selected": "{count} / {max} Personen gewählt"
+      },
+      "checklist": {
+        "label": "Schritte",
+        "placeholder": "Jede Zeile wird ein Schritt.\nDesign freigeben\nTests schreiben",
+        "hint": "{count} / {max} Schritte. Jeder Schritt darf bis zu {length} Zeichen lang sein.",
+        "editing": "Die Checkliste wird auf der Detailseite der Aufgabe verwaltet.",
+        "partial": "{count, plural, one {Die Aufgabe wurde erstellt, aber # Checklistenschritt konnte nicht hinzugefügt werden. Sie können ihn auf der Detailseite ergänzen.} other {Die Aufgabe wurde erstellt, aber # Checklistenschritte konnten nicht hinzugefügt werden. Sie können sie auf der Detailseite ergänzen.}}"
+      }
+    },
+    "locked": {
+      "manager": "Nur die Projektleitung kann dies tun.",
+      "assignee": "Nur die zugewiesenen Personen und die Projektleitung können dies tun."
+    },
+    "detail": {
+      "breadcrumb": "Aufgabenpfad",
+      "tasks": "Aufgaben",
+      "watch": "Beobachten",
+      "unwatch": "Nicht mehr beobachten",
+      "watched": "Sie beobachten jetzt {key}",
+      "unwatched": "Sie beobachten {key} nicht mehr",
+      "edit": "Bearbeiten",
+      "moreActions": "Weitere Aktionen",
+      "copyLink": "Link kopieren",
+      "linkCopied": "Link kopiert",
+      "linkCopyFailed": "Der Link konnte nicht kopiert werden",
+      "archive": "Archivieren",
+      "archived": "{key} wurde archiviert",
+      "archivedBadge": "Archiviert",
+      "archivedNotice": "Diese Aufgabe ist archiviert. Sie ist schreibgeschützt und kann nicht geändert werden.",
+      "backToTasks": "Zurück zu den Aufgaben",
+      "cancel": "Abbrechen",
+      "archiveDialog": {
+        "title": "{key} archivieren?",
+        "description": "Eine archivierte Aufgabe verschwindet aus den Listen und wird schreibgeschützt.",
+        "withSubtasks": "{count, plural, one {Eine archivierte Aufgabe verschwindet aus den Listen und wird schreibgeschützt. Die {count} Unteraufgabe wird ebenfalls archiviert.} other {Eine archivierte Aufgabe verschwindet aus den Listen und wird schreibgeschützt. Die {count} Unteraufgaben werden ebenfalls archiviert.}}",
+        "confirm": "Archivieren"
+      },
+      "description": {
+        "title": "Beschreibung",
+        "empty": "Für diese Aufgabe wurde keine Beschreibung verfasst."
+      },
+      "subtasks": {
+        "title": "Unteraufgaben",
+        "detailed": "Mit Details hinzufügen",
+        "progress": "{done} von {total} erledigt",
+        "loading": "Unteraufgaben werden geladen",
+        "empty": "Es gibt noch keine Unteraufgaben.",
+        "placeholder": "Titel der neuen Unteraufgabe",
+        "add": "Hinzufügen"
+      },
+      "checklist": {
+        "title": "Checkliste",
+        "progress": "{done} von {total} Punkten",
+        "loading": "Checkliste wird geladen",
+        "empty": "Die Checkliste enthält noch keine Punkte.",
+        "doneAt": "Erledigt am {date}",
+        "moveUp": "\"{text}\" nach oben verschieben",
+        "moveDown": "\"{text}\" nach unten verschieben",
+        "remove": "\"{text}\" löschen",
+        "limit": "Es können höchstens {max} Punkte hinzugefügt werden.",
+        "placeholder": "Neuer Punkt",
+        "add": "Hinzufügen"
+      },
+      "relations": {
+        "title": "Beziehungen",
+        "add": "Beziehung hinzufügen",
+        "loading": "Beziehungen werden geladen",
+        "empty": "Diese Aufgabe steht in keiner Beziehung zu anderen Aufgaben.",
+        "groups": {
+          "blockedBy": "Blockiert durch",
+          "blocks": "Blockiert",
+          "relatesTo": "Verwandt mit",
+          "duplicates": "Duplikat von",
+          "duplicatedBy": "Dupliziert durch"
+        },
+        "remove": "Beziehung zu {key} entfernen",
+        "type": "Beziehungstyp",
+        "types": {
+          "BLOCKS": "Blockiert",
+          "RELATES": "Verwandt mit",
+          "DUPLICATES": "Duplikat von"
+        },
+        "search": "Aufgabe suchen",
+        "cancel": "Abbrechen",
+        "submit": "Hinzufügen"
+      },
+      "attachments": {
+        "title": "Anhänge",
+        "open": "{name} in neuem Tab öffnen",
+        "download": "{name} herunterladen",
+        "deleteTitle": "Diesen Anhang löschen?",
+        "deleteDescription": "{name} wird von dieser Aufgabe entfernt.",
+        "delete": "Löschen",
+        "deleteName": "{name} löschen",
+        "cancel": "Abbrechen",
+        "limit": "Eine Aufgabe kann höchstens {max} Dateien haben.",
+        "skipped": "Einige Dateien wurden übersprungen, weil sie {max} überschreiten.",
+        "loading": "Anhänge werden geladen",
+        "drop": "Dateien hier ablegen",
+        "uploading": "{count, plural, one {{count} Datei wird hochgeladen} other {{count} Dateien werden hochgeladen}}",
+        "choose": "Dateien auswählen",
+        "hint": "Höchstens {size} pro Datei und {max} Dateien pro Aufgabe."
+      },
+      "activity": {
+        "title": "Aktivität",
+        "filter": "Aktivitätsfilter",
+        "filters": {
+          "all": "Alle",
+          "comments": "Kommentare",
+          "history": "Verlauf"
+        },
+        "composer": {
+          "label": "Kommentar",
+          "placeholder": "Kommentar schreiben. Mit @ erwähnen Sie jemanden.",
+          "hint": "Zum Senden Strg+Enter drücken",
+          "submit": "Kommentieren",
+          "suggestions": "Mitgliedervorschläge"
+        },
+        "loading": "Aktivität wird geladen",
+        "empty": "Es gibt noch keine Aktivität.",
+        "truncated": "Die neuesten {shown} von {total} Einträgen werden angezeigt.",
+        "edited": "bearbeitet",
+        "editComment": "Kommentar bearbeiten",
+        "deleteComment": "Kommentar löschen",
+        "deleteTitle": "Diesen Kommentar löschen?",
+        "deleteDescription": "Der Inhalt des Kommentars wird für alle entfernt.",
+        "delete": "Löschen",
+        "cancel": "Abbrechen",
+        "save": "Speichern",
+        "deleted": "Dieser Kommentar wurde gelöscht.",
+        "events": {
+          "someone": "Jemand",
+          "aTeam": "ein Team",
+          "aSprint": "ein Sprint",
+          "backlog": "Backlog",
+          "none": "keine",
+          "unknown": "hat die Aufgabe aktualisiert",
+          "created": "hat die Aufgabe erstellt",
+          "statusChanged": "hat den Status von {from} auf {to} geändert",
+          "descriptionChanged": "hat die Beschreibung aktualisiert",
+          "fieldChanged": "hat {field} von {from} auf {to} geändert",
+          "fields": {
+            "title": "den Titel",
+            "priority": "die Priorität",
+            "startDate": "das Startdatum",
+            "deadlineAt": "die Frist",
+            "estimatePoints": "die Schätzpunkte",
+            "timeEstimateMinutes": "die Zeitschätzung",
+            "unknown": "ein Feld"
+          },
+          "blocked": "hat die Aufgabe als blockiert markiert",
+          "blockedReason": "hat die Aufgabe als blockiert markiert: {reason}",
+          "unblocked": "hat die Blockierung aufgehoben",
+          "assigned": "hat {name} zugewiesen",
+          "unassigned": "hat die Zuweisung von {name} entfernt",
+          "poolOpened": "hat die Aufgabe in den Pool gelegt",
+          "poolOpenedTeam": "hat die Aufgabe in den Pool für {team} gelegt",
+          "poolClosed": "hat die Aufgabe aus dem Pool genommen",
+          "claimed": "hat die Aufgabe aus dem Pool übernommen",
+          "released": "hat die Aufgabe in den Pool zurückgegeben",
+          "labelsChanged": "hat die Labels von {from} auf {to} geändert",
+          "sprintChanged": "hat die Aufgabe von {from} nach {to} verschoben",
+          "parentChanged": "hat die übergeordnete Aufgabe geändert",
+          "subtaskAdded": "hat die Unteraufgabe {key} hinzugefügt",
+          "checklistAdded": "hat den Checklistenpunkt \"{text}\" hinzugefügt",
+          "checklistDone": "hat den Checklistenpunkt \"{text}\" erledigt",
+          "checklistReopened": "hat den Checklistenpunkt \"{text}\" wieder geöffnet",
+          "relationAdded": "hat eine Beziehung \"{type}\" zu {key} hinzugefügt",
+          "relationRemoved": "hat die Beziehung \"{type}\" zu {key} entfernt",
+          "attachmentAdded": "hat {name} angehängt",
+          "attachmentRemoved": "hat den Anhang {name} entfernt",
+          "worklogAdded": "hat {duration} erfasst",
+          "archived": "hat die Aufgabe archiviert"
+        }
+      },
+      "time": {
+        "of": "von {estimate} geschätzt",
+        "noEstimate": "erfasst, keine Schätzung",
+        "log": "Zeit erfassen",
+        "progress": "{logged} von {estimate} geschätzter Zeit erfasst",
+        "over": "Die Schätzung wurde um {duration} überschritten.",
+        "loading": "Einträge werden geladen",
+        "empty": "Es wurde noch keine Zeit erfasst.",
+        "deleteTitle": "Diesen Zeiteintrag löschen?",
+        "deleteDescription": "Der Eintrag von {duration} vom {date} wird gelöscht und von der erfassten Zeit abgezogen.",
+        "delete": "Löschen",
+        "cancel": "Abbrechen",
+        "deleteEntry": "Eintrag von {duration} vom {date} löschen",
+        "dialog": {
+          "title": "Zeit für {key} erfassen",
+          "description": "Tragen Sie ein, wie lange Sie an dieser Aufgabe gearbeitet haben.",
+          "duration": "Dauer",
+          "hours": "Stunden",
+          "hoursUnit": "Std.",
+          "minutes": "Minuten",
+          "minutesUnit": "Min.",
+          "date": "Arbeitsdatum",
+          "note": "Notiz (optional)",
+          "notePlaceholder": "Woran haben Sie gearbeitet?",
+          "cancel": "Abbrechen",
+          "submit": "Speichern"
+        }
+      },
+      "panel": {
+        "title": "Aufgabeneigenschaften",
+        "status": "Status",
+        "blockedReason": "Blockiert: {reason}",
+        "unblock": "Blockierung aufheben",
+        "block": "Als blockiert markieren",
+        "assignees": "Zugewiesen",
+        "changeAssignees": "Zuweisung ändern",
+        "claim": "Übernehmen",
+        "release": "In den Pool zurückgeben",
+        "released": "{key} wurde in den Pool zurückgegeben",
+        "priority": "Priorität",
+        "points": "Punkte",
+        "noPoints": "Keine Punkte",
+        "labels": "Labels",
+        "none": "Keine",
+        "sprint": "Sprint",
+        "backlog": "Backlog",
+        "start": "Beginn",
+        "deadline": "Frist",
+        "time": "Zeiterfassung",
+        "watchers": "Beobachter",
+        "loading": "Wird geladen",
+        "noWatchers": "Niemand beobachtet diese Aufgabe.",
+        "moreWatchers": "+{count} weitere",
+        "createdBy": "Erstellt von {name}, {date}",
+        "updatedBy": "Aktualisiert von {name}, {date}",
+        "blockDialog": {
+          "title": "{key} als blockiert markieren?",
+          "description": "Eine blockierte Aufgabe zeigt allen, warum die Arbeit ruht. Eine Begründung wird empfohlen.",
+          "reason": "Grund (optional)",
+          "placeholder": "Worauf wartet sie?",
+          "cancel": "Abbrechen",
+          "confirm": "Als blockiert markieren"
+        },
+        "assigneesDialog": {
+          "title": "Zuweisung von {key}",
+          "description": "Wählen Sie die Projektmitglieder aus, die der Aufgabe zugewiesen werden.",
+          "poolNote": "Die Aufgabe liegt derzeit im Pool. Eine Zuweisung nimmt sie aus dem Pool.",
+          "cancel": "Abbrechen",
+          "save": "Speichern"
+        }
+      }
+    },
+    "my": {
+      "title": "Meine Aufgaben",
+      "description": "Ihnen zugewiesene Aufgaben aus allen Projekten und Pool-Aufgaben, die Sie übernehmen können.",
+      "retry": "Erneut versuchen",
+      "count": "{count, plural, one {{count} Aufgabe} other {{count} Aufgaben}}",
+      "poolCount": "{count, plural, one {{count} Aufgabe wartet auf Übernahme} other {{count} Aufgaben warten auf Übernahme}}",
+      "bucketLabel": "{bucket}, {count} Aufgaben",
+      "noMatchTitle": "Keine passenden Aufgaben",
+      "noMatchDescription": "Keine Aufgabe passt zu den gewählten Filtern. Setzen Sie die Filter zurück und versuchen Sie es erneut.",
+      "clearFilters": "Filter zurücksetzen",
+      "nav": {
+        "badge": "{open} offene Aufgaben, {overdue} überfällig"
+      },
+      "card": {
+        "error": "Die Aufgabenübersicht konnte nicht geladen werden.",
+        "open": "Zu meinen Aufgaben"
+      },
+      "summary": {
+        "label": "Aufgabenübersicht",
+        "open": "Offen",
+        "overdue": "Überfällig",
+        "dueSoon": "Fällig in 24 Stunden",
+        "blocked": "Blockiert",
+        "pool": "Im Pool"
+      },
+      "tabs": {
+        "label": "Aufgabenansicht",
+        "open": "Offen",
+        "done": "Erledigt",
+        "all": "Alle",
+        "pool": "Pool"
+      },
+      "filters": {
+        "label": "Aufgabenfilter",
+        "project": "Projekt",
+        "allProjects": "Alle Projekte",
+        "status": "Status",
+        "overdue": "Überfällig",
+        "clear": "Zurücksetzen"
+      },
+      "buckets": {
+        "overdue": "Überfällig",
+        "today": "Heute",
+        "week": "Diese Woche",
+        "later": "Später",
+        "none": "Ohne Deadline"
+      },
+      "empty": {
+        "open": {
+          "title": "Keine offenen Aufgaben",
+          "description": "Ihnen ist nichts Offenes zugewiesen. Übernehmen Sie im Reiter Pool eine neue Aufgabe."
+        },
+        "done": {
+          "title": "Keine erledigten Aufgaben",
+          "description": "Aufgaben, die Sie abschließen, werden hier aufgelistet."
+        },
+        "all": {
+          "title": "Noch keine Aufgaben",
+          "description": "Aufgaben erscheinen hier, sobald Ihnen ein Projekt eine zuweist."
+        },
+        "pool": {
+          "title": "Der Pool ist leer",
+          "description": "Derzeit gibt es nichts zu übernehmen. Aufgaben erscheinen hier, sobald Projektleitungen sie in den Pool stellen."
+        }
+      }
+    }
+  },
+  "sprints": {
+    "title": "Sprints",
+    "description": "Teilen Sie die Arbeit in Zeitfenster auf und verfolgen Sie Fortschritt und Burndown.",
+    "create": "Sprint erstellen",
+    "retry": "Erneut versuchen",
+    "emptyTitle": "Noch keine Sprints",
+    "emptyManagerDescription": "Erstellen Sie den ersten Sprint, ordnen Sie Aufgaben zu und starten Sie ihn, wenn Sie bereit sind.",
+    "emptyMemberDescription": "Sprints erscheinen hier, sobald die Projektleitung einen erstellt.",
+    "startBlocked": "Ein anderer Sprint läuft bereits, daher kann dieser nicht starten. Schließen Sie zuerst den aktiven Sprint ab.",
+    "sections": {
+      "ACTIVE": "Aktiv",
+      "PLANNED": "Geplant",
+      "COMPLETED": "Abgeschlossen"
+    },
+    "status": {
+      "PLANNED": "Geplant",
+      "ACTIVE": "Aktiv",
+      "COMPLETED": "Abgeschlossen"
+    },
+    "row": {
+      "progress": "{done}/{total} Aufgaben",
+      "points": "{done}/{total} Punkte",
+      "tasks": "{count, plural, one {{count} Aufgabe} other {{count} Aufgaben}}",
+      "overdue": "{count, plural, one {{count} Tag überfällig} other {{count} Tage überfällig}}",
+      "endsToday": "Endet heute",
+      "daysLeft": "{count, plural, one {Noch {count} Tag} other {Noch {count} Tage}}"
+    },
+    "actions": {
+      "start": "Starten",
+      "complete": "Abschließen",
+      "edit": "Bearbeiten",
+      "archive": "Archivieren",
+      "cancel": "Abbrechen",
+      "started": "{name} wurde gestartet",
+      "archived": "{name} wurde archiviert",
+      "archiveTitle": "{name} archivieren?",
+      "archiveDescription": "Der Sprint verschwindet aus der Liste. Das ist nur für geplante Sprints ohne Aufgaben möglich."
+    },
+    "dialog": {
+      "createTitle": "Neuer Sprint",
+      "editTitle": "Sprint bearbeiten",
+      "description": "Legen Sie Name, Ziel und Zeitraum fest.",
+      "name": "Sprintname",
+      "namePlaceholder": "z. B. Sprint 12",
+      "goal": "Ziel",
+      "goalPlaceholder": "Was möchten Sie in diesem Sprint erreichen?",
+      "startDate": "Beginn",
+      "endDate": "Ende",
+      "cancel": "Abbrechen",
+      "create": "Erstellen",
+      "save": "Speichern",
+      "created": "{name} wurde erstellt",
+      "updated": "{name} wurde aktualisiert"
+    },
+    "complete": {
+      "title": "{name} abschließen?",
+      "loading": "Sprintübersicht wird geladen",
+      "description": "{done} von {total} Aufgaben sind erledigt.",
+      "noOpenTasks": "Es sind keine offenen Aufgaben übrig, der Sprint wird direkt abgeschlossen.",
+      "moveTo": "{count, plural, one {{count} offene Aufgabe verschieben nach} other {{count} offene Aufgaben verschieben nach}}",
+      "backlog": "Backlog",
+      "hint": "Erledigte Aufgaben bleiben in diesem Sprint.",
+      "cancel": "Abbrechen",
+      "confirm": "Sprint abschließen",
+      "done": "{name} wurde abgeschlossen"
+    },
+    "burndown": {
+      "title": "Burndown",
+      "unit": "Einheit",
+      "units": {
+        "points": "Punkte",
+        "tasks": "Aufgaben"
+      },
+      "label": "Burndown-Diagramm, Einheit: {unit}, gesamt: {total}",
+      "actual": "Ist",
+      "ideal": "Ideal",
+      "date": "Datum",
+      "remaining": "Verbleibend ({unit})",
+      "empty": "Noch keine Daten für das Diagramm. Der tägliche Fortschritt erscheint hier, sobald der Sprint startet."
+    },
+    "detail": {
+      "back": "Zurück zu den Sprints",
+      "startBlocked": "Ein anderer Sprint läuft bereits, daher kann dieser nicht starten. Schließen Sie zuerst den aktiven Sprint ab.",
+      "goal": "Ziel",
+      "progress": "{done} von {total} Aufgaben erledigt",
+      "stats": {
+        "tasks": "Aufgaben",
+        "points": "Punkte",
+        "logged": "Erfasste Zeit",
+        "time": "Zeitraum",
+        "percent": "{value} %",
+        "completedOn": "Abgeschlossen am {date}",
+        "completed": "Abgeschlossen",
+        "notStarted": "Noch nicht gestartet",
+        "overdue": "{count, plural, one {{count} Tag überfällig} other {{count} Tage überfällig}}",
+        "endsToday": "Endet heute",
+        "daysLeft": "{count, plural, one {Noch {count} Tag} other {Noch {count} Tage}}"
+      },
+      "breakdown": {
+        "title": "Statusverteilung",
+        "empty": "In diesem Sprint gibt es noch keine Aufgaben."
+      },
+      "tasks": {
+        "title": "Aufgaben",
+        "error": "Die Aufgaben konnten nicht geladen werden.",
+        "empty": "In diesem Sprint gibt es noch keine Aufgaben. Weisen Sie einer Aufgabe diesen Sprint zu, um sie hier hinzuzufügen."
+      }
+    }
+  },
+  "labels": {
+    "title": "Labels",
+    "description": "Erstellen, benennen und färben Sie Labels, um Aufgaben zu gruppieren.",
+    "memberDescription": "Labels, die in diesem Projekt für Aufgaben zur Verfügung stehen. Die Projektleitung verwaltet sie.",
+    "create": "Label erstellen",
+    "retry": "Erneut versuchen",
+    "emptyTitle": "Noch keine Labels",
+    "emptyManagerDescription": "Erstellen Sie das erste Label und verwenden Sie es dann bei Aufgaben.",
+    "emptyMemberDescription": "Labels erscheinen hier, sobald die Projektleitung sie erstellt.",
+    "colors": {
+      "slate": "Grau",
+      "red": "Rot",
+      "orange": "Orange",
+      "amber": "Bernstein",
+      "green": "Grün",
+      "teal": "Blaugrün",
+      "blue": "Blau",
+      "violet": "Violett",
+      "pink": "Rosa"
+    },
+    "row": {
+      "usage": "{count, plural, one {In {count} Aufgabe verwendet} other {In {count} Aufgaben verwendet}}",
+      "edit": "Label {name} bearbeiten",
+      "archiveLabel": "Label {name} archivieren",
+      "archive": "Archivieren",
+      "cancel": "Abbrechen",
+      "archived": "{name} wurde archiviert",
+      "archiveTitle": "{name} archivieren?",
+      "archiveDescription": "{count, plural, one {Ein archiviertes Label kann Aufgaben nicht mehr zugewiesen werden. Es wird derzeit in {count} Aufgabe verwendet.} other {Ein archiviertes Label kann Aufgaben nicht mehr zugewiesen werden. Es wird derzeit in {count} Aufgaben verwendet.}}"
+    },
+    "dialog": {
+      "createTitle": "Neues Label",
+      "editTitle": "Label bearbeiten",
+      "description": "Vergeben Sie einen Namen und wählen Sie eine Farbe.",
+      "name": "Labelname",
+      "namePlaceholder": "z. B. Fehler",
+      "color": "Farbe",
+      "preview": "Vorschau",
+      "previewFallback": "Label",
+      "cancel": "Abbrechen",
+      "create": "Erstellen",
+      "save": "Speichern",
+      "created": "{name} wurde erstellt",
+      "updated": "{name} wurde aktualisiert"
+    }
   }
 }

@@ -51,7 +51,40 @@
     "TEAM_LAST_MEMBERSHIP": "This person has no other team. Remove them from the project instead of the team.",
     "TEAM_ARCHIVE_WOULD_ORPHAN": "Archiving this team would leave some people without a team.",
     "PROJECT_OWNER_PROTECTED": "The founder cannot be removed from the project or lose the Project Manager role.",
-    "LAST_PROJECT_MANAGER": "The project must keep at least one Project Manager."
+    "LAST_PROJECT_MANAGER": "The project must keep at least one Project Manager.",
+    "TASK_ARCHIVED": "An archived task cannot be changed.",
+    "PROJECT_ARCHIVED": "An archived project cannot be changed.",
+    "TASK_INVALID_TRANSITION": "The task cannot move to that status directly.",
+    "TASK_DONE_CANNOT_BLOCK": "A completed task cannot be blocked.",
+    "TASK_DONE_CANNOT_POOL": "A completed task cannot be put in the pool.",
+    "TASK_ALREADY_CLAIMED": "Someone else just claimed it.",
+    "TASK_NOT_RELEASABLE": "This task cannot be released back to the pool.",
+    "TASK_NOT_IN_POOL": "This task is no longer in the pool.",
+    "TASK_POOL_HAS_ASSIGNEE": "A task with assignees cannot be put in the pool.",
+    "TASK_POOL_TEAM_ONLY": "Only members of the target team can claim this task.",
+    "TASK_POOL_TEAM_INVALID": "The selected team is not active in this project.",
+    "TASK_RELATION_CYCLE": "This relation would create a cycle.",
+    "TASK_RELATION_EXISTS": "This relation already exists.",
+    "TASK_ATTACHMENT_TYPE": "This file type is not supported.",
+    "TASK_ATTACHMENT_INVALID": "The file content does not match its type, or the file is empty.",
+    "TASK_ATTACHMENT_TOO_LARGE": "A file can be at most 10 MB.",
+    "TASK_ATTACHMENT_LIMIT": "A task can have at most 20 files.",
+    "TASK_CHECKLIST_LIMIT": "A checklist can have at most 50 items.",
+    "TASK_LABEL_LIMIT": "A task can have at most 10 labels.",
+    "TASK_INVALID_PARENT": "The parent task is not valid. A subtask cannot have subtasks.",
+    "TASK_INVALID_ESTIMATE": "The estimate is not valid.",
+    "TASK_DATES_INVALID": "The deadline cannot be before the start date.",
+    "TASK_TOO_MANY_ASSIGNEES": "A task can have at most 20 assignees.",
+    "TASK_ASSIGNEE_NOT_MEMBER": "The assignee must be a member of this project.",
+    "TASK_TOO_MANY_MENTIONS": "A comment can mention at most 20 people.",
+    "TASK_COMMENT_DELETED": "This comment has been deleted.",
+    "TASK_INVALID_REQUEST": "The request is not valid. Check your input.",
+    "SPRINT_ACTIVE_EXISTS": "This project already has an active sprint.",
+    "SPRINT_COMPLETED": "A completed sprint cannot be changed.",
+    "SPRINT_NOT_EMPTY": "A sprint with tasks cannot be deleted.",
+    "SPRINT_INVALID": "The sprint details are not valid.",
+    "LABEL_NAME_EXISTS": "A label with this name already exists.",
+    "WORKLOG_INVALID": "The time entry is not valid."
   },
   "app": {
     "nav": {
@@ -858,7 +891,14 @@
     "passwordMatch": "Passwords do not match.",
     "maxLength": "This value is too long.",
     "dateOrder": "Target end date cannot be before the start date.",
-    "githubUrl": "Enter a public GitHub repository URL, e.g. https://github.com/owner/repo."
+    "githubUrl": "Enter a public GitHub repository URL, e.g. https://github.com/owner/repo.",
+    "number": "Enter a valid number.",
+    "tooMany": "You selected too many items.",
+    "timeNeedsDate": "Pick a date before entering a time.",
+    "taskDateOrder": "The deadline cannot be before the start date.",
+    "timeEstimateRange": "The time estimate must be between 1 and 100000 minutes.",
+    "worklogRange": "Time must be between 1 and 1440 minutes.",
+    "sprintDateOrder": "The end date cannot be before the start date."
   },
   "forgotPassword": {
     "title": "Forgot your password?",
@@ -1043,5 +1083,752 @@
     "totalProjects": "Total projects",
     "summaryDescription": "One workspace for your project goals, success criteria and team.",
     "quickActions": "Quick actions"
+  },
+  "tasks": {
+    "nav": {
+      "group": "Task management",
+      "tasks": "Tasks",
+      "board": "Board",
+      "pool": "Pool",
+      "sprints": "Sprints",
+      "labels": "Labels"
+    },
+    "common": {
+      "status": {
+        "BACKLOG": "Backlog",
+        "TODO": "To do",
+        "IN_PROGRESS": "In progress",
+        "IN_REVIEW": "In review",
+        "TESTING": "Testing",
+        "DONE": "Done"
+      },
+      "priority": {
+        "LOW": "Low",
+        "MEDIUM": "Medium",
+        "HIGH": "High",
+        "CRITICAL": "Critical"
+      },
+      "sprintStatus": {
+        "PLANNED": "Planned",
+        "ACTIVE": "Active",
+        "COMPLETED": "Completed"
+      },
+      "points": "{count, plural, one {# point} other {# points}}",
+      "deadline": {
+        "overdue": "Overdue",
+        "soon": "Due within 24 hours"
+      },
+      "blocked": {
+        "label": "Blocked",
+        "flag": "Blocked manually",
+        "byTask": "Waiting on an unfinished task"
+      },
+      "pool": {
+        "project": "Whole project"
+      },
+      "unassigned": "Unassigned",
+      "statusChanged": "{key} moved to “{status}”",
+      "changeStatus": "Change status, currently: {status}",
+      "moveTo": "Move to",
+      "durationHm": "{hours}h {minutes}m",
+      "durationH": "{hours}h",
+      "durationM": "{minutes}m",
+      "countdown": {
+        "left": {
+          "minutes": "{value} min left",
+          "hours": "{value} h left",
+          "days": "{value, plural, one {# day} other {# days}} left"
+        },
+        "late": {
+          "minutes": "{value} min overdue",
+          "hours": "{value} h overdue",
+          "days": "{value, plural, one {# day} other {# days}} overdue"
+        }
+      },
+      "subtasksProgress": "{done} of {total} subtasks done",
+      "checklistProgress": "Checklist: {done} of {total}",
+      "comments": "{count, plural, one {# comment} other {# comments}}",
+      "attachments": "{count, plural, one {# attachment} other {# attachments}}",
+      "backToProjects": "Back to projects"
+    },
+    "filters": {
+      "label": "Task filters",
+      "search": "Search tasks",
+      "searchPlaceholder": "Search title or key",
+      "searchShort": "Type at least {min} characters",
+      "status": "Status",
+      "priority": "Priority",
+      "assignee": "Assignee",
+      "anyone": "Anyone",
+      "me": "Me",
+      "labels": "Labels",
+      "sprint": "Sprint",
+      "anySprint": "Any sprint",
+      "backlog": "Backlog",
+      "overdue": "Overdue",
+      "blocked": "Blocked",
+      "clear": "Clear",
+      "sortBy": "Sort: {field}",
+      "sortLabel": "Sort by",
+      "sort": {
+        "updatedAt": "Last updated",
+        "priority": "Priority",
+        "deadlineAt": "Deadline",
+        "createdAt": "Created",
+        "taskNumber": "Number"
+      },
+      "direction": {
+        "asc": "Ascending",
+        "desc": "Descending"
+      },
+      "groupBy": "Group: {group}",
+      "groupLabel": "Group by",
+      "group": {
+        "none": "None",
+        "status": "Status",
+        "assignee": "Assignee",
+        "sprint": "Sprint"
+      }
+    },
+    "list": {
+      "title": "Tasks",
+      "description": "Every task in the project. Filters live in the address bar, so you can share the link.",
+      "create": "New task",
+      "retry": "Try again",
+      "count": "{count, plural, one {# task} other {# tasks}}",
+      "groupCount": "{count, plural, one {# task} other {# tasks}}",
+      "noMatchTitle": "No matching tasks",
+      "noMatchDescription": "Try loosening or clearing the filters.",
+      "clearFilters": "Clear filters",
+      "emptyTitle": "No tasks yet",
+      "emptyDescription": "Create the first task and assign it to someone, or put it in the pool.",
+      "emptyViewerDescription": "There are no tasks in this project yet. They will show up here once a project manager adds some."
+    },
+    "pool": {
+      "title": "Task pool",
+      "description": "Tasks nobody owns yet and anyone eligible can take. A task you claim is assigned to you.",
+      "retry": "Try again",
+      "emptyTitle": "The pool is empty",
+      "emptyDescription": "Tasks show up here when a project manager puts them in the pool.",
+      "count": "{count, plural, one {# task available} other {# tasks available}}",
+      "claimed": "You claimed {key}",
+      "teamOnly": "{team} team only",
+      "everyone": "Any project member",
+      "claim": "Claim"
+    },
+    "board": {
+      "title": "Board",
+      "description": "Drag tasks between status columns. You can only drop on a column the workflow allows.",
+      "toolbar": "Board options",
+      "sprint": "Sprint",
+      "allTasks": "All tasks",
+      "backlog": "Backlog",
+      "onlyMine": "Only mine",
+      "dragHint": "Columns you can drop on are highlighted",
+      "retry": "Try again",
+      "emptyTitle": "No tasks on the board",
+      "emptyDescription": "Nothing matches this selection. Pick another sprint or create a task.",
+      "emptyMineDescription": "No tasks are assigned to you in this selection.",
+      "column": "{status}, {count, plural, one {# task} other {# tasks}}",
+      "dropHere": "Drop here",
+      "columnEmpty": "No tasks",
+      "moveCard": "Move {key}"
+    },
+    "form": {
+      "title": "New task",
+      "editTitle": "Edit task",
+      "description": "Describe the task, plan it and decide who owns it. The card on the right shows how it will look in the lists.",
+      "editDescription": "Changes are recorded in the task history once saved, and watchers are notified.",
+      "back": "Back to tasks",
+      "cancel": "Cancel",
+      "submit": "Create task",
+      "save": "Save changes",
+      "saved": "{key} updated",
+      "created": "{key} created",
+      "loading": "Loading the task",
+      "optional": "Optional",
+      "counter": "{count} / {max}",
+      "sections": {
+        "definition": {
+          "title": "Definition",
+          "description": "Say what the task is about, briefly and clearly."
+        },
+        "planning": {
+          "title": "Planning",
+          "description": "Priority, estimate, dates, sprint and labels."
+        },
+        "assignment": {
+          "title": "Assignment",
+          "description": "Assign the task to people or put it in the pool for someone to claim."
+        },
+        "checklist": {
+          "title": "Checklist",
+          "description": "The small steps it takes to finish the task."
+        }
+      },
+      "preview": {
+        "title": "Preview",
+        "caption": "This is how it appears in the list and the pool.",
+        "show": "Preview",
+        "keyPending": "Key assigned on create",
+        "titleEmpty": "Task title",
+        "checklist": "{count, plural, one {# step} other {# steps}}",
+        "poolNote": "Waits in the pool to be claimed"
+      },
+      "titleField": {
+        "label": "Title",
+        "placeholder": "E.g. Add 3-D Secure to the checkout flow"
+      },
+      "descriptionField": {
+        "label": "Description",
+        "mode": "Description view",
+        "write": "Write",
+        "preview": "Preview",
+        "previewEmpty": "Nothing written yet",
+        "placeholder": "Add context, the expected outcome and acceptance criteria."
+      },
+      "parent": {
+        "label": "Parent task",
+        "hint": "If you pick one, this task becomes its subtask. Only one level is supported.",
+        "locked": "This task has subtasks, so it cannot be moved under another task.",
+        "clear": "Remove the parent task",
+        "placeholder": "Search for a parent task",
+        "search": "Search parent tasks",
+        "loading": "Searching",
+        "noResults": "No matching tasks",
+        "minChars": "Type at least {min} characters"
+      },
+      "priority": {
+        "label": "Priority"
+      },
+      "points": {
+        "label": "Estimate",
+        "none": "None",
+        "hint": "Fibonacci scale: the gaps widen as the work grows."
+      },
+      "time": {
+        "label": "Time estimate",
+        "hours": "Hours",
+        "minutes": "Minutes",
+        "hoursUnit": "h",
+        "minutesUnit": "min",
+        "hint": "Leave empty to skip the time estimate.",
+        "total": "{minutes} minutes in total"
+      },
+      "start": {
+        "label": "Start date"
+      },
+      "deadline": {
+        "label": "Deadline",
+        "time": "Deadline time",
+        "quick": "Quick deadline picks",
+        "today": "Today 18:00",
+        "tomorrow": "Tomorrow 18:00",
+        "friday": "Friday 18:00",
+        "nextWeek": "Next week 18:00",
+        "clear": "Clear",
+        "hint": "An empty time means end of day (23:59). A reminder goes out 24 hours before and when the deadline passes."
+      },
+      "sprint": {
+        "label": "Sprint",
+        "none": "No sprint (backlog)"
+      },
+      "labels": {
+        "label": "Labels",
+        "loading": "Loading labels",
+        "empty": "This project has no labels yet.",
+        "manage": "Manage labels",
+        "list": "Labels",
+        "limit": "You can pick up to {max} labels.",
+        "selected": "{count} / {max} labels selected"
+      },
+      "assign": {
+        "label": "Assignment type",
+        "people": "Assign to people",
+        "pool": "Put in the pool",
+        "poolTeam": "Who can claim it",
+        "poolHint": "A pooled task has no assignee. It is assigned to the first eligible person who claims it."
+      },
+      "assignees": {
+        "team": "Filter by team",
+        "allMembers": "All members",
+        "searchPlaceholder": "Search members",
+        "search": "Search members",
+        "assignMe": "Assign to me",
+        "selectedList": "Assignees",
+        "remove": "Remove {name}",
+        "list": "Project members",
+        "loading": "Loading members",
+        "none": "No matching members",
+        "limit": "You can assign up to {max} people.",
+        "selected": "{count} / {max} people selected"
+      },
+      "checklist": {
+        "label": "Steps",
+        "placeholder": "Every line becomes a step.\nApprove the design\nWrite the tests",
+        "hint": "{count} / {max} steps. Each step can be up to {length} characters.",
+        "editing": "The checklist is managed on the task detail page.",
+        "partial": "{count, plural, one {The task was created but # checklist step could not be added. You can add it on the detail page.} other {The task was created but # checklist steps could not be added. You can add them on the detail page.}}"
+      }
+    },
+    "locked": {
+      "manager": "Only the project manager can do this.",
+      "assignee": "Only the people assigned to this task and the project manager can do this."
+    },
+    "detail": {
+      "breadcrumb": "Task path",
+      "tasks": "Tasks",
+      "watch": "Watch",
+      "unwatch": "Unwatch",
+      "watched": "You are now watching {key}",
+      "unwatched": "You stopped watching {key}",
+      "edit": "Edit",
+      "moreActions": "More actions",
+      "copyLink": "Copy link",
+      "linkCopied": "Link copied",
+      "linkCopyFailed": "Could not copy the link",
+      "archive": "Archive",
+      "archived": "{key} was archived",
+      "archivedBadge": "Archived",
+      "archivedNotice": "This task is archived. It is read only, so nothing on it can be changed.",
+      "backToTasks": "Back to tasks",
+      "cancel": "Cancel",
+      "archiveDialog": {
+        "title": "Archive {key}?",
+        "description": "An archived task leaves the lists and becomes read only.",
+        "withSubtasks": "{count, plural, one {An archived task leaves the lists and becomes read only. Its {count} subtask is archived too.} other {An archived task leaves the lists and becomes read only. Its {count} subtasks are archived too.}}",
+        "confirm": "Archive"
+      },
+      "description": {
+        "title": "Description",
+        "empty": "No description has been written for this task."
+      },
+      "subtasks": {
+        "title": "Subtasks",
+        "detailed": "Add with details",
+        "progress": "{done} of {total} done",
+        "loading": "Loading subtasks",
+        "empty": "There are no subtasks yet.",
+        "placeholder": "New subtask title",
+        "add": "Add"
+      },
+      "checklist": {
+        "title": "Checklist",
+        "progress": "{done} of {total} items",
+        "loading": "Loading checklist",
+        "empty": "The checklist has no items yet.",
+        "doneAt": "Done on {date}",
+        "moveUp": "Move \"{text}\" up",
+        "moveDown": "Move \"{text}\" down",
+        "remove": "Delete \"{text}\"",
+        "limit": "You can add up to {max} items.",
+        "placeholder": "New item",
+        "add": "Add"
+      },
+      "relations": {
+        "title": "Relations",
+        "add": "Add relation",
+        "loading": "Loading relations",
+        "empty": "This task is not related to any other task.",
+        "groups": {
+          "blockedBy": "Blocked by",
+          "blocks": "Blocks",
+          "relatesTo": "Related to",
+          "duplicates": "Duplicates",
+          "duplicatedBy": "Duplicated by"
+        },
+        "remove": "Remove the relation to {key}",
+        "type": "Relation type",
+        "types": {
+          "BLOCKS": "Blocks",
+          "RELATES": "Relates to",
+          "DUPLICATES": "Duplicates"
+        },
+        "search": "Search for a task",
+        "cancel": "Cancel",
+        "submit": "Add"
+      },
+      "attachments": {
+        "title": "Attachments",
+        "open": "Open {name} in a new tab",
+        "download": "Download {name}",
+        "deleteTitle": "Delete this attachment?",
+        "deleteDescription": "{name} will be removed from this task.",
+        "delete": "Delete",
+        "deleteName": "Delete {name}",
+        "cancel": "Cancel",
+        "limit": "A task can have up to {max} files.",
+        "skipped": "Some files were skipped because they exceed {max}.",
+        "loading": "Loading attachments",
+        "drop": "Drop files here",
+        "uploading": "{count, plural, one {Uploading {count} file} other {Uploading {count} files}}",
+        "choose": "Choose files",
+        "hint": "Up to {size} per file and {max} files per task."
+      },
+      "activity": {
+        "title": "Activity",
+        "filter": "Activity filter",
+        "filters": {
+          "all": "All",
+          "comments": "Comments",
+          "history": "History"
+        },
+        "composer": {
+          "label": "Comment",
+          "placeholder": "Write a comment. Type @ to mention someone.",
+          "hint": "Press Ctrl+Enter to send",
+          "submit": "Comment",
+          "suggestions": "Member suggestions"
+        },
+        "loading": "Loading activity",
+        "empty": "There is no activity yet.",
+        "truncated": "Showing the newest {shown} of {total} entries.",
+        "edited": "edited",
+        "editComment": "Edit comment",
+        "deleteComment": "Delete comment",
+        "deleteTitle": "Delete this comment?",
+        "deleteDescription": "The content of the comment is removed for everyone.",
+        "delete": "Delete",
+        "cancel": "Cancel",
+        "save": "Save",
+        "deleted": "This comment was deleted.",
+        "events": {
+          "someone": "Someone",
+          "aTeam": "a team",
+          "aSprint": "a sprint",
+          "backlog": "Backlog",
+          "none": "none",
+          "unknown": "updated the task",
+          "created": "created the task",
+          "statusChanged": "changed the status from {from} to {to}",
+          "descriptionChanged": "updated the description",
+          "fieldChanged": "changed {field} from {from} to {to}",
+          "fields": {
+            "title": "the title",
+            "priority": "the priority",
+            "startDate": "the start date",
+            "deadlineAt": "the deadline",
+            "estimatePoints": "the estimate points",
+            "timeEstimateMinutes": "the time estimate",
+            "unknown": "a field"
+          },
+          "blocked": "marked the task as blocked",
+          "blockedReason": "marked the task as blocked: {reason}",
+          "unblocked": "removed the block",
+          "assigned": "assigned {name}",
+          "unassigned": "unassigned {name}",
+          "poolOpened": "put the task in the pool",
+          "poolOpenedTeam": "put the task in the pool for {team}",
+          "poolClosed": "took the task out of the pool",
+          "claimed": "claimed the task from the pool",
+          "released": "released the task back to the pool",
+          "labelsChanged": "changed the labels from {from} to {to}",
+          "sprintChanged": "moved the task from {from} to {to}",
+          "parentChanged": "changed the parent task",
+          "subtaskAdded": "added the subtask {key}",
+          "checklistAdded": "added the checklist item \"{text}\"",
+          "checklistDone": "completed the checklist item \"{text}\"",
+          "checklistReopened": "reopened the checklist item \"{text}\"",
+          "relationAdded": "added a \"{type}\" relation with {key}",
+          "relationRemoved": "removed the \"{type}\" relation with {key}",
+          "attachmentAdded": "attached {name}",
+          "attachmentRemoved": "removed the attachment {name}",
+          "worklogAdded": "logged {duration}",
+          "archived": "archived the task"
+        }
+      },
+      "time": {
+        "of": "of {estimate} estimated",
+        "noEstimate": "logged, no estimate",
+        "log": "Log time",
+        "progress": "{logged} logged of {estimate} estimated",
+        "over": "Over the estimate by {duration}.",
+        "loading": "Loading entries",
+        "empty": "No time has been logged yet.",
+        "deleteTitle": "Delete this time entry?",
+        "deleteDescription": "The {duration} entry from {date} is deleted and removed from the logged total.",
+        "delete": "Delete",
+        "cancel": "Cancel",
+        "deleteEntry": "Delete the {duration} entry from {date}",
+        "dialog": {
+          "title": "Log time on {key}",
+          "description": "Add how long you worked on this task.",
+          "duration": "Duration",
+          "hours": "Hours",
+          "hoursUnit": "h",
+          "minutes": "Minutes",
+          "minutesUnit": "min",
+          "date": "Work date",
+          "note": "Note (optional)",
+          "notePlaceholder": "What did you work on?",
+          "cancel": "Cancel",
+          "submit": "Save"
+        }
+      },
+      "panel": {
+        "title": "Task properties",
+        "status": "Status",
+        "blockedReason": "Blocked: {reason}",
+        "unblock": "Remove block",
+        "block": "Mark as blocked",
+        "assignees": "Assignees",
+        "changeAssignees": "Change assignees",
+        "claim": "Claim",
+        "release": "Release to pool",
+        "released": "{key} was released to the pool",
+        "priority": "Priority",
+        "points": "Points",
+        "noPoints": "No points",
+        "labels": "Labels",
+        "none": "None",
+        "sprint": "Sprint",
+        "backlog": "Backlog",
+        "start": "Start",
+        "deadline": "Deadline",
+        "time": "Time tracking",
+        "watchers": "Watchers",
+        "loading": "Loading",
+        "noWatchers": "Nobody is watching this task.",
+        "moreWatchers": "+{count} more",
+        "createdBy": "Created by {name}, {date}",
+        "updatedBy": "Updated by {name}, {date}",
+        "blockDialog": {
+          "title": "Mark {key} as blocked?",
+          "description": "A blocked task shows everyone why work has stopped. Adding a reason is recommended.",
+          "reason": "Reason (optional)",
+          "placeholder": "What is it waiting for?",
+          "cancel": "Cancel",
+          "confirm": "Mark as blocked"
+        },
+        "assigneesDialog": {
+          "title": "Assignees of {key}",
+          "description": "Choose the project members to assign to this task.",
+          "poolNote": "The task is in the pool right now. Assigning someone takes it out of the pool.",
+          "cancel": "Cancel",
+          "save": "Save"
+        }
+      }
+    },
+    "my": {
+      "title": "My tasks",
+      "description": "Tasks assigned to you across all projects, plus pool tasks you can pick up.",
+      "retry": "Try again",
+      "count": "{count, plural, one {{count} task} other {{count} tasks}}",
+      "poolCount": "{count, plural, one {{count} task waiting to be picked up} other {{count} tasks waiting to be picked up}}",
+      "bucketLabel": "{bucket}, {count} tasks",
+      "noMatchTitle": "No matching tasks",
+      "noMatchDescription": "No task matches the selected filters. Clear them and try again.",
+      "clearFilters": "Clear filters",
+      "nav": {
+        "badge": "{open} open tasks, {overdue} overdue"
+      },
+      "card": {
+        "error": "The task summary could not be loaded.",
+        "open": "Go to my tasks"
+      },
+      "summary": {
+        "label": "Task summary",
+        "open": "Open",
+        "overdue": "Overdue",
+        "dueSoon": "Due within 24 hours",
+        "blocked": "Blocked",
+        "pool": "In the pool"
+      },
+      "tabs": {
+        "label": "Task view",
+        "open": "Open",
+        "done": "Completed",
+        "all": "All",
+        "pool": "Pool"
+      },
+      "filters": {
+        "label": "Task filters",
+        "project": "Project",
+        "allProjects": "All projects",
+        "status": "Status",
+        "overdue": "Overdue",
+        "clear": "Clear"
+      },
+      "buckets": {
+        "overdue": "Overdue",
+        "today": "Today",
+        "week": "This week",
+        "later": "Later",
+        "none": "No deadline"
+      },
+      "empty": {
+        "open": {
+          "title": "No open tasks",
+          "description": "Nothing open is assigned to you. Pick up a new task from the Pool tab."
+        },
+        "done": {
+          "title": "No completed tasks",
+          "description": "Tasks you finish are listed here."
+        },
+        "all": {
+          "title": "No tasks yet",
+          "description": "Tasks show up here once a project assigns one to you."
+        },
+        "pool": {
+          "title": "The pool is empty",
+          "description": "There is nothing you can pick up right now. Tasks appear here when project managers put them in the pool."
+        }
+      }
+    }
+  },
+  "sprints": {
+    "title": "Sprints",
+    "description": "Split the work into time boxes and follow progress and the burndown.",
+    "create": "Create sprint",
+    "retry": "Try again",
+    "emptyTitle": "No sprints yet",
+    "emptyManagerDescription": "Create the first sprint, attach tasks to it and start it when you are ready.",
+    "emptyMemberDescription": "Sprints will show up here once the project manager creates one.",
+    "startBlocked": "Another sprint is running, so this one cannot start. Complete the active sprint first.",
+    "sections": {
+      "ACTIVE": "Active",
+      "PLANNED": "Planned",
+      "COMPLETED": "Completed"
+    },
+    "status": {
+      "PLANNED": "Planned",
+      "ACTIVE": "Active",
+      "COMPLETED": "Completed"
+    },
+    "row": {
+      "progress": "{done}/{total} tasks",
+      "points": "{done}/{total} points",
+      "tasks": "{count, plural, one {{count} task} other {{count} tasks}}",
+      "overdue": "{count, plural, one {{count} day overdue} other {{count} days overdue}}",
+      "endsToday": "Ends today",
+      "daysLeft": "{count, plural, one {{count} day left} other {{count} days left}}"
+    },
+    "actions": {
+      "start": "Start",
+      "complete": "Complete",
+      "edit": "Edit",
+      "archive": "Archive",
+      "cancel": "Cancel",
+      "started": "{name} started",
+      "archived": "{name} was archived",
+      "archiveTitle": "Archive {name}?",
+      "archiveDescription": "The sprint disappears from the list. This is only possible for planned sprints without tasks."
+    },
+    "dialog": {
+      "createTitle": "New sprint",
+      "editTitle": "Edit sprint",
+      "description": "Set a name, a goal and a date range.",
+      "name": "Sprint name",
+      "namePlaceholder": "e.g. Sprint 12",
+      "goal": "Goal",
+      "goalPlaceholder": "What do you want to achieve in this sprint?",
+      "startDate": "Start",
+      "endDate": "End",
+      "cancel": "Cancel",
+      "create": "Create",
+      "save": "Save",
+      "created": "{name} was created",
+      "updated": "{name} was updated"
+    },
+    "complete": {
+      "title": "Complete {name}?",
+      "loading": "Loading the sprint summary",
+      "description": "{done} of {total} tasks are done.",
+      "noOpenTasks": "No open tasks are left, so the sprint completes right away.",
+      "moveTo": "{count, plural, one {Move {count} open task to} other {Move {count} open tasks to}}",
+      "backlog": "Backlog",
+      "hint": "Finished tasks stay in this sprint.",
+      "cancel": "Cancel",
+      "confirm": "Complete sprint",
+      "done": "{name} completed"
+    },
+    "burndown": {
+      "title": "Burndown",
+      "unit": "Unit",
+      "units": {
+        "points": "Points",
+        "tasks": "Tasks"
+      },
+      "label": "Burndown chart, unit: {unit}, total: {total}",
+      "actual": "Actual",
+      "ideal": "Ideal",
+      "date": "Date",
+      "remaining": "Remaining ({unit})",
+      "empty": "No data for the chart yet. Daily progress shows up here once the sprint starts."
+    },
+    "detail": {
+      "back": "Back to sprints",
+      "startBlocked": "Another sprint is running, so this one cannot start. Complete the active sprint first.",
+      "goal": "Goal",
+      "progress": "{done} of {total} tasks done",
+      "stats": {
+        "tasks": "Tasks",
+        "points": "Points",
+        "logged": "Time logged",
+        "time": "Timing",
+        "percent": "{value}%",
+        "completedOn": "Completed on {date}",
+        "completed": "Completed",
+        "notStarted": "Not started yet",
+        "overdue": "{count, plural, one {{count} day overdue} other {{count} days overdue}}",
+        "endsToday": "Ends today",
+        "daysLeft": "{count, plural, one {{count} day left} other {{count} days left}}"
+      },
+      "breakdown": {
+        "title": "Status breakdown",
+        "empty": "There are no tasks in this sprint yet."
+      },
+      "tasks": {
+        "title": "Tasks",
+        "error": "Tasks could not be loaded.",
+        "empty": "There are no tasks in this sprint yet. Assign a sprint to a task to add it here."
+      }
+    }
+  },
+  "labels": {
+    "title": "Labels",
+    "description": "Create, rename and color labels to group tasks.",
+    "memberDescription": "Labels available on tasks in this project. The project manager manages them.",
+    "create": "Create label",
+    "retry": "Try again",
+    "emptyTitle": "No labels yet",
+    "emptyManagerDescription": "Create the first label, then use it on tasks.",
+    "emptyMemberDescription": "Labels will show up here once the project manager creates them.",
+    "colors": {
+      "slate": "Slate",
+      "red": "Red",
+      "orange": "Orange",
+      "amber": "Amber",
+      "green": "Green",
+      "teal": "Teal",
+      "blue": "Blue",
+      "violet": "Violet",
+      "pink": "Pink"
+    },
+    "row": {
+      "usage": "{count, plural, one {Used on {count} task} other {Used on {count} tasks}}",
+      "edit": "Edit label {name}",
+      "archiveLabel": "Archive label {name}",
+      "archive": "Archive",
+      "cancel": "Cancel",
+      "archived": "{name} was archived",
+      "archiveTitle": "Archive {name}?",
+      "archiveDescription": "{count, plural, one {An archived label can no longer be added to tasks. It is currently used on {count} task.} other {An archived label can no longer be added to tasks. It is currently used on {count} tasks.}}"
+    },
+    "dialog": {
+      "createTitle": "New label",
+      "editTitle": "Edit label",
+      "description": "Give it a name and pick a color.",
+      "name": "Label name",
+      "namePlaceholder": "e.g. Bug",
+      "color": "Color",
+      "preview": "Preview",
+      "previewFallback": "Label",
+      "cancel": "Cancel",
+      "create": "Create",
+      "save": "Save",
+      "created": "{name} was created",
+      "updated": "{name} was updated"
+    }
   }
 }

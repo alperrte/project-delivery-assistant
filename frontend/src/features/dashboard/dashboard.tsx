@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { useQueries, useQuery } from "@tanstack/react-query";
-import { ArrowRight, Plus, Lightning, FolderSimple, CheckCircle, Clock, CaretLeft, CaretRight, Users, GearSix } from "@phosphor-icons/react";
+import { ArrowRight, Plus, Lightning, FolderSimple, Clock, CaretLeft, CaretRight, Users, GearSix } from "@phosphor-icons/react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/common/empty-state";
@@ -14,6 +14,7 @@ import { useSession } from "@/features/auth/hooks/use-session";
 import { MonthGrid } from "@/features/calendar/components/month-grid";
 import { useCurrentMember } from "@/features/projects/hooks/use-current-member";
 import { useSelectedProject } from "@/features/projects/hooks/use-selected-project";
+import { MyTasksCard } from "@/features/tasks/components/my-tasks-card";
 import { ReminderList } from "@/features/reminders/components/reminder-list";
 import { dateFromKey, dateKey, todayKey } from "@/features/reminders/dates";
 import { useMonthReminders } from "@/features/reminders/hooks/use-month-reminders";
@@ -94,7 +95,7 @@ export function Dashboard() {
               return <tr key={project.id} className="hover:bg-muted/50"><td className="max-w-60 px-3 py-3"><Link href={`/projects/${project.slug}`} className="flex items-center gap-2.5 hover:underline"><span className="grid size-8 shrink-0 place-items-center rounded-md border bg-muted"><FolderSimple size={17} aria-hidden="true" /></span><span className="min-w-0"><span className="block truncate font-semibold">{project.name}</span><span className="mt-0.5 block truncate text-[10px] font-normal text-muted-foreground">{project.description || project.slug}</span></span></Link></td><td className="px-3 py-3 whitespace-nowrap"><span className="inline-flex items-center gap-1.5"><span className={cn("size-1.5 rounded-full", projectStatusDotClass(project.status))} />{tp(`overview.statusValues.${project.status}`)}</span></td><td className="min-w-28 px-3 py-3">{progress ? <div className="flex items-center gap-2"><span className="h-1 w-14 overflow-hidden rounded-full bg-muted" aria-hidden="true"><span className="block h-full bg-primary" style={{ width: `${progress.total ? progress.completed / progress.total * 100 : 0}%` }} /></span><span className="text-[10px] text-muted-foreground tabular-nums">{progress.completed}/{progress.total}</span></div> : <span title={t(homes[i]?.isError ? "detailUnavailable" : "loading")}>—</span>}</td><td className="px-3 py-3 text-[10px] whitespace-nowrap text-muted-foreground"><time dateTime={project.updatedAt}>{new Date(project.updatedAt).toLocaleDateString(locale, { day: "numeric", month: "short" })}</time></td><td className="px-3 py-3 text-center tabular-nums">{home?.teamMemberCount ?? "—"}</td></tr>;
             })}</tbody></table></div>}
           </section>
-          <div className="grid gap-6 md:grid-cols-2"><section><h2 className="mb-4 text-[15px] font-semibold">{t("tasks")}</h2><div className="rounded-lg border bg-surface-2 p-5"><CheckCircle size={22} className="mb-3 text-muted-foreground" aria-hidden="true" /><p className="text-xs font-medium">{t("taskTitle")}</p><p className="mt-2 text-xs leading-5 text-muted-foreground">{t("taskDescription")}</p></div></section>{updateList}</div>
+          <div className="grid gap-6 md:grid-cols-2"><MyTasksCard />{updateList}</div>
         </>}
         {view === "updates" && <>{query.isLoading ? <Skeleton className="h-32" /> : query.isError ? <Button variant="outline" onClick={() => query.refetch()}>{t("retry")}</Button> : updateList}<p className="text-xs text-muted-foreground">{t("updatesScope")}</p></>}
       </div>

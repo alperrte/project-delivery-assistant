@@ -32,6 +32,15 @@
   --color-ring: var(--ring);
   --color-surface-2: var(--surface-2);
   --color-live: var(--live);
+  --color-label-slate: var(--label-slate);
+  --color-label-red: var(--label-red);
+  --color-label-orange: var(--label-orange);
+  --color-label-amber: var(--label-amber);
+  --color-label-green: var(--label-green);
+  --color-label-teal: var(--label-teal);
+  --color-label-blue: var(--label-blue);
+  --color-label-violet: var(--label-violet);
+  --color-label-pink: var(--label-pink);
 
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
@@ -77,6 +86,17 @@
   --surface-2: #e8ecf2;
   --live: #0e8f9e;
   --shadow-tint: 220 30% 25%;
+
+  /* Task label colors. A label stores one of these names, never a hex value. */
+  --label-slate: #52607a;
+  --label-red: #c8323a;
+  --label-orange: #b4530c;
+  --label-amber: #8f6a00;
+  --label-green: #147a52;
+  --label-teal: #0b7a85;
+  --label-blue: #1b5fe0;
+  --label-violet: #6d4fd0;
+  --label-pink: #c0307a;
 
   /*
    * Auth pages only (over the background photos): one soft cyan light.
@@ -134,6 +154,16 @@
   --surface-2: #1a2029;
   --live: #3ad4e6;
   --shadow-tint: 222 60% 3%;
+
+  --label-slate: #9aa6bd;
+  --label-red: #ff7a80;
+  --label-orange: #ff9a57;
+  --label-amber: #f5c24a;
+  --label-green: #3dd598;
+  --label-teal: #3ad4e6;
+  --label-blue: #6fa3ff;
+  --label-violet: #a591ff;
+  --label-pink: #ff7fb8;
 
   --glow: #2fd0f5;
   --auth-ink: #eef2f7;

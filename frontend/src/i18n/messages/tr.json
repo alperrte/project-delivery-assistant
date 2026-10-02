@@ -51,7 +51,40 @@
     "TEAM_LAST_MEMBERSHIP": "Bu kişinin başka ekibi yok. Ekipten çıkarmak yerine projeden çıkarın.",
     "TEAM_ARCHIVE_WOULD_ORPHAN": "Bu ekip arşivlenirse bazı kişiler ekipsiz kalır.",
     "PROJECT_OWNER_PROTECTED": "Projenin kurucusu projeden çıkarılamaz ve Proje Yöneticisi rolü alınamaz.",
-    "LAST_PROJECT_MANAGER": "Projede en az bir Proje Yöneticisi kalmalıdır."
+    "LAST_PROJECT_MANAGER": "Projede en az bir Proje Yöneticisi kalmalıdır.",
+    "TASK_ARCHIVED": "Arşivlenmiş görev üzerinde işlem yapılamaz.",
+    "PROJECT_ARCHIVED": "Arşivlenmiş projede değişiklik yapılamaz.",
+    "TASK_INVALID_TRANSITION": "Görev bu duruma doğrudan taşınamaz.",
+    "TASK_DONE_CANNOT_BLOCK": "Tamamlanan görev engellenemez.",
+    "TASK_DONE_CANNOT_POOL": "Tamamlanan görev havuza konamaz.",
+    "TASK_ALREADY_CLAIMED": "Başkası az önce üstlendi.",
+    "TASK_NOT_RELEASABLE": "Bu görev havuza geri bırakılamaz.",
+    "TASK_NOT_IN_POOL": "Bu görev artık havuzda değil.",
+    "TASK_POOL_HAS_ASSIGNEE": "Atanmış kişisi olan görev havuza konamaz.",
+    "TASK_POOL_TEAM_ONLY": "Bu görevi yalnızca hedef ekibin üyeleri üstlenebilir.",
+    "TASK_POOL_TEAM_INVALID": "Seçilen ekip bu projede etkin değil.",
+    "TASK_RELATION_CYCLE": "Bu ilişki bir döngü oluşturur.",
+    "TASK_RELATION_EXISTS": "Bu ilişki zaten var.",
+    "TASK_ATTACHMENT_TYPE": "Bu dosya türü desteklenmiyor.",
+    "TASK_ATTACHMENT_INVALID": "Dosya içeriği türüyle uyuşmuyor ya da dosya boş.",
+    "TASK_ATTACHMENT_TOO_LARGE": "Dosya en fazla 10 MB olabilir.",
+    "TASK_ATTACHMENT_LIMIT": "Bir göreve en fazla 20 dosya eklenebilir.",
+    "TASK_CHECKLIST_LIMIT": "Checklist en fazla 50 madde içerebilir.",
+    "TASK_LABEL_LIMIT": "Bir göreve en fazla 10 etiket eklenebilir.",
+    "TASK_INVALID_PARENT": "Üst görev geçersiz. Alt görevin alt görevi olamaz.",
+    "TASK_INVALID_ESTIMATE": "Tahmin değeri geçersiz.",
+    "TASK_DATES_INVALID": "Deadline başlangıç tarihinden önce olamaz.",
+    "TASK_TOO_MANY_ASSIGNEES": "Bir göreve en fazla 20 kişi atanabilir.",
+    "TASK_ASSIGNEE_NOT_MEMBER": "Atanan kişi bu projenin üyesi olmalı.",
+    "TASK_TOO_MANY_MENTIONS": "Bir yorumda en fazla 20 kişi anılabilir.",
+    "TASK_COMMENT_DELETED": "Bu yorum silinmiş.",
+    "TASK_INVALID_REQUEST": "İstek geçersiz. Girdileri kontrol edin.",
+    "SPRINT_ACTIVE_EXISTS": "Projede zaten etkin bir sprint var.",
+    "SPRINT_COMPLETED": "Tamamlanmış sprint değiştirilemez.",
+    "SPRINT_NOT_EMPTY": "Görevi olan sprint silinemez.",
+    "SPRINT_INVALID": "Sprint bilgileri geçersiz.",
+    "LABEL_NAME_EXISTS": "Bu adda bir etiket zaten var.",
+    "WORKLOG_INVALID": "Süre kaydı geçersiz."
   },
   "app": {
     "nav": {
@@ -881,7 +914,14 @@
     "passwordMatch": "Şifreler eşleşmiyor.",
     "maxLength": "Bu değer çok uzun.",
     "dateOrder": "Hedef bitiş tarihi başlangıç tarihinden önce olamaz.",
-    "githubUrl": "Genel bir GitHub depo URL'si girin, ör. https://github.com/owner/repo."
+    "githubUrl": "Genel bir GitHub depo URL'si girin, ör. https://github.com/owner/repo.",
+    "number": "Geçerli bir sayı girin.",
+    "tooMany": "Çok fazla öğe seçtiniz.",
+    "timeNeedsDate": "Saat girmek için önce bir tarih seçin.",
+    "taskDateOrder": "Deadline başlangıç tarihinden önce olamaz.",
+    "timeEstimateRange": "Süre tahmini 1 dakika ile 100000 dakika arasında olmalı.",
+    "worklogRange": "Süre 1 ile 1440 dakika arasında olmalı.",
+    "sprintDateOrder": "Bitiş tarihi başlangıç tarihinden önce olamaz."
   },
   "forgotPassword": {
     "title": "Şifrenizi mi unuttunuz?",
@@ -1066,5 +1106,752 @@
     "totalProjects": "Toplam proje",
     "summaryDescription": "Proje hedeflerin, başarı kriterlerin ve ekibin için tek bir çalışma alanı.",
     "quickActions": "Hızlı işlemler"
+  },
+  "tasks": {
+    "nav": {
+      "group": "Görev Yönetimi",
+      "tasks": "Görevler",
+      "board": "Pano",
+      "pool": "Havuz",
+      "sprints": "Sprintler",
+      "labels": "Etiketler"
+    },
+    "common": {
+      "status": {
+        "BACKLOG": "Backlog",
+        "TODO": "Yapılacak",
+        "IN_PROGRESS": "Devam ediyor",
+        "IN_REVIEW": "İncelemede",
+        "TESTING": "Testte",
+        "DONE": "Tamamlandı"
+      },
+      "priority": {
+        "LOW": "Düşük",
+        "MEDIUM": "Orta",
+        "HIGH": "Yüksek",
+        "CRITICAL": "Kritik"
+      },
+      "sprintStatus": {
+        "PLANNED": "Planlanan",
+        "ACTIVE": "Aktif",
+        "COMPLETED": "Tamamlandı"
+      },
+      "points": "{count} puan",
+      "deadline": {
+        "overdue": "Gecikti",
+        "soon": "24 saatten az kaldı"
+      },
+      "blocked": {
+        "label": "Engelli",
+        "flag": "Elle engellendi",
+        "byTask": "Bitmemiş bir göreve bağlı"
+      },
+      "pool": {
+        "project": "Tüm proje"
+      },
+      "unassigned": "Atanmamış",
+      "statusChanged": "{key} görevi “{status}” durumuna alındı",
+      "changeStatus": "Durumu değiştir, şu an: {status}",
+      "moveTo": "Şuna taşı",
+      "durationHm": "{hours} sa {minutes} dk",
+      "durationH": "{hours} sa",
+      "durationM": "{minutes} dk",
+      "countdown": {
+        "left": {
+          "minutes": "{value} dk kaldı",
+          "hours": "{value} saat kaldı",
+          "days": "{value} gün kaldı"
+        },
+        "late": {
+          "minutes": "{value} dk gecikti",
+          "hours": "{value} saat gecikti",
+          "days": "{value} gün gecikti"
+        }
+      },
+      "subtasksProgress": "{done}/{total} alt görev tamamlandı",
+      "checklistProgress": "Kontrol listesi: {done}/{total}",
+      "comments": "{count} yorum",
+      "attachments": "{count} ek",
+      "backToProjects": "Projelere dön"
+    },
+    "filters": {
+      "label": "Görev filtreleri",
+      "search": "Görevlerde ara",
+      "searchPlaceholder": "Başlık veya anahtar ara",
+      "searchShort": "En az {min} karakter yazın",
+      "status": "Durum",
+      "priority": "Öncelik",
+      "assignee": "Atanan",
+      "anyone": "Herkes",
+      "me": "Ben",
+      "labels": "Etiketler",
+      "sprint": "Sprint",
+      "anySprint": "Tüm sprintler",
+      "backlog": "Backlog",
+      "overdue": "Gecikmiş",
+      "blocked": "Engelli",
+      "clear": "Temizle",
+      "sortBy": "Sırala: {field}",
+      "sortLabel": "Sıralama",
+      "sort": {
+        "updatedAt": "Son güncelleme",
+        "priority": "Öncelik",
+        "deadlineAt": "Deadline",
+        "createdAt": "Oluşturulma",
+        "taskNumber": "Numara"
+      },
+      "direction": {
+        "asc": "Artan",
+        "desc": "Azalan"
+      },
+      "groupBy": "Grupla: {group}",
+      "groupLabel": "Gruplama",
+      "group": {
+        "none": "Yok",
+        "status": "Durum",
+        "assignee": "Atanan",
+        "sprint": "Sprint"
+      }
+    },
+    "list": {
+      "title": "Görevler",
+      "description": "Projenin tüm görevleri. Filtreler adres çubuğunda saklanır, bağlantıyı paylaşabilirsiniz.",
+      "create": "Yeni görev",
+      "retry": "Tekrar dene",
+      "count": "{count} görev",
+      "groupCount": "{count} görev",
+      "noMatchTitle": "Eşleşen görev yok",
+      "noMatchDescription": "Filtreleri gevşetmeyi ya da temizlemeyi deneyin.",
+      "clearFilters": "Filtreleri temizle",
+      "emptyTitle": "Henüz görev yok",
+      "emptyDescription": "İlk görevi oluşturup bir kişiye atayın ya da havuza koyun.",
+      "emptyViewerDescription": "Bu projede henüz görev yok. Proje yöneticisi görev eklediğinde burada görünecek."
+    },
+    "pool": {
+      "title": "Görev havuzu",
+      "description": "Henüz kimseye atanmamış, üstlenmeye açık görevler. Üstlendiğiniz görev size atanır.",
+      "retry": "Tekrar dene",
+      "emptyTitle": "Havuz boş",
+      "emptyDescription": "Proje yöneticisi bir görevi havuza koyduğunda burada görünür.",
+      "count": "{count} görev üstlenilebilir",
+      "claimed": "{key} görevini üstlendiniz",
+      "teamOnly": "Yalnız {team} ekibi",
+      "everyone": "Projenin tüm üyeleri",
+      "claim": "Üstlen"
+    },
+    "board": {
+      "title": "Pano",
+      "description": "Görevleri durum sütunları arasında sürükleyin. Yalnız izin verilen geçişlere bırakabilirsiniz.",
+      "toolbar": "Pano seçenekleri",
+      "sprint": "Sprint",
+      "allTasks": "Tüm görevler",
+      "backlog": "Backlog",
+      "onlyMine": "Yalnız bana atananlar",
+      "dragHint": "Bırakılabilecek sütunlar vurgulandı",
+      "retry": "Tekrar dene",
+      "emptyTitle": "Panoda görev yok",
+      "emptyDescription": "Bu seçimde görev bulunmuyor. Başka bir sprint seçin ya da yeni bir görev oluşturun.",
+      "emptyMineDescription": "Bu seçimde size atanmış görev yok.",
+      "column": "{status}, {count} görev",
+      "dropHere": "Buraya bırakın",
+      "columnEmpty": "Görev yok",
+      "moveCard": "{key} görevini taşı"
+    },
+    "form": {
+      "title": "Yeni görev",
+      "editTitle": "Görevi düzenle",
+      "description": "Görevi tanımlayın, planlayın ve kime ait olduğunu belirleyin. Sağdaki kart, görevin listede nasıl görüneceğini gösterir.",
+      "editDescription": "Değişiklikler kaydedildiğinde görevin geçmişine yazılır ve izleyicilere bildirilir.",
+      "back": "Görevlere dön",
+      "cancel": "Vazgeç",
+      "submit": "Görevi oluştur",
+      "save": "Değişiklikleri kaydet",
+      "saved": "{key} güncellendi",
+      "created": "{key} oluşturuldu",
+      "loading": "Görev yükleniyor",
+      "optional": "İsteğe bağlı",
+      "counter": "{count} / {max}",
+      "sections": {
+        "definition": {
+          "title": "Tanım",
+          "description": "Görevin neyle ilgili olduğunu kısa ve net anlatın."
+        },
+        "planning": {
+          "title": "Planlama",
+          "description": "Öncelik, tahmin, tarih, sprint ve etiketler."
+        },
+        "assignment": {
+          "title": "Atama",
+          "description": "Görevi kişilere atayın ya da üstlenilmek üzere havuza koyun."
+        },
+        "checklist": {
+          "title": "Kontrol listesi",
+          "description": "Görevi bitirmek için yapılacak küçük adımlar."
+        }
+      },
+      "preview": {
+        "title": "Önizleme",
+        "caption": "Liste ve havuzda böyle görünür.",
+        "show": "Önizleme",
+        "keyPending": "Anahtar oluşturulunca atanır",
+        "titleEmpty": "Görev başlığı",
+        "checklist": "{count} adım",
+        "poolNote": "Havuzda üstlenilmeyi bekler"
+      },
+      "titleField": {
+        "label": "Başlık",
+        "placeholder": "Örn. Ödeme akışına 3-D Secure ekle"
+      },
+      "descriptionField": {
+        "label": "Açıklama",
+        "mode": "Açıklama görünümü",
+        "write": "Yaz",
+        "preview": "Önizle",
+        "previewEmpty": "Henüz açıklama yazılmadı",
+        "placeholder": "Bağlamı, beklenen sonucu ve kabul ölçütlerini yazın."
+      },
+      "parent": {
+        "label": "Üst görev",
+        "hint": "Seçerseniz bu görev, üst görevin alt görevi olur. Yalnız tek seviye desteklenir.",
+        "locked": "Bu görevin alt görevleri var, bu yüzden başka bir görevin altına taşınamaz.",
+        "clear": "Üst görevi kaldır",
+        "placeholder": "Üst görev ara",
+        "search": "Üst görev ara",
+        "loading": "Aranıyor",
+        "noResults": "Eşleşen görev yok",
+        "minChars": "En az {min} karakter yazın"
+      },
+      "priority": {
+        "label": "Öncelik"
+      },
+      "points": {
+        "label": "Tahmin puanı",
+        "none": "Yok",
+        "hint": "Fibonacci ölçeği: iş büyüdükçe aralık açılır."
+      },
+      "time": {
+        "label": "Süre tahmini",
+        "hours": "Saat",
+        "minutes": "Dakika",
+        "hoursUnit": "sa",
+        "minutesUnit": "dk",
+        "hint": "Boş bırakılırsa süre tahmini tutulmaz.",
+        "total": "Toplam {minutes} dakika"
+      },
+      "start": {
+        "label": "Başlangıç tarihi"
+      },
+      "deadline": {
+        "label": "Son tarih",
+        "time": "Son tarih saati",
+        "quick": "Hızlı son tarih seçimi",
+        "today": "Bugün 18:00",
+        "tomorrow": "Yarın 18:00",
+        "friday": "Cuma 18:00",
+        "nextWeek": "Haftaya 18:00",
+        "clear": "Temizle",
+        "hint": "Saat boş bırakılırsa gün sonu (23:59) kullanılır. Süre dolmadan 24 saat önce ve süre dolunca hatırlatma gider."
+      },
+      "sprint": {
+        "label": "Sprint",
+        "none": "Sprint yok (backlog)"
+      },
+      "labels": {
+        "label": "Etiketler",
+        "loading": "Etiketler yükleniyor",
+        "empty": "Projede henüz etiket yok.",
+        "manage": "Etiketleri yönet",
+        "list": "Etiketler",
+        "limit": "En fazla {max} etiket seçebilirsiniz.",
+        "selected": "{count} / {max} etiket seçili"
+      },
+      "assign": {
+        "label": "Atama türü",
+        "people": "Kişiye ata",
+        "pool": "Havuza koy",
+        "poolTeam": "Kimler üstlenebilir",
+        "poolHint": "Havuzdaki görev kimseye atanmaz. Uygun ilk kişi üstlendiğinde ona atanır."
+      },
+      "assignees": {
+        "team": "Ekibe göre süz",
+        "allMembers": "Tüm üyeler",
+        "searchPlaceholder": "Üye ara",
+        "search": "Üye ara",
+        "assignMe": "Bana ata",
+        "selectedList": "Atananlar",
+        "remove": "{name} atamasını kaldır",
+        "list": "Proje üyeleri",
+        "loading": "Üyeler yükleniyor",
+        "none": "Eşleşen üye yok",
+        "limit": "En fazla {max} kişi atayabilirsiniz.",
+        "selected": "{count} / {max} kişi seçili"
+      },
+      "checklist": {
+        "label": "Adımlar",
+        "placeholder": "Her satır bir adım olur.\nTasarımı onayla\nTestleri yaz",
+        "hint": "{count} / {max} adım. Her adım en fazla {length} karakter olabilir.",
+        "editing": "Kontrol listesi görevin ayrıntı sayfasında yönetilir.",
+        "partial": "Görev oluşturuldu ancak {count} kontrol listesi adımı eklenemedi. Ayrıntı sayfasından ekleyebilirsiniz."
+      }
+    },
+    "locked": {
+      "manager": "Bu işlemi yalnızca proje yöneticisi yapabilir.",
+      "assignee": "Bu işlemi yalnızca göreve atanan kişiler ve proje yöneticisi yapabilir."
+    },
+    "detail": {
+      "breadcrumb": "Görev yolu",
+      "tasks": "Görevler",
+      "watch": "İzle",
+      "unwatch": "İzlemeyi bırak",
+      "watched": "{key} izleniyor",
+      "unwatched": "{key} artık izlenmiyor",
+      "edit": "Düzenle",
+      "moreActions": "Diğer işlemler",
+      "copyLink": "Bağlantıyı kopyala",
+      "linkCopied": "Bağlantı kopyalandı",
+      "linkCopyFailed": "Bağlantı kopyalanamadı",
+      "archive": "Arşivle",
+      "archived": "{key} arşivlendi",
+      "archivedBadge": "Arşivlendi",
+      "archivedNotice": "Bu görev arşivlendi. Salt okunur olduğu için üzerinde değişiklik yapılamaz.",
+      "backToTasks": "Görevlere dön",
+      "cancel": "Vazgeç",
+      "archiveDialog": {
+        "title": "{key} arşivlensin mi?",
+        "description": "Arşivlenen görev listelerden kalkar ve salt okunur olur.",
+        "withSubtasks": "Arşivlenen görev listelerden kalkar ve salt okunur olur. {count} alt görevi de arşivlenir.",
+        "confirm": "Arşivle"
+      },
+      "description": {
+        "title": "Açıklama",
+        "empty": "Bu görev için açıklama yazılmamış."
+      },
+      "subtasks": {
+        "title": "Alt görevler",
+        "detailed": "Ayrıntılı ekle",
+        "progress": "{done}/{total} tamamlandı",
+        "loading": "Alt görevler yükleniyor",
+        "empty": "Henüz alt görev yok.",
+        "placeholder": "Yeni alt görev başlığı",
+        "add": "Ekle"
+      },
+      "checklist": {
+        "title": "Kontrol listesi",
+        "progress": "{done}/{total} madde",
+        "loading": "Kontrol listesi yükleniyor",
+        "empty": "Kontrol listesinde henüz madde yok.",
+        "doneAt": "Tamamlandı: {date}",
+        "moveUp": "\"{text}\" maddesini yukarı taşı",
+        "moveDown": "\"{text}\" maddesini aşağı taşı",
+        "remove": "\"{text}\" maddesini sil",
+        "limit": "En fazla {max} madde eklenebilir.",
+        "placeholder": "Yeni madde",
+        "add": "Ekle"
+      },
+      "relations": {
+        "title": "İlişkiler",
+        "add": "İlişki ekle",
+        "loading": "İlişkiler yükleniyor",
+        "empty": "Bu görevin başka görevlerle ilişkisi yok.",
+        "groups": {
+          "blockedBy": "Şunlar tarafından engelleniyor",
+          "blocks": "Şunları engelliyor",
+          "relatesTo": "İlişkili",
+          "duplicates": "Şunun kopyası",
+          "duplicatedBy": "Şunlar kopyası"
+        },
+        "remove": "{key} ilişkisini kaldır",
+        "type": "İlişki türü",
+        "types": {
+          "BLOCKS": "Engelliyor",
+          "RELATES": "İlişkili",
+          "DUPLICATES": "Kopyası"
+        },
+        "search": "Görev ara",
+        "cancel": "Vazgeç",
+        "submit": "Ekle"
+      },
+      "attachments": {
+        "title": "Ekler",
+        "open": "{name} dosyasını yeni sekmede aç",
+        "download": "{name} dosyasını indir",
+        "deleteTitle": "Ek silinsin mi?",
+        "deleteDescription": "{name} dosyası bu görevden kaldırılır.",
+        "delete": "Sil",
+        "deleteName": "{name} dosyasını sil",
+        "cancel": "Vazgeç",
+        "limit": "Bir göreve en fazla {max} dosya eklenebilir.",
+        "skipped": "Bazı dosyalar {max} sınırını aştığı için atlandı.",
+        "loading": "Ekler yükleniyor",
+        "drop": "Dosyaları buraya bırakın",
+        "uploading": "{count} dosya yükleniyor",
+        "choose": "Dosya seçin",
+        "hint": "Dosya başına en fazla {size}, görev başına {max} dosya."
+      },
+      "activity": {
+        "title": "Etkinlik",
+        "filter": "Etkinlik filtresi",
+        "filters": {
+          "all": "Tümü",
+          "comments": "Yorumlar",
+          "history": "Geçmiş"
+        },
+        "composer": {
+          "label": "Yorum",
+          "placeholder": "Yorum yazın. Birini anmak için @ yazın.",
+          "hint": "Göndermek için Ctrl+Enter",
+          "submit": "Yorum yap",
+          "suggestions": "Üye önerileri"
+        },
+        "loading": "Etkinlik yükleniyor",
+        "empty": "Henüz etkinlik yok.",
+        "truncated": "{total} kayıttan en yeni {shown} tanesi gösteriliyor.",
+        "edited": "düzenlendi",
+        "editComment": "Yorumu düzenle",
+        "deleteComment": "Yorumu sil",
+        "deleteTitle": "Yorum silinsin mi?",
+        "deleteDescription": "Yorumun içeriği herkes için kaldırılır.",
+        "delete": "Sil",
+        "cancel": "Vazgeç",
+        "save": "Kaydet",
+        "deleted": "Bu yorum silindi.",
+        "events": {
+          "someone": "Bir kullanıcı",
+          "aTeam": "bir ekip",
+          "aSprint": "bir sprint",
+          "backlog": "Backlog",
+          "none": "yok",
+          "unknown": "görevi güncelledi",
+          "created": "görevi oluşturdu",
+          "statusChanged": "durumu {from} yerine {to} yaptı",
+          "descriptionChanged": "açıklamayı güncelledi",
+          "fieldChanged": "{field} alanını {from} yerine {to} yaptı",
+          "fields": {
+            "title": "başlık",
+            "priority": "öncelik",
+            "startDate": "başlangıç tarihi",
+            "deadlineAt": "son teslim zamanı",
+            "estimatePoints": "tahmin puanı",
+            "timeEstimateMinutes": "süre tahmini",
+            "unknown": "bir alan"
+          },
+          "blocked": "görevi engelli olarak işaretledi",
+          "blockedReason": "görevi engelli olarak işaretledi: {reason}",
+          "unblocked": "engeli kaldırdı",
+          "assigned": "{name} kişisini atadı",
+          "unassigned": "{name} kişisinin atamasını kaldırdı",
+          "poolOpened": "görevi havuza koydu",
+          "poolOpenedTeam": "görevi {team} ekibine açık havuza koydu",
+          "poolClosed": "görevi havuzdan çıkardı",
+          "claimed": "görevi havuzdan üstlendi",
+          "released": "görevi havuza geri bıraktı",
+          "labelsChanged": "etiketleri {from} yerine {to} yaptı",
+          "sprintChanged": "sprinti {from} yerine {to} yaptı",
+          "parentChanged": "üst görevi değiştirdi",
+          "subtaskAdded": "{key} alt görevini ekledi",
+          "checklistAdded": "\"{text}\" maddesini ekledi",
+          "checklistDone": "\"{text}\" maddesini tamamladı",
+          "checklistReopened": "\"{text}\" maddesini yeniden açtı",
+          "relationAdded": "{key} ile \"{type}\" ilişkisi ekledi",
+          "relationRemoved": "{key} ile \"{type}\" ilişkisini kaldırdı",
+          "attachmentAdded": "{name} dosyasını ekledi",
+          "attachmentRemoved": "{name} dosyasını kaldırdı",
+          "worklogAdded": "{duration} süre kaydetti",
+          "archived": "görevi arşivledi"
+        }
+      },
+      "time": {
+        "of": "/ {estimate} tahmin",
+        "noEstimate": "harcandı, tahmin yok",
+        "log": "Süre kaydet",
+        "progress": "{estimate} tahminin {logged} kadarı harcandı",
+        "over": "Tahmin {duration} aşıldı.",
+        "loading": "Kayıtlar yükleniyor",
+        "empty": "Henüz süre kaydı yok.",
+        "deleteTitle": "Süre kaydı silinsin mi?",
+        "deleteDescription": "{date} tarihli {duration} kayıt silinir ve harcanan süreden düşülür.",
+        "delete": "Sil",
+        "cancel": "Vazgeç",
+        "deleteEntry": "{date} tarihli {duration} kaydı sil",
+        "dialog": {
+          "title": "{key} için süre kaydet",
+          "description": "Bu görev üzerinde ne kadar çalıştığınızı ekleyin.",
+          "duration": "Süre",
+          "hours": "Saat",
+          "hoursUnit": "sa",
+          "minutes": "Dakika",
+          "minutesUnit": "dk",
+          "date": "Çalışma tarihi",
+          "note": "Not (isteğe bağlı)",
+          "notePlaceholder": "Neler yaptınız?",
+          "cancel": "Vazgeç",
+          "submit": "Kaydet"
+        }
+      },
+      "panel": {
+        "title": "Görev özellikleri",
+        "status": "Durum",
+        "blockedReason": "Engel nedeni: {reason}",
+        "unblock": "Engeli kaldır",
+        "block": "Engelli olarak işaretle",
+        "assignees": "Atananlar",
+        "changeAssignees": "Atananları değiştir",
+        "claim": "Üstlen",
+        "release": "Havuza bırak",
+        "released": "{key} havuza geri bırakıldı",
+        "priority": "Öncelik",
+        "points": "Puan",
+        "noPoints": "Puan yok",
+        "labels": "Etiketler",
+        "none": "Yok",
+        "sprint": "Sprint",
+        "backlog": "Backlog",
+        "start": "Başlangıç",
+        "deadline": "Son teslim",
+        "time": "Zaman takibi",
+        "watchers": "İzleyiciler",
+        "loading": "Yükleniyor",
+        "noWatchers": "Bu görevi kimse izlemiyor.",
+        "moreWatchers": "+{count} kişi daha",
+        "createdBy": "{name} oluşturdu, {date}",
+        "updatedBy": "{name} güncelledi, {date}",
+        "blockDialog": {
+          "title": "{key} engelli olarak işaretlensin mi?",
+          "description": "Engelli görev, çalışmanın neden durduğunu herkese gösterir. Nedeni yazmanız önerilir.",
+          "reason": "Engel nedeni (isteğe bağlı)",
+          "placeholder": "Neyi bekliyor?",
+          "cancel": "Vazgeç",
+          "confirm": "Engelli işaretle"
+        },
+        "assigneesDialog": {
+          "title": "{key} atananları",
+          "description": "Göreve atanacak proje üyelerini seçin.",
+          "poolNote": "Görev şu anda havuzda. Birini atamak görevi havuzdan çıkarır.",
+          "cancel": "Vazgeç",
+          "save": "Kaydet"
+        }
+      }
+    },
+    "my": {
+      "title": "Görevlerim",
+      "description": "Tüm projelerde size atanan görevler ve üstlenebileceğiniz havuz görevleri.",
+      "retry": "Tekrar dene",
+      "count": "{count} görev",
+      "poolCount": "{count} görev üstlenilmeyi bekliyor",
+      "bucketLabel": "{bucket}, {count} görev",
+      "noMatchTitle": "Eşleşen görev yok",
+      "noMatchDescription": "Seçili filtrelere uyan görev bulunamadı. Filtreleri temizleyip yeniden deneyin.",
+      "clearFilters": "Filtreleri temizle",
+      "nav": {
+        "badge": "{open} açık görev, {overdue} gecikmiş"
+      },
+      "card": {
+        "error": "Görev özeti yüklenemedi.",
+        "open": "Görevlerime git"
+      },
+      "summary": {
+        "label": "Görev özeti",
+        "open": "Açık",
+        "overdue": "Gecikmiş",
+        "dueSoon": "24 saat içinde",
+        "blocked": "Engelli",
+        "pool": "Havuzda"
+      },
+      "tabs": {
+        "label": "Görev görünümü",
+        "open": "Açık",
+        "done": "Tamamlanan",
+        "all": "Tümü",
+        "pool": "Havuz"
+      },
+      "filters": {
+        "label": "Görev filtreleri",
+        "project": "Proje",
+        "allProjects": "Tüm projeler",
+        "status": "Durum",
+        "overdue": "Gecikmiş",
+        "clear": "Temizle"
+      },
+      "buckets": {
+        "overdue": "Gecikmiş",
+        "today": "Bugün",
+        "week": "Bu hafta",
+        "later": "Sonra",
+        "none": "Deadline yok"
+      },
+      "empty": {
+        "open": {
+          "title": "Açık göreviniz yok",
+          "description": "Size atanan açık görev kalmadı. Havuz sekmesinden yeni bir görev üstlenebilirsiniz."
+        },
+        "done": {
+          "title": "Tamamlanan görev yok",
+          "description": "Tamamladığınız görevler burada listelenir."
+        },
+        "all": {
+          "title": "Henüz göreviniz yok",
+          "description": "Bir projede size görev atandığında burada görünür."
+        },
+        "pool": {
+          "title": "Havuzda görev yok",
+          "description": "Üstlenebileceğiniz bir görev şu an yok. Proje yöneticileri görevleri havuza koyduğunda burada görünür."
+        }
+      }
+    }
+  },
+  "sprints": {
+    "title": "Sprintler",
+    "description": "Çalışmayı zaman kutularına bölün, ilerlemeyi ve yanma grafiğini izleyin.",
+    "create": "Sprint oluştur",
+    "retry": "Tekrar dene",
+    "emptyTitle": "Henüz sprint yok",
+    "emptyManagerDescription": "İlk sprinti oluşturun, görevleri ona bağlayın ve hazır olduğunuzda başlatın.",
+    "emptyMemberDescription": "Proje yöneticisi bir sprint oluşturduğunda burada görünecek.",
+    "startBlocked": "Başka bir sprint etkin olduğu için bu sprint başlatılamıyor. Önce etkin sprinti tamamlayın.",
+    "sections": {
+      "ACTIVE": "Etkin",
+      "PLANNED": "Planlanan",
+      "COMPLETED": "Tamamlanan"
+    },
+    "status": {
+      "PLANNED": "Planlandı",
+      "ACTIVE": "Etkin",
+      "COMPLETED": "Tamamlandı"
+    },
+    "row": {
+      "progress": "{done}/{total} görev",
+      "points": "{done}/{total} puan",
+      "tasks": "{count} görev",
+      "overdue": "{count} gün gecikti",
+      "endsToday": "Bugün bitiyor",
+      "daysLeft": "{count} gün kaldı"
+    },
+    "actions": {
+      "start": "Başlat",
+      "complete": "Tamamla",
+      "edit": "Düzenle",
+      "archive": "Arşivle",
+      "cancel": "Vazgeç",
+      "started": "{name} başlatıldı",
+      "archived": "{name} arşivlendi",
+      "archiveTitle": "{name} arşivlensin mi?",
+      "archiveDescription": "Sprint listeden kalkar. Bu işlem yalnızca görevi olmayan planlanmış sprintler için yapılabilir."
+    },
+    "dialog": {
+      "createTitle": "Yeni sprint",
+      "editTitle": "Sprinti düzenle",
+      "description": "Ad, hedef ve tarih aralığı belirleyin.",
+      "name": "Sprint adı",
+      "namePlaceholder": "Örn. Sprint 12",
+      "goal": "Hedef",
+      "goalPlaceholder": "Bu sprintte neyi başarmak istiyorsunuz?",
+      "startDate": "Başlangıç",
+      "endDate": "Bitiş",
+      "cancel": "Vazgeç",
+      "create": "Oluştur",
+      "save": "Kaydet",
+      "created": "{name} oluşturuldu",
+      "updated": "{name} güncellendi"
+    },
+    "complete": {
+      "title": "{name} tamamlansın mı?",
+      "loading": "Sprint özeti yükleniyor",
+      "description": "{done}/{total} görev tamamlandı.",
+      "noOpenTasks": "Açık görev kalmadı, sprint doğrudan tamamlanır.",
+      "moveTo": "{count} açık görevi şuraya taşı",
+      "backlog": "Backlog",
+      "hint": "Tamamlanan görevler bu sprintte kalır.",
+      "cancel": "Vazgeç",
+      "confirm": "Sprinti tamamla",
+      "done": "{name} tamamlandı"
+    },
+    "burndown": {
+      "title": "Yanma grafiği",
+      "unit": "Birim",
+      "units": {
+        "points": "Puan",
+        "tasks": "Görev"
+      },
+      "label": "Yanma grafiği, birim: {unit}, toplam: {total}",
+      "actual": "Gerçekleşen",
+      "ideal": "İdeal",
+      "date": "Tarih",
+      "remaining": "Kalan ({unit})",
+      "empty": "Grafik için henüz veri yok. Sprint başladığında günlük ilerleme burada görünür."
+    },
+    "detail": {
+      "back": "Sprintlere dön",
+      "startBlocked": "Başka bir sprint etkin olduğu için bu sprint başlatılamıyor. Önce etkin sprinti tamamlayın.",
+      "goal": "Hedef",
+      "progress": "{done}/{total} görev tamamlandı",
+      "stats": {
+        "tasks": "Görevler",
+        "points": "Puan",
+        "logged": "Harcanan süre",
+        "time": "Süre",
+        "percent": "%{value}",
+        "completedOn": "{date} tarihinde tamamlandı",
+        "completed": "Tamamlandı",
+        "notStarted": "Henüz başlamadı",
+        "overdue": "{count} gün gecikti",
+        "endsToday": "Bugün bitiyor",
+        "daysLeft": "{count} gün kaldı"
+      },
+      "breakdown": {
+        "title": "Durum dağılımı",
+        "empty": "Bu sprintte henüz görev yok."
+      },
+      "tasks": {
+        "title": "Görevler",
+        "error": "Görevler yüklenemedi.",
+        "empty": "Bu sprintte henüz görev yok. Bir göreve sprint atayarak buraya ekleyebilirsiniz."
+      }
+    }
+  },
+  "labels": {
+    "title": "Etiketler",
+    "description": "Görevleri gruplamak için etiket oluşturun, yeniden adlandırın ve renklendirin.",
+    "memberDescription": "Bu projede görevlerde kullanılabilecek etiketler. Etiketleri proje yöneticisi yönetir.",
+    "create": "Etiket oluştur",
+    "retry": "Tekrar dene",
+    "emptyTitle": "Henüz etiket yok",
+    "emptyManagerDescription": "İlk etiketi oluşturun, ardından görevlerde kullanın.",
+    "emptyMemberDescription": "Proje yöneticisi etiket oluşturduğunda burada görünecek.",
+    "colors": {
+      "slate": "Gri",
+      "red": "Kırmızı",
+      "orange": "Turuncu",
+      "amber": "Kehribar",
+      "green": "Yeşil",
+      "teal": "Camgöbeği",
+      "blue": "Mavi",
+      "violet": "Mor",
+      "pink": "Pembe"
+    },
+    "row": {
+      "usage": "{count} görevde kullanılıyor",
+      "edit": "{name} etiketini düzenle",
+      "archiveLabel": "{name} etiketini arşivle",
+      "archive": "Arşivle",
+      "cancel": "Vazgeç",
+      "archived": "{name} arşivlendi",
+      "archiveTitle": "{name} arşivlensin mi?",
+      "archiveDescription": "Arşivlenen etiket artık görevlere eklenemez. Şu an {count} görevde kullanılıyor."
+    },
+    "dialog": {
+      "createTitle": "Yeni etiket",
+      "editTitle": "Etiketi düzenle",
+      "description": "Bir ad verin ve renk seçin.",
+      "name": "Etiket adı",
+      "namePlaceholder": "Örn. Hata",
+      "color": "Renk",
+      "preview": "Önizleme",
+      "previewFallback": "Etiket",
+      "cancel": "Vazgeç",
+      "create": "Oluştur",
+      "save": "Kaydet",
+      "created": "{name} oluşturuldu",
+      "updated": "{name} güncellendi"
+    }
   }
 }

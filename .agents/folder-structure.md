@@ -46,3 +46,11 @@ Squad Service kodu `squad/api`, `squad/application/service`, `squad/domain/entit
 ## Dashboard ve uygulama kabuğu (2026-09-29)
 
 `/dashboard`, `frontend/src/features/dashboard/dashboard.tsx` ile gerçek proje listesi/Project Home verilerini gösterir. `components/layout/app-shell.tsx` bütün oturum içi sayfaların navbar, 240 px sidebar ve mobil çekmecesini; `project-search.tsx` Ctrl+K aramasını sağlar. `components/layout/project-sidebar-nav.tsx`, proje detay bölümlerini bu ortak sidebar içinde bütün sayfalarda gösterir; kullanıcıya özgü son proje slug'ını oturum boyunca korur ve seçim yoksa ilk projeye yönlendirir. Bölüm tanımları ve URL eşlemesi `features/projects/project-sections.ts` içindedir; `features/projects/components/project-detail.tsx` bölüm içeriğini gösterir, ayrı sidebar oluşturmaz. Varsayılan giriş sonrası sayfa dashboard’dur. Görev/bildirim/sprint servisleri bu teslimde uygulanmaz. Oturum içi palet DESIGN.md Titanium referansından gelir; auth tasarımı ayrı kalır.
+
+## Görev yönetimi frontend (2026-10-02)
+
+- `frontend/src/features/tasks/`: `api.ts`, `types.ts`, `schemas.ts`, `hooks.ts`, `workflow.ts`, `deadline.ts`, `filters.ts`, `my-filters.ts`, `mentions.ts`, `permissions.ts`; `components/` (liste, pano, havuz, form, Görevlerim) ve `components/detail/` (görev detayı bölümleri).
+- `frontend/src/features/sprints/` ve `frontend/src/features/labels/`: `api.ts`, `hooks.ts`, `schemas.ts`, `types.ts`, `components/`.
+- Rotalar: `frontend/src/app/(app)/projects/[slug]/{tasks,sprints,labels}/**` ve `frontend/src/app/(app)/tasks/page.tsx`.
+- `frontend/src/components/layout/tasks-nav-link.tsx`: sidebar'daki Görevler bağlantısı ve rozeti.
+- `frontend/e2e/09-tasks.spec.ts`: görev yönetimi E2E.
