@@ -181,6 +181,41 @@ class ProjectApiIntegrationTest {
     }
 
     @Test
+    void aCoManagerCanEditAProjectLinkedToSomeoneElsesOrganizationButCannotLinkOneThatIsNotTheirs() throws Exception {
+        Cookie csrf = csrfCookie();
+        Account owner = account("orgowner2");
+        Account coManager = account("comanager2");
+        var created = mvc.perform(post("/api/v1/organizations").cookie(csrf, owner.access())
+                        .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Owned org\"}"))
+                .andExpect(status().isCreated()).andReturn().getResponse();
+        UUID organizationId = UUID.fromString(JsonPath.read(created.getContentAsString(), "$.id"));
+        var project = mvc.perform(post("/api/v1/projects").cookie(csrf, owner.access())
+                        .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Shared project\",\"organizationId\":\"" + organizationId + "\"}"))
+                .andExpect(status().isCreated()).andReturn().getResponse();
+        UUID projectId = UUID.fromString(JsonPath.read(project.getContentAsString(), "$.id"));
+        memberships.addMember(owner.id(), projectId, coManager.id(), Set.of(ProjectRole.PROJECT_MANAGER));
+
+        // Saving the project as it is (same organization) is allowed for any manager of the project ...
+        mvc.perform(put("/api/v1/projects/" + projectId).cookie(csrf, coManager.access())
+                        .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Shared project renamed\",\"priority\":\"HIGH\",\"status\":\"PLANNING\",\"organizationId\":\"" + organizationId + "\"}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.name").value("Shared project renamed"));
+
+        // ... but linking the project to an organization the actor does not own is still refused.
+        var foreign = mvc.perform(post("/api/v1/organizations").cookie(csrf, owner.access())
+                        .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Another org\"}"))
+                .andExpect(status().isCreated()).andReturn().getResponse();
+        UUID foreignId = UUID.fromString(JsonPath.read(foreign.getContentAsString(), "$.id"));
+        mvc.perform(put("/api/v1/projects/" + projectId).cookie(csrf, coManager.access())
+                        .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Shared project renamed\",\"priority\":\"HIGH\",\"status\":\"PLANNING\",\"organizationId\":\"" + foreignId + "\"}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     void validationAndSwaggerExposeSafeContracts() throws Exception {
         Cookie csrf = csrfCookie();
         Account actor = account("validation");

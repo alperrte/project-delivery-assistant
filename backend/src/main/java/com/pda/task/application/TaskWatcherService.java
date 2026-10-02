@@ -32,7 +32,7 @@ public class TaskWatcherService {
         Map<UUID, UserAccounts.AuthenticatedUser> names = ids.isEmpty() ? Map.of()
                 : users.findActiveByIds(new HashSet<>(ids));
         return ids.stream().filter(names::containsKey)
-                .map(id -> new PersonRef(id, names.get(id).nickname()))
+                .map(id -> new PersonRef(id, names.get(id).nickname(), names.get(id).profilePhotoVersion()))
                 .sorted(Comparator.comparing(PersonRef::nickname, String.CASE_INSENSITIVE_ORDER)).toList();
     }
 

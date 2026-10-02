@@ -13,7 +13,7 @@ import java.util.UUID;
 public record TeamView(Squad team, long memberCount, UserRef updatedBy, List<UserRef> memberPreview,
                        LastJoined lastJoined) {
 
-    public record UserRef(UUID userId, String nickname) {}
+    public record UserRef(UUID userId, String nickname, Long profilePhotoVersion) {}
 
     public record LastJoined(UUID userId, String nickname, Instant joinedAt) {}
 }

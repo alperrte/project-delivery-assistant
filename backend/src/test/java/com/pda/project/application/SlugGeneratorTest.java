@@ -20,6 +20,12 @@ class SlugGeneratorTest {
     }
 
     @Test
+    void aNameInAnotherScriptStillGetsAnAddress() {
+        assertTrue(SlugGenerator.generate("Проект Дельта").startsWith("project-"));
+        assertTrue(SlugGenerator.generate("日本語のプロジェクト").startsWith("project-"));
+    }
+
+    @Test
     void rejectsNameWithoutUsableSlugCharacters() {
         assertThrows(IllegalArgumentException.class, () -> SlugGenerator.generate("!!!"));
     }

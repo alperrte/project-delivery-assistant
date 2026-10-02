@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import jakarta.persistence.LockModeType;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -35,6 +36,10 @@ public interface ProjectInvitationRepository extends JpaRepository<ProjectInvita
     Optional<ProjectInvitation> lockById(UUID id);
 
     Page<ProjectInvitation> findByInvitedUserId(UUID invitedUserId, Pageable pageable);
+
+    /** The recipient's invitations that can still be answered: pending and not past their expiry. */
+    Page<ProjectInvitation> findByInvitedUserIdAndStatusAndExpiresAtAfter(UUID invitedUserId, InvitationStatus status,
+                                                                          Instant now, Pageable pageable);
 
     Page<ProjectInvitation> findByProjectId(UUID projectId, Pageable pageable);
 

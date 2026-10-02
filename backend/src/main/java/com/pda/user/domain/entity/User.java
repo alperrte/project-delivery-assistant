@@ -72,6 +72,9 @@ public class User {
     @Column(name = "must_change_password", nullable = false)
     private boolean mustChangePassword;
 
+    @Column(name = "profile_photo_updated_at")
+    private Instant profilePhotoUpdatedAt;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -80,6 +83,14 @@ public class User {
 
     protected User() {
         // JPA
+    }
+
+    public void profilePhotoStored(Instant at) {
+        this.profilePhotoUpdatedAt = Objects.requireNonNull(at, "at is required");
+    }
+
+    public void profilePhotoRemoved() {
+        this.profilePhotoUpdatedAt = null;
     }
 
     public static User registerLocal(String email, String nickname, String rawPassword,
@@ -198,4 +209,6 @@ public class User {
     public boolean isMustChangePassword() { return mustChangePassword; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
+
+    public Instant getProfilePhotoUpdatedAt() { return profilePhotoUpdatedAt; }
 }

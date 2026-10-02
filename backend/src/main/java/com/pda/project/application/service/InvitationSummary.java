@@ -20,6 +20,12 @@ public record InvitationSummary(UUID id, UUID projectId, UUID invitedUserId, Str
                                 Instant expiresAt, String rejectionMessage, String firstName, String lastName,
                                 String message, String nickname, UUID teamId, String teamName) {
 
+    /** Same invitation with a different status; used to report a lapsed pending invitation as expired. */
+    public InvitationSummary withStatus(InvitationStatus newStatus) {
+        return new InvitationSummary(id, projectId, invitedUserId, email, invitedBy, initialRoles, newStatus, createdAt,
+                expiresAt, rejectionMessage, firstName, lastName, message, nickname, teamId, teamName);
+    }
+
     public static InvitationSummary from(ProjectInvitation invitation) {
         return from(invitation, null, null);
     }

@@ -1,6 +1,7 @@
 package com.pda.project.application.service;
 
 import com.pda.project.domain.entity.Project;
+import com.pda.shared.ImageSniffer;
 import com.pda.project.domain.entity.ProjectLogo;
 import com.pda.project.domain.entity.ProjectMembership;
 import com.pda.project.domain.enums.MembershipStatus;
@@ -50,7 +51,14 @@ public class ProjectLogoService {
         if (data.length > ProjectLogo.MAX_BYTES) {
             throw new ProjectLogoException(ProjectLogoException.TOO_LARGE);
         }
-        String contentType = detectType(data);
+        ImageSniffer.Image image;
+        try {
+            image = ImageSniffer.inspect(data);
+        } catch (ImageSniffer.RejectedImageException rejected) {
+            throw new ProjectLogoException(rejected.reason() == ImageSniffer.Reason.DIMENSIONS
+                    ? ProjectLogoException.DIMENSIONS : ProjectLogoException.INVALID_TYPE);
+        }
+        String contentType = image.contentType();
         Instant now = Instant.now();
         ProjectLogo logo = logos.findById(projectId).orElse(null);
         if (logo == null) {
@@ -79,21 +87,6 @@ public class ProjectLogoService {
         ProjectLogo logo = logos.findById(projectId)
                 .orElseThrow(() -> new NoSuchElementException("Project logo not found"));
         return new StoredLogo(logo.getContentType(), logo.getData());
-    }
-
-    static String detectType(byte[] data) {
-        if (data.length >= 8 && (data[0] & 0xFF) == 0x89 && data[1] == 'P' && data[2] == 'N' && data[3] == 'G'
-                && data[4] == 0x0D && data[5] == 0x0A && data[6] == 0x1A && data[7] == 0x0A) {
-            return "image/png";
-        }
-        if (data.length >= 3 && (data[0] & 0xFF) == 0xFF && (data[1] & 0xFF) == 0xD8 && (data[2] & 0xFF) == 0xFF) {
-            return "image/jpeg";
-        }
-        if (data.length >= 12 && data[0] == 'R' && data[1] == 'I' && data[2] == 'F' && data[3] == 'F'
-                && data[8] == 'W' && data[9] == 'E' && data[10] == 'B' && data[11] == 'P') {
-            return "image/webp";
-        }
-        throw new ProjectLogoException(ProjectLogoException.INVALID_TYPE);
     }
 
     private Project activeProject(UUID projectId) {

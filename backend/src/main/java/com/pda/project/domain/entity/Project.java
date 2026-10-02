@@ -100,6 +100,9 @@ public class Project {
     @Column(name = "logo_updated_at")
     private Instant logoUpdatedAt;
 
+    @Column(name = "banner_updated_at")
+    private Instant bannerUpdatedAt;
+
     @Column(name = "archived_at")
     private Instant archivedAt;
 
@@ -163,6 +166,22 @@ public class Project {
             throw new IllegalStateException("Archived projects cannot be changed");
         }
         this.logoUpdatedAt = null;
+        touch(actor);
+    }
+
+    public void bannerStored(UUID actor, Instant at) {
+        if (archivedAt != null) {
+            throw new IllegalStateException("Archived projects cannot be changed");
+        }
+        this.bannerUpdatedAt = Objects.requireNonNull(at, "at is required");
+        touch(actor);
+    }
+
+    public void bannerRemoved(UUID actor) {
+        if (archivedAt != null) {
+            throw new IllegalStateException("Archived projects cannot be changed");
+        }
+        this.bannerUpdatedAt = null;
         touch(actor);
     }
 
@@ -270,5 +289,6 @@ public class Project {
     public Instant getUpdatedAt() { return updatedAt; }
     public UUID getUpdatedBy() { return updatedBy; }
     public Instant getLogoUpdatedAt() { return logoUpdatedAt; }
+    public Instant getBannerUpdatedAt() { return bannerUpdatedAt; }
     public Instant getArchivedAt() { return archivedAt; }
 }

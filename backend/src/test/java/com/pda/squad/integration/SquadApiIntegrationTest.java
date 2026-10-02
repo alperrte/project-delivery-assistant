@@ -255,6 +255,71 @@ class SquadApiIntegrationTest {
     }
 
     @Test
+    void teamMemberEmailsAreShownOnlyToThoseWhoManageMembers() throws Exception {
+        Cookie csrf = csrfCookie();
+        Account manager = account("emailmanager");
+        Account contributor = account("emailcontrib");
+        UUID projectId = createProject(manager, csrf, "Team emails project");
+        memberships.addMember(manager.id(), projectId, contributor.id(), Set.of(ProjectRole.BACKEND_DEVELOPER));
+        UUID teamId = squadService.create(manager.id(), projectId, "Mail team", null, null, true).getId();
+        squadService.addMember(manager.id(), projectId, teamId, contributor.id());
+        String members = "/api/v1/projects/" + projectId + "/teams/" + teamId + "/members";
+
+        // The manager sees both addresses ...
+        mvc.perform(get(members).cookie(manager.access())).andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.content[0].email").value(org.hamcrest.Matchers.containsString("@")))
+                .andExpect(jsonPath("$.content[1].email").value(org.hamcrest.Matchers.containsString("@")));
+        // ... an ordinary member sees the same people by nickname, with no address at all.
+        mvc.perform(get(members).cookie(contributor.access())).andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.content[0].nickname").isNotEmpty())
+                .andExpect(jsonPath("$.content[0].email").value(org.hamcrest.Matchers.nullValue()))
+                .andExpect(jsonPath("$.content[1].email").value(org.hamcrest.Matchers.nullValue()));
+    }
+
+    @Test
+    void teamRoutesNeverReachATeamOfAnotherProjectEvenForSomeoneWhoManagesBoth() throws Exception {
+        Cookie csrf = csrfCookie();
+        Account manager = account("teamscopemanager");
+        Account outsider = account("teamscopeoutsider");
+        UUID projectA = createProject(manager, csrf, "Team scope A");
+        UUID projectB = createProject(manager, csrf, "Team scope B");
+        var created = mvc.perform(post("/api/v1/projects/" + projectA + "/teams")
+                        .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Team of A\"}"))
+                .andExpect(status().isCreated()).andReturn().getResponse();
+        UUID teamOfA = UUID.fromString(JsonPath.read(created.getContentAsString(), "$.id"));
+        String viaB = "/api/v1/projects/" + projectB + "/teams/" + teamOfA;
+
+        // Read, edit, move, archive, list members and add a member: all answer 404 under the wrong project.
+        mvc.perform(get(viaB).cookie(manager.access())).andExpect(status().isNotFound());
+        mvc.perform(put(viaB).cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Renamed through B\"}"))
+                .andExpect(status().isNotFound());
+        mvc.perform(put(viaB + "/parent").cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"parentTeamId\":null}"))
+                .andExpect(status().isNotFound());
+        mvc.perform(get(viaB + "/members").cookie(manager.access())).andExpect(status().isNotFound());
+        mvc.perform(post(viaB + "/members").cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"userId\":\"" + manager.id() + "\"}"))
+                .andExpect(status().isNotFound());
+        mvc.perform(delete(viaB).cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isNotFound());
+        // A team of project A cannot become the parent of a team in project B.
+        mvc.perform(post("/api/v1/projects/" + projectB + "/teams").cookie(csrf, manager.access())
+                        .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Child in B\",\"parentTeamId\":\"" + teamOfA + "\"}"))
+                .andExpect(status().is4xxClientError());
+        // Nothing above changed the team, and somebody who is in neither project reaches neither.
+        mvc.perform(get("/api/v1/projects/" + projectA + "/teams/" + teamOfA).cookie(manager.access()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.name").value("Team of A"));
+        mvc.perform(get("/api/v1/projects/" + projectA + "/teams/" + teamOfA).cookie(outsider.access()))
+                .andExpect(status().isForbidden());
+        mvc.perform(get(viaB).cookie(outsider.access())).andExpect(status().isForbidden());
+    }
+
+    @Test
     void everyContributorRoleIsDeniedEverySquadMutation() throws Exception {
         Cookie csrf = csrfCookie();
         Account manager = account("sqhttpmanager3");

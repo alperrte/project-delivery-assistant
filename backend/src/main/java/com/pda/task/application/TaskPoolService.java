@@ -91,7 +91,7 @@ public class TaskPoolService {
         }
         Map<UUID, ProjectSummaryView> projects = claimableProjects(actor, projectId);
         List<Task> claimable = claimable(actor, projects);
-        int from = Math.min(page * size, claimable.size());
+        int from = (int) Math.min((long) page * size, claimable.size());
         List<Task> slice = claimable.subList(from, Math.min(from + size, claimable.size()));
         return new PageImpl<>(assembler.assemble(slice, actor, projects), PageRequest.of(page, size),
                 claimable.size());

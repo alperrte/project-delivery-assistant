@@ -3,7 +3,9 @@ package com.pda.project.api;
 import com.pda.project.application.service.GitHubIntegrationException;
 import com.pda.project.application.service.InvitationConflictException;
 import com.pda.project.application.service.MembershipConflictException;
+import com.pda.project.application.service.ProjectBannerException;
 import com.pda.project.application.service.ProjectLogoException;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -45,18 +47,31 @@ public class ProjectApiErrorHandler {
 
     @ExceptionHandler(ProjectLogoException.class)
     ResponseEntity<ProblemDetail> invalidLogo(ProjectLogoException exception) {
-        return logoProblem(exception.code());
+        return imageProblem("Invalid project logo", exception.code());
+    }
+
+    @ExceptionHandler(ProjectBannerException.class)
+    ResponseEntity<ProblemDetail> invalidBanner(ProjectBannerException exception) {
+        return imageProblem("Invalid project banner", exception.code());
     }
 
     /** The servlet multipart limit trips before the service can measure the file. */
     @ExceptionHandler(MaxUploadSizeExceededException.class)
-    ResponseEntity<ProblemDetail> logoTooLarge() {
-        return logoProblem(ProjectLogoException.TOO_LARGE);
+    ResponseEntity<ProblemDetail> imageTooLarge(HttpServletRequest request) {
+        return isBanner(request)
+                ? imageProblem("Invalid project banner", ProjectBannerException.TOO_LARGE)
+                : imageProblem("Invalid project logo", ProjectLogoException.TOO_LARGE);
     }
 
     @ExceptionHandler({MissingServletRequestPartException.class, MultipartException.class})
-    ResponseEntity<ProblemDetail> missingLogoPart() {
-        return logoProblem(ProjectLogoException.EMPTY);
+    ResponseEntity<ProblemDetail> missingImagePart(HttpServletRequest request) {
+        return isBanner(request)
+                ? imageProblem("Invalid project banner", ProjectBannerException.EMPTY)
+                : imageProblem("Invalid project logo", ProjectLogoException.EMPTY);
+    }
+
+    private static boolean isBanner(HttpServletRequest request) {
+        return request.getRequestURI().endsWith("/banner");
     }
 
     @ExceptionHandler(NoSuchElementException.class)
@@ -102,8 +117,8 @@ public class ProjectApiErrorHandler {
         };
     }
 
-    private static ResponseEntity<ProblemDetail> logoProblem(String code) {
-        ProblemDetail body = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Invalid project logo");
+    private static ResponseEntity<ProblemDetail> imageProblem(String detail, String code) {
+        ProblemDetail body = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, detail);
         body.setProperty("code", code);
         return ResponseEntity.badRequest().header("Cache-Control", "no-store").body(body);
     }

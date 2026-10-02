@@ -1,5 +1,6 @@
 package com.pda.task.application;
 
+import com.pda.shared.ImageSniffer;
 import com.pda.task.domain.TaskValidationException;
 
 import java.nio.ByteBuffer;
@@ -75,15 +76,36 @@ final class AttachmentPolicy {
     private static boolean matches(String extension, Kind kind, byte[] b) {
         if (kind.text()) return plainText(b);
         return switch (extension) {
-            case "png" -> startsWith(b, 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A);
-            case "jpg", "jpeg" -> startsWith(b, 0xFF, 0xD8, 0xFF);
-            case "gif" -> startsWith(b, 'G', 'I', 'F', '8') && b.length > 5 && (b[4] == '7' || b[4] == '9')
-                    && b[5] == 'a';
-            case "webp" -> startsWith(b, 'R', 'I', 'F', 'F') && b.length > 11 && b[8] == 'W' && b[9] == 'E'
-                    && b[10] == 'B' && b[11] == 'P';
+            // Pictures are opened by every member's browser, so their size is read from the header as well
+            // (a few bytes can claim an enormous image); see ImageSniffer.
+            case "png", "jpg", "jpeg", "webp" -> isImage(b, kind.contentType());
+            case "gif" -> startsWith(b, 'G', 'I', 'F', '8') && b.length > 9 && (b[4] == '7' || b[4] == '9')
+                    && b[5] == 'a' && gifSizeAllowed(b);
             case "pdf" -> startsWith(b, '%', 'P', 'D', 'F', '-');
             default -> startsWith(b, 'P', 'K', 0x03, 0x04);
         };
+    }
+
+    private static boolean isImage(byte[] bytes, String contentType) {
+        try {
+            return ImageSniffer.inspect(bytes).contentType().equals(contentType);
+        } catch (ImageSniffer.RejectedImageException rejected) {
+            if (rejected.reason() == ImageSniffer.Reason.DIMENSIONS) {
+                throw new TaskValidationException("TASK_ATTACHMENT_INVALID", "Image dimensions are too large");
+            }
+            return false;
+        }
+    }
+
+    /** The logical screen size sits at bytes 6-9 (little endian). */
+    private static boolean gifSizeAllowed(byte[] b) {
+        long width = (b[6] & 0xFF) | ((b[7] & 0xFF) << 8);
+        long height = (b[8] & 0xFF) | ((b[9] & 0xFF) << 8);
+        if (width == 0 || height == 0) return false;
+        if (width > ImageSniffer.MAX_SIDE || height > ImageSniffer.MAX_SIDE || width * height > ImageSniffer.MAX_PIXELS) {
+            throw new TaskValidationException("TASK_ATTACHMENT_INVALID", "Image dimensions are too large");
+        }
+        return true;
     }
 
     private static boolean startsWith(byte[] bytes, int... prefix) {

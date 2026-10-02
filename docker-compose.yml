@@ -8,7 +8,8 @@ services:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "${DB_PORT:-5436}:${DB_PORT:-5436}"
+      # Local development only: reachable from this machine, never published on every network interface.
+      - "127.0.0.1:${DB_PORT:-5436}:${DB_PORT:-5436}"
     volumes:
       - pda_postgres_data:/var/lib/postgresql
     healthcheck:

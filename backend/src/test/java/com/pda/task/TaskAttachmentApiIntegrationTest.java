@@ -1,6 +1,7 @@
 package com.pda.task;
 
 import com.jayway.jsonpath.JsonPath;
+import com.pda.shared.TestImages;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
 
@@ -12,7 +13,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /** The attachment surface: content is proven by magic bytes, never by the name or the client's content type. */
 class TaskAttachmentApiIntegrationTest extends TaskTestBase {
-    private static final byte[] PNG = {(byte) 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0};
+    private static final byte[] PNG = TestImages.png(2, 2);
+
+    @org.springframework.beans.factory.annotation.Autowired org.springframework.jdbc.core.JdbcTemplate jdbc;
 
     private static MockMultipartFile file(String name, String declaredType, byte[] bytes) {
         return new MockMultipartFile("file", name, declaredType, bytes);
@@ -22,6 +25,26 @@ class TaskAttachmentApiIntegrationTest extends TaskTestBase {
         String body = send(multipart(base + "/attachments").file(file), who, null).andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         return UUID.fromString(JsonPath.read(body, "$.id"));
+    }
+
+    @Test void anAttachmentIsOnlyReachableThroughItsOwnTaskAndProject() throws Exception {
+        Account pm = account("attscopepm");
+        UUID projectA = project(pm, "Attachment scope A");
+        UUID projectB = project(pm, "Attachment scope B");
+        UUID taskA = createTask(projectA, pm, "{\"title\":\"Task A\"}");
+        UUID taskA2 = createTask(projectA, pm, "{\"title\":\"Second task of A\"}");
+        UUID taskB = createTask(projectB, pm, "{\"title\":\"Task B\"}");
+        String baseA = tasksUrl(projectA) + "/" + taskA;
+        UUID attachment = upload(baseA, pm, file("a.png", "image/png", PNG));
+
+        // Another task of the same project, and a task of another project the same person manages: both 404.
+        for (String wrongBase : new String[] {tasksUrl(projectA) + "/" + taskA2, tasksUrl(projectB) + "/" + taskB,
+                tasksUrl(projectB) + "/" + taskA}) {
+            read(wrongBase + "/attachments/" + attachment + "/content", pm).andExpect(status().isNotFound());
+            send(delete(wrongBase + "/attachments/" + attachment), pm, null).andExpect(status().isNotFound());
+        }
+        // The attachment was not touched by any of that.
+        read(baseA + "/attachments/" + attachment + "/content", pm).andExpect(status().isOk()).andExpect(content().bytes(PNG));
     }
 
     @Test void validUploadIsServedSafelyAndPermissionsHold() throws Exception {
@@ -63,6 +86,9 @@ class TaskAttachmentApiIntegrationTest extends TaskTestBase {
         send(delete(base + "/attachments/" + text), pm, null).andExpect(status().isNoContent());
         read(base + "/attachments/" + image + "/content", pm).andExpect(status().isNotFound());
         read(base, pm).andExpect(jsonPath("$.attachmentCount").value(0));
+        // A deleted attachment keeps no bytes behind.
+        org.junit.jupiter.api.Assertions.assertEquals(0, jdbc.queryForObject(
+                "SELECT count(*) FROM task_attachment_data WHERE attachment_id IN (?, ?)", Integer.class, image, text));
     }
 
     @Test void disguisedActiveAndOversizedFilesAreRefused() throws Exception {
@@ -91,8 +117,16 @@ class TaskAttachmentApiIntegrationTest extends TaskTestBase {
         send(multipart(url).file(file("empty.png", "image/png", new byte[0])), pm, null)
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("TASK_ATTACHMENT_INVALID"));
 
-        byte[] huge = new byte[10 * 1024 * 1024 + 1];
-        System.arraycopy(PNG, 0, huge, 0, PNG.length);
+        // A few bytes that claim an enormous picture are refused before anyone's browser is asked to draw it.
+        byte[] gifBomb = {'G', 'I', 'F', '8', '9', 'a', (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, 0, 0};
+        for (MockMultipartFile bomb : new MockMultipartFile[] {
+                file("bomb.png", "image/png", TestImages.pngHeaderClaiming(10_000, 10_000)),
+                file("bomb.gif", "image/gif", gifBomb)}) {
+            send(multipart(url).file(bomb), pm, null).andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.code").value("TASK_ATTACHMENT_INVALID"));
+        }
+
+        byte[] huge = TestImages.pngPaddedTo(10 * 1024 * 1024 + 1);
         send(multipart(url).file(file("huge.png", "image/png", huge)), pm, null).andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("TASK_ATTACHMENT_TOO_LARGE"));
         read(url, pm).andExpect(jsonPath("$.length()").value(0));

@@ -83,7 +83,7 @@ public class ProjectService {
         Page<Project> page = list(actorId, pageable);
         List<Project> content = page.getContent();
         if (content.isEmpty()) {
-            return page.map(project -> new ProjectCardView(project, 0, List.of(), null));
+            return page.map(project -> new ProjectCardView(project, 0, List.of(), null, false));
         }
         List<UUID> projectIds = content.stream().map(Project::getId).toList();
 
@@ -101,19 +101,27 @@ public class ProjectService {
         }
         content.stream().map(Project::getUpdatedBy).filter(Objects::nonNull).forEach(userIds::add);
         Map<UUID, UserAccounts.AuthenticatedUser> accounts = users.findActiveByIds(userIds);
+        Set<UUID> editable = new HashSet<>();
+        for (ProjectMembership membership : memberships.findActiveByUser(actorId)) {
+            if (RolePolicy.allows(membership.getRoles(), ProjectPermission.PROJECT_UPDATE)) {
+                editable.add(membership.getProjectId());
+            }
+        }
 
         return page.map(project -> new ProjectCardView(project,
                 counts.getOrDefault(project.getId(), 0),
                 previewIds.getOrDefault(project.getId(), List.of()).stream()
                         .filter(accounts::containsKey)
-                        .map(id -> new ProjectCardView.Person(id, accounts.get(id).nickname()))
+                        .map(id -> new ProjectCardView.Person(id, accounts.get(id).nickname(),
+                                accounts.get(id).profilePhotoVersion()))
                         .toList(),
-                person(accounts, project.getUpdatedBy())));
+                person(accounts, project.getUpdatedBy()),
+                editable.contains(project.getId())));
     }
 
     private static ProjectCardView.Person person(Map<UUID, UserAccounts.AuthenticatedUser> accounts, UUID userId) {
         UserAccounts.AuthenticatedUser account = userId == null ? null : accounts.get(userId);
-        return account == null ? null : new ProjectCardView.Person(account.id(), account.nickname());
+        return account == null ? null : new ProjectCardView.Person(account.id(), account.nickname(), account.profilePhotoVersion());
     }
 
     @Transactional(readOnly = true)
@@ -145,7 +153,9 @@ public class ProjectService {
                           ProjectType projectType, String tagline) {
         require(actorId, projectId, ProjectPermission.PROJECT_UPDATE);
         Project project = activeProject(projectId);
-        if (organizationId != null) {
+        // Ownership is checked when the project is linked to an organization, not on every save: a co-manager who
+        // is not the organization's owner must still be able to edit a project that is already linked to it.
+        if (organizationId != null && !organizationId.equals(project.getOrganizationId())) {
             organizations.detail(actorId, organizationId);
         }
         if (status != null && status != project.getStatus()) {

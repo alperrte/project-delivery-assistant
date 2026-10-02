@@ -3,6 +3,7 @@ package com.pda.project.integration;
 import com.jayway.jsonpath.JsonPath;
 import com.pda.BackendApplication;
 import com.pda.project.application.service.ProjectMembershipService;
+import com.pda.shared.TestImages;
 import com.pda.squad.application.service.SquadService;
 import com.pda.user.ProjectRole;
 import com.pda.user.UserAccounts;
@@ -12,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.http.HttpMethod;
 import org.springframework.mock.web.MockMultipartFile;
@@ -30,10 +32,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -68,6 +72,7 @@ class ProjectInvitationApiIntegrationTest {
     @Autowired UserAccounts users;
     @Autowired ProjectMembershipService memberships;
     @Autowired SquadService squads;
+    @Autowired JdbcTemplate jdbc;
 
     private final Map<UUID, UUID> teamByProject = new HashMap<>();
 
@@ -326,7 +331,7 @@ class ProjectInvitationApiIntegrationTest {
         mvc.perform(get(previewPath).cookie(outsider.access())).andExpect(status().isNotFound());
         mvc.perform(get(logoPath).cookie(outsider.access())).andExpect(status().isNotFound());
         mvc.perform(get(logoPath).cookie(recipient.access())).andExpect(status().isNotFound());
-        byte[] png = {(byte) 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0};
+        byte[] png = TestImages.png(2, 2);
         mvc.perform(multipart(HttpMethod.PUT, "/api/v1/projects/" + projectId + "/logo")
                         .file(new MockMultipartFile("file", "logo.png", "image/png", png))
                         .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue()))
@@ -352,9 +357,97 @@ class ProjectInvitationApiIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].status").value("REJECTED"))
                 .andExpect(jsonPath("$.content[0].rejectionMessage").value("Not available"));
-        mvc.perform(get(previewPath).cookie(recipient.access()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("My invitation project"));
+        // Answered invitations no longer open the project's card or logo.
+        mvc.perform(get(previewPath).cookie(recipient.access())).andExpect(status().isNotFound());
+        mvc.perform(get(logoPath).cookie(recipient.access())).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void anInvitationCannotBeAcceptedIntoAnArchivedProjectOrAfterItsInviterLeftTheManagement() throws Exception {
+        Cookie csrf = csrfCookie();
+        Account manager = account("lifecyclemanager");
+        Account recipient = account("lifecyclerecipient");
+        UUID archived = createProject(manager, csrf, "Archived before accept");
+        UUID left = createProject(manager, csrf, "Inviter left before accept");
+        UUID archivedInvitation = invite(manager, csrf, archived, "\"userId\":\"" + recipient.id() + "\"");
+        UUID leftInvitation = invite(manager, csrf, left, "\"userId\":\"" + recipient.id() + "\"");
+
+        // The project is archived after the invitation was sent: accepting must not create a membership in it.
+        jdbc.update("UPDATE projects SET archived_at = now() WHERE id = ?", archived);
+        mvc.perform(post("/api/v1/project-invitations/" + archivedInvitation + "/accept")
+                        .cookie(csrf, recipient.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isNotFound());
+        assertEquals(0, jdbc.queryForObject("SELECT count(*) FROM project_memberships WHERE project_id = ? AND user_id = ?",
+                Integer.class, archived, recipient.id()));
+
+        // The inviter is removed after sending: the roles they could give are no longer theirs to give.
+        jdbc.update("UPDATE project_memberships SET status = 'REMOVED' WHERE project_id = ? AND user_id = ?",
+                left, manager.id());
+        mvc.perform(post("/api/v1/project-invitations/" + leftInvitation + "/accept")
+                        .cookie(csrf, recipient.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isConflict());
+        assertEquals(0, jdbc.queryForObject("SELECT count(*) FROM project_memberships WHERE project_id = ? AND user_id = ?",
+                Integer.class, left, recipient.id()));
+    }
+
+    @Test
+    void theProjectPreviewAndLogoStopOpeningOnceTheInvitationIsCancelled() throws Exception {
+        Cookie csrf = csrfCookie();
+        Account manager = account("previewendmanager");
+        Account recipient = account("previewendrecipient");
+        UUID projectId = createProject(manager, csrf, "Preview ends with the invitation");
+        UUID invitationId = invite(manager, csrf, projectId, "\"userId\":\"" + recipient.id() + "\"");
+        mvc.perform(get("/api/v1/project-invitations/" + invitationId + "/preview").cookie(recipient.access()))
+                .andExpect(status().isOk());
+        mvc.perform(delete("/api/v1/projects/" + projectId + "/invitations/" + invitationId)
+                        .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isNoContent());
+        mvc.perform(get("/api/v1/project-invitations/" + invitationId + "/preview").cookie(recipient.access()))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void myInvitationsListFiltersPendingReportsLapsedAsExpiredAndHidesArchivedProjectNames() throws Exception {
+        Cookie csrf = csrfCookie();
+        Account manager = account("mylistmanager");
+        Account recipient = account("mylistrecipient");
+        UUID live = createProject(manager, csrf, "Live invitation project");
+        UUID lapsed = createProject(manager, csrf, "Lapsed invitation project");
+        UUID rejected = createProject(manager, csrf, "Rejected invitation project");
+        UUID archived = createProject(manager, csrf, "Archived invitation project");
+        UUID liveInvitation = invite(manager, csrf, live, "\"email\":\"" + recipient.email() + "\"");
+        UUID lapsedInvitation = invite(manager, csrf, lapsed, "\"userId\":\"" + recipient.id() + "\"");
+        UUID rejectedInvitation = invite(manager, csrf, rejected, "\"userId\":\"" + recipient.id() + "\"");
+        UUID archivedInvitation = invite(manager, csrf, archived, "\"userId\":\"" + recipient.id() + "\"");
+        mvc.perform(post("/api/v1/project-invitations/" + rejectedInvitation + "/reject")
+                        .cookie(csrf, recipient.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isNoContent());
+        jdbc.update("UPDATE project_invitations SET expires_at = ? WHERE id = ?",
+                java.sql.Timestamp.from(java.time.Instant.now().minusSeconds(60)), lapsedInvitation);
+        jdbc.update("UPDATE projects SET archived_at = now() WHERE id = ?", archived);
+
+        // Without a filter every invitation is listed: invited by e-mail or by id, a lapsed one reads as EXPIRED.
+        String all = mvc.perform(get("/api/v1/project-invitations/me").cookie(recipient.access()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(4))
+                .andReturn().getResponse().getContentAsString();
+        assertEquals("PENDING", statusOf(all, liveInvitation));
+        assertEquals("EXPIRED", statusOf(all, lapsedInvitation));
+        assertEquals("REJECTED", statusOf(all, rejectedInvitation));
+        // An archived project can no longer be joined, so its name is not reported.
+        java.util.List<Object> archivedName = JsonPath.read(all,
+                "$.content[?(@.id=='" + archivedInvitation + "')].projectName");
+        assertEquals(1, archivedName.size());
+        assertNull(archivedName.get(0));
+
+        // The PENDING filter keeps only what can still be answered (the archived project's invitation is still pending).
+        mvc.perform(get("/api/v1/project-invitations/me?status=PENDING").cookie(recipient.access()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(2))
+                .andExpect(jsonPath("$.content[?(@.id=='" + liveInvitation + "')]").exists())
+                .andExpect(jsonPath("$.content[?(@.id=='" + lapsedInvitation + "')]").doesNotExist())
+                .andExpect(jsonPath("$.content[?(@.id=='" + rejectedInvitation + "')]").doesNotExist());
+        mvc.perform(get("/api/v1/project-invitations/me?status=ACCEPTED").cookie(recipient.access()))
+                .andExpect(status().isBadRequest());
+        mvc.perform(get("/api/v1/project-invitations/me?status=PENDING")).andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -426,6 +519,21 @@ class ProjectInvitationApiIntegrationTest {
         return teamByProject.get(projectId);
     }
 
+    /** Invites with the given identity JSON fragment (userId or email) into the project's first team. */
+    private UUID invite(Account manager, Cookie csrf, UUID projectId, String identity) throws Exception {
+        var created = mvc.perform(post("/api/v1/projects/" + projectId + "/invitations")
+                        .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{" + identity + ",\"teamId\":\"" + team(projectId) + "\",\"roles\":[\"TESTER\"]}"))
+                .andExpect(status().isCreated()).andReturn().getResponse();
+        return UUID.fromString(JsonPath.read(created.getContentAsString(), "$.invitationId"));
+    }
+
+    private static String statusOf(String page, UUID invitationId) {
+        java.util.List<String> statuses = JsonPath.read(page, "$.content[?(@.id=='" + invitationId + "')].status");
+        return statuses.get(0);
+    }
+
     private Account account(String prefix) throws Exception {
         String suffix = UUID.randomUUID().toString().replace("-", "").substring(0, 16);
         String email = prefix + suffix + "@example.test";
@@ -439,7 +547,7 @@ class ProjectInvitationApiIntegrationTest {
                 .andExpect(status().isOk()).andReturn().getResponse();
         Cookie access = cookie(login.getHeaders(HttpHeaders.SET_COOKIE), "PDA_ACCESS");
         assertFalse(access.getValue().isBlank());
-        return new Account(id, access);
+        return new Account(id, email, access);
     }
 
     private Cookie csrfCookie() throws Exception {
@@ -455,6 +563,6 @@ class ProjectInvitationApiIntegrationTest {
         return new Cookie(name, value);
     }
 
-    private record Account(UUID id, Cookie access) {
+    private record Account(UUID id, String email, Cookie access) {
     }
 }

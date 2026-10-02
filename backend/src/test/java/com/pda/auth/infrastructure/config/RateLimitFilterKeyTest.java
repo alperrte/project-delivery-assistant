@@ -1,0 +1,59 @@
+package com.pda.auth.infrastructure.config;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.mock.web.MockFilterChain;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
+
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+/**
+ * The limiters count requests per route and client address. A key built from the raw URI would let one
+ * unauthenticated client fill the table with made-up paths (and lock everybody else out), or dodge the limit
+ * by changing an id in the path.
+ */
+class RateLimitFilterKeyTest {
+
+    private static int status(jakarta.servlet.Filter filter, String method, String uri, String address) throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest(method, uri);
+        request.setRemoteAddr(address);
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        filter.doFilter(request, response, new MockFilterChain());
+        return response.getStatus();
+    }
+
+    @Test
+    void madeUpOAuthPathsFromOneClientNeitherFillTheTableNorLockOthersOut() throws Exception {
+        AuthRateLimitFilter filter = new AuthRateLimitFilter();
+        for (int i = 0; i < 10_500; i++) {
+            status(filter, "GET", "/api/v1/auth/oauth2/authorization/made-up-" + i, "198.51.100.1");
+        }
+        // The flood is answered with 429 for the flooder only; everyone else is still served.
+        assertEquals(429, status(filter, "GET", "/api/v1/auth/oauth2/authorization/another", "198.51.100.1"));
+        assertEquals(200, status(filter, "POST", "/api/v1/auth/login", "198.51.100.2"));
+        assertEquals(200, status(filter, "GET", "/api/v1/auth/oauth2/authorization/google", "198.51.100.3"));
+    }
+
+    @Test
+    void varyingTheIdInAnInvitationPathCannotMintEndlessKeysOrLockOthersOut() throws Exception {
+        ProjectInvitationRateLimitFilter filter = new ProjectInvitationRateLimitFilter();
+        // The same invitation is limited per URI, as before.
+        String same = "/api/v1/projects/" + UUID.randomUUID() + "/invitations/" + UUID.randomUUID() + "/accept";
+        for (int i = 0; i < 10; i++) {
+            assertEquals(200, status(filter, "POST", same, "198.51.100.10"));
+        }
+        assertEquals(429, status(filter, "POST", same, "198.51.100.10"));
+        // A flood of made-up URIs from one client stops at the per-client total, long before the table is full ...
+        int served = 0;
+        for (int i = 0; i < 12_000; i++) {
+            String made = "/api/v1/projects/" + UUID.randomUUID() + "/invitations/" + UUID.randomUUID() + "/reject";
+            if (status(filter, "POST", made, "198.51.100.12") == 200) served++;
+        }
+        assertEquals(200, served);
+        // ... so everybody else is still served.
+        assertEquals(200, status(filter, "POST", same, "198.51.100.13"));
+        assertEquals(200, status(filter, "POST", "/api/v1/projects/" + UUID.randomUUID() + "/invitations", "198.51.100.14"));
+    }
+}

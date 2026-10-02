@@ -26,6 +26,9 @@ public class PasswordResetChallenge {
     private static final Duration CODE_LIFETIME = Duration.ofMinutes(10);
     private static final Duration RESEND_COOLDOWN = Duration.ofSeconds(60);
     private static final int MAX_ATTEMPTS = 5;
+    /** Wrong guesses across all codes of the account inside this window block the reset until the window ends. */
+    private static final Duration FAILURE_WINDOW = Duration.ofHours(1);
+    private static final int MAX_WINDOW_FAILURES = 5;
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -52,6 +55,12 @@ public class PasswordResetChallenge {
     @Column(name = "consumed_at")
     private Instant consumedAt;
 
+    @Column(name = "window_failures", nullable = false)
+    private int windowFailures;
+
+    @Column(name = "failure_window_started_at")
+    private Instant failureWindowStartedAt;
+
     @Version
     @Column(nullable = false)
     private long version;
@@ -70,8 +79,12 @@ public class PasswordResetChallenge {
         return challenge;
     }
 
+    /**
+     * A used (consumed) challenge is just a finished one: a person who forgets their password a second time must be
+     * able to ask for a new code, so only the cooldown since the last mail matters.
+     */
     public boolean canResend(Instant now) {
-        return consumedAt == null && !lastSentAt.plus(RESEND_COOLDOWN).isAfter(now);
+        return !lastSentAt.plus(RESEND_COOLDOWN).isAfter(now);
     }
 
     public void resend(String replacementHash, Instant now) {
@@ -83,6 +96,19 @@ public class PasswordResetChallenge {
         expiresAt = now.plus(CODE_LIFETIME);
         lastSentAt = now;
         attemptCount = 0;
+        if (consumedAt != null) {
+            // A finished reset starts over; an unfinished one keeps counting, so asking for a new code is no way
+            // around the limit.
+            windowFailures = 0;
+            failureWindowStartedAt = null;
+        }
+        consumedAt = null;
+    }
+
+    /** True while too many wrong guesses were made within the last hour: no code is accepted, even a correct one. */
+    public boolean isBlocked(Instant now) {
+        return windowFailures >= MAX_WINDOW_FAILURES && failureWindowStartedAt != null
+                && failureWindowStartedAt.plus(FAILURE_WINDOW).isAfter(now);
     }
 
     public AttemptResult attempt(String candidateHash, Instant now) {
@@ -92,12 +118,17 @@ public class PasswordResetChallenge {
         if (!expiresAt.isAfter(now)) {
             return AttemptResult.EXPIRED;
         }
-        if (attemptCount >= MAX_ATTEMPTS) {
+        if (isBlocked(now) || attemptCount >= MAX_ATTEMPTS) {
             return AttemptResult.TOO_MANY_ATTEMPTS;
         }
         if (!java.security.MessageDigest.isEqual(codeHash.getBytes(java.nio.charset.StandardCharsets.US_ASCII),
                 requireHash(candidateHash).getBytes(java.nio.charset.StandardCharsets.US_ASCII))) {
             attemptCount++;
+            if (failureWindowStartedAt == null || !failureWindowStartedAt.plus(FAILURE_WINDOW).isAfter(now)) {
+                failureWindowStartedAt = now;
+                windowFailures = 0;
+            }
+            windowFailures++;
             return AttemptResult.WRONG;
         }
         consumedAt = now;

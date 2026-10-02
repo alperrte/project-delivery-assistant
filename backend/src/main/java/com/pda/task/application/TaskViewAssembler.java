@@ -108,7 +108,7 @@ public class TaskViewAssembler {
         for (Task t : list) {
             List<UUID> assigneeList = assigneesByTask.getOrDefault(t.getId(), List.of());
             List<PersonRef> people = assigneeList.stream()
-                    .map(id -> new PersonRef(id, nickname(names, id)))
+                    .map(id -> new PersonRef(id, nickname(names, id), photoVersion(names, id)))
                     .sorted(Comparator.comparing(p -> p.nickname() == null ? "" : p.nickname().toLowerCase()))
                     .toList();
             List<LabelRef> labelRefs = labelIdsByTask.getOrDefault(t.getId(), List.of()).stream()
@@ -163,6 +163,11 @@ public class TaskViewAssembler {
             result.put((UUID) row[0], new int[]{total, done});
         }
         return result;
+    }
+
+    private static Long photoVersion(Map<UUID, UserAccounts.AuthenticatedUser> names, UUID id) {
+        UserAccounts.AuthenticatedUser user = names.get(id);
+        return user == null ? null : user.profilePhotoVersion();
     }
 
     private static String nickname(Map<UUID, UserAccounts.AuthenticatedUser> names, UUID id) {

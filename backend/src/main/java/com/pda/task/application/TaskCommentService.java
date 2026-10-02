@@ -48,8 +48,9 @@ public class TaskCommentService {
     }
 
     /** A deleted comment keeps its place in the thread but never exposes its body. */
-    public record CommentView(UUID id, UUID taskId, UUID authorId, String authorName, String body, boolean deleted,
-                              Instant createdAt, Instant editedAt, List<PersonRef> mentions) {}
+    public record CommentView(UUID id, UUID taskId, UUID authorId, String authorName, Long authorPhotoVersion,
+                              String body, boolean deleted, Instant createdAt, Instant editedAt,
+                              List<PersonRef> mentions) {}
 
     @Transactional(readOnly = true)
     public Page<CommentView> list(UUID projectId, UUID taskId, UUID actor, int page, int size) {
@@ -61,7 +62,7 @@ public class TaskCommentService {
         support.visible(projectId, taskId);
         List<TaskComment> all = new ArrayList<>(comments.findByTaskId(taskId));
         all.sort(Comparator.comparing(TaskComment::getCreatedAt));
-        int from = Math.min(page * size, all.size());
+        int from = (int) Math.min((long) page * size, all.size());
         List<TaskComment> slice = all.subList(from, Math.min(from + size, all.size()));
         return new PageImpl<>(views(slice), PageRequest.of(page, size), all.size());
     }
@@ -87,7 +88,7 @@ public class TaskCommentService {
         commentRows.forEach(c -> merged.add(new Object[]{c.getCreatedAt(), c}));
         activityRows.forEach(a -> merged.add(new Object[]{a.getCreatedAt(), a}));
         merged.sort((x, y) -> ((Instant) y[0]).compareTo((Instant) x[0]));
-        int from = Math.min(page * size, merged.size());
+        int from = (int) Math.min((long) page * size, merged.size());
         List<Object[]> slice = merged.subList(from, Math.min(from + size, merged.size()));
 
         List<TaskComment> pageComments = new ArrayList<>();
@@ -208,10 +209,12 @@ public class TaskCommentService {
         mentionsByComment.values().forEach(userIds::addAll);
         Map<UUID, UserAccounts.AuthenticatedUser> names = users.findActiveByIds(userIds);
         Function<UUID, String> nameOf = id -> names.get(id) == null ? null : names.get(id).nickname();
+        Function<UUID, Long> photoOf = id -> names.get(id) == null ? null : names.get(id).profilePhotoVersion();
         return list.stream().map(c -> new CommentView(c.getId(), c.getTaskId(), c.getAuthorId(),
-                nameOf.apply(c.getAuthorId()), c.isDeleted() ? null : c.getBody(), c.isDeleted(), c.getCreatedAt(),
+                nameOf.apply(c.getAuthorId()), photoOf.apply(c.getAuthorId()), c.isDeleted() ? null : c.getBody(),
+                c.isDeleted(), c.getCreatedAt(),
                 c.getEditedAt(), c.isDeleted() ? List.<PersonRef>of()
                 : mentionsByComment.getOrDefault(c.getId(), List.of()).stream()
-                .map(id -> new PersonRef(id, nameOf.apply(id))).toList())).toList();
+                .map(id -> new PersonRef(id, nameOf.apply(id), photoOf.apply(id))).toList())).toList();
     }
 }

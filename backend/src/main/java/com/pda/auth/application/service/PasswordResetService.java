@@ -52,7 +52,9 @@ public class PasswordResetService {
         }
         Instant now = now();
         Optional<PasswordResetChallenge> found = challenges.findByUserId(userId.get());
-        if (found.isPresent() && !found.get().canResend(now)) {
+        // Silent like every other no-op here: while the account is blocked for too many wrong guesses a new code
+        // would not be accepted anyway, so none is sent.
+        if (found.isPresent() && (!found.get().canResend(now) || found.get().isBlocked(now))) {
             return;
         }
         String code = codes.newCode();

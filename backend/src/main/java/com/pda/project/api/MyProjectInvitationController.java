@@ -29,16 +29,20 @@ public class MyProjectInvitationController {
     public MyProjectInvitationController(ProjectInvitationService invitations) { this.invitations = invitations; }
 
     @GetMapping("/me")
-    @Operation(summary = "List my project invitations", description = "Authenticated recipient only; paginated")
+    @Operation(summary = "List my project invitations",
+            description = "Authenticated recipient only; paginated. status=PENDING keeps only invitations that can "
+                    + "still be answered; a pending invitation past its expiry is reported as EXPIRED.")
     public PageResponse<MyInvitationResponse> mine(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
                                                    @RequestParam(defaultValue = "0") int page,
-                                                   @RequestParam(defaultValue = "20") int size) {
-        return PageResponse.from(invitations.listMine(AuthenticatedActor.id(principal), page(page, size)), item -> {
-            InvitationSummary i = item.invitation();
-            return new MyInvitationResponse(i.id(), i.projectId(), item.projectName(), i.invitedBy(),
-                    item.invitedByNickname(), i.initialRoles(), i.status(), i.createdAt(), i.expiresAt(),
-                    i.message(), i.teamName());
-        });
+                                                   @RequestParam(defaultValue = "20") int size,
+                                                   @RequestParam(required = false) InvitationStatus status) {
+        return PageResponse.from(invitations.listMine(AuthenticatedActor.id(principal), status, page(page, size)),
+                item -> {
+                    InvitationSummary i = item.invitation();
+                    return new MyInvitationResponse(i.id(), i.projectId(), item.projectName(), i.invitedBy(),
+                            item.invitedByNickname(), item.invitedByPhotoVersion(), i.initialRoles(), i.status(),
+                            i.createdAt(), i.expiresAt(), i.message(), i.teamName());
+                });
     }
 
     @GetMapping("/{invitationId}/preview")
@@ -83,7 +87,8 @@ public class MyProjectInvitationController {
     }
     public record RejectRequest(@Size(max = 500) String message) {}
     public record MyInvitationResponse(UUID id, UUID projectId, String projectName, UUID invitedBy,
-                                       String invitedByNickname, Set<ProjectRole> initialRoles,
+                                       String invitedByNickname, Long invitedByPhotoVersion,
+                                       Set<ProjectRole> initialRoles,
                                        InvitationStatus status, Instant createdAt, Instant expiresAt,
                                        String message, String teamName) {}
 }

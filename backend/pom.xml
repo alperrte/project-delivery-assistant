@@ -30,6 +30,11 @@
     <java.version>25</java.version>
     <spring-modulith.version>2.1.1</spring-modulith.version>
     <org.mapstruct.version>1.6.3</org.mapstruct.version>
+    <!-- Security patch overrides of the Spring Boot 4.1.1 BOM (OSV advisories, 2026-10-02). Remove an override once the
+         BOM itself ships a version at or above it. -->
+    <tomcat.version>11.0.25</tomcat.version>
+    <jackson-2-bom.version>2.21.7</jackson-2-bom.version>
+    <jackson-bom.version>3.1.7</jackson-bom.version>
   </properties>
   <dependencies>
     <!-- MapStruct -->

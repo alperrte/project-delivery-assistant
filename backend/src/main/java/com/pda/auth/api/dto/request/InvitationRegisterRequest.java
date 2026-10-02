@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record InvitationRegisterRequest(
-        @NotBlank String token,
+        @NotBlank @Size(max = 200) String token,
         @NotBlank @Email @Size(max = 320) String email,
         @NotBlank @Size(max = 100) String firstName,
         @NotBlank @Size(max = 100) String lastName,

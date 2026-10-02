@@ -67,6 +67,24 @@ class PasswordResetServiceTest {
     }
 
     @Test
+    void forgotSendsNothingWhileTheAccountIsBlockedForTooManyWrongGuesses() {
+        UUID userId = UUID.randomUUID();
+        PasswordResetChallenge blocked = PasswordResetChallenge.issue(userId, codes.hashResetCode(userId, "111111"),
+                now.minusSeconds(600));
+        for (int i = 0; i < 5; i++) {
+            blocked.attempt(codes.hashResetCode(userId, "222222"), now.minusSeconds(590));
+        }
+        when(mailPort.available()).thenReturn(true);
+        when(users.findActiveByEmail("member@example.test")).thenReturn(Optional.of(userId));
+        when(challenges.findByUserId(userId)).thenReturn(Optional.of(blocked));
+
+        service.forgot("member@example.test");
+
+        verify(challenges, never()).saveAndFlush(any());
+        verify(mailPort, never()).sendPasswordResetCode(anyString(), anyString());
+    }
+
+    @Test
     void forgotDoesNotResendBeforeTheCooldownElapses() {
         UUID userId = UUID.randomUUID();
         PasswordResetChallenge existing = PasswordResetChallenge.issue(userId, codes.hashResetCode(userId, "111111"),
