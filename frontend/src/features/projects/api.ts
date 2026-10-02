@@ -33,6 +33,11 @@ export function projectLogoUrl(projectId: string, logoVersion: number): string {
   return apiUrl(`/projects/${projectId}/logo?v=${logoVersion}`);
 }
 
+/** Banner URL for `<img>`; `bannerVersion` busts the one-year immutable cache when the banner changes. */
+export function projectBannerUrl(projectId: string, bannerVersion: number): string {
+  return apiUrl(`/projects/${projectId}/banner?v=${bannerVersion}`);
+}
+
 export const projectsApi = {
   list: (page: number, size = PROJECT_PAGE_SIZE) => apiRequest<Page<Project>>(`/projects?page=${page}&size=${size}`),
   detail: (projectId: string) => apiRequest<Project>(`/projects/${projectId}`),
@@ -47,5 +52,11 @@ export const projectsApi = {
     return apiRequest<void>(`/projects/${projectId}/logo`, { method: "PUT", body });
   },
   deleteLogo: (projectId: string) => apiRequest<void>(`/projects/${projectId}/logo`, { method: "DELETE" }),
+  uploadBanner: (projectId: string, file: File) => {
+    const body = new FormData();
+    body.append("file", file);
+    return apiRequest<void>(`/projects/${projectId}/banner`, { method: "PUT", body });
+  },
+  deleteBanner: (projectId: string) => apiRequest<void>(`/projects/${projectId}/banner`, { method: "DELETE" }),
   archive: (projectId: string) => apiRequest<void>(`/projects/${projectId}/archive`, { method: "POST" }),
 };

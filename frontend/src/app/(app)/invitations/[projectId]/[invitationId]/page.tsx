@@ -1,3 +1,4 @@
+import { PageContainer } from "@/components/common/page-container";
 import { AcceptInvitationView } from "@/features/invitations/components/accept-invitation-view";
 
 export default async function InvitationResponsePage({
@@ -11,8 +12,8 @@ export default async function InvitationResponsePage({
   const { token } = await searchParams;
 
   return (
-    <div className="mx-auto max-w-sm py-16">
+    <PageContainer width="narrow" className="mx-auto py-16">
       <AcceptInvitationView projectId={projectId} invitationId={invitationId} token={token} />
-    </div>
+    </PageContainer>
   );
 }

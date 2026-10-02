@@ -14,7 +14,7 @@ export const ESTIMATE_POINTS = [0, 1, 2, 3, 5, 8, 13, 21] as const;
 export const LABEL_COLORS = ["slate", "red", "orange", "amber", "green", "teal", "blue", "violet", "pink"] as const;
 export type LabelColor = (typeof LABEL_COLORS)[number];
 
-export type PersonRef = { userId: string; nickname: string | null };
+export type PersonRef = { userId: string; nickname: string | null; profilePhotoVersion?: number | null };
 export type LabelRef = { id: string; name: string; color: LabelColor };
 export type TaskRef = { id: string; key: string; title: string };
 export type SprintRef = { id: string; name: string; status: SprintStatus };
@@ -89,6 +89,7 @@ export type Comment = {
   taskId: string;
   authorId: string;
   authorName: string | null;
+  authorPhotoVersion?: number | null;
   /** `null` for a deleted comment: it keeps its place in the thread without a body. */
   body: string | null;
   deleted: boolean;

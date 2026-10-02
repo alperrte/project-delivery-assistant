@@ -44,7 +44,8 @@ test.describe.serial("Project lifecycle (manager)", () => {
   });
 
   test("edit settings, add criterion, complete it", async () => {
-    await page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Ayarlar" }).click();
+    // The sidebar has no settings item; the pencil on the project's card opens them (covered in 11-project-banner).
+    await page.goto(`/projects/${slug}?section=settings`);
 
     await page.getByRole("combobox", { name: "Durum" }).click();
     await page.getByRole("option", { name: "Aktif" }).click();
@@ -74,7 +75,7 @@ test.describe.serial("Project lifecycle (manager)", () => {
   });
 
   test("archive the project", async () => {
-    await page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Ayarlar" }).click();
+    await page.goto(`/projects/${slug}?section=settings`);
     await page.getByRole("button", { name: /^Arşivle$/ }).click();
     await page.getByRole("dialog").getByRole("button", { name: /^Arşivle$/ }).click();
     await expect(page).toHaveURL(/\/projects$/, { timeout: 15_000 });

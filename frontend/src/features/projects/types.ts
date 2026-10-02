@@ -5,7 +5,7 @@ export type ProjectVisibility = "PRIVATE";
 export const PROJECT_TYPES = ["WEB", "MOBILE", "AI", "DESKTOP", "OTHER"] as const;
 export type ProjectType = (typeof PROJECT_TYPES)[number];
 
-export type UserRef = { userId: string; nickname: string };
+export type UserRef = { userId: string; nickname: string; profilePhotoVersion?: number | null };
 /** Filled by the list endpoint only (aggregated per page); detail responses carry `null`. */
 export type ProjectTeam = { memberCount: number; preview: UserRef[] };
 
@@ -30,6 +30,10 @@ export type Project = {
   tagline: string | null;
   /** Epoch ms of the stored logo; `null` means no logo. Append to the logo URL as `?v=` for cache busting. */
   logoVersion: number | null;
+  /** Epoch ms of the stored banner (cover image); `null` means none. Append to the banner URL as `?v=`. */
+  bannerVersion: number | null;
+  /** Only on the project list: whether the signed-in user may open this project's settings. A hint for the pencil. */
+  canEdit?: boolean | null;
   updatedBy: UserRef | null;
   team: ProjectTeam | null;
 };
@@ -70,6 +74,7 @@ export type ProjectRole = (typeof PROJECT_ROLES)[number];
 export type Member = {
   userId: string;
   nickname: string | null;
+  profilePhotoVersion?: number | null;
   roles: ProjectRole[];
   joinedAt: string;
 };

@@ -42,7 +42,7 @@ async function ensureCsrf(force = false): Promise<{ headerName: string; token: s
 }
 
 async function toApiError(res: Response): Promise<ApiError> {
-  let body: { code?: string; invalidFields?: Record<string, string> | { field: string; message: string }[] } & Record<string, unknown> = {};
+  let body: { code?: string; invalidFields?: Record<string, string> | string[] | { field: string; message: string }[] } & Record<string, unknown> = {};
   try {
     body = await res.json();
   } catch {
@@ -50,7 +50,12 @@ async function toApiError(res: Response): Promise<ApiError> {
   }
   let fields: Record<string, string> | undefined;
   if (Array.isArray(body.invalidFields)) {
-    fields = Object.fromEntries(body.invalidFields.map((f) => [f.field, f.message]));
+    // The server sends the names of the invalid fields (string[]); a {field, message}[] shape is accepted too.
+    fields = Object.fromEntries(
+      (body.invalidFields as (string | { field: string; message: string })[]).map((f) =>
+        typeof f === "string" ? [f, f] : [f.field, f.message],
+      ),
+    );
   } else if (body.invalidFields) {
     fields = body.invalidFields;
   }

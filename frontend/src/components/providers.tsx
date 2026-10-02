@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { ThemeProvider } from "next-themes";
+import { MotionConfig } from "motion/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeTransitionOverlay } from "@/components/layout/theme-transition";
+import { applyMotionPreference, useMotionPreference } from "@/lib/preferences/motion";
 
 /**
  * next-themes injects its no-FOUC script via React.createElement("script", ...),
@@ -24,6 +26,20 @@ if (typeof window !== "undefined" && !("__themeScriptWarningPatched" in window))
   };
 }
 
+/**
+ * Applies the user's motion choice everywhere: the stylesheet reads `<html data-motion>` (CSS animations and
+ * transitions), and `MotionConfig` tells every `motion` component to skip transforms when it is off.
+ */
+function MotionPreference({ children }: { children: ReactNode }) {
+  const [preference] = useMotionPreference();
+  useEffect(() => applyMotionPreference(preference), [preference]);
+  return (
+    <MotionConfig reducedMotion={preference === "off" ? "always" : preference === "on" ? "never" : "user"}>
+      {children}
+    </MotionConfig>
+  );
+}
+
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(
     () =>
@@ -37,9 +53,11 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       <QueryClientProvider client={queryClient}>
-        <TooltipProvider delay={150}>{children}</TooltipProvider>
-        <Toaster position="top-center" />
-        <ThemeTransitionOverlay />
+        <MotionPreference>
+          <TooltipProvider delay={150}>{children}</TooltipProvider>
+          <Toaster position="top-center" />
+          <ThemeTransitionOverlay />
+        </MotionPreference>
       </QueryClientProvider>
     </ThemeProvider>
   );

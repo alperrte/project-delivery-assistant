@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { CircleNotch, HandGrabbing, HandPalm, LockSimple, LockSimpleOpen, UsersThree } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { Avatar } from "@/components/ui/avatar";
+import { profilePhotoSrc } from "@/features/account/api";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useSprints } from "@/features/sprints/hooks";
@@ -101,7 +102,7 @@ export function PropertiesPanel(ctx: DetailContext) {
                 <ul className="flex flex-wrap gap-x-3 gap-y-1">
                   {task.assignees.map((person) => (
                     <li key={person.userId} className="flex min-w-0 items-center gap-1.5 text-sm">
-                      <Avatar name={person.nickname ?? "?"} className="size-5 text-[9px]" />
+                      <Avatar name={person.nickname ?? "?"} src={profilePhotoSrc(person.userId, person.profilePhotoVersion)} className="size-5 text-[9px]" />
                       <span className="truncate">{person.nickname ?? "?"}</span>
                     </li>
                   ))}
@@ -265,7 +266,7 @@ export function PropertiesPanel(ctx: DetailContext) {
           <ul className="flex flex-wrap gap-1.5">
             {watcherList.slice(0, WATCHERS_SHOWN).map((person) => (
               <li key={person.userId} className="flex items-center gap-1.5 rounded-full border bg-card py-0.5 pr-2 pl-0.5 text-xs">
-                <Avatar name={person.nickname ?? "?"} className="size-5 text-[9px]" />
+                <Avatar name={person.nickname ?? "?"} src={profilePhotoSrc(person.userId, person.profilePhotoVersion)} className="size-5 text-[9px]" />
                 <span className="max-w-28 truncate">{person.nickname ?? "?"}</span>
               </li>
             ))}

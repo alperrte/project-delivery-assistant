@@ -8,7 +8,8 @@ export const PROJECT_SECTIONS = [
   { value: "teams", icon: UsersThree },
   { value: "invitations", icon: EnvelopeSimple, managerOnly: true, parent: "teams" },
   { value: "repository", icon: GithubLogo },
-  { value: "settings", icon: GearSix, managerOnly: true },
+  // Reached from the pencil in the project header; kept as a section so `?section=settings` links keep working.
+  { value: "settings", icon: GearSix, managerOnly: true, sidebar: false },
 ] as const;
 
 export type ProjectSection = (typeof PROJECT_SECTIONS)[number]["value"];

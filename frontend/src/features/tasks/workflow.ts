@@ -23,18 +23,6 @@ export function canTransition(from: TaskStatus, to: TaskStatus): boolean {
 
 /** Board and filter order. */
 export const STATUS_ORDER: readonly TaskStatus[] = TASK_STATUSES;
-export const ACTIVE_STATUSES: readonly TaskStatus[] = TASK_STATUSES.filter((status) => status !== "DONE");
-
-export function isOpenStatus(status: TaskStatus): boolean {
-  return status !== "DONE";
-}
-
-const PRIORITY_RANK: Record<TaskPriority, number> = { LOW: 0, MEDIUM: 1, HIGH: 2, CRITICAL: 3 };
-
-export function priorityRank(priority: TaskPriority): number {
-  return PRIORITY_RANK[priority];
-}
-
 /** Most urgent first. */
 export const PRIORITY_DESC: readonly TaskPriority[] = [...TASK_PRIORITIES].reverse();
 

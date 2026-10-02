@@ -328,7 +328,7 @@ export function TeamFormPage({ slug, teamId }: { slug: string; teamId?: string }
           </aside>
         </div>
 
-        <div className="sticky bottom-0 z-20 -mx-4 mt-10 border-t bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:-mx-6 sm:px-6">
+        <div className="sticky bottom-0 z-20 -mx-4 -mb-6 mt-10 sm:-mb-8 border-t bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:-mx-8 sm:px-8">
           <div className="flex items-center justify-between gap-2">
             <Link href={backHref} className={buttonVariants({ variant: "outline" })}>
               {t("cancel")}

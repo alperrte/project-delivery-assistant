@@ -45,6 +45,9 @@
     "PROJECT_LOGO_INVALID_TYPE": "Das Logo muss eine PNG-, JPEG- oder WebP-Datei sein.",
     "PROJECT_LOGO_TOO_LARGE": "Das Logo darf höchstens 512 KB groß sein.",
     "PROJECT_LOGO_EMPTY": "Die Logodatei ist leer.",
+    "PROJECT_BANNER_INVALID_TYPE": "Das Titelbild muss PNG, JPEG oder WebP sein.",
+    "PROJECT_BANNER_TOO_LARGE": "Das Titelbild darf höchstens 2 MB groß sein.",
+    "PROJECT_BANNER_EMPTY": "Die Titelbilddatei ist leer.",
     "TEAM_MEMBER_EXISTS": "Diese Person ist bereits im Team.",
     "TEAM_CIRCULAR_PARENT": "Ein Team kann nicht unter eines seiner eigenen Unterteams verschoben werden.",
     "TEAM_HAS_CHILDREN": "Ein Team mit Unterteams kann nicht archiviert werden. Verschieben oder archivieren Sie zuerst die Unterteams.",
@@ -84,7 +87,14 @@
     "SPRINT_NOT_EMPTY": "Ein Sprint mit Aufgaben kann nicht gelöscht werden.",
     "SPRINT_INVALID": "Die Sprint-Angaben sind ungültig.",
     "LABEL_NAME_EXISTS": "Ein Label mit diesem Namen existiert bereits.",
-    "WORKLOG_INVALID": "Der Zeiteintrag ist ungültig."
+    "WORKLOG_INVALID": "Der Zeiteintrag ist ungültig.",
+    "PROFILE_PHOTO_INVALID_TYPE": "Dieser Dateityp wird nicht unterstützt.",
+    "PROFILE_PHOTO_TOO_LARGE": "Die Datei darf höchstens 5 MB groß sein.",
+    "PROFILE_PHOTO_EMPTY": "Die Datei ist leer.",
+    "PROFILE_PHOTO_DIMENSIONS": "Das Bild ist zu groß. Höchstens 6000 Pixel pro Seite.",
+    "PROFILE_PHOTO_FAILED": "Das Profilfoto konnte nicht hochgeladen werden.",
+    "PROJECT_LOGO_DIMENSIONS": "Das Logo ist zu groß. Höchstens 6000 Pixel pro Seite.",
+    "PROJECT_BANNER_DIMENSIONS": "Das Titelbild ist zu groß. Höchstens 6000 Pixel pro Seite."
   },
   "app": {
     "nav": {
@@ -149,7 +159,27 @@
       "create": "Erstellen",
       "save": "Speichern",
       "created": "Organisation erstellt.",
-      "updated": "Organisation aktualisiert."
+      "updated": "Organisation aktualisiert.",
+      "createDescription": "Gruppieren Sie Ihre Projekte unter einer Organisation.",
+      "editDescription": "Aktualisieren Sie Namen und Beschreibung der Organisation.",
+      "notEditable": "Nur der Eigentümer kann diese Organisation bearbeiten; archivierte Organisationen können nicht geändert werden.",
+      "namePlaceholder": "z. B. Liefer-Team",
+      "descriptionPlaceholder": "Beschreiben Sie kurz, was die Organisation macht und wen sie umfasst.",
+      "descriptionHint": "Optional. Wird auf der Karte und auf der Seite der Organisation angezeigt.",
+      "preview": {
+        "title": "Vorschau",
+        "caption": "So sieht die Karte in der Liste aus.",
+        "now": "Jetzt",
+        "show": "Vorschau anzeigen",
+        "namePlaceholder": "Name der Organisation"
+      },
+      "backToOrganization": "Zurück zur Organisation",
+      "sections": {
+        "general": {
+          "title": "Allgemein",
+          "description": "Name und Beschreibung der Organisation."
+        }
+      }
     }
   },
   "projects": {
@@ -162,6 +192,8 @@
       "updatedBy": "{date} · {name}",
       "open": "Projekt öffnen",
       "openNamed": "Projekt {name} öffnen",
+      "edit": "Einstellungen bearbeiten",
+      "editNamed": "Einstellungen von {name} bearbeiten",
       "types": {
         "WEB": "Web",
         "MOBILE": "Mobil",
@@ -218,6 +250,15 @@
         "invalidType": "Laden Sie eine PNG-, JPEG- oder WebP-Datei hoch.",
         "tooLarge": "Das Logo darf höchstens 512 KB groß sein."
       },
+      "banner": {
+        "label": "Titelbild",
+        "hint": "PNG, JPEG oder WebP, höchstens 2 MB. Wird hinter der Karte in der Projektliste angezeigt; ohne Bild bleibt die Karte schlicht.",
+        "choose": "Bild hochladen",
+        "change": "Ändern",
+        "remove": "Entfernen",
+        "invalidType": "Laden Sie nur PNG, JPEG oder WebP hoch.",
+        "tooLarge": "Das Titelbild darf höchstens 2 MB groß sein."
+      },
       "name": {
         "label": "Projektname",
         "placeholder": "z. B. Lieferportal",
@@ -271,7 +312,8 @@
         "cancel": "Abbrechen",
         "submit": "Projekt erstellen",
         "created": "Projekt erstellt.",
-        "logoFailed": "Das Logo konnte nicht hochgeladen werden. Sie können es in den Projekteinstellungen erneut versuchen."
+        "logoFailed": "Das Logo konnte nicht hochgeladen werden. Sie können es in den Projekteinstellungen erneut versuchen.",
+        "bannerFailed": "Das Titelbild konnte nicht hochgeladen werden. Sie können es in den Projekteinstellungen erneut versuchen."
       },
       "types": {
         "WEB": {
@@ -425,7 +467,27 @@
       "tagline": "Slogan",
       "taglinePlaceholder": "Beschreiben Sie das Projekt in einem Satz",
       "type": "Projektart",
+      "banner": {
+        "label": "Titelbild",
+        "hint": "PNG, JPEG oder WebP, höchstens 2 MB. Wirkt am besten im Format 4:1 (z. B. 1600×400); das Bild wird zugeschnitten.",
+        "statusSet": "Für dieses Projekt ist ein Titelbild hochgeladen.",
+        "statusNone": "Es gibt noch kein Titelbild.",
+        "choose": "Bild hochladen",
+        "change": "Ändern",
+        "remove": "Entfernen",
+        "cancel": "Abbrechen",
+        "removeConfirmTitle": "Titelbild entfernen?",
+        "removeConfirmDescription": "Das Bild wird gelöscht und durch den Standardhintergrund ersetzt.",
+        "uploaded": "Titelbild aktualisiert.",
+        "removed": "Titelbild entfernt.",
+        "invalidType": "Das Titelbild muss PNG, JPEG oder WebP sein.",
+        "tooLarge": "Das Titelbild darf höchstens 2 MB groß sein."
+      },
       "sections": {
+        "banner": {
+          "title": "Titelbild",
+          "description": "Erscheint über der Projektkarte in der Projektliste."
+        },
         "general": {
           "title": "Allgemein",
           "description": "Name, Beschreibung und Ziel des Projekts. Sichtbar in Listen und im Projektkopf."
@@ -530,6 +592,11 @@
     "mineTitle": "Meine Projekteinladungen",
     "mineDescription": "Einladungen an Ihr Konto ansehen.",
     "mineEmpty": "Sie haben keine Projekteinladungen.",
+    "mineTabsLabel": "Einladungsfilter",
+    "mineTabPending": "Offen",
+    "mineTabAll": "Alle",
+    "minePendingEmpty": "Sie haben keine offenen Einladungen.",
+    "mineProjectGone": "Das Projekt ist nicht mehr verfügbar, die Einladung kann nicht beantwortet werden.",
     "mineListLabel": "Meine Projekteinladungen",
     "mineLoading": "Einladungen werden geladen",
     "mineProject": "Projekt",
@@ -1024,6 +1091,70 @@
       "timeInvalid": "Geben Sie eine gültige Uhrzeit ein."
     }
   },
+  "preferences": {
+    "title": "Einstellungen",
+    "description": "Was Sie hier speichern, wird zum Standard Ihres Kontos und gilt bei jeder Anmeldung. Die Sprach- und Design-Schalter in der oberen Leiste gelten nur für die aktuelle Sitzung.",
+    "save": {
+      "save": "Speichern",
+      "discard": "Verwerfen",
+      "unsaved": "Es gibt ungespeicherte Änderungen.",
+      "clean": "Ihre Einstellungen sind gespeichert.",
+      "done": "Einstellungen gespeichert."
+    },
+    "profile": {
+      "title": "Profil",
+      "description": "Die in Ihrem Konto angezeigten Angaben.",
+      "photo": {
+        "photoLabel": "Profilfoto",
+        "choose": "Foto auswählen",
+        "change": "Foto ändern",
+        "remove": "Entfernen",
+        "hint": "PNG, JPEG oder WebP. Bis zu 5 MB.",
+        "previewTitle": "Vorschau des neuen Fotos",
+        "save": "Foto speichern",
+        "cancel": "Abbrechen",
+        "uploaded": "Profilfoto aktualisiert.",
+        "removed": "Profilfoto entfernt.",
+        "removeConfirmTitle": "Profilfoto entfernen?",
+        "removeConfirmDescription": "Das Foto wird gelöscht und Ihre Initialen werden angezeigt.",
+        "invalidType": "Dieser Dateityp wird nicht unterstützt.",
+        "tooLarge": "Die Datei darf höchstens 5 MB groß sein.",
+        "uploading": "Wird hochgeladen"
+      }
+    },
+    "security": {
+      "title": "Sicherheit",
+      "description": "Aktualisieren Sie Ihr Passwort regelmäßig."
+    },
+    "language": {
+      "title": "Sprache",
+      "description": "Die Standardsprache der Oberfläche. Sie ändert sich erst, wenn Sie auf Speichern klicken.",
+      "label": "Oberflächensprache"
+    },
+    "appearance": {
+      "title": "Darstellung",
+      "description": "Das Standarddesign: hell, dunkel oder dem Gerät folgen. Es ändert sich erst, wenn Sie auf Speichern klicken.",
+      "label": "Design"
+    },
+    "motion": {
+      "title": "Animationen",
+      "description": "Diese Einstellungen werden in Ihrem Konto gespeichert und gelten bei jeder Anmeldung.",
+      "ui": {
+        "label": "Oberflächenanimationen",
+        "hint": "Dialoge, Menüs, die Seitenleiste und der Sprachwechsel. „Gerät folgen“ übernimmt die Einstellung „Bewegung reduzieren“ Ihres Geräts.",
+        "system": "Gerät folgen",
+        "on": "An",
+        "off": "Aus"
+      },
+      "theme": {
+        "label": "Designwechsel-Animation",
+        "hint": "Der kreisförmige Übergang beim Wechsel zwischen hellem und dunklem Design.",
+        "on": "An",
+        "off": "Aus",
+        "blocked": "Die Oberflächenanimationen sind aus oder Ihr Gerät reduziert Bewegung, daher wechselt das Design sofort."
+      }
+    }
+  },
   "account": {
     "title": "Kontoeinstellungen",
     "description": "Sehen Sie Ihre Kontodaten ein und verwalten Sie Ihr Passwort.",
@@ -1068,7 +1199,9 @@
     "notifications": "Benachrichtigungen",
     "noNotifications": "Noch keine Benachrichtigungen.",
     "calendar": "Kalender",
-    "settings": "Kontoeinstellungen",
+    "settings": "Einstellungen",
+    "personal": "Persönlich",
+    "accountSettings": "Kontoeinstellungen",
     "workspace": "Dein Arbeitsbereich",
     "skip": "Zum Inhalt springen",
     "account": "Kontomenü",

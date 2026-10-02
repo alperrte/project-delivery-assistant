@@ -107,8 +107,10 @@ test.describe.serial("Invitation, roles, squad, and denial checks", () => {
   });
 
   test("non-manager cannot change project settings (UI hidden and API denies)", async () => {
-    await memberPage.goto(`/projects/${slug}`);
-    await expect(memberPage.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Ayarlar" })).toHaveCount(0);
+    // The list tells a member nothing to edit: no pencil on the project's card.
+    await memberPage.goto("/projects");
+    await expect(memberPage.locator("article").filter({ hasText: projectName })).toBeVisible();
+    await expect(memberPage.getByRole("link", { name: /ayarlarını düzenle/ })).toHaveCount(0);
 
     const status = await memberPage.evaluate(async (id) => {
       const csrfRes = await fetch("http://localhost:8080/api/v1/auth/csrf", { credentials: "include" });

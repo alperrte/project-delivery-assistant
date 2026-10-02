@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { CheckCircle, Clock, Lock, Prohibit, Tray } from "@phosphor-icons/react";
 import { Avatar } from "@/components/ui/avatar";
+import { profilePhotoSrc } from "@/features/account/api";
 import { cn } from "@/lib/utils";
 import { deadlineState } from "../deadline";
 import { useTaskFormat } from "../format";
@@ -135,7 +136,7 @@ export function AssigneeAvatars({ people, max = 3, className }: { people: Person
     <span className={cn("inline-flex items-center", className)}>
       <span className="flex -space-x-1.5" aria-hidden="true">
         {shown.map((person) => (
-          <Avatar key={person.userId} name={person.nickname ?? "?"} className="size-6 bg-muted text-[10px] text-foreground" />
+          <Avatar key={person.userId} name={person.nickname ?? "?"} src={profilePhotoSrc(person.userId, person.profilePhotoVersion)} className="size-6 bg-muted text-[10px] text-foreground" />
         ))}
         {extra > 0 && (
           <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-secondary text-[10px] font-medium text-muted-foreground ring-2 ring-card">

@@ -70,6 +70,7 @@ export function ProjectSidebarNav({
 
   const sections = PROJECT_SECTIONS.filter(
     (item) =>
+      !("sidebar" in item && item.sidebar === false) &&
       !("managerOnly" in item && item.managerOnly && !isManager) &&
       (!!projectPath || item.value !== "teams"),
   );

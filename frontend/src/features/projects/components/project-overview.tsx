@@ -8,6 +8,7 @@ import {
   Code, EnvelopeSimple, GearSix, GithubLogo, Plus, UsersThree,
 } from "@phosphor-icons/react";
 import { Avatar } from "@/components/ui/avatar";
+import { profilePhotoSrc } from "@/features/account/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { errorKey } from "@/lib/api/error-message";
 import { criteriaApi } from "@/features/criteria/api";
@@ -149,7 +150,7 @@ export function ProjectOverview({ project, isManager, onNavigate }: {
               visibleMembers.length > 0 ? (
                 <div className="flex -space-x-2">
                   {visibleMembers.map((member, index) => (
-                    <Avatar key={member.userId} name={member.nickname ?? member.userId} tint={index} className="size-7 text-[10px]" />
+                    <Avatar key={member.userId} name={member.nickname ?? member.userId} src={profilePhotoSrc(member.userId, member.profilePhotoVersion)} tint={index} className="size-7 text-[10px]" />
                   ))}
                   {extraMembers > 0 && (
                     <span className="grid size-7 shrink-0 place-items-center rounded-full bg-muted text-[10px] font-semibold text-muted-foreground ring-2 ring-card">

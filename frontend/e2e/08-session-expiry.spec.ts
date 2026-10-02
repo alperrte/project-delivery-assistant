@@ -43,7 +43,8 @@ test("when the session is really over, the user is sent to the login page instea
   // Both cookies gone (refresh token expired or revoked): there is nothing left to renew.
   await context.clearCookies({ name: "PDA_ACCESS" });
   await context.clearCookies({ name: "PDA_REFRESH" });
-  await page.getByRole("link", { name: "Projeler", exact: true }).click();
+  // A background request may notice the ended session before the click lands; either way the user must be sent away.
+  await page.getByRole("link", { name: "Projeler", exact: true }).click({ timeout: 3_000 }).catch(() => undefined);
 
   await expect(page).toHaveURL(/\/login/);
   await expect(page.getByText("E-posta veya şifre hatalı.")).toHaveCount(0);

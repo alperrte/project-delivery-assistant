@@ -531,9 +531,10 @@ html.dark:has(.app-shell) {
 }
 
 /*
- * Theme switch (theme-transition.tsx): the new theme opens as a circle from
- * the centre, where a small sun/moon passes. The overlay has its own
- * view-transition name, so it stays live above both snapshots.
+ * Theme switch (theme-transition.tsx). Going to the light theme, the new theme opens as a circle from the centre
+ * (theme-reveal). Going to the dark theme it runs the other way: the light page closes in on the centre like an
+ * iris and the dark page appears from the edges inwards (theme-close-in). A small sun/moon passes in the centre.
+ * The overlay has its own view-transition name, so it stays live above both snapshots.
  */
 html.theme-reveal::view-transition-old(root) {
   animation: none;
@@ -545,6 +546,18 @@ html.theme-reveal::view-transition-new(root) {
 @keyframes theme-reveal {
   from { clip-path: circle(0% at 50% 50%); }
   to { clip-path: circle(72% at 50% 50%); }
+}
+html.theme-close-in::view-transition-new(root) {
+  animation: none;
+}
+html.theme-close-in::view-transition-old(root) {
+  z-index: 1;
+  mix-blend-mode: normal;
+  animation: theme-close-in 0.75s cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+@keyframes theme-close-in {
+  from { clip-path: circle(72% at 50% 50%); }
+  to { clip-path: circle(0% at 50% 50%); }
 }
 ::view-transition-group(theme-orb),
 ::view-transition-new(theme-orb) {
@@ -581,20 +594,43 @@ html.theme-reveal::view-transition-new(root) {
   }
 }
 
+/*
+ * Reduced motion has two sources. The device's setting applies unless the user chose "always animate" on the
+ * Settings page (`<html data-motion="on">`); an explicit "off" (`data-motion="off"`) applies whatever the device says.
+ * Both blocks hold the same rules.
+ */
 @media (prefers-reduced-motion: reduce) {
-  *, ::before, ::after {
+  html:not([data-motion="on"]) *,
+  html:not([data-motion="on"]) ::before,
+  html:not([data-motion="on"]) ::after {
     animation-duration: 0.01ms !important;
     animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
   /* Ambient loops simply stay at rest. */
-  .auth-slogan::after,
-  .auth-neon-band {
+  html:not([data-motion="on"]) .auth-slogan::after,
+  html:not([data-motion="on"]) .auth-neon-band {
     animation: none !important;
   }
   /* Resting electrons would be two frozen arcs; leave the logo plain. */
-  .logo-current {
+  html:not([data-motion="on"]) .logo-current {
     display: none;
   }
+}
+
+html[data-motion="off"] *,
+html[data-motion="off"] ::before,
+html[data-motion="off"] ::after {
+  animation-duration: 0.01ms !important;
+  animation-delay: 0s !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+html[data-motion="off"] .auth-slogan::after,
+html[data-motion="off"] .auth-neon-band {
+  animation: none !important;
+}
+html[data-motion="off"] .logo-current {
+  display: none;
 }

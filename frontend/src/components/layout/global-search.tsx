@@ -67,7 +67,8 @@ export function GlobalSearch({ className, onNavigate }: { className?: string; on
       { id: "page-organizations", label: tApp("nav.organizations"), href: "/organizations" },
       { id: "page-tasks", label: t("tasks"), href: "/tasks" },
       { id: "page-calendar", label: t("calendar"), href: "/calendar" },
-      { id: "page-account", label: t("settings"), href: "/account" },
+      { id: "page-settings", label: t("settings"), href: "/settings" },
+      { id: "page-account", label: t("accountSettings"), href: "/account" },
     ],
     [t, tApp],
   );

@@ -6,7 +6,8 @@ import type { PersonRef } from "./types";
  */
 
 const TOKEN = /@\[([0-9a-fA-F-]{36})\]/g;
-const NICKNAME_CHAR = /[A-Za-z0-9_]/;
+// Same alphabet the backend allows for nicknames (letters and digits of any language), so Turkish names like çağrı work.
+const NICKNAME_CHAR = /[\p{L}\p{N}_]/u;
 
 export type MentionSegment = { type: "text"; value: string } | { type: "mention"; value: string; userId: string };
 
@@ -67,7 +68,7 @@ export function activeMention(text: string, caret: number): { start: number; que
   if (at < 0) return null;
   if (at > 0 && NICKNAME_CHAR.test(upToCaret[at - 1])) return null; // an e-mail address, not a mention
   const query = upToCaret.slice(at + 1);
-  return /^[A-Za-z0-9_]{0,32}$/.test(query) ? { start: at, query } : null;
+  return /^[\p{L}\p{N}_]{0,32}$/u.test(query) ? { start: at, query } : null;
 }
 
 /** Replaces the `@query` at `start` with `@nickname ` and returns the new text and caret position. */

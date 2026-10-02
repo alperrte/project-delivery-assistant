@@ -43,6 +43,7 @@ export type MyInvitation = {
   projectName: string | null;
   invitedBy: string;
   invitedByNickname: string | null;
+  invitedByPhotoVersion?: number | null;
   initialRoles: ProjectRole[];
   status: InvitationStatus;
   createdAt: string;

@@ -8,6 +8,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { GithubLogo, LinkSimple, CircleNotch, ArrowSquareOut } from "@phosphor-icons/react";
 import { PageHeader } from "@/components/common/page-header";
+import { PageContainer } from "@/components/common/page-container";
 import { EmptyState } from "@/components/common/empty-state";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { Button } from "@/components/ui/button";
@@ -68,7 +69,7 @@ export function RepositorySettings({ projectId, isManager }: { projectId: string
   if (isLoading) return <Skeleton className="h-32 w-full" />;
 
   return (
-    <div>
+    <PageContainer width="form">
       <PageHeader title={t("title")} description={t("description")} />
 
       {realError && <p className="text-sm text-destructive">{te(errorKey(error))}</p>}
@@ -90,7 +91,7 @@ export function RepositorySettings({ projectId, isManager }: { projectId: string
         <form
           onSubmit={handleSubmit((values) => connect.mutate(values))}
           noValidate
-          className="max-w-xl space-y-5 rounded-2xl border bg-card p-6 shadow-sm"
+          className="space-y-5 rounded-2xl border bg-card p-6 shadow-sm"
         >
           <div className="space-y-1.5">
             <Label htmlFor="repository-url">{t("urlLabel")}</Label>
@@ -151,6 +152,6 @@ export function RepositorySettings({ projectId, isManager }: { projectId: string
           <CommitsWidget projectId={projectId} />
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

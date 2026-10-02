@@ -20,7 +20,7 @@ import { NextResponse, type NextRequest } from "next/server";
  * session still has `mustChangePassword` pending (only the real `/auth/me`
  * response can) — that redirect stays owned by `AppShell`/the login form.
  */
-const PROTECTED_PATHS = ["/dashboard", "/projects", "/organizations", "/account", "/calendar", "/invitations", "/change-password"];
+const PROTECTED_PATHS = ["/dashboard", "/projects", "/organizations", "/settings", "/account", "/calendar", "/invitations", "/change-password"];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -40,6 +40,7 @@ export const config = {
     "/dashboard/:path*",
     "/projects/:path*",
     "/organizations/:path*",
+    "/settings/:path*",
     "/account/:path*",
     "/calendar/:path*",
     "/invitations/:path*",

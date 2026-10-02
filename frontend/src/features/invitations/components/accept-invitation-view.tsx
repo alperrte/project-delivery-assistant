@@ -38,7 +38,7 @@ export function AcceptInvitationView({
 
   if (!token) {
     return (
-      <section className="mx-auto max-w-xl rounded-2xl border bg-card p-8 shadow-sm sm:p-10">
+      <section className="rounded-2xl border bg-card p-8 shadow-sm sm:p-10">
         <WarningCircle size={32} className="text-destructive" aria-hidden="true" />
         <h1 className="mt-5 font-heading text-2xl font-semibold">{t("missingToken")}</h1>
         <Button className="mt-6" variant="outline" onClick={() => router.push("/projects")}>{t("goToProjects")}</Button>
@@ -48,7 +48,7 @@ export function AcceptInvitationView({
 
   if (done === "accepted") {
     return (
-      <section className="mx-auto max-w-xl rounded-2xl border bg-card p-8 shadow-sm sm:p-10">
+      <section className="rounded-2xl border bg-card p-8 shadow-sm sm:p-10">
         <CheckCircle size={32} className="text-success" aria-hidden="true" />
         <h1 className="mt-5 font-heading text-2xl font-semibold">{t("acceptedMessage")}</h1>
         <Button className="mt-6" onClick={() => router.push("/projects")}>{t("goToProjects")}</Button>
@@ -58,7 +58,7 @@ export function AcceptInvitationView({
 
   if (done === "rejected") {
     return (
-      <section className="mx-auto max-w-xl rounded-2xl border bg-card p-8 shadow-sm sm:p-10">
+      <section className="rounded-2xl border bg-card p-8 shadow-sm sm:p-10">
         <XCircle size={32} className="text-muted-foreground" aria-hidden="true" />
         <h1 className="mt-5 font-heading text-2xl font-semibold">{t("rejectedMessage")}</h1>
         <Button className="mt-6" variant="outline" onClick={() => router.push("/projects")}>{t("goToProjects")}</Button>
@@ -67,7 +67,7 @@ export function AcceptInvitationView({
   }
 
   return (
-    <section className="mx-auto max-w-xl rounded-2xl border bg-card p-8 shadow-sm sm:p-10">
+    <section className="rounded-2xl border bg-card p-8 shadow-sm sm:p-10">
       <EnvelopeSimple size={32} className="text-primary" aria-hidden="true" />
       <p className="mt-5 text-xs font-semibold uppercase tracking-[0.14em] text-primary">{t("eyebrow")}</p>
       <h1 className="mt-2 font-heading text-2xl font-semibold">{t("prompt")}</h1>
