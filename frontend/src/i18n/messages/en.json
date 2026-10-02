@@ -1830,5 +1830,323 @@
       "created": "{name} was created",
       "updated": "{name} was updated"
     }
+  },
+  "siteFooter": {
+    "description": "Manage projects, teams and delivery together.",
+    "information": "Information and support",
+    "faq": "Frequently Asked Questions",
+    "kvkk": "KVKK",
+    "privacy": "Privacy Policy",
+    "accessibility": "Accessibility",
+    "team": "Developers",
+    "githubProfile": "{name}'s GitHub profile",
+    "contact": "Contact",
+    "contactDescription": "For questions, suggestions and feedback.",
+    "copyright": "© {year} PDA · Project Delivery Assistant",
+    "source": "Source code"
+  },
+  "publicPages": {
+    "common": {
+      "skip": "Skip to content",
+      "login": "Sign in",
+      "updated": "Last updated: {date}",
+      "contents": "On this page",
+      "contactTitle": "Contact us",
+      "contactText": "Email us with questions, data requests or accessibility feedback. Do not share your password, verification code or secret invitation details.",
+      "reviewTitle": "Review before launch",
+      "reviewNotice": "This information draft describes the current PDA features. The data controller's identity, hosting and email providers, data locations and retention periods must be confirmed before launch. This text does not request consent or represent a completed KVKK compliance process.",
+      "references": "Official references",
+      "noticeReference": "KVKK: Duty to inform",
+      "cookieReference": "KVKK: Cookie practices guide"
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "description": "Answers about getting started with PDA, accounts, projects, teams, privacy and support.",
+      "groups": [
+        {
+          "id": "getting-started",
+          "title": "PDA and getting started",
+          "questions": [
+            {
+              "question": "What is PDA and who is it for?",
+              "answer": "PDA (Project Delivery Assistant) is developed for students and teams that want to manage project delivery in a shared workspace. You can track project information, success criteria, teams, tasks and calendar items."
+            },
+            {
+              "question": "Do I need to install an application?",
+              "answer": "PDA is a web application. You can access the hosted service in a current browser. Its responsive interface also adapts to phones and tablets."
+            },
+            {
+              "question": "How do I create an account?",
+              "answer": "Open the registration link on the sign-in screen and enter your email, username and password. After registration, the application tries to sign you in; if that fails, it directs you to the sign-in screen."
+            },
+            {
+              "question": "Can I sign in with Google or GitHub?",
+              "answer": "You can use Google or GitHub when that provider is enabled in the hosted service. An existing account with the same email is not automatically merged; linking may require signing in to your existing account first."
+            }
+          ]
+        },
+        {
+          "id": "projects-teams",
+          "title": "Projects and teams",
+          "questions": [
+            {
+              "question": "How do I create my first project?",
+              "answer": "After signing in, use the create project action in Projects. Fill in the name, type and required fields; you can also add technology, description and logo details. You become the first project manager of the project you create."
+            },
+            {
+              "question": "How do project membership and team membership differ?",
+              "answer": "Project membership controls access and project roles. Teams organise work within a project. Joining a team does not itself grant manager permissions; actions are checked against project roles."
+            },
+            {
+              "question": "How do I invite my teammates?",
+              "answer": "Create a team in the project's Teams area and use the add member or invitation action. Project managers can invite a user or an email address. Each invitation belongs to a team and must be accepted by its recipient."
+            },
+            {
+              "question": "Where can I accept or reject invitations?",
+              "answer": "Registered users can review incoming invitations in Invitations. An external invitation link may lead through registration or sign-in. Respond with the intended account; ask the project manager for a new invitation if yours has expired or been cancelled."
+            },
+            {
+              "question": "Can everyone see my projects?",
+              "answer": "Creating an account does not grant access to other users' projects. Project data is shown according to active membership and permissions. Some information, such as your email and username, is visible to members you work with; a public GitHub repository may already be publicly accessible on GitHub."
+            },
+            {
+              "question": "Are success criteria the same as tasks?",
+              "answer": "Success criteria are a checklist of delivery goals. Tasks track work, assignments and statuses. Completing a criterion does not automatically complete tasks; the two areas are separate."
+            },
+            {
+              "question": "Does the GitHub connection change my code?",
+              "answer": "The current repository connection reads a public GitHub repository and displays recent commits. It does not commit code or open pull requests. Private repositories are outside this connection's scope."
+            }
+          ]
+        },
+        {
+          "id": "account-security",
+          "title": "Accounts and privacy",
+          "questions": [
+            {
+              "question": "What if I forget my password?",
+              "answer": "Use the forgot password link on the sign-in screen. Reset email delivery depends on the service's email configuration; check your inbox and spam folder. Use the provider's recovery flow for a Google or GitHub password."
+            },
+            {
+              "question": "What does Remember me store?",
+              "answer": "This option only remembers your email address in this browser. It does not store your password or extend your session. Avoid it on shared devices; turn it off on a subsequent sign-in to clear the remembered email."
+            },
+            {
+              "question": "How can I review my data or request deletion?",
+              "answer": "Read the KVKK and Privacy Policy pages for information about data processing. Send account or data requests to the contact email. The current account screen does not have an automatic deletion button; the request scope and identity verification need separate review."
+            }
+          ]
+        },
+        {
+          "id": "support",
+          "title": "Support and contributions",
+          "questions": [
+            {
+              "question": "Which languages does PDA support?",
+              "answer": "The interface offers Turkish, English and German. Use the controls at the top to change language and light/dark theme preferences."
+            },
+            {
+              "question": "How can I report a bug or accessibility barrier?",
+              "answer": "Email pda-info@gmail.com with the page address, expected behaviour and reproduction steps. General development suggestions can also be shared in the GitHub repository. Do not post personal data, passwords, verification codes or vulnerability details in public issues."
+            }
+          ]
+        }
+      ]
+    },
+    "privacy": {
+      "title": "Privacy Policy",
+      "description": "How information is used in PDA, what project members can see and which preferences are stored in your browser.",
+      "sections": [
+        {
+          "id": "scope",
+          "title": "Scope and contact",
+          "paragraphs": [
+            "This policy covers PDA's account, project, team, task and calendar features. When you visit external Google or GitHub pages, those services' own privacy terms apply.",
+            "The README lists Alper Temiz and Hamza Taşbay as developers. The service's data controller must be identified separately before launch; developer names alone do not establish that identity. The designated contact email is pda-info@gmail.com."
+          ]
+        },
+        {
+          "id": "data",
+          "title": "Information used",
+          "paragraphs": [
+            "Account and workspace information is stored according to the features you use. Passwords are not stored as plain text; local account passwords are protected with one-way hashes."
+          ],
+          "items": [
+            "Account: email, username, account status, registration times and an external sign-in provider identity where applicable.",
+            "Project and team: project information, memberships, roles, invitations, responses and uploaded project logos.",
+            "Work content: tasks, comments, attachments, time entries, success criteria and reminders, when you use those features.",
+            "Session: timestamps, browser/device information and secure authentication records. IP addresses are used for request rate limiting.",
+            "Contact: messages you send us and the email address needed to reply."
+          ]
+        },
+        {
+          "id": "purposes",
+          "title": "Why information is used",
+          "paragraphs": [
+            "Account information supports sign-in and account protection; project, team and task information supports your shared workspace. Invitations and notifications are delivered to their recipients. Session and request checks aim to reduce unauthorised access and misuse.",
+            "Do not put sensitive personal data, passwords or unnecessary information about other people in descriptions, comments or files."
+          ]
+        },
+        {
+          "id": "visibility",
+          "title": "Who can see information?",
+          "paragraphs": [
+            "Workspace content is limited by project membership and role permissions. Authorised project members may see your email and username in team lists. Invitation recipients can see the preview provided for their own invitation.",
+            "Choosing Google/GitHub sign-in involves authentication with that provider. The repository connection reads public GitHub information. Hosting, database and email providers and data locations must be confirmed in the pre-launch processing inventory; this draft does not guarantee storage in a particular country or the absence of transfers."
+          ]
+        },
+        {
+          "id": "browser-storage",
+          "title": "Cookies and browser preferences",
+          "paragraphs": [
+            "The current application code contains no advertising or visitor analytics tracker. Session and security cookies support application operation; this page does not add a cookie consent mechanism."
+          ],
+          "items": [
+            "PDA_ACCESS, PDA_REFRESH and PDA_SESSION: sign-in and session flow. Their durations depend on session configuration; they are cleared on sign-out.",
+            "XSRF-TOKEN: security cookie used to protect action requests against forged requests.",
+            "NEXT_LOCALE: a one-year cookie remembering your selected language.",
+            "Local browser storage: theme, menu/team view and an optional remembered email. They may remain until browser data is cleared or the relevant preference is changed.",
+            "Session storage: the last selected project for the user, kept for the browser session."
+          ]
+        },
+        {
+          "id": "retention",
+          "title": "Retention and data requests",
+          "paragraphs": [
+            "Active account and project records are stored in the database for service features. A session expiring does not mean all historical records are automatically deleted.",
+            "Category-specific retention, backup and deletion schedules must be defined before launch. There is currently no automatic account deletion screen. Contact us with access, correction or deletion requests; they should be reviewed after verifying account ownership and considering other people's rights."
+          ]
+        },
+        {
+          "id": "security",
+          "title": "Security and updates",
+          "paragraphs": [
+            "PDA stores session tokens in HttpOnly cookies, hashes passwords and checks project permissions on the server. These measures do not guarantee absolute security. Sign out after using a shared device.",
+            "This policy and its update date should be reviewed when features or processing conditions change. KVKK rights and processing conditions are described on the separate KVKK page."
+          ]
+        }
+      ]
+    },
+    "kvkk": {
+      "title": "KVKK Information",
+      "description": "Pre-launch information about PDA's current data flows and individual rights under Turkish Law No. 6698.",
+      "sections": [
+        {
+          "id": "controller",
+          "title": "Data controller and scope",
+          "paragraphs": [
+            "This pre-launch draft describes data used for registration, sign-in, project/team work, invitations and support. The natural or legal person acting as data controller has not yet been confirmed, so this is not presented as a completed privacy notice.",
+            "The designated contact with the project team is pda-info@gmail.com. The controller identity and appropriate application channels must be confirmed before this text is finalised."
+          ]
+        },
+        {
+          "id": "collection",
+          "title": "How information is collected",
+          "paragraphs": [
+            "Information is collected electronically through registration/sign-in forms, content you enter in project and task screens, invitations from project managers, your chosen sign-in provider and support messages.",
+            "These flows may process email, username, membership/role information, project and task content, invitation responses, session times and browser information. A project manager can also create an invitation by entering your email address."
+          ]
+        },
+        {
+          "id": "basis",
+          "title": "Purposes and legal grounds",
+          "paragraphs": [
+            "A valid processing condition must be established for each activity before launch. The mappings below are a review framework for current features; they do not assume that every activity automatically relies on the same legal ground."
+          ],
+          "items": [
+            "Account and workspace delivery: registration, authentication, memberships and task tracking. Necessity for establishing or performing a service relationship is assessed under Article 5(2)(c).",
+            "Account and system security: session management, permission checks and request limits. Legitimate interest under Article 5(2)(f) requires necessity and balancing individual rights.",
+            "Data requests and legal obligations: Articles 5(2)(ç) and 5(2)(e) are assessed according to the applicable obligation or right.",
+            "If an additional activity requires explicit consent, its purpose and scope must be explained and consent obtained separately. Reading this page is not consent."
+          ]
+        },
+        {
+          "id": "recipients",
+          "title": "Recipients and transfers",
+          "paragraphs": [
+            "Project content and membership details are shown to authorised members for collaboration; invitation previews are presented to their recipients. Google/GitHub sign-in involves authentication processing with the chosen provider; public repository connections send repository information requests to GitHub.",
+            "Hosting, database and email providers, data locations and international transfer conditions must be established before launch. This draft offers no transfer assurance without knowing the actual transfers and their legal mechanism."
+          ]
+        },
+        {
+          "id": "storage",
+          "title": "Retention and deletion",
+          "paragraphs": [
+            "Data supports account, project and security features. Retention must be set for each category, purpose and legal requirement; production deletion and backup schedules are not yet confirmed.",
+            "Deletion, destruction or anonymisation should be reviewed when processing conditions no longer apply. Deleting an account does not automatically remove other users' project records or information retained on legal grounds."
+          ]
+        },
+        {
+          "id": "rights",
+          "title": "Your rights under the law",
+          "paragraphs": [
+            "You may exercise your Article 11 rights by applying to the data controller."
+          ],
+          "items": [
+            "Learn whether your personal data is processed and request information about processing.",
+            "Learn the purpose and whether data is used accordingly.",
+            "Know recipients of transfers in Türkiye or abroad.",
+            "Request correction of incomplete or inaccurate data.",
+            "Request deletion or destruction under the law's conditions, and notification of correction/deletion to recipients.",
+            "Object to an adverse result from analysis exclusively through automated systems.",
+            "Request compensation for damage caused by unlawful processing."
+          ]
+        },
+        {
+          "id": "requests",
+          "title": "Requests and contact",
+          "paragraphs": [
+            "Email pda-info@gmail.com with questions or data requests. State the request topic, the email associated with your account and the action you seek. Do not send passwords, verification codes or invitation tokens.",
+            "This general contact address should not be assumed to satisfy every legally prescribed application method. The controller and official channels must be confirmed before launch. Any information needed to verify identity should be proportionate to the request."
+          ]
+        }
+      ]
+    },
+    "accessibility": {
+      "title": "Accessibility",
+      "description": "PDA's accessibility approach, available controls and how to report barriers.",
+      "sections": [
+        {
+          "id": "approach",
+          "title": "Our approach",
+          "paragraphs": [
+            "We aim to make PDA accessible across screen sizes and different user needs. Accessibility requires renewed checks as the product develops.",
+            "The application has not undergone an independent, comprehensive WCAG conformance assessment. This page is not a certification or a claim that every screen works perfectly."
+          ]
+        },
+        {
+          "id": "keyboard",
+          "title": "Keyboard use",
+          "paragraphs": [
+            "Use Tab and Shift+Tab to move between links and controls. Activate a focused link or button with Enter. The skip link at the start of a page helps you reach its main content.",
+            "Expand or collapse FAQ questions with Enter or Space. Use the application's existing keyboard controls for menus and dialogs; supported windows can be closed with Escape."
+          ]
+        },
+        {
+          "id": "preferences",
+          "title": "Display and reading preferences",
+          "paragraphs": [
+            "Language and theme controls are at the top. Choose a light, dark or system theme and Turkish, English or German interface text.",
+            "You can use browser zoom. Device reduced-motion preferences reduce application animations. Content and footer links stack on narrow screens."
+          ]
+        },
+        {
+          "id": "screen-readers",
+          "title": "Structure and assistive technology",
+          "paragraphs": [
+            "Information pages use semantic headings, main content and navigation. Footer GitHub links have accessible names including the person's name; decorative icons are hidden from screen readers.",
+            "Other application screens still need validation across screen readers and browsers. Reporting barriers helps us improve them."
+          ]
+        },
+        {
+          "id": "feedback",
+          "title": "Report a barrier",
+          "paragraphs": [
+            "If you cannot use a page or complete an action, email pda-info@gmail.com with the page address, intended action, browser/device and any assistive technology used.",
+            "Remove personal or secret information from screenshots. You do not need to disclose medical details to report a barrier."
+          ]
+        }
+      ]
+    }
   }
 }

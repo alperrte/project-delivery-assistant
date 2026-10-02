@@ -164,6 +164,14 @@ Giriş, kayıt ve şifre sıfırlama ekranları arka plan fotoğrafı üzerinde 
 - Filtre durumu URL'dedir (`?status=`, `?tab=`, `?page=`), böylece görünüm paylaşılır ve yenilemede korunur. Arama yazmayı bitirince (300 ms) uygulanır.
 - Tarih ve saat için native `date`/`time` girdileri ve hızlı seçimler kullanılır; yeni bağımlılık eklenmez.
 
+## Footer ve bilgi sayfaları
+
+- `SiteFooter` auth ve herkese açık bilgi sayfalarında kullanılır; sayfa bileşenine ikinci footer ekleme. Bilgi sayfalarında copyright, bilgi bağlantıları ve e-posta sade bir alt satırda yer alır; dar ekranlarda satırlar sarılır. Footer akış içindedir, sabitlenmez; bağlantılar en az 44 px yüksekliğinde ve görünür klavye odağına sahiptir.
+- Uygulama çalışma ekranlarında footer bulunmaz. Bilgi sayfaları ve iletişim bağlantıları `AppHeader` hesap menüsündeki Bilgi ve destek grubunda yer alır; masaüstünde ve mobilde aynı menü kullanılır.
+- Auth footer'ı `tone="auth"` ile kompakt düzendedir: bilgi bağlantıları yatay olarak sarılır; copyright, geliştiriciler, iletişim ve kaynak kod altta yer alır. Mevcut `--auth-control`, `--auth-ink`, `--auth-muted` değerlerini kullanır. `AuthShell` esnek ana içerik ve `min-h-[100dvh]` ile footer'ı yeterli yüksekliğe sahip ekranın altına yerleştirir; kısa ekranlarda içerik doğal olarak kayar, forma örtüşen sabit footer kullanılmaz. Diğer yüzeylerde genel `bg-card`, `text-foreground`, `text-muted-foreground` token'ları geçerlidir.
+- `(public)` bilgi sayfaları oturum istemez. Uzun metinlerde 16 px/7 satır yüksekliği, tek `h1`, anlamlı `h2` bölümleri, içerik bağlantıları ve `lg` üzerinde yapışkan içindekiler kullanılır. SSS native `details/summary` ile klavye ve dokunmatik kullanım sunar. Metinler üç dilde mesaj dosyalarındadır.
+- Kullanıcı tercihiyle bilgi sayfalarındaki tema kontrolü login ile birebir aynı `ThemeToggle tone="auth"` bileşenidir; iki ikon, kayan seçim göstergesi ve ortak dairesel tema geçişi kullanılır. Bu kontrol, auth token'larının bilgi sayfalarında kullanımına özel istisnadır; sayfa içeriği genel token'larla kalır.
+
 ## Yeni sayfa veya bileşen eklerken kontrol listesi
 
 1. `globals.css` dosyasını oku; ihtiyacın olan token zaten var mı bak.

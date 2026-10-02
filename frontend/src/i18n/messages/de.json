@@ -1853,5 +1853,323 @@
       "created": "{name} wurde erstellt",
       "updated": "{name} wurde aktualisiert"
     }
+  },
+  "siteFooter": {
+    "description": "Projekte, Teams und die Umsetzung gemeinsam organisieren.",
+    "information": "Information und Hilfe",
+    "faq": "Häufige Fragen",
+    "kvkk": "KVKK",
+    "privacy": "Datenschutzerklärung",
+    "accessibility": "Barrierefreiheit",
+    "team": "Entwickler",
+    "githubProfile": "GitHub-Profil von {name}",
+    "contact": "Kontakt",
+    "contactDescription": "Für Fragen, Vorschläge und Rückmeldungen.",
+    "copyright": "© {year} PDA · Project Delivery Assistant",
+    "source": "Quellcode"
+  },
+  "publicPages": {
+    "common": {
+      "skip": "Zum Inhalt springen",
+      "login": "Anmelden",
+      "updated": "Zuletzt aktualisiert: {date}",
+      "contents": "Auf dieser Seite",
+      "contactTitle": "Kontakt aufnehmen",
+      "contactText": "Schreiben Sie uns bei Fragen, Datenanfragen oder Barrieren. Teilen Sie keine Passwörter, Bestätigungscodes oder geheimen Einladungsinformationen.",
+      "reviewTitle": "Prüfung vor Veröffentlichung",
+      "reviewNotice": "Dieser Informationsentwurf beschreibt die aktuellen PDA-Funktionen. Die Identität des Verantwortlichen, Hosting- und E-Mail-Anbieter, Datenstandorte und Speicherfristen müssen vor dem Start bestätigt werden. Der Text fordert keine Einwilligung an und bedeutet keine abgeschlossene KVKK-Konformitätsprüfung.",
+      "references": "Offizielle Quellen",
+      "noticeReference": "KVKK: Informationspflicht",
+      "cookieReference": "KVKK: Leitfaden zur Cookie-Nutzung"
+    },
+    "faq": {
+      "title": "Häufige Fragen",
+      "description": "Antworten zum Einstieg in PDA, zu Konten, Projekten, Teams, Datenschutz und Hilfe.",
+      "groups": [
+        {
+          "id": "getting-started",
+          "title": "PDA und erste Schritte",
+          "questions": [
+            {
+              "question": "Was ist PDA und für wen ist es gedacht?",
+              "answer": "PDA (Project Delivery Assistant) wird für Studierende und Teams entwickelt, die ihre Projektumsetzung in einem gemeinsamen Arbeitsbereich organisieren möchten. Projektinformationen, Erfolgskriterien, Teams, Aufgaben und Kalendereinträge helfen bei der Übersicht."
+            },
+            {
+              "question": "Muss ich eine Anwendung installieren?",
+              "answer": "PDA ist eine Webanwendung. Den gehosteten Dienst können Sie mit einem aktuellen Browser nutzen. Die Oberfläche passt sich auch Smartphones und Tablets an."
+            },
+            {
+              "question": "Wie erstelle ich ein Konto?",
+              "answer": "Öffnen Sie den Registrierungslink auf der Anmeldeseite und geben Sie E-Mail, Benutzername und Passwort ein. Nach der Registrierung versucht die Anwendung, Sie anzumelden. Falls dies fehlschlägt, gelangen Sie zur Anmeldeseite."
+            },
+            {
+              "question": "Kann ich mich mit Google oder GitHub anmelden?",
+              "answer": "Google oder GitHub können genutzt werden, wenn der jeweilige Anbieter im Dienst aktiviert ist. Ein bestehendes Konto mit derselben E-Mail wird nicht automatisch zusammengeführt; zum Verknüpfen kann zuerst eine Anmeldung im bestehenden Konto erforderlich sein."
+            }
+          ]
+        },
+        {
+          "id": "projects-teams",
+          "title": "Projekte und Teams",
+          "questions": [
+            {
+              "question": "Wie erstelle ich mein erstes Projekt?",
+              "answer": "Nutzen Sie nach der Anmeldung die Aktion zum Erstellen eines Projekts unter Projekte. Tragen Sie Name, Typ und die Pflichtangaben ein; Technologie, Beschreibung und Logo können ergänzt werden. Sie werden der erste Projektmanager des erstellten Projekts."
+            },
+            {
+              "question": "Was unterscheidet Projekt- und Teammitgliedschaft?",
+              "answer": "Die Projektmitgliedschaft bestimmt Zugriff und Projektrollen. Teams organisieren die Arbeit innerhalb eines Projekts. Eine Teammitgliedschaft allein gibt keine Verwaltungsrechte; Aktionen werden anhand der Projektrollen geprüft."
+            },
+            {
+              "question": "Wie lade ich Teammitglieder ein?",
+              "answer": "Erstellen Sie im Bereich Teams des Projekts ein Team und nutzen Sie die Mitglieder- oder Einladungsaktion. Projektmanager können einen Benutzer oder eine E-Mail-Adresse einladen. Jede Einladung gehört zu einem Team und muss vom Empfänger angenommen werden."
+            },
+            {
+              "question": "Wo kann ich Einladungen annehmen oder ablehnen?",
+              "answer": "Registrierte Benutzer sehen eingehende Einladungen unter Einladungen. Externe Einladungslinks können zur Registrierung oder Anmeldung führen. Antworten Sie mit dem vorgesehenen Konto; bei abgelaufenen oder stornierten Einladungen bitten Sie den Projektmanager um eine neue Einladung."
+            },
+            {
+              "question": "Kann jeder meine Projekte sehen?",
+              "answer": "Ein Konto erlaubt keinen Zugriff auf fremde Projekte. Projektdaten werden nach aktiver Mitgliedschaft und Berechtigungen angezeigt. Einige Angaben, etwa E-Mail und Benutzername, sind für zusammenarbeitende Mitglieder sichtbar. Ein öffentliches GitHub-Repository kann bereits auf GitHub öffentlich sein."
+            },
+            {
+              "question": "Sind Erfolgskriterien und Aufgaben dasselbe?",
+              "answer": "Erfolgskriterien bilden eine Checkliste für Projektziele. Aufgaben erfassen Arbeit, Zuweisungen und Status. Ein abgeschlossenes Kriterium schließt Aufgaben nicht automatisch ab; beide Bereiche bleiben getrennt."
+            },
+            {
+              "question": "Ändert die GitHub-Verbindung meinen Code?",
+              "answer": "Die aktuelle Repository-Verbindung liest ein öffentliches GitHub-Repository und zeigt aktuelle Commits an. Sie erstellt keine Commits oder Pull Requests. Private Repositories gehören nicht zum Umfang dieser Verbindung."
+            }
+          ]
+        },
+        {
+          "id": "account-security",
+          "title": "Konto und Datenschutz",
+          "questions": [
+            {
+              "question": "Was mache ich, wenn ich mein Passwort vergessen habe?",
+              "answer": "Nutzen Sie den Link zur Passwortwiederherstellung auf der Anmeldeseite. Der E-Mail-Versand hängt von der Konfiguration des Dienstes ab; prüfen Sie Posteingang und Spamordner. Für Google- oder GitHub-Passwörter verwenden Sie die Wiederherstellung des jeweiligen Anbieters."
+            },
+            {
+              "question": "Was speichert die Option Angemeldet bleiben?",
+              "answer": "Diese Option merkt sich nur Ihre E-Mail-Adresse in diesem Browser. Sie speichert kein Passwort und verlängert die Sitzung nicht. Vermeiden Sie sie auf gemeinsam genutzten Geräten; deaktivieren Sie sie bei einer späteren Anmeldung, um die gespeicherte E-Mail zu entfernen."
+            },
+            {
+              "question": "Wie kann ich meine Daten prüfen oder eine Löschung beantragen?",
+              "answer": "Die KVKK- und Datenschutzseiten erläutern die Datenverarbeitung. Senden Sie Konto- oder Datenanfragen an die Kontaktadresse. Die aktuelle Kontoseite bietet keine automatische Kontolöschung; Umfang und Identitätsprüfung müssen gesondert geprüft werden."
+            }
+          ]
+        },
+        {
+          "id": "support",
+          "title": "Hilfe und Beiträge",
+          "questions": [
+            {
+              "question": "Welche Sprachen unterstützt PDA?",
+              "answer": "Die Oberfläche bietet Türkisch, Englisch und Deutsch. Sprache und helles/dunkles Design können über die Bedienelemente oben geändert werden."
+            },
+            {
+              "question": "Wie melde ich einen Fehler oder eine Barriere?",
+              "answer": "Schreiben Sie an pda-info@gmail.com mit Seitenadresse, erwartetem Verhalten und Schritten zur Wiederholung. Allgemeine Entwicklungsvorschläge können auch im GitHub-Repository geteilt werden. Veröffentlichen Sie keine personenbezogenen Daten, Passwörter, Bestätigungscodes oder Details zu Sicherheitslücken in öffentlichen Issues."
+            }
+          ]
+        }
+      ]
+    },
+    "privacy": {
+      "title": "Datenschutzerklärung",
+      "description": "Welche Informationen PDA verwendet, was Projektmitglieder sehen und welche Einstellungen im Browser gespeichert werden.",
+      "sections": [
+        {
+          "id": "scope",
+          "title": "Umfang und Kontakt",
+          "paragraphs": [
+            "Diese Erklärung umfasst die Konto-, Projekt-, Team-, Aufgaben- und Kalenderfunktionen von PDA. Auf externen Google- oder GitHub-Seiten gelten die jeweiligen Datenschutzbedingungen.",
+            "Die README nennt Alper Temiz und Hamza Taşbay als Entwickler. Die Identität des datenschutzrechtlich Verantwortlichen ist vor dem Start gesondert festzulegen; Entwicklernamen allein bestimmen diese Rolle nicht. Als Kontaktadresse ist pda-info@gmail.com vorgesehen."
+          ]
+        },
+        {
+          "id": "data",
+          "title": "Verwendete Informationen",
+          "paragraphs": [
+            "Konto- und Arbeitsbereichsdaten werden entsprechend den genutzten Funktionen gespeichert. Passwörter werden nicht im Klartext gespeichert; lokale Kontopasswörter werden durch nicht umkehrbare Hashwerte geschützt."
+          ],
+          "items": [
+            "Konto: E-Mail, Benutzername, Kontostatus, Registrierungszeiten und gegebenenfalls Identität beim externen Anmeldeanbieter.",
+            "Projekt und Team: Projektangaben, Mitgliedschaften, Rollen, Einladungen, Antworten und hochgeladene Projektlogos.",
+            "Arbeitsinhalte: Aufgaben, Kommentare, Anhänge, Zeiteinträge, Erfolgskriterien und Erinnerungen bei Nutzung dieser Funktionen.",
+            "Sitzung: Zeitangaben, Browser-/Geräteinformationen und sichere Anmeldedatensätze. IP-Adressen dienen der Begrenzung von Anfragen.",
+            "Kontakt: Ihre Nachricht und die E-Mail-Adresse für eine Antwort."
+          ]
+        },
+        {
+          "id": "purposes",
+          "title": "Zwecke der Verwendung",
+          "paragraphs": [
+            "Kontodaten ermöglichen Anmeldung und Kontoschutz; Projekt-, Team- und Aufgabendaten ermöglichen den gemeinsamen Arbeitsbereich. Einladungen und Benachrichtigungen erreichen ihre Empfänger. Sitzungs- und Anfrageprüfungen sollen unbefugten Zugriff und Missbrauch reduzieren.",
+            "Tragen Sie keine sensiblen personenbezogenen Daten, Passwörter oder unnötigen Angaben über andere Personen in Beschreibungen, Kommentare oder Dateien ein."
+          ]
+        },
+        {
+          "id": "visibility",
+          "title": "Wer kann Informationen sehen?",
+          "paragraphs": [
+            "Arbeitsinhalte sind durch Projektmitgliedschaft und Rollenberechtigungen begrenzt. Berechtigte Projektmitglieder können Ihre E-Mail und Ihren Benutzernamen in Teamlisten sehen. Empfänger sehen die Vorschau ihrer eigenen Einladung.",
+            "Bei Google-/GitHub-Anmeldung erfolgt die Authentifizierung mit dem gewählten Anbieter. Die Repository-Verbindung liest öffentliche GitHub-Informationen. Hosting-, Datenbank- und E-Mail-Anbieter sowie Datenstandorte müssen vor dem Start festgelegt werden; dieser Entwurf garantiert weder einen bestimmten Speicherort noch das Ausbleiben von Übermittlungen."
+          ]
+        },
+        {
+          "id": "browser-storage",
+          "title": "Cookies und Browsereinstellungen",
+          "paragraphs": [
+            "Der aktuelle Anwendungscode enthält keine Werbe- oder Besucheranalyse-Tracker. Sitzungs- und Sicherheitscookies unterstützen die Anwendung; diese Seite fügt keine Cookie-Einwilligungsfunktion hinzu."
+          ],
+          "items": [
+            "PDA_ACCESS, PDA_REFRESH und PDA_SESSION: Anmeldung und Sitzungsablauf. Die Laufzeit hängt von der Sitzungskonfiguration ab; beim Abmelden werden sie gelöscht.",
+            "XSRF-TOKEN: Sicherheitscookie zum Schutz von Aktionsanfragen gegen gefälschte Anfragen.",
+            "NEXT_LOCALE: Sprachcookie mit einer Laufzeit von einem Jahr.",
+            "Lokaler Browserspeicher: Design, Menü-/Teamansicht und optional gespeicherte E-Mail. Angaben können bis zum Löschen der Browserdaten oder Ändern der Einstellung bleiben.",
+            "Sitzungsspeicher: zuletzt gewähltes Projekt des Benutzers für die Browsersitzung."
+          ]
+        },
+        {
+          "id": "retention",
+          "title": "Speicherung und Datenanfragen",
+          "paragraphs": [
+            "Aktive Konto- und Projektdatensätze liegen für die Dienstfunktionen in der Datenbank. Eine abgelaufene Sitzung bedeutet nicht die automatische Löschung aller historischen Datensätze.",
+            "Speicher-, Sicherungs- und Löschfristen je Datenkategorie müssen vor dem Start bestimmt werden. Eine automatische Kontolöschungsseite gibt es derzeit nicht. Anfragen zu Auskunft, Berichtigung oder Löschung können an die Kontaktadresse gehen; Kontoinhaberschaft und Rechte anderer Personen sind dabei zu prüfen."
+          ]
+        },
+        {
+          "id": "security",
+          "title": "Sicherheit und Änderungen",
+          "paragraphs": [
+            "PDA hält Sitzungstokens in HttpOnly-Cookies, verwendet Passwort-Hashwerte und prüft Projektberechtigungen auf dem Server. Dies garantiert keine absolute Sicherheit. Melden Sie sich auf gemeinsam genutzten Geräten ab.",
+            "Diese Erklärung und ihr Aktualisierungsdatum sind bei Änderungen der Funktionen oder Verarbeitung zu prüfen. KVKK-Rechte und Verarbeitungsvoraussetzungen erläutert die gesonderte KVKK-Seite."
+          ]
+        }
+      ]
+    },
+    "kvkk": {
+      "title": "KVKK-Information",
+      "description": "Informationen vor dem Start zu PDA-Datenflüssen und Betroffenenrechten nach dem türkischen Gesetz Nr. 6698.",
+      "sections": [
+        {
+          "id": "controller",
+          "title": "Verantwortlicher und Umfang",
+          "paragraphs": [
+            "Dieser Entwurf beschreibt Daten bei Registrierung, Anmeldung, Projekt-/Teamarbeit, Einladungen und Unterstützung. Die verantwortliche natürliche oder juristische Person wurde noch nicht bestätigt; daher wird der Text nicht als abgeschlossene Datenschutzinformation dargestellt.",
+            "Für den Kontakt mit dem Projektteam ist pda-info@gmail.com vorgesehen. Die Identität des Verantwortlichen und geeignete Antragswege sind vor der endgültigen Fassung festzulegen."
+          ]
+        },
+        {
+          "id": "collection",
+          "title": "Wie werden Daten erhoben?",
+          "paragraphs": [
+            "Die elektronische Erhebung erfolgt über Registrierungs-/Anmeldeformulare, eingegebene Projekt- und Aufgabeninhalte, Einladungen von Projektmanagern, den gewählten Anmeldeanbieter und Supportnachrichten.",
+            "Dabei können E-Mail, Benutzername, Mitgliedschafts-/Rollenangaben, Projekt- und Aufgabeninhalte, Einladungsantworten, Sitzungszeiten und Browserinformationen verarbeitet werden. Eine Einladung kann auch entstehen, wenn ein Projektmanager Ihre E-Mail eingibt."
+          ]
+        },
+        {
+          "id": "basis",
+          "title": "Zwecke und Rechtsgrundlagen",
+          "paragraphs": [
+            "Vor dem Start ist für jeden Vorgang eine gültige Verarbeitungsvoraussetzung festzustellen. Die folgenden Zuordnungen sind ein Prüfraster für vorhandene Funktionen; es wird nicht angenommen, dass alle Vorgänge automatisch dieselbe Rechtsgrundlage haben."
+          ],
+          "items": [
+            "Konto und Arbeitsbereich: Registrierung, Authentifizierung, Mitgliedschaften und Aufgabenverwaltung. Die Erforderlichkeit für Begründung oder Erfüllung des Dienstverhältnisses ist nach Art. 5 Abs. 2(c) zu prüfen.",
+            "Konto- und Systemsicherheit: Sitzungen, Berechtigungsprüfungen und Anfragebegrenzung. Berechtigtes Interesse nach Art. 5 Abs. 2(f) erfordert Erforderlichkeit und eine Abwägung der Betroffenenrechte.",
+            "Datenanfragen und gesetzliche Pflichten: Art. 5 Abs. 2(ç) und 5 Abs. 2(e) sind je nach Pflicht oder Recht zu prüfen.",
+            "Erfordert eine zusätzliche Verarbeitung ausdrückliche Einwilligung, sind Zweck und Umfang gesondert zu erläutern und die Einwilligung separat einzuholen. Das Lesen dieser Seite ist keine Einwilligung."
+          ]
+        },
+        {
+          "id": "recipients",
+          "title": "Empfänger und Übermittlungen",
+          "paragraphs": [
+            "Projektinhalte und Mitgliedschaftsangaben werden berechtigten Mitgliedern zur Zusammenarbeit angezeigt; Einladungsvorschauen gehen an die jeweiligen Empfänger. Bei Google-/GitHub-Anmeldung verarbeitet der gewählte Anbieter Authentifizierungsdaten. Öffentliche Repository-Verbindungen senden Anfragen an GitHub.",
+            "Hosting-, Datenbank- und E-Mail-Anbieter, Datenstandorte und Bedingungen grenzüberschreitender Übermittlungen müssen vor dem Start bestimmt werden. Ohne Kenntnis tatsächlicher Übermittlungen und der Rechtsmechanismen bietet dieser Entwurf keine entsprechende Zusicherung."
+          ]
+        },
+        {
+          "id": "storage",
+          "title": "Speicherung und Löschung",
+          "paragraphs": [
+            "Daten unterstützen Konto-, Projekt- und Sicherheitsfunktionen. Fristen sind je Kategorie, Zweck und gesetzlicher Anforderung festzulegen; Lösch- und Sicherungspläne für den Produktivbetrieb wurden noch nicht bestätigt.",
+            "Entfallen Verarbeitungsvoraussetzungen, ist die Löschung, Vernichtung oder Anonymisierung zu prüfen. Eine Kontolöschung entfernt nicht automatisch Projektdatensätze anderer Benutzer oder rechtlich aufzubewahrende Informationen."
+          ]
+        },
+        {
+          "id": "rights",
+          "title": "Ihre gesetzlichen Rechte",
+          "paragraphs": [
+            "Sie können Ihre Rechte nach Art. 11 durch einen Antrag an den Verantwortlichen ausüben."
+          ],
+          "items": [
+            "Erfahren, ob personenbezogene Daten verarbeitet werden, und Informationen dazu erhalten.",
+            "Zweck und zweckgemäße Verwendung erfahren.",
+            "Empfänger in der Türkei oder im Ausland kennen.",
+            "Berichtigung unvollständiger oder falscher Daten verlangen.",
+            "Unter den gesetzlichen Voraussetzungen Löschung oder Vernichtung sowie Information der Empfänger über Berichtigung/Löschung verlangen.",
+            "Einem nachteiligen Ergebnis ausschließlich automatisierter Analyse widersprechen.",
+            "Ersatz eines Schadens durch rechtswidrige Verarbeitung verlangen."
+          ]
+        },
+        {
+          "id": "requests",
+          "title": "Anfragen und Kontakt",
+          "paragraphs": [
+            "Senden Sie Fragen oder Datenanfragen an pda-info@gmail.com. Nennen Sie Thema, Konto-E-Mail und gewünschte Maßnahme; senden Sie keine Passwörter, Bestätigungscodes oder Einladungstokens.",
+            "Diese allgemeine Kontaktadresse erfüllt nicht automatisch alle gesetzlich vorgeschriebenen Antragswege. Verantwortlicher und offizielle Kanäle müssen vor dem Start festgelegt werden. Angaben zur Identitätsprüfung sollen dem Antrag angemessen sein."
+          ]
+        }
+      ]
+    },
+    "accessibility": {
+      "title": "Barrierefreiheit",
+      "description": "PDA-Ansatz zur Barrierefreiheit, verfügbare Bedienelemente und Meldung von Hindernissen.",
+      "sections": [
+        {
+          "id": "approach",
+          "title": "Unser Ansatz",
+          "paragraphs": [
+            "PDA soll auf unterschiedlichen Bildschirmgrößen und für unterschiedliche Bedürfnisse zugänglich sein. Barrierefreiheit muss mit der Weiterentwicklung erneut geprüft werden.",
+            "Eine unabhängige, umfassende WCAG-Konformitätsprüfung wurde noch nicht durchgeführt. Diese Seite ist kein Zertifikat und keine Erklärung, dass alle Ansichten fehlerfrei funktionieren."
+          ]
+        },
+        {
+          "id": "keyboard",
+          "title": "Tastaturbedienung",
+          "paragraphs": [
+            "Wechseln Sie mit Tab und Shift+Tab zwischen Links und Bedienelementen. Aktivieren Sie fokussierte Links oder Schaltflächen mit Enter. Der Sprunglink am Seitenanfang führt zum Hauptinhalt.",
+            "FAQ-Antworten können mit Enter oder Leertaste geöffnet und geschlossen werden. Nutzen Sie die vorhandene Tastaturbedienung für Menüs und Dialoge; unterstützte Fenster lassen sich mit Escape schließen."
+          ]
+        },
+        {
+          "id": "preferences",
+          "title": "Darstellung und Lesen",
+          "paragraphs": [
+            "Oben befinden sich Sprach- und Designkontrollen. Wählen Sie helles, dunkles oder Systemdesign sowie türkische, englische oder deutsche Texte.",
+            "Browserzoom ist nutzbar. Die Einstellung für reduzierte Bewegung verringert Animationen. Auf schmalen Bildschirmen werden Inhalte und Footerlinks untereinander angeordnet."
+          ]
+        },
+        {
+          "id": "screen-readers",
+          "title": "Struktur und Hilfsmittel",
+          "paragraphs": [
+            "Informationsseiten verwenden semantische Überschriften, Hauptinhalt und Navigation. GitHub-Links im Footer haben zugängliche Namen mit dem Namen der Person; dekorative Symbole werden vor Screenreadern verborgen.",
+            "Weitere Anwendungsseiten müssen noch mit verschiedenen Screenreadern und Browsern geprüft werden. Ihre Meldungen helfen, Hindernisse zu beheben."
+          ]
+        },
+        {
+          "id": "feedback",
+          "title": "Ein Hindernis melden",
+          "paragraphs": [
+            "Wenn Sie eine Seite oder Aktion nicht nutzen können, schreiben Sie an pda-info@gmail.com mit Seitenadresse, gewünschter Aktion, Browser/Gerät und gegebenenfalls verwendetem Hilfsmittel.",
+            "Entfernen Sie personenbezogene oder geheime Informationen aus Screenshots. Medizinische Angaben sind für eine Meldung nicht erforderlich."
+          ]
+        }
+      ]
+    }
   }
 }

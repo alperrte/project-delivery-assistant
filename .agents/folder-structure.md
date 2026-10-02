@@ -1,4 +1,8 @@
 ﻿# Klasör yapısı kısa rehberi
+## Footer ve herkese açık bilgi sayfaları (2026-10-02)
+
+Ortak footer `frontend/src/components/layout/site-footer.tsx` içinde; AuthShell kompakt auth düzenini, `(public)/layout.tsx` sade alt bağlantı düzenini kullanır. AppShell footer içermez; uygulama içinden bilgi sayfalarına ve iletişime `app-header.tsx` hesap menüsündeki Bilgi ve destek grubundan ulaşılır. Oturum istemeyen `/faq`, `/kvkk`, `/privacy`, `/accessibility` rotaları `(public)` altındadır. İçerik render ve metadata `features/public-info/info-page.tsx`, iletişim/GitHub bağlantıları `site-info.ts`, metinler üç dilde `i18n/messages/{tr,en,de}.json` içindedir. KVKK/gizlilik içerikleri yayın öncesi inceleme taslağıdır; veri sorumlusu ve hosting/saklama kararları kesinleşmeden hukuki sonlandırma sayılmaz. Backend gerektirmeyen footer kontrolü `playwright.public.config.ts` ve `e2e/footer-public-pages.spec.ts` kullanır.
+
 ## Task genişletmesi yolları (2026-10-02)
 
 `task/api/` altında `TaskController`, `MyTasksController`, `TaskChecklistController` (+claim/release), `TaskCommentController`, `TaskRelationController`, `TaskWatcherController`, `TaskWorklogController`, `TaskAttachmentController`, `LabelController`; `task/application/` altında ilgili `*Service` sınıfları, `TaskDeadlineScheduler/Service`, `AttachmentPolicy`, `TaskSupport`, `TaskViewAssembler`; sprint ayrı alt pakettedir (`task/sprint/{api,application,domain,infrastructure}`). `project/ProjectSummaryView` yeni public sözleşmedir. Migration'lar `V37`–`V46` (`task_*`, `project_labels`, `sprints`). Testler `backend/src/test/java/com/pda/task/` altında `TaskTestBase` etrafındadır.
