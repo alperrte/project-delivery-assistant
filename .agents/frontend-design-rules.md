@@ -179,6 +179,14 @@ Giriş, kayıt ve şifre sıfırlama ekranları arka plan fotoğrafı üzerinde 
 - `(public)` bilgi sayfaları oturum istemez. Uzun metinlerde 16 px/7 satır yüksekliği, tek `h1`, anlamlı `h2` bölümleri, içerik bağlantıları ve `lg` üzerinde yapışkan içindekiler kullanılır. SSS native `details/summary` ile klavye ve dokunmatik kullanım sunar. Metinler üç dilde mesaj dosyalarındadır.
 - Kullanıcı tercihiyle bilgi sayfalarındaki tema kontrolü login ile birebir aynı `ThemeToggle tone="auth"` bileşenidir; iki ikon, kayan seçim göstergesi ve ortak dairesel tema geçişi kullanılır. Bu kontrol, auth token'larının bilgi sayfalarında kullanımına özel istisnadır; sayfa içeriği genel token'larla kalır.
 
+## Landing page
+
+- `/` tanıtım sayfası genel `:root`/`.dark` token'larını ve Inter kullanır; auth sahne fotoğrafını veya ayrı bir paleti kopyalamaz. Büyük başlık, tek ana kayıt çağrısı, gerçek arayüz vitrini, özellik açıklamaları ve üç adımlı başlangıç akışı vardır.
+- Görseller gerçek PDA proje/kriter ekranlarının yalnız örnek verilerle yakalanmış WebP dosyalarıdır. Üzerlerindeki Türkçe örnek içerik üç dilde açıklanan bir caption ile belirtilir; gerçek kullanıcı verisi, sahte müşteri sayısı veya referans kullanılmaz. Light/dark görseller temaya göre değişir.
+- `landing.module.css` stili sayfaya özeldir. Giriş ve ışık belirme hareketleri bir kez çalışır (1/4 sn); ürün vitrini scroll ile hafifçe düzleşir. `prefers-reduced-motion` hareketi kaldırır, forced-colors dekoru gizler. İlk hydration render'ında scroll transform uygulanmaz.
+- Header mevcut LocaleSwitcher ve `ThemeToggle tone="app"` bileşenlerini kullanır; tema butonları bu public yüzeyde 44 px hedefe büyütülür. Tablet/mobilde bölüm linkleri gizlenir; giriş, dil ve tema erişilebilir kalır.
+- `SiteFooter tone="landing"` marka, bilgi bağlantıları, geliştirici GitHub adresleri ve mailto iletişimini üç kolonda, mobilde tek kolonda gösterir. Bu varyant auth/default footer'ların davranışını değiştirmez.
+
 ## Yeni sayfa veya bileşen eklerken kontrol listesi
 
 1. `globals.css` dosyasını oku; ihtiyacın olan token zaten var mı bak.

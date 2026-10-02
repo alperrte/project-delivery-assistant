@@ -25,7 +25,8 @@ Bu checklist uygulanırken:
 
 # A — Genel / Kurumsal
 
-- [ ] **Footer** — Kullanıcının yasal, kurumsal ve önemli bağlantılara site genelinde ulaşmasını sağlar.
+- [x] **Footer** — Kullanıcının yasal, kurumsal ve önemli bağlantılara site genelinde ulaşmasını sağlar.
+  - 2026-10-02: Landing, auth ve bilgi sayfalarında SiteFooter bulunur. Kullanıcı tercihiyle çalışma ekranlarında footer yerine hesap menüsündeki “Bilgi ve destek” bağlantıları kullanılır. Public test paketi bu erişimi doğrular.
 - [ ] **KVKK** — Kişisel veri işleme süreçleriyle ilgili gerekli bilgilendirme ve kullanıcı hakları erişilebilir olmalıdır.
 - [ ] **Gizlilik Politikası** — Kullanıcı verilerinin nasıl toplandığını, kullanıldığını ve gerektiğinde saklandığını/paylaşıldığını açıklar.
 - [ ] **Erişilebilirlik** — Site farklı kullanıcı ihtiyaçları düşünülerek erişilebilir biçimde geliştirilmiş olmalıdır.
@@ -38,9 +39,12 @@ Bu checklist uygulanırken:
 
 # B — CTA / UX / UI State
 
-- [ ] **Net BİR CTA** — Kullanıcıya “Kayıt Ol”, “Başla”, “İletişime Geç” gibi bir sonraki ana aksiyonu açıkça gösterir.
+- [x] **Net BİR CTA** — Kullanıcıya “Kayıt Ol”, “Başla”, “İletişime Geç” gibi bir sonraki ana aksiyonu açıkça gösterir.
+  - 2026-10-02: `/` landing page ana aksiyonu “Hesap oluştur” → `/register`; “Giriş yap” ikincildir. Üç dilde link akışı `landing-page.spec.ts` ile doğrulandı.
 - [ ] **Responsive Design** — Site telefon, tablet, laptop ve masaüstünde düzgün kullanılmalıdır.
+  - 2026-10-02: Landing page 320/390/768/1440 px, light/dark doğrulandı. Proje genelindeki tüm çalışma ekranları denetlenmedi; bu yüzden genel madde açık.
 - [ ] **Mobil Görünüm Responsive Testleri** — Kritik sayfalar gerçekçi mobil viewportlarda test edilmelidir.
+  - Landing, auth/bilgi footer'ları ve hata ekranları public test paketinde kontrol edilir; tüm kritik oturum içi akışlar bu teslimin kapsamı değildir.
 - [ ] **Loading State** — Veri veya sayfa yüklenirken kullanıcı sistemin çalıştığını anlayabilmelidir.
 - [ ] **Empty State** — Veri olmadığında boş ekran yerine nedenini ve mümkünse sonraki aksiyonu anlatmalıdır.
 - [ ] **Error State** — Bir işlem başarısız olduğunda kullanıcıya problemi ve mümkünse çözüm/yeni deneme yolunu göstermelidir.
@@ -52,10 +56,14 @@ Bu checklist uygulanırken:
 
 - [ ] **SEO / GEO** — Public içerik hem klasik arama motorları hem de AI tabanlı keşif sistemleri tarafından anlaşılabilir olmalıdır.
 - [ ] **Meta Data** — Arama motorlarına ve tarayıcılara sayfanın başlık, açıklama ve ilgili metadata bilgilerini vermelidir.
+  - Landing page üç dilde title/description ve OpenGraph metadata üretir; diğer rotaların tüm metadata alanları bu görevde denetlenmedi.
 - [ ] **Unique Page Title** — Her önemli public sayfa arama motorlarında ve tarayıcı sekmesinde kendisini doğru tanımlayan benzersiz bir title'a sahip olmalıdır.
-- [ ] **sitemap.xml** — Arama motorlarının sitenin önemli public sayfalarını keşfetmesini sağlamalıdır.
-- [ ] **robots.txt** — Arama motoru botlarına hangi alanların taranabileceğini belirtmeli ve yanlışlıkla public siteyi engellememelidir.
+- [x] **sitemap.xml** — Arama motorlarının sitenin önemli public sayfalarını keşfetmesini sağlamalıdır.
+  - `/`, `/login`, `/register`, `/faq`, `/accessibility` listelenir; noindex hukuki taslaklar eklenmez. Production domain kontrolü yayın aşamasında yapılmalıdır.
+- [x] **robots.txt** — Arama motoru botlarına hangi alanların taranabileceğini belirtmeli ve yanlışlıkla public siteyi engellememelidir.
+  - Public yollar açık; API, çalışma alanı, hata önizlemeleri ve dev rotaları dışlanır. Bu dosya erişim güvenliği değildir. Production üzerinde ayrıca doğrulanmalıdır.
 - [ ] **Canonical URL'ler** — Aynı içeriğin farklı URL'lerde bulunması durumunda asıl URL'yi arama motorlarına bildirmelidir.
+  - `/` canonical mevcut metadataBase üzerinden üretilir ve test edildi. Tüm public rotalar ve production domain henüz topluca doğrulanmadı.
 - [ ] **OpenGraph** — Link WhatsApp, LinkedIn, Discord vb. platformlarda paylaşıldığında doğru başlık, açıklama ve görsel çıkmalıdır.
 - [ ] **llms.txt** — AI sistemlerine sitenin önemli public içerikleri hakkında yönlendirme sağlamayı amaçlayan dosya proje kararı doğrultusunda mevcut olmalı veya N/A/opsiyonel olarak işaretlenmelidir.
 - [ ] **hreflang** — Çok dilli sitelerde hangi sayfanın hangi dil/bölgeye ait olduğunu arama motorlarına bildirmelidir; tek dilde N/A olabilir.
@@ -74,6 +82,7 @@ Bu checklist uygulanırken:
 # E — Erişilebilirlik
 
 - [ ] **Keyboard Navigation** — Kullanıcı mouse kullanmadan Tab/Shift+Tab/Enter/Escape gibi kontrollerle temel akışları tamamlayabilmelidir.
+  - Landing skip link ve görünüm değiştirme klavye ile doğrulandı; proje genelindeki tüm temel akışlar denetlenmedi.
 - [ ] **Screen Reader Uyumluluğu** — Görme engelli kullanıcıların arayüzü semantik HTML ve gerektiğinde uygun erişilebilir isimlerle anlayabilmesini sağlamalıdır.
 - [ ] **Alt Text** — Anlam taşıyan görsellerin erişilebilir açıklaması bulunmalıdır.
 - [ ] **Heading Hierarchy** — `h1`, `h2`, `h3` yapısı sayfanın mantıksal içerik hiyerarşisini doğru yansıtmalıdır.
