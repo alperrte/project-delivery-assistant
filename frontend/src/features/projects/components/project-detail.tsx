@@ -10,7 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { errorKey } from "@/lib/api/error-message";
+import { PageFailure } from "@/features/errors/page-failure";
 import { InvitationsPage } from "@/features/invitations/components/invitations-page";
 import { TeamsPage } from "@/features/squads/components/teams-page";
 import { CriteriaList } from "@/features/criteria/components/criteria-list";
@@ -25,13 +25,12 @@ import { ProjectSettingsForm } from "./project-settings-form";
 export function ProjectDetail({ slug }: { slug: string }) {
   const t = useTranslations("projects.detail");
   const tp = useTranslations("projects.overview");
-  const te = useTranslations("errors");
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const { data: project, isLoading, isError, error } = useQuery({
+  const { data: project, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["projects", "by-slug", slug],
     queryFn: () => projectsApi.bySlug(slug),
   });
@@ -49,7 +48,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
   }, [pathname, router]);
 
   if (isLoading || memberLoading) return <Skeleton className="h-64 w-full rounded-2xl" />;
-  if (isError) return <p className="text-sm text-destructive">{te(errorKey(error))}</p>;
+  if (isError) return <PageFailure error={error} onRetry={() => { void refetch(); }} />;
   if (!project) return null;
 
   return (

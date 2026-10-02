@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { errorKey } from "@/lib/api/error-message";
+import { PageFailure } from "@/features/errors/page-failure";
 import { useSession } from "@/features/auth/hooks/use-session";
 import { ProjectRow } from "@/features/projects/components/project-card";
 import { organizationsApi } from "../api";
@@ -23,13 +23,12 @@ import { OrganizationFormDialog } from "./organization-form-dialog";
 export function OrganizationDetail({ organizationId }: { organizationId: string }) {
   const t = useTranslations("organizations");
   const tp = useTranslations("projects");
-  const te = useTranslations("errors");
   const { data: user } = useSession();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [page, setPage] = useState(0);
 
-  const { data: org, isLoading, isError, error } = useQuery({
+  const { data: org, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["organizations", organizationId],
     queryFn: () => organizationsApi.detail(organizationId),
   });
@@ -41,7 +40,7 @@ export function OrganizationDetail({ organizationId }: { organizationId: string 
   });
 
   if (isLoading) return <Skeleton className="h-32 w-full" />;
-  if (isError) return <p className="text-sm text-destructive">{te(errorKey(error))}</p>;
+  if (isError) return <PageFailure error={error} onRetry={() => { void refetch(); }} />;
   if (!org) return null;
 
   const archived = org.status === "ARCHIVED";

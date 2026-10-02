@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { Archive } from "@phosphor-icons/react";
-import { buttonVariants } from "@/components/ui/button";
+import { PageFailure } from "@/features/errors/page-failure";
+import { ApiError } from "@/lib/api/client";
 import { useTask } from "../../hooks";
 import { taskPermissions, type TaskPermissions } from "../../permissions";
 import type { Task } from "../../types";
@@ -39,19 +39,11 @@ function Description({ task }: { task: Task }) {
 
 function TaskDetailBody({ slug, project, projectId, isManager, userId, taskId }: ProjectGateContext & { taskId: string }) {
   const t = useTranslations("tasks.detail");
-  const te = useTranslations("errors");
   const task = useTask(projectId, taskId);
 
   if (task.isPending) return <PageSkeleton />;
   if (task.isError || !task.data) {
-    return (
-      <div className="space-y-4">
-        <p role="alert" className="text-sm text-destructive">{te("notFound")}</p>
-        <Link href={`/projects/${slug}/tasks`} className={buttonVariants({ variant: "outline" })}>
-          {t("backToTasks")}
-        </Link>
-      </div>
-    );
+    return <PageFailure error={task.error ?? new ApiError(404)} onRetry={() => { void task.refetch(); }} />;
   }
 
   const data = task.data;

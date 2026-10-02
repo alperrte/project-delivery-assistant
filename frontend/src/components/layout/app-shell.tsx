@@ -16,7 +16,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { navItemClass } from "./nav-item";
 import { cn } from "@/lib/utils";
 import { authApi } from "@/features/auth/api";
-import { SESSION_EXPIRED_EVENT } from "@/lib/api/client";
+import { ApiError, SESSION_EXPIRED_EVENT } from "@/lib/api/client";
+import { PageFailure } from "@/features/errors/page-failure";
+import { ErrorFrame } from "@/features/errors/error-frame";
 import { sessionQueryKey, useSession } from "@/features/auth/hooks/use-session";
 
 const NAV_LINKS = [
@@ -53,15 +55,16 @@ export function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const queryClient = useQueryClient();
-  const { data: user, isLoading, isError } = useSession();
+  const { data: user, isLoading, isError, error, refetch } = useSession();
+  const sessionExpired = isError && error instanceof ApiError && error.status === 401;
   // SSR/first-paint snapshot is always "expanded" so hydration never mismatches;
   // the real preference (if collapsed) applies a frame later, same pattern as
   // the last-selected-project memory in project-sidebar-nav.tsx.
   const collapsed = useSyncExternalStore(subscribeToCollapse, readCollapsed, () => false);
 
   useEffect(() => {
-    if (isError) router.replace("/login");
-  }, [isError, router]);
+    if (sessionExpired) router.replace("/login");
+  }, [sessionExpired, router]);
 
   // The access token is renewed transparently; this only fires when the session itself is over.
   useEffect(() => {
@@ -92,7 +95,11 @@ export function AppShell({ children }: { children: ReactNode }) {
     window.dispatchEvent(new Event(collapseEvent));
   }
 
-  if (isLoading || isError) {
+  if (isError && !sessionExpired) {
+    return <ErrorFrame><PageFailure error={error} onRetry={() => { void refetch(); }} /></ErrorFrame>;
+  }
+
+  if (isLoading || sessionExpired) {
     return (
       <div className="flex min-h-[100dvh] items-center justify-center">
         <Skeleton className="h-10 w-40" />

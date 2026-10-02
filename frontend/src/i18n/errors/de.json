@@ -1,0 +1,34 @@
+{
+  "403": {
+    "title": "Du hast hier keinen Zugriff.",
+    "description": "Dein Konto benötigt die passende Berechtigung, um diese Seite anzuzeigen.",
+    "hint": "Kontaktiere deine Projektleitung oder prüfe dein Konto auf der Anmeldeseite."
+  },
+  "404": {
+    "title": "Diese Seite wurde nicht gefunden.",
+    "description": "Die Adresse könnte falsch sein, der Inhalt wurde entfernt oder ist nicht mehr verfügbar.",
+    "hint": "Prüfe die Adresse oder kehre zur Startseite zurück, um an deinen Projekten weiterzuarbeiten."
+  },
+  "500": {
+    "title": "Etwas ist schiefgelaufen.",
+    "description": "Beim Öffnen dieser Seite ist in PDA ein unerwartetes Problem aufgetreten.",
+    "hint": "Versuche es erneut. Wenn das Problem weiterhin besteht, teile uns mit, bei welcher Aktion es auftritt."
+  },
+  "503": {
+    "title": "Wir machen eine kurze Pause.",
+    "description": "PDA kann diese Anfrage gerade nicht bearbeiten. Der Dienst ist möglicherweise vorübergehend nicht verfügbar.",
+    "hint": "Versuche es in Kürze erneut. Prüfe bei Verbindungsproblemen auch deine Internetverbindung."
+  },
+  "common": {
+    "label": "PDA · Deine Arbeit wurde unterbrochen",
+    "home": "Zur Startseite",
+    "login": "Zur Anmeldung",
+    "retry": "Erneut versuchen",
+    "contact": "Kontaktiere uns",
+    "skip": "Zum Inhalt springen",
+    "next": "Was kannst du tun?",
+    "test": "Testfehler auslösen",
+    "testTitle": "Die 500-Seite testen",
+    "testDescription": "Die Schaltfläche löst auf dieser Seite einen kontrollierten Testfehler aus. Erneut versuchen führt zu dieser Ansicht zurück."
+  }
+}
