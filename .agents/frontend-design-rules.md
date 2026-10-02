@@ -164,6 +164,13 @@ Giriş, kayıt ve şifre sıfırlama ekranları arka plan fotoğrafı üzerinde 
 - Filtre durumu URL'dedir (`?status=`, `?tab=`, `?page=`), böylece görünüm paylaşılır ve yenilemede korunur. Arama yazmayı bitirince (300 ms) uygulanır.
 - Tarih ve saat için native `date`/`time` girdileri ve hızlı seçimler kullanılır; yeni bağımlılık eklenmez.
 
+## Hata ekranları
+
+- 404, 403, 500 ve 503 aynı `features/errors/error-content.tsx` bileşenini kullanır: PDA logo, büyük hata kodu, kısa açıklama, sonraki adım ve geri dönüş/yeniden deneme bağlantıları. Footer bulunmaz. Masaüstünde iki kolon, `md` altında tek kolon; eylem hedefleri en az 44 px'dir.
+- Tam ekran `ErrorFrame` tema ve dil kontrollerini bilgi sayfalarındaki gibi sunar; tema kontrolü için `ThemeToggle tone="auth"` istisnası geçerlidir. Uygulama içindeki `PageFailure` mevcut AppShell'i korur, ikinci header veya main eklemez.
+- Kök `global-error` provider, oturum veya router istemeden çalışır; ince JSON kataloglarını kullanır, kendi CSS ve sistem fontunu taşır. Ham hata mesajı, stack trace ve API detayları kullanıcıya basılmaz.
+- Taşınabilir `public/errors/503.html` kendi token tanımlarını `globals.css` içinden üretir; palet/metin değişirse `node scripts/build-maintenance-page.mjs` çalıştır. Bu belge hiçbir dış görsel/font/script istemez; Next.js kapalıyken göstermek hosting tarafının sorumluluğudur.
+
 ## Footer ve bilgi sayfaları
 
 - `SiteFooter` auth ve herkese açık bilgi sayfalarında kullanılır; sayfa bileşenine ikinci footer ekleme. Bilgi sayfalarında copyright, bilgi bağlantıları ve e-posta sade bir alt satırda yer alır; dar ekranlarda satırlar sarılır. Footer akış içindedir, sabitlenmez; bağlantılar en az 44 px yüksekliğinde ve görünür klavye odağına sahiptir.
