@@ -21,6 +21,7 @@ export default getRequestConfig(async () => {
     messages: {
       ...(await import(`./messages/${locale}.json`)).default,
       errorPages: (await import(`./errors/${locale}.json`)).default,
+      landing: (await import(`./landing/${locale}.json`)).default,
     },
   };
 });

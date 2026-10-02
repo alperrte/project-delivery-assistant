@@ -1,10 +1,10 @@
 import type { MetadataRoute } from "next";
 
-/** Only the public auth screens are crawlable; everything behind login is opted out per-page too. */
+/** Public content is crawlable. Workspace, API and preview paths stay excluded. */
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
-      { userAgent: "*", allow: ["/login", "/register", "/forgot-password"], disallow: "/" },
+      { userAgent: "*", allow: "/", disallow: ["/api/", "/dashboard", "/projects", "/organizations", "/account", "/calendar", "/tasks", "/invitations", "/change-password", "/errors/", "/dev/"] },
     ],
     sitemap: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/sitemap.xml`,
   };

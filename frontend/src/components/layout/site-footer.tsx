@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 
 const linkClass = "inline-flex min-h-11 items-center gap-2 rounded-md py-2 text-sm underline-offset-4 outline-none hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring";
 
-export function SiteFooter({ tone = "default" }: { tone?: "default" | "auth" }) {
+export function SiteFooter({ tone = "default" }: { tone?: "default" | "auth" | "landing" }) {
   const t = useTranslations("siteFooter");
 
   if (tone === "auth") {
@@ -41,6 +41,18 @@ export function SiteFooter({ tone = "default" }: { tone?: "default" | "auth" }) 
               <GitHubIcon className="size-4 shrink-0" />{t("source")}<ArrowUpRight size={14} aria-hidden="true" /><span className="text-xs">Apache 2.0</span>
             </a>
           </div>
+        </div>
+      </footer>
+    );
+  }
+
+  if (tone === "landing") {
+    return (
+      <footer className="border-t border-border bg-card text-foreground">
+        <div className="mx-auto grid max-w-[1280px] gap-8 px-5 py-10 md:grid-cols-3 sm:px-10">
+          <div><p className="text-lg font-semibold" translate="no">PDA</p><p className="mt-2 text-sm text-muted-foreground" translate="no">Project Delivery Assistant</p><p className="mt-5 text-xs text-muted-foreground">{t("copyright", { year: new Date().getFullYear() })}</p></div>
+          <nav aria-label={t("information")}><p className="mb-2 text-sm font-medium">{t("information")}</p><ul>{INFO_LINKS.map(({ key, href }) => <li key={key}><Link href={href} className={cn(linkClass, "text-muted-foreground")}>{t(key)}</Link></li>)}</ul></nav>
+          <div className="flex flex-col items-start"><p className="mb-2 text-sm font-medium">{t("team")}</p><ul>{CONTRIBUTORS.map(({ name, github }) => <li key={github}><a href={github} className={cn(linkClass, "text-muted-foreground")} aria-label={t("githubProfile", { name })}><GitHubIcon className="size-4 shrink-0" />{name}</a></li>)}</ul><a href={"mailto:" + CONTACT_EMAIL} className={cn(linkClass, "max-w-full text-muted-foreground")}><EnvelopeSimple size={17} aria-hidden="true" /><span className="break-all">{CONTACT_EMAIL}</span></a><a href={REPOSITORY_URL} className={cn(linkClass, "text-muted-foreground")}><GitHubIcon className="size-4 shrink-0" />{t("source")}<span className="text-xs">Apache 2.0</span></a></div>
         </div>
       </footer>
     );
