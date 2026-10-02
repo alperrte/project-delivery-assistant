@@ -4,7 +4,7 @@ import { useState, useTransition, type ComponentType } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { CaretDown } from "@phosphor-icons/react";
 import DE from "country-flag-icons/react/3x2/DE";
 import GB from "country-flag-icons/react/3x2/GB";
@@ -19,8 +19,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { useReducedMotionPreference } from "@/lib/preferences/motion";
 
-const FLAGS: Record<Locale, ComponentType<{ className?: string; title?: string }>> = { tr: TR, en: GB, de: DE };
+export const FLAGS: Record<Locale, ComponentType<{ className?: string; title?: string }>> = { tr: TR, en: GB, de: DE };
 
 // The flip: a beat on the old flag, then a half-second turn to the new one.
 const FLIP_DELAY = 0.35;
@@ -30,24 +31,13 @@ const MIN_SHOWN = 1400;
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 /**
- * Flag-based locale menu. The choice lives in the NEXT_LOCALE cookie. While
- * the page refreshes, a blurred overlay shows the current language's flag,
- * which turns over like a card to reveal the chosen one; it stays until the
- * refresh is done and the turn has played, then clears itself once its own
- * exit animation finishes.
+ * The one way the language changes (header menu and Settings page). The choice lives in the NEXT_LOCALE cookie and
+ * the page refreshes; `overlay` is the flag-turning screen that covers the refresh and must be rendered by the caller.
  */
-export function LocaleSwitcher({
-  triggerClassName,
-  hideLabelOnMobile,
-}: {
-  triggerClassName?: string;
-  /** Drops the "TR"/"EN"/"DE" text (flag + caret only) below `sm`, for tight navbar layouts. */
-  hideLabelOnMobile?: boolean;
-}) {
-  const t = useTranslations("common.language");
+export function useLocaleSelection() {
   const current = useLocale() as Locale;
   const router = useRouter();
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionPreference();
   const [pending, startTransition] = useTransition();
   const [flip, setFlip] = useState<{ from: Locale; to: Locale } | null>(null);
   const [holding, setHolding] = useState(false);
@@ -62,8 +52,28 @@ export function LocaleSwitcher({
     startTransition(() => router.refresh());
   }
 
+  const overlay = (
+    <LocaleOverlay flip={flip} shown={flip !== null && (pending || holding)} reduce={reduce} onExited={() => setFlip(null)} />
+  );
+  return { current, select, overlay };
+}
+
+/**
+ * Flag-based locale menu. While the page refreshes, a blurred overlay shows the current language's flag, which
+ * turns over like a card to reveal the chosen one; it stays until the refresh is done and the turn has played,
+ * then clears itself once its own exit animation finishes.
+ */
+export function LocaleSwitcher({
+  triggerClassName,
+  hideLabelOnMobile,
+}: {
+  triggerClassName?: string;
+  /** Drops the "TR"/"EN"/"DE" text (flag + caret only) below `sm`, for tight navbar layouts. */
+  hideLabelOnMobile?: boolean;
+}) {
+  const t = useTranslations("common.language");
+  const { current, select, overlay } = useLocaleSelection();
   const CurrentFlag = FLAGS[current];
-  const shown = flip !== null && (pending || holding);
 
   return (
     <>
@@ -89,10 +99,24 @@ export function LocaleSwitcher({
         </DropdownMenuContent>
       </DropdownMenu>
 
+      {overlay}
+    </>
+  );
+}
+
+function LocaleOverlay({ flip, shown, reduce, onExited }: {
+  flip: { from: Locale; to: Locale } | null;
+  shown: boolean;
+  reduce: boolean;
+  onExited: () => void;
+}) {
+  const t = useTranslations("common.language");
+  return (
+    <>
       {typeof document !== "undefined" &&
         createPortal(
-          <AnimatePresence onExitComplete={() => setFlip(null)}>
-            {shown && (
+          <AnimatePresence onExitComplete={onExited}>
+            {shown && flip && (
               <motion.div
                 key="locale-overlay"
                 initial={{ opacity: 0 }}
@@ -108,7 +132,7 @@ export function LocaleSwitcher({
                   transition={{ duration: reduce ? 0 : 0.35, ease: EASE }}
                   className="flex flex-col items-center gap-4 perspective-[900px]"
                 >
-                  <FlagCard from={flip.from} to={flip.to} reduce={!!reduce} />
+                  <FlagCard from={flip.from} to={flip.to} reduce={reduce} />
                   {/* Both names stacked in one cell; they swap at the turn's midpoint. */}
                   <p className="grid text-base font-semibold text-foreground">
                     <Label text={t(flip.from)} visible={false} delay={reduce ? 0 : FLIP_DELAY + FLIP_DURATION / 2} />

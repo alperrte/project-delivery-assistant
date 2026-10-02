@@ -9,18 +9,32 @@ import { PageHeader } from "@/components/common/page-header";
 import { EmptyState } from "@/components/common/empty-state";
 import { PaginationBar } from "@/components/common/pagination-bar";
 import { Button } from "@/components/ui/button";
+import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { errorKey } from "@/lib/api/error-message";
+import { profilePhotoSrc } from "@/features/account/api";
 import { invitationsApi } from "@/features/invitations/api";
 import { InvitationProjectPreviewDialog } from "@/features/invitations/components/invitation-project-preview-dialog";
 import { InvitationStatusBadge } from "@/features/invitations/components/invitation-status-badge";
 import type { MyInvitation } from "@/features/invitations/types";
 
+/** The inviter's photo (or initials) next to their name. */
+function Inviter({ invitation }: { invitation: MyInvitation }) {
+  if (!invitation.invitedByNickname) return null;
+  return (
+    <Avatar name={invitation.invitedByNickname} src={profilePhotoSrc(invitation.invitedBy, invitation.invitedByPhotoVersion)}
+      className="size-6 bg-muted text-[10px] text-foreground ring-0" />
+  );
+}
+
 const PAGE_SIZE = 20;
+const FILTERS = ["PENDING", "ALL"] as const;
+type Filter = (typeof FILTERS)[number];
 
 export default function MyInvitationsPage() {
   const t = useTranslations("invitations");
@@ -29,12 +43,17 @@ export default function MyInvitationsPage() {
   const locale = useLocale();
   const queryClient = useQueryClient();
   const [page, setPage] = useState(0);
+  const [filter, setFilter] = useState<Filter>("PENDING");
   const [previewId, setPreviewId] = useState<string | null>(null);
   const [rejectInvitation, setRejectInvitation] = useState<MyInvitation | null>(null);
   const [reason, setReason] = useState("");
   const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ["project-invitations", "me", page],
-    queryFn: () => invitationsApi.mine(page, PAGE_SIZE),
+    queryKey: ["project-invitations", "me", filter, page],
+    queryFn: () => invitationsApi.mine(page, PAGE_SIZE, filter === "PENDING" ? "PENDING" : undefined),
+    // New invitations arrive while the app is open, so this list is always read fresh instead of from the 30 s cache.
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["project-invitations", "me"] });
   const accept = useMutation({
@@ -67,18 +86,23 @@ export default function MyInvitationsPage() {
     const projectName = invitation.projectName ?? t("mineUnavailableProject");
     return (
       <div className="flex flex-wrap items-center gap-2 xl:justify-end">
-        <Button variant="outline" size="sm" aria-label={t("minePreviewNamed", { project: projectName })}
-          onClick={() => setPreviewId(invitation.id)}>
-          <Eye size={15} aria-hidden="true" />
-          {t("minePreviewAction")}
-        </Button>
-        {invitation.status === "PENDING" && (
+        {invitation.status === "PENDING" && invitation.projectName && (
+          <Button variant="outline" size="sm" aria-label={t("minePreviewNamed", { project: projectName })}
+            onClick={() => setPreviewId(invitation.id)}>
+            <Eye size={15} aria-hidden="true" />
+            {t("minePreviewAction")}
+          </Button>
+        )}
+        {invitation.status === "PENDING" && invitation.projectName && (
           <>
             <Button size="sm" disabled={accept.isPending || reject.isPending}
               onClick={() => accept.mutate(invitation.id)}>{t("respond.accept")}</Button>
             <Button variant="ghost" size="sm" disabled={accept.isPending || reject.isPending}
               onClick={() => { setReason(""); setRejectInvitation(invitation); }}>{t("respond.reject")}</Button>
           </>
+        )}
+        {invitation.status === "PENDING" && !invitation.projectName && (
+          <p className="text-xs text-muted-foreground">{t("mineProjectGone")}</p>
         )}
       </div>
     );
@@ -87,6 +111,14 @@ export default function MyInvitationsPage() {
   return (
     <section className="space-y-6">
       <PageHeader title={t("mineTitle")} description={t("mineDescription")} />
+
+      <Tabs value={filter} onValueChange={(next) => { setFilter(next as Filter); setPage(0); }}>
+        <TabsList aria-label={t("mineTabsLabel")}>
+          {FILTERS.map((value) => (
+            <TabsTrigger key={value} value={value}>{t(value === "PENDING" ? "mineTabPending" : "mineTabAll")}</TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
 
       {isLoading && (
         <div aria-label={t("mineLoading")} role="status" className="space-y-2">
@@ -99,7 +131,7 @@ export default function MyInvitationsPage() {
           <Button variant="outline" size="sm" onClick={() => void refetch()}>{t("retry")}</Button>
         </div>
       )}
-      {data?.content.length === 0 && <EmptyState title={t("mineEmpty")} />}
+      {data?.content.length === 0 && <EmptyState title={t(filter === "PENDING" ? "minePendingEmpty" : "mineEmpty")} />}
 
       {data && data.content.length > 0 && (
         <>
@@ -119,7 +151,7 @@ export default function MyInvitationsPage() {
                   <div><dt className="text-xs text-muted-foreground">{t("columns.team")}</dt>
                     <dd>{invitation.teamName ?? t("noTeam")}</dd></div>
                   <div><dt className="text-xs text-muted-foreground">{t("mineInviter")}</dt>
-                    <dd>{invitation.invitedByNickname ?? t("mineUnknownInviter")}</dd></div>
+                    <dd className="flex items-center gap-2"><Inviter invitation={invitation} />{invitation.invitedByNickname ?? t("mineUnknownInviter")}</dd></div>
                   <div><dt className="text-xs text-muted-foreground">{t("columns.sentAt")}</dt>
                     <dd>{dateFormatter.format(new Date(invitation.createdAt))}</dd></div>
                   <div className="min-w-0 sm:col-span-2"><dt className="text-xs text-muted-foreground">{t("mineMessage")}</dt>
@@ -164,7 +196,7 @@ export default function MyInvitationsPage() {
                       </div>
                     </TableCell>
                     <TableCell className="whitespace-normal">
-                      <p>{invitation.invitedByNickname ?? t("mineUnknownInviter")}</p>
+                      <p className="flex items-center gap-2"><Inviter invitation={invitation} />{invitation.invitedByNickname ?? t("mineUnknownInviter")}</p>
                       <p className="text-xs text-muted-foreground">{dateFormatter.format(new Date(invitation.createdAt))}</p>
                     </TableCell>
                     <TableCell><InvitationStatusBadge status={invitation.status} /></TableCell>

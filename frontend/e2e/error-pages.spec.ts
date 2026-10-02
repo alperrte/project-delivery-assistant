@@ -91,18 +91,18 @@ for (const status of [403, 404, 500, 503]) {
 test("session service 503 shows availability screen and recovers after retry", async ({ page }) => {
   let unavailable = true;
   await mockApi(page, path => path.endsWith("/auth/me") && unavailable ? 503 : 200);
-  await page.goto("/account");
+  await page.goto("/settings");
   await expect(page.locator('[data-error-code="503"]')).toBeVisible();
-  await expect(page).toHaveURL(/\/account$/);
+  await expect(page).toHaveURL(/\/settings$/);
   unavailable = false;
   await page.getByRole("button", { name: "Yeniden dene", exact: true }).click();
   await expect(page.locator(".app-shell")).toBeVisible();
-  await expect(page.locator("h1")).toHaveText("Hesap ayarları");
+  await expect(page.locator("h1")).toHaveText("Ayarlar");
 });
 
 test("expired session still redirects to login instead of a 403 screen", async ({ page }) => {
   await mockApi(page, path => path.endsWith("/auth/me") ? 401 : path.endsWith("/auth/refresh") ? 403 : 200);
-  await page.goto("/account");
+  await page.goto("/settings");
   await expect(page).toHaveURL(/\/login$/);
   await expect(page.locator('[data-error-code="403"]')).toHaveCount(0);
 });

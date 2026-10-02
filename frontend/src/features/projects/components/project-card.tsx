@@ -5,14 +5,14 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { ArrowRight, CalendarBlank } from "@phosphor-icons/react";
+import { ArrowRight, CalendarBlank, PencilSimple } from "@phosphor-icons/react";
 import { EntityCard, EntityCardFooter, EntityCardLink, EntityCardSection, EntityStatusPill } from "@/components/common/entity-card";
 import { AvatarStack } from "@/components/common/avatar-stack";
 import { buttonVariants } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { projectLogoUrl } from "../api";
+import { projectBannerUrl, projectLogoUrl } from "../api";
 import { parseTechStack } from "../tech-stack";
 import type { Project, ProjectType } from "../types";
 import {
@@ -21,6 +21,7 @@ import {
   projectStatusTone,
   projectPriorityDotClass,
 } from "../status-colors";
+import { ProjectBanner } from "./project-banner";
 import { ProjectTypeBadge } from "./project-type";
 import { TechLogo, toTechLabels } from "./tech-logo";
 
@@ -32,10 +33,14 @@ export type ProjectCardData = Pick<
 > & {
   /** `null` only in the create preview, before a type has been picked. */
   projectType: ProjectType | null;
+  /** Epoch ms of the banner; absent in the create preview, where no banner exists yet. */
+  bannerVersion?: number | null;
+  /** The signed-in user may open this project's settings; only the project list tells. */
+  canEdit?: boolean | null;
 };
 
 /** Live preview on the create page: the link is inert and the logo comes from the file the user just picked. */
-export type ProjectCardPreview = { logoSrc: string | null; updatedLabel: string };
+export type ProjectCardPreview = { logoSrc: string | null; bannerSrc?: string | null; updatedLabel: string };
 
 const techChip = "relative z-10 inline-flex h-8 min-w-8 items-center justify-center rounded-md border bg-surface-2 px-1.5 text-xs font-medium text-muted-foreground";
 
@@ -54,6 +59,17 @@ function logoSource(project: Pick<Project, "id" | "logoVersion">, preview?: Proj
   if (preview) return preview.logoSrc;
   if (invitationLogoSrc !== undefined) return invitationLogoSrc;
   return project.logoVersion == null ? null : projectLogoUrl(project.id, project.logoVersion);
+}
+
+/**
+ * The banner shows on the card in the Projeler list and, as the user picks it, on the create page's preview card; the
+ * invitation preview never has one.
+ */
+function bannerSource(project: Pick<ProjectCardData, "id" | "bannerVersion">, preview?: ProjectCardPreview,
+                      invitation?: boolean): string | null {
+  if (preview) return preview.bannerSrc ?? null;
+  if (invitation || project.bannerVersion == null) return null;
+  return projectBannerUrl(project.id, project.bannerVersion);
 }
 
 /** Logos only; the name lives in a tooltip and in the accessible label. Free text from older projects stays a text chip. */
@@ -106,10 +122,22 @@ export function ProjectCard({ project, preview, invitationPreview }: {
   const when = preview?.updatedLabel ?? date.format(new Date(project.updatedAt));
   const updated = project.updatedBy ? t("card.updatedBy", { date: when, name: project.updatedBy.nickname }) : when;
   const logo = logoSource(project, preview, invitationPreview?.logoSrc);
+  const banner = bannerSource(project, preview, !!invitationPreview);
 
   return (
     <EntityCard
       tone={projectStatusTone(project.status)}
+      banner={banner ? <ProjectBanner key={banner} src={banner} className="aspect-auto size-full sm:aspect-auto" /> : undefined}
+      corner={!preview && !invitationPreview && project.canEdit ? (
+        <Link
+          href={`/projects/${project.slug}?section=settings`}
+          aria-label={t("card.editNamed", { name: project.name })}
+          title={t("card.edit")}
+          className={cn(buttonVariants({ variant: "outline", size: "icon" }), "size-11 bg-background/90 shadow-sm backdrop-blur sm:size-9")}
+        >
+          <PencilSimple size={18} aria-hidden="true" />
+        </Link>
+      ) : undefined}
       mark={<ProjectMark key={logo ?? "none"} name={project.name} src={logo} />}
       title={project.name}
       description={project.tagline || project.description || project.projectGoal || t("cardNoDescription")}

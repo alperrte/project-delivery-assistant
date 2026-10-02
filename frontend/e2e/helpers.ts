@@ -19,8 +19,35 @@ export async function registerUser(page: Page, user: { email: string; nickname: 
   await page.locator('input[name="password"]').fill(user.password);
   await page.locator('input[name="confirmPassword"]').fill(user.password);
   await page.getByRole("button", { name: /^Kayıt ol$/ }).click();
-  // Registration signs the new account in and opens the app.
-  await expect(page.getByRole("navigation")).toBeVisible({ timeout: 15_000 });
+  // Registration signs the new account in and opens the app. The auth pages have their own navigation, so wait for
+  // the app shell's main region: it only exists once the session cookies are set.
+  await expect(page.locator("#main-content")).toBeVisible({ timeout: 15_000 });
+}
+
+/** Calls the backend with the page's own session and the CSRF dance, for setup and for asserting server-side rules. */
+export async function api(
+  page: Page,
+  method: string,
+  path: string,
+  body?: unknown,
+): Promise<{ status: number; json: unknown }> {
+  return page.evaluate(
+    async ({ method, path, body }) => {
+      const base = "http://localhost:8080/api/v1";
+      const csrfRes = await fetch(`${base}/auth/csrf`, { credentials: "include" });
+      const { headerName } = await csrfRes.json();
+      const cookie = document.cookie.split("; ").find((row) => row.startsWith("XSRF-TOKEN="));
+      const csrf = decodeURIComponent(cookie?.slice("XSRF-TOKEN=".length) ?? "");
+      const res = await fetch(`${base}${path}`, {
+        method,
+        credentials: "include",
+        headers: { "Content-Type": "application/json", [headerName]: csrf },
+        body: body === undefined ? undefined : JSON.stringify(body),
+      });
+      return { status: res.status, json: await res.json().catch(() => null) };
+    },
+    { method, path, body },
+  );
 }
 
 export async function login(page: Page, email: string, password: string) {
@@ -28,7 +55,7 @@ export async function login(page: Page, email: string, password: string) {
   await page.locator('input[name="email"]').fill(email);
   await page.locator('input[name="password"]').fill(password);
   await page.getByRole("button", { name: /^Giriş yap$/ }).click();
-  await expect(page.getByRole("navigation")).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator("#main-content")).toBeVisible({ timeout: 15_000 });
 }
 
 export async function registerAndLogin(page: Page, prefix: string) {
@@ -38,11 +65,11 @@ export async function registerAndLogin(page: Page, prefix: string) {
 }
 
 export async function createOrganization(page: Page, name: string) {
-  await page.goto("/organizations");
-  await page.getByRole("button", { name: /^Yeni organizasyon$/ }).click();
+  await page.goto("/organizations/new");
   await page.locator("#org-name").fill(name);
-  await page.getByRole("dialog").getByRole("button", { name: /^Oluştur$/ }).click();
-  await expect(page.getByRole("dialog")).toBeHidden({ timeout: 10_000 });
+  await page.getByRole("button", { name: /^Oluştur$/ }).click();
+  // Creating opens the new organization's own page.
+  await expect(page).toHaveURL(/\/organizations\/(?!new$)[^/]+$/, { timeout: 10_000 });
 }
 
 /** Creates a project and returns its slug, parsed from the post-create redirect URL. */

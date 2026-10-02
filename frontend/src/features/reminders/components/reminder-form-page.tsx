@@ -9,6 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, CircleNotch } from "@phosphor-icons/react";
 import { toast } from "sonner";
+import { PageContainer } from "@/components/common/page-container";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,9 +30,9 @@ import { REMINDER_TYPES, type ReminderType } from "../types";
 
 const BACK_HREF = "/calendar";
 
-function Field({ id, label, error, children }: { id: string; label: string; error?: string; children: React.ReactNode }) {
+function Field({ id, label, error, className, children }: { id: string; label: string; error?: string; className?: string; children: React.ReactNode }) {
   return (
-    <div className="space-y-1.5">
+    <div className={cn("space-y-1.5", className)}>
       <Label htmlFor={id}>{label}</Label>
       {children}
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
@@ -113,13 +114,13 @@ export function ReminderFormPage({ reminderId, initialDate }: { reminderId?: str
   );
 
   if (!project && !projectError) {
-    return <div className="space-y-5"><Skeleton className="h-10 w-40" /><Skeleton className="h-96 w-full max-w-2xl rounded-2xl" /></div>;
+    return <div className="space-y-5"><Skeleton className="h-10 w-40" /><Skeleton className="h-96 w-full rounded-2xl" /></div>;
   }
   if (!project) {
     return <div className="space-y-4">{backLink}<p role="alert" className="text-sm text-muted-foreground">{tf("noProject")}</p></div>;
   }
   if (member.isPending || (editing && existing.isPending)) {
-    return <div className="space-y-5"><Skeleton className="h-10 w-40" /><Skeleton className="h-96 w-full max-w-2xl rounded-2xl" /></div>;
+    return <div className="space-y-5"><Skeleton className="h-10 w-40" /><Skeleton className="h-96 w-full rounded-2xl" /></div>;
   }
   if (member.error || (editing && existing.error)) {
     return (
@@ -133,7 +134,7 @@ export function ReminderFormPage({ reminderId, initialDate }: { reminderId?: str
   const showScopeChoice = !editing && isManager;
 
   return (
-    <div className="min-w-0 space-y-6">
+    <PageContainer width="form" className="space-y-6">
       {backLink}
       <header className="space-y-2">
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{project.name}</p>
@@ -143,13 +144,13 @@ export function ReminderFormPage({ reminderId, initialDate }: { reminderId?: str
         <p className="max-w-2xl text-sm leading-6 text-muted-foreground">{tf(editing ? "editDescription" : "createDescription")}</p>
       </header>
 
-      <form onSubmit={handleSubmit((values) => mutation.mutate(values))} noValidate className="workspace-panel max-w-2xl space-y-5 p-6">
+      <form onSubmit={handleSubmit((values) => mutation.mutate(values))} noValidate className="workspace-panel grid gap-5 p-6 sm:grid-cols-2 lg:grid-cols-3">
         {showScopeChoice && (
           <Controller
             control={control}
             name="scope"
             render={({ field }) => (
-              <fieldset className="space-y-2">
+              <fieldset className="space-y-2 sm:col-span-2 lg:col-span-3">
                 <legend className="text-sm font-medium">{tf("scopeLabel")}</legend>
                 <RadioGroup value={field.value} onValueChange={field.onChange} aria-label={tf("scopeLabel")}>
                   {(["PERSONAL", "PROJECT"] as const).map((scope) => (
@@ -170,13 +171,13 @@ export function ReminderFormPage({ reminderId, initialDate }: { reminderId?: str
         )}
 
         {editing && original && (
-          <p className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+          <p className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground sm:col-span-2 lg:col-span-3">
             <Badge variant={original.scope === "PROJECT" ? "default" : "outline"}>{t(`scope.${original.scope}`)}</Badge>
             {tf("scopeFixed")}
           </p>
         )}
 
-        <Field id="reminder-title" label={tf("title")} error={errors.title && tv(errors.title.message!)}>
+        <Field id="reminder-title" label={tf("title")} error={errors.title && tv(errors.title.message!)} className="sm:col-span-2 lg:col-span-3">
           <Input
             id="reminder-title"
             autoFocus
@@ -188,7 +189,7 @@ export function ReminderFormPage({ reminderId, initialDate }: { reminderId?: str
           />
         </Field>
 
-        <Field id="reminder-description" label={tf("descriptionLabel")} error={errors.description && tv(errors.description.message!)}>
+        <Field id="reminder-description" label={tf("descriptionLabel")} error={errors.description && tv(errors.description.message!)} className="sm:col-span-2 lg:col-span-3">
           <Textarea
             id="reminder-description"
             rows={3}
@@ -199,7 +200,7 @@ export function ReminderFormPage({ reminderId, initialDate }: { reminderId?: str
           />
         </Field>
 
-        <Field id="reminder-type" label={tf("type")} error={errors.type && tv(errors.type.message!)}>
+        <Field id="reminder-type" label={tf("type")} error={errors.type && tv(errors.type.message!)} className="sm:col-span-2 lg:col-span-1">
           <Controller
             control={control}
             name="type"
@@ -232,16 +233,14 @@ export function ReminderFormPage({ reminderId, initialDate }: { reminderId?: str
           />
         </Field>
 
-        <div className="grid gap-5 sm:grid-cols-2">
-          <Field id="reminder-date" label={tf("date")} error={errors.date && tv(errors.date.message!)}>
-            <Input id="reminder-date" type="date" min={editing ? undefined : today} aria-invalid={!!errors.date} {...register("date")} />
-          </Field>
-          <Field id="reminder-time" label={tf("time")} error={errors.time && tv(errors.time.message!)}>
-            <Input id="reminder-time" type="time" aria-invalid={!!errors.time} {...register("time")} />
-          </Field>
-        </div>
+        <Field id="reminder-date" label={tf("date")} error={errors.date && tv(errors.date.message!)}>
+          <Input id="reminder-date" type="date" min={editing ? undefined : today} aria-invalid={!!errors.date} {...register("date")} />
+        </Field>
+        <Field id="reminder-time" label={tf("time")} error={errors.time && tv(errors.time.message!)}>
+          <Input id="reminder-time" type="time" aria-invalid={!!errors.time} {...register("time")} />
+        </Field>
 
-        <div className="flex flex-wrap justify-end gap-2 border-t pt-5">
+        <div className="flex flex-wrap justify-end gap-2 border-t pt-5 sm:col-span-2 lg:col-span-3">
           <Link href={BACK_HREF} className={cn(buttonVariants({ variant: "outline" }))}>{tf("cancel")}</Link>
           <Button type="submit" disabled={mutation.isPending}>
             {mutation.isPending && <CircleNotch size={16} className="animate-spin" aria-hidden="true" />}
@@ -249,6 +248,6 @@ export function ReminderFormPage({ reminderId, initialDate }: { reminderId?: str
           </Button>
         </div>
       </form>
-    </div>
+    </PageContainer>
   );
 }

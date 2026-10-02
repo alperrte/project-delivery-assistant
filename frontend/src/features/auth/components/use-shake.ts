@@ -1,11 +1,12 @@
 "use client";
 
-import { useAnimate, useReducedMotion } from "motion/react";
+import { useAnimate } from "motion/react";
+import { useReducedMotionPreference } from "@/lib/preferences/motion";
 
 /** Returns a ref for the element to shake and a trigger; no-op for reduced motion. */
 export function useShake<T extends Element>() {
   const [scope, animate] = useAnimate<T>();
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionPreference();
 
   function shake() {
     if (reduce || !scope.current) return;

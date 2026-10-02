@@ -3,23 +3,11 @@
 import { useSyncExternalStore } from "react";
 import { flushSync } from "react-dom";
 import { useTheme } from "next-themes";
-import { useTranslations } from "next-intl";
-import { useReducedMotion } from "motion/react";
-import { Moon, Sun } from "@phosphor-icons/react";
-import { buttonVariants } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
+import { useReducedMotionPreference, useThemeTransitionPreference } from "@/lib/preferences/motion";
 
 import { playThemeTransition } from "./theme-transition";
 
 const subscribe = () => () => {};
-const OPTIONS = ["system", "light", "dark"] as const;
 
 /**
  * Theme state that is safe to render: the stored value only shows after
@@ -31,7 +19,8 @@ const OPTIONS = ["system", "light", "dark"] as const;
 export function useThemeSelection() {
   const { theme, resolvedTheme, setTheme } = useTheme();
   const mounted = useSyncExternalStore(subscribe, () => true, () => false);
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionPreference();
+  const [transitionEnabled] = useThemeTransitionPreference();
 
   function selectTheme(next: string) {
     const from = resolvedTheme === "dark" ? "dark" : "light";
@@ -42,6 +31,7 @@ export function useThemeSelection() {
     // choice equal to "system" and an implicit one both read the same way.
     const applied = next !== "system" && next === osScheme ? "system" : next;
     const animated =
+      transitionEnabled &&
       !reduce &&
       from !== to &&
       (to === "light" || to === "dark") &&
@@ -56,31 +46,4 @@ export function useThemeSelection() {
     resolvedTheme: mounted ? resolvedTheme : undefined,
     selectTheme,
   };
-}
-
-/** System / Light / Dark menu for the app header. */
-export function ThemeSwitcher() {
-  const t = useTranslations("common.theme");
-  const { theme, resolvedTheme, selectTheme } = useThemeSelection();
-  const Icon = resolvedTheme === "dark" ? Moon : Sun;
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        aria-label={t("label")}
-        className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "size-8")}
-      >
-        <Icon size={18} />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-36">
-        <DropdownMenuRadioGroup value={theme} onValueChange={selectTheme}>
-          {OPTIONS.map((option) => (
-            <DropdownMenuRadioItem key={option} value={option}>
-              {t(option)}
-            </DropdownMenuRadioItem>
-          ))}
-        </DropdownMenuRadioGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
 }

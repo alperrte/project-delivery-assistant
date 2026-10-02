@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import { MANAGER_STORAGE } from "./global-setup";
 
 test.use({ storageState: MANAGER_STORAGE });
@@ -30,8 +30,8 @@ const team = {
   lastJoined: { userId: "responsive-user", nickname: "testuser", joinedAt: "2026-09-28T00:00:00Z" },
 };
 
-test("project sections use the shared sidebar on desktop and its mobile drawer", async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
+/** API answers for one project of which the signed-in user is the manager. */
+async function mockResponsiveProject(page: Page) {
   await page.route("**/api/v1/**", async (route) => {
     const path = new URL(route.request().url()).pathname;
     let data: unknown;
@@ -55,10 +55,17 @@ test("project sections use the shared sidebar on desktop and its mobile drawer",
       body: JSON.stringify(data ?? {}),
     });
   });
+}
+
+test("project sections use the shared sidebar on desktop and its mobile drawer", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mockResponsiveProject(page);
 
   await page.goto("/projects/responsive-project");
   await expect(page.getByRole("heading", { name: "Responsive project" })).toBeVisible();
   await page.getByRole("button", { name: "Gezinme menüsü" }).click();
+  // The drawer carries the same navigation: one "Ayarlar" link of its own, none among the project sections.
+  await expect(page.getByRole("dialog").getByRole("link", { name: "Ayarlar", exact: true })).toHaveCount(1);
   await page.getByRole("dialog").getByRole("link", { name: "Kriterler" }).click();
   await expect(page.getByRole("heading", { name: "Başarı kriterleri" })).toBeVisible();
   await expect(page.getByRole("dialog")).toBeHidden();
@@ -78,6 +85,42 @@ test("project sections use the shared sidebar on desktop and its mobile drawer",
   await page.getByRole("button", { name: "Kriterleri tanımla" }).click();
   await expect(page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Kriterler" })).toHaveAttribute("aria-current", "page");
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBe(1440);
+});
+
+test("the sidebar has no project settings item, and its own Ayarlar link stays in view", async ({ page }) => {
+  // Short on purpose: the project navigation is taller than this, so the sidebar's middle part has to scroll.
+  await page.setViewportSize({ width: 1440, height: 640 });
+  await mockResponsiveProject(page);
+
+  await page.goto("/projects/responsive-project");
+  await expect(page.getByRole("heading", { name: "Responsive project" })).toBeVisible();
+  const nav = page.getByRole("navigation", { name: "Gezinme menüsü" });
+  await expect(nav.getByRole("link", { name: "Kriterler" })).toBeVisible();
+  await expect(nav.getByRole("link", { name: "Ayarlar" })).toHaveCount(0);
+
+  // The page header carries no pencil either; the settings section itself is unchanged and opens by address.
+  await expect(page.getByRole("link", { name: /ayarlarını düzenle/ })).toHaveCount(0);
+  await page.goto("/projects/responsive-project?section=settings");
+  await expect(page.getByRole("heading", { level: 1, name: "Proje ayarları" })).toBeVisible();
+
+  // The sidebar's own settings link sits below the scrolling part and never leaves the screen.
+  const settings = page.getByRole("link", { name: "Ayarlar", exact: true });
+  await expect(settings).toBeInViewport();
+  await page.getByRole("button", { name: "Kenar çubuğunu daralt" }).click();
+  await expect(page.getByRole("link", { name: "Ayarlar", exact: true })).toBeInViewport();
+  await expect(page.getByRole("link", { name: "Ayarlar", exact: true })).toHaveCount(1);
+  await page.getByRole("button", { name: "Kenar çubuğunu genişlet" }).click();
+
+  // The old "workspace" card is gone.
+  await expect(page.getByText("Çalışma alanın")).toHaveCount(0);
+});
+
+test("Projeler stays highlighted on the list and the create page, not inside a project", async ({ page }) => {
+  await page.goto("/projects");
+  const nav = page.getByRole("navigation", { name: "Gezinme menüsü" });
+  await expect(nav.getByRole("link", { name: "Projeler", exact: true })).toHaveAttribute("aria-current", "page");
+  await page.goto("/projects/new");
+  await expect(nav.getByRole("link", { name: "Projeler", exact: true })).toHaveAttribute("aria-current", "page");
 });
 
 test("criteria filters and search show only matching real criteria", async ({ page }) => {

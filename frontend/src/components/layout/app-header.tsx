@@ -14,13 +14,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Avatar } from "@/components/ui/avatar";
+import { profilePhotoUrl } from "@/features/account/api";
 import { cn } from "@/lib/utils";
 import { GlobalSearch } from "./global-search";
 import { LocaleSwitcher } from "./locale-switcher";
 import { ThemeToggle } from "./theme-toggle";
 import { useAutoHide } from "./use-auto-hide";
 
-type SessionUser = { nickname?: string; email?: string } | null | undefined;
+type SessionUser = { id?: string; nickname?: string; email?: string; profilePhotoVersion?: number | null } | null | undefined;
 
 /**
  * Floating glass navbar: a compact pill fixed to the true viewport (so it's
@@ -65,7 +67,7 @@ export function AppHeader({
       <header
         ref={ref}
         className={cn(
-          "fixed inset-x-3 top-3 z-40 flex h-12 items-center gap-2 rounded-full border border-border/60 bg-background/95 px-3 shadow-[0_10px_30px_-14px_hsl(var(--shadow-tint)/0.35)] backdrop-saturate-150 transition-[translate,scale,opacity] duration-500 ease-out supports-[backdrop-filter]:bg-background/55 supports-[backdrop-filter]:backdrop-blur-2xl sm:inset-x-auto sm:left-1/2 sm:w-[min(90vw,560px)] sm:-translate-x-1/2 sm:px-4 lg:w-[440px] xl:w-[620px] 2xl:w-[760px]",
+          "fixed inset-x-3 top-3 z-40 flex h-12 items-center gap-2 rounded-full border border-border/60 bg-background/95 px-3 shadow-[0_10px_30px_-14px_hsl(var(--shadow-tint)/0.35)] backdrop-saturate-150 transition-[translate,scale,opacity] duration-500 ease-out supports-[backdrop-filter]:bg-background/55 supports-[backdrop-filter]:backdrop-blur-2xl sm:inset-x-auto sm:left-1/2 sm:w-[min(90vw,560px)] sm:-translate-x-1/2 sm:px-4 lg:w-[480px] xl:w-[620px] 2xl:w-[760px]",
           hidden && "pointer-events-none scale-95 -translate-y-[calc(100%+16px)] opacity-0",
         )}
       >
@@ -81,10 +83,12 @@ export function AppHeader({
           <DropdownMenu>
             <DropdownMenuTrigger
               render={
-                <Button variant="ghost" size="sm" className="max-w-40 min-w-0 gap-2 px-1 sm:px-2">
-                  <span className="grid size-7 shrink-0 place-items-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground">
-                    {user?.nickname?.slice(0, 2).toUpperCase()}
-                  </span>
+                <Button variant="ghost" size="sm" className="max-w-44 min-w-0 gap-2 px-1 sm:px-2 xl:max-w-56">
+                  <Avatar
+                    name={user?.nickname ?? ""}
+                    src={user?.id && user.profilePhotoVersion != null ? profilePhotoUrl(user.id, user.profilePhotoVersion) : null}
+                    className="size-7 bg-primary text-[11px] text-primary-foreground ring-0"
+                  />
                   <span className="hidden truncate sm:block" title={user?.nickname}>{user?.nickname}</span>
                   <CaretDown size={13} aria-hidden="true" />
                   <span className="sr-only">{tw("account")}</span>
@@ -98,7 +102,7 @@ export function AppHeader({
                 <p className="break-all text-xs text-muted-foreground">{user?.email}</p>
               </div>
               <DropdownMenuSeparator />
-              <DropdownMenuItem render={<Link href="/account" />}>{tw("settings")}</DropdownMenuItem>
+              <DropdownMenuItem render={<Link href="/account" />}>{tw("accountSettings")}</DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
                 <DropdownMenuLabel>{tf("information")}</DropdownMenuLabel>

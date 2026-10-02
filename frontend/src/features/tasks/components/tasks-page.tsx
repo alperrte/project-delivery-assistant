@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/common/empty-state";
 import { PageHeader } from "@/components/common/page-header";
 import { PaginationBar } from "@/components/common/pagination-bar";
 import { Avatar } from "@/components/ui/avatar";
+import { profilePhotoSrc } from "@/features/account/api";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { errorKey } from "@/lib/api/error-message";
@@ -46,7 +47,7 @@ function GroupHeading({ group }: { group: TaskGroup }) {
   if (group.kind === "assignee") {
     return (
       <span className="inline-flex items-center gap-2 text-sm font-medium text-foreground">
-        {group.userId && <Avatar name={group.name ?? "?"} className="size-5 bg-muted text-[9px] text-foreground" />}
+        {group.userId && <Avatar name={group.name ?? "?"} src={profilePhotoSrc(group.userId, group.profilePhotoVersion)} className="size-5 bg-muted text-[9px] text-foreground" />}
         {group.userId ? (group.name ?? "?") : tc("unassigned")}
       </span>
     );

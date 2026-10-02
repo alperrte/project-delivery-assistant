@@ -1,8 +1,9 @@
 "use client";
 
-import { useId, useRef, useState, type KeyboardEvent } from "react";
+import { useId, useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
 import { useTranslations } from "next-intl";
 import { Avatar } from "@/components/ui/avatar";
+import { profilePhotoSrc } from "@/features/account/api";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { useProjectMembers } from "../../hooks";
@@ -40,6 +41,20 @@ export function MentionTextarea({ projectId, value, onChange, onPick, onSubmit, 
   const [index, setIndex] = useState(0);
   const [dismissed, setDismissed] = useState<number | null>(null);
   const members = useProjectMembers(projectId);
+  // Where the caret goes once the picked mention is in the text. Applied only while the text is still exactly what
+  // the pick produced: if the person kept typing meanwhile, the caret is already where they are typing.
+  const restore = useRef<{ text: string; caret: number } | null>(null);
+
+  useLayoutEffect(() => {
+    const pending = restore.current;
+    if (!pending) return;
+    restore.current = null;
+    const element = field.current;
+    if (element && value === pending.text) {
+      element.focus();
+      element.setSelectionRange(pending.caret, pending.caret);
+    }
+  }, [value]);
 
   const mention = activeMention(value, caret);
   const needle = mention?.query.toLowerCase() ?? "";
@@ -66,10 +81,7 @@ export function MentionTextarea({ projectId, value, onChange, onPick, onSubmit, 
     onChange(next.text);
     setCaret(next.caret);
     setIndex(0);
-    requestAnimationFrame(() => {
-      field.current?.focus();
-      field.current?.setSelectionRange(next.caret, next.caret);
-    });
+    restore.current = next;
   }
 
   function onKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
@@ -144,7 +156,7 @@ export function MentionTextarea({ projectId, value, onChange, onPick, onSubmit, 
               onMouseMove={() => setIndex(position)}
               className={cn("flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm", position === active ? "bg-accent text-accent-foreground" : "text-foreground")}
             >
-              <Avatar name={member.nickname ?? "?"} className="size-5 text-[9px] ring-0" />
+              <Avatar name={member.nickname ?? "?"} src={profilePhotoSrc(member.userId, member.profilePhotoVersion)} className="size-5 text-[9px] ring-0" />
               <span className="truncate">@{member.nickname}</span>
             </li>
           ))}

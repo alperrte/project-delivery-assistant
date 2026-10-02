@@ -23,6 +23,7 @@ import { createProjectSchema, TAGLINE_MAX, type CreateProjectValues } from "../s
 import { MAX_TECH_SELECTION } from "../tech-catalog";
 import { formatTechStack } from "../tech-stack";
 import type { UserRef } from "../types";
+import { BannerPickField } from "./create/banner-pick-field";
 import { LogoField } from "./create/logo-field";
 import { TechPicker } from "./create/tech-picker";
 import { TypePicker } from "./create/type-picker";
@@ -54,6 +55,27 @@ function Section({ id, title, description, children }: { id: string; title: stri
   );
 }
 
+/**
+ * A picked image file and a local URL to show it with. The URL is created on pick and released when the file is
+ * replaced, removed or the page is left.
+ */
+function usePickedImage() {
+  const [picked, setPicked] = useState<{ file: File; url: string } | null>(null);
+  const urlRef = useRef<string | null>(null);
+  function change(file: File | null) {
+    if (urlRef.current) URL.revokeObjectURL(urlRef.current);
+    urlRef.current = file ? URL.createObjectURL(file) : null;
+    setPicked(file && urlRef.current ? { file, url: urlRef.current } : null);
+  }
+  useEffect(
+    () => () => {
+      if (urlRef.current) URL.revokeObjectURL(urlRef.current);
+    },
+    [],
+  );
+  return { file: picked?.file ?? null, url: picked?.url ?? null, change };
+}
+
 export function ProjectCreatePage() {
   const t = useTranslations("projects.newPage");
   const tv = useTranslations("validation");
@@ -63,23 +85,8 @@ export function ProjectCreatePage() {
   const { data: user } = useSession();
   const ids = useId();
 
-  const [logo, setLogo] = useState<{ file: File; url: string } | null>(null);
-  const logoFile = logo?.file ?? null;
-  const logoUrl = logo?.url ?? null;
-
-  // Object URLs are created on pick and released when replaced, removed or on leaving the page.
-  const logoUrlRef = useRef<string | null>(null);
-  function changeLogo(file: File | null) {
-    if (logoUrlRef.current) URL.revokeObjectURL(logoUrlRef.current);
-    logoUrlRef.current = file ? URL.createObjectURL(file) : null;
-    setLogo(file && logoUrlRef.current ? { file, url: logoUrlRef.current } : null);
-  }
-  useEffect(
-    () => () => {
-      if (logoUrlRef.current) URL.revokeObjectURL(logoUrlRef.current);
-    },
-    [],
-  );
+  const { file: logoFile, url: logoUrl, change: changeLogo } = usePickedImage();
+  const { file: bannerFile, url: bannerUrl, change: changeBanner } = usePickedImage();
 
   const { data: organizations } = useQuery({
     queryKey: ["organizations", "picker"],
@@ -98,7 +105,7 @@ export function ProjectCreatePage() {
   });
 
   const values = useWatch({ control });
-  const dirty = isDirty || logoFile !== null;
+  const dirty = isDirty || logoFile !== null || bannerFile !== null;
 
   const mutation = useMutation({
     mutationFn: async (form: CreateProjectValues) => {
@@ -118,13 +125,22 @@ export function ProjectCreatePage() {
           logoFailed = true;
         }
       }
-      return { project, logoFailed };
+      let bannerFailed = false;
+      if (bannerFile) {
+        try {
+          await projectsApi.uploadBanner(project.id, bannerFile);
+        } catch {
+          bannerFailed = true;
+        }
+      }
+      return { project, logoFailed, bannerFailed };
     },
-    onSuccess: ({ project, logoFailed }) => {
+    onSuccess: ({ project, logoFailed, bannerFailed }) => {
       created.current = true;
       queryClient.invalidateQueries({ queryKey: ["projects"] });
       toast.success(t("actions.created"));
       if (logoFailed) toast.warning(t("actions.logoFailed"));
+      if (bannerFailed) toast.warning(t("actions.bannerFailed"));
       router.push(`/projects/${project.slug}`);
     },
     onError: (err) => toast.error(te(errorKey(err))),
@@ -179,6 +195,7 @@ export function ProjectCreatePage() {
           <div className="space-y-8 lg:col-span-7">
             <Section id={`${ids}-identity`} title={t("sections.identity.title")} description={t("sections.identity.description")}>
               <LogoField name={name} previewUrl={logoUrl} onChange={changeLogo} />
+              <BannerPickField previewUrl={bannerUrl} onChange={changeBanner} />
 
               <div className="space-y-1.5">
                 <Label htmlFor="project-name">{t("name.label")}</Label>
@@ -301,13 +318,13 @@ export function ProjectCreatePage() {
                 <p className="text-sm text-muted-foreground">{t("preview.caption")}</p>
               </div>
               <div className="mx-auto max-w-sm lg:max-w-none">
-                <ProjectCard project={previewProject} preview={{ logoSrc: logoUrl, updatedLabel: t("preview.now") }} />
+                <ProjectCard project={previewProject} preview={{ logoSrc: logoUrl, bannerSrc: bannerUrl, updatedLabel: t("preview.now") }} />
               </div>
             </div>
           </aside>
         </div>
 
-        <div className="sticky bottom-0 z-20 -mx-4 mt-10 border-t bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:-mx-6 sm:px-6">
+        <div className="sticky bottom-0 z-20 -mx-4 -mb-6 mt-10 sm:-mb-8 border-t bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:-mx-8 sm:px-8">
           <div className="flex items-center justify-between gap-2">
             <Link href="/projects" className={buttonVariants({ variant: "outline" })}>
               {t("actions.cancel")}

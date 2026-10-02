@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { CircleNotch, PaperPlaneRight, PencilSimple, Trash } from "@phosphor-icons/react";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { Avatar } from "@/components/ui/avatar";
+import { profilePhotoSrc } from "@/features/account/api";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { tasksApi } from "../../api";
@@ -72,7 +73,7 @@ function CommentRow({ comment, ctx }: { comment: Comment; ctx: DetailContext }) 
 
   return (
     <li className="group flex gap-3">
-      <Avatar name={comment.authorName ?? "?"} className="mt-0.5 size-7 shrink-0 text-[10px]" />
+      <Avatar name={comment.authorName ?? "?"} src={profilePhotoSrc(comment.authorId, comment.authorPhotoVersion)} className="mt-0.5 size-7 shrink-0 text-[10px]" />
       <div className="min-w-0 flex-1 space-y-1">
         <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
           <span className="text-sm font-medium text-foreground">{comment.authorName ?? t("events.someone")}</span>

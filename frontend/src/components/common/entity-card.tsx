@@ -16,6 +16,10 @@ const TONES: Record<EntityTone, { band: string; mark: string }> = {
 
 type EntityCardProps = {
   tone?: EntityTone;
+  /** Optional cover image drawn behind the header band's content; the band itself stays where it is. */
+  banner?: ReactNode;
+  /** Optional control pinned to the card's top-right corner, above the card-wide link. */
+  corner?: ReactNode;
   /** Letter or icon shown in the header tile. */
   mark: ReactNode;
   title: string;
@@ -27,7 +31,7 @@ type EntityCardProps = {
   className?: string;
 };
 
-export function EntityCard({ tone = "neutral", mark, title, description, badge, children, className }: EntityCardProps) {
+export function EntityCard({ tone = "neutral", banner, corner, mark, title, description, badge, children, className }: EntityCardProps) {
   const palette = TONES[tone];
   return (
     <article
@@ -38,16 +42,24 @@ export function EntityCard({ tone = "neutral", mark, title, description, badge, 
         className,
       )}
     >
-      <div className={cn("rounded-lg px-4 py-5 text-center", palette.band)}>
+      {corner && <div className="absolute top-4 right-4 z-10">{corner}</div>}
+      <div className={cn("relative overflow-hidden rounded-lg px-4 py-5 text-center", palette.band)}>
+        {banner && (
+          <>
+            <div aria-hidden="true" className="absolute inset-0">{banner}</div>
+            {/* A veil keeps the name and description readable on any picture. */}
+            <div aria-hidden="true" className="absolute inset-0 bg-background/50" />
+          </>
+        )}
         <span
           aria-hidden="true"
-          className={cn("mx-auto grid size-12 place-items-center rounded-lg font-heading text-xl font-semibold", palette.mark)}
+          className={cn("relative mx-auto grid size-12 place-items-center rounded-lg font-heading text-xl font-semibold", palette.mark)}
         >
           {mark}
         </span>
-        <h2 className="mt-3 truncate text-base font-semibold text-foreground" title={title}>{title}</h2>
-        <p className="mx-auto mt-1 line-clamp-2 min-h-10 max-w-[34ch] text-sm leading-5 text-muted-foreground">{description}</p>
-        {badge && <div className="mt-3 flex justify-center">{badge}</div>}
+        <h2 className="relative mt-3 truncate text-base font-semibold text-foreground" title={title}>{title}</h2>
+        <p className="relative mx-auto mt-1 line-clamp-2 min-h-10 max-w-[34ch] text-sm leading-5 text-muted-foreground">{description}</p>
+        {badge && <div className="relative mt-3 flex justify-center">{badge}</div>}
       </div>
       <div className="flex flex-1 flex-col gap-3 px-2 pt-3 pb-1">{children}</div>
     </article>

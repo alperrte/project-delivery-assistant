@@ -23,6 +23,7 @@ export type TeamRef = { id: string; name: string };
 export type TeamMember = {
   userId: string;
   nickname: string | null;
+  profilePhotoVersion?: number | null;
   email: string | null;
   roles: ProjectRole[];
   addedBy: string;

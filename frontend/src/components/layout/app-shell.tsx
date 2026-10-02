@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
-import { Buildings, CaretDown, SquaresFour, House, GearSix, CalendarBlank, SidebarSimple, EnvelopeSimple } from "@phosphor-icons/react";
+import { Buildings, SquaresFour, House, GearSix, CalendarBlank, SidebarSimple, EnvelopeSimple } from "@phosphor-icons/react";
 import { AppHeader } from "./app-header";
 import { ProjectSidebarNav } from "./project-sidebar-nav";
 import { TasksNavLink } from "./tasks-nav-link";
@@ -20,6 +20,7 @@ import { ApiError, SESSION_EXPIRED_EVENT } from "@/lib/api/client";
 import { PageFailure } from "@/features/errors/page-failure";
 import { ErrorFrame } from "@/features/errors/error-frame";
 import { sessionQueryKey, useSession } from "@/features/auth/hooks/use-session";
+import { useApplySavedPreferences, useRestoreSessionBaseline } from "@/features/settings/session-preferences";
 
 const NAV_LINKS = [
   { href: "/dashboard", key: "home", icon: House },
@@ -57,29 +58,40 @@ export function AppShell({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const { data: user, isLoading, isError, error, refetch } = useSession();
   const sessionExpired = isError && error instanceof ApiError && error.status === 401;
+  // A sign-in starts with the account's saved defaults; the navbar's language and theme switches only last until
+  // sign-out (or the end of the session), when the interface goes back to where the sign-in started.
+  useApplySavedPreferences(user?.id);
+  const restoreBaseline = useRestoreSessionBaseline();
   // SSR/first-paint snapshot is always "expanded" so hydration never mismatches;
   // the real preference (if collapsed) applies a frame later, same pattern as
   // the last-selected-project memory in project-sidebar-nav.tsx.
   const collapsed = useSyncExternalStore(subscribeToCollapse, readCollapsed, () => false);
 
   useEffect(() => {
-    if (sessionExpired) router.replace("/login");
+    if (!sessionExpired) return;
+    restoreBaseline();
+    router.replace("/login");
+    // `restoreBaseline` is recreated every render; the session ending is the only trigger that matters.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionExpired, router]);
 
   // The access token is renewed transparently; this only fires when the session itself is over.
   useEffect(() => {
     const sessionEnded = () => {
+      restoreBaseline();
       queryClient.removeQueries({ queryKey: sessionQueryKey });
       router.replace("/login");
     };
     window.addEventListener(SESSION_EXPIRED_EVENT, sessionEnded);
     return () => window.removeEventListener(SESSION_EXPIRED_EVENT, sessionEnded);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queryClient, router]);
 
   async function handleLogout() {
     try {
       await authApi.logout();
     } finally {
+      restoreBaseline();
       queryClient.removeQueries({ queryKey: sessionQueryKey });
       router.replace("/login");
     }
@@ -121,7 +133,13 @@ export function AppShell({ children }: { children: ReactNode }) {
         <nav aria-label={tw("navigation")} className={cn("min-h-0 flex-1 space-y-1 overflow-y-auto py-3", narrow ? "px-2" : "px-3")}>
           {NAV_LINKS.map(link => {
             const Icon = link.icon;
-            const active = link.key === "organizations" ? pathname.startsWith(link.href) : pathname === link.href;
+            // Inside one project the selected-project group owns the highlight, so "Projeler" lights up only on
+            // the list and the create page; organizations also own their detail pages.
+            const active = link.key === "organizations"
+              ? pathname.startsWith(link.href)
+              : link.key === "projects"
+                ? pathname === link.href || pathname === "/projects/new"
+                : pathname === link.href;
             return (
               <Link
                 key={link.href}
@@ -138,7 +156,11 @@ export function AppShell({ children }: { children: ReactNode }) {
             );
           })}
           <ProjectSidebarNav onNavigate={() => setMenuOpen(false)} collapsed={narrow} />
-          <div className="my-3 border-t" />
+          <div className="mt-3 border-t border-border pt-4">
+            {!narrow && (
+              <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">{tw("personal")}</p>
+            )}
+          </div>
           <TasksNavLink narrow={narrow} onNavigate={() => setMenuOpen(false)} />
           <Link
             href="/calendar"
@@ -154,32 +176,15 @@ export function AppShell({ children }: { children: ReactNode }) {
         </nav>
         <div className={cn("space-y-3 p-3", narrow && "px-2")}>
           <Link
-            href="/account"
+            href="/settings"
             onClick={() => setMenuOpen(false)}
             title={narrow ? tw("settings") : undefined}
             aria-label={narrow ? tw("settings") : undefined}
-            aria-current={pathname === "/account" ? "page" : undefined}
-            className={navItemClass(pathname === "/account", cn("flex items-center gap-3 rounded-md py-2 text-[13px] hover:bg-muted hover:text-foreground", narrow ? "justify-center px-0" : "px-3"))}
+            aria-current={pathname === "/settings" ? "page" : undefined}
+            className={navItemClass(pathname === "/settings", cn("flex items-center gap-3 rounded-md py-2 text-[13px] hover:bg-muted hover:text-foreground", narrow ? "justify-center px-0" : "px-3"))}
           >
             <GearSix size={19} aria-hidden="true" />
             {!narrow && tw("settings")}
-          </Link>
-          <Link
-            href="/organizations"
-            onClick={() => setMenuOpen(false)}
-            title={narrow ? tw("workspace") : undefined}
-            className={cn("flex items-center gap-2.5 rounded-lg border bg-card hover:bg-muted", narrow ? "justify-center p-2" : "p-3")}
-          >
-            <span className="grid size-8 shrink-0 place-items-center rounded-md bg-primary text-xs font-semibold text-primary-foreground">P</span>
-            {!narrow && (
-              <>
-                <span className="min-w-0">
-                  <span className="block text-xs font-semibold">PDA</span>
-                  <span className="block truncate text-[11px] text-muted-foreground">{tw("workspace")}</span>
-                </span>
-                <CaretDown className="ml-auto" size={14} aria-hidden="true" />
-              </>
-            )}
           </Link>
         </div>
       </>

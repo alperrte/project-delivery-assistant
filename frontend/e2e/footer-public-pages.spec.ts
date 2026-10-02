@@ -100,7 +100,7 @@ test("authenticated app shell has no footer and information links work from the 
     });
   });
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/account");
+  await page.goto("/settings");
   await expect(page.locator(".app-shell")).toBeVisible();
   await expect(page.locator("footer")).toHaveCount(0);
   await page.getByRole("button", { name: /Hesap menüsü/ }).click();

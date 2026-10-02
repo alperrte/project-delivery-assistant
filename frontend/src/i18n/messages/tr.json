@@ -45,6 +45,9 @@
     "PROJECT_LOGO_INVALID_TYPE": "Logo PNG, JPEG veya WebP olmalıdır.",
     "PROJECT_LOGO_TOO_LARGE": "Logo en fazla 512 KB olabilir.",
     "PROJECT_LOGO_EMPTY": "Logo dosyası boş.",
+    "PROJECT_BANNER_INVALID_TYPE": "Kapak görseli PNG, JPEG veya WebP olmalıdır.",
+    "PROJECT_BANNER_TOO_LARGE": "Kapak görseli en fazla 2 MB olabilir.",
+    "PROJECT_BANNER_EMPTY": "Kapak görseli dosyası boş.",
     "TEAM_MEMBER_EXISTS": "Bu kişi zaten ekipte.",
     "TEAM_CIRCULAR_PARENT": "Bir ekip kendi alt ekibinin altına taşınamaz.",
     "TEAM_HAS_CHILDREN": "Alt ekibi olan bir ekip arşivlenemez. Önce alt ekipleri taşıyın veya arşivleyin.",
@@ -84,7 +87,14 @@
     "SPRINT_NOT_EMPTY": "Görevi olan sprint silinemez.",
     "SPRINT_INVALID": "Sprint bilgileri geçersiz.",
     "LABEL_NAME_EXISTS": "Bu adda bir etiket zaten var.",
-    "WORKLOG_INVALID": "Süre kaydı geçersiz."
+    "WORKLOG_INVALID": "Süre kaydı geçersiz.",
+    "PROFILE_PHOTO_INVALID_TYPE": "Dosya türü desteklenmiyor.",
+    "PROFILE_PHOTO_TOO_LARGE": "Dosya en fazla 5 MB olabilir.",
+    "PROFILE_PHOTO_EMPTY": "Dosya boş.",
+    "PROFILE_PHOTO_DIMENSIONS": "Görsel çok büyük. En fazla 6000 piksel olabilir.",
+    "PROFILE_PHOTO_FAILED": "Profil fotoğrafı yüklenemedi.",
+    "PROJECT_LOGO_DIMENSIONS": "Logo çok büyük. En fazla 6000 piksel olabilir.",
+    "PROJECT_BANNER_DIMENSIONS": "Kapak görseli çok büyük. En fazla 6000 piksel olabilir."
   },
   "app": {
     "nav": {
@@ -149,7 +159,27 @@
       "create": "Oluştur",
       "save": "Kaydet",
       "created": "Organizasyon oluşturuldu.",
-      "updated": "Organizasyon güncellendi."
+      "updated": "Organizasyon güncellendi.",
+      "createDescription": "Projelerinizi bir organizasyon altında gruplayın.",
+      "editDescription": "Organizasyonun adını ve açıklamasını güncelleyin.",
+      "notEditable": "Bu organizasyonu yalnızca sahibi düzenleyebilir; arşivlenmiş organizasyonlar değiştirilemez.",
+      "namePlaceholder": "Ör. Teslimat Ekibi",
+      "descriptionPlaceholder": "Organizasyonun ne yaptığını ve kimleri kapsadığını kısaca yazın.",
+      "descriptionHint": "İsteğe bağlı. Kartta ve organizasyon sayfasında görünür.",
+      "preview": {
+        "title": "Önizleme",
+        "caption": "Kart listede böyle görünecek.",
+        "now": "Şimdi",
+        "show": "Önizlemeyi göster",
+        "namePlaceholder": "Organizasyon adı"
+      },
+      "backToOrganization": "Organizasyona dön",
+      "sections": {
+        "general": {
+          "title": "Genel",
+          "description": "Organizasyonun adı ve açıklaması."
+        }
+      }
     }
   },
   "projects": {
@@ -162,6 +192,8 @@
       "updatedBy": "{date} · {name}",
       "open": "Projeyi aç",
       "openNamed": "{name} projesini aç",
+      "edit": "Ayarları düzenle",
+      "editNamed": "{name} ayarlarını düzenle",
       "types": {
         "WEB": "Web",
         "MOBILE": "Mobil",
@@ -218,6 +250,15 @@
         "invalidType": "Yalnızca PNG, JPEG veya WebP yükleyin.",
         "tooLarge": "Logo en fazla 512 KB olabilir."
       },
+      "banner": {
+        "label": "Kapak görseli",
+        "hint": "PNG, JPEG veya WebP, en fazla 2 MB. Projeler listesindeki kartın arka planı olarak görünür; yoksa kart düz kalır.",
+        "choose": "Görsel yükle",
+        "change": "Değiştir",
+        "remove": "Kaldır",
+        "invalidType": "Yalnızca PNG, JPEG veya WebP yükleyin.",
+        "tooLarge": "Kapak görseli en fazla 2 MB olabilir."
+      },
       "name": {
         "label": "Proje adı",
         "placeholder": "ör. Teslimat Portalı",
@@ -271,7 +312,8 @@
         "cancel": "Vazgeç",
         "submit": "Projeyi oluştur",
         "created": "Proje oluşturuldu.",
-        "logoFailed": "Logo yüklenemedi. Proje ayarlarından tekrar deneyebilirsiniz."
+        "logoFailed": "Logo yüklenemedi. Proje ayarlarından tekrar deneyebilirsiniz.",
+        "bannerFailed": "Kapak görseli yüklenemedi. Proje ayarlarından tekrar deneyebilirsiniz."
       },
       "types": {
         "WEB": {
@@ -425,7 +467,27 @@
       "tagline": "Slogan",
       "taglinePlaceholder": "Projeyi tek cümleyle anlatın",
       "type": "Proje türü",
+      "banner": {
+        "label": "Kapak görseli",
+        "hint": "PNG, JPEG veya WebP, en fazla 2 MB. 4:1 oranında (ör. 1600×400) en iyi görünür; görsel kırpılarak sığdırılır.",
+        "statusSet": "Bu proje için bir kapak görseli yüklü.",
+        "statusNone": "Henüz kapak görseli yok.",
+        "choose": "Görsel yükle",
+        "change": "Değiştir",
+        "remove": "Kaldır",
+        "cancel": "Vazgeç",
+        "removeConfirmTitle": "Kapak görseli kaldırılsın mı?",
+        "removeConfirmDescription": "Görsel silinir ve yerine varsayılan arka plan gösterilir.",
+        "uploaded": "Kapak görseli güncellendi.",
+        "removed": "Kapak görseli kaldırıldı.",
+        "invalidType": "Kapak görseli PNG, JPEG veya WebP olmalıdır.",
+        "tooLarge": "Kapak görseli en fazla 2 MB olabilir."
+      },
       "sections": {
+        "banner": {
+          "title": "Kapak görseli",
+          "description": "Projeler listesinde proje kartının üstünde görünür."
+        },
         "general": {
           "title": "Genel",
           "description": "Projenin adı, açıklaması ve hedefi. Liste ve proje başlığında görünür."
@@ -530,6 +592,11 @@
     "mineTitle": "Proje davetlerim",
     "mineDescription": "Hesabınıza gönderilen davetleri inceleyin.",
     "mineEmpty": "Proje davetiniz yok.",
+    "mineTabsLabel": "Davet filtresi",
+    "mineTabPending": "Bekleyen",
+    "mineTabAll": "Tümü",
+    "minePendingEmpty": "Bekleyen davetiniz yok.",
+    "mineProjectGone": "Proje artık kullanılamıyor, davet yanıtlanamaz.",
     "mineListLabel": "Bana gelen proje davetleri",
     "mineLoading": "Davetler yükleniyor",
     "mineProject": "Proje",
@@ -1024,6 +1091,70 @@
       "timeInvalid": "Geçerli bir saat girin."
     }
   },
+  "preferences": {
+    "title": "Ayarlar",
+    "description": "Burada kaydettikleriniz hesabınızın varsayılanı olur ve her girişinizde uygulanır. Üst çubuktaki dil ve tema düğmeleri yalnızca o anki oturum için geçicidir.",
+    "save": {
+      "save": "Kaydet",
+      "discard": "Vazgeç",
+      "unsaved": "Kaydedilmemiş değişiklikler var.",
+      "clean": "Tercihleriniz kayıtlı.",
+      "done": "Ayarlar kaydedildi."
+    },
+    "profile": {
+      "title": "Profil",
+      "description": "Hesabınızda görünen bilgiler.",
+      "photo": {
+        "photoLabel": "Profil fotoğrafı",
+        "choose": "Fotoğraf seç",
+        "change": "Fotoğrafı değiştir",
+        "remove": "Kaldır",
+        "hint": "PNG, JPEG veya WebP. En fazla 5 MB.",
+        "previewTitle": "Yeni fotoğraf önizlemesi",
+        "save": "Fotoğrafı kaydet",
+        "cancel": "Vazgeç",
+        "uploaded": "Profil fotoğrafı güncellendi.",
+        "removed": "Profil fotoğrafı kaldırıldı.",
+        "removeConfirmTitle": "Profil fotoğrafı kaldırılsın mı?",
+        "removeConfirmDescription": "Fotoğraf silinir ve adınızın baş harfleri gösterilir.",
+        "invalidType": "Dosya türü desteklenmiyor.",
+        "tooLarge": "Dosya en fazla 5 MB olabilir.",
+        "uploading": "Yükleniyor"
+      }
+    },
+    "security": {
+      "title": "Güvenlik",
+      "description": "Parolanızı düzenli aralıklarla güncelleyin."
+    },
+    "language": {
+      "title": "Dil",
+      "description": "Arayüzün varsayılan dili. Kaydet'e basana kadar değişmez.",
+      "label": "Arayüz dili"
+    },
+    "appearance": {
+      "title": "Görünüm",
+      "description": "Varsayılan tema: açık, koyu ya da cihazınızı izleyin. Kaydet'e basana kadar değişmez.",
+      "label": "Tema"
+    },
+    "motion": {
+      "title": "Animasyonlar",
+      "description": "Bu tercihler hesabınıza kaydedilir ve her girişinizde uygulanır.",
+      "ui": {
+        "label": "Arayüz animasyonları",
+        "hint": "Açılır pencereler, menüler, kenar çubuğu ve dil geçişi. “Cihazı izle”, cihazınızdaki “hareketi azalt” ayarını uygular.",
+        "system": "Cihazı izle",
+        "on": "Açık",
+        "off": "Kapalı"
+      },
+      "theme": {
+        "label": "Tema geçiş animasyonu",
+        "hint": "Açık ile koyu tema arasında geçerken ekranı saran çember geçişi.",
+        "on": "Açık",
+        "off": "Kapalı",
+        "blocked": "Arayüz animasyonları kapalı veya cihazınız hareketi azaltıyor, bu yüzden tema doğrudan değişir."
+      }
+    }
+  },
   "account": {
     "title": "Hesap ayarları",
     "description": "Hesap bilgilerinizi görüntüleyin ve şifrenizi yönetin.",
@@ -1068,7 +1199,9 @@
     "notifications": "Bildirimler",
     "noNotifications": "Henüz bildirim yok.",
     "calendar": "Takvim",
-    "settings": "Hesap ayarları",
+    "settings": "Ayarlar",
+    "personal": "Kişisel",
+    "accountSettings": "Hesap ayarları",
     "workspace": "Çalışma alanın",
     "skip": "İçeriğe geç",
     "account": "Hesap menüsü",

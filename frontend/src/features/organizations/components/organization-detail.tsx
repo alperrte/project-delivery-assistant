@@ -10,7 +10,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { EmptyState } from "@/components/common/empty-state";
 import { PaginationBar } from "@/components/common/pagination-bar";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -18,7 +18,6 @@ import { PageFailure } from "@/features/errors/page-failure";
 import { useSession } from "@/features/auth/hooks/use-session";
 import { ProjectRow } from "@/features/projects/components/project-card";
 import { organizationsApi } from "../api";
-import { OrganizationFormDialog } from "./organization-form-dialog";
 
 export function OrganizationDetail({ organizationId }: { organizationId: string }) {
   const t = useTranslations("organizations");
@@ -57,15 +56,10 @@ export function OrganizationDetail({ organizationId }: { organizationId: string 
         action={
           !archived && isOwner && (
             <div className="flex gap-2">
-              <OrganizationFormDialog
-                organization={org}
-                trigger={
-                  <Button variant="outline">
-                    <PencilSimple data-icon="inline-start" size={16} />
-                    {t("edit")}
-                  </Button>
-                }
-              />
+              <Link href={`/organizations/${org.id}/edit`} className={buttonVariants({ variant: "outline" })}>
+                <PencilSimple data-icon="inline-start" size={16} aria-hidden="true" />
+                {t("edit")}
+              </Link>
               <ConfirmDialog
                 trigger={
                   <Button variant="destructive">

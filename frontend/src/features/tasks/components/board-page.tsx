@@ -185,7 +185,7 @@ function BoardView({ slug, projectId, userId, isManager }: ProjectGateContext) {
       )}
 
       {tasks.data && tasks.data.length > 0 && (
-        <div className="-mx-4 overflow-x-auto px-4 pb-3 sm:-mx-6 sm:px-6" tabIndex={-1}>
+        <div className="-mx-4 overflow-x-auto px-4 pb-3 sm:-mx-8 sm:px-8" tabIndex={-1}>
           <div className="flex min-w-max gap-3">
             {STATUS_ORDER.map((status) => {
               const column = byStatus.get(status) ?? [];

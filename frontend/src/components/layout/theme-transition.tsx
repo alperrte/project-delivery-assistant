@@ -8,9 +8,9 @@ import { Moon, Sun } from "@phosphor-icons/react";
 type Scheme = "light" | "dark";
 type Run = { id: number; from: Scheme; to: Scheme };
 
-// Timeline (ms): the new theme starts opening as a circle almost at once; a
-// small sun/moon crosses over in the centre and is gone by the time the
-// circle has covered the screen.
+// Timeline (ms): the circle starts almost at once; a small sun/moon crosses over
+// in the centre and is gone by the time the circle has finished. The circle opens
+// from the centre for the light theme and closes in on it for the dark theme.
 const SWAP_AT = 60;
 const CLEAR_AT = 600;
 
@@ -29,8 +29,10 @@ function subscribe(listener: () => void) {
 
 /**
  * Plays the sun/moon overlay and, part-way in, runs `swap` (which applies the
- * theme) inside a view transition revealed as a growing circle. Returns false
- * when a run is already playing, so the caller can apply the theme directly.
+ * theme) inside a view transition: a circle growing from the centre when going
+ * to the light theme, one closing in on the centre when going to the dark
+ * theme. Returns false when a run is already playing, so the caller can apply
+ * the theme directly.
  */
 export function playThemeTransition(from: Scheme, to: Scheme, swap: () => void) {
   if (current) return false;
@@ -39,9 +41,10 @@ export function playThemeTransition(from: Scheme, to: Scheme, swap: () => void) 
 
   window.setTimeout(() => {
     const html = document.documentElement;
-    html.classList.add("theme-reveal");
+    const motion = to === "dark" ? "theme-close-in" : "theme-reveal";
+    html.classList.add(motion);
     const transition = document.startViewTransition(swap);
-    transition.finished.finally(() => html.classList.remove("theme-reveal"));
+    transition.finished.finally(() => html.classList.remove(motion));
   }, SWAP_AT);
 
   window.setTimeout(() => {

@@ -16,8 +16,9 @@ export const invitationsApi = {
     apiRequest<void>(`/projects/${projectId}/invitations/${invitationId}/reject`, { method: "POST", body: { token } }),
   accept: (projectId: string, invitationId: string, token: string) =>
     apiRequest<Member>(`/projects/${projectId}/invitations/${invitationId}/accept`, { method: "POST", body: { token } }),
-  mine: (page: number, size = 20) =>
-    apiRequest<Page<MyInvitation>>(`/project-invitations/me?page=${page}&size=${size}`),
+  /** `status: "PENDING"` keeps only invitations that can still be answered; omitted lists every invitation. */
+  mine: (page: number, size = 20, status?: "PENDING") =>
+    apiRequest<Page<MyInvitation>>(`/project-invitations/me?page=${page}&size=${size}${status ? `&status=${status}` : ""}`),
   previewMine: (invitationId: string) =>
     apiRequest<InvitationProjectPreview>(`/project-invitations/${invitationId}/preview`),
   previewLogoUrl: (invitationId: string, logoVersion: number) =>

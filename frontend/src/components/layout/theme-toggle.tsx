@@ -1,9 +1,10 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { motion, useReducedMotion } from "motion/react";
+import { motion } from "motion/react";
 import { Moon, Sun } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
+import { useReducedMotionPreference } from "@/lib/preferences/motion";
 import { useThemeSelection } from "./theme-switcher";
 
 const OPTIONS = [
@@ -20,7 +21,14 @@ const BUTTON_SIZE = { auth: "size-9", app: "size-7" } as const;
 
 const THUMB_TONE = {
   auth: "bg-white shadow-[0_2px_8px_-2px_rgb(15_23_42/0.25)] dark:bg-white/10 dark:shadow-[inset_0_0_0_1px_rgb(255_255_255/0.08)]",
-  app: "bg-primary shadow-sm",
+  // A neutral raised chip, so the coloured sun and moon read well on it in both themes.
+  app: "bg-card shadow-sm ring-1 ring-border",
+} as const;
+
+/** The navbar's icons are filled and keep their own colour: a yellow sun and a PDA-blue moon. */
+const APP_ICON_TONE = {
+  light: "text-amber-500 dark:text-amber-400",
+  dark: "text-[color-mix(in_oklab,var(--glow),black_25%)] dark:text-(--glow)",
 } as const;
 
 const ICON_TONE = {
@@ -40,7 +48,7 @@ const ICON_TONE = {
 export function ThemeToggle({ className, tone = "auth" }: { className?: string; tone?: "auth" | "app" }) {
   const t = useTranslations("common.theme");
   const { resolvedTheme, selectTheme } = useThemeSelection();
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionPreference();
 
   return (
     <div
@@ -73,9 +81,13 @@ export function ThemeToggle({ className, tone = "auth" }: { className?: string; 
             )}
             <Icon
               size={tone === "app" ? 15 : 18}
-              weight={active ? "bold" : "regular"}
+              weight={tone === "app" ? "fill" : active ? "bold" : "regular"}
               aria-hidden="true"
-              className={cn("relative", tone === "auth" && active && value === "dark" && "text-(--glow)")}
+              className={cn(
+                "relative",
+                tone === "app" && [APP_ICON_TONE[value], !active && "opacity-60"],
+                tone === "auth" && active && value === "dark" && "text-(--glow)",
+              )}
             />
           </button>
         );

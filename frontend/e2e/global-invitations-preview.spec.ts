@@ -6,6 +6,8 @@ const api = "http://localhost:8080/api/v1";
 
 test("global invitations show a recipient-owned project preview without an open link", async ({ page, context }) => {
   await context.addCookies([{ name: "PDA_SESSION", value: "ui-test", domain: "localhost", path: "/" }]);
+  // The status query parameter of every list read: "PENDING" on the default tab, none on the history tab.
+  const listFilters: (string | null)[] = [];
   await page.route(`${api}/**`, async (route) => {
     const url = new URL(route.request().url());
     const json = (body: unknown) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) });
@@ -13,6 +15,7 @@ test("global invitations show a recipient-owned project preview without an open 
       return json({ id: "user-1", email: "tester@example.test", nickname: "tester", globalRole: "USER", mustChangePassword: false });
     }
     if (url.pathname.endsWith("/project-invitations/me")) {
+      listFilters.push(url.searchParams.get("status"));
       return json({ page: 0, size: 20, totalElements: 2, totalPages: 1, content: [
         { id, projectId, projectName: "Atlas", teamName: "Core", invitedBy: "manager-1", invitedByNickname: "manager",
           initialRoles: ["TESTER"], status: "PENDING", createdAt: "2026-10-01T12:00:00Z",
@@ -51,6 +54,11 @@ test("global invitations show a recipient-owned project preview without an open 
   await page.keyboard.press("Escape");
   await expect(dialog).toHaveCount(0);
   await expect(page.getByRole("row").filter({ hasText: "Arşiv" }).getByRole("button", { name: /Kabul et|Reddet/ })).toHaveCount(0);
+
+  // Bekleyen is the default tab and asks for pending invitations only; Tümü asks for the whole history.
+  expect(listFilters[0]).toBe("PENDING");
+  await page.getByRole("tab", { name: "Tümü" }).click();
+  await expect.poll(() => listFilters.at(-1)).toBeNull();
 
   await page.setViewportSize({ width: 390, height: 844 });
   const mobileList = page.getByRole("list", { name: /proje davetleri/i });
@@ -161,5 +169,7 @@ test("list and preview show loading, error, retry and empty states", async ({ pa
 
   listMode = "empty";
   await page.reload();
+  await expect(page.getByText("Bekleyen davetiniz yok.")).toBeVisible();
+  await page.getByRole("tab", { name: "Tümü" }).click();
   await expect(page.getByText("Proje davetiniz yok.")).toBeVisible();
 });

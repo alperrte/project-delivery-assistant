@@ -62,7 +62,6 @@ export function Dashboard() {
   const tp = useTranslations("projects");
   const locale = useLocale();
   const { data: user } = useSession();
-  const [today] = useState(() => new Date());
   const [view, setView] = useState<"overview" | "updates">("overview");
   const query = useQuery({ queryKey: ["projects", "dashboard"], queryFn: () => projectsApi.list(0, 6) });
   const projects = query.data?.content ?? [];
@@ -71,9 +70,9 @@ export function Dashboard() {
   const create = <Link href="/projects/new" className={buttonVariants()}><Plus size={16} aria-hidden="true" />{t("create")}</Link>;
   const updateList = <section className="min-w-0"><h2 className="mb-4 text-[15px] font-semibold">{t("updates")}</h2><div className="space-y-0">{updates.map(project => <Link key={project.id} href={`/projects/${project.slug}`} className="flex items-start gap-3 border-b py-3 last:border-0 hover:bg-muted/50"><span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full border bg-surface-2"><Clock size={14} aria-hidden="true" /></span><span className="min-w-0 flex-1"><span className="block truncate text-xs font-medium">{project.name}</span><span className="text-[11px] text-muted-foreground">{t("projectUpdated")}</span></span><time dateTime={project.updatedAt} className="shrink-0 text-[10px] text-muted-foreground">{new Date(project.updatedAt).toLocaleDateString(locale, { day: "numeric", month: "short" })}</time></Link>)}{!query.isLoading && !query.isError && !updates.length && <p className="text-xs text-muted-foreground">{t("noUpdates")}</p>}</div></section>;
 
-  return <div className="grid min-h-[calc(100dvh-3.5rem)] xl:grid-cols-[minmax(0,1fr)_300px] 2xl:grid-cols-[minmax(0,1fr)_320px]">
+  return <div className="grid min-h-[calc(100dvh-4.5rem)] xl:grid-cols-[minmax(0,1fr)_300px] 2xl:grid-cols-[minmax(0,1fr)_320px]">
     <div className="min-w-0 space-y-6 px-4 py-6 sm:px-7 sm:py-7">
-      <div><p className="text-xs text-muted-foreground">{today.toLocaleDateString(locale, { dateStyle: "full" })}</p><h1 className="mt-1.5 text-[26px] leading-tight font-bold tracking-tight break-words sm:text-[32px]">{t("greeting", { name: user?.nickname ?? "" })}</h1><p className="mt-2 text-[13px] text-muted-foreground">{t("subtitle")}</p></div>
+      <div><h1 className="text-[26px] leading-tight font-bold tracking-tight break-words sm:text-[32px]">{t("greeting", { name: user?.nickname ?? "" })}</h1><p className="mt-2 text-[13px] text-muted-foreground">{t("subtitle")}</p></div>
       <div className="flex gap-6 border-b" role="tablist" aria-label={t("dashboard")}>
         {(["overview", "updates"] as const).map(tab => <button key={tab} id={`tab-${tab}`} role="tab" aria-selected={view === tab} aria-controls="dashboard-panel" tabIndex={view === tab ? 0 : -1} onClick={() => setView(tab)} onKeyDown={event => { if (["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) { event.preventDefault(); const next = event.key === "Home" ? "overview" : event.key === "End" ? "updates" : view === "overview" ? "updates" : "overview"; setView(next); document.getElementById(`tab-${next}`)?.focus(); } }} className={cn("-mb-px border-b-2 border-transparent pb-3 text-xs text-muted-foreground hover:text-foreground", view === tab && "border-primary font-semibold text-foreground")}>{t(tab)}</button>)}
       </div>
@@ -102,7 +101,7 @@ export function Dashboard() {
     </div>
     <aside aria-label={t("insights")} className="min-w-0 space-y-6 border-t bg-surface-2 p-5 xl:border-t-0 xl:border-l">
       <section><h2 className="mb-3 text-sm font-semibold">{t("workspace")}</h2><div className="rounded-lg border bg-card p-4"><div className="flex items-center justify-between"><span className="text-xs text-muted-foreground">{t("totalProjects")}</span><span className="text-xl font-semibold tabular-nums">{query.data?.totalElements ?? "—"}</span></div><p className="mt-3 border-t pt-3 text-xs leading-5 text-muted-foreground">{t("summaryDescription")}</p></div></section>
-      <section><h2 className="mb-2 text-xs font-medium text-muted-foreground">{t("quickActions")}</h2><Link href="/projects/new" className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-xs hover:bg-muted"><Plus size={17} aria-hidden="true" />{t("create")}<ArrowRight className="ml-auto" size={14} aria-hidden="true" /></Link><Link href="/organizations" className="flex items-center gap-3 rounded-md px-3 py-2.5 text-xs hover:bg-muted"><Users size={17} aria-hidden="true" />{t("teams")}<ArrowRight className="ml-auto" size={14} aria-hidden="true" /></Link><Link href="/account" className="flex items-center gap-3 rounded-md px-3 py-2.5 text-xs hover:bg-muted"><GearSix size={17} aria-hidden="true" />{t("settings")}<ArrowRight className="ml-auto" size={14} aria-hidden="true" /></Link></section>
+      <section><h2 className="mb-2 text-xs font-medium text-muted-foreground">{t("quickActions")}</h2><Link href="/projects/new" className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-xs hover:bg-muted"><Plus size={17} aria-hidden="true" />{t("create")}<ArrowRight className="ml-auto" size={14} aria-hidden="true" /></Link><Link href="/organizations" className="flex items-center gap-3 rounded-md px-3 py-2.5 text-xs hover:bg-muted"><Users size={17} aria-hidden="true" />{t("teams")}<ArrowRight className="ml-auto" size={14} aria-hidden="true" /></Link><Link href="/settings" className="flex items-center gap-3 rounded-md px-3 py-2.5 text-xs hover:bg-muted"><GearSix size={17} aria-hidden="true" />{t("settings")}<ArrowRight className="ml-auto" size={14} aria-hidden="true" /></Link></section>
       <MiniCalendar />
     </aside>
   </div>;

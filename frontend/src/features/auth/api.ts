@@ -9,6 +9,8 @@ export type AuthenticatedUser = {
   nickname: string;
   globalRole: string;
   mustChangePassword: boolean;
+  /** Set only while the account has a profile photo; used as the `?v=` cache buster. */
+  profilePhotoVersion?: number | null;
 };
 
 export const authApi = {

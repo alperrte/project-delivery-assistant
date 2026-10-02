@@ -9,7 +9,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CircleNotch, Archive } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/common/page-header";
+import { PageContainer } from "@/components/common/page-container";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
+import { SettingsSection } from "@/components/common/settings-section";
 import { TagInput } from "@/components/common/tag-input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -20,6 +22,7 @@ import { errorKey } from "@/lib/api/error-message";
 import { cn } from "@/lib/utils";
 import { organizationsApi } from "@/features/organizations/api";
 import { projectsApi } from "../api";
+import { BannerField } from "./banner-field";
 import { projectPriorities, projectSettingsSchema, projectStatuses, TAGLINE_MAX, type ProjectSettingsValues } from "../schemas";
 import { formatTechStack, parseTechStack } from "../tech-stack";
 import { PROJECT_TYPES, type Project } from "../types";
@@ -43,18 +46,6 @@ function toFormValues(project: Project): ProjectSettingsValues {
     projectType: project.projectType,
     tagline: project.tagline ?? "",
   };
-}
-
-function SettingsSection({ title, description, children }: { title: string; description: string; children: ReactNode }) {
-  return (
-    <section className="grid gap-5 border-t py-8 first:border-t-0 first:pt-0 md:grid-cols-[minmax(0,13rem)_minmax(0,1fr)] md:gap-12 lg:grid-cols-[minmax(0,16rem)_minmax(0,1fr)]">
-      <div>
-        <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-        <p className="mt-1.5 text-sm leading-5 text-muted-foreground">{description}</p>
-      </div>
-      <div className="min-w-0">{children}</div>
-    </section>
-  );
 }
 
 function Field({
@@ -121,12 +112,12 @@ export function ProjectSettingsForm({ project }: { project: Project }) {
   const saving = isSubmitting || save.isPending;
 
   return (
-    <div className="max-w-4xl">
+    <PageContainer width="form">
       <PageHeader title={t("title")} />
 
       <form onSubmit={handleSubmit((values) => save.mutate(values))} noValidate>
         <SettingsSection title={t("sections.general.title")} description={t("sections.general.description")}>
-          <div className="space-y-5">
+          <div className="grid gap-5 lg:grid-cols-2">
             <Field id="settings-name" label={t("name")} error={errors.name && tv(errors.name.message!)}>
               <Input
                 id="settings-name"
@@ -135,17 +126,6 @@ export function ProjectSettingsForm({ project }: { project: Project }) {
                 aria-invalid={!!errors.name}
                 aria-describedby={errors.name ? "settings-name-error" : undefined}
                 {...register("name")}
-              />
-            </Field>
-            <Field id="settings-tagline" label={t("tagline")} error={errors.tagline && tv(errors.tagline.message!)}>
-              <Input
-                id="settings-tagline"
-                className={inputClass}
-                maxLength={TAGLINE_MAX}
-                placeholder={t("taglinePlaceholder")}
-                aria-invalid={!!errors.tagline}
-                aria-describedby={errors.tagline ? "settings-tagline-error" : undefined}
-                {...register("tagline")}
               />
             </Field>
             <Field id="settings-type" label={t("type")}>
@@ -166,7 +146,18 @@ export function ProjectSettingsForm({ project }: { project: Project }) {
                 )}
               />
             </Field>
-            <Field id="settings-description" label={t("description")} error={errors.description && tv(errors.description.message!)}>
+            <Field id="settings-tagline" label={t("tagline")} error={errors.tagline && tv(errors.tagline.message!)} className="lg:col-span-2">
+              <Input
+                id="settings-tagline"
+                className={inputClass}
+                maxLength={TAGLINE_MAX}
+                placeholder={t("taglinePlaceholder")}
+                aria-invalid={!!errors.tagline}
+                aria-describedby={errors.tagline ? "settings-tagline-error" : undefined}
+                {...register("tagline")}
+              />
+            </Field>
+            <Field id="settings-description" label={t("description")} error={errors.description && tv(errors.description.message!)} className="lg:col-span-2">
               <Textarea
                 id="settings-description"
                 rows={3}
@@ -176,7 +167,7 @@ export function ProjectSettingsForm({ project }: { project: Project }) {
                 {...register("description")}
               />
             </Field>
-            <Field id="settings-goal" label={t("goal")} hint={t("goalHint")} error={errors.projectGoal && tv(errors.projectGoal.message!)}>
+            <Field id="settings-goal" label={t("goal")} hint={t("goalHint")} error={errors.projectGoal && tv(errors.projectGoal.message!)} className="lg:col-span-2">
               <Textarea
                 id="settings-goal"
                 rows={3}
@@ -188,6 +179,10 @@ export function ProjectSettingsForm({ project }: { project: Project }) {
               />
             </Field>
           </div>
+        </SettingsSection>
+
+        <SettingsSection title={t("sections.banner.title")} description={t("sections.banner.description")}>
+          <BannerField project={project} />
         </SettingsSection>
 
         <SettingsSection title={t("sections.planning.title")} description={t("sections.planning.description")}>
@@ -335,6 +330,6 @@ export function ProjectSettingsForm({ project }: { project: Project }) {
           />
         </div>
       </SettingsSection>
-    </div>
+    </PageContainer>
   );
 }

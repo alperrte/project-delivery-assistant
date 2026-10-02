@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { MagnifyingGlass, X } from "@phosphor-icons/react";
 import { Avatar } from "@/components/ui/avatar";
+import { profilePhotoSrc } from "@/features/account/api";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -74,7 +75,7 @@ export function Segment({
 function PersonChip({ person, removeLabel, onRemove }: { person: PersonRef; removeLabel: string; onRemove: () => void }) {
   return (
     <li className="inline-flex h-7 items-center gap-1.5 rounded-full border bg-card pr-1 pl-1">
-      <Avatar name={person.nickname ?? "?"} className="size-5 bg-muted text-[9px] text-foreground" />
+      <Avatar name={person.nickname ?? "?"} src={profilePhotoSrc(person.userId, person.profilePhotoVersion)} className="size-5 bg-muted text-[9px] text-foreground" />
       <span className="max-w-32 truncate text-xs font-medium text-foreground">{person.nickname ?? "?"}</span>
       <button
         type="button"
@@ -189,7 +190,7 @@ export function AssigneePicker({ projectId, userId, value, onChange, max, known 
                       disabled={!checked && atLimit}
                       onCheckedChange={(next) => toggle(person.userId, next === true)}
                     />
-                    <Avatar name={person.nickname ?? "?"} className="size-6 bg-muted text-[10px] text-foreground" />
+                    <Avatar name={person.nickname ?? "?"} src={profilePhotoSrc(person.userId, person.profilePhotoVersion)} className="size-6 bg-muted text-[10px] text-foreground" />
                     <span className="min-w-0 flex-1 truncate text-foreground">{person.nickname ?? "?"}</span>
                   </label>
                 </li>

@@ -1,22 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { useLocale, useTranslations } from "next-intl";
+import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarBlank, Plus } from "@phosphor-icons/react";
+import { Plus } from "@phosphor-icons/react";
 import { PageHeader } from "@/components/common/page-header";
 import { EmptyState } from "@/components/common/empty-state";
-import { EntityCard, EntityCardFooter, EntityCardLink, EntityCardSection, EntityGrid, EntityStatusPill } from "@/components/common/entity-card";
+import { EntityGrid } from "@/components/common/entity-card";
 import { PaginationBar } from "@/components/common/pagination-bar";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { errorKey } from "@/lib/api/error-message";
 import { organizationsApi } from "../api";
-import { OrganizationFormDialog } from "./organization-form-dialog";
+import { OrganizationCard } from "./organization-card";
 
 export function OrganizationList() {
   const t = useTranslations("organizations");
-  const locale = useLocale();
   const te = useTranslations("errors");
   const [page, setPage] = useState(0);
 
@@ -24,7 +24,6 @@ export function OrganizationList() {
     queryKey: ["organizations", page],
     queryFn: () => organizationsApi.list(page),
   });
-  const date = new Intl.DateTimeFormat(locale, { dateStyle: "medium" });
 
   return (
     <div>
@@ -32,14 +31,10 @@ export function OrganizationList() {
         title={t("title")}
         description={t("description")}
         action={
-          <OrganizationFormDialog
-            trigger={
-              <Button>
-                <Plus data-icon="inline-start" size={16} />
-                {t("create")}
-              </Button>
-            }
-          />
+          <Link href="/organizations/new" className={buttonVariants()}>
+            <Plus data-icon="inline-start" size={16} aria-hidden="true" />
+            {t("create")}
+          </Link>
         }
       />
 
@@ -58,36 +53,11 @@ export function OrganizationList() {
       {data && data.content.length > 0 && (
         <>
           <EntityGrid>
-            {data.content.map((org) => {
-              const active = org.status === "ACTIVE";
-              return (
-                <li key={org.id} className="flex">
-                  <EntityCard
-                    tone={active ? "success" : "neutral"}
-                    mark={org.name.slice(0, 1).toLocaleUpperCase(locale)}
-                    title={org.name}
-                    description={org.description || t("cardNoDescription")}
-                    badge={
-                      <EntityStatusPill
-                        className={active ? "border border-success/25 bg-success/10 text-success" : "border border-border bg-muted text-muted-foreground"}
-                        dotClassName={active ? "bg-success" : "bg-muted-foreground/40"}
-                        label={t(`statusValues.${org.status}`)}
-                      />
-                    }
-                  >
-                    <EntityCardSection label={t("card.lastUpdate")}>
-                      <p className="flex items-center gap-2 text-sm text-foreground">
-                        <CalendarBlank size={16} className="text-muted-foreground" aria-hidden="true" />
-                        <time dateTime={org.updatedAt}>{date.format(new Date(org.updatedAt))}</time>
-                      </p>
-                    </EntityCardSection>
-                    <EntityCardFooter>
-                      <EntityCardLink href={`/organizations/${org.id}`} label={t("cardOpen")} ariaLabel={t("card.openNamed", { name: org.name })} />
-                    </EntityCardFooter>
-                  </EntityCard>
-                </li>
-              );
-            })}
+            {data.content.map((org) => (
+              <li key={org.id} className="flex">
+                <OrganizationCard organization={org} />
+              </li>
+            ))}
           </EntityGrid>
           <PaginationBar
             page={data.page}

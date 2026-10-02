@@ -4,7 +4,7 @@ import type { Grouping } from "./filters";
 
 export type TaskGroup =
   | { id: string; kind: "status"; status: TaskStatus; tasks: Task[] }
-  | { id: string; kind: "assignee"; userId: string | null; name: string | null; tasks: Task[] }
+  | { id: string; kind: "assignee"; userId: string | null; name: string | null; profilePhotoVersion?: number | null; tasks: Task[] }
   | { id: string; kind: "sprint"; sprintId: string | null; name: string | null; status: string | null; tasks: Task[] };
 
 const SPRINT_RANK: Record<string, number> = { ACTIVE: 0, PLANNED: 1, COMPLETED: 2 };
@@ -26,7 +26,7 @@ export function groupTasks(tasks: Task[], grouping: Exclude<Grouping, "none">): 
     for (const task of tasks) {
       if (task.assignees.length === 0) unassigned.push(task);
       for (const person of task.assignees) {
-        const group = byUser.get(person.userId) ?? { id: person.userId, kind: "assignee" as const, userId: person.userId, name: person.nickname, tasks: [] };
+        const group = byUser.get(person.userId) ?? { id: person.userId, kind: "assignee" as const, userId: person.userId, name: person.nickname, profilePhotoVersion: person.profilePhotoVersion, tasks: [] };
         group.tasks.push(task);
         byUser.set(person.userId, group);
       }

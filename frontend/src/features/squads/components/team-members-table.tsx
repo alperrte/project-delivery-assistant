@@ -7,6 +7,7 @@ import { Lock, PencilSimple, UserMinus, UserCircleMinus } from "@phosphor-icons/
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { Avatar } from "@/components/ui/avatar";
+import { profilePhotoSrc } from "@/features/account/api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -37,7 +38,7 @@ function Identity({ member, founder, you }: { member: TeamMember; founder: boole
   const name = displayName(member);
   return (
     <span className="flex min-w-0 items-center gap-3">
-      <Avatar name={name} className="size-9 bg-muted text-foreground ring-0" />
+      <Avatar name={name} src={profilePhotoSrc(member.userId, member.profilePhotoVersion)} className="size-9 bg-muted text-foreground ring-0" />
       <span className="min-w-0">
         <span className="flex min-w-0 items-center gap-2">
           <span className="truncate font-medium text-foreground">{name}</span>

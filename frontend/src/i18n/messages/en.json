@@ -45,6 +45,9 @@
     "PROJECT_LOGO_INVALID_TYPE": "The logo must be a PNG, JPEG or WebP file.",
     "PROJECT_LOGO_TOO_LARGE": "The logo can be at most 512 KB.",
     "PROJECT_LOGO_EMPTY": "The logo file is empty.",
+    "PROJECT_BANNER_INVALID_TYPE": "The cover image must be PNG, JPEG or WebP.",
+    "PROJECT_BANNER_TOO_LARGE": "The cover image can be at most 2 MB.",
+    "PROJECT_BANNER_EMPTY": "The cover image file is empty.",
     "TEAM_MEMBER_EXISTS": "This person is already in the team.",
     "TEAM_CIRCULAR_PARENT": "A team cannot be moved under one of its own sub-teams.",
     "TEAM_HAS_CHILDREN": "A team with sub-teams cannot be archived. Move or archive the sub-teams first.",
@@ -84,7 +87,14 @@
     "SPRINT_NOT_EMPTY": "A sprint with tasks cannot be deleted.",
     "SPRINT_INVALID": "The sprint details are not valid.",
     "LABEL_NAME_EXISTS": "A label with this name already exists.",
-    "WORKLOG_INVALID": "The time entry is not valid."
+    "WORKLOG_INVALID": "The time entry is not valid.",
+    "PROFILE_PHOTO_INVALID_TYPE": "This file type is not supported.",
+    "PROFILE_PHOTO_TOO_LARGE": "The file can be at most 5 MB.",
+    "PROFILE_PHOTO_EMPTY": "The file is empty.",
+    "PROFILE_PHOTO_DIMENSIONS": "The image is too large. At most 6000 pixels per side.",
+    "PROFILE_PHOTO_FAILED": "The profile photo could not be uploaded.",
+    "PROJECT_LOGO_DIMENSIONS": "The logo is too large. At most 6000 pixels per side.",
+    "PROJECT_BANNER_DIMENSIONS": "The cover image is too large. At most 6000 pixels per side."
   },
   "app": {
     "nav": {
@@ -149,7 +159,27 @@
       "create": "Create",
       "save": "Save",
       "created": "Organization created.",
-      "updated": "Organization updated."
+      "updated": "Organization updated.",
+      "createDescription": "Group your projects under an organization.",
+      "editDescription": "Update the name and description of the organization.",
+      "notEditable": "Only the owner can edit this organization, and archived organizations cannot be changed.",
+      "namePlaceholder": "e.g. Delivery team",
+      "descriptionPlaceholder": "Briefly say what the organization does and who it covers.",
+      "descriptionHint": "Optional. Shown on the card and on the organization's page.",
+      "preview": {
+        "title": "Preview",
+        "caption": "This is how the card will look in the list.",
+        "now": "Now",
+        "show": "Show preview",
+        "namePlaceholder": "Organization name"
+      },
+      "backToOrganization": "Back to the organization",
+      "sections": {
+        "general": {
+          "title": "General",
+          "description": "The name and description of the organization."
+        }
+      }
     }
   },
   "projects": {
@@ -162,6 +192,8 @@
       "updatedBy": "{date} · {name}",
       "open": "Open project",
       "openNamed": "Open project {name}",
+      "edit": "Edit settings",
+      "editNamed": "Edit settings of {name}",
       "types": {
         "WEB": "Web",
         "MOBILE": "Mobile",
@@ -218,6 +250,15 @@
         "invalidType": "Upload a PNG, JPEG or WebP file.",
         "tooLarge": "The logo can be at most 512 KB."
       },
+      "banner": {
+        "label": "Cover image",
+        "hint": "PNG, JPEG or WebP, up to 2 MB. Shown behind the card in the Projects list; without one the card stays plain.",
+        "choose": "Upload image",
+        "change": "Change",
+        "remove": "Remove",
+        "invalidType": "Upload a PNG, JPEG or WebP file only.",
+        "tooLarge": "The cover image can be at most 2 MB."
+      },
       "name": {
         "label": "Project name",
         "placeholder": "e.g. Delivery Portal",
@@ -271,7 +312,8 @@
         "cancel": "Cancel",
         "submit": "Create project",
         "created": "Project created.",
-        "logoFailed": "The logo could not be uploaded. You can try again from the project settings."
+        "logoFailed": "The logo could not be uploaded. You can try again from the project settings.",
+        "bannerFailed": "The cover image could not be uploaded. You can try again from the project settings."
       },
       "types": {
         "WEB": {
@@ -425,7 +467,27 @@
       "tagline": "Tagline",
       "taglinePlaceholder": "Describe the project in one sentence",
       "type": "Project type",
+      "banner": {
+        "label": "Cover image",
+        "hint": "PNG, JPEG or WebP, up to 2 MB. Looks best at a 4:1 ratio (e.g. 1600×400); the image is cropped to fit.",
+        "statusSet": "A cover image is uploaded for this project.",
+        "statusNone": "There is no cover image yet.",
+        "choose": "Upload image",
+        "change": "Change",
+        "remove": "Remove",
+        "cancel": "Cancel",
+        "removeConfirmTitle": "Remove the cover image?",
+        "removeConfirmDescription": "The image is deleted and the default background is shown instead.",
+        "uploaded": "Cover image updated.",
+        "removed": "Cover image removed.",
+        "invalidType": "The cover image must be PNG, JPEG or WebP.",
+        "tooLarge": "The cover image can be at most 2 MB."
+      },
       "sections": {
+        "banner": {
+          "title": "Cover image",
+          "description": "Appears above the project's card in the Projects list."
+        },
         "general": {
           "title": "General",
           "description": "The project's name, description and goal. Shown in lists and the project header."
@@ -530,6 +592,11 @@
     "mineTitle": "My project invitations",
     "mineDescription": "Review invitations sent to your account.",
     "mineEmpty": "You have no project invitations.",
+    "mineTabsLabel": "Invitation filter",
+    "mineTabPending": "Pending",
+    "mineTabAll": "All",
+    "minePendingEmpty": "You have no pending invitations.",
+    "mineProjectGone": "The project is no longer available, so this invitation cannot be answered.",
     "mineListLabel": "Project invitations sent to me",
     "mineLoading": "Loading invitations",
     "mineProject": "Project",
@@ -678,7 +745,6 @@
     "title": "Squads",
     "create": "New squad",
     "emptyTitle": "No squads yet",
-    "archive": "Archive",
     "archiveConfirmTitle": "Archive this squad?",
     "cancel": "Cancel",
     "columns": { "name": "Name", "actions": "Actions" },
@@ -1001,6 +1067,70 @@
       "timeInvalid": "Enter a valid time."
     }
   },
+  "preferences": {
+    "title": "Settings",
+    "description": "What you save here becomes your account's default and applies every time you sign in. The language and theme switches in the top bar only last for the current session.",
+    "save": {
+      "save": "Save",
+      "discard": "Discard",
+      "unsaved": "You have unsaved changes.",
+      "clean": "Your preferences are saved.",
+      "done": "Settings saved."
+    },
+    "profile": {
+      "title": "Profile",
+      "description": "The details shown on your account.",
+      "photo": {
+        "photoLabel": "Profile photo",
+        "choose": "Choose photo",
+        "change": "Change photo",
+        "remove": "Remove",
+        "hint": "PNG, JPEG or WebP. Up to 5 MB.",
+        "previewTitle": "New photo preview",
+        "save": "Save photo",
+        "cancel": "Cancel",
+        "uploaded": "Profile photo updated.",
+        "removed": "Profile photo removed.",
+        "removeConfirmTitle": "Remove your profile photo?",
+        "removeConfirmDescription": "The photo is deleted and your initials are shown instead.",
+        "invalidType": "This file type is not supported.",
+        "tooLarge": "The file can be at most 5 MB.",
+        "uploading": "Uploading"
+      }
+    },
+    "security": {
+      "title": "Security",
+      "description": "Update your password regularly."
+    },
+    "language": {
+      "title": "Language",
+      "description": "The default language of the interface. It does not change until you press Save.",
+      "label": "Interface language"
+    },
+    "appearance": {
+      "title": "Appearance",
+      "description": "The default theme: light, dark, or follow your device. It does not change until you press Save.",
+      "label": "Theme"
+    },
+    "motion": {
+      "title": "Animations",
+      "description": "These preferences are saved to your account and apply every time you sign in.",
+      "ui": {
+        "label": "Interface animations",
+        "hint": "Dialogs, menus, the sidebar and the language change. “Follow device” applies your device's “reduce motion” setting.",
+        "system": "Follow device",
+        "on": "On",
+        "off": "Off"
+      },
+      "theme": {
+        "label": "Theme transition",
+        "hint": "The circular wipe when switching between the light and dark theme.",
+        "on": "On",
+        "off": "Off",
+        "blocked": "Interface animations are off or your device reduces motion, so the theme changes instantly."
+      }
+    }
+  },
   "account": {
     "title": "Account settings",
     "description": "View your account details and manage your password.",
@@ -1045,7 +1175,9 @@
     "notifications": "Notifications",
     "noNotifications": "No notifications yet.",
     "calendar": "Calendar",
-    "settings": "Account settings",
+    "settings": "Settings",
+    "personal": "Personal",
+    "accountSettings": "Account settings",
     "workspace": "Your workspace",
     "skip": "Skip to content",
     "account": "Account menu",
