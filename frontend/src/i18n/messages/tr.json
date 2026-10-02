@@ -1853,5 +1853,323 @@
       "created": "{name} oluşturuldu",
       "updated": "{name} güncellendi"
     }
+  },
+  "siteFooter": {
+    "description": "Projeleri, ekipleri ve teslim sürecini birlikte yönetin.",
+    "information": "Bilgi ve destek",
+    "faq": "Sıkça Sorulan Sorular",
+    "kvkk": "KVKK",
+    "privacy": "Gizlilik Politikası",
+    "accessibility": "Erişilebilirlik",
+    "team": "Geliştiriciler",
+    "githubProfile": "{name} GitHub profili",
+    "contact": "İletişim",
+    "contactDescription": "Sorularınız, önerileriniz ve geri bildirimleriniz için.",
+    "copyright": "© {year} PDA · Project Delivery Assistant",
+    "source": "Kaynak kod"
+  },
+  "publicPages": {
+    "common": {
+      "skip": "İçeriğe geç",
+      "login": "Giriş yap",
+      "updated": "Son güncelleme: {date}",
+      "contents": "Bu sayfada",
+      "contactTitle": "Bize ulaşın",
+      "contactText": "Sorunuz, veri talebiniz veya erişilebilirlik geri bildiriminiz için e-posta yazabilirsiniz. Şifrenizi, doğrulama kodunuzu ve davet bağlantınızdaki gizli bilgileri paylaşmayın.",
+      "reviewTitle": "Yayın öncesi inceleme",
+      "reviewNotice": "Bu metin mevcut PDA işlevlerine göre hazırlanmış bir bilgilendirme taslağıdır. Veri sorumlusunun kimliği, hosting ve e-posta sağlayıcıları, veri konumları ve saklama süreleri yayın öncesinde kesinleştirilmelidir. Metin açık rıza talebi değildir ve tek başına tamamlanmış bir KVKK uyum süreci anlamına gelmez.",
+      "references": "Resmî kaynaklar",
+      "noticeReference": "KVKK: Aydınlatma yükümlülüğü",
+      "cookieReference": "KVKK: Çerez uygulamaları rehberi"
+    },
+    "faq": {
+      "title": "Sıkça Sorulan Sorular",
+      "description": "PDA'yı kullanmaya başlarken hesap, proje, ekip, gizlilik ve destek hakkında merak edilenler.",
+      "groups": [
+        {
+          "id": "getting-started",
+          "title": "PDA ve ilk adımlar",
+          "questions": [
+            {
+              "question": "PDA nedir, kimler için uygundur?",
+              "answer": "PDA (Project Delivery Assistant), proje teslim sürecini ortak bir çalışma alanında yönetmek isteyen öğrenciler ve ekipler için geliştirilir. Proje bilgileri, başarı kriterleri, ekipler, görevler ve takvim üzerinden işlerinizi takip edebilirsiniz."
+            },
+            {
+              "question": "PDA'yı kullanmak için bilgisayarıma uygulama kurmalı mıyım?",
+              "answer": "PDA bir web uygulamasıdır. Yayındaki hizmete güncel bir tarayıcıyla erişebilirsiniz. Telefonda ve tablette de ekran boyutuna uyum sağlayan arayüzü kullanabilirsiniz."
+            },
+            {
+              "question": "Nasıl hesap oluşturabilirim?",
+              "answer": "Giriş ekranındaki kayıt bağlantısını açıp e-posta, kullanıcı adı ve şifre alanlarını doldurun. Kayıt başarılı olduğunda uygulama oturum açmayı dener; giriş tamamlanamazsa giriş ekranına yönlendirilirsiniz."
+            },
+            {
+              "question": "Google veya GitHub ile giriş yapabilir miyim?",
+              "answer": "Yayın ortamında ilgili sağlayıcı etkinleştirilmişse giriş ekranındaki Google veya GitHub seçeneğini kullanabilirsiniz. Aynı e-postayla var olan bir hesap otomatik olarak birleştirilmez; hesap bağlama için mevcut hesabınızla giriş yapmanız gerekebilir."
+            }
+          ]
+        },
+        {
+          "id": "projects-teams",
+          "title": "Projeler ve ekipler",
+          "questions": [
+            {
+              "question": "İlk projemi nasıl oluştururum?",
+              "answer": "Giriş yaptıktan sonra Projeler bölümündeki proje oluşturma düğmesini kullanın. Proje adı, türü ve gerekli alanları doldurun; teknoloji, açıklama ve logo gibi bilgileri de ekleyebilirsiniz. Oluşturduğunuz projede ilk proje yöneticisi siz olursunuz."
+            },
+            {
+              "question": "Proje üyeliği ile ekip üyeliği arasındaki fark nedir?",
+              "answer": "Proje üyeliği erişiminizi ve proje rollerinizi belirler. Ekipler, projenin içindeki çalışma gruplarıdır. Bir ekipte yer almak tek başına yönetici yetkisi vermez; işlemler proje rollerine göre denetlenir."
+            },
+            {
+              "question": "Ekip arkadaşlarımı nasıl davet ederim?",
+              "answer": "Projenin Ekipler bölümünde bir ekip oluşturup üye ekleme veya davet işlemini kullanın. Proje yöneticisi olarak kullanıcı veya e-posta üzerinden davet gönderebilirsiniz. Davet her zaman bir ekibe bağlıdır; alıcının kabul etmesi gerekir."
+            },
+            {
+              "question": "Davetleri nereden kabul veya reddedebilirim?",
+              "answer": "Kayıtlı kullanıcılar kendilerine gelen davetleri Davetler bölümünde görebilir. Dış davet bağlantısı kayıt veya giriş adımlarına götürebilir. Davet, hedeflenen hesapla yanıtlanmalıdır; süre dolmuş ya da iptal edilmiş davet için proje yöneticisinden yeni davet isteyin."
+            },
+            {
+              "question": "Projelerimi herkes görebilir mi?",
+              "answer": "Hesap açabilmek, başka kullanıcıların projelerine erişim sağlamaz. Proje verileri aktif proje üyeliği ve yetkilere göre gösterilir. E-posta ve kullanıcı adınız gibi bazı bilgiler birlikte çalıştığınız proje üyelerine görünür; herkese açık GitHub deponuz ise GitHub üzerinde zaten açık olabilir."
+            },
+            {
+              "question": "Başarı kriterleri ve görevler aynı şey mi?",
+              "answer": "Başarı kriterleri projenin teslim hedefleri için bir kontrol listesidir. Görevler yapılacak işleri, atamaları ve durumları takip eder. Bir kriteri tamamlamak görevlerin tamamlandığı anlamına gelmez; iki alan ayrı tutulur."
+            },
+            {
+              "question": "GitHub bağlantısı kodumu değiştirir mi?",
+              "answer": "PDA'daki mevcut depo bağlantısı herkese açık bir GitHub deposunu okumak ve son commitleri göstermek içindir. Kodunuza commit atmaz veya pull request açmaz. Özel depo erişimi bu bağlantının kapsamında değildir."
+            }
+          ]
+        },
+        {
+          "id": "account-security",
+          "title": "Hesap ve gizlilik",
+          "questions": [
+            {
+              "question": "Şifremi unuttum, ne yapmalıyım?",
+              "answer": "Giriş ekranında Şifremi unuttum bağlantısını kullanın. Şifre sıfırlama e-postası hizmetin e-posta yapılandırmasına bağlıdır; gelen kutunuzu ve spam klasörünü kontrol edin. Google veya GitHub hesabınızın şifresi için ilgili sağlayıcının kurtarma akışını kullanın."
+            },
+            {
+              "question": "Beni hatırla seçeneği neyi saklar?",
+              "answer": "Bu seçenek yalnız e-posta adresinizi kullandığınız tarayıcıda hatırlar. Şifrenizi saklamaz ve oturum süresini uzatmaz. Ortak bir cihazda kullanmamanız önerilir; sonraki girişte seçeneği kapatarak kayıtlı e-postayı temizleyebilirsiniz."
+            },
+            {
+              "question": "Verilerimi incelemek veya silinmesini istemek için ne yapabilirim?",
+              "answer": "KVKK ve Gizlilik Politikası sayfalarında veri işleme bilgilerini okuyabilirsiniz. Hesap veya veri talebinizi iletişim e-postasına iletin. Mevcut hesap ekranında otomatik hesap silme düğmesi bulunmaz; talebin kapsamı ve kimlik doğrulaması ayrıca değerlendirilir."
+            }
+          ]
+        },
+        {
+          "id": "support",
+          "title": "Destek ve katkı",
+          "questions": [
+            {
+              "question": "PDA hangi dilleri destekler?",
+              "answer": "Arayüz Türkçe, İngilizce ve Almanca seçenekleri sunar. Dil ve açık/koyu tema tercihlerini üst bölümdeki kontrollerden değiştirebilirsiniz."
+            },
+            {
+              "question": "Bir hata veya erişilebilirlik sorunu nasıl bildirebilirim?",
+              "answer": "pda-info@gmail.com adresine sayfa adresini, beklenen davranışı ve sorunun nasıl tekrarlandığını yazın. Genel geliştirme önerilerini GitHub deposunda da paylaşabilirsiniz. Herkese açık hata kayıtlarına kişisel veri, şifre, doğrulama kodu veya güvenlik açığının ayrıntılarını eklemeyin."
+            }
+          ]
+        }
+      ]
+    },
+    "privacy": {
+      "title": "Gizlilik Politikası",
+      "description": "PDA'da hangi bilgilerin kullanıldığını, ekip içindeki görünürlüğü ve tarayıcıda tutulan tercihleri açıklıyoruz.",
+      "sections": [
+        {
+          "id": "scope",
+          "title": "Kapsam ve iletişim",
+          "paragraphs": [
+            "Bu politika PDA web uygulamasının hesap, proje, ekip, görev ve takvim işlevlerini kapsar. Harici GitHub veya Google sayfalarına geçtiğinizde ilgili hizmetin kendi gizlilik koşulları uygulanır.",
+            "PDA geliştiricileri README'de Alper Temiz ve Hamza Taşbay olarak listelenir. Hizmetin veri sorumlusu kimliği yayın öncesinde ayrıca belirlenecektir; geliştirme ekibinin adı tek başına bu kimliği belirlemez. İletişim adresi pda-info@gmail.com olarak belirlenmiştir."
+          ]
+        },
+        {
+          "id": "data",
+          "title": "Kullanılan bilgiler",
+          "paragraphs": [
+            "Kullandığınız işlemlere göre hesap ve çalışma alanı bilgileri uygulamada tutulur. Şifreler düz metin olarak saklanmaz; yerel hesap şifreleri tek yönlü şifre özetiyle korunur."
+          ],
+          "items": [
+            "Hesap: e-posta, kullanıcı adı, hesap durumu, kayıt zamanları ve varsa harici giriş sağlayıcısı kimliği.",
+            "Proje ve ekip: proje bilgileri, üyelikler, roller, davetler, kabul veya ret yanıtları ve yüklediğiniz proje logosu.",
+            "Çalışma içeriği: görevler, yorumlar, dosya ekleri, zaman kayıtları, başarı kriterleri ve hatırlatıcılar; yalnız kullandığınız işlevlerde.",
+            "Oturum: oturum zamanları, tarayıcı/cihaz bilgisi ve güvenli oturum doğrulama kayıtları. IP adresi isteklerin hız sınırı kontrolünde kullanılır.",
+            "İletişim: bize gönderdiğiniz mesajın içeriği ve yanıt verebilmek için e-posta adresiniz."
+          ]
+        },
+        {
+          "id": "purposes",
+          "title": "Bilgilerin kullanım amacı",
+          "paragraphs": [
+            "Hesap bilgileri giriş yapmanız ve hesabınızın korunması için; proje, ekip ve görev verileri ortak çalışma alanınızı sunmak için kullanılır. Davetler ve bildirimler ilgili kişiye ulaştırılır. Oturum ve istek kontrolleri yetkisiz erişimi ve kötüye kullanımı azaltmaya yöneliktir.",
+            "Özel nitelikli kişisel veri, şifre veya başka kişilere ait gereksiz bilgileri proje açıklamalarına, yorumlara ve dosyalara eklemeyin."
+          ]
+        },
+        {
+          "id": "visibility",
+          "title": "Kimler görebilir?",
+          "paragraphs": [
+            "Çalışma alanı içerikleri proje üyeliği ve rol izinleriyle sınırlanır. Yetkili proje üyeleri, ekip listelerinde e-posta ve kullanıcı adınızı görebilir. İlgili davetin alıcısı kendisine sunulan davet önizlemesini görebilir.",
+            "Google/GitHub girişini seçtiğinizde ilgili sağlayıcıyla kimlik doğrulama yapılır. Depo bağlantısı GitHub'ın herkese açık depo bilgilerini okur. Hosting, veritabanı ve e-posta hizmet sağlayıcılarının isimleri ve veri konumları yayın öncesi veri işleme envanterinde kesinleştirilecektir; bu taslak belirli bir ülkede saklama veya aktarım yapılmadığı garantisi vermez."
+          ]
+        },
+        {
+          "id": "browser-storage",
+          "title": "Çerezler ve tarayıcı tercihleri",
+          "paragraphs": [
+            "Mevcut uygulama kodunda reklam veya ziyaretçi analitiği takip aracı bulunmaz. Oturum ve güvenlik çerezleri uygulamanın çalışması için kullanılır; bu sayfa yeni bir çerez onay mekanizması eklemez."
+          ],
+          "items": [
+            "PDA_ACCESS, PDA_REFRESH ve PDA_SESSION: giriş ve oturum akışı. Süreleri hizmetin oturum yapılandırmasına bağlıdır; çıkışta temizlenirler.",
+            "XSRF-TOKEN: işlem isteklerini sahte isteklerden korumak için kullanılan güvenlik çerezi.",
+            "NEXT_LOCALE: seçtiğiniz dili hatırlayan, bir yıl süreli dil çerezi.",
+            "Yerel tarayıcı depolaması: tema, menü/ekip görünümü ve isterseniz hatırlanan e-posta. Tarayıcı verileri temizlenene veya ilgili tercih değiştirilene kadar kalabilir.",
+            "Oturum depolaması: kullanıcıya özgü son seçilen proje bilgisi. Tarayıcı oturumu boyunca tutulur."
+          ]
+        },
+        {
+          "id": "retention",
+          "title": "Saklama ve veri talepleri",
+          "paragraphs": [
+            "Aktif hesap ve proje kayıtları hizmetin işlevleri için veritabanında tutulur. Oturum geçerlilik süresinin bitmesi tüm geçmiş kayıtların otomatik silindiği anlamına gelmez.",
+            "Kategori bazında saklama, yedekleme ve silme takvimi yayın öncesinde belirlenecektir. Mevcut sürümde otomatik hesap silme ekranı bulunmaz. Erişim, düzeltme veya silme talebinizi iletişim adresine iletebilirsiniz; talep, hesabın size ait olduğu doğrulanarak ve diğer kişilerin hakları dikkate alınarak değerlendirilmelidir."
+          ]
+        },
+        {
+          "id": "security",
+          "title": "Güvenlik ve güncellemeler",
+          "paragraphs": [
+            "PDA oturum belirteçlerini HttpOnly çerezlerde tutar, şifreleri tek yönlü özetle saklar ve proje yetkilerini sunucuda denetler. Bu önlemler mutlak güvenlik garantisi değildir. Ortak cihazlarda işiniz bittiğinde çıkış yapın.",
+            "İşlevler veya veri işleme koşulları değiştiğinde bu politika ve son güncelleme tarihi gözden geçirilir. KVKK hakları ve işleme şartları ayrı KVKK sayfasında açıklanır."
+          ]
+        }
+      ]
+    },
+    "kvkk": {
+      "title": "KVKK Bilgilendirmesi",
+      "description": "PDA'nın mevcut veri akışları ve 6698 sayılı Kanun kapsamında ilgili kişi hakları hakkında yayın öncesi bilgilendirme.",
+      "sections": [
+        {
+          "id": "controller",
+          "title": "Veri sorumlusu ve kapsam",
+          "paragraphs": [
+            "Bu sayfa hesap açma, giriş, proje/ekip çalışmaları, davet ve destek iletişimi sırasında kullanılan verileri açıklayan yayın öncesi taslaktır. Hizmetin veri sorumlusu gerçek kişi veya tüzel kişi olarak henüz teyit edilmemiştir; bu nedenle tamamlanmış bir aydınlatma metni olarak sunulmaz.",
+            "PDA proje ekibiyle iletişim için pda-info@gmail.com adresi belirlenmiştir. Veri sorumlusunun kimliği ve uygun başvuru kanalları kesinleştirilince metin güncellenecektir."
+          ]
+        },
+        {
+          "id": "collection",
+          "title": "Veriler nasıl elde edilir?",
+          "paragraphs": [
+            "Bilgiler kayıt/giriş formlarına, proje ve görev ekranlarına girdiğiniz içeriklerden; proje yöneticisinin gönderdiği davetlerden; seçtiğiniz harici giriş sağlayıcısından ve bize ilettiğiniz destek mesajından elektronik olarak elde edilir.",
+            "E-posta ve kullanıcı adı, üyelik/rol bilgileri, proje ve görev içerikleri, davet yanıtları, oturum zamanları ve tarayıcı bilgisi bu akışlarda işlenebilir. Bir davet e-posta adresinizin proje yöneticisi tarafından girilmesiyle de oluşabilir."
+          ]
+        },
+        {
+          "id": "basis",
+          "title": "Amaçlar ve hukuki sebepler",
+          "paragraphs": [
+            "Yayın öncesi hukuki değerlendirmede her işleme faaliyeti için geçerli şart ayrıca belirlenmelidir. Aşağıdaki eşleştirmeler hizmetin mevcut işlevlerini açıklayan değerlendirme çerçevesidir; bütün faaliyetlerin otomatik olarak aynı hukuki sebebe dayandığı kabul edilmez."
+          ],
+          "items": [
+            "Hesap ve çalışma alanının sunulması: kayıt, kimlik doğrulama, proje/ekip üyeliği ve görev takibi. Hizmet ilişkisinin kurulması veya ifası için gereklilik yönünden Kanun m.5/2(c) değerlendirilir.",
+            "Hesap ve sistem güvenliği: oturum yönetimi, yetki denetimi ve istek hız sınırı. Gereklilik ve hakların dengelenmesiyle m.5/2(f) kapsamındaki meşru menfaat değerlendirilir.",
+            "Veri taleplerinin ve hukuki yükümlülüklerin yerine getirilmesi: ilgili yükümlülük veya hakkın varlığına göre m.5/2(ç) ve m.5/2(e) değerlendirilir.",
+            "Açık rıza gereken ek bir işleme faaliyeti varsa, amacı ve kapsamı ayrıca açıklanmalı ve rıza ayrı alınmalıdır. Bu sayfayı görüntülemek açık rıza sayılmaz."
+          ]
+        },
+        {
+          "id": "recipients",
+          "title": "Alıcılar ve aktarım",
+          "paragraphs": [
+            "Proje içerikleri ve üyelik bilgileri, ilgili projenin yetkili üyelerine çalışma amacıyla gösterilir; davet önizlemesi ilgili davetin alıcısına sunulur. Seçilen Google/GitHub girişinde kimlik doğrulama bilgileri ilgili sağlayıcıyla işlenir; herkese açık depo bağlantısında GitHub'a depo bilgi isteği gönderilir.",
+            "Hosting, veritabanı ve e-posta sağlayıcıları, veri konumları ve yurt dışı aktarım koşulları yayın öncesinde netleştirilmelidir. Aktarımın varlığı ve hukuki mekanizması bilinmeden bu taslak bir aktarım güvencesi vermez."
+          ]
+        },
+        {
+          "id": "storage",
+          "title": "Saklama ve silme",
+          "paragraphs": [
+            "Veriler hesap, proje ve güvenlik işlevlerinde kullanılır. Saklama süreleri her veri kategorisi, işleme amacı ve ilgili yasal gereklilik bakımından belirlenmelidir; yayın ortamının silme ve yedekleme takvimi henüz teyit edilmemiştir.",
+            "İşleme şartları ortadan kalktığında silme, yok etme veya anonimleştirme süreci değerlendirilir. Hesap silme talebi diğer kullanıcıların proje kayıtlarını veya yasal sebeple tutulması gereken bilgileri kendiliğinden ortadan kaldırmaz."
+          ]
+        },
+        {
+          "id": "rights",
+          "title": "Kanun kapsamındaki haklarınız",
+          "paragraphs": [
+            "Kanunun 11. maddesi kapsamındaki haklarınızı veri sorumlusuna başvurarak kullanabilirsiniz."
+          ],
+          "items": [
+            "Kişisel verilerinizin işlenip işlenmediğini öğrenme; işlenmişse bilgi isteme.",
+            "İşleme amacını ve verilerin bu amaca uygun kullanılıp kullanılmadığını öğrenme.",
+            "Yurt içinde veya yurt dışında verilerin aktarıldığı üçüncü kişileri bilme.",
+            "Eksik ya da yanlış işlenen verilerin düzeltilmesini isteme.",
+            "Kanundaki şartlar çerçevesinde silme veya yok edilmesini isteme; düzeltme ve silme işlemlerinin alıcılara bildirilmesini isteme.",
+            "Yalnız otomatik sistemlerle yapılan analiz sonucunda aleyhinize bir sonuç oluşmasına itiraz etme.",
+            "Kanuna aykırı işleme nedeniyle zarar oluşursa zararın giderilmesini talep etme."
+          ]
+        },
+        {
+          "id": "requests",
+          "title": "Başvuru ve iletişim",
+          "paragraphs": [
+            "Sorularınız ve veri talepleriniz için pda-info@gmail.com adresine ulaşabilirsiniz. Talebinizin konusunu, hesabınızla ilişkili e-posta adresini ve istediğiniz işlemi belirtin; şifre, doğrulama kodu veya davet belirteci göndermeyin.",
+            "Bu genel iletişim adresi, mevzuattaki başvuru usullerinin tümünü tek başına karşılıyor sayılmaz. Veri sorumlusu ve resmi başvuru kanalları yayın öncesinde kesinleştirilecektir. Kimlik doğrulaması gerekli olduğunda talebinizle orantılı bilgi istenmelidir."
+          ]
+        }
+      ]
+    },
+    "accessibility": {
+      "title": "Erişilebilirlik",
+      "description": "PDA'nın erişilebilirlik yaklaşımı, kullanabileceğiniz kontroller ve sorun bildirme yolu.",
+      "sections": [
+        {
+          "id": "approach",
+          "title": "Yaklaşımımız",
+          "paragraphs": [
+            "PDA'nın farklı ekran boyutlarında ve farklı kullanım ihtiyaçlarında erişilebilir olmasını hedefliyoruz. Erişilebilirlik, ürün geliştikçe yeniden kontrol edilmesi gereken bir süreçtir.",
+            "Uygulama için bağımsız, kapsamlı bir WCAG uygunluk değerlendirmesi henüz yapılmamıştır. Bu sayfa sertifika veya bütün ekranların kusursuz çalıştığına dair bir beyan değildir."
+          ]
+        },
+        {
+          "id": "keyboard",
+          "title": "Klavye ile kullanım",
+          "paragraphs": [
+            "Bağlantılar ve kontroller arasında Tab ve Shift+Tab ile ilerleyebilirsiniz. Odaklanan bağlantı veya düğmeyi Enter ile çalıştırabilirsiniz. Sayfanın başındaki İçeriğe geç bağlantısı ana içeriğe ulaşmanıza yardımcı olur.",
+            "SSS sorularını Enter veya Space ile açıp kapatabilirsiniz. Açılır menüler ve diyaloglarda uygulamanın mevcut klavye kontrollerini kullanabilir, desteklenen pencereleri Escape ile kapatabilirsiniz."
+          ]
+        },
+        {
+          "id": "preferences",
+          "title": "Görünüm ve okuma tercihleri",
+          "paragraphs": [
+            "Üst bölümde dil ve tema kontrolleri bulunur. Açık, koyu veya sistem teması seçebilir; Türkçe, İngilizce ve Almanca arayüz metinlerini kullanabilirsiniz.",
+            "Tarayıcınızın yakınlaştırmasını kullanabilirsiniz. Cihazınızdaki hareket azaltma tercihi etkin olduğunda uygulama animasyonları azaltılır. Dar ekranlarda içerik ve footer bağlantıları alt alta yerleşir."
+          ]
+        },
+        {
+          "id": "screen-readers",
+          "title": "Anlamlı içerik ve yardımcı teknolojiler",
+          "paragraphs": [
+            "Bilgi sayfalarında başlıklar, ana içerik ve gezinme alanları anlamlı HTML öğeleriyle düzenlenir. Footer'daki GitHub bağlantıları kişi adını içeren erişilebilir ad taşır; dekoratif simgeler ekran okuyuculardan gizlenir.",
+            "Uygulamadaki diğer ekranların ekran okuyucu ve farklı tarayıcı kombinasyonlarında doğrulanması devam eden bir ihtiyaçtır. Karşılaştığınız engelleri bildirmeniz iyileştirmelere yardımcı olur."
+          ]
+        },
+        {
+          "id": "feedback",
+          "title": "Bir engel bildirin",
+          "paragraphs": [
+            "Bir sayfayı veya işlemi kullanamıyorsanız pda-info@gmail.com adresine yazın. Sayfa adresini, yapmak istediğiniz işlemi, tarayıcı/cihazınızı ve varsa kullandığınız yardımcı teknolojiyi belirtin.",
+            "Ekran görüntüsü paylaşıyorsanız kişisel verileri ve gizli bilgileri kapatın. Bildirimde bulunmak için tıbbi durumunuzu açıklamanız gerekmez."
+          ]
+        }
+      ]
+    }
   }
 }

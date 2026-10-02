@@ -5,6 +5,7 @@ import { getTranslations } from "next-intl/server";
 import { Logo } from "@/components/common/logo";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { SiteFooter } from "@/components/layout/site-footer";
 import { cn } from "@/lib/utils";
 
 // The two photos (both 1672×941) are separate renders of one scene: in the dark
@@ -43,7 +44,7 @@ const NEON_FILTER_ID = "pda-scene-neon";
 export async function AuthShell({ children }: { children: ReactNode }) {
   const t = await getTranslations("brand");
   return (
-    <div className="relative isolate min-h-[100dvh] bg-(--background) text-(--auth-ink)">
+    <div className="relative isolate flex min-h-[100dvh] flex-col bg-(--background) text-(--auth-ink)">
       <NeonFilter />
       <div aria-hidden className="auth-enter-scene pointer-events-none fixed inset-0 -z-10 overflow-hidden">
         {SCENES.map(({ src, shift, theme }) => (
@@ -89,17 +90,19 @@ export async function AuthShell({ children }: { children: ReactNode }) {
 
       <main
         id="main"
-        className="mx-auto flex min-h-[100dvh] w-full max-w-5xl flex-col items-center px-4 pb-8 pt-20 sm:px-6 sm:pt-[clamp(4rem,7vh,6.5rem)]"
+        tabIndex={-1}
+        className="mx-auto flex w-full flex-1 max-w-5xl flex-col items-center px-4 pb-4 pt-20 sm:px-6 sm:pt-[clamp(3.5rem,6vh,6.5rem)]"
       >
         <Link
           href="/login"
           aria-label="PDA · Project Delivery Assistant"
-          className="auth-enter-logo w-[clamp(13.5rem,min(30vw,39vh),27.5rem)] rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-(--glow)"
+          className="auth-enter-logo w-[clamp(13.5rem,min(30vw,24vh),27.5rem)] rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-(--glow)"
         >
           <Logo variant="wordmark" size={440} priority />
         </Link>
-        <div className="mt-[clamp(1rem,2.5vh,2rem)] w-full">{children}</div>
+        <div className="mt-4 w-full">{children}</div>
       </main>
+      <SiteFooter tone="auth" />
     </div>
   );
 }

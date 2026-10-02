@@ -2,12 +2,15 @@
 
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { Bell, CaretDown, List, SignOut } from "@phosphor-icons/react";
+import { Bell, CaretDown, EnvelopeSimple, List, SignOut } from "@phosphor-icons/react";
+import { CONTACT_EMAIL, INFO_LINKS } from "@/features/public-info/site-info";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -42,6 +45,7 @@ export function AppHeader({
 }) {
   const t = useTranslations("app");
   const tw = useTranslations("workspace");
+  const tf = useTranslations("siteFooter");
   const { ref, hidden, reveal } = useAutoHide<HTMLElement>();
 
   return (
@@ -95,6 +99,17 @@ export function AppHeader({
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem render={<Link href="/account" />}>{tw("settings")}</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                <DropdownMenuLabel>{tf("information")}</DropdownMenuLabel>
+                {INFO_LINKS.map(({ key, href }) => (
+                  <DropdownMenuItem key={key} className="min-h-11" render={<Link href={href} />}>{tf(key)}</DropdownMenuItem>
+                ))}
+                <DropdownMenuItem className="min-h-11" render={<a href={"mailto:" + CONTACT_EMAIL} />}>
+                  <EnvelopeSimple data-icon="inline-start" size={16} aria-hidden="true" />
+                  {tf("contact")}
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
               <DropdownMenuSeparator />
               <DropdownMenuItem variant="destructive" onClick={onLogout}>
                 <SignOut data-icon="inline-start" size={16} aria-hidden="true" />

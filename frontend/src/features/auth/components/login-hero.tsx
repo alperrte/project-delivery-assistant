@@ -11,9 +11,9 @@ export async function LoginHero() {
   const title = t("title");
 
   return (
-    <div className="mx-auto mb-[clamp(1.25rem,3.5vh,2.5rem)] max-w-4xl text-center">
+    <div className="mx-auto mb-[clamp(1rem,2vh,1.5rem)] max-w-4xl text-center">
       <h1
-        className="auth-slogan font-(family-name:--font-exo2) text-balance text-[clamp(2rem,4.2vw,3.4rem)] font-bold leading-[1.08] tracking-[-0.01em]"
+        className="auth-slogan font-(family-name:--font-exo2) text-balance text-[clamp(2rem,3.2vw,2.5rem)] font-bold leading-[1.08] tracking-[-0.01em]"
         data-text={title}
       >
         {title}
