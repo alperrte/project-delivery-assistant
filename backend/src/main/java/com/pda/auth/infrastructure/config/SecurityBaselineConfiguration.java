@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestCustomizers;
@@ -42,7 +43,8 @@ public class SecurityBaselineConfiguration {
                                            ObjectProvider<ClientRegistrationRepository> oauthRegistrations,
                                            ObjectProvider<OAuthLoginHandlers> oauthHandlers,
                                            ObjectProvider<GitHubOAuth2UserService> gitHubUsers,
-                                           @Value("${API_DOCS_ENABLED:false}") boolean apiDocsEnabled)
+                                           @Value("${API_DOCS_ENABLED:false}") boolean apiDocsEnabled,
+                                           Environment environment)
             throws Exception {
         ClientRegistrationRepository registrations = oauthRegistrations.getIfAvailable();
         OAuthLoginHandlers handlers = oauthHandlers.getIfAvailable();
@@ -94,7 +96,7 @@ public class SecurityBaselineConfiguration {
                 // A 401 must not remember the request in an HttpSession: every anonymous probe would otherwise
                 // allocate a server-side session (JSESSIONID) that lives for 30 minutes. OAuth keeps its own session use.
                 .requestCache(cache -> cache.requestCache(new NullRequestCache()))
-                .addFilterBefore(new AuthRateLimitFilter(), CsrfFilter.class)
+                .addFilterBefore(AuthRateLimitFilter.configured(environment), CsrfFilter.class)
                 .addFilterBefore(new ProjectInvitationRateLimitFilter(), CsrfFilter.class)
                 .addFilterBefore(new JwtCookieAuthenticationFilter(tokens, cookies, users, sessions, clock),
                         UsernamePasswordAuthenticationFilter.class)
@@ -116,6 +118,7 @@ public class SecurityBaselineConfiguration {
                                     || path.equals("/api/v1/organizations") || path.startsWith("/api/v1/organizations/")
                                     || path.startsWith("/api/v1/tasks/")
                                     || path.startsWith("/api/v1/users/")
+                                    || path.equals("/api/v1/ws")
                                     || path.equals("/api/v1/project-invitations/me")
                                     || path.startsWith("/api/v1/project-invitations/")
                                     || path.equals("/api/v1/notifications") || path.startsWith("/api/v1/notifications/");
@@ -161,6 +164,9 @@ public class SecurityBaselineConfiguration {
                                     "/api/v1/users/me/profile-photo").authenticated()
                             .requestMatchers(HttpMethod.DELETE, "/api/v1/users/me/profile-photo").authenticated()
                             .requestMatchers(HttpMethod.GET, "/api/v1/notifications", "/api/v1/notifications/unread-count").authenticated()
+                            // Project chat WebSocket handshake (STOMP over native WebSocket); the PDA_ACCESS cookie is
+                            // Path=/api, which is why the endpoint lives under /api.
+                            .requestMatchers(HttpMethod.GET, "/api/v1/ws").authenticated()
                             .requestMatchers(HttpMethod.PATCH, "/api/v1/notifications/read-all",
                                     "/api/v1/notifications/*/read").authenticated()
                             // Platform administration: ADMIN only; the services re-check the platform permission.
@@ -187,6 +193,9 @@ public class SecurityBaselineConfiguration {
                                     "/api/v1/projects/*/criteria/*/uncomplete",
                                     "/api/v1/projects/*/criteria/reorder",
                                     "/api/v1/projects/*/reminders",
+                                    "/api/v1/projects/*/chat/direct/*",
+                                    "/api/v1/projects/*/chat/conversations/*/messages",
+                                    "/api/v1/projects/*/chat/conversations/*/read",
                                     "/api/v1/projects/*/repository").authenticated()
                             .requestMatchers(HttpMethod.POST, "/api/v1/projects/*/labels",
                                     "/api/v1/projects/*/sprints",
@@ -269,6 +278,8 @@ public class SecurityBaselineConfiguration {
         configuration.setAllowedOrigins(List.of(origin.toString()));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Content-Type", "X-XSRF-TOKEN"));
+        // The browser client reads how long the access token stays valid to renew the session before it runs out.
+        configuration.setExposedHeaders(List.of(JwtCookieAuthenticationFilter.ACCESS_EXPIRES_IN_HEADER));
         configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/v1/auth/**", configuration);

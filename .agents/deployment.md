@@ -45,6 +45,7 @@ Backend profilleri `application-dev.yml`, `application-test.yml`, `application-p
 ## Production'a çıkmadan önce
 
 1. Frontend/backend hostlarını, domain topolojisini, HTTPS/TLS ve reverse proxy düzenini karara bağlayıp bu belgeye kaydedin.
+   Mesajlaşma WebSocket kullanır (`/api/v1/ws`): reverse proxy `Upgrade`/`Connection` başlıklarını iletmeli, uzun ömürlü bağlantıya (en az birkaç dakika boşta) izin vermeli ve tarayıcının `Origin` başlığını değiştirmemelidir; `FRONTEND_URL` aynı zamanda WebSocket için izinli kaynaktır. HTTPS'te `wss://` kullanılır (`NEXT_PUBLIC_API_URL` şemasından türetilir).
 2. Cookie `Secure=true`, uygun `SameSite`/`Domain`/`Path`, CSRF akışı ve açık CORS origin listesini gerçek topolojiyle birlikte doğrulayın.
 3. Production PostgreSQL bağlantısını (varsayılan Neon) en az yetkili kullanıcıyla kurun; bağlantı secret'larını secret store/ENV içinde tutun. Flyway migration'larını çalıştırın ve Hibernate şema doğrulamasını `ddl-auto=validate` ile yapın.
 4. Veritabanı backup/restore beklentisini ve uygulama sürümüyle migration uyumluluğunu belirleyin; bir restore denemesi yapın.

@@ -53,7 +53,7 @@ public class JwtTokens {
         return parse(token, "access").flatMap(claims -> {
             try {
                 return Optional.of(new AccessIdentity(UUID.fromString(claims.getSubject()),
-                        UUID.fromString(claims.get("sid", String.class))));
+                        UUID.fromString(claims.get("sid", String.class)), claims.getExpiration().toInstant()));
             } catch (RuntimeException exception) {
                 return Optional.empty();
             }
@@ -101,5 +101,5 @@ public class JwtTokens {
     }
 
     public record IssuedToken(String value, Instant expiresAt) {}
-    public record AccessIdentity(UUID userId, UUID sessionId) {}
+    public record AccessIdentity(UUID userId, UUID sessionId, Instant expiresAt) {}
 }

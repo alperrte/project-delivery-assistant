@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { ChatNavItem } from "@/features/chat/components/chat-nav-item";
 import { usePendingInvitationCount } from "@/features/invitations/hooks";
 import { useCurrentMember } from "@/features/projects/hooks/use-current-member";
 import { useSelectedProject } from "@/features/projects/hooks/use-selected-project";
@@ -163,6 +164,12 @@ export function ProjectSidebarNav({
             })}
           </div>
         )}
+
+        {slug && projectPath && (
+          <div className="mt-1 border-t border-border pt-1">
+            <ChatNavItem projectId={project?.id} slug={slug} projectPath={projectPath} collapsed onNavigate={onNavigate} />
+          </div>
+        )}
       </div>
     );
   }
@@ -298,6 +305,12 @@ export function ProjectSidebarNav({
               );
             })}
           </div>
+        </div>
+      )}
+
+      {slug && projectPath && (
+        <div className="ml-2 mt-3 border-l border-border pl-2">
+          <ChatNavItem projectId={project?.id} slug={slug} projectPath={projectPath} onNavigate={onNavigate} />
         </div>
       )}
     </div>

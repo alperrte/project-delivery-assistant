@@ -1,6 +1,7 @@
 package com.pda.auth.infrastructure.config;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.mock.env.MockEnvironment;
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -8,6 +9,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * The limiters count requests per route and client address. A key built from the raw URI would let one
@@ -34,6 +36,37 @@ class RateLimitFilterKeyTest {
         assertEquals(429, status(filter, "GET", "/api/v1/auth/oauth2/authorization/another", "198.51.100.1"));
         assertEquals(200, status(filter, "POST", "/api/v1/auth/login", "198.51.100.2"));
         assertEquals(200, status(filter, "GET", "/api/v1/auth/oauth2/authorization/google", "198.51.100.3"));
+    }
+
+    @Test
+    void theAuthLimitsDefaultToTheProductionValuesAndCanBeRaisedForTestEnvironments() throws Exception {
+        // Nothing configured: 5 registrations per address, then 429.
+        AuthRateLimitFilter production = AuthRateLimitFilter.configured(new MockEnvironment());
+        for (int i = 0; i < 5; i++) {
+            assertEquals(200, status(production, "POST", "/api/v1/auth/register", "198.51.100.40"));
+        }
+        assertEquals(429, status(production, "POST", "/api/v1/auth/register", "198.51.100.40"));
+        // Login keeps its own, larger default.
+        for (int i = 0; i < 30; i++) {
+            assertEquals(200, status(production, "POST", "/api/v1/auth/login", "198.51.100.40"));
+        }
+        assertEquals(429, status(production, "POST", "/api/v1/auth/login", "198.51.100.40"));
+
+        // A test environment raises the registration limit; the other two keep their defaults.
+        AuthRateLimitFilter relaxed = AuthRateLimitFilter.configured(
+                new MockEnvironment().withProperty("auth.rate-limit.sensitive-max-requests", "50"));
+        for (int i = 0; i < 50; i++) {
+            assertEquals(200, status(relaxed, "POST", "/api/v1/auth/register", "198.51.100.41"));
+        }
+        assertEquals(429, status(relaxed, "POST", "/api/v1/auth/register", "198.51.100.41"));
+        for (int i = 0; i < 30; i++) {
+            assertEquals(200, status(relaxed, "POST", "/api/v1/auth/login", "198.51.100.41"));
+        }
+        assertEquals(429, status(relaxed, "POST", "/api/v1/auth/login", "198.51.100.41"));
+
+        // A nonsensical value fails the start instead of silently disabling the protection.
+        assertThrows(IllegalStateException.class, () -> AuthRateLimitFilter.configured(
+                new MockEnvironment().withProperty("auth.rate-limit.sensitive-max-requests", "0")));
     }
 
     @Test

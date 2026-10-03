@@ -88,6 +88,16 @@
     "SPRINT_INVALID": "Die Sprint-Angaben sind ungültig.",
     "LABEL_NAME_EXISTS": "Ein Label mit diesem Namen existiert bereits.",
     "WORKLOG_INVALID": "Der Zeiteintrag ist ungültig.",
+    "CHAT_FORBIDDEN": "Du hast keinen Zugriff auf die Nachrichten dieses Projekts.",
+    "CHAT_NOT_FOUND": "Diese Unterhaltung wurde nicht gefunden.",
+    "CHAT_RECIPIENT": "Diese Person kann nicht angeschrieben werden; sie ist möglicherweise nicht mehr im Projekt.",
+    "CHAT_SELF": "Du kannst keine Unterhaltung mit dir selbst beginnen.",
+    "CHAT_MESSAGE_EMPTY": "Eine leere Nachricht kann nicht gesendet werden.",
+    "CHAT_MESSAGE_TOO_LONG": "Eine Nachricht darf höchstens 2000 Zeichen lang sein.",
+    "CHAT_MESSAGE_INVALID": "Die Nachricht enthält nicht erlaubte Zeichen.",
+    "CHAT_RATE_LIMITED": "Du sendest zu schnell Nachrichten. Warte einen Moment und versuche es erneut.",
+    "CHAT_INVALID_REQUEST": "Die Anfrage ist ungültig.",
+    "CHAT_CONFLICT": "Das kollidiert mit dem aktuellen Stand. Bitte erneut versuchen.",
     "PROFILE_PHOTO_INVALID_TYPE": "Dieser Dateityp wird nicht unterstützt.",
     "PROFILE_PHOTO_TOO_LARGE": "Die Datei darf höchstens 5 MB groß sein.",
     "PROFILE_PHOTO_EMPTY": "Die Datei ist leer.",
@@ -1985,6 +1995,56 @@
       "save": "Speichern",
       "created": "{name} wurde erstellt",
       "updated": "{name} wurde aktualisiert"
+    }
+  },
+  "chat": {
+    "title": "Nachrichten",
+    "nav": {
+      "label": "Nachrichten",
+      "unread": "{count} ungelesene Nachrichten"
+    },
+    "groupName": "Projektgruppe",
+    "groupHint": "Alle im Projekt",
+    "conversations": "Unterhaltungen",
+    "listLoading": "Unterhaltungen werden geladen",
+    "listFailed": "Die Unterhaltungen konnten nicht geladen werden.",
+    "noMembers": "In diesem Projekt gibt es noch keine weiteren Mitglieder.",
+    "unreadCount": "{count} ungelesene Nachrichten",
+    "messagesLabel": "Nachrichten",
+    "loading": "Nachrichten werden geladen",
+    "loadingOlder": "Ältere Nachrichten werden geladen…",
+    "loadFailed": "Die Nachrichten konnten nicht geladen werden.",
+    "retry": "Erneut versuchen",
+    "noMessages": "Noch keine Nachrichten. Schreib die erste.",
+    "today": "Heute",
+    "yesterday": "Gestern",
+    "newMessages": "Neue Nachrichten",
+    "openingDirect": "Unterhaltung wird geöffnet",
+    "sending": "Wird gesendet…",
+    "sendFailed": "Nicht gesendet",
+    "retrySend": "Erneut versuchen",
+    "discard": "Löschen",
+    "composerLabel": "Deine Nachricht",
+    "composerPlaceholder": "Nachricht schreiben…",
+    "send": "Senden",
+    "hint": "Enter zum Senden, Umschalt+Enter für eine neue Zeile.",
+    "counter": "{count}/{max}",
+    "disconnected": "Die Verbindung wurde unterbrochen und wird wiederhergestellt. Bis dahin können keine Nachrichten gesendet werden.",
+    "validation": {
+      "empty": "Eine leere Nachricht kann nicht gesendet werden.",
+      "tooLong": "Eine Nachricht darf höchstens {max} Zeichen lang sein.",
+      "invalid": "Die Nachricht enthält nicht erlaubte Steuerzeichen."
+    },
+    "panel": {
+      "label": "Nachrichtenbereich",
+      "minimize": "Verkleinern",
+      "close": "Schließen",
+      "fullscreen": "Vollbild",
+      "back": "Zurück zu den Unterhaltungen"
+    },
+    "dock": {
+      "label": "Verkleinerte Nachrichten",
+      "open": "Nachrichten öffnen"
     }
   },
   "siteFooter": {

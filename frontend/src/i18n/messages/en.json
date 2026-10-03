@@ -88,6 +88,16 @@
     "SPRINT_INVALID": "The sprint details are not valid.",
     "LABEL_NAME_EXISTS": "A label with this name already exists.",
     "WORKLOG_INVALID": "The time entry is not valid.",
+    "CHAT_FORBIDDEN": "You do not have access to this project's messages.",
+    "CHAT_NOT_FOUND": "This conversation could not be found.",
+    "CHAT_RECIPIENT": "This person cannot be messaged; they may no longer be in the project.",
+    "CHAT_SELF": "You cannot start a conversation with yourself.",
+    "CHAT_MESSAGE_EMPTY": "An empty message cannot be sent.",
+    "CHAT_MESSAGE_TOO_LONG": "A message can be at most 2000 characters.",
+    "CHAT_MESSAGE_INVALID": "The message contains characters that are not allowed.",
+    "CHAT_RATE_LIMITED": "You are sending messages too fast. Wait a moment and try again.",
+    "CHAT_INVALID_REQUEST": "The request is not valid.",
+    "CHAT_CONFLICT": "This conflicted with the current state. Please try again.",
     "PROFILE_PHOTO_INVALID_TYPE": "This file type is not supported.",
     "PROFILE_PHOTO_TOO_LARGE": "The file can be at most 5 MB.",
     "PROFILE_PHOTO_EMPTY": "The file is empty.",
@@ -1961,6 +1971,56 @@
       "save": "Save",
       "created": "{name} was created",
       "updated": "{name} was updated"
+    }
+  },
+  "chat": {
+    "title": "Messaging",
+    "nav": {
+      "label": "Messaging",
+      "unread": "{count} unread messages"
+    },
+    "groupName": "Project group",
+    "groupHint": "Everyone in the project",
+    "conversations": "Conversations",
+    "listLoading": "Loading conversations",
+    "listFailed": "Conversations could not be loaded.",
+    "noMembers": "There are no other members in this project yet.",
+    "unreadCount": "{count} unread messages",
+    "messagesLabel": "Messages",
+    "loading": "Loading messages",
+    "loadingOlder": "Loading older messages…",
+    "loadFailed": "Messages could not be loaded.",
+    "retry": "Try again",
+    "noMessages": "No messages yet. Write the first one.",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "newMessages": "New messages",
+    "openingDirect": "Opening conversation",
+    "sending": "Sending…",
+    "sendFailed": "Not sent",
+    "retrySend": "Try again",
+    "discard": "Delete",
+    "composerLabel": "Your message",
+    "composerPlaceholder": "Write a message…",
+    "send": "Send",
+    "hint": "Enter to send, Shift+Enter for a new line.",
+    "counter": "{count}/{max}",
+    "disconnected": "The connection was lost and is being restored. Messages cannot be sent until it is back.",
+    "validation": {
+      "empty": "An empty message cannot be sent.",
+      "tooLong": "A message can be at most {max} characters.",
+      "invalid": "The message contains control characters that are not allowed."
+    },
+    "panel": {
+      "label": "Messaging panel",
+      "minimize": "Minimize",
+      "close": "Close",
+      "fullscreen": "Make full size",
+      "back": "Back to conversations"
+    },
+    "dock": {
+      "label": "Minimized messaging",
+      "open": "Open messaging"
     }
   },
   "siteFooter": {

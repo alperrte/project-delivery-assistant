@@ -80,6 +80,40 @@ class RefreshAndSessionsIntegrationTest {
     }
 
     @Test
+    void authenticatedResponsesTellHowLongTheAccessTokenStaysValidAndTheBrowserMayReadIt() throws Exception {
+        Account account = newAccount();
+        Cookie csrf = csrfCookie();
+        Tokens tokens = login(account, csrf, "Expiry/1.0");
+
+        // The header is the time left of the access token that authenticated the request, in milliseconds: just
+        // under the 15 minutes it was issued for.
+        String payload = new String(java.util.Base64.getUrlDecoder().decode(tokens.access.getValue().split("[.]")[1]),
+                java.nio.charset.StandardCharsets.UTF_8);
+        long expMillis = ((Number) com.jayway.jsonpath.JsonPath.read(payload, "$.exp")).longValue() * 1000;
+        String header = mvc.perform(get("/api/v1/auth/me").cookie(tokens.access))
+                .andExpect(status().isOk()).andReturn().getResponse().getHeader("X-Access-Token-Expires-In");
+        org.junit.jupiter.api.Assertions.assertNotNull(header);
+        long remaining = Long.parseLong(header);
+        org.junit.jupiter.api.Assertions.assertTrue(remaining > 14 * 60_000L && remaining <= 15 * 60_000L,
+                "remaining " + remaining);
+        org.junit.jupiter.api.Assertions.assertTrue(Math.abs(System.currentTimeMillis() + remaining - expMillis) < 5_000,
+                "the header must match the exp of the token");
+
+        // Without a valid session there is nothing to announce.
+        mvc.perform(get("/api/v1/auth/me"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header()
+                        .doesNotExist("X-Access-Token-Expires-In"));
+
+        // The frontend lives on another origin, so CORS has to expose the header to its scripts.
+        mvc.perform(get("/api/v1/auth/me").cookie(tokens.access)
+                        .header(org.springframework.http.HttpHeaders.ORIGIN, "http://localhost:3000"))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header()
+                        .string("Access-Control-Expose-Headers", org.hamcrest.Matchers.containsString("X-Access-Token-Expires-In")));
+    }
+
+    @Test
     void loggedOutRefreshTokenCannotCreateASession() throws Exception {
         Account account = newAccount();
         Cookie csrf = csrfCookie();
