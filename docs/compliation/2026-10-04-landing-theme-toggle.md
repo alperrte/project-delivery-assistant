@@ -1,5 +1,7 @@
 # Landing tema kontrolü uyumu
 
+Bu ilk teslimin yerine kullanıcı tercihiyle dashboard tasarımını tüm sayfalara taşıyan [ortak tema kontrolü teslimi](2026-10-04-shared-theme-toggle.md) uygulanmıştır. Aşağıdaki bilgiler ilk teslimin kaydıdır.
+
 ## Teslim ve durum
 
 2026-10-04 — Tamamlandı. Landing header tema kontrolü, giriş ve public bilgi sayfalarıyla aynı ortak görünümü kullanır.

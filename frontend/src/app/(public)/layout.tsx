@@ -16,7 +16,7 @@ export default async function PublicLayout({ children }: { children: ReactNode }
           <Link href="/login" aria-label="PDA · Project Delivery Assistant" className="w-24 rounded-md outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"><Logo variant="wordmark" compact plain size={96} /></Link>
           <div className="flex items-center gap-2">
             <LocaleSwitcher />
-            <ThemeToggle tone="auth" />
+            <ThemeToggle />
             <Link href="/login" className="inline-flex min-h-11 items-center rounded-md px-3 text-sm font-medium hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring">{t("login")}</Link>
           </div>
         </div>

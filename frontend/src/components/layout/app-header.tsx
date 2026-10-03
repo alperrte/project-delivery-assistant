@@ -79,7 +79,7 @@ export function AppHeader({
         <GlobalSearch className="min-w-0 flex-1" keyboardShortcut={!contained} />
         <div className="ml-auto flex min-w-0 shrink-0 items-center gap-1 sm:gap-2">
           <LocaleSwitcher triggerClassName="max-sm:px-1" hideLabelOnMobile />
-          <ThemeToggle tone="app" />
+          <ThemeToggle />
           <NotificationsMenu />
           <div className="mx-1 h-5 border-l max-sm:hidden" />
           <DropdownMenu>

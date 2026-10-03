@@ -190,9 +190,9 @@
   --auth-cta-ink: #ffffff;
 }
 
-/* Titanium workspace palette from the supplied DESIGN.md. Auth stays scoped. */
+/* Titanium palette shared by the workspace, previews and the site-wide theme control. */
 .workspace-preview { color: var(--foreground); }
-:is(html:has(.app-shell), .workspace-preview) {
+:is(html:has(.app-shell), .workspace-preview, .theme-toggle) {
   --radius: 0.5rem;
   --background: #ffffff;
   --foreground: #090a0b;
@@ -219,7 +219,7 @@
   --destructive: #ba1a1a;
   --live: #10b981;
 }
-:is(html.dark:has(.app-shell), html.dark .workspace-preview) {
+:is(html.dark:has(.app-shell), html.dark .workspace-preview, html.dark .theme-toggle) {
   --background: #090a0b;
   --foreground: #f4f5f6;
   --card: #18191b;
@@ -249,6 +249,10 @@
   font-family: var(--font-inter), sans-serif;
 }
 :is(.app-shell, .workspace-preview) :is(a, button, input):focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+}
+.theme-toggle[role="group"] button:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 3px;
 }
