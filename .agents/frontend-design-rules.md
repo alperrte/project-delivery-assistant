@@ -135,6 +135,8 @@ Giriş, kayıt ve şifre sıfırlama ekranları arka plan fotoğrafı üzerinde 
 
 ## Tema (light/dark)
 
+- Tek tema kontrolü `components/layout/theme-toggle.tsx` içindedir; dashboard tasarımı tüm sayfalarda aynıdır. Auth/app tone varyantı veya sayfaya özel boyut override kullanılmaz. `.theme-toggle` mevcut Titanium token bloğunu paylaşır; palet kopyalanmaz, sayfanın diğer renkleri değişmez. Seçim animasyonu her component instance için ayrı `useId` ile izole edilir.
+
 - Her yeni renk token'ı **hem `:root` hem `.dark`** içinde tanımlanmalı ve genel bir renk ise `@theme inline` içinde `--color-*` olarak bağlanmalıdır.
 - Bileşenlerde sabit hex, `bg-white`, `text-black` veya `bg-slate-*` gibi paletten bağımsız renkler kullanma. `bg-background`, `text-foreground`, `border-border`, `bg-card`, `text-muted-foreground`, `bg-primary` gibi token sınıflarını kullan. Auth'a özel değerler için `bg-(--auth-card)` yazımı kullanılır.
 - `dark:` varyantını yalnız token'ın karşılamadığı ince farklar için kullan; renkleri token seviyesinde çöz.
@@ -194,7 +196,7 @@ Panelin üç görünür durumu vardır ve geçişler tek yönlü kurallıdır: `
 ## Hata ekranları
 
 - 404, 403, 500 ve 503 aynı `features/errors/error-content.tsx` bileşenini kullanır: PDA logo, büyük hata kodu, kısa açıklama, sonraki adım ve geri dönüş/yeniden deneme bağlantıları. Footer bulunmaz. Masaüstünde iki kolon, `md` altında tek kolon; eylem hedefleri en az 44 px'dir.
-- Tam ekran `ErrorFrame` tema ve dil kontrollerini bilgi sayfalarındaki gibi sunar; tema kontrolü için `ThemeToggle tone="auth"` istisnası geçerlidir. Uygulama içindeki `PageFailure` mevcut AppShell'i korur, ikinci header veya main eklemez.
+- Tam ekran `ErrorFrame` tema ve dil kontrollerini bilgi sayfalarındaki gibi sunar; site genelindeki tek `ThemeToggle` dashboard görünümünü kullanır. Uygulama içindeki `PageFailure` mevcut AppShell'i korur, ikinci header veya main eklemez.
 - Kök `global-error` provider, oturum veya router istemeden çalışır; ince JSON kataloglarını kullanır, kendi CSS ve sistem fontunu taşır. Ham hata mesajı, stack trace ve API detayları kullanıcıya basılmaz.
 - Taşınabilir `public/errors/503.html` kendi token tanımlarını `globals.css` içinden üretir; palet/metin değişirse `node scripts/build-maintenance-page.mjs` çalıştır. Bu belge hiçbir dış görsel/font/script istemez; Next.js kapalıyken göstermek hosting tarafının sorumluluğudur.
 
@@ -204,7 +206,7 @@ Panelin üç görünür durumu vardır ve geçişler tek yönlü kurallıdır: `
 - Uygulama çalışma ekranlarında footer bulunmaz. Bilgi sayfaları ve iletişim bağlantıları `AppHeader` hesap menüsündeki Bilgi ve destek grubunda yer alır; masaüstünde ve mobilde aynı menü kullanılır.
 - Auth footer'ı `tone="auth"` ile kompakt düzendedir: bilgi bağlantıları yatay olarak sarılır; copyright, geliştiriciler, iletişim ve kaynak kod altta yer alır. Mevcut `--auth-control`, `--auth-ink`, `--auth-muted` değerlerini kullanır. `AuthShell` esnek ana içerik ve `min-h-[100dvh]` ile footer'ı yeterli yüksekliğe sahip ekranın altına yerleştirir; kısa ekranlarda içerik doğal olarak kayar, forma örtüşen sabit footer kullanılmaz. Diğer yüzeylerde genel `bg-card`, `text-foreground`, `text-muted-foreground` token'ları geçerlidir.
 - `(public)` bilgi sayfaları oturum istemez. Uzun metinlerde 16 px/7 satır yüksekliği, tek `h1`, anlamlı `h2` bölümleri, içerik bağlantıları ve `lg` üzerinde yapışkan içindekiler kullanılır. SSS native `details/summary` ile klavye ve dokunmatik kullanım sunar. Metinler üç dilde mesaj dosyalarındadır.
-- Kullanıcı tercihiyle bilgi sayfalarındaki tema kontrolü login ile birebir aynı `ThemeToggle tone="auth"` bileşenidir; iki ikon, kayan seçim göstergesi ve ortak dairesel tema geçişi kullanılır. Bu kontrol, auth token'larının bilgi sayfalarında kullanımına özel istisnadır; sayfa içeriği genel token'larla kalır.
+- Kullanıcı tercihiyle bilgi sayfaları, login, landing ve oturum içi sayfalar dashboard görünümündeki tek `ThemeToggle` bileşenini kullanır: kompakt pill, renkli dolu güneş/ay ikonları, kayan seçim göstergesi ve ortak dairesel tema geçişi. Sayfa içeriği kendi token'larıyla kalır.
 
 ## Landing page
 
@@ -214,7 +216,7 @@ Panelin üç görünür durumu vardır ve geçişler tek yönlü kurallıdır: `
 - `LandingPdaDemoProvider` ayrı TanStack Query client’ında statik demo verilerini sağlar; query ve mutation fonksiyonları gerçek API’ye ulaşamaz. Demo `inert` ve aria-hidden bir gerçek uygulama görüntüsüdür; uygulama kontrolleri landing’in tab sırasına veya Ctrl+K kısayoluna katılmaz. Status kaynağı gerçek `TASK_STATUSES` enum’udur: `TODO → IN_PROGRESS → IN_REVIEW → TESTING → DONE`. Gerçek `TasksPage`, `TaskRow` ve status bileşenleri kullanılır.
 - CMD komutları Windows prompt ile DOM üzerinde karakter karakter görünür; gerçek `.env` dosyası okunmaz veya değiştirilmez. Transcript örnek kurulum olarak etiketlidir; compose yalnız backend/postgres, frontend ayrı `npm ci` ve `npm run dev` adımlarıyla gösterilir.
 - Demo `.workspace-preview` sınıfıyla globals.css içindeki aynı Titanium token bloğunu paylaşır; token değerleri değiştirilemez ve paralel palet kopyası oluşturulmaz. `.app-shell` sınıfı landing köküne eklenmez. CSS contain/viewport ölçeği dışında uygulama geometrisi değiştirilmez. iframe için güvenlik başlıkları gevşetilmez.
-- Header logosu aynı asset ile desktop 110px, tablet 90px, mobile 70px genişlikte render edilir; navbar yüksekliği ve asset aspect ratio’su korunur. Header ortak LocaleSwitcher/ThemeToggle kullanır; landing tema kontrolü giriş ve public bilgi sayfalarıyla aynı `tone="auth"` görünümündedir, özel boyut override eklenmez. Ortak dairesel tema geçişi ve hareket tercihleri korunur. `LandingFooter` mevcut bilgi rotalarını, iletişimi, README/GitHub/LICENSE hedeflerini içerir; auth ve default SiteFooter’a ek footer konmaz. Olmayan CONTRIBUTING.md veya kök SECURITY.md bağlantısı üretilmez.
+- Header logosu aynı asset ile desktop 110px, tablet 90px, mobile 70px genişlikte render edilir; navbar yüksekliği ve asset aspect ratio’su korunur. Header ortak LocaleSwitcher/ThemeToggle kullanır; landing tema kontrolü dashboard, giriş ve public bilgi sayfalarıyla aynı tek görünümdedir, özel boyut override eklenmez. Ortak dairesel tema geçişi ve hareket tercihleri korunur. `LandingFooter` mevcut bilgi rotalarını, iletişimi, README/GitHub/LICENSE hedeflerini içerir; auth ve default SiteFooter’a ek footer konmaz. Olmayan CONTRIBUTING.md veya kök SECURITY.md bağlantısı üretilmez.
 
 ## Yeni sayfa veya bileşen eklerken kontrol listesi
 

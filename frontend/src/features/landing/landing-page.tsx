@@ -27,7 +27,7 @@ export function LandingPage() {
         </nav>
         <div className={styles.controls}>
           <LocaleSwitcher hideLabelOnMobile triggerClassName="min-h-11" />
-          <ThemeToggle tone="auth" />
+          <ThemeToggle />
           <Link href="/login" className={styles.headerLogin}>{t("login")}<ArrowUpRight size={15} aria-hidden="true" /></Link>
         </div>
       </header>
