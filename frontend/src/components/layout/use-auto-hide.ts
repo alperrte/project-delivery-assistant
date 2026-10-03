@@ -18,13 +18,13 @@ const SCROLL_HIDE_DELTA = 80;
  * `prefers-reduced-motion` via the site-wide rule in globals.css, so this
  * hook does not need its own reduced-motion branch.
  */
-export function useAutoHide<T extends HTMLElement>() {
+export function useAutoHide<T extends HTMLElement>(enabled = true) {
   const ref = useRef<T>(null);
   const [hidden, setHidden] = useState(false);
 
   useEffect(() => {
     const node = ref.current;
-    if (!node) return;
+    if (!node || !enabled) return;
 
     const touch = matchMedia("(hover: none)").matches;
     let idleTimer: ReturnType<typeof setTimeout> | null = null;
@@ -129,7 +129,7 @@ export function useAutoHide<T extends HTMLElement>() {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, []);
+  }, [enabled]);
 
   return { ref, hidden, reveal: () => setHidden(false) };
 }

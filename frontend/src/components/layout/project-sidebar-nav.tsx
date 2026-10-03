@@ -21,13 +21,16 @@ import { navItemClass } from "./nav-item";
 export function ProjectSidebarNav({
   onNavigate,
   collapsed,
+  pathnameOverride,
 }: {
   onNavigate: () => void;
   collapsed?: boolean;
+  pathnameOverride?: string;
 }) {
   const t = useTranslations("projects.detail");
   const tn = useTranslations("tasks.nav");
-  const pathname = usePathname();
+  const routePathname = usePathname();
+  const pathname = pathnameOverride ?? routePathname;
   const searchParams = useSearchParams();
 
   // Team pages:

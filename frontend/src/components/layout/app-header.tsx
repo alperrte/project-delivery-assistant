@@ -40,15 +40,17 @@ export function AppHeader({
   user,
   onOpenMobileMenu,
   onLogout,
+  contained = false,
 }: {
   user: SessionUser;
+  contained?: boolean;
   onOpenMobileMenu: () => void;
   onLogout: () => void;
 }) {
   const t = useTranslations("app");
   const tw = useTranslations("workspace");
   const tf = useTranslations("siteFooter");
-  const { ref, hidden, reveal } = useAutoHide<HTMLElement>();
+  const { ref, hidden, reveal } = useAutoHide<HTMLElement>(!contained);
 
   return (
     <>
@@ -74,7 +76,7 @@ export function AppHeader({
         <Button variant="ghost" size="icon" className="shrink-0 lg:hidden" aria-label={tw("navigation")} onClick={onOpenMobileMenu}>
           <List size={20} aria-hidden="true" />
         </Button>
-        <GlobalSearch className="min-w-0 flex-1" />
+        <GlobalSearch className="min-w-0 flex-1" keyboardShortcut={!contained} />
         <div className="ml-auto flex min-w-0 shrink-0 items-center gap-1 sm:gap-2">
           <LocaleSwitcher triggerClassName="max-sm:px-1" hideLabelOnMobile />
           <ThemeToggle tone="app" />
