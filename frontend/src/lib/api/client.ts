@@ -24,6 +24,18 @@ type CsrfState = { headerName: string } | null;
 let csrf: CsrfState = null;
 let refreshing: Promise<boolean> | null = null;
 
+/**
+ * Header the backend adds to every authenticated response: how many milliseconds the access token stays valid. A
+ * duration (not a timestamp) so that a wrong clock in the browser cannot make the session look expired.
+ */
+const ACCESS_EXPIRES_IN_HEADER = "X-Access-Token-Expires-In";
+let accessExpiresAt: number | null = null;
+
+/** When the current access token expires, on this browser's clock, or null if the server has not said yet. */
+export function getAccessExpiresAt(): number | null {
+  return accessExpiresAt;
+}
+
 function readCookie(name: string): string | undefined {
   if (typeof document === "undefined") return undefined;
   return document.cookie
@@ -71,20 +83,72 @@ async function send(path: string, init: RequestInit, method: string): Promise<Re
     headers.set(headerName, token);
   }
   try {
-    return await fetch(`${API_URL}${path}`, { ...init, method, headers, credentials: "include" });
+    const res = await fetch(`${API_URL}${path}`, { ...init, method, headers, credentials: "include" });
+    const header = res.headers.get(ACCESS_EXPIRES_IN_HEADER);
+    const remaining = header === null ? NaN : Number(header);
+    if (Number.isFinite(remaining) && remaining >= 0) accessExpiresAt = Date.now() + remaining;
+    return res;
   } catch {
     throw new ApiError(0);
   }
 }
 
+const REFRESH_LOCK = "pda-session-refresh";
+const LAST_REFRESH_KEY = "pda:last-session-refresh";
+/** A session renewed this recently by any tab is fresh enough: the cookies are shared by all tabs. */
+const FRESH_WINDOW_MS = 8_000;
+
+function recentlyRefreshed(): boolean {
+  try {
+    return Date.now() - Number(localStorage.getItem(LAST_REFRESH_KEY)) < FRESH_WINDOW_MS;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The refresh token rotates on use, and presenting the previous one again ends the whole session. Tabs share the
+ * cookies, so two tabs refreshing at the same moment could do exactly that. The Web Locks API (all current browsers)
+ * lines them up: the second tab waits, sees that the first one just renewed the session and does not rotate again.
+ */
+async function exclusivelyAcrossTabs<T>(task: () => Promise<T>): Promise<T> {
+  const locks = typeof navigator !== "undefined" ? navigator.locks : undefined;
+  return locks ? locks.request(REFRESH_LOCK, task) : task();
+}
+
 function refreshSession(): Promise<boolean> {
-  refreshing ??= send("/auth/refresh", {}, "POST")
-    .then((res) => res.ok)
+  refreshing ??= exclusivelyAcrossTabs(async () => {
+    if (recentlyRefreshed()) return true;
+    const renewed = await send("/auth/refresh", {}, "POST").then((res) => res.ok).catch(() => false);
+    if (renewed) {
+      try {
+        localStorage.setItem(LAST_REFRESH_KEY, String(Date.now()));
+      } catch {
+        /* storage unavailable: the lock alone still prevents simultaneous rotations */
+      }
+    }
+    return renewed;
+  })
     .catch(() => false)
     .finally(() => {
       refreshing = null;
     });
   return refreshing;
+}
+
+/**
+ * Renews the session ahead of time (before the access token runs out) and reads the new expiry. False when the
+ * session cannot be renewed (it was ended, or the network is down).
+ */
+export async function renewAccessSession(): Promise<boolean> {
+  if (!(await refreshSession())) return false;
+  try {
+    // Any authenticated response carries the new token's expiry.
+    await apiRequest("/auth/me");
+  } catch {
+    /* the renewal itself worked; the expiry is simply not updated */
+  }
+  return true;
 }
 
 const NO_REFRESH = ["/auth/login", "/auth/register", "/auth/register/invitation", "/auth/refresh", "/auth/logout"];

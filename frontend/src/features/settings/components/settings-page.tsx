@@ -90,7 +90,7 @@ export function SettingsPage() {
             onThemeTransitionChange={(next) => setDraft({ ...current, themeTransition: next })}
           />
 
-          <div className="sticky bottom-0 z-20 -mx-4 -mb-6 mt-10 sm:-mb-8 border-t bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:-mx-8 sm:px-8">
+          <div data-sticky-actions className="sticky bottom-0 z-20 -mx-4 -mb-6 mt-10 sm:-mb-8 border-t bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:-mx-8 sm:px-8">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <p role="status" className="text-sm text-muted-foreground">{dirty ? t("save.unsaved") : t("save.clean")}</p>
               <div className="flex items-center gap-2">

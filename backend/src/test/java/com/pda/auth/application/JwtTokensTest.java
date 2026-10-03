@@ -31,6 +31,18 @@ class JwtTokensTest {
     }
 
     @Test
+    void theAccessIdentityKnowsWhenItsTokenStopsBeingValid() {
+        byte[] key = new byte[32];
+        new SecureRandom().nextBytes(key);
+        JwtTokens tokens = new JwtTokens(Base64.getEncoder().encodeToString(key), 15, 7, Clock.systemUTC());
+        JwtTokens.IssuedToken issued = tokens.issueAccess(UUID.randomUUID(), UUID.randomUUID());
+
+        // A JWT carries whole seconds; the identity must report the very moment the token expires.
+        assertEquals(issued.expiresAt().truncatedTo(java.time.temporal.ChronoUnit.SECONDS),
+                tokens.parseAccess(issued.value()).orElseThrow().expiresAt());
+    }
+
+    @Test
     void missingOrPlaceholderSecretFailsFast() {
         assertThrows(IllegalStateException.class, () -> new JwtTokens("", 15, 7, Clock.systemUTC()));
         assertThrows(IllegalStateException.class,

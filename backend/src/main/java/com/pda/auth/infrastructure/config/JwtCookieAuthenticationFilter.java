@@ -1,5 +1,6 @@
 package com.pda.auth.infrastructure.config;
 
+import com.pda.auth.AuthenticatedSession;
 import com.pda.auth.application.service.JwtTokens;
 import com.pda.user.UserAccounts;
 import com.pda.user.UserSessions;
@@ -9,6 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.Clock;
+import java.time.Duration;
 import java.util.List;
 import java.util.Set;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -17,6 +19,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 final class JwtCookieAuthenticationFilter extends OncePerRequestFilter {
+
+    /** Response header: milliseconds the access token that authenticated the request stays valid. Exposed by CORS. */
+    static final String ACCESS_EXPIRES_IN_HEADER = "X-Access-Token-Expires-In";
 
     private static final Set<String> ALLOWED_WHILE_PASSWORD_CHANGE_PENDING = Set.of(
             "/api/v1/auth/me", "/api/v1/auth/password/change", "/api/v1/auth/logout",
@@ -57,10 +62,19 @@ final class JwtCookieAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain chain) throws ServletException, IOException {
         tokens.parseAccess(cookies.access(request)).ifPresent(identity -> {
             if (sessions.isActive(identity.sessionId(), identity.userId(), clock.instant())) {
-                users.findActiveById(identity.userId()).ifPresent(user ->
-                        SecurityContextHolder.getContext().setAuthentication(
-                                new UsernamePasswordAuthenticationToken(user, null,
-                                        List.of(new SimpleGrantedAuthority("ROLE_" + user.globalRole())))));
+                users.findActiveById(identity.userId()).ifPresent(user -> {
+                    SecurityContextHolder.getContext().setAuthentication(
+                            new UsernamePasswordAuthenticationToken(user, null,
+                                    List.of(new SimpleGrantedAuthority("ROLE_" + user.globalRole()))));
+                    // For connections that outlive this request (the chat WebSocket): which session this was.
+                    request.setAttribute(AuthenticatedSession.REQUEST_ATTRIBUTE,
+                            new AuthenticatedSession(user.id(), identity.sessionId(), identity.expiresAt()));
+                    // How long the access token stays valid, in milliseconds from now (nothing secret in it; a
+                    // duration rather than a point in time, so a browser clock that is off cannot mislead it). The
+                    // browser client renews the session, and the chat socket with it, shortly before it runs out.
+                    long remaining = Duration.between(clock.instant(), identity.expiresAt()).toMillis();
+                    response.setHeader(ACCESS_EXPIRES_IN_HEADER, String.valueOf(Math.max(remaining, 0)));
+                });
             }
         });
         if (passwordChangeRequired(request)) {

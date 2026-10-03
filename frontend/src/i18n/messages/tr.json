@@ -88,6 +88,16 @@
     "SPRINT_INVALID": "Sprint bilgileri geçersiz.",
     "LABEL_NAME_EXISTS": "Bu adda bir etiket zaten var.",
     "WORKLOG_INVALID": "Süre kaydı geçersiz.",
+    "CHAT_FORBIDDEN": "Bu projenin mesajlaşmasına erişim iznin yok.",
+    "CHAT_NOT_FOUND": "Bu konuşma bulunamadı.",
+    "CHAT_RECIPIENT": "Bu kişiye mesaj gönderilemiyor; artık projede olmayabilir.",
+    "CHAT_SELF": "Kendinle konuşma başlatamazsın.",
+    "CHAT_MESSAGE_EMPTY": "Boş bir mesaj gönderilemez.",
+    "CHAT_MESSAGE_TOO_LONG": "Mesaj en fazla 2000 karakter olabilir.",
+    "CHAT_MESSAGE_INVALID": "Mesaj izin verilmeyen karakterler içeriyor.",
+    "CHAT_RATE_LIMITED": "Çok hızlı mesaj gönderiyorsun. Biraz bekleyip tekrar dene.",
+    "CHAT_INVALID_REQUEST": "İstek geçerli değil.",
+    "CHAT_CONFLICT": "İşlem mevcut durumla çakıştı. Tekrar dene.",
     "PROFILE_PHOTO_INVALID_TYPE": "Dosya türü desteklenmiyor.",
     "PROFILE_PHOTO_TOO_LARGE": "Dosya en fazla 5 MB olabilir.",
     "PROFILE_PHOTO_EMPTY": "Dosya boş.",
@@ -1985,6 +1995,56 @@
       "save": "Kaydet",
       "created": "{name} oluşturuldu",
       "updated": "{name} güncellendi"
+    }
+  },
+  "chat": {
+    "title": "Mesajlaşma",
+    "nav": {
+      "label": "Mesajlaşma",
+      "unread": "{count} okunmamış mesaj"
+    },
+    "groupName": "Proje Grubu",
+    "groupHint": "Projedeki herkes",
+    "conversations": "Konuşmalar",
+    "listLoading": "Konuşmalar yükleniyor",
+    "listFailed": "Konuşmalar yüklenemedi.",
+    "noMembers": "Bu projede henüz başka üye yok.",
+    "unreadCount": "{count} okunmamış mesaj",
+    "messagesLabel": "Mesajlar",
+    "loading": "Mesajlar yükleniyor",
+    "loadingOlder": "Eski mesajlar yükleniyor…",
+    "loadFailed": "Mesajlar yüklenemedi.",
+    "retry": "Tekrar dene",
+    "noMessages": "Henüz mesaj yok. İlk mesajı sen yaz.",
+    "today": "Bugün",
+    "yesterday": "Dün",
+    "newMessages": "Yeni mesajlar",
+    "openingDirect": "Konuşma açılıyor",
+    "sending": "Gönderiliyor…",
+    "sendFailed": "Gönderilemedi",
+    "retrySend": "Tekrar dene",
+    "discard": "Sil",
+    "composerLabel": "Mesajın",
+    "composerPlaceholder": "Bir mesaj yaz…",
+    "send": "Gönder",
+    "hint": "Göndermek için Enter, yeni satır için Shift+Enter.",
+    "counter": "{count}/{max}",
+    "disconnected": "Bağlantı koptu, yeniden bağlanılıyor. Bağlantı gelene kadar mesaj gönderilemez.",
+    "validation": {
+      "empty": "Boş bir mesaj gönderilemez.",
+      "tooLong": "Mesaj en fazla {max} karakter olabilir.",
+      "invalid": "Mesaj izin verilmeyen kontrol karakterleri içeriyor."
+    },
+    "panel": {
+      "label": "Mesajlaşma paneli",
+      "minimize": "Küçült",
+      "close": "Kapat",
+      "fullscreen": "Tam ekran yap",
+      "back": "Konuşmalara dön"
+    },
+    "dock": {
+      "label": "Küçültülmüş mesajlaşma",
+      "open": "Mesajlaşmayı aç"
     }
   },
   "siteFooter": {

@@ -9,6 +9,8 @@ import java.time.Duration;
 import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Map;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
 import org.springframework.http.MediaType;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -20,13 +22,51 @@ final class AuthRateLimitFilter extends OncePerRequestFilter {
     private static final String REFRESH_PATH = "/api/v1/auth/refresh";
     private static final String LOGIN_PATH = "/api/v1/auth/login";
     private static final long WINDOW_MILLIS = Duration.ofMinutes(10).toMillis();
-    private static final int MAX_REQUESTS = 5;
-    private static final int MAX_REFRESH_REQUESTS = 30;
+    // Production defaults. They can be raised for automated test environments only (see configured(...)).
+    static final int DEFAULT_SENSITIVE_REQUESTS = 5;
+    static final int DEFAULT_REFRESH_REQUESTS = 30;
     // Every login request counts, successful ones too, so 5 locked out ordinary users.
-    private static final int MAX_LOGIN_REQUESTS = 30;
+    static final int DEFAULT_LOGIN_REQUESTS = 30;
     private static final int MAX_IPS = 10_000;
+
+    private final int maxRequests;
+    private final int maxRefreshRequests;
+    private final int maxLoginRequests;
     private final Map<String, ArrayDeque<Long>> attempts = new HashMap<>();
     private long requests;
+
+    AuthRateLimitFilter() {
+        this(DEFAULT_SENSITIVE_REQUESTS, DEFAULT_LOGIN_REQUESTS, DEFAULT_REFRESH_REQUESTS);
+    }
+
+    AuthRateLimitFilter(int maxRequests, int maxLoginRequests, int maxRefreshRequests) {
+        if (maxRequests < 1 || maxLoginRequests < 1 || maxRefreshRequests < 1) {
+            throw new IllegalStateException("Auth rate limits must be at least 1");
+        }
+        this.maxRequests = maxRequests;
+        this.maxLoginRequests = maxLoginRequests;
+        this.maxRefreshRequests = maxRefreshRequests;
+    }
+
+    /**
+     * The limits come from {@code auth.rate-limit.sensitive-max-requests} (register, register by invitation, external
+     * invitation preview, password change/forgot/reset), {@code auth.rate-limit.login-max-requests} and
+     * {@code auth.rate-limit.refresh-max-requests} (refresh and OAuth). Without them the production defaults apply;
+     * a raised value is meant for automated tests that sign many throw-away users up from one address, and is
+     * announced in the log so it cannot go unnoticed.
+     */
+    static AuthRateLimitFilter configured(Environment environment) {
+        int sensitive = environment.getProperty("auth.rate-limit.sensitive-max-requests", Integer.class, DEFAULT_SENSITIVE_REQUESTS);
+        int login = environment.getProperty("auth.rate-limit.login-max-requests", Integer.class, DEFAULT_LOGIN_REQUESTS);
+        int refresh = environment.getProperty("auth.rate-limit.refresh-max-requests", Integer.class, DEFAULT_REFRESH_REQUESTS);
+        AuthRateLimitFilter filter = new AuthRateLimitFilter(sensitive, login, refresh);
+        if (sensitive != DEFAULT_SENSITIVE_REQUESTS || login != DEFAULT_LOGIN_REQUESTS || refresh != DEFAULT_REFRESH_REQUESTS) {
+            LoggerFactory.getLogger(AuthRateLimitFilter.class).warn(
+                    "Auth rate limits differ from the production defaults (sensitive={}, login={}, refresh={}): for test environments only",
+                    sensitive, login, refresh);
+        }
+        return filter;
+    }
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
@@ -60,8 +100,8 @@ final class AuthRateLimitFilter extends OncePerRequestFilter {
         // The key is the route, never the raw URI: the OAuth paths end in a client-chosen segment, and a key per URI
         // would let one unauthenticated client fill the table and lock everybody else out.
         String key = routeOf(path) + ":" + request.getRemoteAddr();
-        int limit = REFRESH_PATH.equals(path) || isOAuthRedirect(path) ? MAX_REFRESH_REQUESTS
-                : LOGIN_PATH.equals(path) ? MAX_LOGIN_REQUESTS : MAX_REQUESTS;
+        int limit = REFRESH_PATH.equals(path) || isOAuthRedirect(path) ? maxRefreshRequests
+                : LOGIN_PATH.equals(path) ? maxLoginRequests : maxRequests;
         if (!allow(key, limit, System.currentTimeMillis())) {
             response.setStatus(429);
             response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);

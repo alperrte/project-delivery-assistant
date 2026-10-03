@@ -287,7 +287,7 @@ export function ProjectSettingsForm({ project }: { project: Project }) {
         {/* Room for the save bar once it rests at the end of the form; it floats over this gap, not over the fields. */}
         <div aria-hidden="true" className="h-16" />
         {isDirty && (
-          <div className="sticky bottom-4 z-20 h-0">
+          <div data-sticky-actions className="sticky bottom-4 z-20 h-0">
             <div
               role="region"
               aria-label={t("unsaved")}

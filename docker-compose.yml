@@ -28,6 +28,13 @@ services:
       - .env
     environment:
       SPRING_PROFILES_ACTIVE: ${APP_ENV:-dev}
+      # Rate limits. The defaults are the production values; raise them in a local .env (or the shell) only to run
+      # the browser tests repeatedly without restarting the backend. See .env.example.
+      AUTH_RATE_LIMIT_SENSITIVE_MAX_REQUESTS: ${AUTH_RATE_LIMIT_SENSITIVE_MAX_REQUESTS:-5}
+      AUTH_RATE_LIMIT_LOGIN_MAX_REQUESTS: ${AUTH_RATE_LIMIT_LOGIN_MAX_REQUESTS:-30}
+      AUTH_RATE_LIMIT_REFRESH_MAX_REQUESTS: ${AUTH_RATE_LIMIT_REFRESH_MAX_REQUESTS:-30}
+      CHAT_SEND_MAX_MESSAGES: ${CHAT_SEND_MAX_MESSAGES:-30}
+      CHAT_SEND_WINDOW_SECONDS: ${CHAT_SEND_WINDOW_SECONDS:-60}
     ports:
       - "${BACKEND_PORT:-8080}:8080"
     depends_on:

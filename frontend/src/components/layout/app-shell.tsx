@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -10,6 +9,9 @@ import { Buildings, SquaresFour, House, GearSix, CalendarBlank, SidebarSimple, E
 import { AppHeader } from "./app-header";
 import { ProjectSidebarNav } from "./project-sidebar-nav";
 import { TasksNavLink } from "./tasks-nav-link";
+import { COLLAPSE_KEY, collapseEvent, useSidebarCollapsed } from "./sidebar-collapse";
+import { ChatProvider } from "@/features/chat/chat-provider";
+import { ChatRoot } from "@/features/chat/components/chat-root";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Logo } from "@/components/common/logo";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -29,26 +31,6 @@ const NAV_LINKS = [
   { href: "/invitations", key: "invitations", icon: EnvelopeSimple },
 ] as const;
 
-const COLLAPSE_KEY = "pda:sidebar-collapsed";
-const collapseEvent = "pda:sidebar-collapsed-changed";
-
-function subscribeToCollapse(onChange: () => void) {
-  window.addEventListener(collapseEvent, onChange);
-  window.addEventListener("storage", onChange);
-  return () => {
-    window.removeEventListener(collapseEvent, onChange);
-    window.removeEventListener("storage", onChange);
-  };
-}
-
-function readCollapsed() {
-  try {
-    return localStorage.getItem(COLLAPSE_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
-
 export function AppShell({ children }: { children: ReactNode }) {
   const t = useTranslations("app");
   const tw = useTranslations("workspace");
@@ -65,7 +47,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   // SSR/first-paint snapshot is always "expanded" so hydration never mismatches;
   // the real preference (if collapsed) applies a frame later, same pattern as
   // the last-selected-project memory in project-sidebar-nav.tsx.
-  const collapsed = useSyncExternalStore(subscribeToCollapse, readCollapsed, () => false);
+  const collapsed = useSidebarCollapsed();
 
   useEffect(() => {
     if (!sessionExpired) return;
@@ -191,7 +173,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     );
   }
 
-  return (
+  const shell = (
     <div className="app-shell flex min-h-[100dvh] bg-background">
       <a href="#main-content" className="sr-only z-50 rounded bg-primary p-3 text-primary-foreground focus:not-sr-only focus:fixed focus:top-2 focus:left-2">{tw("skip")}</a>
       <aside className={cn("sticky top-0 hidden h-[100dvh] shrink-0 flex-col border-r bg-surface-2 transition-[width] duration-300 lg:flex", collapsed ? "w-16" : "w-60")}>
@@ -222,5 +204,13 @@ export function AppShell({ children }: { children: ReactNode }) {
         <main id="main-content" tabIndex={-1} className={cn("w-full min-w-0 flex-1 pt-[4.5rem]", pathname === "/dashboard" ? "" : "mx-auto max-w-[1560px] px-4 pb-6 sm:px-8 sm:pb-8")}>{children}</main>
       </div>
     </div>
+  );
+
+  // The chat lives next to the shell, not inside a page, so a minimized chat survives moving between pages.
+  return (
+    <ChatProvider>
+      {shell}
+      <ChatRoot />
+    </ChatProvider>
   );
 }
