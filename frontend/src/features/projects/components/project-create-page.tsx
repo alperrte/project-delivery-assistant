@@ -76,7 +76,7 @@ function usePickedImage() {
   return { file: picked?.file ?? null, url: picked?.url ?? null, change };
 }
 
-export function ProjectCreatePage() {
+export function ProjectCreatePage({ presentationValues }: { presentationValues?: CreateProjectValues } = {}) {
   const t = useTranslations("projects.newPage");
   const tv = useTranslations("validation");
   const te = useTranslations("errors");
@@ -102,6 +102,7 @@ export function ProjectCreatePage() {
   } = useForm<CreateProjectValues>({
     resolver: zodResolver(createProjectSchema),
     defaultValues: { name: "", tagline: "", techStack: [], description: "" },
+    values: presentationValues,
   });
 
   const values = useWatch({ control });

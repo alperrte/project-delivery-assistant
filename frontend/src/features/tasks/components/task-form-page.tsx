@@ -73,9 +73,10 @@ type BodyProps = ProjectGateContext & {
   task?: Task;
   initialSprintId: string;
   initialParent: TaskRef | null;
+  presentationValues?: TaskFormValues;
 };
 
-function TaskFormBody({ slug, project, projectId, userId, task, initialSprintId, initialParent }: BodyProps) {
+export function TaskFormBody({ slug, project, projectId, userId, task, initialSprintId, initialParent, presentationValues }: BodyProps) {
   const t = useTranslations("tasks.form");
   const tc = useTranslations("tasks.common");
   const tv = useTranslations("validation");
@@ -97,6 +98,7 @@ function TaskFormBody({ slug, project, projectId, userId, task, initialSprintId,
   } = useForm<TaskFormValues>({
     resolver: zodResolver(taskFormSchema),
     defaultValues: initialValues(task, initialSprintId, initialParent?.id ?? ""),
+    values: presentationValues,
   });
   const values = useWatch({ control });
 
@@ -183,7 +185,7 @@ function TaskFormBody({ slug, project, projectId, userId, task, initialSprintId,
                 <Input
                   id="task-title"
                   autoComplete="off"
-                  autoFocus={!editing}
+                  autoFocus={!editing && !presentationValues}
                   maxLength={TASK_TITLE_MAX}
                   placeholder={t("titleField.placeholder")}
                   aria-invalid={!!errors.title}
