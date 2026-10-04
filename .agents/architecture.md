@@ -1,4 +1,8 @@
 ﻿# Mimari kısa özet
+## Organization profili ve özel medya (2026-10-04)
+
+Organization, Project modülü içinde owner kapsamını korur. Profil metadata'sı ve opaque logo/cover referansları PostgreSQL'dedir; byte'lar `shared.MediaStorage` portunun `FileSystemMediaStorage` adaptörüyle özel persistent volume'de tutulur. Project/User BYTEA görselleri değişmez. Media ledger pending/active/delete-pending durumlarını kalıcı tutar; dosya yazımı ile referans değişimi row lock altında koordine edilir, yarım kalan upload ve silmeler yeniden denenir. V1 tek host depolamasıdır; çok host için ortak storage/future adapter gerekir. Public medya endpoint'i veya organization üye/rol modeli eklenmez.
+
 ## Task Service genişletmesi (2026-10-02)
 
 `com.pda.task` artık alt görev, checklist, yorum/bahsetme, aktivite, etiket, ilişki, izleyici, dosya eki, zaman kaydı, görev havuzu ve (`task.sprint.*`) sprint içerir. Task, Project ile yalnız `ProjectAccess`, `ProjectTaskContext`, `ProjectSummaryView` ve `ProjectMemberRemovedEvent` üzerinden; ekip bilgisiyle `ProjectTeamDirectory` portu üzerinden konuşur (Squad uygular, Task Squad'ı import etmez). Notification yalnız `com.pda.task.TaskEvents` olaylarını `AFTER_COMMIT` dinler. `TaskDeadlineScheduler` (`@Scheduled`, `pda.task.deadline-scan-interval`) saatli deadline için 24 saat kala ve gecikme hatırlatması üretir; çift bildirimi koşullu `UPDATE ... WHERE ... IS NULL` önler, böylece birden çok instance güvenlidir. Görevlerim (`/api/v1/tasks/mine`) kimliği yalnız principal'dan alır ve yalnız aktif projelerin kendi görevlerini döner. Ayrıntı: `SECURITY.md` §11.

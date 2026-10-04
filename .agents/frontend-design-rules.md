@@ -2,6 +2,13 @@
 
 Bu belge PDA frontend'inin görsel dilini özetler: renk paleti (light/dark), yazı tipleri, köşe yarıçapları, ikonlar, hareket ve erişilebilirlik kuralları. Amaç, hangi ajan çalışırsa çalışsın tüm sayfaların aynı sistemle uyumlu kalmasıdır. Süreç (skill'ler, Playwright, audit) için `.agents/FRONTEND_WORKFLOW.md` geçerlidir; bu belge onun "mevcut token'ları koru" adımının içeriğidir.
 
+## Organization profil formu ve ortak medya (2026-10-04)
+
+2026-10-05 kullanıcı referansı: Organization formu `PageContainer wide` içinde 7/5 geniş iki kolondur. Soldaki tek yüzeyde ikonlu General/Identity/Contact/Details bölümleri, yan yana tile upload alanları ve kaydedilen 1000 karakter Notes bulunur. Sağda centered profil, yatay gerçek OrganizationCard ve gerçek profile header preview'si, altında yardım kartı vardır. Mavi/violet/amber mevcut `label-*` token'larından gelir; mavi CTA koyu temada okunabilir beyaz yazı için kontrollü ton kullanır. Organization cover yoksa token tabanlı dekoratif SVG gösterilir; gerçek upload bunu değiştirir, Project fallback aynı kalır. Notes gerçek detail'da düz metin olarak sunulur. Preview etkileşim/nav içermez; geniş ve mobil form/dock düzeni ortak davranışı korur.
+
+
+Create/edit aynı General / Identity / Contact alanlarını, mevcut `PageContainer` 7/5 grid ve sticky action bar'ı kullanır. Preview gerçek OrganizationCard/ProfileHeader bileşenlerinden oluşur; link ve mutation içermez. Logo/cover ortak `ImagePicker`, `EntityMark`, `EntityCover` ve `lib/media` politikalarını kullanır; Project wrapper'ları aynı altyapıyı paylaşır. Kart görseli mevcut token ve okunabilir overlay ile, detail cover dekoratif olarak gösterilir. Yeni palette/token eklenmez. Kaydedilmiş metadata ile başarısız upload ayrı tutulur; retry sadece bekleyen dosyaları gönderir. Kaldırma onaydan sonra draft olarak işaretlenir, Save ile uygulanır; Vazgeç sunucu görsellerini değiştirmez. Uzun TR/EN/DE action metinleri mobilde satıra bölünür.
+
 ## Önce `globals.css` dosyasını oku
 
 Tek doğruluk kaynağı `frontend/src/app/globals.css` dosyasıdır. Buradaki tablolar bir özettir ve kodun gerisinde kalabilir. UI'a dokunan her işten önce o dosyayı oku; çelişki varsa `globals.css` kazanır. Bir token eklediğinde, sildiğinde veya değerini değiştirdiğinde bu belgeyi de güncelle.

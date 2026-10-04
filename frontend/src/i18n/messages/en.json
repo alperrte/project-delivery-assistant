@@ -104,7 +104,13 @@
     "PROFILE_PHOTO_DIMENSIONS": "The image is too large. At most 6000 pixels per side.",
     "PROFILE_PHOTO_FAILED": "The profile photo could not be uploaded.",
     "PROJECT_LOGO_DIMENSIONS": "The logo is too large. At most 6000 pixels per side.",
-    "PROJECT_BANNER_DIMENSIONS": "The cover image is too large. At most 6000 pixels per side."
+    "PROJECT_BANNER_DIMENSIONS": "The cover image is too large. At most 6000 pixels per side.",
+    "ORGANIZATION_MEDIA_INVALID_TYPE": "Choose a PNG, JPEG or WebP image.",
+    "ORGANIZATION_MEDIA_TOO_LARGE": "The image exceeds the allowed file size.",
+    "ORGANIZATION_MEDIA_EMPTY": "Choose a non-empty file.",
+    "ORGANIZATION_MEDIA_DIMENSIONS": "The image exceeds the allowed file size.",
+    "ORGANIZATION_MEDIA_UNAVAILABLE": "The organization was saved; some image operations failed. You can retry the failed operations.",
+    "ORGANIZATION_MEDIA_CONFLICT": "The organization was saved; some image operations failed. You can retry the failed operations."
   },
   "app": {
     "nav": {
@@ -166,19 +172,19 @@
       "name": "Name",
       "description": "Description",
       "cancel": "Cancel",
-      "create": "Create",
+      "create": "Create organization",
       "save": "Save",
       "created": "Organization created.",
       "updated": "Organization updated.",
-      "createDescription": "Group your projects under an organization.",
-      "editDescription": "Update the name and description of the organization.",
+      "createDescription": "Bring your team and projects together in one organization.",
+      "editDescription": "Update your organization profile, contact details and images.",
       "notEditable": "Only the owner can edit this organization, and archived organizations cannot be changed.",
       "namePlaceholder": "e.g. Delivery team",
       "descriptionPlaceholder": "Briefly say what the organization does and who it covers.",
       "descriptionHint": "Optional. Shown on the card and on the organization's page.",
       "preview": {
         "title": "Preview",
-        "caption": "This is how the card will look in the list.",
+        "caption": "This is how it will appear in the list and on the organization page.",
         "now": "Now",
         "show": "Show preview",
         "namePlaceholder": "Organization name"
@@ -186,10 +192,53 @@
       "backToOrganization": "Back to the organization",
       "sections": {
         "general": {
-          "title": "General",
+          "title": "General information",
           "description": "The name and description of the organization."
         }
       }
+    },
+    "profile": {
+      "website": "Website",
+      "contactEmail": "Contact email",
+      "location": "Location",
+      "websitePlaceholder": "https://example.com",
+      "emailPlaceholder": "contact@example.com",
+      "locationPlaceholder": "Istanbul, Türkiye",
+      "identityTitle": "Identity and images",
+      "identityDescription": "Define your organization’s visual identity.",
+      "contactTitle": "Contact and links",
+      "contactDescription": "These details will appear on your organization page.",
+      "logo": "Logo",
+      "cover": "Cover image",
+      "choose": "Choose image",
+      "change": "Replace",
+      "remove": "Remove",
+      "logoHint": "PNG, JPEG or WebP · Up to 512 KB.",
+      "coverHint": "PNG, JPEG or WebP · Up to 2 MB.",
+      "invalidType": "Choose a PNG, JPEG or WebP image.",
+      "tooLarge": "The image exceeds the allowed file size.",
+      "empty": "Choose a non-empty file.",
+      "removeTitle": "Remove this image?",
+      "removeDescription": "The change will be applied when you click Save.",
+      "partial": "The organization was saved; some image operations failed. You can retry the failed operations.",
+      "retry": "Retry uploads",
+      "continue": "Continue to organization",
+      "failedLogo": "The logo could not be saved.",
+      "failedCover": "The cover image could not be saved.",
+      "helpTitle": "What is an organization?",
+      "helpDescription": "It groups related projects together. Memberships and permissions are managed separately in each project.",
+      "profilePreview": "Page header",
+      "failedRefresh": "The latest details could not be loaded.",
+      "optional": "Optional",
+      "uploadLogo": "Upload logo",
+      "uploadCover": "Upload cover image",
+      "logoFallbackHint": "Without a logo, the first letter of the name is used.",
+      "coverPlacementHint": "Appears at the top of your organization page.",
+      "detailsTitle": "Details",
+      "detailsDescription": "Add further information and notes.",
+      "notes": "Additional notes",
+      "notesPlaceholder": "Anything else you would like to add about this organization… (optional)",
+      "cardPreview": "Card appearance"
     }
   },
   "projects": {
@@ -268,7 +317,8 @@
         "change": "Change",
         "remove": "Remove",
         "invalidType": "Upload a PNG, JPEG or WebP file only.",
-        "tooLarge": "The cover image can be at most 2 MB."
+        "tooLarge": "The cover image can be at most 2 MB.",
+        "empty": "Choose a non-empty file."
       },
       "name": {
         "label": "Project name",
@@ -720,12 +770,12 @@
     }
   },
   "squads": {
-    "title": "Teams",
-    "description": "Create and manage the teams that work together in the project. People are invited through teams.",
-    "create": "New team",
+    "title": "Squads",
+    "description": "Create and manage teams working together on this project.",
+    "create": "New squad",
     "cancel": "Cancel",
-    "emptyTitle": "No teams yet",
-    "emptyDescription": "Create your first team. People are invited through teams.",
+    "emptyTitle": "No squads yet",
+    "emptyDescription": "Organize project members into teams that work together.",
     "emptyViewerDescription": "No team has been created in this project yet.",
     "view": {
       "label": "View",
@@ -762,7 +812,6 @@
       "openTeam": "Open team {name}",
       "members": "{count, plural, one {# member} other {# members}}"
     },
-    "description": "Create and manage teams working together on this project.",
     "noDescription": "No description has been added for this team.",
     "newPage": {
       "description": "Give the team a name and a short description. You can add members after the team is created.",
@@ -770,13 +819,11 @@
     },
     "manageMembers": "Members",
     "edit": "Edit",
-    "emptyDescription": "Organize project members into teams that work together.",
-    "title": "Squads",
-    "create": "New squad",
-    "emptyTitle": "No squads yet",
     "archiveConfirmTitle": "Archive this squad?",
-    "cancel": "Cancel",
-    "columns": { "name": "Name", "actions": "Actions" },
+    "columns": {
+      "name": "Name",
+      "actions": "Actions"
+    },
     "form": {
       "title": "New team",
       "editTitle": "Edit team",
@@ -993,7 +1040,8 @@
     "taskDateOrder": "The deadline cannot be before the start date.",
     "timeEstimateRange": "The time estimate must be between 1 and 100000 minutes.",
     "worklogRange": "Time must be between 1 and 1440 minutes.",
-    "sprintDateOrder": "The end date cannot be before the start date."
+    "sprintDateOrder": "The end date cannot be before the start date.",
+    "url": "Enter a valid http/https address."
   },
   "forgotPassword": {
     "title": "Forgot your password?",
@@ -1043,7 +1091,10 @@
       "WORK": "Work",
       "OTHER": "Other"
     },
-    "scope": { "PERSONAL": "Personal", "PROJECT": "Project-wide" },
+    "scope": {
+      "PERSONAL": "Personal",
+      "PROJECT": "Project-wide"
+    },
     "createdBy": "Created by {name}",
     "toasts": {
       "created": "Reminder created.",

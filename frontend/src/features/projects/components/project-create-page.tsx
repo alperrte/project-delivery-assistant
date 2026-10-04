@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useMemo, useRef, type ReactNode } from "react";
+import { usePickedImage } from "@/lib/media/use-picked-image";
 import Link from "@/i18n/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
@@ -55,27 +56,6 @@ function Section({ id, title, description, children }: { id: string; title: stri
   );
 }
 
-/**
- * A picked image file and a local URL to show it with. The URL is created on pick and released when the file is
- * replaced, removed or the page is left.
- */
-function usePickedImage() {
-  const [picked, setPicked] = useState<{ file: File; url: string } | null>(null);
-  const urlRef = useRef<string | null>(null);
-  function change(file: File | null) {
-    if (urlRef.current) URL.revokeObjectURL(urlRef.current);
-    urlRef.current = file ? URL.createObjectURL(file) : null;
-    setPicked(file && urlRef.current ? { file, url: urlRef.current } : null);
-  }
-  useEffect(
-    () => () => {
-      if (urlRef.current) URL.revokeObjectURL(urlRef.current);
-    },
-    [],
-  );
-  return { file: picked?.file ?? null, url: picked?.url ?? null, change };
-}
-
 export function ProjectCreatePage({ presentationValues }: { presentationValues?: CreateProjectValues } = {}) {
   const t = useTranslations("projects.newPage");
   const tv = useTranslations("validation");
@@ -90,7 +70,7 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
 
   const { data: organizations } = useQuery({
     queryKey: ["organizations", "picker"],
-    queryFn: () => organizationsApi.list(0, 100),
+    queryFn: () => organizationsApi.allOwned(),
   });
 
   const {

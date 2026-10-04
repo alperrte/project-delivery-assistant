@@ -5,6 +5,12 @@ export type Organization = {
   name: string;
   slug: string;
   description: string | null;
+  website: string | null;
+  contactEmail: string | null;
+  location: string | null;
+  notes: string | null;
+  logoVersion: string | null;
+  coverVersion: string | null;
   ownerUserId: string;
   status: OrganizationStatus;
   createdAt: string;

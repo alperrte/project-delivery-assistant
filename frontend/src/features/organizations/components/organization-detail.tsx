@@ -6,7 +6,7 @@ import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, PencilSimple, Archive } from "@phosphor-icons/react";
-import { PageHeader } from "@/components/common/page-header";
+import { OrganizationProfileHeader } from "./organization-profile-header";
 import { EmptyState } from "@/components/common/empty-state";
 import { PaginationBar } from "@/components/common/pagination-bar";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
@@ -17,23 +17,25 @@ import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components
 import { PageFailure } from "@/features/errors/page-failure";
 import { useSession } from "@/features/auth/hooks/use-session";
 import { ProjectRow } from "@/features/projects/components/project-card";
-import { organizationsApi } from "../api";
+import { organizationKeys, invalidateOrganizationQueries } from "../queries";
+import { organizationsApi, organizationImageSource } from "../api";
 
 export function OrganizationDetail({ organizationId }: { organizationId: string }) {
   const t = useTranslations("organizations");
   const tp = useTranslations("projects");
+  const profile = useTranslations("organizations.profile");
   const { data: user } = useSession();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [page, setPage] = useState(0);
 
   const { data: org, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ["organizations", organizationId],
+    queryKey: organizationKeys.detail(organizationId ?? ""),
     queryFn: () => organizationsApi.detail(organizationId),
   });
 
   const { data: projects } = useQuery({
-    queryKey: ["organizations", organizationId, "projects", page],
+    queryKey: organizationKeys.projects(organizationId, page),
     queryFn: () => organizationsApi.projects(organizationId, page),
     enabled: !!org,
   });
@@ -50,9 +52,11 @@ export function OrganizationDetail({ organizationId }: { organizationId: string 
       <Link href="/organizations" className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground">
         <ArrowLeft size={16} aria-hidden="true" />{t("backToOrganizations")}
       </Link>
-      <PageHeader
-        title={org.name}
-        description={org.description ?? undefined}
+      <OrganizationProfileHeader
+        name={org.name}
+        description={org.description}
+        logoSrc={organizationImageSource(org, "logo")}
+        coverSrc={organizationImageSource(org, "cover")}
         action={
           !archived && isOwner && (
             <div className="flex gap-2">
@@ -74,7 +78,7 @@ export function OrganizationDetail({ organizationId }: { organizationId: string 
                 destructive
                 onConfirm={async () => {
                   await organizationsApi.archive(org.id);
-                  await queryClient.invalidateQueries({ queryKey: ["organizations"] });
+                  await invalidateOrganizationQueries(queryClient);
                   router.push("/organizations");
                 }}
               />
@@ -82,6 +86,16 @@ export function OrganizationDetail({ organizationId }: { organizationId: string 
           )
         }
       />
+
+      {(org.website || org.contactEmail || org.location) && <section aria-label={profile("contactTitle")} className="mt-6 rounded-lg border bg-card p-5">
+        <dl className="grid gap-5 sm:grid-cols-3">
+          {org.website && <div className="min-w-0"><dt className="text-sm text-muted-foreground">{profile("website")}</dt><dd className="mt-1 break-all text-sm"><a href={org.website} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">{org.website}</a></dd></div>}
+          {org.contactEmail && <div className="min-w-0"><dt className="text-sm text-muted-foreground">{profile("contactEmail")}</dt><dd className="mt-1 break-all text-sm"><a href={`mailto:${org.contactEmail}`} className="underline underline-offset-4">{org.contactEmail}</a></dd></div>}
+          {org.location && <div className="min-w-0"><dt className="text-sm text-muted-foreground">{profile("location")}</dt><dd className="mt-1 whitespace-pre-wrap break-words text-sm">{org.location}</dd></div>}
+        </dl>
+      </section>}
+
+      {org.notes && <section className="mt-6 rounded-xl border bg-surface-2/50 p-5"><h2 className="text-sm font-semibold">{profile("notes")}</h2><p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-muted-foreground">{org.notes}</p></section>}
 
       {archived && <Badge variant="outline" className="mb-5 px-2.5 py-1">{t("archivedBadge")}</Badge>}
 

@@ -104,7 +104,13 @@
     "PROFILE_PHOTO_DIMENSIONS": "Görsel çok büyük. En fazla 6000 piksel olabilir.",
     "PROFILE_PHOTO_FAILED": "Profil fotoğrafı yüklenemedi.",
     "PROJECT_LOGO_DIMENSIONS": "Logo çok büyük. En fazla 6000 piksel olabilir.",
-    "PROJECT_BANNER_DIMENSIONS": "Kapak görseli çok büyük. En fazla 6000 piksel olabilir."
+    "PROJECT_BANNER_DIMENSIONS": "Kapak görseli çok büyük. En fazla 6000 piksel olabilir.",
+    "ORGANIZATION_MEDIA_INVALID_TYPE": "PNG, JPEG veya WebP görseli seçin.",
+    "ORGANIZATION_MEDIA_TOO_LARGE": "Görsel izin verilen dosya boyutunu aşıyor.",
+    "ORGANIZATION_MEDIA_EMPTY": "Boş dosya yüklenemez.",
+    "ORGANIZATION_MEDIA_DIMENSIONS": "Görsel izin verilen dosya boyutunu aşıyor.",
+    "ORGANIZATION_MEDIA_UNAVAILABLE": "Organizasyon kaydedildi; bazı görsel işlemleri tamamlanamadı. Başarısız işlemleri tekrar deneyebilirsiniz.",
+    "ORGANIZATION_MEDIA_CONFLICT": "Organizasyon kaydedildi; bazı görsel işlemleri tamamlanamadı. Başarısız işlemleri tekrar deneyebilirsiniz."
   },
   "app": {
     "nav": {
@@ -166,19 +172,19 @@
       "name": "Ad",
       "description": "Açıklama",
       "cancel": "Vazgeç",
-      "create": "Oluştur",
+      "create": "Organizasyonu oluştur",
       "save": "Kaydet",
       "created": "Organizasyon oluşturuldu.",
       "updated": "Organizasyon güncellendi.",
-      "createDescription": "Projelerinizi bir organizasyon altında gruplayın.",
-      "editDescription": "Organizasyonun adını ve açıklamasını güncelleyin.",
+      "createDescription": "Ekibinizi ve projelerinizi bir organizasyon altında toplayın.",
+      "editDescription": "Organizasyon profilini, iletişim bilgilerini ve görsellerini güncelleyin.",
       "notEditable": "Bu organizasyonu yalnızca sahibi düzenleyebilir; arşivlenmiş organizasyonlar değiştirilemez.",
-      "namePlaceholder": "Ör. Teslimat Ekibi",
+      "namePlaceholder": "Ör. x-etc, Üniversite Kulübü, Teslimat Ekibi",
       "descriptionPlaceholder": "Organizasyonun ne yaptığını ve kimleri kapsadığını kısaca yazın.",
       "descriptionHint": "İsteğe bağlı. Kartta ve organizasyon sayfasında görünür.",
       "preview": {
         "title": "Önizleme",
-        "caption": "Kart listede böyle görünecek.",
+        "caption": "Kart listede ve organizasyon sayfasında böyle görünecek.",
         "now": "Şimdi",
         "show": "Önizlemeyi göster",
         "namePlaceholder": "Organizasyon adı"
@@ -186,10 +192,53 @@
       "backToOrganization": "Organizasyona dön",
       "sections": {
         "general": {
-          "title": "Genel",
+          "title": "Genel Bilgiler",
           "description": "Organizasyonun adı ve açıklaması."
         }
       }
+    },
+    "profile": {
+      "website": "Web sitesi",
+      "contactEmail": "İletişim e-postası",
+      "location": "Konum",
+      "websitePlaceholder": "https://example.com",
+      "emailPlaceholder": "iletisim@example.com",
+      "locationPlaceholder": "İstanbul, Türkiye",
+      "identityTitle": "Kimlik ve Görsel",
+      "identityDescription": "Organizasyonunuzun görsel kimliğini belirleyin.",
+      "contactTitle": "İletişim ve Bağlantılar",
+      "contactDescription": "Bu bilgiler organizasyon sayfanızda görünecektir.",
+      "logo": "Logo",
+      "cover": "Kapak görseli",
+      "choose": "Görsel seç",
+      "change": "Değiştir",
+      "remove": "Kaldır",
+      "logoHint": "PNG, JPEG veya WebP · En fazla 512 KB.",
+      "coverHint": "PNG, JPEG veya WebP · En fazla 2 MB.",
+      "invalidType": "PNG, JPEG veya WebP görseli seçin.",
+      "tooLarge": "Görsel izin verilen dosya boyutunu aşıyor.",
+      "empty": "Boş dosya yüklenemez.",
+      "removeTitle": "Bu görsel kaldırılsın mı?",
+      "removeDescription": "Değişiklik Kaydet düğmesine bastığınızda uygulanacak.",
+      "partial": "Organizasyon kaydedildi; bazı görsel işlemleri tamamlanamadı. Başarısız işlemleri tekrar deneyebilirsiniz.",
+      "retry": "Tekrar dene",
+      "continue": "Organizasyona devam et",
+      "failedLogo": "Logo kaydedilemedi.",
+      "failedCover": "Kapak görseli kaydedilemedi.",
+      "helpTitle": "Organizasyon nedir?",
+      "helpDescription": "İlişkili projelerinizi tek bir çatı altında tutar. Proje üyelikleri ve yetkileri her projede ayrı yönetilir.",
+      "profilePreview": "Sayfa üst kısmı",
+      "failedRefresh": "Güncel bilgiler okunamadı.",
+      "optional": "İsteğe bağlı",
+      "uploadLogo": "Logo yükle",
+      "uploadCover": "Kapak görseli yükle",
+      "logoFallbackHint": "Logo yoksa adın ilk harfi kullanılır.",
+      "coverPlacementHint": "Organizasyon sayfanızın üst kısmında görünür.",
+      "detailsTitle": "Detaylar",
+      "detailsDescription": "Ek bilgiler ve notlar ekleyebilirsiniz.",
+      "notes": "Ek notlar",
+      "notesPlaceholder": "Bu organizasyon hakkında eklemek istediğiniz bilgiler… (isteğe bağlı)",
+      "cardPreview": "Kart görünümü"
     }
   },
   "projects": {
@@ -268,7 +317,8 @@
         "change": "Değiştir",
         "remove": "Kaldır",
         "invalidType": "Yalnızca PNG, JPEG veya WebP yükleyin.",
-        "tooLarge": "Kapak görseli en fazla 2 MB olabilir."
+        "tooLarge": "Kapak görseli en fazla 2 MB olabilir.",
+        "empty": "Boş dosya yüklenemez."
       },
       "name": {
         "label": "Proje adı",
@@ -720,7 +770,23 @@
     }
   },
   "squads": {
-    "card": { "members": "Üyeler", "lastUpdate": "Son güncelleme" },
+    "card": {
+      "members": "Üyeler",
+      "memberCount": "{count} üye",
+      "noMembers": "Henüz üye yok",
+      "lastUpdate": "Son güncelleme",
+      "updatedBy": "{date} · {name}",
+      "lastJoined": "Son katılan",
+      "joinedBy": "{name} · {when}",
+      "nobodyJoined": "Henüz kimse katılmadı",
+      "noDescription": "Açıklama eklenmedi",
+      "namePlaceholder": "Ekip adı",
+      "parent": "Üst ekip: {name}",
+      "open": "Ekibi aç",
+      "openNamed": "{name} ekibini aç",
+      "edit": "Düzenle",
+      "editNamed": "{name} ekibini düzenle"
+    },
     "membersPage": {
       "back": "Ekiplere dön",
       "teams": "Ekipler",
@@ -750,7 +816,7 @@
       "removedFromProject": "Üye projeden çıkarıldı.",
       "retry": "Tekrar dene"
     },
-    "description": "Proje içinde birlikte çalışan ekipleri oluşturun ve yönetin.",
+    "description": "Projede birlikte çalışan ekipleri oluşturun ve yönetin. Üyeler ekipler üzerinden davet edilir.",
     "noDescription": "Bu ekip için henüz açıklama eklenmedi.",
     "newPage": {
       "description": "Ekibe bir ad ve kısa bir açıklama verin. Üyeleri ekip oluşturulduktan sonra ekleyebilirsiniz.",
@@ -758,35 +824,16 @@
     },
     "manageMembers": "Üyeler",
     "edit": "Düzenle",
-    "emptyDescription": "Proje üyelerini birlikte çalışacakları ekiplerde düzenleyin.",
+    "emptyDescription": "İlk ekibinizi oluşturun. Üyeler ekipler üzerinden davet edilir.",
     "title": "Ekipler",
-    "description": "Projede birlikte çalışan ekipleri oluşturun ve yönetin. Üyeler ekipler üzerinden davet edilir.",
     "create": "Yeni ekip",
     "cancel": "Vazgeç",
     "emptyTitle": "Henüz ekip yok",
-    "emptyDescription": "İlk ekibinizi oluşturun. Üyeler ekipler üzerinden davet edilir.",
     "emptyViewerDescription": "Bu projede henüz ekip oluşturulmadı.",
     "view": {
       "label": "Görünüm",
       "list": "Liste",
       "chart": "Şema"
-    },
-    "card": {
-      "members": "Üyeler",
-      "memberCount": "{count} üye",
-      "noMembers": "Henüz üye yok",
-      "lastUpdate": "Son güncelleme",
-      "updatedBy": "{date} · {name}",
-      "lastJoined": "Son katılan",
-      "joinedBy": "{name} · {when}",
-      "nobodyJoined": "Henüz kimse katılmadı",
-      "noDescription": "Açıklama eklenmedi",
-      "namePlaceholder": "Ekip adı",
-      "parent": "Üst ekip: {name}",
-      "open": "Ekibi aç",
-      "openNamed": "{name} ekibini aç",
-      "edit": "Düzenle",
-      "editNamed": "{name} ekibini düzenle"
     },
     "archive": {
       "label": "{name} ekibini arşivle",
@@ -1017,7 +1064,8 @@
     "taskDateOrder": "Deadline başlangıç tarihinden önce olamaz.",
     "timeEstimateRange": "Süre tahmini 1 dakika ile 100000 dakika arasında olmalı.",
     "worklogRange": "Süre 1 ile 1440 dakika arasında olmalı.",
-    "sprintDateOrder": "Bitiş tarihi başlangıç tarihinden önce olamaz."
+    "sprintDateOrder": "Bitiş tarihi başlangıç tarihinden önce olamaz.",
+    "url": "Geçerli bir http/https adresi girin."
   },
   "forgotPassword": {
     "title": "Şifrenizi mi unuttunuz?",
@@ -1067,7 +1115,10 @@
       "WORK": "Çalışma",
       "OTHER": "Diğer"
     },
-    "scope": { "PERSONAL": "Kişisel", "PROJECT": "Proje geneli" },
+    "scope": {
+      "PERSONAL": "Kişisel",
+      "PROJECT": "Proje geneli"
+    },
     "createdBy": "{name} oluşturdu",
     "toasts": {
       "created": "Anımsatıcı oluşturuldu.",

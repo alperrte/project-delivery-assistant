@@ -67,7 +67,7 @@ export async function registerAndLogin(page: Page, prefix: string) {
 export async function createOrganization(page: Page, name: string) {
   await page.goto("/organizations/new");
   await page.locator("#org-name").fill(name);
-  await page.getByRole("button", { name: /^Oluştur$/ }).click();
+  await page.getByRole("button", { name: /^Organizasyonu oluştur$/ }).click();
   // Creating opens the new organization's own page.
   await expect(page).toHaveURL(/\/tr\/organizasyonlar\/(?!yeni$)[^/]+$/, { timeout: 10_000 });
 }
