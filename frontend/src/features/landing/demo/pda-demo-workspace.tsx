@@ -73,7 +73,7 @@ function DemoWorkspace({ data, stage, progress }: { data: DemoData; stage: DemoS
   }, [stage, progress]);
 
   return <div ref={root} inert data-pda-demo-stage={stage} data-demo-status={status}>
-    <ChatProvider>
+    <ChatProvider disabled>
       <AppShellView contained pathname={pathname} user={DEMO_USER} onLogout={noop} onToggleCollapsed={noop}>
         {stage === "project" && (created ? <ProjectDetail slug={data.project.slug} /> : <ProjectCreatePage presentationValues={{ name: typed(data.project.name, fraction(progress, 0.02, 0.055)), tagline: typed(data.project.tagline ?? "", fraction(progress, 0.08, 0.065)), description: data.project.description ?? "", projectType: "WEB", techStack: ["nextjs", "spring", "postgresql"] }} />)}
         {stage === "team" && <TeamDetailPage slug={data.project.slug} teamId={data.team.id} />}

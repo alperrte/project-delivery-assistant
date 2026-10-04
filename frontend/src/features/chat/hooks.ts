@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { chatApi } from "./api";
 import { applyReadToOverview, chatKeys, flattenMessages } from "./cache";
@@ -12,7 +13,7 @@ import type { ChatMessagePage } from "./types";
 export function useChatOverview(projectId: string | undefined, options: { poll?: boolean } = {}) {
   return useQuery({
     queryKey: chatKeys.overview(projectId ?? ""),
-    queryFn: () => chatApi.overview(projectId!),
+    queryFn: ({ signal }) => chatApi.overview(projectId!, signal),
     enabled: !!projectId,
     refetchInterval: options.poll ? 60_000 : false,
   });
@@ -22,7 +23,7 @@ export function useChatOverview(projectId: string | undefined, options: { poll?:
 export function useChatMembers(projectId: string | undefined, enabled = true) {
   return useQuery({
     queryKey: chatKeys.members(projectId ?? ""),
-    queryFn: () => chatApi.members(projectId!),
+    queryFn: ({ signal }) => chatApi.members(projectId!, signal),
     enabled: !!projectId && enabled,
   });
 }
@@ -35,8 +36,8 @@ export function useChatMembers(projectId: string | undefined, enabled = true) {
 export function useChatMessages(projectId: string | undefined, conversationId: string | undefined) {
   const query = useInfiniteQuery({
     queryKey: chatKeys.messages(projectId ?? "", conversationId ?? ""),
-    queryFn: ({ pageParam }): Promise<ChatMessagePage> =>
-      chatApi.messages(projectId!, conversationId!, pageParam ? { before: pageParam } : {}),
+    queryFn: ({ pageParam, signal }): Promise<ChatMessagePage> =>
+      chatApi.messages(projectId!, conversationId!, pageParam ? { before: pageParam } : {}, signal),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => (lastPage.hasMore ? lastPage.messages[0]?.id : undefined),
     enabled: !!projectId && !!conversationId,
@@ -49,28 +50,29 @@ export function useChatMessages(projectId: string | undefined, conversationId: s
 
 /** Opens (finds or creates) the direct conversation with a project member. */
 export function useOpenDirect(projectId: string | undefined) {
-  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (userId: string) => chatApi.openDirect(projectId!, userId),
-    onSuccess: () => {
-      if (!projectId) return;
-      void queryClient.invalidateQueries({ queryKey: chatKeys.overview(projectId) });
-      void queryClient.invalidateQueries({ queryKey: chatKeys.members(projectId) });
-    },
   });
 }
 
 /** Marks a conversation read; the unread count drops right away and the server confirms in the background. */
-export function useMarkRead(projectId: string | undefined) {
+export function useMarkRead(projectId: string | undefined, ownerKey: string) {
+  const lifetime = useRef({ active: true });
+  useEffect(() => {
+    const generation = { active: true };
+    lifetime.current = generation;
+    return () => { generation.active = false; };
+  }, [ownerKey]);
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (conversationId: string) => chatApi.markRead(projectId!, conversationId),
     onMutate: (conversationId) => {
       if (projectId) applyReadToOverview(queryClient, projectId, conversationId);
+      return { projectId, generation: lifetime.current };
     },
-    onError: () => {
+    onError: (_error, _conversationId, context) => {
       // The optimistic zero may be wrong now: let the server say what is still unread.
-      if (projectId) void queryClient.invalidateQueries({ queryKey: chatKeys.overview(projectId) });
+      if (context?.generation.active && context.projectId) void queryClient.invalidateQueries({ queryKey: chatKeys.overview(context.projectId) });
     },
   });
 }

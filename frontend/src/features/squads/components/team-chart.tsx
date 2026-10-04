@@ -3,7 +3,7 @@
 import Link from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { AvatarStack } from "@/components/common/avatar-stack";
-import { ProjectMark } from "@/features/projects/components/project-card";
+import { ProjectMark } from "@/features/projects/components/project-mark";
 import type { Project } from "@/features/projects/types";
 import { projectLogoSrc } from "../hooks";
 import type { Team } from "../types";

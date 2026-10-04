@@ -170,7 +170,7 @@ export function ProjectSidebarNav({
 
         {slug && projectPath && (
           <div className="mt-1 border-t border-border pt-1">
-            <ChatNavItem projectId={project?.id} slug={slug} projectPath={projectPath} collapsed onNavigate={onNavigate} />
+            <ChatNavItem projectId={project?.id} slug={slug} collapsed onNavigate={onNavigate} />
           </div>
         )}
       </div>
@@ -313,7 +313,7 @@ export function ProjectSidebarNav({
 
       {slug && projectPath && (
         <div className="ml-2 mt-3 border-l border-border pl-2">
-          <ChatNavItem projectId={project?.id} slug={slug} projectPath={projectPath} onNavigate={onNavigate} />
+          <ChatNavItem projectId={project?.id} slug={slug} onNavigate={onNavigate} />
         </div>
       )}
     </div>

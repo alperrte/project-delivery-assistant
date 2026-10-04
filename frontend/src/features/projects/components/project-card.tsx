@@ -1,7 +1,5 @@
-/* eslint-disable @next/next/no-img-element -- the project logo is an authenticated API image; next/image optimisation does not apply. */
 "use client";
 
-import { useState } from "react";
 import Link from "@/i18n/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -12,7 +10,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { projectBannerUrl, projectLogoUrl } from "../api";
+import { projectBannerUrl, projectLogoSource } from "../api";
 import { parseTechStack } from "../tech-stack";
 import type { Project, ProjectType } from "../types";
 import {
@@ -21,6 +19,7 @@ import {
   projectStatusTone,
   projectPriorityDotClass,
 } from "../status-colors";
+import { ProjectMark } from "./project-mark";
 import { ProjectBanner } from "./project-banner";
 import { ProjectTypeBadge } from "./project-type";
 import { TechLogo, toTechLabels } from "./tech-logo";
@@ -44,21 +43,11 @@ export type ProjectCardPreview = { logoSrc: string | null; bannerSrc?: string | 
 
 const techChip = "relative z-10 inline-flex h-8 min-w-8 items-center justify-center rounded-md border bg-surface-2 px-1.5 text-xs font-medium text-muted-foreground";
 
-/** Logo tile content: the uploaded logo, or the first letter when there is none (or it failed to load). */
-export function ProjectMark({ name, src }: { name: string; src: string | null }) {
-  const locale = useLocale();
-  const [failedSrc, setFailedSrc] = useState<string | null>(null);
-  if (src && failedSrc !== src) {
-    return <img src={src} alt="" className="size-full rounded-[inherit] object-cover" onError={() => setFailedSrc(src)} />;
-  }
-  return <>{(name.trim().slice(0, 1) || "?").toLocaleUpperCase(locale)}</>;
-}
-
 function logoSource(project: Pick<Project, "id" | "logoVersion">, preview?: ProjectCardPreview,
                     invitationLogoSrc?: string | null): string | null {
   if (preview) return preview.logoSrc;
   if (invitationLogoSrc !== undefined) return invitationLogoSrc;
-  return project.logoVersion == null ? null : projectLogoUrl(project.id, project.logoVersion);
+  return projectLogoSource(project);
 }
 
 /**

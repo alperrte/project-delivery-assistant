@@ -2,7 +2,8 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { test, expect, type Locator, type Page } from "@playwright/test";
 import { api, createProject, login, registerAndLogin } from "./helpers";
-import { AUTH_DIR, MANAGER_STORAGE, MEMBER_STORAGE, MEMBER_USER_FILE } from "./global-setup";
+import { AUTH_DIR, MANAGER_STORAGE, MANAGER_USER_FILE, MEMBER_STORAGE, MEMBER_USER_FILE } from "./global-setup";
+import { localizeHref } from "../src/i18n/routing";
 
 /** A real 1x1 PNG: the server reads the type and size from the bytes, so a made-up header would be refused. */
 const PNG = Buffer.from(
@@ -52,9 +53,18 @@ test.describe.serial("Project chat", () => {
   let manager: Person;
   let member: Person;
   const project2Name = `E2E Chat Second ${Date.now()}`;
+  const socketStats = { opened: 0, subscribed: 0, closed: 0 };
 
   test.beforeAll(async ({ browser }) => {
     managerPage = await (await browser.newContext({ storageState: MANAGER_STORAGE })).newPage();
+    managerPage.on("websocket", (socket) => {
+      if (!socket.url().includes("/api/v1/ws")) return;
+      socketStats.opened += 1;
+      socket.on("framesent", ({ payload }) => {
+        if (payload.toString().startsWith("SUBSCRIBE")) socketStats.subscribed += 1;
+      });
+      socket.on("close", () => { socketStats.closed += 1; });
+    });
     memberPage = await (await browser.newContext({ storageState: MEMBER_STORAGE })).newPage();
     // This account stays outside the newly created project until the compact-chat invitation test.
     outsiderPage = await (await browser.newContext({ locale: "tr-TR" })).newPage();
@@ -181,6 +191,8 @@ test.describe.serial("Project chat", () => {
   });
 
   test("full, bar, compact: the chat survives navigation and keeps conversation, history and draft", async () => {
+    await expectSendEnabled(managerPage);
+    const beforeNavigation = { ...socketStats };
     await directRow(managerPage, member).click();
     await expect(messagesOf(managerPage).filter({ hasText: "Selam, mesaj geldi" })).toBeVisible();
     await composerOf(managerPage).fill("yarım kalan taslak");
@@ -199,6 +211,27 @@ test.describe.serial("Project chat", () => {
     await expect(compactOf(managerPage)).toBeVisible();
     await managerPage.getByTestId("chat-minimize").click();
     await expect(barOf(managerPage)).toBeVisible();
+
+    // All links are real client-side navigation, including global pages without a project slug.
+    for (const href of [
+      "/calendar", "/tasks", `/projects/${slug}?section=criteria`, `/projects/${slug}?section=teams`,
+      `/projects/${slug}?section=repository`, `/projects/${slug}`, `/projects/${slug}/tasks/board`,
+      `/projects/${slug}/tasks/pool`, `/projects/${slug}/sprints`, `/projects/${slug}/labels`,
+      "/dashboard", "/projects", "/organizations", "/settings",
+    ]) {
+      const target = localizeHref(href, "tr");
+      await managerPage.locator(`.app-shell a[href="${target}"]`).first().click();
+      await expect(managerPage).toHaveURL(new RegExp(target.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "$"));
+      await expect(barOf(managerPage)).toBeVisible();
+      await expect(managerPage.getByTestId("chat-bar-title")).toHaveText(member.nickname);
+    }
+    expect(socketStats).toEqual(beforeNavigation);
+    await directRow(memberPage, manager).click();
+    await expectSendEnabled(memberPage);
+    await send(memberPage, "Global sayfada bar bildirimi");
+    await expect(managerPage.getByTestId("chat-bar-unread")).toBeVisible();
+    await managerPage.locator('nav a[href="/tr/takvim"]').first().click();
+    await expect(managerPage.getByTestId("chat-bar-unread")).toBeVisible();
 
     // Move through the project's pages with the bar still there.
     await managerPage.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Görevler", exact: true }).first().click();
@@ -241,9 +274,23 @@ test.describe.serial("Project chat", () => {
     await expect(panelOf(managerPage)).toHaveCount(0);
     await expect(barOf(managerPage)).toHaveCount(0);
     await expect(compactOf(managerPage)).toHaveCount(0);
+    await managerPage.locator('nav a[href="/tr/takvim"]').first().click();
+    await expect(barOf(managerPage)).toHaveCount(0);
+    await openPanel(managerPage);
+    await expect(managerPage).toHaveURL(/\/tr\/takvim$/);
+    await managerPage.getByTestId("chat-minimize").click();
+    await managerPage.getByTestId("chat-close").click();
+    await managerPage.locator(`nav a[href="${localizeHref(`/projects/${slug}?section=teams`, "tr")}"]`).first().click();
+    await expect(barOf(managerPage)).toHaveCount(0);
+    await openPanel(managerPage);
+    await managerPage.getByTestId("chat-minimize").click();
+    await managerPage.getByTestId("chat-bar-expand").click();
+    await managerPage.getByTestId("chat-close").click();
+    await managerPage.locator('nav a[href="/tr/takvim"]').first().click();
+    await expect(compactOf(managerPage)).toHaveCount(0);
   });
 
-  test("another project starts clean and leaving the project closes the chat", async () => {
+  test("the project list keeps chat, but another selected project starts clean", async () => {
     // A second project the member does not belong to (also used for the server-side refusal below).
     slug2 = await createProject(managerPage, project2Name);
 
@@ -254,15 +301,18 @@ test.describe.serial("Project chat", () => {
     await managerPage.getByTestId("chat-minimize").click();
     await expect(barOf(managerPage)).toBeVisible();
 
-    // "Değiştir" leaves the project's pages: the chat is closed.
+    // The project list still owns the same selection, so it keeps the minimized chat.
     await managerPage.getByRole("link", { name: "Değiştir", exact: true }).first().click();
     await expect(managerPage).toHaveURL(/\/tr\/projeler$/);
-    await expect(barOf(managerPage)).toHaveCount(0);
+    await expect(barOf(managerPage)).toBeVisible();
+    const closedBeforeSwitch = socketStats.closed;
 
     // Opening the other project through the app router (a client-side navigation, like a click on its card; the
     // list is paged, so the card of a project created minutes ago is not always on the first page).
     await managerPage.evaluate((target) => (window as unknown as { next: { router: { push: (href: string) => void } } }).next.router.push(target), `/projects/${slug2}`);
     await expect(managerPage).toHaveURL(new RegExp(`/tr/projeler/${slug2}$`));
+    await expect(barOf(managerPage)).toHaveCount(0);
+    await expect.poll(() => socketStats.closed).toBeGreaterThan(closedBeforeSwitch);
     await openPanel(managerPage);
     await expect(managerPage.getByTestId("chat-active-name")).toHaveText(project2Name);
     await expect(composerOf(managerPage)).toHaveValue("");
@@ -271,6 +321,56 @@ test.describe.serial("Project chat", () => {
     await expect(managerPage.getByText("Bu projede henüz başka üye yok.")).toBeVisible();
     await managerPage.getByTestId("chat-minimize").click();
     await managerPage.getByTestId("chat-close").click();
+  });
+
+  test("calendar project selection cleans chat and a late send cannot restore its previous generation", async () => {
+    await managerPage.goto(`/projects/${slug}`);
+    await openPanel(managerPage);
+    await directRow(managerPage, member).click();
+    await expectSendEnabled(managerPage);
+    let release!: () => void;
+    let entered!: () => void;
+    const waiting = new Promise<void>((resolve) => { release = resolve; });
+    const started = new Promise<void>((resolve) => { entered = resolve; });
+    const pattern = `**/projects/${projectId}/chat/conversations/*/messages`;
+    await managerPage.route(pattern, async (route) => {
+      if (route.request().method() !== "POST") return route.continue();
+      const conversationId = route.request().url().split("/").at(-2);
+      entered();
+      await waiting;
+      await route.fulfill({ json: {
+        id: "11111111-1111-4111-8111-111111111111", conversationId,
+        content: "late generation response", createdAt: new Date().toISOString(),
+        sender: { userId: manager.id, nickname: manager.nickname, profilePhotoVersion: null },
+      } });
+    });
+    try {
+      await send(managerPage, "late generation response");
+      await started;
+      await managerPage.getByTestId("chat-minimize").click();
+      await managerPage.locator('nav a[href="/tr/takvim"]').first().click();
+      await expect(barOf(managerPage)).toBeVisible();
+      await managerPage.locator("#calendar-project").click();
+      await managerPage.getByRole("option", { name: project2Name, exact: true }).click();
+      await expect(barOf(managerPage)).toHaveCount(0);
+      await openPanel(managerPage);
+      await expect(managerPage.getByTestId("chat-active-name")).toHaveText(project2Name);
+      await expect(composerOf(managerPage)).toHaveValue("");
+      await managerPage.getByTestId("chat-panel-close").click();
+      await managerPage.locator("#calendar-project").click();
+      await managerPage.getByRole("option", { name: projectName, exact: true }).click();
+      await openPanel(managerPage);
+      await directRow(managerPage, member).click();
+      await expectSendEnabled(managerPage);
+      const answered = managerPage.waitForResponse((response) => response.request().method() === "POST" && response.url().includes(`/projects/${projectId}/chat/conversations/`) && response.url().endsWith("/messages"));
+      release();
+      await answered;
+      await expect(messagesOf(managerPage).filter({ hasText: "late generation response" })).toHaveCount(0);
+      await expect(composerOf(managerPage)).toHaveValue("");
+    } finally {
+      release();
+      await managerPage.unroute(pattern);
+    }
   });
 
   test("a message that looks like HTML is shown as text and nothing runs", async () => {
@@ -397,12 +497,123 @@ test.describe.serial("Project chat", () => {
     }
   });
 
+  test("a late direct-open response cannot select a conversation after A to B to A", async () => {
+    const reads = `**/projects/${projectId}/chat/*`;
+    await managerPage.route(reads, async (route) => {
+      const response = await route.fetch();
+      const data = await response.json();
+      await route.fulfill({ response, json: Array.isArray(data)
+        ? data.map((person) => ({ ...person, conversationId: null })) : { ...data, directs: [] } });
+    });
+    let release!: () => void;
+    let entered!: () => void;
+    const gate = new Promise<void>((resolve) => { release = resolve; });
+    const started = new Promise<void>((resolve) => { entered = resolve; });
+    const directUrl = `**/projects/${projectId}/chat/direct/${member.id}`;
+    await managerPage.route(directUrl, async (route) => {
+      const response = await route.fetch();
+      entered();
+      await gate;
+      await route.fulfill({ response });
+    });
+    try {
+      await managerPage.goto(`/projects/${slug}`);
+      await openPanel(managerPage);
+      await directRow(managerPage, member).click();
+      await started;
+      await managerPage.unroute(reads);
+      await managerPage.getByTestId("chat-minimize").click();
+      await managerPage.locator('nav a[href="/tr/takvim"]').first().click();
+      await managerPage.locator("#calendar-project").click();
+      await managerPage.getByRole("option", { name: project2Name, exact: true }).click();
+      await expect(barOf(managerPage)).toHaveCount(0);
+      await managerPage.locator("#calendar-project").click();
+      await managerPage.getByRole("option", { name: projectName, exact: true }).click();
+      await openPanel(managerPage);
+      await expect(managerPage.getByTestId("chat-active-name")).toHaveText(projectName);
+      const response = managerPage.waitForResponse((res) => res.request().method() === "POST" && res.url().includes(`/chat/direct/${member.id}`));
+      release();
+      await response;
+      await expect(managerPage.getByTestId("chat-active-name")).toHaveText(projectName);
+      await expect(composerOf(managerPage)).toHaveValue("");
+      await managerPage.getByTestId("chat-panel-close").click();
+    } finally { release(); await managerPage.unroute(reads); await managerPage.unroute(directUrl); }
+  });
+
+  test("logout closes chat; another account on the same project receives no previous draft or active peer", async ({ browser }) => {
+    const first = JSON.parse(readFileSync(MANAGER_USER_FILE, "utf-8")) as { email: string; password: string };
+    const second = JSON.parse(readFileSync(MEMBER_USER_FILE, "utf-8")) as { email: string; password: string };
+    const context = await browser.newContext({ locale: "tr-TR" });
+    const page = await context.newPage();
+    try {
+      await login(page, first.email, first.password);
+      await page.goto(`/projects/${slug}`);
+      await openPanel(page);
+      await directRow(page, member).click();
+      await expectSendEnabled(page);
+      await composerOf(page).fill("private draft of previous account");
+      await page.getByTestId("chat-minimize").click();
+      await page.locator("header").getByRole("button", { name: /Hesap/ }).click();
+      await page.getByRole("menuitem", { name: "Çıkış yap" }).click();
+      await expect(page).toHaveURL(/\/tr\/giris/);
+      await expect(barOf(page)).toHaveCount(0);
+      // Client-side sign-in retains the same QueryClient: a full reload would hide a cache leak.
+      await page.locator('input[name="email"]').fill(second.email);
+      await page.locator('input[name="password"]').fill(second.password);
+      await page.getByRole("button", { name: /^Giriş yap$/ }).click();
+      await expect(page.locator("#main-content")).toBeVisible();
+      await page.evaluate((target) => (window as unknown as { next: { router: { push: (href: string) => void } } }).next.router.push(target), `/projects/${slug}`);
+      await expect(page).toHaveURL(new RegExp(`/tr/projeler/${slug}$`));
+      await expect(barOf(page)).toHaveCount(0);
+      await openPanel(page);
+      await expect(page.getByTestId("chat-active-name")).toHaveText(projectName);
+      await directRow(page, manager).click();
+      await expect(composerOf(page)).toHaveValue("");
+      await expect(directRow(page, member)).toHaveCount(0);
+    } finally { await context.close(); }
+  });
+
+  test("selected-project chat survives localized global and nested team navigation", async ({ browser }) => {
+    const teamResult = await api(managerPage, "POST", `/projects/${projectId}/teams`, { name: `Chat team ${Date.now()}`, includeCreator: true });
+    expect(teamResult.status).toBe(201);
+    const teamId = (teamResult.json as { id: string }).id;
+    for (const locale of ["tr", "en", "de"] as const) {
+      const context = await browser.newContext({ storageState: await managerPage.context().storageState() });
+      const page = await context.newPage();
+      try {
+        await page.goto("/tr/genel-bakis");
+        await expect.poll(() => page.evaluate(() => sessionStorage.getItem("pda:session-baseline"))).not.toBeNull();
+        await page.goto(localizeHref(`/projects/${slug}`, locale));
+        await expect(page.locator("html")).toHaveAttribute("lang", locale);
+        await openPanel(page);
+        await expectSendEnabled(page);
+        await composerOf(page).fill(`draft ${locale}`);
+        await page.getByTestId("chat-minimize").click();
+        for (const href of ["/calendar", "/tasks", `/projects/${slug}?section=teams`]) {
+          await page.locator(`.app-shell a[href="${localizeHref(href, locale)}"]`).first().click();
+          await expect(barOf(page)).toBeVisible();
+        }
+        await page.locator(`main a[href="${localizeHref(`/projects/${slug}/teams/${teamId}`, locale)}"]`).first().click();
+        await expect(page).toHaveURL(new RegExp(teamId + "$"));
+        await expect(barOf(page)).toBeVisible();
+        await page.getByTestId("chat-bar-expand").click();
+        await expect(composerOf(page)).toHaveValue(`draft ${locale}`);
+        await page.setViewportSize({ width: 390, height: 844 });
+        const box = (await compactOf(page).boundingBox())!;
+        expect(box.x).toBeGreaterThanOrEqual(0);
+        expect(box.x + box.width).toBeLessThanOrEqual(390);
+        await composerOf(page).press("Escape");
+        await expect(barOf(page)).toBeVisible();
+      } finally { await context.close(); }
+    }
+  });
+
   test("the connection is renewed before the access token runs out: a new socket takes over without a visible gap", async ({ browser }) => {
     test.setTimeout(90_000);
     const credentials: { email: string; password: string } = JSON.parse(readFileSync(MEMBER_USER_FILE, "utf-8"));
     // A login of its own, so renewing (which rotates the refresh token) never touches the shared member session.
     const context = await browser.newContext({ locale: "tr-TR" });
-    const page = await context.newPage();
+    let page = await context.newPage();
     try {
       // The server announces how long the access token stays valid (15 minutes); to see the renewal without waiting
       // that long, every authenticated answer says "20 seconds" (the client renews 90 s before, but not sooner than 10 s).
@@ -413,12 +624,22 @@ test.describe.serial("Project chat", () => {
         await route.fulfill({ response, headers });
       });
       const sockets: { closed: boolean }[] = [];
-      page.on("websocket", (socket) => {
+      const trackSocket = (socket: import("@playwright/test").WebSocket) => {
+        if (!socket.url().includes("/api/v1/ws")) return;
         const entry = { closed: false };
         sockets.push(entry);
         socket.on("close", () => { entry.closed = true; });
-      });
+      };
       await login(page, credentials.email, credentials.password);
+      await page.close();
+      page = await context.newPage();
+      await page.route("**/api/v1/**", async (route) => {
+        const response = await route.fetch();
+        const headers = response.headers();
+        if ("x-access-token-expires-in" in headers) headers["x-access-token-expires-in"] = "20000";
+        await route.fulfill({ response, headers });
+      });
+      page.on("websocket", trackSocket);
       // Whatever happens, the composer must never be seen disabled (that is what a dropped connection looks like).
       await page.addInitScript(() => {
         (window as unknown as { __chatBlocked: boolean }).__chatBlocked = false;
@@ -430,11 +651,13 @@ test.describe.serial("Project chat", () => {
       await page.goto(`/projects/${slug}`);
       await openPanel(page);
       await expectSendEnabled(page);
-      expect(sockets).toHaveLength(1);
+      // Development Strict Mode may have opened and disposed an initial socket. No orphan may remain.
+      await expect.poll(() => sockets.filter((entry) => !entry.closed).length).toBe(1);
+      const initialSockets = sockets.length;
 
       // A second socket is opened with the renewed session, becomes the live one, and the first one is closed.
-      await expect.poll(() => sockets.length, { timeout: 40_000 }).toBeGreaterThanOrEqual(2);
-      await expect.poll(() => sockets[0].closed, { timeout: 15_000 }).toBe(true);
+      await expect.poll(() => sockets.length, { timeout: 40_000 }).toBeGreaterThan(initialSockets);
+      await expect.poll(() => sockets.slice(0, initialSockets).every((entry) => entry.closed), { timeout: 15_000 }).toBe(true);
       await expect.poll(() => sockets.filter((entry) => !entry.closed).length).toBe(1);
       expect(await page.evaluate(() => (window as unknown as { __chatBlocked: boolean }).__chatBlocked)).toBe(false);
       await expectSendEnabled(page);

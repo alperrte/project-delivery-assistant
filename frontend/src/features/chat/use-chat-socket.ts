@@ -32,7 +32,7 @@ function parseEvent(body: string): ChatSocketEvent | null {
 }
 
 /**
- * One STOMP-over-WebSocket client for as long as the chat has a project context (`enabled`); leaving the project
+ * One STOMP-over-WebSocket client for each user/project context (`contextKey`); changing that context
  * disconnects it. The handshake carries the HttpOnly session cookie, so before every (re)connect a cheap `/auth/me`
  * call lets the API client renew an expired access cookie first. Reconnecting is the library's job
  * (`reconnectDelay`); `onConnect` fires after every successful connection (`reconnect` is true from the second one on)
@@ -45,11 +45,11 @@ function parseEvent(body: string): ChatSocketEvent | null {
  * deduplicated by message id, no double message.
  */
 export function useChatSocket({
-  enabled,
+  contextKey,
   onEvent,
   onConnect,
 }: {
-  enabled: boolean;
+  contextKey?: string;
   onEvent: (event: ChatSocketEvent) => void;
   onConnect: (reconnect: boolean) => void;
 }): ChatConnection {
@@ -63,7 +63,7 @@ export function useChatSocket({
   });
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!contextKey) return;
     let disposed = false;
     let connects = 0;
     /** What the user sees; mirrored into React state. */
@@ -118,15 +118,19 @@ export function useChatSocket({
         // A half-open socket must be dropped so the reconnect timer can take over.
         discardWebsocketOnCommFailure: true,
         beforeConnect: async () => {
+          if (disposed) { void client.deactivate({ force: true }); return; }
           if (!renewal || client === active) show("connecting");
           try {
             await apiRequest("/auth/me");
           } catch {
             // Offline or the session is over: the app shell handles the latter; a failed handshake retries later.
           }
+          if (disposed) void client.deactivate({ force: true });
         },
         onConnect: () => {
+          if (disposed) { void client.deactivate({ force: true }); return; }
           client.subscribe(USER_QUEUE, (frame) => {
+            if (disposed) return;
             const event = parseEvent(frame.body);
             if (event) onEventRef.current(event);
           });
@@ -164,9 +168,9 @@ export function useChatSocket({
       disposed = true;
       clearTimeout(renewTimer);
       timers.forEach(clearTimeout);
-      clients.forEach((client) => void client.deactivate());
+      clients.forEach((client) => void client.deactivate({ force: true }));
     };
-  }, [enabled]);
+  }, [contextKey]);
 
-  return enabled ? state : "disconnected";
+  return contextKey ? state : "disconnected";
 }

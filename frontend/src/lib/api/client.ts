@@ -155,13 +155,13 @@ const NO_REFRESH = ["/auth/login", "/auth/register", "/auth/register/invitation"
 
 export async function apiRequest<T = void>(
   path: string,
-  options: { method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE"; body?: unknown } = {},
+  options: { method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE"; body?: unknown; signal?: AbortSignal } = {},
 ): Promise<T> {
   const method = options.method ?? "GET";
   const init: RequestInit =
     options.body === undefined
-      ? {}
-      : { body: options.body instanceof FormData ? options.body : JSON.stringify(options.body) };
+      ? { signal: options.signal }
+      : { signal: options.signal, body: options.body instanceof FormData ? options.body : JSON.stringify(options.body) };
 
   let res = await send(path, init, method);
 

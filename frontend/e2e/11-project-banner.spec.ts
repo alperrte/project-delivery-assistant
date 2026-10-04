@@ -86,7 +86,7 @@ test.describe.serial("Project banner", () => {
 
   test("a wrong type or an oversize file is refused before anything is uploaded", async () => {
     await managerPage.goto(`/projects/${slug}?section=settings`);
-    const input = managerPage.locator('input[type="file"]');
+    const input = managerPage.getByLabel("Kapak görseli", { exact: true });
 
     await input.setInputFiles({ name: "kapak.gif", mimeType: "image/gif", buffer: Buffer.from("GIF89a") });
     await expect(managerPage.getByRole("alert").filter({ hasText: "PNG, JPEG veya WebP olmalıdır" })).toBeVisible();
@@ -98,7 +98,7 @@ test.describe.serial("Project banner", () => {
 
   test("the manager uploads a banner; it shows on the project card only", async () => {
     await managerPage.goto(`/projects/${slug}?section=settings`);
-    await managerPage.locator('input[type="file"]').setInputFiles({ name: "kapak.png", mimeType: "image/png", buffer: PNG });
+    await managerPage.getByLabel("Kapak görseli", { exact: true }).setInputFiles({ name: "kapak.png", mimeType: "image/png", buffer: PNG });
     await expect(managerPage.getByText("Kapak görseli güncellendi.")).toBeVisible();
     // The settings only state it: no picture there, and none in the project page header.
     await expect(managerPage.getByText("Bu proje için bir kapak görseli yüklü.")).toBeVisible();
