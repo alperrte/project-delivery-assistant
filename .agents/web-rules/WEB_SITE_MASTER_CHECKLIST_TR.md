@@ -59,18 +59,20 @@ Bu checklist uygulanırken:
   - Landing page üç dilde title/description ve OpenGraph metadata üretir; diğer rotaların tüm metadata alanları bu görevde denetlenmedi.
 - [ ] **Unique Page Title** — Her önemli public sayfa arama motorlarında ve tarayıcı sekmesinde kendisini doğru tanımlayan benzersiz bir title'a sahip olmalıdır.
 - [x] **sitemap.xml** — Arama motorlarının sitenin önemli public sayfalarını keşfetmesini sağlamalıdır.
-  - `/`, `/login`, `/register`, `/faq`, `/accessibility` listelenir; noindex hukuki taslaklar eklenmez. Production domain kontrolü yayın aşamasında yapılmalıdır.
+  - 2026-10-04: Sitemap TR/EN/DE landing, giriş, kayıt, SSS ve erişilebilirlik adreslerini hreflang eşleriyle içerir; noindex taslaklar listelenmez.
 - [x] **robots.txt** — Arama motoru botlarına hangi alanların taranabileceğini belirtmeli ve yanlışlıkla public siteyi engellememelidir.
-  - Public yollar açık; API, çalışma alanı, hata önizlemeleri ve dev rotaları dışlanır. Bu dosya erişim güvenliği değildir. Production üzerinde ayrıca doğrulanmalıdır.
-- [ ] **Canonical URL'ler** — Aynı içeriğin farklı URL'lerde bulunması durumunda asıl URL'yi arama motorlarına bildirmelidir.
-  - `/` canonical mevcut metadataBase üzerinden üretilir ve test edildi. Tüm public rotalar ve production domain henüz topluca doğrulanmadı.
+  - 2026-10-04: TR/EN/DE public yollar açık; API, yerelleştirilmiş çalışma alanı, hata ve dev rotaları dışlanır. Bu dosya erişim güvenliği değildir. Production üzerinde ayrıca doğrulanmalıdır.
+- [x] **Canonical URL'ler** — Her dildeki public sayfa kendi asıl adresini bildirir.
+  - 2026-10-04: Landing, auth ve bilgi sayfalarında canonical doğrulandı; production domain yayın ortamında ayrıca kontrol edilmelidir.
 - [ ] **OpenGraph** — Link WhatsApp, LinkedIn, Discord vb. platformlarda paylaşıldığında doğru başlık, açıklama ve görsel çıkmalıdır.
 - [ ] **llms.txt** — AI sistemlerine sitenin önemli public içerikleri hakkında yönlendirme sağlamayı amaçlayan dosya proje kararı doğrultusunda mevcut olmalı veya N/A/opsiyonel olarak işaretlenmelidir.
-- [ ] **hreflang** — Çok dilli sitelerde hangi sayfanın hangi dil/bölgeye ait olduğunu arama motorlarına bildirmelidir; tek dilde N/A olabilir.
+- [x] **hreflang** — Çok dilli sayfaların dil karşılıklarını bildirir.
+  - 2026-10-04: Landing, auth ve bilgi sayfaları TR/EN/DE alternates üretir; sitemap aynı eşlemeyi taşır.
 - [ ] **Favicon** — Tarayıcı sekmesi, favoriler ve uygun yüzeylerde sitenin doğru küçük logosu görünmelidir.
 - [ ] **JSON-LD / Structured Data** — Uygun sayfalarda `Organization`, `SoftwareApplication`, `FAQPage`, `BreadcrumbList` vb. schema ile sayfanın anlamı makine-okunur biçimde verilmelidir.
 - [ ] **Breadcrumb Structured Data** — Breadcrumb kullanılan public sayfalarda uygunsa `BreadcrumbList` schema ile desteklenmelidir.
-- [ ] **301 / 308 Redirect Yönetimi** — Taşınan veya değişen public URL'ler gerekiyorsa doğru kalıcı yönlendirme ile yeni adrese gitmelidir.
+- [x] **301 / 308 Redirect Yönetimi** — Eski sayfa adreslerini yeni adrese taşır.
+  - 2026-10-04: Eski ve dil uyumsuz URL, query korunarak canonical adrese 308 ile yönlenir; bilinmeyen yol 404 kalır.
 - [ ] **Broken Link Kontrolü** — Internal public linklerde kırık veya yanlış hedef bulunmamalıdır.
 
 # D — HTTPS Referansı

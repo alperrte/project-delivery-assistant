@@ -83,6 +83,7 @@
   --border-strong: #b8c2d1;
   --input: #d8dee8;
   --ring: #1b5fe0;
+  --theme-moon: #4c8dff;
   --surface-2: #e8ecf2;
   --live: #0e8f9e;
   --shadow-tint: 220 30% 25%;
@@ -151,6 +152,7 @@
   --border-strong: #374152;
   --input: #262d3a;
   --ring: #4c8dff;
+  --theme-moon: #4c8dff;
   --surface-2: #1a2029;
   --live: #3ad4e6;
   --shadow-tint: 222 60% 3%;

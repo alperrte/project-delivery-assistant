@@ -52,9 +52,9 @@ test.describe.serial("Global invitations", () => {
 
     // A client-side round trip, no reload: the list must be read again instead of served from the cache.
     await memberPage.getByRole("link", { name: "Projeler", exact: true }).click();
-    await expect(memberPage).toHaveURL(/\/projects$/);
+    await expect(memberPage).toHaveURL(/\/tr\/projeler$/);
     await memberPage.getByRole("link", { name: "Davetler", exact: true }).click();
-    await expect(memberPage).toHaveURL(/\/invitations$/);
+    await expect(memberPage).toHaveURL(/\/tr\/davetler$/);
 
     const row = memberPage.getByRole("row").filter({ hasText: projectName });
     await expect(row).toBeVisible();

@@ -7,7 +7,7 @@ test("sidebar calendar opens its own calendar page instead of the dashboard", as
   await page.goto("/projects");
   await page.getByRole("link", { name: "Takvim" }).click();
 
-  await expect(page).toHaveURL(/\/calendar$/);
+  await expect(page).toHaveURL(/\/tr\/takvim$/);
   await expect(page.getByRole("heading", { level: 1, name: "Takvim" })).toBeVisible();
   await expect(page.getByRole("heading", { name: /Tekrar hoş geldin/ })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Bugün" })).toBeVisible();

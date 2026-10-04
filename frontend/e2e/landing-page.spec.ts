@@ -29,7 +29,7 @@ for (const [locale, heading] of [["tr", "Fikirden teslimata."], ["en", "From ide
     await expect(page).toHaveTitle(/PDA/);
     await expect(page.locator('meta[name="description"]')).toHaveAttribute("content", /.+/);
     const canonical = await page.locator('link[rel="canonical"]').getAttribute("href");
-    expect(new URL(canonical!).pathname).toBe("/");
+    expect(new URL(canonical!).pathname).toBe(`/${locale}`);
     expect(new URL(canonical!).search).toBe("");
     await expect(page.locator("#open-source")).toContainText("docker compose up --build -d");
     await expect(page.locator("#open-source")).toContainText("npm ci");
@@ -135,15 +135,15 @@ test("keyboard, chapter shortcuts and live reduced-motion changes", async ({ pag
 test("CTA and information links reach existing routes", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
-  await page.locator('main a[href="/register"]').click();
-  await expect(page).toHaveURL(/\/register$/);
+  await page.locator('main a[href="/tr/kayit"]').click();
+  await expect(page).toHaveURL(/\/tr\/kayit$/);
   await page.goto("/");
-  await page.locator('header a[href="/login"]').click();
-  await expect(page).toHaveURL(/\/login$/);
-  for (const route of ["/faq", "/kvkk", "/privacy", "/accessibility"]) {
+  await page.locator('header a[href="/tr/giris"]').click();
+  await expect(page).toHaveURL(/\/tr\/giris$/);
+  for (const target of ["/tr/sss", "/tr/kvkk", "/tr/gizlilik", "/tr/erisilebilirlik"]) {
     await page.goto("/");
-    await page.locator('footer a[href="' + route + '"]').click();
-    await expect(page).toHaveURL(new RegExp(route + "$"));
+    await page.locator('footer a[href="' + target + '"]').click();
+    await expect(page).toHaveURL(new RegExp(target + "$"));
   }
   for (const file of ["README.md", "LICENSE"]) {
     await page.goto("/");
@@ -155,7 +155,7 @@ test("session hint continues to the verified app shell", async ({ page, context 
   await context.addCookies([{ name: "PDA_SESSION", value: "1", url: "http://localhost:3000" }]);
   await page.route("**/api/v1/**", route => route.fulfill({ status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "http://localhost:3000", "access-control-allow-credentials": "true" }, body: JSON.stringify(new URL(route.request().url()).pathname.endsWith("/auth/me") ? { id: "landing-test", nickname: "LandingTest", email: "landing@example.com", globalRole: "USER", mustChangePassword: false } : { content: [], totalElements: 0, totalPages: 0, counts: {} }) }));
   await page.goto("/");
-  await expect(page).toHaveURL(/\/dashboard$/);
+  await expect(page).toHaveURL(/\/tr\/genel-bakis$/);
   await expect(page.locator(".app-shell")).toBeVisible();
   await expect(page.locator("footer")).toHaveCount(0);
 });
@@ -166,7 +166,7 @@ test("complete story and CTA render without JavaScript", async ({ browser }) => 
   await page.goto("http://localhost:3000/");
   await expect(page.locator("#landing-heading")).toContainText("Fikirden teslimata.");
   await expect(page.locator("article[data-chapter]:visible")).toHaveCount(4);
-  await expect(page.locator('main a[href="/register"]')).toBeVisible();
+  await expect(page.locator('main a[href="/tr/kayit"]')).toBeVisible();
   await expect(page.locator("[data-command-group]:visible")).toHaveCount(8);
   await context.close();
 });
@@ -175,7 +175,7 @@ test("homepage remains in sitemap and robots", async ({ request }) => {
   expect((await request.get("/sitemap.xml")).status()).toBe(200);
   const robots = await request.get("/robots.txt");
   expect(await robots.text()).toContain("Allow: /");
-  expect(await robots.text()).toContain("Disallow: /dashboard");
+  expect(await robots.text()).toContain("Disallow: /tr/genel-bakis");
 });
 
 test("short laptop viewport keeps the complete story in normal flow", async ({ page }) => {
@@ -195,5 +195,5 @@ test("landing follows live changes to the global semantic palette", async ({ pag
     document.documentElement.style.setProperty("--primary", "#34613d");
   });
   expect(await page.locator("#landing-main").evaluate(el => getComputedStyle(el.parentElement!).backgroundColor)).toBe("rgb(245, 235, 219)");
-  expect(await page.locator('main a[href="/register"]').evaluate(el => getComputedStyle(el).backgroundColor)).toBe("rgb(52, 97, 61)");
+  expect(await page.locator('main a[href="/tr/kayit"]').evaluate(el => getComputedStyle(el).backgroundColor)).toBe("rgb(52, 97, 61)");
 });

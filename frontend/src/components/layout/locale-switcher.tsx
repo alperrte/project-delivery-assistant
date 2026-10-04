@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useTransition, type ComponentType } from "react";
+import { useState, type ComponentType } from "react";
 import { createPortal } from "react-dom";
-import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "motion/react";
 import { CaretDown } from "@phosphor-icons/react";
@@ -11,6 +10,7 @@ import GB from "country-flag-icons/react/3x2/GB";
 import TR from "country-flag-icons/react/3x2/TR";
 import { locales, type Locale } from "@/i18n/config";
 import { writeLocaleCookie } from "@/i18n/locale-cookie";
+import { switchLocale } from "@/i18n/routing";
 import { buttonVariants } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -36,24 +36,21 @@ const EASE = [0.22, 1, 0.36, 1] as const;
  */
 export function useLocaleSelection() {
   const current = useLocale() as Locale;
-  const router = useRouter();
   const reduce = useReducedMotionPreference();
-  const [pending, startTransition] = useTransition();
   const [flip, setFlip] = useState<{ from: Locale; to: Locale } | null>(null);
-  const [holding, setHolding] = useState(false);
 
   function select(next: string) {
-    if (next === current || pending || flip) return;
+    if (next === current || flip) return;
     const target = next as Locale;
     setFlip({ from: current, to: target });
-    setHolding(true);
-    window.setTimeout(() => setHolding(false), reduce ? 0 : MIN_SHOWN);
     writeLocaleCookie(target);
-    startTransition(() => router.refresh());
+    const destination = switchLocale(window.location.pathname, window.location.search, target, window.location.hash);
+    // A client-only route change keeps the existing root <html lang>; a document navigation updates it with the URL.
+    window.setTimeout(() => window.location.assign(destination), reduce ? 0 : MIN_SHOWN);
   }
 
   const overlay = (
-    <LocaleOverlay flip={flip} shown={flip !== null && (pending || holding)} reduce={reduce} onExited={() => setFlip(null)} />
+    <LocaleOverlay flip={flip} shown={flip !== null} reduce={reduce} onExited={() => setFlip(null)} />
   );
   return { current, select, overlay };
 }

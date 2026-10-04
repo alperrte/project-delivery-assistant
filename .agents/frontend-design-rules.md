@@ -135,6 +135,8 @@ Giriş, kayıt ve şifre sıfırlama ekranları arka plan fotoğrafı üzerinde 
 
 ## Tema (light/dark)
 
+Tema geçişindeki ay `--theme-moon` rengini kullanır (`#4c8dff`, iki temada da). Bu renk açık ve koyu zemin üzerinde seçilir kalır; güneş ve hale renkleri ayrıdır.
+
 - Tek tema kontrolü `components/layout/theme-toggle.tsx` içindedir; dashboard tasarımı tüm sayfalarda aynıdır. Auth/app tone varyantı veya sayfaya özel boyut override kullanılmaz. `.theme-toggle` mevcut Titanium token bloğunu paylaşır; palet kopyalanmaz, sayfanın diğer renkleri değişmez. Seçim animasyonu her component instance için ayrı `useId` ile izole edilir.
 
 - Her yeni renk token'ı **hem `:root` hem `.dark`** içinde tanımlanmalı ve genel bir renk ise `@theme inline` içinde `--color-*` olarak bağlanmalıdır.

@@ -3,13 +3,13 @@ import { defineConfig, devices } from "@playwright/test";
 // Public information and footer checks do not need backend accounts.
 export default defineConfig({
   testDir: "./e2e",
-  testMatch: ["footer-public-pages.spec.ts", "error-pages.spec.ts", "landing-page.spec.ts", "landing-real-ui.spec.ts"],
+  testMatch: ["footer-public-pages.spec.ts", "error-pages.spec.ts", "landing-page.spec.ts", "landing-real-ui.spec.ts", "localized-routing.spec.ts"],
   timeout: 60_000,
   fullyParallel: false,
   workers: 1,
   reporter: [["list"]],
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL: process.env.E2E_BASE_URL ?? "http://localhost:3000",
     locale: "tr-TR",
     trace: "retain-on-failure",
     screenshot: "only-on-failure",

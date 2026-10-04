@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useMutation } from "@tanstack/react-query";
 import { CheckCircle, CircleNotch, EnvelopeSimple, WarningCircle, XCircle } from "@phosphor-icons/react";

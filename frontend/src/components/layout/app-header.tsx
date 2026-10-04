@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { Bell, CaretDown, EnvelopeSimple, List, SignOut } from "@phosphor-icons/react";
 import { CONTACT_EMAIL, INFO_LINKS } from "@/features/public-info/site-info";

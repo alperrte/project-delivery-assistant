@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import Link from "@/i18n/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -46,8 +46,9 @@ export function OrganizationFormPage({ organizationId }: { organizationId?: stri
   const {
     register,
     handleSubmit,
+    setFocus,
     control,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<OrganizationFormValues>({
     resolver: zodResolver(organizationFormSchema),
     values: organization
@@ -96,6 +97,7 @@ export function OrganizationFormPage({ organizationId }: { organizationId?: stri
     updatedAt: organization?.updatedAt ?? new Date().toISOString(),
   };
   const descriptionLength = values.description?.length ?? 0;
+  const saving = mutation.isPending || isSubmitting;
 
   return (
     <PageContainer width="form">
@@ -105,26 +107,29 @@ export function OrganizationFormPage({ organizationId }: { organizationId?: stri
         description={editing ? tf("editDescription") : tf("createDescription")}
       />
 
-      <form onSubmit={handleSubmit((form) => mutation.mutate(form))} noValidate>
+      <form onSubmit={handleSubmit((form) => mutation.mutate(form), (invalid) => {
+        if (invalid.name) setFocus("name");
+        else if (invalid.description) setFocus("description");
+      })} noValidate aria-busy={saving}>
         <div className="grid gap-10 lg:grid-cols-12 lg:gap-12">
-          <section aria-labelledby="org-general" className="space-y-5 lg:col-span-7">
+          <section aria-labelledby="org-general" className="workspace-panel space-y-5 p-5 sm:p-6 lg:col-span-7">
             <div>
               <h2 id="org-general" className="text-sm font-semibold text-foreground">{tf("sections.general.title")}</h2>
               <p className="mt-1.5 text-sm leading-5 text-muted-foreground">{tf("sections.general.description")}</p>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="org-name">{tf("name")}</Label>
-              <Input id="org-name" autoFocus maxLength={160} placeholder={tf("namePlaceholder")} aria-invalid={!!errors.name} {...register("name")} />
-              {errors.name && <p role="alert" className="text-sm text-destructive">{tv(errors.name.message!)}</p>}
+              <Input id="org-name" autoFocus maxLength={160} placeholder={tf("namePlaceholder")} aria-invalid={!!errors.name} aria-describedby={errors.name ? "org-name-error" : undefined} disabled={saving} {...register("name")} />
+              {errors.name && <p id="org-name-error" role="alert" className="text-sm text-destructive">{tv(errors.name.message!)}</p>}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="org-description">{tf("description")}</Label>
-              <Textarea id="org-description" rows={6} maxLength={2000} placeholder={tf("descriptionPlaceholder")} aria-invalid={!!errors.description} {...register("description")} />
+              <Textarea id="org-description" rows={6} maxLength={2000} placeholder={tf("descriptionPlaceholder")} aria-invalid={!!errors.description} aria-describedby={errors.description ? "org-description-error" : "org-description-hint"} disabled={saving} {...register("description")} />
               <div className="flex items-start justify-between gap-3">
                 {errors.description ? (
-                  <p role="alert" className="text-sm text-destructive">{tv(errors.description.message!)}</p>
+                  <p id="org-description-error" role="alert" className="text-sm text-destructive">{tv(errors.description.message!)}</p>
                 ) : (
-                  <p className="text-sm text-muted-foreground">{tf("descriptionHint")}</p>
+                  <p id="org-description-hint" className="text-sm text-muted-foreground">{tf("descriptionHint")}</p>
                 )}
                 <span className="shrink-0 text-xs text-muted-foreground tabular-nums">{descriptionLength}/2000</span>
               </div>
@@ -144,7 +149,7 @@ export function OrganizationFormPage({ organizationId }: { organizationId?: stri
           </aside>
         </div>
 
-        <div data-sticky-actions className="sticky bottom-0 z-20 -mx-4 -mb-6 mt-10 border-t bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:-mx-8 sm:-mb-8 sm:px-8">
+        <div data-sticky-actions className="sticky bottom-0 z-20 -mx-4 -mb-6 mt-10 border-t bg-background/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:-mx-8 sm:-mb-8 sm:px-8">
           <div className="flex items-center justify-between gap-2">
             <Link href={backHref} className={buttonVariants({ variant: "outline" })}>{tf("cancel")}</Link>
             <div className="flex items-center gap-2">
@@ -152,8 +157,8 @@ export function OrganizationFormPage({ organizationId }: { organizationId?: stri
                 <Eye size={16} data-icon="inline-start" aria-hidden="true" />
                 <span className="sr-only min-[440px]:not-sr-only">{tf("preview.show")}</span>
               </a>
-              <Button type="submit" disabled={mutation.isPending}>
-                {mutation.isPending && <CircleNotch size={16} className="animate-spin" aria-hidden="true" />}
+              <Button type="submit" disabled={saving}>
+                {saving && <CircleNotch size={16} className="animate-spin" aria-hidden="true" />}
                 {editing ? tf("save") : tf("create")}
               </Button>
             </div>

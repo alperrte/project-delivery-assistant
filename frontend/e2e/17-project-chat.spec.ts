@@ -1,7 +1,8 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import path from "node:path";
 import { test, expect, type Locator, type Page } from "@playwright/test";
 import { api, createProject, login, registerAndLogin } from "./helpers";
-import { MANAGER_STORAGE, MEMBER_STORAGE, MEMBER_USER_FILE } from "./global-setup";
+import { AUTH_DIR, MANAGER_STORAGE, MEMBER_STORAGE, MEMBER_USER_FILE } from "./global-setup";
 
 /** A real 1x1 PNG: the server reads the type and size from the bytes, so a made-up header would be refused. */
 const PNG = Buffer.from(
@@ -18,6 +19,7 @@ const navItemOf = (page: Page) => page.getByTestId("chat-nav-item");
 const composerOf = (page: Page) => page.getByTestId("chat-composer");
 const messagesOf = (page: Page) => page.getByTestId("chat-message");
 const directRow = (page: Page, person: Person) => page.locator(`[data-testid="chat-conversation-direct"][data-peer-id="${person.id}"]`);
+const OUTSIDER_USER_FILE = path.join(AUTH_DIR, "chat-outsider-user.json");
 
 async function openPanel(page: Page) {
   await navItemOf(page).click();
@@ -54,9 +56,15 @@ test.describe.serial("Project chat", () => {
   test.beforeAll(async ({ browser }) => {
     managerPage = await (await browser.newContext({ storageState: MANAGER_STORAGE })).newPage();
     memberPage = await (await browser.newContext({ storageState: MEMBER_STORAGE })).newPage();
-    // The one extra account of this file: it has no project at all, so it is also the "outside the project" user.
+    // This account stays outside the newly created project until the compact-chat invitation test.
     outsiderPage = await (await browser.newContext({ locale: "tr-TR" })).newPage();
-    await registerAndLogin(outsiderPage, "chatout");
+    if (process.env.E2E_REUSE_USERS === "1" && existsSync(OUTSIDER_USER_FILE)) {
+      const credentials = JSON.parse(readFileSync(OUTSIDER_USER_FILE, "utf-8")) as { email: string; password: string };
+      await login(outsiderPage, credentials.email, credentials.password);
+    } else {
+      const credentials = await registerAndLogin(outsiderPage, "chatout");
+      writeFileSync(OUTSIDER_USER_FILE, JSON.stringify(credentials));
+    }
   });
 
   test.afterAll(async () => {
@@ -88,12 +96,7 @@ test.describe.serial("Project chat", () => {
     expect(accepted.status).toBe(200);
   });
 
-  test("the Mesajlaşma entry appears only with a selected project", async () => {
-    // Somebody with no project has "choose a project" in the sidebar and no chat entry.
-    await outsiderPage.goto("/dashboard");
-    await expect(outsiderPage.getByRole("link", { name: "Proje seçin" }).first()).toBeVisible();
-    await expect(navItemOf(outsiderPage)).toHaveCount(0);
-
+  test("the Mesajlaşma entry appears in the selected project's navigation", async () => {
     await managerPage.goto(`/projects/${slug}`);
     await expect(navItemOf(managerPage)).toBeVisible();
     await expect(navItemOf(managerPage)).toContainText("Mesajlaşma");
@@ -199,7 +202,7 @@ test.describe.serial("Project chat", () => {
 
     // Move through the project's pages with the bar still there.
     await managerPage.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Görevler", exact: true }).first().click();
-    await expect(managerPage).toHaveURL(new RegExp(`/projects/${slug}/tasks`));
+    await expect(managerPage).toHaveURL(new RegExp(`/tr/projeler/${slug}/gorevler`));
     await expect(barOf(managerPage)).toBeVisible();
 
     // Compact: the same conversation, the same history, the same unsent draft.
@@ -207,6 +210,17 @@ test.describe.serial("Project chat", () => {
     await expect(compactOf(managerPage)).toBeVisible();
     await expect(managerPage.getByTestId("chat-active-name")).toHaveText(member.nickname);
     await expect(messagesOf(managerPage).filter({ hasText: "Selam, mesaj geldi" })).toBeVisible();
+    await expect(composerOf(managerPage)).toHaveValue("yarım kalan taslak");
+
+    // The compact selector reuses the full panel's conversation list and the same draft slots.
+    await compactOf(managerPage).getByTestId("chat-compact-selector").click();
+    await expect(compactOf(managerPage).getByTestId("chat-conversation-group")).toBeVisible();
+    await compactOf(managerPage).getByTestId("chat-conversation-group").click();
+    await expect(compactOf(managerPage).getByTestId("chat-active-name")).toHaveText(projectName);
+    await expect(compactOf(managerPage).getByTestId("chat-conversation-direct")).toHaveCount(0);
+    await compactOf(managerPage).getByTestId("chat-compact-selector").click();
+    await directRow(managerPage, member).click();
+    await expect(compactOf(managerPage).getByTestId("chat-active-name")).toHaveText(member.nickname);
     await expect(composerOf(managerPage)).toHaveValue("yarım kalan taslak");
 
     // A new message arrives while compact: it shows and (being read) leaves no unread behind.
@@ -242,13 +256,13 @@ test.describe.serial("Project chat", () => {
 
     // "Değiştir" leaves the project's pages: the chat is closed.
     await managerPage.getByRole("link", { name: "Değiştir", exact: true }).first().click();
-    await expect(managerPage).toHaveURL(/\/projects$/);
+    await expect(managerPage).toHaveURL(/\/tr\/projeler$/);
     await expect(barOf(managerPage)).toHaveCount(0);
 
     // Opening the other project through the app router (a client-side navigation, like a click on its card; the
     // list is paged, so the card of a project created minutes ago is not always on the first page).
     await managerPage.evaluate((target) => (window as unknown as { next: { router: { push: (href: string) => void } } }).next.router.push(target), `/projects/${slug2}`);
-    await expect(managerPage).toHaveURL(new RegExp(`/projects/${slug2}$`));
+    await expect(managerPage).toHaveURL(new RegExp(`/tr/projeler/${slug2}$`));
     await openPanel(managerPage);
     await expect(managerPage.getByTestId("chat-active-name")).toHaveText(project2Name);
     await expect(composerOf(managerPage)).toHaveValue("");
@@ -469,9 +483,9 @@ test.describe.serial("Project chat", () => {
 
       // Not at once: the socket is still open until the server's next session check (every 30 s) ...
       await page.waitForTimeout(3_000);
-      await expect(page).toHaveURL(new RegExp(`/projects/${slug}`));
+      await expect(page).toHaveURL(new RegExp(`/tr/projeler/${slug}`));
       // ... then the server closes it, the reconnect finds the session gone and the app leaves for the login page.
-      await expect(page).toHaveURL(/\/login/, { timeout: 90_000 });
+      await expect(page).toHaveURL(/\/tr\/giris/, { timeout: 90_000 });
     } finally {
       await context.close();
     }
@@ -495,5 +509,51 @@ test.describe.serial("Project chat", () => {
     const members = await api(managerPage, "GET", `/projects/${projectId}/chat/members`);
     expect(members.status).toBe(200);
     expect(JSON.stringify(members.json)).not.toContain("@");
+  });
+
+  test("compact selector moves between two people and the group without losing drafts", async () => {
+    const third = (await api(outsiderPage, "GET", "/auth/me")).json as Person;
+    const team = await api(managerPage, "POST", `/projects/${projectId}/teams`, { name: "Compact Chat Team" });
+    expect(team.status).toBe(201);
+    const invite = await api(managerPage, "POST", `/projects/${projectId}/invitations`, {
+      userId: third.id, roles: ["FRONTEND_DEVELOPER"], teamId: (team.json as { id: string }).id,
+    });
+    expect(invite.status).toBe(201);
+    const { invitationId, token } = invite.json as { invitationId: string; token: string };
+    expect((await api(outsiderPage, "POST", `/projects/${projectId}/invitations/${invitationId}/accept`, { token })).status).toBe(200);
+
+    await managerPage.goto(`/projects/${slug}`);
+    await openPanel(managerPage);
+    await directRow(managerPage, member).click();
+    await composerOf(managerPage).fill("member draft");
+    await managerPage.getByTestId("chat-minimize").click();
+    await managerPage.getByTestId("chat-bar-expand").click();
+    const compact = compactOf(managerPage);
+    await compact.getByTestId("chat-compact-selector").click();
+    await expect(directRow(managerPage, third)).toBeVisible();
+    await directRow(managerPage, third).click();
+    await expect(compact.getByTestId("chat-active-name")).toHaveText(third.nickname);
+    await expectSendEnabled(managerPage);
+    await composerOf(managerPage).fill("third draft");
+    await compact.getByTestId("chat-compact-selector").click();
+    await compact.getByTestId("chat-conversation-group").click();
+    await expect(compact.getByTestId("chat-active-name")).toHaveText(projectName);
+    await expectSendEnabled(managerPage);
+    await send(managerPage, "Compact group message");
+    await expect(messagesOf(managerPage).filter({ hasText: "Compact group message" })).toBeVisible();
+    await compact.getByTestId("chat-compact-selector").click();
+    await directRow(managerPage, member).click();
+    await expect(composerOf(managerPage)).toHaveValue("member draft");
+    await compact.getByTestId("chat-compact-selector").click();
+    await directRow(managerPage, third).click();
+    await expect(composerOf(managerPage)).toHaveValue("third draft");
+    await managerPage.setViewportSize({ width: 390, height: 844 });
+    await compact.getByTestId("chat-compact-selector").click();
+    const bounds = await compact.boundingBox();
+    expect(bounds).not.toBeNull();
+    expect(bounds!.x).toBeGreaterThanOrEqual(0);
+    expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(390);
+    await compact.press("Escape");
+    await expect(compact.getByTestId("chat-compact-selector")).toHaveAttribute("aria-expanded", "false");
   });
 });

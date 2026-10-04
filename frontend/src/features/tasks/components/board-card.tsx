@@ -1,7 +1,7 @@
 "use client";
 
 import type { DragEvent } from "react";
-import Link from "next/link";
+import Link from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { ArrowsLeftRight } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";

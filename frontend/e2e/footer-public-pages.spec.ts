@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { buildPath } from "../src/i18n/routing";
 
 const infoPaths = ["/faq", "/kvkk", "/privacy", "/accessibility"] as const;
 
@@ -14,7 +15,7 @@ for (const [locale, faqTitle] of [
     for (const path of infoPaths) {
       const response = await page.goto(path);
       expect(response?.status()).toBe(200);
-      await expect(page).toHaveURL(new RegExp(path + "$"));
+      await expect(page).toHaveURL(new RegExp(buildPath(path, {}, locale) + "$"));
       await expect(page.locator("h1")).toHaveCount(1);
       await expect(page.locator("article")).not.toBeEmpty();
       await expect(page.locator("footer")).toHaveCount(1);
@@ -64,8 +65,8 @@ test("footer links open the correct information and contributor targets", async 
   await expect(footer.getByRole("link", { name: "Hamza Taşbay GitHub profili" })).toHaveAttribute("href", "https://github.com/HmzT270");
   await expect(footer.locator('a[href="mailto:pda-info@gmail.com"]')).toBeVisible();
   for (const path of infoPaths) {
-    await footer.locator('a[href="' + path + '"]').click();
-    await expect(page).toHaveURL(new RegExp(path + "$"));
+    await footer.locator('a[href="' + buildPath(path, {}, "tr") + '"]').click();
+    await expect(page).toHaveURL(new RegExp(buildPath(path, {}, "tr") + "$"));
     await expect(page.locator("h1")).toBeVisible();
   }
 });
@@ -107,10 +108,10 @@ test("authenticated app shell has no footer and information links work from the 
   const menu = page.getByRole("menu");
   await expect(menu).toBeVisible();
   for (const path of infoPaths) {
-    await expect(menu.locator('a[href="' + path + '"]')).toBeVisible();
+    await expect(menu.locator('a[href="' + buildPath(path, {}, "tr") + '"]')).toBeVisible();
   }
   await expect(menu.locator('a[href="mailto:pda-info@gmail.com"]')).toBeVisible();
-  await menu.locator('a[href="/privacy"]').click();
-  await expect(page).toHaveURL(/\/privacy$/);
+  await menu.locator('a[href="/tr/gizlilik"]').click();
+  await expect(page).toHaveURL(/\/tr\/gizlilik$/);
   await expect(page.locator("h1")).toHaveText("Gizlilik Politikası");
 });

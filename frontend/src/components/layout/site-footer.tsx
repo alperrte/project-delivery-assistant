@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { EnvelopeSimple, ArrowUpRight } from "@phosphor-icons/react";
 import { GitHubIcon } from "@/components/common/brand-icons";

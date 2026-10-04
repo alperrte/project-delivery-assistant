@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { ChatsCircle } from "@phosphor-icons/react";
 import { navItemClass } from "@/components/layout/nav-item";

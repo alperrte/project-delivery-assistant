@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useRef, useState, type ReactNode } from "react";
-import Link from "next/link";
+import Link from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { MagnifyingGlass, X } from "@phosphor-icons/react";
 import { Avatar } from "@/components/ui/avatar";

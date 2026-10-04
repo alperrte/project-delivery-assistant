@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { ArrowRight, CalendarBlank, PencilSimple, TreeStructure } from "@phosphor-icons/react";
 import { AvatarStack } from "@/components/common/avatar-stack";

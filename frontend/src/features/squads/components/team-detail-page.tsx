@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import Link from "@/i18n/navigation";
+import { usePathname, useRouter, useSearchParams } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CaretDown, Check, MagnifyingGlass, PencilSimple, Funnel } from "@phosphor-icons/react";

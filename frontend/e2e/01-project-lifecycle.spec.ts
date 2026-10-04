@@ -78,7 +78,7 @@ test.describe.serial("Project lifecycle (manager)", () => {
     await page.goto(`/projects/${slug}?section=settings`);
     await page.getByRole("button", { name: /^Arşivle$/ }).click();
     await page.getByRole("dialog").getByRole("button", { name: /^Arşivle$/ }).click();
-    await expect(page).toHaveURL(/\/projects$/, { timeout: 15_000 });
+    await expect(page).toHaveURL(/\/tr\/projeler$/, { timeout: 15_000 });
     await expect(page.getByText("Proje arşivlendi.")).toBeVisible();
   });
 });

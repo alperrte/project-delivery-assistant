@@ -24,7 +24,7 @@ test("an expired access token is renewed in place instead of showing a permissio
   // A client-side navigation, so the page is not reloaded (a reload would renew the session through /auth/me).
   await page.getByRole("link", { name: "Projeler", exact: true }).click();
 
-  await expect(page).toHaveURL(/\/projects$/);
+  await expect(page).toHaveURL(/\/tr\/projeler$/);
   await expect(page.getByRole("heading", { level: 1, name: "Projeler" })).toBeVisible();
   await expect(page.getByText("Bu işlem için yetkiniz yok.")).toHaveCount(0);
   // The list call was refused once for lack of a session, then repeated successfully after the renewal.
@@ -46,7 +46,7 @@ test("when the session is really over, the user is sent to the login page instea
   // A background request may notice the ended session before the click lands; either way the user must be sent away.
   await page.getByRole("link", { name: "Projeler", exact: true }).click({ timeout: 3_000 }).catch(() => undefined);
 
-  await expect(page).toHaveURL(/\/login/);
+  await expect(page).toHaveURL(/\/tr\/giris/);
   await expect(page.getByText("E-posta veya şifre hatalı.")).toHaveCount(0);
   await expect(page.getByText("Bu işlem için yetkiniz yok.")).toHaveCount(0);
 

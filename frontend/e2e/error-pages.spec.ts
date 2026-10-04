@@ -47,7 +47,7 @@ test("unknown address returns the PDA 404 screen and HTTP 404", async ({ page })
   await page.keyboard.press("Enter");
   await expect(page.locator("#error-main")).toBeFocused();
   await page.getByRole("link", { name: "Giriş sayfası", exact: true }).click();
-  await expect(page).toHaveURL(/\/login$/);
+  await expect(page).toHaveURL(/\/tr\/giris$/);
 });
 
 for (const width of [320, 390, 768, 1440]) {
@@ -93,7 +93,7 @@ test("session service 503 shows availability screen and recovers after retry", a
   await mockApi(page, path => path.endsWith("/auth/me") && unavailable ? 503 : 200);
   await page.goto("/settings");
   await expect(page.locator('[data-error-code="503"]')).toBeVisible();
-  await expect(page).toHaveURL(/\/settings$/);
+  await expect(page).toHaveURL(/\/tr\/ayarlar$/);
   unavailable = false;
   await page.getByRole("button", { name: "Yeniden dene", exact: true }).click();
   await expect(page.locator(".app-shell")).toBeVisible();
@@ -103,7 +103,7 @@ test("session service 503 shows availability screen and recovers after retry", a
 test("expired session still redirects to login instead of a 403 screen", async ({ page }) => {
   await mockApi(page, path => path.endsWith("/auth/me") ? 401 : path.endsWith("/auth/refresh") ? 403 : 200);
   await page.goto("/settings");
-  await expect(page).toHaveURL(/\/login$/);
+  await expect(page).toHaveURL(/\/tr\/giris$/);
   await expect(page.locator('[data-error-code="403"]')).toHaveCount(0);
 });
 

@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { MANAGER_STORAGE } from "./global-setup";
+import { api, createProject, openProjectListPage } from "./helpers";
 
 test.use({ storageState: MANAGER_STORAGE });
 
@@ -10,6 +11,21 @@ const PNG = Buffer.from(
 );
 
 test.describe("Yeni proje sayfası", () => {
+  test("overview shows catalog logos and the original name for unknown technologies", async ({ page }) => {
+    const slug = await createProject(page, `Tech Overview ${Date.now()}`);
+    const project = (await api(page, "GET", `/projects/by-slug/${slug}`)).json as {
+      id: string; name: string; description: string | null; priority: string; status: string; projectType: string;
+    };
+    const updated = await api(page, "PUT", `/projects/${project.id}`, {
+      name: project.name, description: project.description, priority: project.priority,
+      status: project.status, projectType: project.projectType, techStack: "React, QuantumScript",
+    });
+    expect(updated.status).toBe(200);
+    await page.goto(`/projects/${slug}`);
+    await expect(page.getByRole("button", { name: "React", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "QuantumScript", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "React", exact: true }).locator("img[src*='/images/tech/react.svg']")).toBeVisible();
+  });
   test("önizleme yazdıkça güncellenir ve teknoloji seçilebilir", async ({ page }) => {
     await page.goto("/projects/new");
 
@@ -45,19 +61,20 @@ test.describe("Yeni proje sayfası", () => {
 
     await page.locator("#project-name").fill("Türsüz proje");
     await page.getByRole("button", { name: /^Projeyi oluştur$/ }).click();
-    await expect(page).toHaveURL(/\/projects\/new$/);
+    await expect(page).toHaveURL(/\/tr\/projeler\/yeni$/);
     await expect(page.getByRole("alert").filter({ hasText: "Bu alan zorunlu." })).toBeVisible();
   });
 
   test("logo ile oluşturulan proje listede logosuyla görünür, kart başına /home çağrılmaz", async ({ page }) => {
+    const name = `Logolu Proje ${Date.now()}`;
     await page.goto("/projects/new");
 
     await page.locator('input[type="file"]').first().setInputFiles({ name: "logo.png", mimeType: "image/png", buffer: PNG });
-    await page.locator("#project-name").fill("Logolu Proje");
+    await page.locator("#project-name").fill(name);
     await page.getByRole("radio", { name: /^Web/ }).click();
     await page.getByRole("button", { name: "React", exact: true }).click();
     await page.getByRole("button", { name: /^Projeyi oluştur$/ }).click();
-    await expect(page).toHaveURL(/\/projects\/(?!new$)[^/]+$/, { timeout: 15_000 });
+    await expect(page).toHaveURL(/\/tr\/projeler\/(?!yeni$)[^/]+$/, { timeout: 15_000 });
 
     // The detail page loads its own /home; let it finish so only requests made by the list page are counted.
     await page.waitForLoadState("networkidle");
@@ -66,8 +83,9 @@ test.describe("Yeni proje sayfası", () => {
       if (/\/projects\/[^/]+\/home/.test(request.url())) homeCalls.push(request.url());
     });
 
-    await page.goto("/projects");
-    const card = page.getByRole("article").filter({ hasText: "Logolu Proje" });
+    const slug = new URL(page.url()).pathname.split("/").pop()!;
+    await openProjectListPage(page, slug);
+    const card = page.getByRole("article").filter({ has: page.locator(`a[href="/tr/projeler/${slug}"]`) });
     await expect(card).toBeVisible();
     await expect(card.locator('img[src*="/logo?v="]')).toBeVisible();
     await expect(card.getByText("1 üye")).toBeVisible();
@@ -75,6 +93,7 @@ test.describe("Yeni proje sayfası", () => {
   });
 
   test("kapak görseli oluşturma sırasında seçilir, önizleme kartında görünür ve proje kartına yüklenir", async ({ page }) => {
+    const name = `Kapaklı Proje ${Date.now()}`;
     await page.goto("/projects/new");
     const preview = page.locator("#project-preview");
     await expect(preview.locator("img")).toHaveCount(0);
@@ -85,14 +104,15 @@ test.describe("Yeni proje sayfası", () => {
     await expect(preview.locator('img[src^="blob:"]')).toHaveCount(1);
     await expect(page.getByRole("button", { name: "Kaldır" })).toBeVisible();
 
-    await page.locator("#project-name").fill("Kapaklı Proje");
+    await page.locator("#project-name").fill(name);
     await page.getByRole("radio", { name: /^Web/ }).click();
     await page.getByRole("button", { name: "React", exact: true }).click();
     await page.getByRole("button", { name: /^Projeyi oluştur$/ }).click();
-    await expect(page).toHaveURL(/\/projects\/(?!new$)[^/]+$/, { timeout: 15_000 });
+    await expect(page).toHaveURL(/\/tr\/projeler\/(?!yeni$)[^/]+$/, { timeout: 15_000 });
 
-    await page.goto("/projects");
-    const card = page.getByRole("article").filter({ hasText: "Kapaklı Proje" });
+    const slug = new URL(page.url()).pathname.split("/").pop()!;
+    await openProjectListPage(page, slug);
+    const card = page.getByRole("article").filter({ has: page.locator(`a[href="/tr/projeler/${slug}"]`) });
     await expect(card.locator('img[src*="/banner?v="]')).toBeVisible();
   });
 

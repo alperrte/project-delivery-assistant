@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState, type ReactNode, type ComponentProps } from "react";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import Link from "@/i18n/navigation";
+import { usePathname, useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
 import { Buildings, SquaresFour, House, GearSix, CalendarBlank, SidebarSimple, EnvelopeSimple } from "@phosphor-icons/react";
