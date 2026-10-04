@@ -44,7 +44,7 @@ public class OrganizationController {
             @AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
             @Valid @RequestBody CreateOrganizationRequest request) {
         OrganizationResponse response = OrganizationResponse.from(organizations.create(
-                AuthenticatedActor.id(principal), request.name(), request.description()));
+                AuthenticatedActor.id(principal), request.name(), request.description(), request.website(), request.contactEmail(), request.location(), request.notes()));
         return ResponseEntity.created(URI.create("/api/v1/organizations/" + response.id())).body(response);
     }
 
@@ -82,7 +82,7 @@ public class OrganizationController {
                                        @PathVariable UUID organizationId,
                                        @Valid @RequestBody UpdateOrganizationRequest request) {
         return OrganizationResponse.from(organizations.update(AuthenticatedActor.id(principal),
-                organizationId, request.name(), request.description()));
+                organizationId, request.name(), request.description(), request.website(), request.contactEmail(), request.location(), request.notes()));
     }
 
     @PostMapping("/{organizationId}/archive")

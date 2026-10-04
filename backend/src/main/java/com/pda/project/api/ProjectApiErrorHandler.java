@@ -45,6 +45,15 @@ public class ProjectApiErrorHandler {
         return problem(HttpStatus.BAD_REQUEST, "Invalid request");
     }
 
+    @ExceptionHandler(com.pda.project.organization.application.OrganizationMediaException.class)
+    ResponseEntity<ProblemDetail> organizationMedia(com.pda.project.organization.application.OrganizationMediaException exception) {
+        HttpStatus status = exception.code().endsWith("UNAVAILABLE") ? HttpStatus.SERVICE_UNAVAILABLE
+                : exception.code().endsWith("CONFLICT") ? HttpStatus.CONFLICT : HttpStatus.BAD_REQUEST;
+        ProblemDetail body=ProblemDetail.forStatusAndDetail(status,"Organization media request failed");
+        body.setProperty("code",exception.code());
+        return ResponseEntity.status(status).header("Cache-Control","no-store").body(body);
+    }
+
     @ExceptionHandler(ProjectLogoException.class)
     ResponseEntity<ProblemDetail> invalidLogo(ProjectLogoException exception) {
         return imageProblem("Invalid project logo", exception.code());
@@ -58,6 +67,8 @@ public class ProjectApiErrorHandler {
     /** The servlet multipart limit trips before the service can measure the file. */
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     ResponseEntity<ProblemDetail> imageTooLarge(HttpServletRequest request) {
+        if (request.getRequestURI().startsWith("/api/v1/organizations/"))
+            return imageProblem("Invalid organization image", "ORGANIZATION_MEDIA_TOO_LARGE");
         return isBanner(request)
                 ? imageProblem("Invalid project banner", ProjectBannerException.TOO_LARGE)
                 : imageProblem("Invalid project logo", ProjectLogoException.TOO_LARGE);
@@ -65,6 +76,8 @@ public class ProjectApiErrorHandler {
 
     @ExceptionHandler({MissingServletRequestPartException.class, MultipartException.class})
     ResponseEntity<ProblemDetail> missingImagePart(HttpServletRequest request) {
+        if (request.getRequestURI().startsWith("/api/v1/organizations/"))
+            return imageProblem("Invalid organization image", "ORGANIZATION_MEDIA_EMPTY");
         return isBanner(request)
                 ? imageProblem("Invalid project banner", ProjectBannerException.EMPTY)
                 : imageProblem("Invalid project logo", ProjectLogoException.EMPTY);

@@ -1,4 +1,8 @@
 ﻿# Klasör yapısı kısa rehberi
+## Organization profili (2026-10-04)
+
+Backend `project/organization/{api,application,domain,infrastructure}` profil alanlarını ve media controller/service/ledger repository'sini barındırır. `shared/{MediaStorage,FileSystemMediaStorage}` teknik port/adaptördür; V52 migration `db/migration` altındadır. Frontend `features/organizations` contract, query factory, form, card ve ortak profile header'ı içerir. Nötr image picker/mark/cover `components/common`, validation ve picked-image hook `lib/media` altındadır; Project wrapper'ları aynı bileşenleri kendi çevirileriyle kullanır. `.local/` özel host storage ve QA çıktıları için Git dışında tutulur.
+
 ## Herkese açık landing page (2026-10-02)
 
 `frontend/src/app/page.tsx` oturumsuz ziyaretçiye `features/landing/landing-page.tsx` sayfasını gösterir. `PDA_SESSION` işareti varsa yalnız `/dashboard` hedefini seçer; gerçek oturumu mevcut AppShell/API doğrular. Stil `features/landing/landing.module.css`, metinler `i18n/landing/{tr,en,de}.json` içindedir. `public/images/landing/` gerçek PDA arayüzünün örnek verilerle yakalanmış iki görünümünün light/dark WebP dosyalarını içerir. `SiteFooter tone="landing"` public tanıtım sayfasına özel düzeni sağlar; auth ve uygulama kabukları değişmez. `e2e/landing-page.spec.ts` public Playwright yapılandırmasına dahildir. Ana sayfa metadata/canonical üretir ve sitemap/robots içinde keşfedilebilir; production domain mevcut `NEXT_PUBLIC_SITE_URL` sözleşmesiyle ayrıca doğru ayarlanmalıdır.

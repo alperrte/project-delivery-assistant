@@ -14,7 +14,9 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
 import java.time.Instant;
+import java.net.URI;
 import java.util.Locale;
+
 import java.util.Objects;
 import java.util.UUID;
 
@@ -39,6 +41,20 @@ public class Organization {
 
     @Column(length = 2000)
     private String description;
+
+    @Column(length = 1000)
+    private String notes;
+
+    @Column(length = 2048)
+    private String website;
+    @Column(name = "contact_email", length = 254)
+    private String contactEmail;
+    @Column(length = 200)
+    private String location;
+    @Column(name = "logo_key", length = 36)
+    private String logoKey;
+    @Column(name = "cover_image_key", length = 36)
+    private String coverKey;
 
     @Column(name = "owner_user_id", nullable = false, updatable = false)
     private UUID ownerUserId;
@@ -78,6 +94,50 @@ public class Organization {
         this.name = validName;
         this.description = validDescription;
     }
+
+    public void updateProfile(String name, String description, String website, String contactEmail, String location) {
+        updateProfile(name, description, website, contactEmail, location, null);
+    }
+
+    public void updateProfile(String name, String description, String website, String contactEmail, String location, String notes) {
+        String validWebsite = optionalText(website, 2048, "website");
+        if (validWebsite != null) {
+            URI uri;
+            try { uri = URI.create(validWebsite); } catch (IllegalArgumentException invalid) {
+                throw new IllegalArgumentException("Invalid website");
+            }
+            if (!("https".equalsIgnoreCase(uri.getScheme()) || "http".equalsIgnoreCase(uri.getScheme()))
+                    || uri.getHost() == null || uri.getUserInfo() != null || validWebsite.chars().anyMatch(Character::isISOControl)) {
+                throw new IllegalArgumentException("Invalid website");
+            }
+        }
+        String validEmail = optionalText(contactEmail, 254, "contactEmail");
+        if (validEmail != null && !validEmail.matches("[^\\s@]+@[^\\s@]+")) {
+            throw new IllegalArgumentException("Invalid contact email");
+        }
+        String validLocation = optionalText(location, 200, "location");
+        String validNotes = optionalText(notes, 1000, "notes");
+        updateDetails(name, description);
+        this.website = validWebsite;
+        this.contactEmail = validEmail;
+        this.location = validLocation;
+        this.notes = validNotes;
+    }
+
+    public void mediaStored(String kind, String key) {
+        if (archivedAt != null) throw new IllegalStateException("Archived organization");
+        if ("LOGO".equals(kind)) logoKey = key;
+        else if ("COVER".equals(kind)) coverKey = key;
+        else throw new IllegalArgumentException("Unknown media kind");
+    }
+
+    public String mediaKey(String kind) { return "LOGO".equals(kind) ? logoKey : coverKey; }
+    public String getNotes() { return notes; }
+    public String getWebsite() { return website; }
+    public String getContactEmail() { return contactEmail; }
+    public String getLocation() { return location; }
+    public String getLogoKey() { return logoKey; }
+    public String getCoverKey() { return coverKey; }
 
     public void archive() {
         if (archivedAt == null) {

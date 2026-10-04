@@ -1,5 +1,12 @@
 # API rehberi
 
+## Organization profili ve görselleri (2026-10-04)
+
+2026-10-05 ek kapsam: POST/PUT ve response'a nullable `notes` eklendi (en fazla 1000, trim, whitespace→null). Description ayrı kalır. PUT tam metadata semantiği notes için de geçerlidir; görsel mutation notes'a dokunmaz. Notes sadece owner'a açık profile/list response'unda, düzenleme formunda ve detail'ın ek notlar bölümünde görünür.
+
+
+Mevcut organization POST/PUT JSON'una opsiyonel `website`, `contactEmail`, `location` eklenir; boş/whitespace değerler null olur. PUT tam profil güncellemesidir; gönderilmeyen opsiyonel metadata temizlenir, logo/cover korunur. Response opaque `logoVersion`/`coverVersion` içerir; storage yolu ve byte'lar JSON'a girmez. `/api/v1/organizations/{id}/logo` ve `/cover`: GET görsel, PUT multipart `file`, DELETE kaldırma. Active owner kontrolü bütün işlemlerde, CSRF mutation'larda uygulanır; global ADMIN owner olmayan organizasyona erişemez. Görseller private/no-store'dur; `v` cache-buster'ıdır, GET güncel görseli döner. PNG/JPEG/WebP; logo 512 KiB, cover 2 MiB. Method/body/status/error ve Swagger matrisi `SECURITY.md` §11 Organization profil bölümündedir.
+
 ## Proje mesajlaşması (2026-10-03)
 
 `/api/v1/projects/{projectId}/chat` altında proje kapsamlı mesajlaşma sunulur: `GET /conversations` (proje grubu — ilk kullanımda oluşur —, çağıranın birebir konuşmaları, son mesaj önizlemesi ve okunmamış sayıları, `totalUnread`), `GET /members` (diğer aktif üyeler; e-posta yoktur), `POST /direct/{userId}` (birebir konuşmayı bul veya oluştur), `GET /conversations/{id}/messages?before&after&limit` (imleç sayfalama; `after` yeniden bağlanma telafisi içindir), `POST /conversations/{id}/messages` (`{content}`, en çok 2000 karakter, kullanıcı başına dakikada 30) ve `POST /conversations/{id}/read`. Gönderen her zaman oturumdaki kullanıcıdır; istekte gönderen alanı yoktur. Hata kodları `CHAT_*` (`CHAT_FORBIDDEN`, `CHAT_NOT_FOUND`, `CHAT_RECIPIENT`, `CHAT_SELF`, `CHAT_MESSAGE_EMPTY|TOO_LONG|INVALID`, `CHAT_RATE_LIMITED`, `CHAT_INVALID_REQUEST`, `CHAT_CONFLICT`). Gerçek zamanlı iletim `GET /api/v1/ws` (STOMP over WebSocket; çerez ile kimlik doğrulanır, yalnız `/user/queue/chat` dinlenir, gönderim REST'tedir) üzerindendir. Yöntem, yetki ve hata matrisi ile WebSocket güvenlik modeli `SECURITY.md` §11 "Project chat"dedir; tablolar `database.md` V51'dedir.

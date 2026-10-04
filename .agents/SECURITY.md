@@ -227,6 +227,28 @@ Because PDA uses cookie-based authentication:
 
 ## 11. API and Swagger Security
 
+### Organization profile and media (2026-10-04)
+
+2026-10-05 notes extension: organization POST/PUT JSON and profile response also include optional `notes` (<=1000, trimmed plain text, blank/missing→null on full PUT). Existing owner/CSRF checks apply. Notes are separate from description and rendered as escaped text, never HTML; no new endpoint or authorization model.
+
+
+All reads require an authenticated active organization owner; global ADMIN has no owner bypass. Mutations require CSRF. Creation assigns the owner from the session, never JSON.
+
+| Method/path | Request | Success | Important failures |
+|---|---|---|---|
+| `POST /api/v1/organizations` | JSON `{name,description?,website?,contactEmail?,location?}` | `201` profile + Location; caller becomes owner | `400` validation, `401` session, `403` CSRF |
+| `PUT /api/v1/organizations/{id}` | Same JSON; omitted/blank optional metadata becomes null; media unchanged | `200` profile | `400`, `401`, `403` owner/CSRF, `404` missing/archived |
+| `GET /api/v1/organizations` | `page=0`, `size=20` | `200` owned paginated profiles | `400`, `401` |
+| `GET /api/v1/organizations/{id}` | UUID | `200` profile + nullable metadata + opaque `logoVersion`/`coverVersion` | `401`, `403`, `404` |
+| `PUT /api/v1/organizations/{id}/logo` or `/cover` | multipart `file`; PNG/JPEG/WebP | `204` replacement stored | `400` empty/type/size/dimensions, `401`, `403`, `404`, `409` conflict, `503` storage |
+| `GET /api/v1/organizations/{id}/logo` or `/cover` | UUID, optional `v` cache buster | `200` detected MIME + bytes; private/no-store, nosniff, sandbox | `401`, `403`, `404` missing/archived/no image, `503` storage |
+| `DELETE /api/v1/organizations/{id}/logo` or `/cover` | UUID, no body | `204` idempotent removal | `401`, `403`, `404` |
+
+Safe JSON: `{"name":"Example Studio","website":"https://example.com","contactEmail":"team@example.com","location":"İstanbul"}`. Name <=160, description <=2000, website <=2048, email <=254, location <=200. Website allows only HTTP/HTTPS with host and without credentials/control characters; no remote fetch. Logo <=512 KiB; cover <=2 MiB; dimensions <=6000 each and <=24 million pixels through `ImageSniffer`. Signature/header/dimension checks are not full decoding. Client MIME/filename never select paths.
+
+Media `ProblemDetail.code`: `ORGANIZATION_MEDIA_EMPTY`, `ORGANIZATION_MEDIA_INVALID_TYPE`, `ORGANIZATION_MEDIA_TOO_LARGE`, `ORGANIZATION_MEDIA_DIMENSIONS`, `ORGANIZATION_MEDIA_CONFLICT`, `ORGANIZATION_MEDIA_UNAVAILABLE`. Metadata retains generic ProblemDetail/invalidFields. Existing servlet upload rejection maps to `400`, not `413`. Swagger only with existing `API_DOCS_ENABLED=true`: `/swagger-ui/index.html`, `/v3/api-docs`. Authenticate through normal cookie session; mutations use existing CSRF token. Storage approval/controls are in §18.
+
+
 ### Project Teams ve kayıtlı kullanıcı davetleri (2026-09-30)
 
 Swagger kontrolü: `API_DOCS_ENABLED=true` ile `/swagger-ui/index.html`; önce `GET /api/v1/auth/csrf`, ardından oturum açma. Tüm yollar access cookie ister; POST/PUT/DELETE işlemleri ayrıca `X-XSRF-TOKEN` ister. `PROJECT_VIEW` aktif proje üyeliği, `SQUAD_MANAGE` ve davet yönetimi Project Manager yetkisi gerektirir. Hatalar `ProblemDetail` döner. `page>=0`, `size=1..100`.
@@ -688,6 +710,8 @@ The Next.js frontend sets `X-Content-Type-Options: nosniff`, `X-Frame-Options: D
 ---
 
 ## 18. File and Path Safety
+
+**Approved organization media architecture (2026-10-04):** The user selected private filesystem storage on a Docker persistent volume, with `ORGANIZATION_MEDIA_STORAGE_PATH` configuration and a storage port for future adapters. Organization logo/cover use server-generated identifiers, never client paths or filenames. Only metadata/references are stored in PostgreSQL. Access remains active organization owner only; mutations require CSRF. PNG/JPEG/WebP are validated through `ImageSniffer`, with logo 512 KiB and cover 2 MiB limits and the existing pixel limits. Replacement/removal use persistent lifecycle records for retry after crashes; archived references are retained and cannot be served. Storage stays outside public/static directories; containment and symlink checks are required. Existing Project/User BYTEA media is unchanged.
 
 When file handling is introduced:
 

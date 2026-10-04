@@ -230,6 +230,7 @@ public class SecurityBaselineConfiguration {
                             .requestMatchers(HttpMethod.PUT, "/api/v1/projects/*",
                                     "/api/v1/projects/*/tasks/*/assignees",
                                     "/api/v1/organizations/*",
+                                    "/api/v1/organizations/*/logo", "/api/v1/organizations/*/cover",
                                     "/api/v1/projects/*/members/*/roles",
                                     "/api/v1/projects/*/squads/*",
                                     "/api/v1/projects/*/teams/*",
@@ -237,7 +238,8 @@ public class SecurityBaselineConfiguration {
                                     "/api/v1/projects/*/criteria/*",
                                     "/api/v1/projects/*/logo",
                                     "/api/v1/projects/*/banner").authenticated()
-                            .requestMatchers(HttpMethod.DELETE, "/api/v1/projects/*/members/*",
+                            .requestMatchers(HttpMethod.DELETE, "/api/v1/organizations/*/logo", "/api/v1/organizations/*/cover",
+                                    "/api/v1/projects/*/members/*",
                                     "/api/v1/projects/*/logo",
                                     "/api/v1/projects/*/banner",
                                     "/api/v1/projects/*/tasks/*",

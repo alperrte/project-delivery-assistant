@@ -70,6 +70,7 @@ class ProjectApiIntegrationTest {
         registry.add("FRONTEND_URL", () -> "http://localhost:3000");
         registry.add("JWT_SECRET", () -> Base64.getEncoder().encodeToString(JWT_KEY));
         registry.add("API_DOCS_ENABLED", () -> "true");
+        registry.add("pda.organization.media.storage-path", () -> System.getProperty("java.io.tmpdir") + "/pda-org-api-" + java.util.HexFormat.of().formatHex(JWT_KEY));
     }
 
     @Autowired MockMvc mvc;
@@ -78,6 +79,9 @@ class ProjectApiIntegrationTest {
     @Autowired ProjectMembershipService memberships;
     @Autowired ProjectAccess projectAccess;
     @Autowired JdbcTemplate jdbc;
+    @Autowired com.pda.project.organization.application.OrganizationMediaService organizationMedia;
+    @Autowired com.pda.project.organization.application.OrganizationService organizations;
+    @org.springframework.test.context.bean.override.mockito.MockitoSpyBean com.pda.shared.MediaStorage organizationStorage;
 
     @Test
     void creatorBecomesManagerAndCrossProjectAccessIsDenied() throws Exception {
@@ -90,7 +94,7 @@ class ProjectApiIntegrationTest {
                 .andExpect(status().isForbidden());
         var created = mvc.perform(post("/api/v1/projects").cookie(csrf, manager.access())
                         .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"Öğrenci Projesi\",\"description\":\"First project\"}"))
+                        .content("{\"name\":\"Ã–ÄŸrenci Projesi\",\"description\":\"First project\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.status").value("PLANNING"))
                 .andExpect(jsonPath("$.visibility").value("PRIVATE"))
@@ -531,6 +535,124 @@ class ProjectApiIntegrationTest {
         mvc.perform(delete("/api/v1/projects/" + otherProjectId + "/members/" + target.id())
                         .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue()))
                 .andExpect(status().isNotFound());
+    }
+
+
+    @Test
+    void organizationExpandedMetadataValidatesAndPreservesMedia() throws Exception {
+        Cookie csrf = csrfCookie(); Account owner = account("orgprofile");
+        var response = mvc.perform(post("/api/v1/organizations").cookie(csrf,owner.access())
+          .header("X-XSRF-TOKEN",csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
+          .content("{\"name\":\"Profile\",\"website\":\"https://example.com\",\"contactEmail\":\"info@example.com\",\"location\":\"Istanbul\"}"))
+          .andExpect(status().isCreated()).andExpect(jsonPath("$.website").value("https://example.com"))
+          .andReturn().getResponse();
+        String id=JsonPath.read(response.getContentAsString(),"$.id");
+        for(String body : List.of("{\"name\":\"Bad\",\"website\":\"javascript:alert(1)\"}","{\"name\":\"Bad\",\"contactEmail\":\"bad\"}")) {
+          mvc.perform(put("/api/v1/organizations/"+id).cookie(csrf,owner.access()).header("X-XSRF-TOKEN",csrf.getValue())
+            .contentType(MediaType.APPLICATION_JSON).content(body)).andExpect(status().isBadRequest());
+        }
+        mvc.perform(put("/api/v1/organizations/"+id).cookie(csrf,owner.access()).header("X-XSRF-TOKEN",csrf.getValue())
+          .contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Updated\"}"))
+          .andExpect(status().isOk()).andExpect(jsonPath("$.name").value("Updated"));
+    }
+
+
+
+    @Test
+    void organizationNotesRoundTripValidateAndStayOwnerScoped() throws Exception {
+        Cookie csrf = csrfCookie(); Account owner = account("notesowner"); Account other = account("notesforeign");
+        String notes = "n".repeat(1000);
+        var created = mvc.perform(post("/api/v1/organizations").cookie(csrf, owner.access())
+            .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
+            .content("{\"name\":\"Notes\",\"description\":\"Short\",\"notes\":\""+notes+"\"}"))
+            .andExpect(status().isCreated()).andExpect(jsonPath("$.notes").value(notes)).andReturn().getResponse();
+        String id = JsonPath.read(created.getContentAsString(), "$.id");
+        String path = "/api/v1/organizations/"+id;
+        mvc.perform(get(path).cookie(owner.access())).andExpect(status().isOk()).andExpect(jsonPath("$.notes").value(notes));
+        mvc.perform(get(path).cookie(other.access())).andExpect(status().isForbidden());
+        mvc.perform(put(path).cookie(csrf,owner.access()).header("X-XSRF-TOKEN",csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
+            .content("{\"name\":\"Notes\",\"notes\":\""+notes+"x\"}"))
+            .andExpect(status().isBadRequest()).andExpect(jsonPath("$.invalidFields[0]").value("notes"));
+        mvc.perform(get(path).cookie(owner.access())).andExpect(jsonPath("$.description").value("Short"));
+        mvc.perform(put(path).cookie(csrf,owner.access()).header("X-XSRF-TOKEN",csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
+            .content("{\"name\":\"Notes\",\"description\":\"Short\",\"notes\":\"  Edited notes  \"}"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.notes").value("Edited notes"));
+        mvc.perform(put(path).cookie(csrf,owner.access()).header("X-XSRF-TOKEN",csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
+            .content("{\"name\":\"Notes\",\"notes\":\"  \"}"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.notes").doesNotExist());
+    }
+
+    @Test
+    void organizationMediaLifecycleSecurityAndCleanupRecovery() throws Exception {
+        Cookie csrf=csrfCookie(); Account owner=account("orgmedia"); Account other=account("orgforeign");
+        UUID id=organizations.create(owner.id(),"Media",null).getId();
+        byte[] png=com.pda.shared.TestImages.png(7,5);
+        String base="/api/v1/organizations/"+id;
+        var file=new org.springframework.mock.web.MockMultipartFile("file","../../bad.svg","text/html",png);
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart(base+"/logo").file(file)
+          .with(r->{r.setMethod("PUT");return r;}).cookie(csrf,owner.access()).header("X-XSRF-TOKEN",csrf.getValue()))
+          .andExpect(status().isNoContent());
+        String first=organizations.detail(owner.id(),id).getLogoKey();
+        mvc.perform(get(base+"/logo?v=stale").cookie(owner.access())).andExpect(status().isOk())
+          .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().string("Cache-Control","private, no-store"))
+          .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().bytes(png));
+        mvc.perform(get(base+"/logo")).andExpect(status().isUnauthorized());
+        mvc.perform(get(base+"/logo").cookie(other.access())).andExpect(status().isForbidden());
+        mvc.perform(delete(base+"/logo").cookie(owner.access())).andExpect(status().isForbidden());
+        mvc.perform(delete(base+"/logo").cookie(csrf,other.access()).header("X-XSRF-TOKEN",csrf.getValue())).andExpect(status().isForbidden());
+        assertThrows(org.springframework.security.access.AccessDeniedException.class,()->organizationMedia.replace(other.id(),id,"LOGO",png));
+        jdbc.update("UPDATE users SET global_role='ADMIN' WHERE id=?", other.id());
+        mvc.perform(get(base+"/logo").cookie(other.access())).andExpect(status().isForbidden());
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart(base+"/logo").file(file)
+          .with(r->{r.setMethod("PUT");return r;}).cookie(csrf,other.access()).header("X-XSRF-TOKEN",csrf.getValue()))
+          .andExpect(status().isForbidden());
+        mvc.perform(delete(base+"/logo").cookie(csrf,other.access()).header("X-XSRF-TOKEN",csrf.getValue())).andExpect(status().isForbidden());
+        mvc.perform(put(base).cookie(csrf,other.access()).header("X-XSRF-TOKEN",csrf.getValue())
+          .contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Forbidden admin update\"}"))
+          .andExpect(status().isForbidden());
+        assertThrows(com.pda.project.organization.application.OrganizationMediaException.class,()->organizationMedia.replace(owner.id(),id,"LOGO",new byte[524289]));
+        assertThrows(com.pda.project.organization.application.OrganizationMediaException.class,()->organizationMedia.replace(owner.id(),id,"COVER",new byte[2097153]));
+        for(byte[] invalid:List.of(new byte[0],"<svg/>".getBytes(),new byte[]{(byte)137,80,78,71}))
+          assertThrows(com.pda.project.organization.application.OrganizationMediaException.class,()->organizationMedia.replace(owner.id(),id,"LOGO",invalid));
+        org.mockito.Mockito.doThrow(new java.io.IOException("disk unavailable")).when(organizationStorage).delete(first);
+        organizationMedia.replace(owner.id(),id,"LOGO",png);
+        assertEquals("DELETE_PENDING",jdbc.queryForObject("SELECT state FROM organization_media_objects WHERE object_key=?",String.class,first));
+        org.mockito.Mockito.doCallRealMethod().when(organizationStorage).delete(first);
+        organizationMedia.cleanup();
+        assertEquals(0,jdbc.queryForObject("SELECT count(*) FROM organization_media_objects WHERE object_key=?",Integer.class,first));
+        String current=organizations.detail(owner.id(),id).getLogoKey();
+        org.mockito.Mockito.doThrow(new java.io.IOException("write failed")).when(organizationStorage).put(org.mockito.ArgumentMatchers.anyString(),org.mockito.ArgumentMatchers.any());
+        assertThrows(com.pda.project.organization.application.OrganizationMediaException.class,()->organizationMedia.replace(owner.id(),id,"LOGO",png));
+        assertEquals(current,organizations.detail(owner.id(),id).getLogoKey());
+        org.mockito.Mockito.doCallRealMethod().when(organizationStorage).put(org.mockito.ArgumentMatchers.anyString(),org.mockito.ArgumentMatchers.any());
+        organizationMedia.replace(owner.id(),id,"COVER",png);
+        organizations.update(owner.id(),id,"Renamed",null,"https://example.com",null,null);
+        assertEquals(current,organizations.detail(owner.id(),id).getLogoKey());
+        mvc.perform(delete(base+"/logo").cookie(csrf,owner.access()).header("X-XSRF-TOKEN",csrf.getValue())).andExpect(status().isNoContent());
+        mvc.perform(delete(base+"/logo").cookie(csrf,owner.access()).header("X-XSRF-TOKEN",csrf.getValue())).andExpect(status().isNoContent());
+        mvc.perform(get(base+"/logo").cookie(owner.access())).andExpect(status().isNotFound());
+        organizations.archive(owner.id(),id);
+        mvc.perform(get(base+"/cover").cookie(owner.access())).andExpect(status().isNotFound());
+    }
+
+
+    @Test
+    void pendingCrashFilesAndConcurrentReplacementsAreSafe() throws Exception {
+        Account owner=account("orgconcurrent");UUID id=organizations.create(owner.id(),"Concurrent",null).getId();
+        byte[] png=com.pda.shared.TestImages.png(3,3);
+        String pending=UUID.randomUUID().toString();
+        jdbc.update("INSERT INTO organization_media_objects VALUES(?,?, 'LOGO','image/png',?,'PENDING',now(),now()-interval '1 minute')",pending,id,png.length);
+        organizationStorage.put(pending,png);organizationMedia.cleanup();
+        assertThrows(java.io.IOException.class,()->organizationStorage.read(pending,png.length));
+        try(var executor=Executors.newFixedThreadPool(2)) {
+            var first=executor.submit(()->organizationMedia.replace(owner.id(),id,"LOGO",png));
+            var second=executor.submit(()->organizationMedia.replace(owner.id(),id,"LOGO",png));
+            first.get(15,TimeUnit.SECONDS);second.get(15,TimeUnit.SECONDS);
+        }
+        organizationMedia.cleanup();
+        assertEquals(1,jdbc.queryForObject("SELECT count(*) FROM organization_media_objects WHERE organization_id=?",Integer.class,id));
+        assertTrue(java.util.Arrays.equals(png,organizationMedia.read(owner.id(),id,"LOGO").data()));
+        organizationMedia.remove(owner.id(),id,"LOGO");
     }
 
     private UUID createProject(Account actor, Cookie csrf, String name) throws Exception {

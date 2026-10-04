@@ -1,5 +1,16 @@
 # Veritabanı ve kalıcılık
 
+## V52 Organization profili ve media ledger (2026-10-04)
+
+### V53 — Organization notes (2026-10-05)
+
+Referans UI sonrasında kullanıcının kararıyla nullable `organizations.notes VARCHAR(1000)` eklenir. Description'dan bağımsız, opsiyonel düz metindir; create/edit DTO, domain ve istemci 1000 UTF-16 karakter sınırını uygular, boş/whitespace null olur. V52 değiştirilmez; eski profil/veri korunur. Notes da mevcut organization owner kapsamındadır.
+
+
+`organizations`: nullable `website` (2048), `contact_email` (254), `location` (200), `logo_key` ve `cover_image_key` (36). Eski kayıtlar null alanlarla çalışır; eski migration değiştirilmez. Organization'a ait BYTEA kolon bulunmadığından binary taşıma/backfill yoktur. Project/User kolonları korunur.
+
+`organization_media_objects`: UUID object key, organization FK, LOGO/COVER kind, doğrulanmış MIME, byte size, PENDING/ACTIVE/DELETE_PENDING state, created_at ve lease_until. DB sadece metadata tutar. Referans değişikliği owner/active organization row lock altında yapılır; silme hatası ledger'da kalır, 60 saniyelik cleanup tekrar dener; pending lease 5 dakikadır. Archive referansları retention için korur fakat API bunları sunmaz. Kurtarma için PostgreSQL ve media volume aynı tutarlı backup setinde saklanmalıdır.
+
 ## V50 Şifre sıfırlama toplam deneme penceresi (2026-10-03)
 
 `V50__password_reset_failure_window.sql`, `password_reset_challenges` tablosuna `window_failures` (INT, varsayılan 0, CHECK >= 0) ve `failure_window_started_at` (TIMESTAMPTZ, NULL olabilir) ekler. Yeni kod istemek kod başına 5 deneme sayacını sıfırlıyordu; bu iki sütun yanlış tahminleri hesabın tüm kodları boyunca bir saatlik pencerede sayar, penceredeki 5. yanlış tahminden sonra pencere bitene kadar sıfırlama bloklanır. Yalnız ekleme yapar, mevcut satırlar 0 ile başlar.
