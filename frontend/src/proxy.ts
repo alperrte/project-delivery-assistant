@@ -1,4 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { defaultLocale, isLocale, LOCALE_COOKIE, type Locale } from "./i18n/config";
+import { buildPath, matchPath } from "./i18n/routing";
 
 /**
  * Edge-level defense-in-depth for route access. This never replaces backend
@@ -20,30 +22,37 @@ import { NextResponse, type NextRequest } from "next/server";
  * session still has `mustChangePassword` pending (only the real `/auth/me`
  * response can) — that redirect stays owned by `AppShell`/the login form.
  */
-const PROTECTED_PATHS = ["/dashboard", "/projects", "/organizations", "/settings", "/account", "/calendar", "/invitations", "/change-password"];
+const PROTECTED_PATHS = ["/dashboard", "/projects", "/organizations", "/settings", "/account", "/calendar", "/invitations", "/change-password", "/tasks"];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const stored = request.cookies.get(LOCALE_COOKIE)?.value;
+  const preferred: Locale = isLocale(stored) ? stored : defaultLocale;
+  const page = matchPath(pathname, preferred);
+  if (!page) return NextResponse.next();
+  if (pathname !== page.canonicalPath) {
+    const target = request.nextUrl.clone();
+    target.pathname = page.canonicalPath;
+    return NextResponse.redirect(target, 308);
+  }
+
   const authenticated = request.cookies.has("PDA_SESSION");
 
-  if (!authenticated && PROTECTED_PATHS.some(path => pathname === path || pathname.startsWith(`${path}/`))) {
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("next", pathname);
+  if (!authenticated && PROTECTED_PATHS.some(path => page.internalPath === path || page.internalPath.startsWith(`${path}/`))) {
+    const loginUrl = new URL(buildPath("/login", {}, page.locale), request.url);
+    loginUrl.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
     return NextResponse.redirect(loginUrl);
   }
 
-  return NextResponse.next();
+  const destination = request.nextUrl.clone();
+  destination.pathname = page.internalPath;
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-pda-locale", page.locale);
+  const response = NextResponse.rewrite(destination, { request: { headers: requestHeaders } });
+  if (stored !== page.locale) response.cookies.set(LOCALE_COOKIE, page.locale, { path: "/", sameSite: "lax", maxAge: 31_536_000 });
+  return response;
 }
 
 export const config = {
-  matcher: [
-    "/dashboard/:path*",
-    "/projects/:path*",
-    "/organizations/:path*",
-    "/settings/:path*",
-    "/account/:path*",
-    "/calendar/:path*",
-    "/invitations/:path*",
-    "/change-password",
-  ],
+  matcher: ["/((?!api(?:/|$)|_next(?:/|$)|.*\\..*).*)"],
 };

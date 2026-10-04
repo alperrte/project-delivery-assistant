@@ -1,8 +1,8 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import Link from "@/i18n/navigation";
+import { usePathname, useRouter, useSearchParams } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import { ListBullets, Plus, TreeStructure } from "@phosphor-icons/react";

@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useRef, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { useTranslations } from "next-intl";
-import { ArrowsOut, Minus, X } from "@phosphor-icons/react";
+import { ArrowsOut, List, Minus, X } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useChat, draftKey } from "../chat-provider";
 import { ActiveConversationIdentity, ConversationView } from "./conversation-view";
 import { GroupAvatar, PersonAvatar } from "./person-avatar";
+import { ConversationList } from "./conversation-list";
 
 /**
  * Where the dock sits: the bottom-right corner. Pages with a sticky save bar mark it `data-sticky-actions`, and the
@@ -75,11 +76,16 @@ function Compact() {
   const t = useTranslations("chat");
   const chat = useChat();
   const windowRef = useRef<HTMLDivElement>(null);
+  const selectorRef = useRef<HTMLButtonElement>(null);
+  const [showConversations, setShowConversations] = useState(false);
 
   function keyDown(event: KeyboardEvent<HTMLElement>) {
     if (event.key === "Escape" && !event.defaultPrevented) {
       event.stopPropagation();
-      chat.minimize();
+      if (showConversations) {
+        setShowConversations(false);
+        selectorRef.current?.focus();
+      } else chat.minimize();
     }
   }
 
@@ -99,6 +105,9 @@ function Compact() {
       <header className="flex h-12 shrink-0 items-center gap-2 border-b px-3">
         <ActiveConversationIdentity avatarClassName="size-8" />
         <div className="ml-auto flex shrink-0 items-center gap-0.5">
+          <Button ref={selectorRef} variant="ghost" size="icon-sm" aria-label={t("conversations")} aria-expanded={showConversations} aria-controls="compact-conversations" data-testid="chat-compact-selector" onClick={() => setShowConversations((open) => !open)}>
+            <List size={16} aria-hidden="true" />
+          </Button>
           <Button variant="ghost" size="icon-sm" aria-label={t("panel.minimize")} data-testid="chat-minimize" onClick={chat.minimize}>
             <Minus size={16} aria-hidden="true" />
           </Button>
@@ -110,7 +119,10 @@ function Compact() {
           </Button>
         </div>
       </header>
-      <ConversationView key={conversationKey} autoFocus />
+      <div id="compact-conversations" className={cn("min-h-0 flex-1 flex-col", showConversations ? "flex" : "hidden")} aria-hidden={!showConversations}>
+        {showConversations && <ConversationList onSelected={() => { setShowConversations(false); selectorRef.current?.focus(); }} />}
+      </div>
+      {!showConversations && <ConversationView key={conversationKey} autoFocus />}
     </section>
   );
 }

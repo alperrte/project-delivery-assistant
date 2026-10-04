@@ -1,6 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
-import { login, createProject, createTeam } from "./helpers";
+import { login, createProject, createTeam, openProjectListPage } from "./helpers";
 import { MANAGER_STORAGE, MEMBER_USER_FILE } from "./global-setup";
 
 /**
@@ -102,15 +102,16 @@ test.describe.serial("Invitation, roles, squad, and denial checks", () => {
     await managerPage.getByRole("dialog").getByRole("button", { name: /^Kaydet$/ }).click();
     await expect(managerPage.getByText("Roller güncellendi.")).toBeVisible();
 
-    await memberPage.goto("/projects");
-    await expect(memberPage.locator("#main-content").getByRole("link", { name: projectName })).toBeVisible();
+    await openProjectListPage(memberPage, slug);
+    await expect(memberPage.getByRole("article").filter({ has: memberPage.locator(`a[href="/tr/projeler/${slug}"]`) })).toBeVisible();
   });
 
   test("non-manager cannot change project settings (UI hidden and API denies)", async () => {
     // The list tells a member nothing to edit: no pencil on the project's card.
-    await memberPage.goto("/projects");
-    await expect(memberPage.locator("article").filter({ hasText: projectName })).toBeVisible();
-    await expect(memberPage.getByRole("link", { name: /ayarlarını düzenle/ })).toHaveCount(0);
+    await openProjectListPage(memberPage, slug);
+    const card = memberPage.getByRole("article").filter({ has: memberPage.locator(`a[href="/tr/projeler/${slug}"]`) });
+    await expect(card).toBeVisible();
+    await expect(card.getByRole("link", { name: /ayarlarını düzenle/ })).toHaveCount(0);
 
     const status = await memberPage.evaluate(async (id) => {
       const csrfRes = await fetch("http://localhost:8080/api/v1/auth/csrf", { credentials: "include" });
@@ -170,6 +171,6 @@ test.describe.serial("Invitation, roles, squad, and denial checks", () => {
     await expect(managerPage.getByRole("row", { name: new RegExp(member.nickname) })).toHaveCount(0);
 
     await managerPage.getByRole("navigation", { name: "Konum" }).getByRole("link", { name: "Ekipler" }).click();
-    await expect(managerPage).toHaveURL(`/projects/${slug}?section=teams`);
+    await expect(managerPage).toHaveURL(`/tr/projeler/${slug}?section=teams`);
   });
 });

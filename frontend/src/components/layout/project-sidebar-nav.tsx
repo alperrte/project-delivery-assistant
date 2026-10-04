@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import Link from "@/i18n/navigation";
+import { usePathname, useSearchParams } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { ChatNavItem } from "@/features/chat/components/chat-nav-item";
 import { usePendingInvitationCount } from "@/features/invitations/hooks";

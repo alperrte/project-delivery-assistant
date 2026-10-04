@@ -26,13 +26,13 @@ test.describe.serial("Organizations", () => {
     await managerPage.goto("/organizations");
     await managerPage.getByRole("link", { name: "Yeni organizasyon" }).click();
 
-    await expect(managerPage).toHaveURL(/\/organizations\/new$/);
+    await expect(managerPage).toHaveURL(/\/tr\/organizasyonlar\/yeni$/);
     await expect(managerPage.getByRole("dialog")).toHaveCount(0);
     await expect(managerPage.getByRole("heading", { level: 1, name: "Yeni organizasyon" })).toBeVisible();
 
     await managerPage.getByRole("button", { name: /^Oluştur$/ }).click();
     await expect(managerPage.getByRole("alert").first()).toBeVisible();
-    await expect(managerPage).toHaveURL(/\/organizations\/new$/);
+    await expect(managerPage).toHaveURL(/\/tr\/organizasyonlar\/yeni$/);
   });
 
   test("the form shows a live preview card that follows what is typed, without a link to open", async () => {
@@ -56,7 +56,7 @@ test.describe.serial("Organizations", () => {
     await managerPage.getByRole("button", { name: /^Oluştur$/ }).click();
 
     await expect(managerPage.getByText("Organizasyon oluşturuldu.")).toBeVisible();
-    await expect(managerPage).toHaveURL(/\/organizations\/(?!new$)[^/]+$/);
+    await expect(managerPage).toHaveURL(/\/tr\/organizasyonlar\/(?!yeni$)[^/]+$/);
     await expect(managerPage.getByRole("heading", { level: 1, name })).toBeVisible();
     organizationUrl = new URL(managerPage.url()).pathname;
   });
@@ -64,7 +64,7 @@ test.describe.serial("Organizations", () => {
   test("editing happens on a page too and shows the saved name afterwards", async () => {
     await managerPage.getByRole("link", { name: "Düzenle" }).click();
 
-    await expect(managerPage).toHaveURL(new RegExp(`${organizationUrl}/edit$`));
+    await expect(managerPage).toHaveURL(new RegExp(`${organizationUrl}/duzenle$`));
     await expect(managerPage.getByRole("dialog")).toHaveCount(0);
     await expect(managerPage.getByRole("heading", { level: 1, name: "Organizasyonu düzenle" })).toBeVisible();
     await expect(managerPage.locator("#org-name")).toHaveValue(name);
@@ -78,7 +78,7 @@ test.describe.serial("Organizations", () => {
   });
 
   test("cancelling goes back without saving", async () => {
-    await managerPage.goto(`${organizationUrl}/edit`);
+    await managerPage.goto(`${organizationUrl}/duzenle`);
     await managerPage.locator("#org-name").fill("Kaydedilmeyecek ad");
     await managerPage.getByRole("link", { name: "Vazgeç" }).click();
     await expect(managerPage).toHaveURL(new RegExp(`${organizationUrl}$`));
@@ -86,7 +86,7 @@ test.describe.serial("Organizations", () => {
   });
 
   test("somebody who cannot see the organization gets the 403 screen, not a form", async () => {
-    await memberPage.goto(`${organizationUrl}/edit`);
+    await memberPage.goto(`${organizationUrl}/duzenle`);
     await expect(memberPage.locator('[data-error-code="403"]')).toBeVisible();
     await expect(memberPage.locator("#org-name")).toHaveCount(0);
   });
@@ -95,11 +95,47 @@ test.describe.serial("Organizations", () => {
     await managerPage.goto(organizationUrl);
     await managerPage.getByRole("button", { name: /^Arşivle$/ }).click();
     await managerPage.getByRole("dialog").getByRole("button", { name: /^Arşivle$/ }).click();
-    await expect(managerPage).toHaveURL(/\/organizations$/);
+    await expect(managerPage).toHaveURL(/\/tr\/organizasyonlar$/);
 
     // The server no longer serves an archived organization, so its edit address is a 404 and never a form.
-    await managerPage.goto(`${organizationUrl}/edit`);
+    await managerPage.goto(`${organizationUrl}/duzenle`);
     await expect(managerPage.locator('[data-error-code="404"]')).toBeVisible();
     await expect(managerPage.locator("#org-name")).toHaveCount(0);
   });
 });
+
+for (const { locale, segment, create, edit, submit } of [
+  { locale: "en", segment: "organizations", create: "new", edit: "edit", submit: "Create" },
+  { locale: "de", segment: "organisationen", create: "neu", edit: "bearbeiten", submit: "Erstellen" },
+] as const) {
+  test(`organization create and edit remain usable at ${locale} addresses`, async ({ browser }) => {
+    const context = await browser.newContext({ storageState: MANAGER_STORAGE });
+    const page = await context.newPage();
+    const name = `E2E ${locale.toUpperCase()} Organization ${Date.now()}`;
+    const renamed = `${name} updated`;
+    // A fresh sign-in applies the account's saved language once. Exercise explicit localized URLs after that baseline.
+    await page.goto("/tr/genel-bakis");
+    await expect.poll(() => page.evaluate(() => sessionStorage.getItem("pda:session-baseline"))).not.toBeNull();
+    await page.goto(`/${locale}/${segment}/${create}`);
+    await expect(page.locator("html")).toHaveAttribute("lang", locale);
+    await expect(page.locator("#org-name")).toBeVisible();
+    await page.getByRole("button", { name: submit, exact: true }).click();
+    await expect(page.getByRole("alert").first()).toBeVisible();
+    await page.locator("#org-name").fill(name);
+    await page.getByRole("button", { name: submit, exact: true }).click();
+    await expect(page).toHaveURL(new RegExp(`/${locale}/${segment}/(?!${create}$)[^/]+$`));
+    await expect(page.getByRole("heading", { level: 1, name })).toBeVisible();
+
+    const detail = new URL(page.url()).pathname;
+    await page.goto(`${detail}/${edit}`);
+    await expect(page.locator("#org-name")).toHaveValue(name);
+    await page.locator("#org-name").fill(renamed);
+    await page.locator('button[type="submit"]').click();
+    await expect(page.getByRole("heading", { level: 1, name: renamed })).toBeVisible();
+    await page.goto(`${detail}/${edit}`);
+    await page.locator("#org-name").fill("Unsaved value");
+    await page.getByRole("link", { name: locale === "en" ? "Cancel" : "Abbrechen" }).click();
+    await expect(page.getByRole("heading", { level: 1, name: renamed })).toBeVisible();
+    await context.close();
+  });
+}

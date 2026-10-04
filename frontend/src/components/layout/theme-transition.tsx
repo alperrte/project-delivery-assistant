@@ -62,7 +62,7 @@ const BODIES = {
   },
   dark: {
     Icon: Moon,
-    className: "text-sky-100 drop-shadow-[0_0_14px_rgb(47_208_245/0.6)]",
+    className: "text-(--theme-moon) drop-shadow-[0_0_14px_rgb(47_208_245/0.6)]",
     halo: "rgb(47 208 245 / 0.26)",
   },
 } as const;

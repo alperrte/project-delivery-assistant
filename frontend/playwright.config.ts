@@ -2,7 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./e2e",
-  globalSetup: "./e2e/global-setup.ts",
+  globalSetup: process.env.E2E_REUSE_AUTH === "1" ? undefined : "./e2e/global-setup.ts",
   timeout: 60_000,
   expect: { timeout: 10_000 },
   fullyParallel: false,

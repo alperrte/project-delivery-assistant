@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useChat } from "../chat-provider";
 import { ChatDock } from "./chat-dock";
 import { ChatPanel } from "./chat-panel";
@@ -12,6 +12,20 @@ import { ChatPanel } from "./chat-panel";
 export function ChatRoot() {
   const { mode, projectId } = useChat();
   const full = !!projectId && mode === "full";
+  const returnFocus = useRef<HTMLElement | null>(null);
+  const previousMode = useRef(mode);
+
+  useEffect(() => {
+    if (mode === "full" && previousMode.current === "closed") {
+      returnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    }
+    if (mode === "closed" && previousMode.current !== "closed") {
+      const target = returnFocus.current;
+      if (target?.isConnected) target.focus();
+      returnFocus.current = null;
+    }
+    previousMode.current = mode;
+  }, [mode]);
 
   useEffect(() => {
     if (!full) return;

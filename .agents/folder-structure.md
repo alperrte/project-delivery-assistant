@@ -74,3 +74,10 @@ Squad Service kodu `squad/api`, `squad/application/service`, `squad/domain/entit
 - Rotalar: `frontend/src/app/(app)/projects/[slug]/{tasks,sprints,labels}/**` ve `frontend/src/app/(app)/tasks/page.tsx`.
 - `frontend/src/components/layout/tasks-nav-link.tsx`: sidebar'daki Görevler bağlantısı ve rozeti.
 - `frontend/e2e/09-tasks.spec.ts`: görev yönetimi E2E.
+
+## Yerelleştirilmiş frontend rota sınırı (2026-10-04)
+
+- `frontend/src/i18n/routing.ts`: TR/EN/DE sayfa rota tablosu, `buildPath`/`matchPath`/`switchLocale`.
+- `frontend/src/i18n/navigation.tsx`: yerelleştirilmiş Link/router ve mantıksal pathname yardımcıları.
+- `frontend/src/proxy.ts`: canonical 308, oturum ipucu kontrolü ve mevcut App Router ağacına rewrite.
+- `frontend/e2e/localized-routing.spec.ts`: URL, dil, eski bookmark, 404 ve metadata regresyonu.

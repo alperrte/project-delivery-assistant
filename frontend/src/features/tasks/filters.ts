@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "@/i18n/navigation";
 import { TASK_PRIORITIES, TASK_STATUSES } from "./types";
 import type { SortDirection, TaskListParams, TaskPriority, TaskSortField, TaskStatus } from "./types";
 

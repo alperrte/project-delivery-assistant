@@ -141,7 +141,7 @@ for (const width of [1440, 1920]) {
   test("larger existing navbar logo preserves alignment: " + width, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     await page.goto("/");
-    const brand = page.locator('header > a[href="/"]').first();
+    const brand = page.locator('header > a[href="/tr"]').first();
     await expect(brand).toHaveCSS("width", "110px");
     await expect(page.locator("body > div header").first()).toHaveCSS("min-height", "88px");
     await expect(brand.locator("span:visible")).toHaveCSS("max-width", "110px");
@@ -163,7 +163,7 @@ test("demo cannot take focus, intercept shortcuts, or submit a backend mutation"
   await expect(page.locator('[data-pda-demo-stage="project"] form button[type=submit]')).not.toBeDisabled();
   await page.waitForTimeout(300);
   expect(requests).toEqual([]);
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/tr");
   expect(await page.locator(".app-shell").count()).toBe(0);
   await expect(page.locator("#landing-main")).toBeVisible();
 });

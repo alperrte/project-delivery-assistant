@@ -69,7 +69,7 @@ export async function createOrganization(page: Page, name: string) {
   await page.locator("#org-name").fill(name);
   await page.getByRole("button", { name: /^Oluştur$/ }).click();
   // Creating opens the new organization's own page.
-  await expect(page).toHaveURL(/\/organizations\/(?!new$)[^/]+$/, { timeout: 10_000 });
+  await expect(page).toHaveURL(/\/tr\/organizasyonlar\/(?!yeni$)[^/]+$/, { timeout: 10_000 });
 }
 
 /** Creates a project and returns its slug, parsed from the post-create redirect URL. */
@@ -92,9 +92,28 @@ export async function createProject(
 
   await page.getByRole("button", { name: /^Projeyi oluştur$/ }).click();
   // The create page itself is `/projects/new`, so the new project is the first detail URL that is not "new".
-  await expect(page).toHaveURL(/\/projects\/(?!new$)[^/]+$/, { timeout: 15_000 });
+  await expect(page).toHaveURL(/\/tr\/projeler\/(?!yeni$)[^/]+$/, { timeout: 15_000 });
   const url = new URL(page.url());
   return url.pathname.split("/").pop()!;
+}
+
+/** Finds this project's card even when a reused E2E account has several pages of projects. */
+export async function openProjectListPage(page: Page, slug: string) {
+  const project = (await api(page, "GET", `/projects/by-slug/${slug}`)).json as { id: string };
+  let pageIndex = 0;
+  let totalPages = 1;
+  while (pageIndex < totalPages) {
+    const result = await api(page, "GET", `/projects?page=${pageIndex}&size=12`);
+    expect(result.status).toBe(200);
+    const data = result.json as { content: { id: string }[]; totalPages: number };
+    if (data.content.some((item) => item.id === project.id)) {
+      await page.goto(pageIndex === 0 ? "/projects" : `/projects?page=${pageIndex + 1}`);
+      return;
+    }
+    totalPages = data.totalPages;
+    pageIndex += 1;
+  }
+  throw new Error(`Created project ${slug} was not returned by the project list`);
 }
 
 /** Creates a team through the full-page form and returns its id, parsed from the post-create redirect. */
@@ -102,7 +121,7 @@ export async function createTeam(page: Page, slug: string, name: string): Promis
   await page.goto(`/projects/${slug}/teams/new`);
   await page.locator("#team-name").fill(name);
   await page.getByRole("button", { name: /^Ekibi oluştur$/ }).click();
-  await expect(page).toHaveURL(new RegExp(`/projects/${slug}/teams/(?!new$)[^/]+$`), { timeout: 15_000 });
+  await expect(page).toHaveURL(new RegExp(`/tr/projeler/${slug}/ekipler/(?!yeni$)[^/]+$`), { timeout: 15_000 });
   return new URL(page.url()).pathname.split("/").pop()!;
 }
 

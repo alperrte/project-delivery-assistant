@@ -257,9 +257,9 @@ if (Get-NetTCPConnection -LocalPort $FrontendPort -State Listen -ErrorAction Sil
     Fail "Frontend port $FrontendPort is in use; stop the existing server before pre-push."
 }
 $script:FrontendTestServer = Start-Process -FilePath (Get-Command node).Source `
-    -ArgumentList @("node_modules/next/dist/bin/next", "start", "--hostname", "127.0.0.1", "--port", $FrontendPort) `
+    -ArgumentList @("node_modules/next/dist/bin/next", "start", "--hostname", "localhost", "--port", $FrontendPort) `
     -WorkingDirectory (Get-Location).Path -WindowStyle Hidden -PassThru
-Wait-Http -Url "http://localhost:$FrontendPort" -TimeoutSeconds 60
+Wait-Http -Url "http://localhost:$FrontendPort/tr" -TimeoutSeconds 60
 
 # Optional Playwright / E2E.
 # This becomes mandatory automatically when package.json contains test:e2e.
@@ -295,7 +295,7 @@ Wait-Http -Url "http://localhost:$BackendPort/actuator/health" -TimeoutSeconds 1
 
 Write-Host ""
 Write-Host "Frontend bekleniyor..." -ForegroundColor Cyan
-Wait-Http -Url "http://localhost:$FrontendPort" -TimeoutSeconds 120
+Wait-Http -Url "http://localhost:$FrontendPort/tr" -TimeoutSeconds 120
 
 if ($script:FrontendTestServer -and -not $script:FrontendTestServer.HasExited) {
     Stop-Process -Id $script:FrontendTestServer.Id -Force -ErrorAction SilentlyContinue
