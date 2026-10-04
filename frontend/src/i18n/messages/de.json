@@ -251,6 +251,7 @@
         }
       },
       "logo": {
+        "empty": "Die Logodatei darf nicht leer sein.",
         "label": "Logo",
         "hint": "PNG, JPEG oder WebP, höchstens 512 KB. Ohne Logo wird der erste Buchstabe des Namens verwendet.",
         "choose": "Logo hochladen",
@@ -477,6 +478,20 @@
       "tagline": "Slogan",
       "taglinePlaceholder": "Beschreiben Sie das Projekt in einem Satz",
       "type": "Projektart",
+      "logo": {
+        "label": "Projektlogo",
+        "hint": "PNG, JPEG oder WebP, bis zu 512 KB. Änderungen werden sofort gespeichert.",
+        "statusSet": "Dieses Projekt hat ein Logo.",
+        "statusNone": "Noch kein Logo. Der erste Buchstabe des Projekts wird angezeigt.",
+        "choose": "Logo hochladen",
+        "change": "Logo ändern",
+        "remove": "Logo entfernen",
+        "cancel": "Abbrechen",
+        "removeConfirmTitle": "Projektlogo entfernen?",
+        "removeConfirmDescription": "Das Logo wird gelöscht und durch den ersten Buchstaben des Projekts ersetzt.",
+        "uploaded": "Projektlogo aktualisiert.",
+        "removed": "Projektlogo entfernt."
+      },
       "banner": {
         "label": "Titelbild",
         "hint": "PNG, JPEG oder WebP, höchstens 2 MB. Wirkt am besten im Format 4:1 (z. B. 1600×400); das Bild wird zugeschnitten.",
@@ -494,6 +509,10 @@
         "tooLarge": "Das Titelbild darf höchstens 2 MB groß sein."
       },
       "sections": {
+        "logo": {
+          "title": "Projektlogo",
+          "description": "Wird auf der Projektkarte, im Kopfbereich und im Gruppenchat angezeigt."
+        },
         "banner": {
           "title": "Titelbild",
           "description": "Erscheint über der Projektkarte in der Projektliste."

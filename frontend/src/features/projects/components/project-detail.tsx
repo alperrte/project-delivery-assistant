@@ -15,10 +15,11 @@ import { InvitationsPage } from "@/features/invitations/components/invitations-p
 import { TeamsPage } from "@/features/squads/components/teams-page";
 import { CriteriaList } from "@/features/criteria/components/criteria-list";
 import { RepositorySettings } from "@/features/repository/components/repository-settings";
-import { projectsApi } from "../api";
+import { projectsApi, projectLogoSource } from "../api";
 import { projectSection, projectSectionHref, type ProjectSection } from "../project-sections";
 import { useCurrentMember } from "../hooks/use-current-member";
 import { projectStatusBadgeClass, projectPriorityBadgeClass } from "../status-colors";
+import { ProjectMark } from "./project-mark";
 import { ProjectOverview } from "./project-overview";
 import { ProjectSettingsForm } from "./project-settings-form";
 
@@ -55,8 +56,8 @@ export function ProjectDetail({ slug }: { slug: string }) {
     <Tabs value={section} className="project-workspace min-w-0">
         <div className="min-w-0 space-y-6">
           <div className="flex flex-wrap items-start gap-4 sm:gap-5">
-            <div aria-hidden="true" className="grid size-14 shrink-0 place-items-center rounded-xl border border-primary/30 bg-primary/10 font-heading text-xl font-semibold text-primary sm:size-16">
-              {project.name.slice(0, 1).toLocaleUpperCase(locale)}
+            <div aria-hidden="true" data-testid="project-header-mark" className="grid size-14 shrink-0 place-items-center rounded-xl border border-primary/30 bg-primary/10 font-heading text-xl font-semibold text-primary sm:size-16">
+              <ProjectMark name={project.name} src={projectLogoSource(project)} />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-x-3 gap-y-2">

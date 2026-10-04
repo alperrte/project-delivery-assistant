@@ -11,11 +11,14 @@ import {
   type ReactNode,
 } from "react";
 import { usePathname } from "@/i18n/navigation";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { useSession } from "@/features/auth/hooks/use-session";
-import { projectLogoUrl, projectsApi } from "@/features/projects/api";
+import { projectLogoSource } from "@/features/projects/api";
+import { useSelectedProject } from "@/features/projects/hooks/use-selected-project";
+import type { Project } from "@/features/projects/types";
+import { ApiError } from "@/lib/api/client";
 import { errorKey } from "@/lib/api/error-message";
 import { chatApi } from "./api";
 import {
@@ -51,15 +54,12 @@ export function draftKey(active: ActiveConversation): string {
   return active.kind === "group" ? "group" : `direct:${active.peerId}`;
 }
 
-/** How long a "go to the project, then open the chat" request from the sidebar stays valid. */
-const PENDING_OPEN_MS = 10_000;
-
 type State = {
-  /** The project route the chat belongs to; undefined outside project pages. */
+  /** The selected workspace project, independent of the current page. */
   slug?: string;
+  ownerKey?: string;
   mode: ChatMode;
   active: ActiveConversation | null;
-  pendingOpenSlug?: string;
   /** Messages being sent or failed, by conversation id. */
   outbox: Record<string, PendingMessage[]>;
 };
@@ -67,9 +67,7 @@ type State = {
 const initialState: State = { mode: "closed", active: null, outbox: {} };
 
 type Action =
-  | { type: "context"; slug?: string }
-  | { type: "requestOpen"; slug: string }
-  | { type: "clearPending" }
+  | { type: "context"; slug?: string; ownerKey: string }
   | { type: "open" }
   | { type: "mode"; mode: ChatMode }
   | { type: "select"; active: ActiveConversation }
@@ -81,23 +79,7 @@ type Action =
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
-    case "context": {
-      if (action.slug === state.slug) return state;
-      // A different project (or none): nothing of the previous one may carry over, and it closes.
-      const wanted = action.slug !== undefined && state.pendingOpenSlug === action.slug;
-      const keepPending = action.slug === undefined && state.pendingOpenSlug !== undefined;
-      return {
-        ...initialState,
-        slug: action.slug,
-        mode: wanted ? "full" : "closed",
-        active: wanted ? { kind: "group" } : null,
-        pendingOpenSlug: keepPending ? state.pendingOpenSlug : undefined,
-      };
-    }
-    case "requestOpen":
-      return { ...state, pendingOpenSlug: action.slug };
-    case "clearPending":
-      return state.pendingOpenSlug === undefined ? state : { ...state, pendingOpenSlug: undefined };
+    case "context": return { ...initialState, slug: action.slug, ownerKey: action.ownerKey };
     case "open":
       if (!state.slug) return state;
       return { ...state, mode: "full", active: state.active ?? { kind: "group" } };
@@ -147,12 +129,12 @@ function reducer(state: State, action: Action): State {
 type ViewState = { conversationId: string | null; atBottom: boolean };
 
 type ChatContextValue = {
-  /** The project the chat works on: the project of the current route. Undefined outside project pages. */
+  /** The selected workspace project. Undefined while resolving or when access is unavailable. */
   projectId?: string;
   /** The project's own name and logo: the project group conversation is shown under them. Undefined while loading. */
   projectName?: string;
   projectLogoSrc: string | null;
-  routeSlug?: string;
+  contextSlug?: string;
   mode: ChatMode;
   active: ActiveConversation | null;
   activeConversationId?: string;
@@ -169,8 +151,6 @@ type ChatContextValue = {
   refetchMembers: () => void;
   openingDirect: boolean;
   open: () => void;
-  /** From outside the project's pages: go to the project first, then open. */
-  requestOpen: (slug: string) => void;
   minimize: () => void;
   expandCompact: () => void;
   expandFull: () => void;
@@ -197,39 +177,35 @@ export function useChat(): ChatContextValue {
 }
 
 /**
- * The chat of the project the user is in. It lives in the app shell, so it survives navigation between the project's
- * pages: a minimized chat stays where it is while the user moves from Tasks to the Calendar. Everything is keyed to
- * the route's project; another project (or leaving project pages) resets and closes it, so nothing leaks across
- * projects. Data comes from TanStack Query, the live part from one STOMP socket that only exists while a project is
- * the context.
+ * One chat for the selected workspace project. The selection is shared with the sidebar and calendar. Only an
+ * account/project change resets its state and lifetime; page components stay mounted while selection resolves.
  */
-export function ChatProvider({ children }: { children: ReactNode }) {
-  const te = useTranslations("errors");
+export function ChatProvider({ children, disabled = false }: { children: ReactNode; disabled?: boolean }) {
   const pathname = usePathname();
   const routeSlug = chatRouteSlug(pathname);
-  const queryClient = useQueryClient();
   const { data: user } = useSession();
-  const selfId = user?.id;
-  const [state, dispatch] = useReducer(reducer, initialState);
+  const { slug, project, error } = useSelectedProject(routeSlug);
+  const unavailable = error instanceof ApiError && (error.status === 403 || error.status === 404);
+  const contextSlug = disabled || unavailable ? undefined : slug;
+  return (
+    <ProjectChatProvider ownerKey={`${user?.id ?? "none"}:${contextSlug ?? "none"}`} slug={contextSlug}
+      project={contextSlug && project?.slug === contextSlug ? project : undefined} selfId={disabled ? undefined : user?.id}>
+      {children}
+    </ProjectChatProvider>
+  );
+}
 
-  // Adjusting state while rendering (not in an effect) so no frame ever shows the old project's chat.
-  if (state.slug !== routeSlug) dispatch({ type: "context", slug: routeSlug });
-
-  // A "go to the project, then open" request that never arrived (navigation cancelled) must not fire much later.
-  useEffect(() => {
-    if (!state.pendingOpenSlug) return;
-    const timer = window.setTimeout(() => dispatch({ type: "clearPending" }), PENDING_OPEN_MS);
-    return () => window.clearTimeout(timer);
-  }, [state.pendingOpenSlug]);
-
-  const { data: project } = useQuery({
-    queryKey: ["projects", "by-slug", routeSlug],
-    queryFn: () => projectsApi.bySlug(routeSlug!),
-    enabled: !!routeSlug,
-  });
-  const projectId = routeSlug ? project?.id : undefined;
-  const projectName = routeSlug ? project?.name : undefined;
-  const projectLogoSrc = routeSlug && project && project.logoVersion != null ? projectLogoUrl(project.id, project.logoVersion) : null;
+function ProjectChatProvider({ children, slug, project, selfId, ownerKey }: {
+  children: ReactNode; slug?: string; project?: Project; selfId?: string; ownerKey: string;
+}) {
+  const te = useTranslations("errors");
+  const queryClient = useQueryClient();
+  const [state, dispatch] = useReducer(reducer, { ...initialState, slug, ownerKey });
+  // React rerenders this owner before committing: B never receives A's visible state. Children keep their identity.
+  if (state.ownerKey !== ownerKey) dispatch({ type: "context", slug, ownerKey });
+  const projectId = project?.id;
+  const projectName = project?.name;
+  const projectLogoSrc = project ? projectLogoSource(project) : null;
   const shown = state.mode !== "closed";
 
   // ---- refs the socket callbacks read (they must not change identity) ----------------------------------------------
@@ -239,6 +215,13 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const viewRef = useRef<ViewState>({ conversationId: null, atBottom: false });
   const draftsRef = useRef<Record<string, string>>({});
   const triggerRef = useRef<HTMLElement | null>(null);
+  // Each account/project transition is a distinct generation, including a quick A -> B -> A trip.
+  const lifetimeRef = useRef({ active: true });
+  useEffect(() => {
+    const lifetime = { active: true };
+    lifetimeRef.current = lifetime;
+    return () => { lifetime.active = false; };
+  }, [ownerKey]);
   useEffect(() => {
     projectIdRef.current = projectId;
     selfIdRef.current = selfId;
@@ -251,17 +234,17 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     return () => {
       draftsRef.current = {};
       viewRef.current = { conversationId: null, atBottom: false };
-      queryClient.removeQueries({ queryKey: chatKeys.messagesRoot(projectId) });
-      queryClient.removeQueries({ queryKey: chatKeys.members(projectId) });
+      void queryClient.cancelQueries({ queryKey: chatKeys.all(projectId) });
+      queryClient.removeQueries({ queryKey: chatKeys.all(projectId) });
     };
-  }, [projectId, queryClient]);
+  }, [projectId, queryClient, ownerKey]);
 
   // ---- real-time ---------------------------------------------------------------------------------------------------
   const handleEvent = useCallback(
     (event: ChatSocketEvent) => {
       const pid = projectIdRef.current;
       // Another project's event (a stale subscription, a bug, a hostile frame) never touches this project's state.
-      if (!pid || event.projectId !== pid) return;
+      if (!lifetimeRef.current.active || !pid || event.projectId !== pid) return;
       if (event.type === "READ") {
         applyReadToOverview(queryClient, pid, event.conversationId);
         return;
@@ -290,7 +273,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   /** Whatever happened while the socket was down is fetched over REST: no message is lost on a reconnect. */
   const handleConnect = useCallback((reconnect: boolean) => {
     const pid = projectIdRef.current;
-    if (!pid) return;
+    const lifetime = lifetimeRef.current;
+    if (!lifetime.active || !pid) return;
     if (reconnect) void queryClient.invalidateQueries({ queryKey: chatKeys.overview(pid) });
     const loaded = queryClient.getQueriesData<MessagePages>({ queryKey: chatKeys.messagesRoot(pid) });
     void (async () => {
@@ -306,7 +290,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         try {
           for (let round = 0; round < 20 && cursor; round += 1) {
             const page = await chatApi.messages(pid, conversationId, { after: cursor, limit: 100 });
-            if (projectIdRef.current !== pid) return;
+            if (!lifetime.active || projectIdRef.current !== pid) return;
             appendMessages(queryClient, pid, conversationId, page.messages);
             if (!page.hasMore || page.messages.length === 0) break;
             cursor = page.messages[page.messages.length - 1].id;
@@ -318,13 +302,13 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     })();
   }, [queryClient]);
 
-  const connection = useChatSocket({ enabled: !!projectId, onEvent: handleEvent, onConnect: handleConnect });
+  const connection = useChatSocket({ contextKey: projectId && selfId ? `${selfId}:${projectId}` : undefined, onEvent: handleEvent, onConnect: handleConnect });
 
   // ---- data --------------------------------------------------------------------------------------------------------
   const overviewQuery = useChatOverview(projectId, { poll: connection !== "connected" });
   const membersQuery = useChatMembers(projectId, shown);
   const openDirect = useOpenDirect(projectId);
-  const markReadMutation = useMarkRead(projectId);
+  const markReadMutation = useMarkRead(projectId, ownerKey);
   const overview = overviewQuery.data;
 
   const active = state.active;
@@ -347,10 +331,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     if (document.activeElement instanceof HTMLElement) triggerRef.current = document.activeElement;
     dispatch({ type: "open" });
   }, []);
-  const requestOpen = useCallback((slug: string) => {
-    if (document.activeElement instanceof HTMLElement) triggerRef.current = document.activeElement;
-    dispatch({ type: "requestOpen", slug });
-  }, []);
   const minimize = useCallback(() => dispatch({ type: "mode", mode: "bar" }), []);
   const expandCompact = useCallback(() => dispatch({ type: "mode", mode: "compact" }), []);
   const expandFull = useCallback(() => dispatch({ type: "mode", mode: "full" }), []);
@@ -369,9 +349,18 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         return;
       }
       dispatch({ type: "select", active: { kind: "direct", peerId } });
+      const lifetime = lifetimeRef.current;
       openDirect.mutate(peerId, {
-        onSuccess: (conversation) => dispatch({ type: "resolveDirect", peerId, conversationId: conversation.id }),
+        onSuccess: (conversation) => {
+          if (!lifetime.active) return;
+          dispatch({ type: "resolveDirect", peerId, conversationId: conversation.id });
+          if (projectId) {
+            void queryClient.invalidateQueries({ queryKey: chatKeys.overview(projectId) });
+            void queryClient.invalidateQueries({ queryKey: chatKeys.members(projectId) });
+          }
+        },
         onError: (error) => {
+          if (!lifetime.active) return;
           toast.error(te(errorKey(error)));
           dispatch({ type: "select", active: { kind: "group" } });
         },
@@ -379,7 +368,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     },
     // `openDirect.mutate` is stable; `te` changes only with the locale.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [openDirect.mutate, te],
+    [openDirect.mutate, te, projectId, queryClient],
   );
 
   // ---- drafts, sending, reading ------------------------------------------------------------------------------------
@@ -392,15 +381,16 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const deliver = useCallback(
     async (conversationId: string, clientId: string, content: string) => {
       const pid = projectIdRef.current;
-      if (!pid) return;
+      const lifetime = lifetimeRef.current;
+      if (!lifetime.active || !pid) return;
       try {
         const message = await chatApi.send(pid, conversationId, content);
-        if (projectIdRef.current !== pid) return;
+        if (!lifetime.active || projectIdRef.current !== pid) return;
         appendMessages(queryClient, pid, conversationId, [message]);
         applyMessageToOverview(queryClient, pid, message, { mine: true, viewing: true });
         dispatch({ type: "outboxRemove", conversationId, clientId });
       } catch (error) {
-        if (projectIdRef.current !== pid) return;
+        if (!lifetime.active || projectIdRef.current !== pid) return;
         dispatch({
           type: "outboxPatch",
           conversationId,
@@ -463,7 +453,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const value = useMemo<ChatContextValue>(
     () => ({
       projectId,
-      routeSlug,
+      contextSlug: slug,
       projectName,
       projectLogoSrc,
       mode: state.mode,
@@ -480,7 +470,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       refetchMembers: () => void membersQuery.refetch(),
       openingDirect: openDirect.isPending,
       open,
-      requestOpen,
       minimize,
       expandCompact,
       expandFull,
@@ -499,8 +488,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     // The query objects change identity every render; their data/status are what matters.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
-      projectId, projectName, projectLogoSrc, routeSlug, state.mode, active, activeConversationId, activePeer, connection, overview,
-      overviewQuery.status, membersQuery.data, membersQuery.status, openDirect.isPending, open, requestOpen,
+      projectId, projectName, projectLogoSrc, slug, state.mode, active, activeConversationId, activePeer, connection, overview,
+      overviewQuery.status, membersQuery.data, membersQuery.status, openDirect.isPending, open,
       minimize, expandCompact, expandFull, close, selectGroup, selectPeer, getDraft, setDraft, outboxFor, send,
       retry, discard, reportView, markRead,
     ],

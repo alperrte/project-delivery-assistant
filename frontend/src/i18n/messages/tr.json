@@ -251,6 +251,7 @@
         }
       },
       "logo": {
+        "empty": "Logo dosyası boş olamaz.",
         "label": "Logo",
         "hint": "PNG, JPEG veya WebP, en fazla 512 KB. Logo yoksa adın ilk harfi kullanılır.",
         "choose": "Logo yükle",
@@ -477,6 +478,20 @@
       "tagline": "Slogan",
       "taglinePlaceholder": "Projeyi tek cümleyle anlatın",
       "type": "Proje türü",
+      "logo": {
+        "label": "Proje logosu",
+        "hint": "PNG, JPEG veya WebP, en fazla 512 KB. Değişiklikler hemen kaydedilir.",
+        "statusSet": "Bu proje için bir logo yüklü.",
+        "statusNone": "Henüz logo yok. Projenin ilk harfi gösterilir.",
+        "choose": "Logo yükle",
+        "change": "Logo değiştir",
+        "remove": "Logo kaldır",
+        "cancel": "Vazgeç",
+        "removeConfirmTitle": "Proje logosu kaldırılsın mı?",
+        "removeConfirmDescription": "Logo silinir ve yerine projenin ilk harfi gösterilir.",
+        "uploaded": "Proje logosu güncellendi.",
+        "removed": "Proje logosu kaldırıldı."
+      },
       "banner": {
         "label": "Kapak görseli",
         "hint": "PNG, JPEG veya WebP, en fazla 2 MB. 4:1 oranında (ör. 1600×400) en iyi görünür; görsel kırpılarak sığdırılır.",
@@ -494,6 +509,10 @@
         "tooLarge": "Kapak görseli en fazla 2 MB olabilir."
       },
       "sections": {
+        "logo": {
+          "title": "Proje logosu",
+          "description": "Proje kartında, başlıkta ve sohbet grubunda görünür."
+        },
         "banner": {
           "title": "Kapak görseli",
           "description": "Projeler listesinde proje kartının üstünde görünür."

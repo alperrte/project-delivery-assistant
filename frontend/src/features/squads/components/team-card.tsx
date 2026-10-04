@@ -6,7 +6,7 @@ import { ArrowRight, CalendarBlank, PencilSimple, TreeStructure } from "@phospho
 import { AvatarStack } from "@/components/common/avatar-stack";
 import { EntityCard, EntityCardFooter, EntityCardLink, EntityCardSection } from "@/components/common/entity-card";
 import { buttonVariants } from "@/components/ui/button";
-import { ProjectMark } from "@/features/projects/components/project-card";
+import { ProjectMark } from "@/features/projects/components/project-mark";
 import type { Project } from "@/features/projects/types";
 import { cn } from "@/lib/utils";
 import { projectLogoSrc } from "../hooks";

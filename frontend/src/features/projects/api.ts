@@ -33,6 +33,11 @@ export function projectLogoUrl(projectId: string, logoVersion: number): string {
   return apiUrl(`/projects/${projectId}/logo?v=${logoVersion}`);
 }
 
+/** Null-safe source shared by project cards, settings, header and chat. */
+export function projectLogoSource(project: Pick<Project, "id" | "logoVersion">): string | null {
+  return project.logoVersion == null ? null : projectLogoUrl(project.id, project.logoVersion);
+}
+
 /** Banner URL for `<img>`; `bannerVersion` busts the one-year immutable cache when the banner changes. */
 export function projectBannerUrl(projectId: string, bannerVersion: number): string {
   return apiUrl(`/projects/${projectId}/banner?v=${bannerVersion}`);
