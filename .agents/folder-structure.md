@@ -105,3 +105,7 @@ Squad Service kodu `squad/api`, `squad/application/service`, `squad/domain/entit
 - `features/projects/components/task-model-setting.tsx`: ilk kurucu seçimi ve proje ayarlarındaki aynı tercih kontrolü.
 - `features/tasks/schemas.ts`: yalnız görünür türün doğrulanması, gönderilmeyen gelişmiş alanların korunması, değişmeyen atama/havuz/deadline koruması.
 - `frontend/e2e/21-task-models.spec.ts`: proje politikası, form/taslak, detay, yorumlar, URL filtresi, dönüşüm/veri koruma, yetki ve responsive/i18n kontrolleri.
+
+## Chat V55 geni?lemesi (2026-10-05)
+
+Backend: application/service `ChatReactionService`, `ChatReactionViewReader`, `ChatReactionRateLimiter`; domain/enums `ChatReactionCode`, domain/entity `ChatMessageReaction`; infrastructure/repository `ChatReactionRepository`; V55 migration, `chat/integration/ChatReplyReactionMigrationTest`. Frontend chat: `reactions.ts`, `reaction-resync.ts`, `pending.ts`, `emoji-catalog.ts`; components `reply-preview`, `message-actions`, `reaction-chips`, `emoji-picker`. Kabul edilen workspace link intent `components/layout/workspace-link.tsx`. E2E `chat-cache.spec.ts`, `chat-replies-reactions.spec.ts`, `chat-responsive.spec.ts`; navigation/renewal mevcut `17-project-chat.spec.ts`.

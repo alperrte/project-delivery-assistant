@@ -81,6 +81,9 @@ const CODE_KEYS: Record<string, string> = {
       "CHAT_RATE_LIMITED",
       "CHAT_INVALID_REQUEST",
       "CHAT_CONFLICT",
+      "CHAT_REPLY_NOT_FOUND",
+      "CHAT_REACTION_INVALID",
+      "CHAT_REACTION_RATE_LIMITED",
     ].map((code) => [code, code]),
   ),
 };

@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "@/i18n/navigation";
+import Link from "./workspace-link";
 import { usePathname, useSearchParams } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { ChatNavItem } from "@/features/chat/components/chat-nav-item";

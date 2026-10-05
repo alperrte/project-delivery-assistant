@@ -114,7 +114,10 @@
     "TASK_MODE_NOT_ALLOWED": "Advanced task creation is disabled in this project. Existing data is preserved. You can edit basic fields, status and comments; advanced fields are read-only.",
     "TASK_SIMPLE_FIELDS_INVALID": "Simple tasks cannot contain advanced fields.",
     "TASK_MODE_CONVERSION_BLOCKED": "A task with advanced data cannot become simple. Remove advanced data from the relevant sections first; nothing is deleted automatically.",
-    "PROJECT_TASK_MODE_NOT_CONFIGURED": "The project founder must choose a preference before the first task can be created."
+    "PROJECT_TASK_MODE_NOT_CONFIGURED": "The project founder must choose a preference before the first task can be created.",
+    "CHAT_REPLY_NOT_FOUND": "The quoted message was not found in this conversation.",
+    "CHAT_REACTION_INVALID": "This reaction is not supported.",
+    "CHAT_REACTION_RATE_LIMITED": "Too many reaction attempts. Please wait and try again."
   },
   "app": {
     "nav": {
@@ -2097,6 +2100,48 @@
     "dock": {
       "label": "Minimized messaging",
       "open": "Open messaging"
+    },
+    "reply": {
+      "action": "Reply",
+      "senderUnknown": "Unknown user",
+      "context": "Replying to {name}",
+      "cancel": "Cancel reply",
+      "unavailable": "Quoted message unavailable."
+    },
+    "emoji": {
+      "action": "Choose emoji",
+      "close": "Close emoji picker",
+      "names": {
+        "SMILE": "Smile",
+        "GRIN": "Grinning face",
+        "LAUGH": "Laugh",
+        "ROFL": "Rolling laughter",
+        "BLUSH": "Smiling face",
+        "LOVE": "Heart eyes",
+        "PARTY": "Party face",
+        "COOL": "Cool",
+        "THINK": "Thinking",
+        "SURPRISED": "Surprised",
+        "SAD": "Sad",
+        "CRY": "Crying",
+        "SWEAT": "Sweating smile",
+        "SLEEP": "Sleepy",
+        "THUMBS_UP": "Thumbs up",
+        "THUMBS_DOWN": "Thumbs down",
+        "CLAP": "Clap",
+        "RAISE": "Raised hands",
+        "THANKS": "Thanks",
+        "HEART": "Heart",
+        "FIRE": "Fire",
+        "CELEBRATE": "Celebration",
+        "CHECK": "Check",
+        "ROCKET": "Rocket"
+      }
+    },
+    "reactions": {
+      "action": "React",
+      "chip": "{emoji}, {count} reactions",
+      "error": "Reaction could not be saved."
     }
   },
   "siteFooter": {

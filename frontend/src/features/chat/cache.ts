@@ -1,6 +1,7 @@
 import type { InfiniteData, QueryClient } from "@tanstack/react-query";
 import { previewOf } from "./limits";
-import type { ChatConversation, ChatMessage, ChatMessagePage, ChatOverview } from "./types";
+import type { ChatConversation, ChatMessage, ChatMessagePage, ChatOverview, ReactionSnapshot } from "./types";
+import { newerReactionVersion, normalizeChatMessage } from "./reactions";
 
 /** Query keys of one project's chat. Everything is nested under the project id, so projects never share state. */
 export const chatKeys = {
@@ -38,11 +39,39 @@ export function appendMessages(queryClient: QueryClient, projectId: string, conv
   queryClient.setQueryData<MessagePages>(chatKeys.messages(projectId, conversationId), (old) => {
     if (!old || old.pages.length === 0) return old;
     const known = new Set(old.pages.flatMap((page) => page.messages.map((message) => message.id)));
-    const fresh = incoming.filter((message) => !known.has(message.id));
-    if (fresh.length === 0) return old;
-    const [newest, ...rest] = old.pages;
+    const fresh = incoming.map(normalizeChatMessage).filter((message) => message.conversationId === conversationId && !known.has(message.id));
+    const updates = new Map(incoming.map(message => [message.id, normalizeChatMessage(message)]));
+    const pages = old.pages.map(page => ({ ...page, messages: page.messages.map(message => {
+      const update = updates.get(message.id);
+      if (!update || update.conversationId !== conversationId) return message;
+      const newer = newerReactionVersion(update.reactionVersion, message.reactionVersion ?? "0");
+      return { ...message, ...update, replyTo: update.replyTo ?? message.replyTo ?? null,
+        reactions: newer ? update.reactions : message.reactions ?? [],
+        reactionVersion: newer ? update.reactionVersion : message.reactionVersion ?? "0" };
+    }) }));
+    const [newest, ...rest] = pages;
     return { ...old, pages: [{ ...newest, messages: [...newest.messages, ...fresh] }, ...rest] };
   });
+}
+
+/** Absolute, personalized snapshots: no counter increments, no phantom messages. */
+export function applyReactionSnapshots(queryClient: QueryClient, projectId: string, conversationId: string, incoming: ReactionSnapshot[]): Set<string> {
+  const key = chatKeys.messages(projectId, conversationId);
+  const old = queryClient.getQueryData<MessagePages>(key);
+  const found = new Set<string>();
+  if (!old) return found;
+  const snapshots = new Map(incoming.map(snapshot => [snapshot.messageId, snapshot]));
+  let changed = false;
+  const pages = old.pages.map(page => ({ ...page, messages: page.messages.map(message => {
+    const snapshot = snapshots.get(message.id);
+    if (!snapshot || message.conversationId !== conversationId) return message;
+    found.add(message.id);
+    if (!newerReactionVersion(snapshot.reactionVersion, message.reactionVersion ?? "0")) return message;
+    changed = true;
+    return { ...message, reactionVersion: snapshot.reactionVersion, reactions: snapshot.reactions };
+  }) }));
+  if (changed) queryClient.setQueryData(key, { ...old, pages });
+  return found;
 }
 
 /** The id of the newest confirmed message of a loaded conversation, the cursor for a reconnect catch-up. */

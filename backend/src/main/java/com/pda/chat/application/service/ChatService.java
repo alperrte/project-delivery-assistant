@@ -68,10 +68,11 @@ public class ChatService {
     private final ChatSendRateLimiter rateLimiter;
     private final ChatDelivery delivery;
     private final Clock clock;
+    private final ChatReactionViewReader reactionViews;
 
     public ChatService(ProjectAccess projects, UserAccounts users, ChatConversationRepository conversations,
                        ChatMessageRepository messages, ChatReadStateRepository readStates,
-                       ChatSendRateLimiter rateLimiter, ChatDelivery delivery, Clock clock) {
+                       ChatSendRateLimiter rateLimiter, ChatDelivery delivery, Clock clock, ChatReactionViewReader reactionViews) {
         this.projects = projects;
         this.users = users;
         this.conversations = conversations;
@@ -80,6 +81,7 @@ public class ChatService {
         this.rateLimiter = rateLimiter;
         this.delivery = delivery;
         this.clock = clock;
+        this.reactionViews = reactionViews;
     }
 
     // ---- listing ------------------------------------------------------------------------------------------------
@@ -201,11 +203,16 @@ public class ChatService {
         if (newestFirst) {
             java.util.Collections.reverse(page);
         }
-        return new MessagePage(messageViews(page), hasMore);
+        return new MessagePage(messageViews(page, actor, conversationId), hasMore);
     }
 
     @Transactional
     public MessageView send(UUID actor, UUID projectId, UUID conversationId, String content) {
+        return send(actor,projectId,conversationId,content,null);
+    }
+
+    @Transactional
+    public MessageView send(UUID actor, UUID projectId, UUID conversationId, String content, UUID replyToMessageId) {
         ChatConversation conversation = accessible(actor, projectId, conversationId);
         if (conversation.getType() == ChatConversationType.DIRECT
                 && !projects.isMember(projectId, conversation.peerOf(actor))) {
@@ -217,13 +224,13 @@ public class ChatService {
         if (!rateLimiter.tryAcquire(actor)) {
             throw ChatException.rateLimited();
         }
-        ChatMessage message = ChatMessage.create(conversation.getId(), actor, content, clock.instant());
-        messages.save(message);
+        if (replyToMessageId != null) messages.findByIdAndConversationId(replyToMessageId,conversationId)
+                .orElseThrow(() -> ChatException.notFound("CHAT_REPLY_NOT_FOUND"));
+        ChatMessage message = ChatMessage.create(conversation.getId(), actor, content, replyToMessageId, clock.instant());
+        messages.saveAndFlush(message);
         conversations.touch(conversation.getId(), message.getCreatedAt());
 
-        UserAccounts.AuthenticatedUser sender = users.findActiveById(actor).orElse(null);
-        MessageView view = new MessageView(message.getId(), conversation.getId(), message.getContent(),
-                message.getCreatedAt(), chatUser(actor, sender));
+        MessageView view = messageViews(List.of(message),actor,conversationId).getFirst();
         Set<UUID> participants = conversation.getType() == ChatConversationType.DIRECT
                 ? Set.of(conversation.getDirectUserLow(), conversation.getDirectUserHigh()) : Set.of();
         ChatMessageSent event = new ChatMessageSent(projectId, conversation.getId(), conversation.getType(),
@@ -252,7 +259,7 @@ public class ChatService {
      * Member of the project AND the conversation belongs to that project AND (for a direct one) the caller is one of
      * its two participants. Everything else is a 404, so a foreign conversation id reveals nothing.
      */
-    private ChatConversation accessible(UUID actor, UUID projectId, UUID conversationId) {
+    ChatConversation accessible(UUID actor, UUID projectId, UUID conversationId) {
         requireMember(actor, projectId);
         ChatConversation conversation = conversations.findByIdAndProjectId(
                         Objects.requireNonNull(conversationId, "conversationId is required"), projectId)
@@ -301,14 +308,27 @@ public class ChatService {
         return counts;
     }
 
-    private List<MessageView> messageViews(List<ChatMessage> page) {
+    private List<MessageView> messageViews(List<ChatMessage> page, UUID actor, UUID conversationId) {
+        if (page.isEmpty()) return List.of();
+        Set<UUID> replyIds = page.stream().map(ChatMessage::getReplyToMessageId).filter(Objects::nonNull)
+                .collect(java.util.stream.Collectors.toSet());
+        Map<UUID,ChatMessage> replies = new HashMap<>();
+        if (!replyIds.isEmpty()) messages.findByIdInAndConversationId(replyIds,conversationId).forEach(message -> replies.put(message.getId(),message));
         Set<UUID> senderIds = new HashSet<>();
         page.forEach(message -> senderIds.add(message.getSenderUserId()));
+        replies.values().forEach(message -> senderIds.add(message.getSenderUserId()));
         Map<UUID, UserAccounts.AuthenticatedUser> accounts = senderIds.isEmpty() ? Map.of()
                 : users.findActiveByIds(senderIds);
-        return page.stream().map(message -> new MessageView(message.getId(), message.getConversationId(),
-                message.getContent(), message.getCreatedAt(),
-                chatUser(message.getSenderUserId(), accounts.get(message.getSenderUserId())))).toList();
+        var snapshots = reactionViews.forActor(conversationId,page.stream().map(ChatMessage::getId).toList(),actor);
+        return page.stream().map(message -> {
+            var parent = replies.get(message.getReplyToMessageId());
+            var quote = parent == null ? null : new ChatViews.ReplyView(parent.getId(),
+                    chatUser(parent.getSenderUserId(),accounts.get(parent.getSenderUserId())),preview(parent.getContent()));
+            var reactions = snapshots.get(message.getId());
+            return new MessageView(message.getId(),message.getConversationId(),message.getContent(),message.getCreatedAt(),
+                    chatUser(message.getSenderUserId(),accounts.get(message.getSenderUserId())),quote,
+                    reactions.reactionVersion(),reactions.reactions());
+        }).toList();
     }
 
     private static ConversationView conversationView(ChatConversation conversation, ChatUser peer, ChatMessage last,
@@ -341,7 +361,7 @@ public class ChatService {
     }
 
     /** Real-time delivery must follow the commit, never precede it (a rolled back message must not be pushed). */
-    private static void afterCommit(Runnable action) {
+    static void afterCommit(Runnable action) {
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override

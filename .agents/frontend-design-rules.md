@@ -239,3 +239,7 @@ Sohbet full/bar/compact tek provider state'idir. Seçili proje aynı kaldığın
 3. Renkleri token sınıflarıyla ver. Yeni token gerekiyorsa `:root` + `.dark` (+ gerekiyorsa `@theme inline`) içine ekle ve bu belgeyi güncelle.
 4. Uygulama içi sayfalarda `--auth-*` token'larını ve auth efektlerini kullanma.
 5. Light, dark, mobil (390 px) ve reduced motion ile Playwright'ta kontrol et.
+
+### Chat reply / reaction / emoji UI (2026-10-05)
+
+Confirmed mesajlarda Reply/React desktop hover/focus-within, mobile 44px kontrollerle eri?ilir. Quote tek seviyeli plain text; reply iptali text tasla??n? silmez. Escape ?nce picker, sonra reply context, sonra mevcut panel davran???n? t?ketir. Payla??lan Base UI popover composer24 Unicode emoji, reaction6 code sunar; native button group, token renkleri, viewport s?n?r?, focus/caret restore. Yeni paket yok. Chips count/mine/aria-pressed g?sterir; server response/WS snapshot esas, additive optimistic delta yok. Navigation eski trigger'a focus ?almaz; inert layout cleanup ile kald?r?l?r.

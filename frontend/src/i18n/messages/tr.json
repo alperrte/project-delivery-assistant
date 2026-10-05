@@ -114,7 +114,10 @@
     "TASK_MODE_NOT_ALLOWED": "Bu projede gelişmiş görev oluşturma kapalı. Mevcut veriler korunuyor; temel alanları, durumu ve yorumları düzenleyebilirsiniz. Gelişmiş alanlar salt okunur.",
     "TASK_SIMPLE_FIELDS_INVALID": "Basit görevde gelişmiş alanlar kullanılamaz.",
     "TASK_MODE_CONVERSION_BLOCKED": "Gelişmiş verileri olan görev basite dönüştürülemez. Önce gelişmiş verileri ilgili bölümlerden kaldırın; hiçbir veri otomatik silinmez.",
-    "PROJECT_TASK_MODE_NOT_CONFIGURED": "İlk görev oluşturulmadan önce projeyi kuran kişinin bu tercihi belirlemesi gerekiyor."
+    "PROJECT_TASK_MODE_NOT_CONFIGURED": "İlk görev oluşturulmadan önce projeyi kuran kişinin bu tercihi belirlemesi gerekiyor.",
+    "CHAT_REPLY_NOT_FOUND": "Yanıtlanan mesaj bu konuşmada bulunamadı.",
+    "CHAT_REACTION_INVALID": "Bu tepki desteklenmiyor.",
+    "CHAT_REACTION_RATE_LIMITED": "Çok sık tepki bıraktınız. Biraz bekleyip tekrar deneyin."
   },
   "app": {
     "nav": {
@@ -2121,6 +2124,48 @@
     "dock": {
       "label": "Küçültülmüş mesajlaşma",
       "open": "Mesajlaşmayı aç"
+    },
+    "reply": {
+      "action": "Yanıtla",
+      "senderUnknown": "Bilinmeyen kullanıcı",
+      "context": "Yanıtlanan mesaj: {name}",
+      "cancel": "Yanıtı iptal et",
+      "unavailable": "Yanıtlanan mesaj kullanılamıyor."
+    },
+    "emoji": {
+      "action": "Emoji seç",
+      "close": "Emoji seçiciyi kapat",
+      "names": {
+        "SMILE": "Gülümseme",
+        "GRIN": "Mutlu yüz",
+        "LAUGH": "Gülmek",
+        "ROFL": "Kahkaha",
+        "BLUSH": "Gülümseyen yüz",
+        "LOVE": "Kalp gözler",
+        "PARTY": "Parti yüzü",
+        "COOL": "Havalı",
+        "THINK": "Düşünceli",
+        "SURPRISED": "Şaşkın",
+        "SAD": "Üzgün",
+        "CRY": "Ağlamak",
+        "SWEAT": "Terleyen gülümseme",
+        "SLEEP": "Uykulu",
+        "THUMBS_UP": "Beğenmek",
+        "THUMBS_DOWN": "Beğenmemek",
+        "CLAP": "Alkış",
+        "RAISE": "Eller havada",
+        "THANKS": "Teşekkür",
+        "HEART": "Kalp",
+        "FIRE": "Ateş",
+        "CELEBRATE": "Kutlama",
+        "CHECK": "Onay",
+        "ROCKET": "Roket"
+      }
+    },
+    "reactions": {
+      "action": "Tepki ver",
+      "chip": "{emoji}, {count} tepki",
+      "error": "Tepki gönderilemedi."
     }
   },
   "siteFooter": {

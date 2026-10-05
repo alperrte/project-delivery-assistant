@@ -8,9 +8,10 @@ import {
   useMemo,
   useReducer,
   useRef,
+  useState,
   type ReactNode,
 } from "react";
-import { usePathname } from "@/i18n/navigation";
+import { usePathname, useSearchParams } from "@/i18n/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -25,6 +26,8 @@ import {
   appendMessages,
   applyMessageToOverview,
   applyReadToOverview,
+  applyReactionSnapshots,
+  flattenMessages,
   chatKeys,
   newestMessageId,
   type MessagePages,
@@ -40,8 +43,18 @@ import type {
   ChatSocketEvent,
   ChatUser,
   PendingMessage,
+  ChatReply,
+  ReactionCode,
 } from "./types";
 import { useChatSocket } from "./use-chat-socket";
+import { ReactionBuffer } from "./reactions";
+import { ReactionSyncQueue, resyncReactions } from "./reaction-resync";
+import { pendingMatches } from "./pending";
+
+function chatLifetime() {
+  return { active: true, messageIds: new Set<string>(), reactions: new ReactionBuffer(), abort: new AbortController(),
+    queue: new ReactionSyncQueue(), resyncs: new Map<string, Promise<void>>() };
+}
 
 /** Project slug of a `/projects/[slug]/...` route; `/projects/new` and the list are not a project. */
 export function chatRouteSlug(pathname: string): string | undefined {
@@ -58,6 +71,7 @@ type State = {
   /** The selected workspace project, independent of the current page. */
   slug?: string;
   ownerKey?: string;
+  pageKey?: string;
   mode: ChatMode;
   active: ActiveConversation | null;
   /** Messages being sent or failed, by conversation id. */
@@ -67,7 +81,8 @@ type State = {
 const initialState: State = { mode: "closed", active: null, outbox: {} };
 
 type Action =
-  | { type: "context"; slug?: string; ownerKey: string }
+  | { type: "context"; slug?: string; ownerKey: string; pageKey: string }
+  | { type: "navigation"; pageKey?: string }
   | { type: "open" }
   | { type: "mode"; mode: ChatMode }
   | { type: "select"; active: ActiveConversation }
@@ -75,11 +90,12 @@ type Action =
   | { type: "outboxAdd"; conversationId: string; pending: PendingMessage }
   | { type: "outboxPatch"; conversationId: string; clientId: string; patch: Partial<PendingMessage> }
   | { type: "outboxRemove"; conversationId: string; clientId: string }
-  | { type: "outboxConsume"; conversationId: string; content: string };
+  | { type: "outboxConsume"; conversationId: string; content: string; replyId?: string | null };
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
-    case "context": return { ...initialState, slug: action.slug, ownerKey: action.ownerKey };
+    case "context": return { ...initialState, slug: action.slug, ownerKey: action.ownerKey, pageKey: action.pageKey };
+    case "navigation": return { ...state, pageKey: action.pageKey ?? state.pageKey, mode: state.mode === "full" ? "closed" : state.mode };
     case "open":
       if (!state.slug) return state;
       return { ...state, mode: "full", active: state.active ?? { kind: "group" } };
@@ -119,7 +135,7 @@ function reducer(state: State, action: Action): State {
       };
     case "outboxConsume": {
       const list = state.outbox[action.conversationId] ?? [];
-      const index = list.findIndex((pending) => pending.status === "sending" && pending.content === action.content);
+      const index = list.findIndex((pending) => pendingMatches(pending, action.content, action.replyId));
       if (index < 0) return state;
       return { ...state, outbox: { ...state.outbox, [action.conversationId]: list.filter((_, i) => i !== index) } };
     }
@@ -155,12 +171,17 @@ type ChatContextValue = {
   expandCompact: () => void;
   expandFull: () => void;
   close: () => void;
+  navigatePage: () => void;
   selectGroup: () => void;
   selectPeer: (peerId: string, conversationId?: string | null) => void;
   getDraft: (key: string) => string;
   setDraft: (key: string, text: string) => void;
+  getReply: (key: string) => ChatReply | null;
+  setReply: (key: string, reply: ChatReply | null) => void;
+  react: (messageId: string, code: ReactionCode, add: boolean) => Promise<void>;
+  reactionPending: (messageId: string, code: ReactionCode) => boolean;
   outboxFor: (conversationId: string | undefined) => PendingMessage[];
-  send: (conversationId: string, text: string) => MessageValidation;
+  send: (conversationId: string, text: string, reply?: ChatReply | null) => MessageValidation;
   retry: (conversationId: string, clientId: string) => void;
   discard: (conversationId: string, clientId: string) => void;
   /** The conversation view reports what is on screen so unread counting and read marking know about it. */
@@ -169,6 +190,8 @@ type ChatContextValue = {
 };
 
 const ChatContext = createContext<ChatContextValue | null>(null);
+
+export function useOptionalChat() { return useContext(ChatContext); }
 
 export function useChat(): ChatContextValue {
   const value = useContext(ChatContext);
@@ -182,6 +205,8 @@ export function useChat(): ChatContextValue {
  */
 export function ChatProvider({ children, disabled = false }: { children: ReactNode; disabled?: boolean }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const pageKey = `${pathname}?section=${searchParams.get("section") ?? ""}`;
   const routeSlug = chatRouteSlug(pathname);
   const { data: user } = useSession();
   const { slug, project, error } = useSelectedProject(routeSlug);
@@ -189,20 +214,21 @@ export function ChatProvider({ children, disabled = false }: { children: ReactNo
   const contextSlug = disabled || unavailable ? undefined : slug;
   return (
     <ProjectChatProvider ownerKey={`${user?.id ?? "none"}:${contextSlug ?? "none"}`} slug={contextSlug}
-      project={contextSlug && project?.slug === contextSlug ? project : undefined} selfId={disabled ? undefined : user?.id}>
+      project={contextSlug && project?.slug === contextSlug ? project : undefined} selfId={disabled ? undefined : user?.id} pageKey={pageKey}>
       {children}
     </ProjectChatProvider>
   );
 }
 
-function ProjectChatProvider({ children, slug, project, selfId, ownerKey }: {
-  children: ReactNode; slug?: string; project?: Project; selfId?: string; ownerKey: string;
+function ProjectChatProvider({ children, slug, project, selfId, ownerKey, pageKey }: {
+  children: ReactNode; slug?: string; project?: Project; selfId?: string; ownerKey: string; pageKey: string;
 }) {
   const te = useTranslations("errors");
   const queryClient = useQueryClient();
-  const [state, dispatch] = useReducer(reducer, { ...initialState, slug, ownerKey });
+  const [state, dispatch] = useReducer(reducer, { ...initialState, slug, ownerKey, pageKey });
   // React rerenders this owner before committing: B never receives A's visible state. Children keep their identity.
-  if (state.ownerKey !== ownerKey) dispatch({ type: "context", slug, ownerKey });
+  if (state.ownerKey !== ownerKey) dispatch({ type: "context", slug, ownerKey, pageKey });
+  else if (state.pageKey !== pageKey) dispatch({ type: "navigation", pageKey });
   const projectId = project?.id;
   const projectName = project?.name;
   const projectLogoSrc = project ? projectLogoSource(project) : null;
@@ -214,13 +240,16 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey }: {
   const modeRef = useRef(state.mode);
   const viewRef = useRef<ViewState>({ conversationId: null, atBottom: false });
   const draftsRef = useRef<Record<string, string>>({});
+  const repliesRef = useRef<Record<string, ChatReply>>({});
+  const [reactionPendingKeys, setReactionPendingKeys] = useState<Set<string>>(new Set());
+  const pendingReactionsRef = useRef<Set<string>>(new Set());
   const triggerRef = useRef<HTMLElement | null>(null);
   // Each account/project transition is a distinct generation, including a quick A -> B -> A trip.
-  const lifetimeRef = useRef({ active: true, messageIds: new Set<string>() });
+  const lifetimeRef = useRef(chatLifetime());
   useEffect(() => {
-    const lifetime = { active: true, messageIds: new Set<string>() };
+    const lifetime = chatLifetime();
     lifetimeRef.current = lifetime;
-    return () => { lifetime.active = false; };
+    return () => { lifetime.active = false; lifetime.abort.abort(); lifetime.reactions.clear(); };
   }, [ownerKey]);
   useEffect(() => {
     projectIdRef.current = projectId;
@@ -233,10 +262,43 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey }: {
     if (!projectId) return;
     return () => {
       draftsRef.current = {};
+      repliesRef.current = {};
+      pendingReactionsRef.current = new Set();
+      setReactionPendingKeys(new Set());
       viewRef.current = { conversationId: null, atBottom: false };
       void queryClient.cancelQueries({ queryKey: chatKeys.all(projectId) });
       queryClient.removeQueries({ queryKey: chatKeys.all(projectId) });
     };
+  }, [projectId, queryClient, ownerKey]);
+
+  const syncReactions = useCallback((conversationId: string) => {
+    const pid = projectIdRef.current;
+    const lifetime = lifetimeRef.current;
+    if (!pid || !lifetime.active) return Promise.resolve();
+    const running = lifetime.resyncs.get(conversationId);
+    if (running) return running;
+    const job = resyncReactions(queryClient, pid, conversationId, (ids, signal) => chatApi.reactionSnapshots(pid, conversationId, ids, signal),
+      { signal: lifetime.abort.signal, queue: lifetime.queue, current: () => lifetime.active && lifetimeRef.current === lifetime && projectIdRef.current === pid })
+      .catch(() => { /* Reopen/reconnect retries; keep authoritative newer frames. */ })
+      .finally(() => lifetime.resyncs.delete(conversationId));
+    lifetime.resyncs.set(conversationId, job);
+    return job;
+  }, [queryClient]);
+
+  // A history page can arrive after its reaction frame. Remove buffered entries
+  // before setQueryData, because query-cache notifications are synchronous.
+  useEffect(() => {
+    if (!projectId) return;
+    const lifetime = lifetimeRef.current;
+    return queryClient.getQueryCache().subscribe(event => {
+      if (!lifetime.active || event.type !== "updated") return;
+      const key = event.query.queryKey;
+      if (key[0] !== "projects" || key[1] !== projectId || key[2] !== "chat" || key[3] !== "messages" || typeof key[4] !== "string") return;
+      const data = queryClient.getQueryData<MessagePages>(key);
+      const ids = new Set(flattenMessages(data).map(message => message.id));
+      const buffered = lifetime.reactions.takeLoaded(key[4], ids);
+      if (buffered.length) applyReactionSnapshots(queryClient, projectId, key[4], buffered);
+    });
   }, [projectId, queryClient, ownerKey]);
 
   // ---- real-time ---------------------------------------------------------------------------------------------------
@@ -249,6 +311,11 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey }: {
         applyReadToOverview(queryClient, pid, event.conversationId);
         return;
       }
+      if (event.type === "REACTIONS") {
+        const found = applyReactionSnapshots(queryClient, pid, event.conversationId, [event]);
+        if (!found.has(event.messageId)) lifetimeRef.current.reactions.put(event.conversationId, event);
+        return;
+      }
       const message = event.message;
       if (!message || message.conversationId !== event.conversationId) return;
       // Renewal briefly keeps both subscriptions alive. Process a delivered message once, including unread/outbox.
@@ -259,7 +326,7 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey }: {
       if (messageIds.size > 1000) messageIds.delete(messageIds.values().next().value!);
       const mine = message.sender.userId === selfIdRef.current;
       appendMessages(queryClient, pid, message.conversationId, [message]);
-      if (mine) dispatch({ type: "outboxConsume", conversationId: message.conversationId, content: message.content });
+      if (mine) dispatch({ type: "outboxConsume", conversationId: message.conversationId, content: message.content, replyId: message.replyTo?.id });
       const view = viewRef.current;
       const viewing =
         view.conversationId === message.conversationId &&
@@ -286,6 +353,8 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey }: {
     void (async () => {
       for (const [key, data] of loaded) {
         const conversationId = key[4] as string;
+        await syncReactions(conversationId);
+        if (!lifetime.active || projectIdRef.current !== pid) return;
         let cursor = newestMessageId(data);
         if (!data) continue;
         if (!cursor) {
@@ -306,7 +375,7 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey }: {
         }
       }
     })();
-  }, [queryClient]);
+  }, [queryClient, syncReactions]);
 
   const connection = useChatSocket({ contextKey: projectId && selfId ? `${selfId}:${projectId}` : undefined, onEvent: handleEvent, onConnect: handleConnect });
 
@@ -332,12 +401,17 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey }: {
     return membersQuery.data?.find((member) => member.userId === activePeerId) ?? null;
   }, [activePeerId, overview, membersQuery.data]);
 
+  useEffect(() => {
+    if (shown && activeConversationId) void syncReactions(activeConversationId);
+  }, [shown, activeConversationId, syncReactions, ownerKey]);
+
   // ---- panel state -------------------------------------------------------------------------------------------------
   const open = useCallback(() => {
     if (document.activeElement instanceof HTMLElement) triggerRef.current = document.activeElement;
     dispatch({ type: "open" });
   }, []);
   const minimize = useCallback(() => dispatch({ type: "mode", mode: "bar" }), []);
+  const navigatePage = useCallback(() => dispatch({ type: "navigation" }), []);
   const expandCompact = useCallback(() => dispatch({ type: "mode", mode: "compact" }), []);
   const expandFull = useCallback(() => dispatch({ type: "mode", mode: "full" }), []);
   const close = useCallback(() => {
@@ -383,14 +457,36 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey }: {
     if (text === "") delete draftsRef.current[key];
     else draftsRef.current[key] = text;
   }, []);
+  const getReply = useCallback((key: string) => repliesRef.current[key] ?? null, []);
+  const setReply = useCallback((key: string, reply: ChatReply | null) => {
+    if (reply) repliesRef.current[key] = reply; else delete repliesRef.current[key];
+  }, []);
+
+  const react = useCallback(async (messageId: string, code: ReactionCode, add: boolean) => {
+    const pid = projectIdRef.current, cid = activeConversationId, lifetime = lifetimeRef.current;
+    const key = `${cid}:${messageId}:${code}`;
+    if (!pid || !cid || !lifetime.active || pendingReactionsRef.current.has(key)) return;
+    const pending = pendingReactionsRef.current;
+    pending.add(key); setReactionPendingKeys(new Set(pending));
+    try {
+      const snapshot = await chatApi.react(pid, cid, messageId, code, add, lifetime.abort.signal);
+      if (lifetime.active && projectIdRef.current === pid) applyReactionSnapshots(queryClient, pid, cid, [snapshot]);
+    } catch (error) {
+      if (lifetime.active) throw error;
+    } finally {
+      pending.delete(key);
+      if (lifetime.active) setReactionPendingKeys(new Set(pending));
+    }
+  }, [activeConversationId, queryClient]);
+  const reactionPending = useCallback((messageId: string, code: ReactionCode) => reactionPendingKeys.has(`${activeConversationId}:${messageId}:${code}`), [reactionPendingKeys, activeConversationId]);
 
   const deliver = useCallback(
-    async (conversationId: string, clientId: string, content: string) => {
+    async (conversationId: string, clientId: string, content: string, reply?: ChatReply | null) => {
       const pid = projectIdRef.current;
       const lifetime = lifetimeRef.current;
       if (!lifetime.active || !pid) return;
       try {
-        const message = await chatApi.send(pid, conversationId, content);
+        const message = await chatApi.send(pid, conversationId, content, reply?.id, lifetime.abort.signal);
         if (!lifetime.active || projectIdRef.current !== pid) return;
         appendMessages(queryClient, pid, conversationId, [message]);
         applyMessageToOverview(queryClient, pid, message, { mine: true, viewing: true });
@@ -409,16 +505,16 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey }: {
   );
 
   const send = useCallback(
-    (conversationId: string, text: string): MessageValidation => {
+    (conversationId: string, text: string, reply?: ChatReply | null): MessageValidation => {
       const validation = validateMessage(text);
       if (!validation.ok) return validation;
       const clientId = crypto.randomUUID();
       dispatch({
         type: "outboxAdd",
         conversationId,
-        pending: { clientId, content: validation.content, status: "sending", sentAt: Date.now() },
+        pending: { clientId, content: validation.content, status: "sending", sentAt: Date.now(), replyTo: reply ?? null },
       });
-      void deliver(conversationId, clientId, validation.content);
+      void deliver(conversationId, clientId, validation.content, reply);
       return validation;
     },
     [deliver],
@@ -433,7 +529,7 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey }: {
       const pending = outboxRef.current[conversationId]?.find((item) => item.clientId === clientId);
       if (!pending) return;
       dispatch({ type: "outboxPatch", conversationId, clientId, patch: { status: "sending", errorKey: undefined } });
-      void deliver(conversationId, clientId, normalizeMessage(pending.content));
+      void deliver(conversationId, clientId, normalizeMessage(pending.content), pending.replyTo);
     },
     [deliver],
   );
@@ -480,10 +576,15 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey }: {
       expandCompact,
       expandFull,
       close,
+      navigatePage,
       selectGroup,
       selectPeer,
       getDraft,
       setDraft,
+      getReply,
+      setReply,
+      react,
+      reactionPending,
       outboxFor,
       send,
       retry,
@@ -496,8 +597,8 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey }: {
     [
       projectId, projectName, projectLogoSrc, slug, state.mode, active, activeConversationId, activePeer, connection, overview,
       overviewQuery.status, membersQuery.data, membersQuery.status, openDirect.isPending, open,
-      minimize, expandCompact, expandFull, close, selectGroup, selectPeer, getDraft, setDraft, outboxFor, send,
-      retry, discard, reportView, markRead,
+      minimize, expandCompact, expandFull, close, navigatePage, selectGroup, selectPeer, getDraft, setDraft, outboxFor, send,
+      retry, discard, reportView, markRead, getReply, setReply, react, reactionPending,
     ],
   );
 

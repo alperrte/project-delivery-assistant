@@ -7,8 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { dayKey, formatClock, formatDayLabel } from "../format";
-import type { ChatMessage, PendingMessage } from "../types";
+import type { ChatMessage, PendingMessage, ReactionCode } from "../types";
+import { ReactionChips } from "./reaction-chips";
 import { PersonAvatar } from "./person-avatar";
+import { MessageActions } from "./message-actions";
+import { ReplyPreview } from "./reply-preview";
 
 /** Within this distance of the end the list counts as "at the bottom" (and follows new messages). */
 const BOTTOM_SLACK_PX = 48;
@@ -31,6 +34,10 @@ type Props = {
   onRetrySend: (clientId: string) => void;
   onDiscard: (clientId: string) => void;
   errorLabel: (key: string) => string;
+  onReply: (message: ChatMessage) => void;
+  onReact: (messageId: string, code: ReactionCode, add: boolean) => void;
+  reactionPending: (messageId: string, code: ReactionCode) => boolean;
+  reactionsDisabled: boolean;
 };
 
 /**
@@ -54,6 +61,10 @@ export function MessageList({
   onRetrySend,
   onDiscard,
   errorLabel,
+  onReply,
+  onReact,
+  reactionPending,
+  reactionsDisabled,
 }: Props) {
   const t = useTranslations("chat");
   const locale = useLocale();
@@ -107,6 +118,9 @@ export function MessageList({
       if (stickRef.current || outboxGrew || newest?.sender.userId === selfId) {
         el.scrollTop = el.scrollHeight;
       }
+    } else if (stickRef.current && el.scrollHeight !== before.height) {
+      // Metadata can add a chip row without adding a message; keep a bottom reader anchored.
+      el.scrollTop = el.scrollHeight;
     }
     previous.current = { firstId, lastId, height: el.scrollHeight, outbox: outbox.length };
   }, [messages, outbox, lastId, loading, selfId]);
@@ -192,7 +206,8 @@ export function MessageList({
               <div
                 data-testid="chat-message"
                 data-own={own ? "true" : "false"}
-                className={cn("flex items-end gap-2", own ? "justify-end" : "justify-start", newRun && "pt-2")}
+                data-message-id={message.id}
+                className={cn("group/message flex items-end gap-2", own ? "justify-end" : "justify-start", newRun && "pt-2")}
               >
                 {!own && showSenders && (
                   <span className="w-7 shrink-0">
@@ -211,11 +226,16 @@ export function MessageList({
                       own ? "rounded-br-sm bg-primary text-primary-foreground" : "rounded-bl-sm bg-muted text-foreground",
                     )}
                   >
-                    {message.content}
+                    {message.replyTo && <ReplyPreview reply={message.replyTo} />}
+                    <span data-testid="chat-message-text">{message.content}</span>
                   </div>
-                  <time dateTime={message.createdAt} className="mt-0.5 px-1 text-[10px] text-muted-foreground tabular-nums">
+                  <div className="mt-0.5 flex items-center gap-1">
+                  <time dateTime={message.createdAt} className="px-1 text-[10px] text-muted-foreground tabular-nums">
                     {formatClock(message.createdAt, locale)}
                   </time>
+                  <MessageActions message={message} onReply={onReply} onReact={(code,add)=>onReact(message.id,code,add)} disabled={reactionsDisabled} />
+                  </div>
+                  <ReactionChips message={message} onReact={(code,add)=>onReact(message.id,code,add)} pending={code=>reactionPending(message.id,code)} disabled={reactionsDisabled} />
                 </div>
               </div>
             </Fragment>
@@ -232,6 +252,7 @@ export function MessageList({
                     : "bg-primary/60 text-primary-foreground",
                 )}
               >
+                {pending.replyTo && <ReplyPreview reply={pending.replyTo} />}
                 {pending.content}
               </div>
               {pending.status === "sending" ? (

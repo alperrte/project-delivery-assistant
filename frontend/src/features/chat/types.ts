@@ -15,7 +15,15 @@ export type ChatMessage = {
   content: string;
   createdAt: string;
   sender: ChatUser;
+  replyTo: ChatReply | null;
+  reactionVersion: string;
+  reactions: ChatReaction[];
 };
+
+export type ReactionCode = "THUMBS_UP" | "HEART" | "LAUGH" | "SURPRISED" | "SAD" | "THANKS";
+export type ChatReply = { id: string; sender: ChatUser; preview: string };
+export type ChatReaction = { code: ReactionCode; emoji: string; count: number; reactedByCurrentUser: boolean };
+export type ReactionSnapshot = { messageId: string; reactionVersion: string; reactions: ChatReaction[] };
 
 export type ChatLastMessage = {
   preview: string;
@@ -49,13 +57,15 @@ export type ChatMessagePage = {
   hasMore: boolean;
 };
 
-export type ChatSocketEvent = {
-  type: "MESSAGE" | "READ";
+type ChatEventScope = {
   projectId: string;
   conversationId: string;
-  conversationType?: ChatConversationType;
-  message?: ChatMessage;
 };
+export type ChatSocketEvent = ChatEventScope & (
+  | { type: "MESSAGE"; conversationType?: ChatConversationType; message: ChatMessage }
+  | { type: "READ" }
+  | ({ type: "REACTIONS" } & ReactionSnapshot)
+);
 
 /** What the user is looking at. A direct conversation gets its id once it was opened on the server. */
 export type ActiveConversation =
@@ -76,4 +86,5 @@ export type PendingMessage = {
   errorKey?: string;
   /** Client time the user pressed send, only used to place the bubble after the confirmed messages. */
   sentAt: number;
+  replyTo?: ChatReply | null;
 };
