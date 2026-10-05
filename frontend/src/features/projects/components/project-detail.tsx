@@ -78,7 +78,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
           <TabsContent value="teams"><TeamsPage project={project} isManager={isManager} /></TabsContent>
           {isManager && <TabsContent value="invitations"><InvitationsPage projectId={project.id} /></TabsContent>}
           <TabsContent value="repository"><RepositorySettings projectId={project.id} isManager={isManager} /></TabsContent>
-          {isManager && <TabsContent value="settings"><ProjectSettingsForm project={project} /></TabsContent>}
+          {isManager && <TabsContent value="settings"><ProjectSettingsForm project={project} organization={home?.organization} /></TabsContent>}
         </div>
       </Tabs>
   );

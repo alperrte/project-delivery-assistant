@@ -23,11 +23,12 @@ import { errorKey } from "@/lib/api/error-message";
 import { cn } from "@/lib/utils";
 import { organizationsApi } from "@/features/organizations/api";
 import { projectsApi } from "../api";
+import { invalidateProjectMutation } from "../query-invalidation";
 import { ProjectLogoField } from "./project-logo-field";
 import { BannerField } from "./banner-field";
 import { projectPriorities, projectSettingsSchema, projectStatuses, TAGLINE_MAX, type ProjectSettingsValues } from "../schemas";
 import { formatTechStack, parseTechStack } from "../tech-stack";
-import { PROJECT_TYPES, type Project } from "../types";
+import { PROJECT_TYPES, type Project, type OrganizationSummary } from "../types";
 
 const inputClass = "h-10 bg-background px-3";
 const textareaClass = "min-h-20 bg-background px-3 py-2.5 leading-6";
@@ -66,7 +67,7 @@ function Field({
   );
 }
 
-export function ProjectSettingsForm({ project }: { project: Project }) {
+export function ProjectSettingsForm({ project, organization }: { project: Project; organization?: OrganizationSummary | null }) {
   const t = useTranslations("projects.settings");
   const tCard = useTranslations("projects.card");
   const tv = useTranslations("validation");
@@ -92,9 +93,9 @@ export function ProjectSettingsForm({ project }: { project: Project }) {
   });
 
   const save = useMutation({
-    mutationFn: (values: ProjectSettingsValues) => projectsApi.update(project.id, values),
-    onSuccess: (updated) => {
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
+    mutationFn: (values: ProjectSettingsValues) => projectsApi.update(project.id, { ...values, organizationId: values.organizationId ?? null }),
+    onSuccess: async (updated) => {
+      await invalidateProjectMutation(queryClient, project.organizationId, updated.organizationId);
       reset(toFormValues(updated));
       toast.success(t("saved"));
     },
@@ -103,8 +104,8 @@ export function ProjectSettingsForm({ project }: { project: Project }) {
 
   const archive = useMutation({
     mutationFn: () => projectsApi.archive(project.id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
+    onSuccess: async () => {
+      await invalidateProjectMutation(queryClient, project.organizationId);
       toast.success(t("archived"));
       router.push("/projects");
     },
@@ -112,6 +113,8 @@ export function ProjectSettingsForm({ project }: { project: Project }) {
   });
 
   const saving = isSubmitting || save.isPending;
+  const currentOrganizationName = organizations?.content.find(org => org.id === project.organizationId)?.name
+    ?? (organization?.id === project.organizationId ? organization.name : t("organizationUnavailable"));
 
   return (
     <PageContainer width="form">
@@ -246,20 +249,24 @@ export function ProjectSettingsForm({ project }: { project: Project }) {
               />
             </Field>
 
-            {organizations && organizations.content.length > 0 && (
+            {(
               <Field id="settings-organization" label={t("organization")} className="sm:col-span-2">
                 <Controller
                   control={control}
                   name="organizationId"
                   render={({ field }) => (
-                    <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                    <Select value={field.value ?? "__standalone__"} disabled={!organizations} onValueChange={(value) => field.onChange(value === "__standalone__" ? undefined : value)}>
                       <SelectTrigger id="settings-organization" className={selectClass}>
                         <SelectValue placeholder={t("organizationNone")}>
-                          {(value: string) => organizations.content.find((org) => org.id === value)?.name ?? t("organizationNone")}
+                          {(value: string) => value === "__standalone__" ? t("organizationNone")
+                            : organizations?.content.find(org => org.id === value)?.name ?? currentOrganizationName}
                         </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
-                        {organizations.content.map((org) => (
+                        <SelectItem value="__standalone__">{t("organizationNone")}</SelectItem>
+                        {project.organizationId && !organizations?.content.some(org => org.id === project.organizationId) &&
+                          <SelectItem value={project.organizationId}>{currentOrganizationName}</SelectItem>}
+                        {(organizations?.content ?? []).map((org) => (
                           <SelectItem key={org.id} value={org.id}>{org.name}</SelectItem>
                         ))}
                       </SelectContent>

@@ -22,6 +22,7 @@ import { organizationsApi, organizationImageSource } from "../api";
 
 export function OrganizationDetail({ organizationId }: { organizationId: string }) {
   const t = useTranslations("organizations");
+  const common = useTranslations("common");
   const tp = useTranslations("projects");
   const profile = useTranslations("organizations.profile");
   const { data: user } = useSession();
@@ -34,11 +35,16 @@ export function OrganizationDetail({ organizationId }: { organizationId: string 
     queryFn: () => organizationsApi.detail(organizationId),
   });
 
-  const { data: projects } = useQuery({
+  const { data: projects, isPending: projectsPending, isError: projectsFailed, error: projectsError } = useQuery({
     queryKey: organizationKeys.projects(organizationId, page),
     queryFn: () => organizationsApi.projects(organizationId, page),
     enabled: !!org,
   });
+
+  // Adjust this component's state before committing an out-of-range page.
+  if (projects && !projectsFailed && page >= Math.max(1, projects.totalPages)) {
+    setPage(Math.max(0, projects.totalPages - 1));
+  }
 
   if (isLoading) return <Skeleton className="h-32 w-full" />;
   if (isError) return <PageFailure error={error} onRetry={() => { void refetch(); }} />;
@@ -103,11 +109,18 @@ export function OrganizationDetail({ organizationId }: { organizationId: string 
         <h2 className="text-lg font-semibold text-foreground">{t("projectsHeading")}</h2>
       </div>
 
-      {projects && projects.content.length === 0 && (
+      {projectsPending && <div data-testid="organization-projects-loading" role="status" aria-live="polite">
+        <span className="sr-only">{common("loading")}</span><Skeleton className="h-28 w-full" />
+      </div>}
+      {projectsFailed && <div data-testid="organization-projects-error"><PageFailure error={projectsError} onRetry={() => {
+        // The dataset may have shrunk while this page failed; previous pages must also be fresh when clamping.
+        void queryClient.invalidateQueries({ queryKey: ["organizations", "projects", organizationId] });
+      }} /></div>}
+      {!projectsPending && !projectsFailed && projects && projects.content.length === 0 && (
         <EmptyState title={t("noProjects")} />
       )}
 
-      {projects && projects.content.length > 0 && (
+      {!projectsFailed && projects && projects.content.length > 0 && (
         <>
           <Table>
             <TableHeader>

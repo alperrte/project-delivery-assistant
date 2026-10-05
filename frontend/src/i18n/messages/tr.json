@@ -165,7 +165,7 @@
     "archiveConfirmDescription": "Arşivlenen organizasyonlar yeni proje kabul etmez. Bu işlem geri alınamaz.",
     "archivedBadge": "Arşivlendi",
     "projectsHeading": "Projeler",
-    "noProjects": "Bu organizasyonun henüz projesi yok.",
+    "noProjects": "Bu organizasyonda erişebildiğiniz aktif proje yok.",
     "emptyTitle": "Henüz organizasyon yok",
     "emptyDescription": "İlişkili projeleri bir arada tutmak için bir tane oluşturun.",
     "columns": {
@@ -590,7 +590,8 @@
           "title": "Tehlikeli bölge",
           "description": "Geri alınamayan işlemler."
         }
-      }
+      },
+      "organizationUnavailable": "Bağlı organizasyon arşivlenmiş veya kullanılamıyor"
     }
   },
   "criteria": {

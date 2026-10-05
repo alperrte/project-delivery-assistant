@@ -243,3 +243,7 @@ Sohbet full/bar/compact tek provider state'idir. Seçili proje aynı kaldığın
 ### Chat reply / reaction / emoji UI (2026-10-05)
 
 Confirmed mesajlarda Reply/React desktop hover/focus-within, mobile 44px kontrollerle eri?ilir. Quote tek seviyeli plain text; reply iptali text tasla??n? silmez. Escape ?nce picker, sonra reply context, sonra mevcut panel davran???n? t?ketir. Payla??lan Base UI popover composer24 Unicode emoji, reaction6 code sunar; native button group, token renkleri, viewport s?n?r?, focus/caret restore. Yeni paket yok. Chips count/mine/aria-pressed g?sterir; server response/WS snapshot esas, additive optimistic delta yok. Navigation eski trigger'a focus ?almaz; inert layout cleanup ile kald?r?l?r.
+
+### Optional organization association UX (2026-10-05)
+
+Create/settings always expose a none/standalone option using existing Select/tokens and localized labels; UI sentinel maps to omitted create or explicit-null PUT. Current non-owned association label comes from safe Project Home summary, unavailable retained FK is distinct from standalone. Home organization name is a link only with server capability; otherwise plain text. Organization project list has its own loading/error/retry and caller-visible empty copy; retry refreshes page prefixes before last-page clamp. No palette/component library redesign.
