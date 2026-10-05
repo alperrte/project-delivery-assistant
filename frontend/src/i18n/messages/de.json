@@ -114,7 +114,10 @@
     "TASK_MODE_NOT_ALLOWED": "Erweiterte Aufgabenerstellung ist deaktiviert. Bestehende Daten bleiben erhalten. Grundlegende Felder, Status und Kommentare sind bearbeitbar; erweiterte Felder sind schreibgeschützt.",
     "TASK_SIMPLE_FIELDS_INVALID": "Einfache Aufgaben können keine erweiterten Felder enthalten.",
     "TASK_MODE_CONVERSION_BLOCKED": "Eine Aufgabe mit erweiterten Daten kann nicht einfach werden. Entfernen Sie diese Daten zuerst in den jeweiligen Abschnitten; nichts wird automatisch gelöscht.",
-    "PROJECT_TASK_MODE_NOT_CONFIGURED": "Der Projektgründer muss vor der ersten Aufgabe eine Einstellung auswählen."
+    "PROJECT_TASK_MODE_NOT_CONFIGURED": "Der Projektgründer muss vor der ersten Aufgabe eine Einstellung auswählen.",
+    "CHAT_REPLY_NOT_FOUND": "Die zitierte Nachricht wurde in diesem Gespräch nicht gefunden.",
+    "CHAT_REACTION_INVALID": "Diese Reaktion wird nicht unterstützt.",
+    "CHAT_REACTION_RATE_LIMITED": "Zu viele Reaktionen. Bitte kurz warten und erneut versuchen."
   },
   "app": {
     "nav": {
@@ -2121,6 +2124,48 @@
     "dock": {
       "label": "Verkleinerte Nachrichten",
       "open": "Nachrichten öffnen"
+    },
+    "reply": {
+      "action": "Antworten",
+      "senderUnknown": "Unbekannte Person",
+      "context": "Antwort auf {name}",
+      "cancel": "Antwort abbrechen",
+      "unavailable": "Zitierte Nachricht nicht verfügbar."
+    },
+    "emoji": {
+      "action": "Emoji auswählen",
+      "close": "Emoji-Auswahl schließen",
+      "names": {
+        "SMILE": "Lächeln",
+        "GRIN": "Fröhliches Gesicht",
+        "LAUGH": "Lachen",
+        "ROFL": "Lachend rollen",
+        "BLUSH": "Lächelndes Gesicht",
+        "LOVE": "Herzaugen",
+        "PARTY": "Partygesicht",
+        "COOL": "Cool",
+        "THINK": "Nachdenklich",
+        "SURPRISED": "Überrascht",
+        "SAD": "Traurig",
+        "CRY": "Weinen",
+        "SWEAT": "Schwitzendes Lächeln",
+        "SLEEP": "Schläfrig",
+        "THUMBS_UP": "Daumen hoch",
+        "THUMBS_DOWN": "Daumen runter",
+        "CLAP": "Applaus",
+        "RAISE": "Erhobene Hände",
+        "THANKS": "Danke",
+        "HEART": "Herz",
+        "FIRE": "Feuer",
+        "CELEBRATE": "Feiern",
+        "CHECK": "Bestätigung",
+        "ROCKET": "Rakete"
+      }
+    },
+    "reactions": {
+      "action": "Reagieren",
+      "chip": "{emoji}, {count} Reaktionen",
+      "error": "Reaktion konnte nicht gespeichert werden."
     }
   },
   "siteFooter": {

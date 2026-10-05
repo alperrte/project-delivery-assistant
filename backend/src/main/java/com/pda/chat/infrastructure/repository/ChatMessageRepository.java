@@ -3,6 +3,8 @@ package com.pda.chat.infrastructure.repository;
 import com.pda.chat.domain.entity.ChatMessage;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.Lock;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
@@ -15,6 +17,12 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, UUID> 
 
     /** Cursor lookup: the cursor message must belong to the conversation being read. */
     Optional<ChatMessage> findByIdAndConversationId(UUID id, UUID conversationId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select m from ChatMessage m where m.id=:id and m.conversationId=:conversationId")
+    Optional<ChatMessage> lockByIdAndConversationId(@Param("id") UUID id,@Param("conversationId") UUID conversationId);
+
+    List<ChatMessage> findByIdInAndConversationId(Collection<UUID> ids, UUID conversationId);
 
     /** Newest first. */
     @Query(value = """

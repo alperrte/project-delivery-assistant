@@ -19,6 +19,22 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ChatDomainTest {
 
+    @Test void replyAndReactionFoundationPreservesTextAndTime() {
+        UUID conversation = UUID.randomUUID(), sender = UUID.randomUUID(), parent = UUID.randomUUID();
+        ChatMessage old = ChatMessage.create(conversation, sender, "😂❤️", NOW);
+        assertNull(old.getReplyToMessageId());
+        assertEquals(0, old.getReactionVersion());
+        ChatMessage reply = ChatMessage.create(conversation, sender, "  answer  ", parent, NOW);
+        assertEquals(parent, reply.getReplyToMessageId());
+        assertEquals("answer", reply.getContent());
+        reply.reactionsChanged(); reply.reactionsChanged();
+        assertEquals(2, reply.getReactionVersion());
+        assertEquals(NOW.truncatedTo(java.time.temporal.ChronoUnit.MICROS), reply.getCreatedAt());
+        for (com.pda.chat.domain.enums.ChatReactionCode code : com.pda.chat.domain.enums.ChatReactionCode.values())
+            assertEquals(code, com.pda.chat.domain.enums.ChatReactionCode.parse(code.name()));
+        assertThrows(ChatException.class, () -> com.pda.chat.domain.enums.ChatReactionCode.parse("👍"));
+    }
+
     private static final Instant NOW = Instant.parse("2026-10-03T10:15:30.123456789Z");
 
     // ---- conversations ------------------------------------------------------------------------------------------

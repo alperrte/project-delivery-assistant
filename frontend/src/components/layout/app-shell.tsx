@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode, type ComponentProps } from "react";
-import Link from "@/i18n/navigation";
+import Link from "./workspace-link";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";

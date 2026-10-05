@@ -1,4 +1,8 @@
 # Web Sitesi Kesinlikle Olması Gerekenler — Master Checklist
+## 2026-10-05 ? Chat navigation, reply/reaction ve emoji kapsam do?rulamas?
+
+Full?closed page navigation, compact/bar draft persistence, modifier/cancel/back-forward intent, focus/inert cleanup, scoped reply/reaction REST/DB/WS, versioned cache ve reconnect batch50/shared2 resync do?ruland?. TR/EN/DE, keyboard/Escape/caret/IME, 2000 code-point s?n?r?, light/dark, 320/390/768/1440 px ve motion kontrolleri ge?ti; screenshot animasyon sonunda incelendi. Tam kap?: 459 backend (0 fail/error/skip), 225 Chromium + 1 expected production crash-route skip; lint/type/build/Docker health ba?ar?l?. Mevcut dev npm debt5 high / production0. Bu s?n?rl? kapsam genel accessibility, multi-browser veya production checklist kutular?n? topluca [x] yapmaz. Ayr?nt?: `docs/compliation/2026-10-05-chat-replies-reactions.md`.
+
 ## Npm/CSS remediation — 2026-10-05 (sınırlı kapsam)
 
 Shadcn CLI kaldırıldı; kullanılan yedi durum varyantı yerel CSS'te korundu. Üretilen CSS karşılaştırması, light/dark state/animation testleri, gerçek form/settings/chat akışları ve ekran görüntüleri doğrulandı. Hedefli 73, landing 23, tam Chromium 208 passed + 1 expected production skip; son pre-push 449 backend testi ile PASSED. Full npm audit 8→5 high; production audit 6→0. Kalan ESLint/braces zinciri açık security debt. Bu kapsam proje geneli kutuları tamamlanmış saymaz. Ayrıntı: `docs/compliation/2026-10-05-npm-security-remediation.md`.

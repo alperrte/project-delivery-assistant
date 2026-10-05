@@ -190,7 +190,62 @@ test.describe.serial("Project chat", () => {
     await expect(groupRow).not.toContainText("okunmamış");
   });
 
-  test("full, bar, compact: the chat survives navigation and keeps conversation, history and draft", async () => {
+  test("full closes on page navigation without minimizing; compact keeps the draft", async () => {
+    await openPanel(managerPage);
+    await directRow(managerPage, member).click();
+    await expectSendEnabled(managerPage);
+    await composerOf(managerPage).fill("navigation draft");
+    const calendar = managerPage.locator('.app-shell a[href="/tr/takvim"]').first();
+    await calendar.evaluate((element) => {
+      const abort = (event: Event) => event.preventDefault();
+      Object.assign(element, { __abortChatNavigation: abort });
+      element.addEventListener("click", abort);
+    });
+    await calendar.click();
+    await expect(panelOf(managerPage)).toBeVisible();
+    await calendar.evaluate((element) => element.removeEventListener("click", (element as HTMLElement & { __abortChatNavigation: EventListener }).__abortChatNavigation));
+    const newTab = managerPage.context().waitForEvent("page");
+    await calendar.click({ modifiers: ["Control"] });
+    await (await newTab).close();
+    await expect(panelOf(managerPage)).toBeVisible();
+    await managerPage.locator(".app-shell > aside > button").click();
+    for (const href of [`/projects/${slug}`, `/projects/${slug}?section=criteria`, "/calendar", `/projects/${slug}/tasks`, "/settings"]) {
+      await managerPage.locator(`.app-shell a[href="${localizeHref(href, "tr")}"]`).first().click();
+      await expect(panelOf(managerPage)).toHaveCount(0);
+      await expect(barOf(managerPage)).toHaveCount(0);
+      await expect(managerPage.locator("#main-content")).not.toHaveAttribute("inert", "");
+      await openPanel(managerPage);
+      await expect(composerOf(managerPage)).toHaveValue("navigation draft");
+    }
+    await managerPage.goBack();
+    await expect(panelOf(managerPage)).toHaveCount(0);
+    await openPanel(managerPage);
+    await managerPage.goForward();
+    await expect(panelOf(managerPage)).toHaveCount(0);
+    await openPanel(managerPage);
+    await managerPage.locator(".app-shell > aside > button").click();
+    await managerPage.getByTestId("chat-minimize").click();
+    await managerPage.getByTestId("chat-bar-expand").click();
+    await managerPage.locator('.app-shell a[href="/tr/takvim"]').first().click();
+    await expect(compactOf(managerPage)).toBeVisible();
+    await expect(composerOf(managerPage)).toHaveValue("navigation draft");
+    await managerPage.getByTestId("chat-fullscreen").click();
+    await expectSendEnabled(managerPage);
+    const viewport = managerPage.viewportSize()!;
+    await managerPage.setViewportSize({ width: 390, height: 844 });
+    // The existing navbar auto-hides while idle; a real top-edge pointer move reveals it.
+    await managerPage.mouse.move(200, 8);
+    await managerPage.getByRole("button", { name: "Gezinme menüsü", exact: true }).click();
+    await managerPage.getByRole("dialog").locator('a[href="/tr/takvim"]').click();
+    await expect(managerPage.getByRole("dialog")).toHaveCount(0);
+    await expect(panelOf(managerPage)).toHaveCount(0);
+    await expect(barOf(managerPage)).toHaveCount(0);
+    await managerPage.setViewportSize(viewport);
+    await openPanel(managerPage);
+    await expectSendEnabled(managerPage);
+  });
+
+  test("bar and compact survive navigation and keep conversation, history and draft", async () => {
     await expectSendEnabled(managerPage);
     const beforeNavigation = { ...socketStats };
     await directRow(managerPage, member).click();
@@ -357,6 +412,7 @@ test.describe.serial("Project chat", () => {
       } });
     });
     try {
+      const abandoned = managerPage.waitForEvent("requestfailed", request => request.method() === "POST" && request.url().includes(`/projects/${projectId}/chat/conversations/`) && request.url().endsWith("/messages"));
       await send(managerPage, "late generation response");
       await started;
       await managerPage.getByTestId("chat-minimize").click();
@@ -374,9 +430,8 @@ test.describe.serial("Project chat", () => {
       await openPanel(managerPage);
       await directRow(managerPage, member).click();
       await expectSendEnabled(managerPage);
-      const answered = managerPage.waitForResponse((response) => response.request().method() === "POST" && response.url().includes(`/projects/${projectId}/chat/conversations/`) && response.url().endsWith("/messages"));
       release();
-      await answered;
+      await abandoned;
       await expect(messagesOf(managerPage).filter({ hasText: "late generation response" })).toHaveCount(0);
       await expect(composerOf(managerPage)).toHaveValue("");
     } finally {
@@ -687,7 +742,8 @@ test.describe.serial("Project chat", () => {
       await page.waitForTimeout(100);
       expect(sockets.filter((entry) => !entry.closed && entry.subscribed)).toHaveLength(2);
       const overlapText = `Overlap unread ${Date.now()}`;
-      expect((await api(managerPage, "POST", `/projects/${projectId}/chat/conversations/${overview.group.id}/messages`, { content: overlapText })).status).toBe(201);
+      const overlapSent = await api(managerPage, "POST", `/projects/${projectId}/chat/conversations/${overview.group.id}/messages`, { content: overlapText });
+      expect(overlapSent.status).toBe(201);
       await expect.poll(() => sockets.filter((entry) => entry.messages.some((frame) => frame.includes(overlapText))).length).toBe(2);
       await expect(page.getByTestId("chat-bar-unread")).toHaveText(String(expectedUnread));
       await page.waitForTimeout(350);
@@ -695,6 +751,16 @@ test.describe.serial("Project chat", () => {
       await expect(page.getByTestId("chat-bar-unread")).toHaveText(String(expectedUnread));
       await page.getByTestId("chat-bar-expand").click();
       await expect(messagesOf(page).filter({ hasText: overlapText })).toHaveCount(1);
+
+      const overlapId=(overlapSent.json as {id:string}).id;
+      expect(sockets.filter(entry=>!entry.closed&&entry.subscribed)).toHaveLength(2);
+      expect((await api(managerPage,"PUT",`/projects/${projectId}/chat/conversations/${overview.group.id}/messages/${overlapId}/reactions/THUMBS_UP`)).status).toBe(200);
+      await expect.poll(()=>sockets.filter(entry=>entry.messages.some(frame=>frame.includes('"type":"REACTIONS"')&&frame.includes(overlapId))).length).toBe(2);
+      const reacted=messagesOf(page).filter({hasText:overlapText}).getByTestId("chat-reaction-THUMBS_UP");
+      await expect(reacted).toHaveText("👍1");
+      await expect(reacted).toHaveAttribute("aria-pressed","false");
+      await page.waitForTimeout(350);
+      await expect(reacted).toHaveText("👍1");
 
       // A second socket is opened with the renewed session, becomes the live one, and the first one is closed.
       await expect.poll(() => sockets.length, { timeout: 40_000 }).toBeGreaterThan(initialSockets);

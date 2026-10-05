@@ -23,6 +23,10 @@ public interface ChatDelivery {
 
     void messageSent(ChatMessageSent event);
 
+    record ChatReactionsChanged(UUID projectId, UUID conversationId, ChatConversationType type,
+                                Set<UUID> directParticipants, UUID messageId, long committedVersion) { }
+    void reactionsChanged(ChatReactionsChanged event);
+
     /** The user read the conversation; only that user's own sessions are told (unread sync across tabs). */
     void conversationRead(UUID projectId, UUID conversationId, UUID userId);
 }
