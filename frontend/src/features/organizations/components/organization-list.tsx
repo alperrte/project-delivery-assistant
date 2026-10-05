@@ -12,6 +12,7 @@ import { PaginationBar } from "@/components/common/pagination-bar";
 import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { errorKey } from "@/lib/api/error-message";
+import { organizationKeys } from "../queries";
 import { organizationsApi } from "../api";
 import { OrganizationCard } from "./organization-card";
 
@@ -21,7 +22,7 @@ export function OrganizationList() {
   const [page, setPage] = useState(0);
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["organizations", page],
+    queryKey: organizationKeys.list(page),
     queryFn: () => organizationsApi.list(page),
   });
 

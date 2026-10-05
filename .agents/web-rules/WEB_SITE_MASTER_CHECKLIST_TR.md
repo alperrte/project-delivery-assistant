@@ -1,6 +1,17 @@
 # Web Sitesi Kesinlikle Olması Gerekenler — Master Checklist
+## Backend integration audit — 2026-10-05 (sınırlı kapsam)
+
+Organization metadata/media gerçek API, PostgreSQL, dosya storage ve cache-disabled reload ile doğrulandı; logo ve cover container force-recreate sonrasında aynı byte hash'lerine sahip. Project settings logosu yeni browser context'te gerçek detail/image GET ile doğrulandı. Organization picker 101. kayıt ve rename → Project Home cache regresyonları ayrı onayla düzeltildi. Chat navigation/proje/hesap sınırları ve iki subscription renewal overlap sırasında tek mesaj unread artışı doğrulandı; duplicate MESSAGE side effect'i ayrı onayla giderildi. Son kaynak tam kapı: 415 backend + 182 Chromium passed, 1 expected production skip; lint/TypeScript/build/Docker health başarılı. Bu sınırlı audit proje geneli maddeleri [x] yapmaz. Ayrıntı: `docs/compliation/2026-10-05-backend-integration-mock-audit.md`.
 
 ## Göreve ait sınırlı doğrulama — 2026-10-04
+
+### Organization profili — 2026-10-05
+
+Referans tasarım ek kapsamı: ikonlu dört bölüm, geniş iki kolon, tile upload, üç preview ve kaydedilen notes alanı TR/EN/DE, light/dark, 320/390/768/1280/1440 px kontrollerinden geçti; 1536×1024 referans screenshot incelendi. Notes error/counter/owner/1000 sınırı ve persistence doğrulandı; ortak Project picker ve sohbet dock regresyonları geçti. Yeni final kapı: 415 backend, 180 Chromium passed + production kontrollü crash route için 1 expected skip. Kapsam kaydı: `docs/compliation/2026-10-05-organization-reference-ui-notes.md`; global checklist maddeleri bu sınırlı kanıtla tamamlanmış sayılmaz.
+
+
+Organization create/edit/detail/list ve ortak media picker için dosya/URL/e-posta validation, hata/başarı/partial retry, initials/cover fallback, klavye/focus, decorative görseller, object URL cleanup ve sticky actions kontrol edildi. TR/EN/DE, light/dark, 320/390/768/1280/1440 px ve reduced motion hedefli Chromium testleri geçti; screenshot incelendi. Sohbet barı Save alanını 320/390/1280 px'te örtmüyor. Full gate: 413 backend testi ve 180 Playwright testi başarılı; production'da kapalı kontrollü crash route testi 1 expected skip. Bu sınırlı kanıt aşağıdaki proje geneli accessibility/çok tarayıcı/production maddelerini `[x]` yapmaz. Detay: `docs/compliation/2026-10-05-organization-profile-expansion.md`.
+
 
 Chat persistence ve proje logo ayarlarında client-side navigasyon, klavye/focus, X/Escape, boş/hata/yüklenme/başarı durumları, görsel fallback, dosya doğrulaması ve mobil dock/ayar çubuğu yerleşimi kontrol edildi. TR/EN/DE ve açık/koyu tema için hedefli Chromium E2E ve ekran görüntüsü incelemesi yapıldı. Proje oluşturma, banner ve mevcut yetki kontrolleri regresyona dahil edildi. Bu kanıt yalnız değişen akışları kapsar; aşağıdaki proje geneli accessibility, tüm tarayıcılar ve production QA maddeleri bununla `[x]` yapılmaz. Ayrıntılı sonuç tamamlanan teslimin `docs/compliation/2026-10-04-chat-persistence-project-logo.md` kaydında tutulur.
 

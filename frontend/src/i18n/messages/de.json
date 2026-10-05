@@ -104,7 +104,13 @@
     "PROFILE_PHOTO_DIMENSIONS": "Das Bild ist zu groß. Höchstens 6000 Pixel pro Seite.",
     "PROFILE_PHOTO_FAILED": "Das Profilfoto konnte nicht hochgeladen werden.",
     "PROJECT_LOGO_DIMENSIONS": "Das Logo ist zu groß. Höchstens 6000 Pixel pro Seite.",
-    "PROJECT_BANNER_DIMENSIONS": "Das Titelbild ist zu groß. Höchstens 6000 Pixel pro Seite."
+    "PROJECT_BANNER_DIMENSIONS": "Das Titelbild ist zu groß. Höchstens 6000 Pixel pro Seite.",
+    "ORGANIZATION_MEDIA_INVALID_TYPE": "Wählen Sie ein PNG-, JPEG- oder WebP-Bild.",
+    "ORGANIZATION_MEDIA_TOO_LARGE": "Das Bild überschreitet die erlaubte Dateigröße.",
+    "ORGANIZATION_MEDIA_EMPTY": "Wählen Sie eine nicht leere Datei.",
+    "ORGANIZATION_MEDIA_DIMENSIONS": "Das Bild überschreitet die erlaubte Dateigröße.",
+    "ORGANIZATION_MEDIA_UNAVAILABLE": "Die Organisation wurde gespeichert; einige Bildaktionen sind fehlgeschlagen. Sie können diese erneut versuchen.",
+    "ORGANIZATION_MEDIA_CONFLICT": "Die Organisation wurde gespeichert; einige Bildaktionen sind fehlgeschlagen. Sie können diese erneut versuchen."
   },
   "app": {
     "nav": {
@@ -166,19 +172,19 @@
       "name": "Name",
       "description": "Beschreibung",
       "cancel": "Abbrechen",
-      "create": "Erstellen",
+      "create": "Organisation erstellen",
       "save": "Speichern",
       "created": "Organisation erstellt.",
       "updated": "Organisation aktualisiert.",
-      "createDescription": "Gruppieren Sie Ihre Projekte unter einer Organisation.",
-      "editDescription": "Aktualisieren Sie Namen und Beschreibung der Organisation.",
+      "createDescription": "Bündeln Sie Ihr Team und Ihre Projekte in einer Organisation.",
+      "editDescription": "Aktualisieren Sie das Profil, die Kontaktdaten und die Bilder Ihrer Organisation.",
       "notEditable": "Nur der Eigentümer kann diese Organisation bearbeiten; archivierte Organisationen können nicht geändert werden.",
       "namePlaceholder": "z. B. Liefer-Team",
       "descriptionPlaceholder": "Beschreiben Sie kurz, was die Organisation macht und wen sie umfasst.",
       "descriptionHint": "Optional. Wird auf der Karte und auf der Seite der Organisation angezeigt.",
       "preview": {
         "title": "Vorschau",
-        "caption": "So sieht die Karte in der Liste aus.",
+        "caption": "So erscheint sie in der Liste und auf der Organisationsseite.",
         "now": "Jetzt",
         "show": "Vorschau anzeigen",
         "namePlaceholder": "Name der Organisation"
@@ -186,10 +192,53 @@
       "backToOrganization": "Zurück zur Organisation",
       "sections": {
         "general": {
-          "title": "Allgemein",
+          "title": "Allgemeine Angaben",
           "description": "Name und Beschreibung der Organisation."
         }
       }
+    },
+    "profile": {
+      "website": "Webseite",
+      "contactEmail": "Kontakt-E-Mail",
+      "location": "Standort",
+      "websitePlaceholder": "https://example.com",
+      "emailPlaceholder": "kontakt@example.com",
+      "locationPlaceholder": "Istanbul, Türkei",
+      "identityTitle": "Identität und Bilder",
+      "identityDescription": "Gestalten Sie das visuelle Erscheinungsbild Ihrer Organisation.",
+      "contactTitle": "Kontakt und Links",
+      "contactDescription": "Diese Angaben erscheinen auf Ihrer Organisationsseite.",
+      "logo": "Logo",
+      "cover": "Titelbild",
+      "choose": "Bild auswählen",
+      "change": "Ersetzen",
+      "remove": "Entfernen",
+      "logoHint": "PNG, JPEG oder WebP · Bis zu 512 KB.",
+      "coverHint": "PNG, JPEG oder WebP · Bis zu 2 MB.",
+      "invalidType": "Wählen Sie ein PNG-, JPEG- oder WebP-Bild.",
+      "tooLarge": "Das Bild überschreitet die erlaubte Dateigröße.",
+      "empty": "Wählen Sie eine nicht leere Datei.",
+      "removeTitle": "Dieses Bild entfernen?",
+      "removeDescription": "Die Änderung wird beim Speichern angewendet.",
+      "partial": "Die Organisation wurde gespeichert; einige Bildaktionen sind fehlgeschlagen. Sie können diese erneut versuchen.",
+      "retry": "Erneut versuchen",
+      "continue": "Zur Organisation",
+      "failedLogo": "Das Logo konnte nicht gespeichert werden.",
+      "failedCover": "Das Titelbild konnte nicht gespeichert werden.",
+      "helpTitle": "Was ist eine Organisation?",
+      "helpDescription": "Sie bündelt zusammengehörige Projekte. Mitgliedschaften und Berechtigungen werden in jedem Projekt separat verwaltet.",
+      "profilePreview": "Seitenkopf",
+      "failedRefresh": "Die aktuellen Angaben konnten nicht geladen werden.",
+      "optional": "Optional",
+      "uploadLogo": "Logo hochladen",
+      "uploadCover": "Titelbild hochladen",
+      "logoFallbackHint": "Ohne Logo wird der erste Buchstabe des Namens verwendet.",
+      "coverPlacementHint": "Wird oben auf Ihrer Organisationsseite angezeigt.",
+      "detailsTitle": "Details",
+      "detailsDescription": "Ergänzen Sie weitere Informationen und Notizen.",
+      "notes": "Weitere Notizen",
+      "notesPlaceholder": "Weitere Informationen zu dieser Organisation… (optional)",
+      "cardPreview": "Kartenansicht"
     }
   },
   "projects": {
@@ -268,7 +317,8 @@
         "change": "Ändern",
         "remove": "Entfernen",
         "invalidType": "Laden Sie nur PNG, JPEG oder WebP hoch.",
-        "tooLarge": "Das Titelbild darf höchstens 2 MB groß sein."
+        "tooLarge": "Das Titelbild darf höchstens 2 MB groß sein.",
+        "empty": "Wählen Sie eine nicht leere Datei."
       },
       "name": {
         "label": "Projektname",
@@ -720,7 +770,23 @@
     }
   },
   "squads": {
-    "card": { "members": "Mitglieder", "lastUpdate": "Letzte Änderung" },
+    "card": {
+      "members": "Mitglieder",
+      "memberCount": "{count, plural, one {# Mitglied} other {# Mitglieder}}",
+      "noMembers": "Noch keine Mitglieder",
+      "lastUpdate": "Letzte Aktualisierung",
+      "updatedBy": "{date} · {name}",
+      "lastJoined": "Zuletzt beigetreten",
+      "joinedBy": "{name} · {when}",
+      "nobodyJoined": "Noch niemand beigetreten",
+      "noDescription": "Keine Beschreibung hinzugefügt",
+      "namePlaceholder": "Teamname",
+      "parent": "Übergeordnetes Team: {name}",
+      "open": "Team öffnen",
+      "openNamed": "Team {name} öffnen",
+      "edit": "Bearbeiten",
+      "editNamed": "Team {name} bearbeiten"
+    },
     "membersPage": {
       "back": "Zurück zu Teams",
       "teams": "Teams",
@@ -750,7 +816,7 @@
       "removedFromProject": "Mitglied aus dem Projekt entfernt.",
       "retry": "Erneut versuchen"
     },
-    "description": "Erstellen und verwalten Sie Teams, die an diesem Projekt arbeiten.",
+    "description": "Erstellen und verwalten Sie die Teams, die im Projekt zusammenarbeiten. Personen werden über Teams eingeladen.",
     "noDescription": "Für dieses Team wurde noch keine Beschreibung hinzugefügt.",
     "newPage": {
       "description": "Geben Sie dem Team einen Namen und eine kurze Beschreibung. Mitglieder können Sie nach dem Erstellen hinzufügen.",
@@ -758,35 +824,16 @@
     },
     "manageMembers": "Mitglieder",
     "edit": "Bearbeiten",
-    "emptyDescription": "Organisieren Sie Projektmitglieder in Teams, die zusammenarbeiten.",
+    "emptyDescription": "Erstellen Sie Ihr erstes Team. Personen werden über Teams eingeladen.",
     "title": "Teams",
-    "description": "Erstellen und verwalten Sie die Teams, die im Projekt zusammenarbeiten. Personen werden über Teams eingeladen.",
     "create": "Neues Team",
     "cancel": "Abbrechen",
     "emptyTitle": "Noch keine Teams",
-    "emptyDescription": "Erstellen Sie Ihr erstes Team. Personen werden über Teams eingeladen.",
     "emptyViewerDescription": "In diesem Projekt wurde noch kein Team erstellt.",
     "view": {
       "label": "Ansicht",
       "list": "Liste",
       "chart": "Schema"
-    },
-    "card": {
-      "members": "Mitglieder",
-      "memberCount": "{count, plural, one {# Mitglied} other {# Mitglieder}}",
-      "noMembers": "Noch keine Mitglieder",
-      "lastUpdate": "Letzte Aktualisierung",
-      "updatedBy": "{date} · {name}",
-      "lastJoined": "Zuletzt beigetreten",
-      "joinedBy": "{name} · {when}",
-      "nobodyJoined": "Noch niemand beigetreten",
-      "noDescription": "Keine Beschreibung hinzugefügt",
-      "namePlaceholder": "Teamname",
-      "parent": "Übergeordnetes Team: {name}",
-      "open": "Team öffnen",
-      "openNamed": "Team {name} öffnen",
-      "edit": "Bearbeiten",
-      "editNamed": "Team {name} bearbeiten"
     },
     "archive": {
       "label": "Team {name} archivieren",
@@ -1017,7 +1064,8 @@
     "taskDateOrder": "Die Frist darf nicht vor dem Startdatum liegen.",
     "timeEstimateRange": "Die Zeitschätzung muss zwischen 1 und 100000 Minuten liegen.",
     "worklogRange": "Die Zeit muss zwischen 1 und 1440 Minuten liegen.",
-    "sprintDateOrder": "Das Enddatum darf nicht vor dem Startdatum liegen."
+    "sprintDateOrder": "Das Enddatum darf nicht vor dem Startdatum liegen.",
+    "url": "Geben Sie eine gültige HTTP/HTTPS-Adresse ein."
   },
   "forgotPassword": {
     "title": "Passwort vergessen?",
@@ -1067,7 +1115,10 @@
       "WORK": "Arbeit",
       "OTHER": "Sonstiges"
     },
-    "scope": { "PERSONAL": "Persönlich", "PROJECT": "Projektweit" },
+    "scope": {
+      "PERSONAL": "Persönlich",
+      "PROJECT": "Projektweit"
+    },
     "createdBy": "Erstellt von {name}",
     "toasts": {
       "created": "Erinnerung erstellt.",

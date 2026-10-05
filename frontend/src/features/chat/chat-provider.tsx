@@ -216,9 +216,9 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey }: {
   const draftsRef = useRef<Record<string, string>>({});
   const triggerRef = useRef<HTMLElement | null>(null);
   // Each account/project transition is a distinct generation, including a quick A -> B -> A trip.
-  const lifetimeRef = useRef({ active: true });
+  const lifetimeRef = useRef({ active: true, messageIds: new Set<string>() });
   useEffect(() => {
-    const lifetime = { active: true };
+    const lifetime = { active: true, messageIds: new Set<string>() };
     lifetimeRef.current = lifetime;
     return () => { lifetime.active = false; };
   }, [ownerKey]);
@@ -251,6 +251,12 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey }: {
       }
       const message = event.message;
       if (!message || message.conversationId !== event.conversationId) return;
+      // Renewal briefly keeps both subscriptions alive. Process a delivered message once, including unread/outbox.
+      const messageIds = lifetimeRef.current.messageIds;
+      if (messageIds.has(message.id)) return;
+      messageIds.add(message.id);
+      // Retain recent delivery IDs without growing for the entire workspace session.
+      if (messageIds.size > 1000) messageIds.delete(messageIds.values().next().value!);
       const mine = message.sender.userId === selfIdRef.current;
       appendMessages(queryClient, pid, message.conversationId, [message]);
       if (mine) dispatch({ type: "outboxConsume", conversationId: message.conversationId, content: message.content });

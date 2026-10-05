@@ -75,7 +75,7 @@ export function ProjectSettingsForm({ project }: { project: Project }) {
 
   const { data: organizations } = useQuery({
     queryKey: ["organizations", "picker"],
-    queryFn: () => organizationsApi.list(0, 100),
+    queryFn: () => organizationsApi.allOwned(),
   });
 
   const {

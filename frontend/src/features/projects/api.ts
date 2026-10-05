@@ -45,6 +45,16 @@ export function projectBannerUrl(projectId: string, bannerVersion: number): stri
 
 export const projectsApi = {
   list: (page: number, size = PROJECT_PAGE_SIZE) => apiRequest<Page<Project>>(`/projects?page=${page}&size=${size}`),
+  /** Selection controls must include visible projects beyond the first API page. */
+  allVisible: async () => {
+    const projects = new Map<string, Project>();
+    for (let page = 0; ; page++) {
+      const result = await apiRequest<Page<Project>>(`/projects?page=${page}&size=100`);
+      for (const project of result.content) projects.set(project.id, project);
+      if (!result.content.length || page + 1 >= result.totalPages) break;
+    }
+    return [...projects.values()];
+  },
   detail: (projectId: string) => apiRequest<Project>(`/projects/${projectId}`),
   bySlug: (slug: string) => apiRequest<Project>(`/projects/by-slug/${slug}`),
   home: (projectId: string) => apiRequest<ProjectHome>(`/projects/${projectId}/home`),

@@ -30,7 +30,7 @@ test.describe.serial("Organizations", () => {
     await expect(managerPage.getByRole("dialog")).toHaveCount(0);
     await expect(managerPage.getByRole("heading", { level: 1, name: "Yeni organizasyon" })).toBeVisible();
 
-    await managerPage.getByRole("button", { name: /^Oluştur$/ }).click();
+    await managerPage.getByRole("button", { name: /^Organizasyonu oluştur$/ }).click();
     await expect(managerPage.getByRole("alert").first()).toBeVisible();
     await expect(managerPage).toHaveURL(/\/tr\/organizasyonlar\/yeni$/);
   });
@@ -39,12 +39,12 @@ test.describe.serial("Organizations", () => {
     await managerPage.goto("/organizations/new");
     const preview = managerPage.locator("#organization-preview");
     // Empty form: the card still shows a placeholder name instead of an empty header.
-    await expect(preview.getByRole("heading", { name: "Organizasyon adı" })).toBeVisible();
+    await expect(preview.locator("article").getByRole("heading", { name: "Organizasyon adı" })).toBeVisible();
 
     await managerPage.locator("#org-name").fill("Önizleme Ekibi");
     await managerPage.locator("#org-description").fill("Kartta görünecek açıklama");
-    await expect(preview.getByRole("heading", { name: "Önizleme Ekibi" })).toBeVisible();
-    await expect(preview.getByText("Kartta görünecek açıklama")).toBeVisible();
+    await expect(preview.locator("article").getByRole("heading", { name: "Önizleme Ekibi" })).toBeVisible();
+    await expect(preview.locator("article").getByText("Kartta görünecek açıklama")).toBeVisible();
     await expect(managerPage.getByText("25/2000")).toBeVisible();
     // The preview is only a picture of the card: nothing in it can be opened.
     await expect(preview.getByRole("link")).toHaveCount(0);
@@ -53,7 +53,7 @@ test.describe.serial("Organizations", () => {
   test("creating an organization lands on its own page", async () => {
     await managerPage.locator("#org-name").fill(name);
     await managerPage.locator("#org-description").fill("Popup yerine sayfa");
-    await managerPage.getByRole("button", { name: /^Oluştur$/ }).click();
+    await managerPage.getByRole("button", { name: /^Organizasyonu oluştur$/ }).click();
 
     await expect(managerPage.getByText("Organizasyon oluşturuldu.")).toBeVisible();
     await expect(managerPage).toHaveURL(/\/tr\/organizasyonlar\/(?!yeni$)[^/]+$/);
@@ -105,8 +105,8 @@ test.describe.serial("Organizations", () => {
 });
 
 for (const { locale, segment, create, edit, submit } of [
-  { locale: "en", segment: "organizations", create: "new", edit: "edit", submit: "Create" },
-  { locale: "de", segment: "organisationen", create: "neu", edit: "bearbeiten", submit: "Erstellen" },
+  { locale: "en", segment: "organizations", create: "new", edit: "edit", submit: "Create organization" },
+  { locale: "de", segment: "organisationen", create: "neu", edit: "bearbeiten", submit: "Organisation erstellen" },
 ] as const) {
   test(`organization create and edit remain usable at ${locale} addresses`, async ({ browser }) => {
     const context = await browser.newContext({ storageState: MANAGER_STORAGE });

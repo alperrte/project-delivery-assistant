@@ -11,9 +11,9 @@ export function ProjectSwitcher({ slug, onSelect }: { slug: string | undefined; 
   const t = useTranslations("calendarPage");
   const { data } = useQuery({
     queryKey: ["projects", "calendar-switcher"],
-    queryFn: () => projectsApi.list(0, 100),
+    queryFn: projectsApi.allVisible,
   });
-  const projects = data?.content ?? [];
+  const projects = data ?? [];
 
   return (
     <div className="flex flex-wrap items-center gap-3">

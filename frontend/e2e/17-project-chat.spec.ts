@@ -225,6 +225,18 @@ test.describe.serial("Project chat", () => {
       await expect(barOf(managerPage)).toBeVisible();
       await expect(managerPage.getByTestId("chat-bar-title")).toHaveText(member.nickname);
     }
+    await managerPage.locator('.app-shell a[href="/tr/organizasyonlar"]').first().click();
+    await managerPage.getByRole("link", { name: "Yeni organizasyon", exact: true }).click();
+    await expect(managerPage).toHaveURL(/\/tr\/organizasyonlar\/yeni$/);
+    const originalViewport = managerPage.viewportSize()!;
+    for (const width of [320, 390, 1280]) {
+      await managerPage.setViewportSize({ width, height: 900 });
+      await managerPage.locator('[data-sticky-actions]').scrollIntoViewIfNeeded();
+      const actions = (await managerPage.locator('[data-sticky-actions]').boundingBox())!;
+      const dock = (await barOf(managerPage).boundingBox())!;
+      expect(dock.y + dock.height).toBeLessThanOrEqual(actions.y);
+    }
+    await managerPage.setViewportSize(originalViewport);
     expect(socketStats).toEqual(beforeNavigation);
     await directRow(memberPage, manager).click();
     await expectSendEnabled(memberPage);
@@ -623,12 +635,22 @@ test.describe.serial("Project chat", () => {
         if ("x-access-token-expires-in" in headers) headers["x-access-token-expires-in"] = "20000";
         await route.fulfill({ response, headers });
       });
-      const sockets: { closed: boolean }[] = [];
+      const sockets: { closed: boolean; subscribed: boolean; messages: string[] }[] = [];
+      let resolveOverlap!: () => void;
+      const overlap = new Promise<void>((resolve) => { resolveOverlap = resolve; });
       const trackSocket = (socket: import("@playwright/test").WebSocket) => {
         if (!socket.url().includes("/api/v1/ws")) return;
-        const entry = { closed: false };
+        const entry = { closed: false, subscribed: false, messages: [] as string[] };
         sockets.push(entry);
         socket.on("close", () => { entry.closed = true; });
+        socket.on("framereceived", ({ payload }) => {
+          if (payload.toString().startsWith("MESSAGE")) entry.messages.push(payload.toString());
+        });
+        socket.on("framesent", ({ payload }) => {
+          if (!payload.toString().startsWith("SUBSCRIBE")) return;
+          entry.subscribed = true;
+          if (sockets.filter((socket) => !socket.closed && socket.subscribed).length === 2) resolveOverlap();
+        });
       };
       await login(page, credentials.email, credentials.password);
       await page.close();
@@ -655,6 +677,25 @@ test.describe.serial("Project chat", () => {
       await expect.poll(() => sockets.filter((entry) => !entry.closed).length).toBe(1);
       const initialSockets = sockets.length;
 
+      const overview = (await api(managerPage, "GET", `/projects/${projectId}/chat/conversations`)).json as { group: { id: string } };
+      await expect.poll(async () => ((await api(page, "GET", `/projects/${projectId}/chat/conversations`)).json as { group: { unread: number } }).group.unread).toBe(0);
+      const unreadBefore = ((await api(page, "GET", `/projects/${projectId}/chat/conversations`)).json as { totalUnread: number }).totalUnread;
+      const expectedUnread = unreadBefore + 1;
+      await page.getByTestId("chat-minimize").click();
+      await overlap;
+      // Allow the second SUBSCRIBE to reach the broker, while the old subscription is still active.
+      await page.waitForTimeout(100);
+      expect(sockets.filter((entry) => !entry.closed && entry.subscribed)).toHaveLength(2);
+      const overlapText = `Overlap unread ${Date.now()}`;
+      expect((await api(managerPage, "POST", `/projects/${projectId}/chat/conversations/${overview.group.id}/messages`, { content: overlapText })).status).toBe(201);
+      await expect.poll(() => sockets.filter((entry) => entry.messages.some((frame) => frame.includes(overlapText))).length).toBe(2);
+      await expect(page.getByTestId("chat-bar-unread")).toHaveText(String(expectedUnread));
+      await page.waitForTimeout(350);
+      expect(((await api(page, "GET", `/projects/${projectId}/chat/conversations`)).json as { totalUnread: number }).totalUnread).toBe(expectedUnread);
+      await expect(page.getByTestId("chat-bar-unread")).toHaveText(String(expectedUnread));
+      await page.getByTestId("chat-bar-expand").click();
+      await expect(messagesOf(page).filter({ hasText: overlapText })).toHaveCount(1);
+
       // A second socket is opened with the renewed session, becomes the live one, and the first one is closed.
       await expect.poll(() => sockets.length, { timeout: 40_000 }).toBeGreaterThan(initialSockets);
       await expect.poll(() => sockets.slice(0, initialSockets).every((entry) => entry.closed), { timeout: 15_000 }).toBe(true);
@@ -663,7 +704,6 @@ test.describe.serial("Project chat", () => {
       await expectSendEnabled(page);
 
       // The new socket really is the live one: a message from the manager arrives without any reload.
-      const overview = (await api(managerPage, "GET", `/projects/${projectId}/chat/conversations`)).json as { group: { id: string } };
       const text = `Yenilenen bağlantıdan geldi ${Date.now()}`;
       const sent = await api(managerPage, "POST", `/projects/${projectId}/chat/conversations/${overview.group.id}/messages`, { content: text });
       expect(sent.status).toBe(201);
