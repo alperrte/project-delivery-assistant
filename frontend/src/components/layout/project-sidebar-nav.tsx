@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import Link from "@/i18n/navigation";
+import { usePathname, useSearchParams } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { ChatNavItem } from "@/features/chat/components/chat-nav-item";
 import { usePendingInvitationCount } from "@/features/invitations/hooks";
@@ -21,13 +21,16 @@ import { navItemClass } from "./nav-item";
 export function ProjectSidebarNav({
   onNavigate,
   collapsed,
+  pathnameOverride,
 }: {
   onNavigate: () => void;
   collapsed?: boolean;
+  pathnameOverride?: string;
 }) {
   const t = useTranslations("projects.detail");
   const tn = useTranslations("tasks.nav");
-  const pathname = usePathname();
+  const routePathname = usePathname();
+  const pathname = pathnameOverride ?? routePathname;
   const searchParams = useSearchParams();
 
   // Team pages:
@@ -167,7 +170,7 @@ export function ProjectSidebarNav({
 
         {slug && projectPath && (
           <div className="mt-1 border-t border-border pt-1">
-            <ChatNavItem projectId={project?.id} slug={slug} projectPath={projectPath} collapsed onNavigate={onNavigate} />
+            <ChatNavItem projectId={project?.id} slug={slug} collapsed onNavigate={onNavigate} />
           </div>
         )}
       </div>
@@ -310,7 +313,7 @@ export function ProjectSidebarNav({
 
       {slug && projectPath && (
         <div className="ml-2 mt-3 border-l border-border pl-2">
-          <ChatNavItem projectId={project?.id} slug={slug} projectPath={projectPath} onNavigate={onNavigate} />
+          <ChatNavItem projectId={project?.id} slug={slug} onNavigate={onNavigate} />
         </div>
       )}
     </div>

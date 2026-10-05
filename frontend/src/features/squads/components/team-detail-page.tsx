@@ -1,14 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import Link from "@/i18n/navigation";
+import { usePathname, useRouter, useSearchParams } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CaretDown, Check, MagnifyingGlass, PencilSimple, Funnel } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/common/empty-state";
 import { PaginationBar } from "@/components/common/pagination-bar";
-import { ProjectMark } from "@/features/projects/components/project-card";
+import { ProjectMark } from "@/features/projects/components/project-mark";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";

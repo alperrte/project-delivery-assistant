@@ -5,11 +5,8 @@ import { useTranslations } from "next-intl";
 import { UploadSimple } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { ProjectMark } from "../project-card";
-
-export const LOGO_MAX_BYTES = 512 * 1024;
-const ACCEPTED = ["image/png", "image/jpeg", "image/webp"];
-
+import { ProjectMark } from "../project-mark";
+import { LOGO_ACCEPTED_TYPES, logoValidationError } from "../../logo-validation";
 type LogoFieldProps = {
   name: string;
   previewUrl: string | null;
@@ -27,14 +24,8 @@ export function LogoField({ name, previewUrl, onChange }: LogoFieldProps) {
 
   function accept(file: File | undefined) {
     if (!file) return;
-    if (!ACCEPTED.includes(file.type)) {
-      setError(t("invalidType"));
-      return;
-    }
-    if (file.size > LOGO_MAX_BYTES) {
-      setError(t("tooLarge"));
-      return;
-    }
+    const invalid = logoValidationError(file);
+    if (invalid) return setError(t(invalid));
     setError(null);
     onChange(file);
   }
@@ -97,7 +88,7 @@ export function LogoField({ name, previewUrl, onChange }: LogoFieldProps) {
           ref={inputRef}
           id={inputId}
           type="file"
-          accept={ACCEPTED.join(",")}
+          accept={LOGO_ACCEPTED_TYPES.join(",")}
           className="sr-only"
           aria-describedby={hintId}
           onChange={(event) => {

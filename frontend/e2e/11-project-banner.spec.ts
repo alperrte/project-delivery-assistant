@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { api, createProject } from "./helpers";
+import { api, createProject, openProjectListPage } from "./helpers";
 import { MANAGER_STORAGE, MEMBER_STORAGE } from "./global-setup";
 
 /** The smallest valid PNG: the server decides the type from the magic bytes, the picture itself is stretched to fit. */
@@ -59,8 +59,8 @@ test.describe.serial("Project banner", () => {
     await managerPage.goto(`/projects/${slug}`);
     await expect(managerPage.getByRole("heading", { level: 1, name: projectName })).toBeVisible();
     await expect(managerPage.locator(BANNER_IMG)).toHaveCount(0);
-    await managerPage.goto("/projects");
-    const card = managerPage.locator("article").filter({ hasText: projectName });
+    await openProjectListPage(managerPage, slug);
+    const card = managerPage.locator("article").filter({ has: managerPage.locator(`a[href="/tr/projeler/${slug}"]`) });
     await expect(card).toBeVisible();
     // No strip is opened on the card either: the card is just the card.
     await expect(card.locator("img")).toHaveCount(0);
@@ -72,20 +72,21 @@ test.describe.serial("Project banner", () => {
     await expect(managerPage.getByRole("heading", { level: 1, name: projectName })).toBeVisible();
     await expect(managerPage.getByRole("link", { name: /ayarlarını düzenle/ })).toHaveCount(0);
 
-    await managerPage.goto("/projects");
-    const card = managerPage.locator("article").filter({ hasText: projectName });
+    await openProjectListPage(managerPage, slug);
+    const card = managerPage.locator("article").filter({ has: managerPage.locator(`a[href="/tr/projeler/${slug}"]`) });
     await card.getByRole("link", { name: `${projectName} ayarlarını düzenle` }).click();
     await expect(managerPage).toHaveURL(/section=settings/);
     await expect(managerPage.getByRole("heading", { level: 1, name: "Proje ayarları" })).toBeVisible();
 
-    await memberPage.goto("/projects");
-    await expect(memberPage.locator("article").filter({ hasText: projectName })).toBeVisible();
-    await expect(memberPage.getByRole("link", { name: /ayarlarını düzenle/ })).toHaveCount(0);
+    await openProjectListPage(memberPage, slug);
+    const memberCard = memberPage.locator("article").filter({ has: memberPage.locator(`a[href="/tr/projeler/${slug}"]`) });
+    await expect(memberCard).toBeVisible();
+    await expect(memberCard.getByRole("link", { name: /ayarlarını düzenle/ })).toHaveCount(0);
   });
 
   test("a wrong type or an oversize file is refused before anything is uploaded", async () => {
     await managerPage.goto(`/projects/${slug}?section=settings`);
-    const input = managerPage.locator('input[type="file"]');
+    const input = managerPage.getByLabel("Kapak görseli", { exact: true });
 
     await input.setInputFiles({ name: "kapak.gif", mimeType: "image/gif", buffer: Buffer.from("GIF89a") });
     await expect(managerPage.getByRole("alert").filter({ hasText: "PNG, JPEG veya WebP olmalıdır" })).toBeVisible();
@@ -97,7 +98,7 @@ test.describe.serial("Project banner", () => {
 
   test("the manager uploads a banner; it shows on the project card only", async () => {
     await managerPage.goto(`/projects/${slug}?section=settings`);
-    await managerPage.locator('input[type="file"]').setInputFiles({ name: "kapak.png", mimeType: "image/png", buffer: PNG });
+    await managerPage.getByLabel("Kapak görseli", { exact: true }).setInputFiles({ name: "kapak.png", mimeType: "image/png", buffer: PNG });
     await expect(managerPage.getByText("Kapak görseli güncellendi.")).toBeVisible();
     // The settings only state it: no picture there, and none in the project page header.
     await expect(managerPage.getByText("Bu proje için bir kapak görseli yüklü.")).toBeVisible();
@@ -106,8 +107,8 @@ test.describe.serial("Project banner", () => {
     await expect(managerPage.getByRole("heading", { level: 1, name: projectName })).toBeVisible();
     await expect(managerPage.locator(BANNER_IMG)).toHaveCount(0);
 
-    await managerPage.goto("/projects");
-    const card = managerPage.locator("article").filter({ hasText: projectName });
+    await openProjectListPage(managerPage, slug);
+    const card = managerPage.locator("article").filter({ has: managerPage.locator(`a[href="/tr/projeler/${slug}"]`) });
     await expect(card.locator(BANNER_IMG)).toBeVisible();
   });
 
@@ -143,8 +144,8 @@ test.describe.serial("Project banner", () => {
     await expect(managerPage.getByText("Kapak görseli kaldırıldı.")).toBeVisible();
     await expect(managerPage.getByText("Henüz kapak görseli yok.")).toBeVisible();
 
-    await managerPage.goto("/projects");
-    const card = managerPage.locator("article").filter({ hasText: projectName });
+    await openProjectListPage(managerPage, slug);
+    const card = managerPage.locator("article").filter({ has: managerPage.locator(`a[href="/tr/projeler/${slug}"]`) });
     await expect(card).toBeVisible();
     await expect(card.locator(BANNER_IMG)).toHaveCount(0);
   });

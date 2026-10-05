@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { ChatsCircle } from "@phosphor-icons/react";
 import { navItemClass } from "@/components/layout/nav-item";
@@ -10,25 +9,21 @@ import { useChatOverview } from "../hooks";
 
 /**
  * "Mesajlaşma" in the selected-project group of the sidebar. It is a button, not a link: it opens the chat panel over
- * the page. Inside the project's pages that happens at once; from anywhere else it first goes to the project, then
- * opens. The badge is the project's unread total (the number the server keeps), kept live by the socket while the
- * user is in the project and refreshed on a timer elsewhere.
+ * the page. The selected project's chat opens in place on any workspace page. Its unread badge is kept live by
+ * the selected context's socket, and refreshed on a timer while that connection is unavailable.
  */
 export function ChatNavItem({
   projectId,
   slug,
-  projectPath,
   collapsed,
   onNavigate,
 }: {
   projectId: string | undefined;
   slug: string;
-  projectPath: string;
   collapsed?: boolean;
   onNavigate: () => void;
 }) {
   const t = useTranslations("chat");
-  const router = useRouter();
   const chat = useChat();
   const live = chat.projectId !== undefined && chat.projectId === projectId && chat.connection === "connected";
   const { data: overview } = useChatOverview(projectId, { poll: !live });
@@ -38,12 +33,7 @@ export function ChatNavItem({
 
   function activate() {
     onNavigate();
-    if (chat.routeSlug === slug) {
-      chat.open();
-    } else {
-      chat.requestOpen(slug);
-      router.push(projectPath);
-    }
+    if (chat.contextSlug === slug) chat.open();
   }
 
   if (collapsed) {

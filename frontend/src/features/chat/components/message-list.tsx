@@ -167,7 +167,7 @@ export function MessageList({
         aria-label={t("messagesLabel")}
         data-testid="chat-messages"
         tabIndex={0}
-        className="min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain px-3 py-3 outline-none focus-visible:ring-3 focus-visible:ring-inset focus-visible:ring-ring/50"
+        className="min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain px-3 py-4 outline-none focus-visible:ring-3 focus-visible:ring-inset focus-visible:ring-ring/50 sm:px-5"
       >
         {hasOlder && (
           <div ref={sentinelRef} className="py-2 text-center text-xs text-muted-foreground" aria-hidden={!loadingOlder}>
@@ -199,7 +199,7 @@ export function MessageList({
                     {newRun && <PersonAvatar user={message.sender} className="size-7 text-[10px]" />}
                   </span>
                 )}
-                <div className={cn("flex max-w-[78%] min-w-0 flex-col", own ? "items-end" : "items-start")}>
+                <div className={cn("flex max-w-[min(82%,38rem)] min-w-0 flex-col", own ? "items-end" : "items-start")}>
                   {!own && showSenders && newRun && (
                     <span className="mb-0.5 px-1 text-[11px] font-medium text-muted-foreground">
                       {message.sender.nickname ?? "?"}
@@ -223,7 +223,7 @@ export function MessageList({
         })}
         {outbox.map((pending) => (
           <div key={pending.clientId} data-testid="chat-pending" data-status={pending.status} className="flex justify-end pt-2">
-            <div className="flex max-w-[78%] min-w-0 flex-col items-end">
+            <div className="flex max-w-[min(82%,38rem)] min-w-0 flex-col items-end">
               <div
                 className={cn(
                   "rounded-2xl rounded-br-sm px-3 py-1.5 text-sm break-words whitespace-pre-wrap [overflow-wrap:anywhere]",

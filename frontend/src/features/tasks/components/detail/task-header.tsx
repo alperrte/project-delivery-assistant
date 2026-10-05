@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import Link from "@/i18n/navigation";
+import { useRouter } from "@/i18n/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import { buildPath } from "@/i18n/routing";
+import type { Locale } from "@/i18n/config";
 import { Archive, CaretRight, CircleNotch, DotsThree, Eye, EyeSlash, LinkSimple, PencilSimple } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -18,6 +20,7 @@ type HeaderProps = DetailContext & { projectName: string };
 
 export function TaskHeader({ task, slug, projectId, perms, projectName }: HeaderProps) {
   const t = useTranslations("tasks.detail");
+  const locale = useLocale() as Locale;
   const router = useRouter();
   const [archiving, setArchiving] = useState(false);
   const archived = !!task.archivedAt;
@@ -35,7 +38,7 @@ export function TaskHeader({ task, slug, projectId, perms, projectName }: Header
 
   async function copyLink() {
     try {
-      await navigator.clipboard.writeText(`${window.location.origin}/projects/${slug}/tasks/${task.id}`);
+      await navigator.clipboard.writeText(`${window.location.origin}${buildPath("/projects/[slug]/tasks/[taskId]", { slug, taskId: task.id }, locale)}`);
       toast.success(t("linkCopied"));
     } catch {
       toast.error(t("linkCopyFailed"));

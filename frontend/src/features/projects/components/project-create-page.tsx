@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import Link from "@/i18n/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -76,7 +76,7 @@ function usePickedImage() {
   return { file: picked?.file ?? null, url: picked?.url ?? null, change };
 }
 
-export function ProjectCreatePage() {
+export function ProjectCreatePage({ presentationValues }: { presentationValues?: CreateProjectValues } = {}) {
   const t = useTranslations("projects.newPage");
   const tv = useTranslations("validation");
   const te = useTranslations("errors");
@@ -102,6 +102,7 @@ export function ProjectCreatePage() {
   } = useForm<CreateProjectValues>({
     resolver: zodResolver(createProjectSchema),
     defaultValues: { name: "", tagline: "", techStack: [], description: "" },
+    values: presentationValues,
   });
 
   const values = useWatch({ control });

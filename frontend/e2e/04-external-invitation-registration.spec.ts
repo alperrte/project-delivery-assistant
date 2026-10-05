@@ -36,7 +36,7 @@ test("external invitation registers an account and joins the invited team with t
     await invitee.getByLabel("Şifre", { exact: true }).fill(user.password);
     await invitee.getByLabel("Şifre tekrarı").fill(user.password);
     await invitee.getByRole("button", { name: "Kayıt ol ve projeye katıl" }).click();
-    await expect(invitee).toHaveURL(new RegExp(`/projects/${slug}$`), { timeout: 20_000 });
+    await expect(invitee).toHaveURL(new RegExp(`/tr/projeler/${slug}$`), { timeout: 20_000 });
 
     await manager.goto(`/projects/${slug}/teams/${teamId}`);
     await expect(manager.getByRole("row", { name: new RegExp(user.nickname) })).toBeVisible();

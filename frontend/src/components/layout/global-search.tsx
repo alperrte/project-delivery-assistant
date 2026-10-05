@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { MagnifyingGlass, X } from "@phosphor-icons/react";
@@ -30,7 +30,7 @@ function matches(query: string, ...fields: (string | null | undefined)[]) {
  * A full ARIA combobox: arrow keys move `aria-activedescendant`, Enter
  * navigates, Escape clears/closes, an outside click closes.
  */
-export function GlobalSearch({ className, onNavigate }: { className?: string; onNavigate?: () => void }) {
+export function GlobalSearch({ className, onNavigate, keyboardShortcut = true }: { className?: string; onNavigate?: () => void; keyboardShortcut?: boolean }) {
   const t = useTranslations("workspace");
   const tApp = useTranslations("app");
   const router = useRouter();
@@ -110,6 +110,7 @@ export function GlobalSearch({ className, onNavigate }: { className?: string; on
   }
 
   useEffect(() => {
+    if (!keyboardShortcut) return;
     function onKeyDown(event: KeyboardEvent) {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
@@ -119,7 +120,7 @@ export function GlobalSearch({ className, onNavigate }: { className?: string; on
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
+  }, [keyboardShortcut]);
 
   useEffect(() => {
     function onPointerDown(event: PointerEvent) {

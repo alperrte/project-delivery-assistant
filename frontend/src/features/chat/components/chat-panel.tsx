@@ -73,8 +73,11 @@ export function ChatPanel() {
         collapsed ? "lg:left-16" : "lg:left-60",
       )}
     >
-      <header className="flex h-12 shrink-0 items-center gap-2 border-b px-3 sm:px-4">
-        <h2 className="text-sm font-semibold">{t("title")}</h2>
+      <header className="flex min-h-14 shrink-0 items-center gap-3 border-b bg-card/70 px-3 sm:px-5">
+        <div className="min-w-0">
+          <h2 className="text-sm font-semibold">{t("title")}</h2>
+          {chat.projectName && <p className="truncate text-xs text-muted-foreground">{chat.projectName}</p>}
+        </div>
         <div className="ml-auto flex items-center gap-1">
           <Button variant="ghost" size="icon-sm" aria-label={t("panel.minimize")} data-testid="chat-minimize" onClick={chat.minimize}>
             <Minus size={16} aria-hidden="true" />
@@ -86,15 +89,15 @@ export function ChatPanel() {
       </header>
 
       <div className="flex min-h-0 flex-1">
-        <div className={cn("min-h-0 w-full shrink-0 flex-col border-r md:flex md:w-80", showConversation ? "hidden" : "flex")}>
-          <p className="px-4 pt-3 pb-1 text-[11px] font-semibold tracking-[0.08em] text-muted-foreground uppercase">
+        <div className={cn("min-h-0 w-full shrink-0 flex-col border-r bg-surface-2/50 md:flex md:w-80 xl:w-88", showConversation ? "hidden" : "flex")}>
+          <p className="px-4 pt-4 pb-2 text-[11px] font-semibold tracking-[0.08em] text-muted-foreground uppercase">
             {t("conversations")}
           </p>
           <ConversationList onSelected={() => setPane("conversation")} />
         </div>
 
         <div className={cn("min-h-0 min-w-0 flex-1 flex-col md:flex", showConversation ? "flex" : "hidden")}>
-          <div className="flex h-14 shrink-0 items-center gap-2 border-b px-3 sm:px-4">
+          <div className="flex h-14 shrink-0 items-center gap-2 border-b bg-card/40 px-3 sm:px-5">
             <Button variant="ghost" size="icon-sm" className="md:hidden" aria-label={t("panel.back")} onClick={() => setPane("list")}>
               <ArrowLeft size={16} aria-hidden="true" />
             </Button>

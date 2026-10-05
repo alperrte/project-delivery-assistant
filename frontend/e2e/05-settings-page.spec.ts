@@ -27,7 +27,7 @@ test.describe("with the shared manager's session", () => {
     await page.goto("/projects");
     await page.getByRole("link", { name: "Ayarlar", exact: true }).click();
 
-    await expect(page).toHaveURL(/\/settings$/);
+    await expect(page).toHaveURL(/\/tr\/ayarlar$/);
     await expect(page.getByRole("heading", { level: 1, name: "Ayarlar" })).toBeVisible();
     await expect(group(page, "Arayüz dili")).toBeVisible();
     await expect(group(page, "Tema")).toBeVisible();
@@ -153,7 +153,7 @@ test("saved defaults survive logging out and in; the navbar's changes do not", a
     await page.mouse.move(700, 8);
     await page.getByRole("button", { name: "Account menu" }).click();
     await page.getByRole("menuitem", { name: "Log out" }).click();
-    await expect(page).toHaveURL(/\/login/);
+    await expect(page).toHaveURL(/\/en\/login/);
     await expect(page.locator("html")).toHaveClass(/dark/);
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
 
@@ -165,7 +165,7 @@ test("saved defaults survive logging out and in; the navbar's changes do not", a
     await expect(page.locator("#main-content")).toBeVisible({ timeout: 15_000 });
     await expect(page.locator("html")).toHaveClass(/dark/);
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
-    await page.goto("/settings");
+    await page.goto("/en/settings");
     await expect(group(page, "Interface language").getByRole("radio", { name: "English" })).toBeChecked();
     await expect(group(page, "Theme").getByRole("radio", { name: "Dark" })).toBeChecked();
   } finally {

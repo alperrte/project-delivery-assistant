@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/i18n/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import {
@@ -16,7 +16,10 @@ import { usePendingInvitationCount } from "@/features/invitations/hooks";
 import { squadsApi } from "@/features/squads/api";
 import { membersApi } from "../members-api";
 import { projectsApi } from "../api";
+import { parseTechStack } from "../tech-stack";
 import type { Project } from "../types";
+import { TechLogo, toTechLabels } from "./tech-logo";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ProjectCriteriaActivity, ProjectCriteriaTrend } from "./project-criteria-insights";
 
 type OverviewSection = "criteria" | "teams" | "invitations" | "repository" | "settings";
@@ -84,6 +87,7 @@ export function ProjectOverview({ project, isManager, onNavigate }: {
 
   const visibleMembers = members?.content.slice(0, 4) ?? [];
   const extraMembers = Math.max(0, home.teamMemberCount - visibleMembers.length);
+  const technologies = toTechLabels(parseTechStack(project.techStack));
 
   return (
     <div className="space-y-5">
@@ -226,7 +230,7 @@ export function ProjectOverview({ project, isManager, onNavigate }: {
         </div>
         <dl className="grid w-full flex-[2] gap-x-6 gap-y-3 text-sm sm:grid-cols-2 xl:grid-cols-4">
           <div><dt className="inline-flex items-center gap-1.5 text-xs text-muted-foreground"><CalendarBlank size={15} aria-hidden="true" />{t("timeline")}</dt><dd className="mt-1 font-medium">{home.targetEndDate ? date.format(new Date(home.targetEndDate)) : t("notSpecified")}</dd></div>
-          <div><dt className="inline-flex items-center gap-1.5 text-xs text-muted-foreground"><Code size={15} aria-hidden="true" />{t("techStack")}</dt><dd className="mt-1 font-medium">{project.techStack || t("notSpecified")}</dd></div>
+          <div><dt className="inline-flex items-center gap-1.5 text-xs text-muted-foreground"><Code size={15} aria-hidden="true" />{t("techStack")}</dt><dd className="mt-1 font-medium">{technologies.length ? <ul className="flex flex-wrap gap-1.5" aria-label={t("techStack")}>{technologies.map(({ label, tech }) => <li key={label}><Tooltip><TooltipTrigger render={<button type="button" aria-label={tech?.name ?? label} className="inline-flex min-h-9 max-w-full items-center gap-1.5 rounded-md border bg-card px-2 text-xs font-medium text-foreground outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring" />}>{tech ? <TechLogo tech={tech} className="size-4" /> : <Code size={16} aria-hidden="true" />}{!tech && <span className="max-w-36 truncate">{label}</span>}</TooltipTrigger><TooltipContent>{tech?.name ?? label}</TooltipContent></Tooltip></li>)}</ul> : t("notSpecified")}</dd></div>
           <div><dt className="inline-flex items-center gap-1.5 text-xs text-muted-foreground"><UsersThree size={15} aria-hidden="true" />{t("manager")}</dt><dd className="mt-1 font-medium">{home.managers.map((manager) => manager.nickname).join(", ") || t("notSpecified")}</dd></div>
           {home.organization && <div><dt className="text-xs text-muted-foreground">{t("organization")}</dt><dd className="mt-1 font-medium"><Link href={`/organizations/${home.organization.id}`} className="inline-flex items-center gap-1 text-primary hover:underline">{home.organization.name}<ArrowUpRight size={14} aria-hidden="true" /></Link></dd></div>}
         </dl>

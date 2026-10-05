@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState, type ReactNode, type ComponentProps } from "react";
+import Link from "@/i18n/navigation";
+import { usePathname, useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
 import { Buildings, SquaresFour, House, GearSix, CalendarBlank, SidebarSimple, EnvelopeSimple } from "@phosphor-icons/react";
@@ -32,9 +32,6 @@ const NAV_LINKS = [
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const t = useTranslations("app");
-  const tw = useTranslations("workspace");
-  const [menuOpen, setMenuOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
   const queryClient = useQueryClient();
@@ -101,6 +98,22 @@ export function AppShell({ children }: { children: ReactNode }) {
     );
   }
 
+  return <ChatProvider><AppShellView pathname={pathname} user={user} collapsed={collapsed} onLogout={handleLogout} onToggleCollapsed={toggleCollapsed}>{children}</AppShellView><ChatRoot /></ChatProvider>;
+}
+
+/** Shared workspace presentation; authentication and API state stay in AppShell. */
+export function AppShellView({ children, pathname, user, collapsed = false, onLogout, onToggleCollapsed, contained = false }: {
+  children: ReactNode;
+  pathname: string;
+  user: ComponentProps<typeof AppHeader>["user"];
+  collapsed?: boolean;
+  onLogout: () => void;
+  onToggleCollapsed: () => void;
+  contained?: boolean;
+}) {
+  const t = useTranslations("app");
+  const tw = useTranslations("workspace");
+  const [menuOpen, setMenuOpen] = useState(false);
   function renderNavigation(narrow: boolean) {
     return (
       <>
@@ -137,7 +150,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Link>
             );
           })}
-          <ProjectSidebarNav onNavigate={() => setMenuOpen(false)} collapsed={narrow} />
+          <ProjectSidebarNav pathnameOverride={pathname} onNavigate={() => setMenuOpen(false)} collapsed={narrow} />
           <div className="mt-3 border-t border-border pt-4">
             {!narrow && (
               <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">{tw("personal")}</p>
@@ -174,13 +187,13 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   const shell = (
-    <div className="app-shell flex min-h-[100dvh] bg-background">
-      <a href="#main-content" className="sr-only z-50 rounded bg-primary p-3 text-primary-foreground focus:not-sr-only focus:fixed focus:top-2 focus:left-2">{tw("skip")}</a>
-      <aside className={cn("sticky top-0 hidden h-[100dvh] shrink-0 flex-col border-r bg-surface-2 transition-[width] duration-300 lg:flex", collapsed ? "w-16" : "w-60")}>
+    <div style={contained ? { height: "var(--demo-height)" } : undefined} className={cn("flex bg-background", contained ? "workspace-preview min-h-full" : "app-shell min-h-[100dvh]")}>
+      {!contained && <a href="#main-content" className="sr-only z-50 rounded bg-primary p-3 text-primary-foreground focus:not-sr-only focus:fixed focus:top-2 focus:left-2">{tw("skip")}</a>}
+      <aside style={contained ? { height: "var(--demo-height)" } : undefined} className={cn("sticky top-0 hidden h-[100dvh] shrink-0 flex-col border-r bg-surface-2 transition-[width] duration-300 lg:flex", collapsed ? "w-16" : "w-60")}>
         {renderNavigation(collapsed)}
         <button
           type="button"
-          onClick={toggleCollapsed}
+          onClick={onToggleCollapsed}
           aria-expanded={!collapsed}
           title={collapsed ? tw("expandSidebar") : tw("collapseSidebar")}
           aria-label={collapsed ? tw("expandSidebar") : tw("collapseSidebar")}
@@ -200,17 +213,11 @@ export function AppShell({ children }: { children: ReactNode }) {
         </DialogContent>
       </Dialog>
       <div className="flex min-w-0 flex-1 flex-col">
-        <AppHeader user={user} onOpenMobileMenu={() => setMenuOpen(true)} onLogout={handleLogout} />
-        <main id="main-content" tabIndex={-1} className={cn("w-full min-w-0 flex-1 pt-[4.5rem]", pathname === "/dashboard" ? "" : "mx-auto max-w-[1560px] px-4 pb-6 sm:px-8 sm:pb-8")}>{children}</main>
+        <AppHeader contained={contained} user={user} onOpenMobileMenu={() => setMenuOpen(true)} onLogout={onLogout} />
+        <main id={contained ? undefined : "main-content"} style={contained ? { height: "var(--demo-height)", overflowY: "auto" } : undefined} tabIndex={-1} className={cn("w-full min-w-0 flex-1 pt-[4.5rem]", pathname === "/dashboard" ? "" : "mx-auto max-w-[1560px] px-4 pb-6 sm:px-8 sm:pb-8")}>{children}</main>
       </div>
     </div>
   );
 
-  // The chat lives next to the shell, not inside a page, so a minimized chat survives moving between pages.
-  return (
-    <ChatProvider>
-      {shell}
-      <ChatRoot />
-    </ChatProvider>
-  );
+  return shell;
 }

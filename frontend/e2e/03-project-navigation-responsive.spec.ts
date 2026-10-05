@@ -123,6 +123,20 @@ test("Projeler stays highlighted on the list and the create page, not inside a p
   await expect(nav.getByRole("link", { name: "Projeler", exact: true })).toHaveAttribute("aria-current", "page");
 });
 
+test("language changes keep the selected project, section and sidebar target", async ({ page }) => {
+  await mockResponsiveProject(page);
+  await page.goto("/tr/projeler/responsive-project?section=teams");
+  await expect(page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Ekipler" })).toHaveAttribute("aria-current", "page");
+  await page.getByRole("button", { name: "Dil" }).click();
+  await page.getByRole("menuitem", { name: "English" }).click();
+  await expect(page).toHaveURL(/\/en\/projects\/responsive-project\?section=teams$/);
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  await page.getByRole("button", { name: "Language" }).click();
+  await page.getByRole("menuitem", { name: "Deutsch" }).click();
+  await expect(page).toHaveURL(/\/de\/projekte\/responsive-project\?section=teams$/);
+  await expect(page.locator("html")).toHaveAttribute("lang", "de");
+});
+
 test("criteria filters and search show only matching real criteria", async ({ page }) => {
   await page.route("**/api/v1/**", async (route) => {
     const path = new URL(route.request().url()).pathname;

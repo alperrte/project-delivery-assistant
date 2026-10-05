@@ -14,7 +14,7 @@ test("the navbar's account menu opens Hesap ayarları with the account details a
   await page.getByRole("button", { name: /Hesap menüsü/ }).click();
   await page.getByRole("menuitem", { name: "Hesap ayarları" }).click();
 
-  await expect(page).toHaveURL(/\/account$/);
+  await expect(page).toHaveURL(/\/tr\/hesap$/);
   await expect(page.getByRole("heading", { level: 1, name: "Hesap ayarları" })).toBeVisible();
   const main = page.locator("#main-content");
   await expect(main.getByText(manager.nickname, { exact: true })).toBeVisible();

@@ -42,7 +42,7 @@ export function useSelectedProject(routeSlug?: string) {
     enabled: !!userId,
   });
   const slug = routeSlug ?? rememberedSlug ?? projectList?.content[0]?.slug;
-  const { data: project, isError } = useQuery({
+  const { data: project, isError, error } = useQuery({
     queryKey: ["projects", "by-slug", slug],
     queryFn: () => projectsApi.bySlug(slug!),
     enabled: !!slug,
@@ -59,5 +59,5 @@ export function useSelectedProject(routeSlug?: string) {
   // No slug yet only means "still looking" while the user's project list is on its way.
   const isResolving = !slug && (!userId || listPending);
 
-  return { slug, project, isError, isResolving, select };
+  return { slug, project, isError, error, isResolving, select };
 }

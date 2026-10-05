@@ -3,9 +3,11 @@
 
 Backend `project/organization/{api,application,domain,infrastructure}` profil alanlarını ve media controller/service/ledger repository'sini barındırır. `shared/{MediaStorage,FileSystemMediaStorage}` teknik port/adaptördür; V52 migration `db/migration` altındadır. Frontend `features/organizations` contract, query factory, form, card ve ortak profile header'ı içerir. Nötr image picker/mark/cover `components/common`, validation ve picked-image hook `lib/media` altındadır; Project wrapper'ları aynı bileşenleri kendi çevirileriyle kullanır. `.local/` özel host storage ve QA çıktıları için Git dışında tutulur.
 
-## Herkese açık landing page (2026-10-02)
+## Herkese açık landing page (2026-10-03)
 
-`frontend/src/app/page.tsx` oturumsuz ziyaretçiye `features/landing/landing-page.tsx` sayfasını gösterir. `PDA_SESSION` işareti varsa yalnız `/dashboard` hedefini seçer; gerçek oturumu mevcut AppShell/API doğrular. Stil `features/landing/landing.module.css`, metinler `i18n/landing/{tr,en,de}.json` içindedir. `public/images/landing/` gerçek PDA arayüzünün örnek verilerle yakalanmış iki görünümünün light/dark WebP dosyalarını içerir. `SiteFooter tone="landing"` public tanıtım sayfasına özel düzeni sağlar; auth ve uygulama kabukları değişmez. `e2e/landing-page.spec.ts` public Playwright yapılandırmasına dahildir. Ana sayfa metadata/canonical üretir ve sitemap/robots içinde keşfedilebilir; production domain mevcut `NEXT_PUBLIC_SITE_URL` sözleşmesiyle ayrıca doğru ayarlanmalıdır.
+2026-10-04 Product Story UI düzeltmesi: `features/landing/demo/{pda-demo-workspace,landing-pda-demo-provider,demo-data}` gerçek `AppShellView`, `AppHeader`, `ProjectSidebarNav`, `ProjectCreatePage`, `ProjectDetail`, `TeamDetailPage`, `TaskFormBody` ve `TasksPage` bileşenlerini statik verilerle kullanır. Ortak query client yalnız bu gösterimde sorguları kapatır ve mutation fonksiyonlarını reddeder; uygulamanın auth/API client’ları değişmez. `.workspace-preview` globals.css içindeki mevcut Titanium token bloğunu paylaşır; `.app-shell` landing köküne eklenmez. CSS contain ve orantılı viewport ölçeği uygulamanın fixed navbar’ını demo içinde tutar; form kamerası içerik alanının gerçek scrollTop değerini kullanır. Yeni iframe/public demo rotası yoktur. Görsel karşılaştırmalar `e2e/landing-real-ui.spec.ts` içindedir.
+
+`frontend/src/app/page.tsx` oturumsuz ziyaretçiye `features/landing/landing-page.tsx` sayfasını gösterir. `PDA_SESSION` yalnız `/dashboard` hedefini seçer; gerçek oturumu AppShell/API doğrular. Yeni akış Welcome → ProductStory (`product-story.tsx`, `product-demo.tsx`) → OpenSourceScene (`open-source-scene.tsx`, `command-sequence.ts`) → final CTA → `landing-footer.tsx` şeklindedir. HTML demo backend çağrısı yapmaz; görev akışı ortak Task enum ve status stillerini kullanır, TESTING adımını korur. GSAP/ScrollTrigger native scroll üzerinde çalışır; genişlik ≥1024 ve yükseklik ≥800 px olduğunda CSS sticky sahneler etkinleşir. Mobil, kısa ekran, reduced-motion ve JS yokluğunda tüm hikâye normal akışta okunur. Stil `features/landing/landing.module.css`, metinler `i18n/landing/{tr,en,de}.json` içindedir. Global palet değiştirilmez. Eski screenshot assetleri ve ortak SiteFooter landing varyantı kaldırıldı; auth/default footer korunur. `e2e/landing-page.spec.ts` public test paketindedir. Metadata/canonical/sitemap/robots sözleşmesi korunur.
 
 ## Özel hata ekranları (2026-10-02)
 
@@ -45,6 +47,9 @@ Bu belge gezinme haritasıdır; gerçek dosya ve klasörler değişmiş olabilir
 | `backend/src/test/java/com/pda/` | Backend testleri; modül ve use-case'e yakın tut |
 | `frontend/src/app/` | Next.js App Router sayfaları, layout ve global stil |
 | `frontend/public/` | Statik frontend varlıkları |
+| `frontend/src/features/projects/components/project-mark.tsx` | Kart, oluşturma, proje başlığı ve ayarların ortak logo/ilk harf renderer'ı |
+| `frontend/src/features/projects/components/project-logo-field.tsx` | Ayarlarda bağımsız logo upload/remove; mevcut projects query invalidation |
+| `frontend/src/features/projects/logo-validation.ts` | Oluşturma ve ayarların ortak PNG/JPEG/WebP, boş dosya ve 512 KB ön kontrolü |
 | `docs/` | Proje ve faz belgeleri |
 | `docs/compliation/` | Gerçekten tamamlanan faz/servis teslim kayıtları ve kullanıcı kontrol adımları |
 | `assets/` | Repo görselleri |
@@ -76,3 +81,10 @@ Squad Service kodu `squad/api`, `squad/application/service`, `squad/domain/entit
 - Rotalar: `frontend/src/app/(app)/projects/[slug]/{tasks,sprints,labels}/**` ve `frontend/src/app/(app)/tasks/page.tsx`.
 - `frontend/src/components/layout/tasks-nav-link.tsx`: sidebar'daki Görevler bağlantısı ve rozeti.
 - `frontend/e2e/09-tasks.spec.ts`: görev yönetimi E2E.
+
+## Yerelleştirilmiş frontend rota sınırı (2026-10-04)
+
+- `frontend/src/i18n/routing.ts`: TR/EN/DE sayfa rota tablosu, `buildPath`/`matchPath`/`switchLocale`.
+- `frontend/src/i18n/navigation.tsx`: yerelleştirilmiş Link/router ve mantıksal pathname yardımcıları.
+- `frontend/src/proxy.ts`: canonical 308, oturum ipucu kontrolü ve mevcut App Router ağacına rewrite.
+- `frontend/e2e/localized-routing.spec.ts`: URL, dil, eski bookmark, 404 ve metadata regresyonu.

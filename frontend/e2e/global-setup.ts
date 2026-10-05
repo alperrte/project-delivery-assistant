@@ -1,7 +1,7 @@
 import { chromium } from "@playwright/test";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { registerUser, uniqueUser } from "./helpers";
+import { login, registerUser, uniqueUser } from "./helpers";
 
 export const AUTH_DIR = path.join(__dirname, ".auth");
 export const MANAGER_STORAGE = path.join(AUTH_DIR, "manager.json");
@@ -23,14 +23,16 @@ export default async function globalSetup() {
     ["mgr", MANAGER_STORAGE, MANAGER_USER_FILE],
     ["shared", MEMBER_STORAGE, MEMBER_USER_FILE],
   ] as const) {
-    const user = uniqueUser(prefix);
+    const reuse = process.env.E2E_REUSE_USERS === "1" && existsSync(userFile);
+    const user = reuse ? JSON.parse(readFileSync(userFile, "utf-8")) as ReturnType<typeof uniqueUser> : uniqueUser(prefix);
     const context = await browser.newContext({
       locale: "tr-TR",
       baseURL: process.env.E2E_BASE_URL ?? "http://localhost:3000",
     });
-    await registerUser(await context.newPage(), user);
+    if (reuse) await login(await context.newPage(), user.email, user.password);
+    else await registerUser(await context.newPage(), user);
     await context.storageState({ path: storage });
-    writeFileSync(userFile, JSON.stringify(user));
+    if (!reuse) writeFileSync(userFile, JSON.stringify(user));
     await context.close();
   }
 

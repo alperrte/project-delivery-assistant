@@ -68,7 +68,7 @@ test.describe.serial("Project reminders", () => {
   async function createReminder(page: Page, title: string, type: string, scopeLabel?: string) {
     await page.goto("/calendar");
     await page.getByRole("link", { name: "Anımsatıcı oluştur" }).click();
-    await expect(page).toHaveURL(/\/calendar\/new\?date=/);
+    await expect(page).toHaveURL(/\/tr\/takvim\/yeni\?date=/);
     await expect(page.getByRole("dialog")).toHaveCount(0);
     if (scopeLabel) await page.getByText(scopeLabel, { exact: true }).click();
     await page.getByLabel("Anımsatıcı adı").fill(title);
@@ -76,7 +76,7 @@ test.describe.serial("Project reminders", () => {
     await page.getByRole("option", { name: type }).click();
     await page.getByRole("button", { name: /^Oluştur$/ }).click();
     await expect(page.getByText("Anımsatıcı oluşturuldu.")).toBeVisible();
-    await expect(page).toHaveURL(/\/calendar$/);
+    await expect(page).toHaveURL(/\/tr\/takvim$/);
   }
 
   test("a manager and a member share a project", async () => {
@@ -111,7 +111,7 @@ test.describe.serial("Project reminders", () => {
     await memberPage.getByRole("option", { name: "Toplantı" }).click();
     await memberPage.getByRole("button", { name: /^Oluştur$/ }).click();
     await expect(memberPage.getByText("Anımsatıcı oluşturuldu.")).toBeVisible();
-    await expect(memberPage).toHaveURL(/\/calendar$/);
+    await expect(memberPage).toHaveURL(/\/tr\/takvim$/);
 
     const marker = memberPage.getByRole("img", { name: `Toplantı: ${personalTitle}` });
     await expect(marker).toBeVisible();

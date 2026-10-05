@@ -45,8 +45,9 @@ test.describe.serial("Task management", () => {
   let memberNickname: string;
   let formTask: TaskJson;
   let poolTask: TaskJson;
-  const formTitle = "Ödeme akışına 3-D Secure ekle";
+  const formTitle = `Ödeme akışına 3-D Secure ekle ${Date.now()}`;
   const poolTitle = "Havuzdaki E2E görevi";
+  const claimedTitle = `Üstlenilecek görev ${Date.now()}`;
 
   test.beforeAll(async ({ browser }) => {
     managerPage = await (await browser.newContext({ storageState: MANAGER_STORAGE })).newPage();
@@ -87,7 +88,7 @@ test.describe.serial("Task management", () => {
     // The live preview card follows what is typed.
     await expect(managerPage.getByRole("complementary", { name: "Önizleme" }).getByText(formTitle)).toBeVisible();
     await managerPage.getByRole("button", { name: /^Görevi oluştur$/ }).click();
-    await expect(managerPage).toHaveURL(new RegExp(`/projects/${slug}/tasks/(?!new$)[^/]+$`), { timeout: 15_000 });
+    await expect(managerPage).toHaveURL(new RegExp(`/tr/projeler/${slug}/gorevler/(?!yeni$)[^/]+$`), { timeout: 15_000 });
     await expect(managerPage.getByRole("heading", { name: formTitle })).toBeVisible();
 
     const created = await api(managerPage, "GET", `/projects/${projectId}/tasks?q=${encodeURIComponent("3-D Secure")}`);
@@ -155,17 +156,17 @@ test.describe.serial("Task management", () => {
 
   test("a member claims a pool task from the page and gets a confirmation", async () => {
     const extra = await api(managerPage, "POST", `/projects/${projectId}/tasks`, {
-      title: "Üstlenilecek görev",
+      title: claimedTitle,
       priority: "LOW",
       pool: { open: true, teamId: null },
     });
     expect(extra.status).toBe(201);
 
     await memberPage.goto(`/projects/${slug}/tasks/pool`);
-    await expect(memberPage.getByRole("link", { name: "Üstlenilecek görev" })).toBeVisible();
+    await expect(memberPage.getByRole("link", { name: claimedTitle })).toBeVisible();
     await memberPage.getByRole("button", { name: /^Üstlen$/ }).first().click();
     await expect(memberPage.getByText(/görevini üstlendiniz/)).toBeVisible();
-    await expect(memberPage.getByRole("link", { name: "Üstlenilecek görev" })).toHaveCount(0);
+    await expect(memberPage.getByRole("link", { name: claimedTitle })).toHaveCount(0);
   });
 
   test("a comment with a @mention reaches the mentioned member as a notification", async () => {
@@ -207,22 +208,23 @@ test.describe.serial("Task management", () => {
     const assigned = await api(managerPage, "PUT", `/projects/${projectId}/tasks/${formTask.id}/assignees`, { assigneeIds: [memberId] });
     expect(assigned.status).toBe(200);
 
-    await memberPage.goto("/tasks");
+    // Scope the worklist to this run's project; reused accounts have many older tasks on other pages.
+    await memberPage.goto(`/tasks?project=${projectId}`);
     // Both the task assigned above and the one claimed from the pool are theirs now.
     await expect(memberPage.getByRole("link", { name: formTitle })).toBeVisible();
-    await expect(memberPage.getByRole("link", { name: "Üstlenilecek görev" })).toBeVisible();
+    await expect(memberPage.getByRole("link", { name: claimedTitle })).toBeVisible();
 
-    const mine = (await api(memberPage, "GET", "/tasks/mine?scope=OPEN")).json as { content: TaskJson[]; counts: { open: number } };
-    expect(mine.counts.open).toBe(mine.content.length);
+    const mine = (await api(memberPage, "GET", "/tasks/mine?scope=OPEN")).json as { content: TaskJson[]; totalElements: number; counts: { open: number } };
+    expect(mine.counts.open).toBe(mine.totalElements);
     expect(mine.content.every((task) => task.assignees.some((person) => person.userId === memberId))).toBe(true);
 
     // The sidebar badge says the same thing to a screen reader.
     await expect(memberPage.getByRole("link", { name: /açık görev/ })).toBeVisible();
 
     // The status filter lives in the URL, so a filtered view can be shared and reloaded.
-    await memberPage.goto("/tasks?status=TODO");
+    await memberPage.goto(`/tasks?project=${projectId}&status=TODO`);
     await expect(memberPage.getByRole("link", { name: formTitle })).toBeVisible();
-    await expect(memberPage.getByRole("link", { name: "Üstlenilecek görev" })).toHaveCount(0);
+    await expect(memberPage.getByRole("link", { name: claimedTitle })).toHaveCount(0);
   });
 
   test("a stranger cannot see the project's tasks", async ({ browser }) => {

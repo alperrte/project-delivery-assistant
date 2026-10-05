@@ -63,10 +63,23 @@ test.describe.serial("Project lifecycle (manager)", () => {
   });
 
   test("connect a public GitHub repository and see latest commits", async () => {
+    test.setTimeout(90_000);
     await page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Depo" }).click();
     await page.getByRole("button", { name: /^Depo bağla$/ }).click();
     await page.locator("#repository-url").fill("https://github.com/octocat/Hello-World");
-    await page.getByRole("button", { name: /^Depo bağla$/ }).click();
+    // This fixture calls the real external GitHub service. Retry only its explicit temporary-unavailable response;
+    // permission, validation, rate-limit and application errors must still fail, and no response is mocked.
+    const submit = page.getByRole("button", { name: /^Depo bağla$/ });
+    let status = 0;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const answered = page.waitForResponse((response) => response.request().method() === "POST" &&
+        /\/projects\/[^/]+\/repository$/.test(new URL(response.url()).pathname), { timeout: 20_000 });
+      await submit.click();
+      status = (await answered).status();
+      if (status !== 503) break;
+      await expect(submit).toBeEnabled();
+    }
+    expect(status).toBe(201);
     await expect(page.getByText("Depo bağlandı.")).toBeVisible();
 
     await expect(page.getByText("octocat/Hello-World")).toBeVisible();
@@ -78,7 +91,7 @@ test.describe.serial("Project lifecycle (manager)", () => {
     await page.goto(`/projects/${slug}?section=settings`);
     await page.getByRole("button", { name: /^Arşivle$/ }).click();
     await page.getByRole("dialog").getByRole("button", { name: /^Arşivle$/ }).click();
-    await expect(page).toHaveURL(/\/projects$/, { timeout: 15_000 });
+    await expect(page).toHaveURL(/\/tr\/projeler$/, { timeout: 15_000 });
     await expect(page.getByText("Proje arşivlendi.")).toBeVisible();
   });
 });

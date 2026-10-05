@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import Link from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { ArrowRight, Plus, Lightning, FolderSimple, Clock, CaretLeft, CaretRight, Users, GearSix } from "@phosphor-icons/react";

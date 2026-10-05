@@ -251,6 +251,7 @@
         }
       },
       "logo": {
+        "empty": "The logo file cannot be empty.",
         "label": "Logo",
         "hint": "PNG, JPEG or WebP, up to 512 KB. Without a logo the first letter of the name is used.",
         "choose": "Upload logo",
@@ -477,6 +478,20 @@
       "tagline": "Tagline",
       "taglinePlaceholder": "Describe the project in one sentence",
       "type": "Project type",
+      "logo": {
+        "label": "Project logo",
+        "hint": "PNG, JPEG or WebP, up to 512 KB. Changes are saved immediately.",
+        "statusSet": "This project has a logo.",
+        "statusNone": "No logo yet. The project’s first letter is shown.",
+        "choose": "Upload logo",
+        "change": "Change logo",
+        "remove": "Remove logo",
+        "cancel": "Cancel",
+        "removeConfirmTitle": "Remove the project logo?",
+        "removeConfirmDescription": "The logo is deleted and replaced with the project’s first letter.",
+        "uploaded": "Project logo updated.",
+        "removed": "Project logo removed."
+      },
       "banner": {
         "label": "Cover image",
         "hint": "PNG, JPEG or WebP, up to 2 MB. Looks best at a 4:1 ratio (e.g. 1600×400); the image is cropped to fit.",
@@ -494,6 +509,10 @@
         "tooLarge": "The cover image can be at most 2 MB."
       },
       "sections": {
+        "logo": {
+          "title": "Project logo",
+          "description": "Shown on the project card, header and group chat."
+        },
         "banner": {
           "title": "Cover image",
           "description": "Appears above the project's card in the Projects list."

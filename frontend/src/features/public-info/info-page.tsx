@@ -2,13 +2,21 @@ import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
 import { CaretDown } from "@phosphor-icons/react/ssr";
 import { CONTACT_EMAIL, type InfoPage } from "./site-info";
+import { buildPath } from "@/i18n/routing";
+import { locales, type Locale } from "@/i18n/config";
 
 type Section = { id: string; title: string; paragraphs: string[]; items?: string[] };
 type FaqGroup = { id: string; title: string; questions: { question: string; answer: string }[] };
 
 export async function infoMetadata(page: InfoPage): Promise<Metadata> {
   const t = await getTranslations("publicPages." + page);
-  return { title: t("title"), description: t("description"), ...(page === "kvkk" || page === "privacy" ? { robots: { index: false, follow: true } } : {}) };
+  const locale = await getLocale() as Locale;
+  const route = `/${page}` as const;
+  return {
+    title: t("title"), description: t("description"),
+    alternates: { canonical: buildPath(route, {}, locale), languages: Object.fromEntries(locales.map((language) => [language, buildPath(route, {}, language)])) },
+    ...(page === "kvkk" || page === "privacy" ? { robots: { index: false, follow: true } } : {}),
+  };
 }
 
 export async function PublicInfoPage({ page }: { page: InfoPage }) {

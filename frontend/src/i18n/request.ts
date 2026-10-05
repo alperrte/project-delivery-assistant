@@ -3,6 +3,9 @@ import { getRequestConfig } from "next-intl/server";
 import { defaultLocale, isLocale, LOCALE_COOKIE, type Locale } from "./config";
 
 async function resolveLocale(): Promise<Locale> {
+  // The URL locale passed by the page proxy wins over an older preference cookie.
+  const routed = (await headers()).get("x-pda-locale");
+  if (isLocale(routed)) return routed;
   const stored = (await cookies()).get(LOCALE_COOKIE)?.value;
   if (isLocale(stored)) return stored;
 

@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import Link from "@/i18n/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,6 +14,7 @@ import { errorKey } from "@/lib/api/error-message";
 import { authApi } from "../api";
 import { loginSchema, type LoginValues } from "../schemas";
 import { sessionQueryKey } from "../hooks/use-session";
+import { matchPath } from "@/i18n/routing";
 import { authCtaClass } from "./auth-card";
 import { useShake } from "./use-shake";
 
@@ -75,8 +76,19 @@ export function LoginForm({ children }: { children?: ReactNode }) {
       const me = await authApi.me();
       queryClient.setQueryData(sessionQueryKey, me);
       const invitation = new URLSearchParams(window.location.hash.slice(1)).get("invitation");
+      const requested = new URLSearchParams(window.location.search).get("next");
+      let returnPath: string | null = null;
+      if (requested?.startsWith("/") && !requested.startsWith("//")) {
+        const target = new URL(requested, window.location.origin);
+        const matched = matchPath(target.pathname);
+        if (target.origin === window.location.origin && matched &&
+            !["/login", "/register", "/forgot-password", "/change-password"].includes(matched.route) &&
+            !matched.route.startsWith("/errors/") && !matched.route.startsWith("/dev/")) {
+          returnPath = `${matched.internalPath}${target.search}${target.hash}`;
+        }
+      }
       router.replace(me.mustChangePassword ? "/change-password" : invitation
-        ? `/register#invitation=${encodeURIComponent(invitation)}` : "/dashboard");
+        ? `/register#invitation=${encodeURIComponent(invitation)}` : returnPath ?? "/dashboard");
     } catch (err) {
       setFormError(te(errorKey(err)));
       shake();

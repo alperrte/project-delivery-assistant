@@ -1,8 +1,8 @@
 "use client";
 
 import { useId, useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import Link from "@/i18n/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { ArrowLeft } from "@phosphor-icons/react";
 import { PageFailure } from "@/features/errors/page-failure";

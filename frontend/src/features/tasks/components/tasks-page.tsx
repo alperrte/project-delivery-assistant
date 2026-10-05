@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import Link from "next/link";
+import Link from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { CaretDown, Plus } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/common/empty-state";

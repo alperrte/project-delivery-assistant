@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useTheme } from "next-themes";
 import { useLocale } from "next-intl";
 import { writeLocaleCookie } from "@/i18n/locale-cookie";
 import { locales, type Locale } from "@/i18n/config";
+import { switchLocale } from "@/i18n/routing";
 import { setMotionPreference, setThemeTransitionPreference } from "@/lib/preferences/motion";
 import { preferencesApi, preferencesKey, type ThemeChoice } from "./api";
 
@@ -69,7 +69,6 @@ export function useApplySavedPreferences(userId: string | undefined) {
   const saved = useSavedPreferences(userId);
   const { theme, setTheme } = useTheme();
   const locale = useLocale() as Locale;
-  const router = useRouter();
 
   useEffect(() => {
     if (!userId || !saved.data) return;
@@ -81,9 +80,9 @@ export function useApplySavedPreferences(userId: string | undefined) {
     if (defaults.themeTransition !== undefined) setThemeTransitionPreference(defaults.themeTransition);
     if (defaults.locale && locales.includes(defaults.locale) && defaults.locale !== locale) {
       writeLocaleCookie(defaults.locale);
-      router.refresh();
+      window.location.replace(switchLocale(window.location.pathname, window.location.search, defaults.locale, window.location.hash));
     }
-  }, [userId, saved.data, theme, setTheme, locale, router]);
+  }, [userId, saved.data, theme, setTheme, locale]);
 }
 
 /** Returns what the sign-in started with; call it when the person signs out or the session ends. */

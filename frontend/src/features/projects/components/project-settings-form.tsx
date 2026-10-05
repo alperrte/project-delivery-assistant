@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,6 +22,7 @@ import { errorKey } from "@/lib/api/error-message";
 import { cn } from "@/lib/utils";
 import { organizationsApi } from "@/features/organizations/api";
 import { projectsApi } from "../api";
+import { ProjectLogoField } from "./project-logo-field";
 import { BannerField } from "./banner-field";
 import { projectPriorities, projectSettingsSchema, projectStatuses, TAGLINE_MAX, type ProjectSettingsValues } from "../schemas";
 import { formatTechStack, parseTechStack } from "../tech-stack";
@@ -179,6 +180,10 @@ export function ProjectSettingsForm({ project }: { project: Project }) {
               />
             </Field>
           </div>
+        </SettingsSection>
+
+        <SettingsSection title={t("sections.logo.title")} description={t("sections.logo.description")}>
+          <ProjectLogoField project={project} />
         </SettingsSection>
 
         <SettingsSection title={t("sections.banner.title")} description={t("sections.banner.description")}>
