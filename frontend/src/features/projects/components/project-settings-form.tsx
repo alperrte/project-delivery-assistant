@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { PageHeader } from "@/components/common/page-header";
 import { PageContainer } from "@/components/common/page-container";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
+import { TaskModelSetting } from "./task-model-setting";
 import { SettingsSection } from "@/components/common/settings-section";
 import { TagInput } from "@/components/common/tag-input";
 import { Button } from "@/components/ui/button";
@@ -312,6 +313,8 @@ export function ProjectSettingsForm({ project }: { project: Project }) {
           </div>
         )}
       </form>
+
+      <TaskModelSetting project={project} />
 
       <SettingsSection title={t("sections.danger.title")} description={t("sections.danger.description")}>
         <div className="flex flex-wrap items-center justify-between gap-4 rounded-lg border border-destructive/30 bg-destructive/5 p-4">

@@ -14,6 +14,7 @@ export const SORT_FIELDS: TaskSortField[] = ["updatedAt", "priority", "deadlineA
 export const MIN_SEARCH = 2;
 
 export type TaskFilters = {
+  creationMode: "" | "SIMPLE" | "ADVANCED";
   q: string;
   status: TaskStatus[];
   priority: TaskPriority[];
@@ -32,6 +33,7 @@ export type TaskFilters = {
 };
 
 const DEFAULTS: TaskFilters = {
+  creationMode: "",
   q: "",
   status: [],
   priority: [],
@@ -58,6 +60,7 @@ function parse(search: URLSearchParams): TaskFilters {
   const requestedDir = search.get("dir");
   const group = search.get("group") as Grouping | null;
   return {
+    creationMode: search.get("creationMode") === "SIMPLE" ? "SIMPLE" : search.get("creationMode") === "ADVANCED" ? "ADVANCED" : "",
     q: search.get("q") ?? "",
     status: list(search.get("status")).filter((value): value is TaskStatus => (TASK_STATUSES as readonly string[]).includes(value)),
     priority: list(search.get("priority")).filter((value): value is TaskPriority => (TASK_PRIORITIES as readonly string[]).includes(value)),
@@ -75,6 +78,7 @@ function parse(search: URLSearchParams): TaskFilters {
 
 function serialize(filters: TaskFilters): string {
   const search = new URLSearchParams();
+  if (filters.creationMode) search.set("creationMode", filters.creationMode);
   if (filters.q) search.set("q", filters.q);
   if (filters.status.length) search.set("status", filters.status.join(","));
   if (filters.priority.length) search.set("priority", filters.priority.join(","));
@@ -93,6 +97,7 @@ function serialize(filters: TaskFilters): string {
 /** How many filters (not sort, grouping or paging) narrow the list; drives the "clear" button. */
 export function activeFilterCount(filters: TaskFilters): number {
   return (
+    (filters.creationMode ? 1 : 0) +
     (filters.q.trim() ? 1 : 0) +
     (filters.status.length ? 1 : 0) +
     (filters.priority.length ? 1 : 0) +
@@ -108,6 +113,7 @@ export function activeFilterCount(filters: TaskFilters): number {
 export function toListParams(filters: TaskFilters, userId: string): TaskListParams {
   const q = filters.q.trim();
   return {
+    creationMode: filters.creationMode || undefined,
     q: q.length >= MIN_SEARCH ? q : undefined,
     status: filters.status.length ? filters.status : undefined,
     priority: filters.priority.length ? filters.priority : undefined,

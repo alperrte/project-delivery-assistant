@@ -110,7 +110,11 @@
     "ORGANIZATION_MEDIA_EMPTY": "Wählen Sie eine nicht leere Datei.",
     "ORGANIZATION_MEDIA_DIMENSIONS": "Das Bild überschreitet die erlaubte Dateigröße.",
     "ORGANIZATION_MEDIA_UNAVAILABLE": "Die Organisation wurde gespeichert; einige Bildaktionen sind fehlgeschlagen. Sie können diese erneut versuchen.",
-    "ORGANIZATION_MEDIA_CONFLICT": "Die Organisation wurde gespeichert; einige Bildaktionen sind fehlgeschlagen. Sie können diese erneut versuchen."
+    "ORGANIZATION_MEDIA_CONFLICT": "Die Organisation wurde gespeichert; einige Bildaktionen sind fehlgeschlagen. Sie können diese erneut versuchen.",
+    "TASK_MODE_NOT_ALLOWED": "Erweiterte Aufgabenerstellung ist deaktiviert. Bestehende Daten bleiben erhalten. Grundlegende Felder, Status und Kommentare sind bearbeitbar; erweiterte Felder sind schreibgeschützt.",
+    "TASK_SIMPLE_FIELDS_INVALID": "Einfache Aufgaben können keine erweiterten Felder enthalten.",
+    "TASK_MODE_CONVERSION_BLOCKED": "Eine Aufgabe mit erweiterten Daten kann nicht einfach werden. Entfernen Sie diese Daten zuerst in den jeweiligen Abschnitten; nichts wird automatisch gelöscht.",
+    "PROJECT_TASK_MODE_NOT_CONFIGURED": "Der Projektgründer muss vor der ersten Aufgabe eine Einstellung auswählen."
   },
   "app": {
     "nav": {
@@ -1747,7 +1751,8 @@
             "deadlineAt": "die Frist",
             "estimatePoints": "die Schätzpunkte",
             "timeEstimateMinutes": "die Zeitschätzung",
-            "unknown": "ein Feld"
+            "unknown": "ein Feld",
+            "creationMode": "Aufgabentyp"
           },
           "blocked": "hat die Aufgabe als blockiert markiert",
           "blockedReason": "hat die Aufgabe als blockiert markiert: {reason}",
@@ -2435,5 +2440,55 @@
         }
       ]
     }
+  },
+  "taskModels": {
+    "type": "Aufgabentyp",
+    "all": "Alle Aufgaben",
+    "mode": {
+      "SIMPLE": "Einfache Aufgabe",
+      "ADVANCED": "Erweiterte Aufgabe"
+    },
+    "policy": {
+      "SIMPLE": "Nur einfach",
+      "ADVANCED": "Nur erweitert",
+      "BOTH": "Beide"
+    },
+    "policyDescription": {
+      "SIMPLE": "Schnell erstellen mit grundlegenden Feldern.",
+      "ADVANCED": "Sprints, Labels und alle erweiterten Werkzeuge.",
+      "BOTH": "Für jede Aufgabe einfach oder erweitert wählen."
+    },
+    "setupTitle": "Wie möchten Sie Aufgaben in diesem Projekt erstellen?",
+    "settingTitle": "Aufgabenerstellung",
+    "settingDescription": "Verwenden Sie einfache Aufgaben, erweiterte Aufgaben oder beide.",
+    "preserve": "Bestehende Aufgaben und Daten bleiben bei einer Änderung erhalten. Bei „Nur einfach“ sind erweiterte Felder bestehender Aufgaben schreibgeschützt.",
+    "ownerOnly": "Nur der Projektgründer kann diese Einstellung ändern.",
+    "waitOwner": "Der Projektgründer muss vor der ersten Aufgabe eine Einstellung auswählen.",
+    "changeLater": "Sie können diese Einstellung jederzeit in den Projekteinstellungen ändern.",
+    "save": "Einstellung speichern",
+    "start": "Speichern und Aufgabe erstellen",
+    "saved": "Einstellung gespeichert.",
+    "help": "Unterschiede zwischen einfachen und erweiterten Aufgaben",
+    "helpTitle": "Welchen Aufgabentyp soll ich wählen?",
+    "helpDescription": "Wählen Sie den passenden Typ. Gemeinsame Entwurfsfelder bleiben beim Wechsel erhalten.",
+    "simpleFeatures": "Titel, Beschreibung, Priorität, Start- und Enddatum, Zuweisung und Statusverfolgung.",
+    "advancedFeatures": "Alle einfachen Felder sowie übergeordnete und Unteraufgaben, Sprints, Labels, Punkte- und Zeitschätzung, Aufgabenpool, Checklisten, Beziehungen, Blockierung, Anhänge, Zeiteinträge und Beobachter.",
+    "comments": "Kommentare und Erwähnungen sind für beide Aufgabentypen verfügbar.",
+    "dontShow": "Diese Erklärung beim Wechsel nicht mehr automatisch anzeigen",
+    "cancel": "Abbrechen",
+    "continue": "Typ wechseln",
+    "close": "Verstanden",
+    "readOnly": "Erweiterte Aufgabenerstellung ist deaktiviert. Bestehende Daten bleiben erhalten. Grundlegende Felder, Status und Kommentare sind bearbeitbar; erweiterte Felder sind schreibgeschützt.",
+    "conversion": "Aufgabentyp ändern",
+    "conversionBlocked": "Eine Aufgabe mit erweiterten Daten kann nicht einfach werden. Entfernen Sie diese Daten zuerst in den jeweiligen Abschnitten; nichts wird automatisch gelöscht.",
+    "simplePlanning": "Priorität, Start- und Enddatum festlegen.",
+    "simpleAssignment": "Aufgabe Projektmitgliedern zuweisen.",
+    "simpleDeadline": "Neue Aufgaben verwenden das Tagesende. Die Uhrzeit bestehender Aufgaben bleibt erhalten.",
+    "leaveTitle": "Ungespeicherte Änderungen",
+    "leaveDescription": "Beim Verlassen dieser Seite geht der Entwurf verloren.",
+    "leave": "Entwurf verwerfen und verlassen",
+    "stay": "Weiter bearbeiten",
+    "clearPool": "Pool-Zuordnung entfernen",
+    "clearPoolDescription": "Entfernt das Pool-Angebot sowie Pool-Team und Übernahmeinformationen. Zugewiesene Personen bleiben erhalten."
   }
 }

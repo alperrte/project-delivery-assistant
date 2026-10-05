@@ -14,14 +14,14 @@ import { useChecklist, useTaskMutation } from "../../hooks";
 import { CHECKLIST_MAX, CHECKLIST_TEXT_MAX } from "../../schemas";
 import { DetailSection, type DetailContext } from "./detail-section";
 
-export function ChecklistSection({ task, projectId, perms }: DetailContext) {
+export function ChecklistSection({ task, projectId, perms, advancedWritable }: DetailContext) {
   const t = useTranslations("tasks.detail.checklist");
   const tl = useTranslations("tasks.locked");
   const format = useTaskFormat();
   const [text, setText] = useState("");
   const checklist = useChecklist(projectId, task.id);
   const items = [...(checklist.data ?? [])].sort((a, b) => a.position - b.position);
-  const editable = perms.work && !task.archivedAt;
+  const editable = perms.work && advancedWritable && !task.archivedAt;
 
   const add = useTaskMutation(projectId, (value: string) => tasksApi.addChecklistItem(projectId, task.id, value), {
     onSuccess: () => setText(""),

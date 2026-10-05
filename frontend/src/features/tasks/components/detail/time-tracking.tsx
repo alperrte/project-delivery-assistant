@@ -143,7 +143,7 @@ export function TimeTracking(ctx: DetailContext) {
   const estimate = task.timeEstimateMinutes;
   const over = estimate !== null && logged > estimate;
   const percent = estimate ? Math.min(100, Math.round((logged / estimate) * 100)) : 0;
-  const canLog = perms.work && !task.archivedAt;
+  const canLog = perms.work && ctx.advancedWritable && !task.archivedAt;
 
   return (
     <div className="space-y-3">
@@ -186,7 +186,7 @@ export function TimeTracking(ctx: DetailContext) {
                 </p>
                 {entry.note && <p className="text-xs break-words text-muted-foreground">{entry.note}</p>}
               </div>
-              {canEditOwn(entry.userId, userId, isManager) && !task.archivedAt && (
+              {canEditOwn(entry.userId, userId, isManager) && ctx.advancedWritable && !task.archivedAt && (
                 <ConfirmDialog
                   destructive
                   title={t("deleteTitle")}

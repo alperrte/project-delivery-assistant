@@ -110,7 +110,11 @@
     "ORGANIZATION_MEDIA_EMPTY": "Choose a non-empty file.",
     "ORGANIZATION_MEDIA_DIMENSIONS": "The image exceeds the allowed file size.",
     "ORGANIZATION_MEDIA_UNAVAILABLE": "The organization was saved; some image operations failed. You can retry the failed operations.",
-    "ORGANIZATION_MEDIA_CONFLICT": "The organization was saved; some image operations failed. You can retry the failed operations."
+    "ORGANIZATION_MEDIA_CONFLICT": "The organization was saved; some image operations failed. You can retry the failed operations.",
+    "TASK_MODE_NOT_ALLOWED": "Advanced task creation is disabled in this project. Existing data is preserved. You can edit basic fields, status and comments; advanced fields are read-only.",
+    "TASK_SIMPLE_FIELDS_INVALID": "Simple tasks cannot contain advanced fields.",
+    "TASK_MODE_CONVERSION_BLOCKED": "A task with advanced data cannot become simple. Remove advanced data from the relevant sections first; nothing is deleted automatically.",
+    "PROJECT_TASK_MODE_NOT_CONFIGURED": "The project founder must choose a preference before the first task can be created."
   },
   "app": {
     "nav": {
@@ -1723,7 +1727,8 @@
             "deadlineAt": "the deadline",
             "estimatePoints": "the estimate points",
             "timeEstimateMinutes": "the time estimate",
-            "unknown": "a field"
+            "unknown": "a field",
+            "creationMode": "Task type"
           },
           "blocked": "marked the task as blocked",
           "blockedReason": "marked the task as blocked: {reason}",
@@ -2411,5 +2416,55 @@
         }
       ]
     }
+  },
+  "taskModels": {
+    "type": "Task type",
+    "all": "All tasks",
+    "mode": {
+      "SIMPLE": "Simple task",
+      "ADVANCED": "Advanced task"
+    },
+    "policy": {
+      "SIMPLE": "Simple only",
+      "ADVANCED": "Advanced only",
+      "BOTH": "Both"
+    },
+    "policyDescription": {
+      "SIMPLE": "Quick creation using essential fields.",
+      "ADVANCED": "Sprints, labels and all advanced tools.",
+      "BOTH": "Choose simple or advanced for each task."
+    },
+    "setupTitle": "How would you like to create tasks in this project?",
+    "settingTitle": "Task creation preference",
+    "settingDescription": "Use simple tasks, advanced tasks or both in this project.",
+    "preserve": "Changing this preference preserves existing tasks and their data. Simple only makes advanced fields of existing tasks read-only.",
+    "ownerOnly": "Only the project founder can change this preference.",
+    "waitOwner": "The project founder must choose a preference before the first task can be created.",
+    "changeLater": "You can update this preference at any time in project settings.",
+    "save": "Save preference",
+    "start": "Save and create a task",
+    "saved": "Task creation preference saved.",
+    "help": "Differences between simple and advanced tasks",
+    "helpTitle": "Which task type should I choose?",
+    "helpDescription": "Choose the type that fits your task. Shared draft fields are preserved when switching.",
+    "simpleFeatures": "Title, description, priority, start and end dates, people assignment and status tracking.",
+    "advancedFeatures": "All simple fields plus parent/subtasks, sprints, labels, point and time estimates, task pool, checklists, task relations, blocking, attachments, worklogs and watchers.",
+    "comments": "Comments and mentions are available for both task types.",
+    "dontShow": "Do not automatically show this explanation again",
+    "cancel": "Cancel",
+    "continue": "Switch type",
+    "close": "Got it",
+    "readOnly": "Advanced task creation is disabled in this project. Existing data is preserved. You can edit basic fields, status and comments; advanced fields are read-only.",
+    "conversion": "Change task type",
+    "conversionBlocked": "A task with advanced data cannot become simple. Remove advanced data from the relevant sections first; nothing is deleted automatically.",
+    "simplePlanning": "Set priority, start and end dates.",
+    "simpleAssignment": "Assign the task to project members.",
+    "simpleDeadline": "New tasks use the end of the day. Existing task times are preserved.",
+    "leaveTitle": "Unsaved changes",
+    "leaveDescription": "Leaving this page will discard your task draft.",
+    "leave": "Discard draft and leave",
+    "stay": "Keep editing",
+    "clearPool": "Clear pool metadata",
+    "clearPoolDescription": "Closes the pool offer and clears its team and claim information. Assigned people are preserved."
   }
 }

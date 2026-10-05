@@ -32,7 +32,7 @@ function AttachmentCard({ attachment, ctx, onDelete }: { attachment: Attachment;
   const [broken, setBroken] = useState(false);
   const url = attachmentContentUrl(ctx.projectId, ctx.task.id, attachment.id);
   const image = isPreviewableImage(attachment.contentType) && !broken;
-  const removable = canEditOwn(attachment.uploadedBy, ctx.userId, ctx.isManager) && !ctx.task.archivedAt;
+  const removable = canEditOwn(attachment.uploadedBy, ctx.userId, ctx.isManager) && ctx.advancedWritable && !ctx.task.archivedAt;
 
   return (
     <li className="group flex min-w-0 flex-col overflow-hidden rounded-xl border bg-card">
@@ -89,7 +89,7 @@ export function AttachmentsSection(ctx: DetailContext) {
   const [uploading, setUploading] = useState(0);
   const attachments = useAttachments(projectId, task.id);
   const list = attachments.data ?? [];
-  const canUpload = !task.archivedAt;
+  const canUpload = ctx.advancedWritable && !task.archivedAt;
 
   const upload = useTaskMutation(projectId, (file: File) => tasksApi.uploadAttachment(projectId, task.id, file));
   const remove = useTaskMutation(projectId, (id: string) => tasksApi.deleteAttachment(projectId, task.id, id));

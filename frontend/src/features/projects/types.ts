@@ -9,7 +9,10 @@ export type UserRef = { userId: string; nickname: string; profilePhotoVersion?: 
 /** Filled by the list endpoint only (aggregated per page); detail responses carry `null`. */
 export type ProjectTeam = { memberCount: number; preview: UserRef[] };
 
+export type TaskManagementMode = "SIMPLE" | "ADVANCED" | "BOTH";
+
 export type Project = {
+  taskManagementMode: TaskManagementMode | null;
   id: string;
   name: string;
   slug: string;

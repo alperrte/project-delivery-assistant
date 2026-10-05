@@ -10,12 +10,17 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CircleNotch, Eye } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/common/page-header";
+import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useSprints } from "@/features/sprints/hooks";
+import { ApiError } from "@/lib/api/client";
+import { TaskModelSetting } from "@/features/projects/components/task-model-setting";
+import { allowsAdvanced, allowsCreation, initialCreationMode } from "../task-model";
+import { AdvancedReadOnlyNotice, TaskModePicker } from "./task-mode-picker";
 import { errorKey } from "@/lib/api/error-message";
 import { cn } from "@/lib/utils";
 import { tasksApi } from "../api";
@@ -50,6 +55,7 @@ function initialValues(task: Task | undefined, sprintId: string, parentId: strin
   const deadline = fromDeadlineIso(task.deadlineAt);
   const time = task.timeEstimateMinutes === null ? null : splitMinutes(task.timeEstimateMinutes);
   return {
+    creationMode: task.creationMode,
     title: task.title,
     description: task.description ?? "",
     priority: task.priority,
@@ -79,15 +85,13 @@ type BodyProps = ProjectGateContext & {
 export function TaskFormBody({ slug, project, projectId, userId, task, initialSprintId, initialParent, presentationValues }: BodyProps) {
   const t = useTranslations("tasks.form");
   const tc = useTranslations("tasks.common");
+  const tm = useTranslations("taskModels");
   const tv = useTranslations("validation");
   const te = useTranslations("errors");
   const router = useRouter();
   const queryClient = useQueryClient();
   const ids = useId();
   const editing = !!task;
-
-  const sprints = useSprints(projectId);
-  const teams = useProjectTeams(projectId);
 
   const {
     register,
@@ -96,11 +100,25 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
     setValue,
     formState: { errors, isDirty },
   } = useForm<TaskFormValues>({
-    resolver: zodResolver(taskFormSchema),
-    defaultValues: initialValues(task, initialSprintId, initialParent?.id ?? ""),
+    resolver: async (form, context, options) => {
+      const result = await zodResolver(taskFormSchema)(
+        form.creationMode === "ADVANCED" && !allowsAdvanced(project.taskManagementMode) ? { ...form, creationMode: "SIMPLE" } : form,
+        context,
+        options,
+      );
+      if (Object.keys(result.errors).length) return { values: {}, errors: result.errors };
+      return { errors: {}, values: { ...result.values, creationMode: form.creationMode } as TaskFormValues };
+    },
+    defaultValues: { ...initialValues(task, initialSprintId, initialParent?.id ?? ""), creationMode: task?.creationMode ?? initialCreationMode(project.taskManagementMode, !!initialParent || !!initialSprintId) },
     values: presentationValues,
   });
   const values = useWatch({ control });
+  const mode = values.creationMode ?? "SIMPLE";
+  const advancedWritable = allowsAdvanced(project.taskManagementMode);
+  const advanced = mode === "ADVANCED" && advancedWritable;
+  const sprints = useSprints(projectId, undefined, advanced);
+  const teams = useProjectTeams(projectId, advanced);
+  const canSave = !task?.archivedAt && (editing ? mode === task.creationMode || allowsCreation(project.taskManagementMode, mode) : allowsCreation(project.taskManagementMode, mode));
 
   const [parent, setParent] = useState<TaskRef | null>(task?.parent ?? initialParent);
   const [checklistText, setChecklistText] = useState("");
@@ -122,11 +140,11 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
   const created = useRef(false);
   const mutation = useMutation({
     mutationFn: async (form: TaskFormValues) => {
-      const payload = toTaskPayload(form);
+      const payload = toTaskPayload(form, task, advancedWritable);
       if (task) return { saved: await tasksApi.update(projectId, task.id, payload), checklistFailed: 0 };
       const saved = await tasksApi.create(projectId, payload);
       let checklistFailed = 0;
-      for (const text of form.checklist) {
+      for (const text of form.creationMode === "ADVANCED" ? form.checklist : []) {
         try {
           await tasksApi.addChecklistItem(projectId, saved.id, text);
         } catch {
@@ -142,7 +160,10 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
       if (checklistFailed > 0) toast.error(t("checklist.partial", { count: checklistFailed }));
       router.push(`/projects/${slug}/tasks/${saved.id}`);
     },
-    onError: (err) => toast.error(te(errorKey(err))),
+    onError: (err) => {
+      if (err instanceof ApiError && (err.code === "TASK_MODE_NOT_ALLOWED" || err.code === "PROJECT_TASK_MODE_NOT_CONFIGURED")) void queryClient.invalidateQueries({ queryKey: ["projects", "by-slug"] });
+      toast.error(te(errorKey(err)));
+    },
   });
 
   const leaving = isDirty && !mutation.isPending && !mutation.isSuccess;
@@ -159,7 +180,7 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
   const priority = (values.priority ?? "MEDIUM") as TaskPriority;
   const titleLength = values.title?.length ?? 0;
   const descriptionText = values.description ?? "";
-  const inPool = values.assignMode === "pool";
+  const inPool = advanced && values.assignMode === "pool";
   const lockedParent = editing && (task?.subtaskCount ?? 0) > 0;
   const sprintOptions = (sprints.data ?? []).filter((sprint) => sprint.status !== "COMPLETED" || sprint.id === values.sprintId);
 
@@ -169,14 +190,16 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
   function applyQuick(kind: QuickDeadline) {
     const next = quickDeadline(kind);
     setValue("deadlineDate", next.date, { shouldDirty: true, shouldValidate: true });
-    setValue("deadlineTime", next.time, { shouldDirty: true });
+    if (advanced) setValue("deadlineTime", next.time, { shouldDirty: true });
   }
 
   return (
     <div>
       <PageHeader title={t(editing ? "editTitle" : "title")} description={t(editing ? "editDescription" : "description")} />
 
-      <form onSubmit={handleSubmit((form) => mutation.mutate(form))} noValidate>
+      <TaskModePicker value={mode} policy={project.taskManagementMode} userId={userId} onChange={(next) => setValue("creationMode", next, { shouldDirty: true, shouldValidate: true })} />
+      {mode === "ADVANCED" && !advancedWritable && <AdvancedReadOnlyNotice />}
+      <form onSubmit={handleSubmit((form) => { if (canSave) mutation.mutate(form); })} noValidate>
         <div className="grid gap-10 lg:grid-cols-12 lg:gap-12">
           <div className="space-y-8 lg:col-span-7">
             <FormSection id={`${ids}-definition`} title={t("sections.definition.title")} description={t("sections.definition.description")}>
@@ -241,17 +264,21 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
                 )}
               </div>
 
-              <div className="space-y-1.5">
-                <div className="flex items-baseline justify-between gap-3">
-                  <Label>{t("parent.label")}</Label>
-                  <span className="text-xs text-muted-foreground">{t("optional")}</span>
-                </div>
-                <ParentPicker projectId={projectId} value={parent} onChange={pickParent} excludeId={task?.id} disabled={lockedParent} />
-                <p className="text-sm text-muted-foreground">{lockedParent ? t("parent.locked") : t("parent.hint")}</p>
-              </div>
+              {advanced && (
+                <>
+                  <div className="space-y-1.5">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <Label>{t("parent.label")}</Label>
+                      <span className="text-xs text-muted-foreground">{t("optional")}</span>
+                    </div>
+                    <ParentPicker projectId={projectId} value={parent} onChange={pickParent} excludeId={task?.id} disabled={lockedParent} />
+                    <p className="text-sm text-muted-foreground">{lockedParent ? t("parent.locked") : t("parent.hint")}</p>
+                  </div>
+                </>
+              )}
             </FormSection>
 
-            <FormSection id={`${ids}-planning`} title={t("sections.planning.title")} description={t("sections.planning.description")}>
+            <FormSection id={`${ids}-planning`} title={t("sections.planning.title")} description={advanced ? t("sections.planning.description") : tm("simplePlanning")}>
               <div className="space-y-1.5">
                 <Label>{t("priority.label")}</Label>
                 <Controller
@@ -272,57 +299,61 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
                 />
               </div>
 
-              <div className="space-y-1.5">
-                <Label>{t("points.label")}</Label>
-                <Controller
-                  control={control}
-                  name="estimatePoints"
-                  render={({ field }) => (
-                    <Segment
-                      label={t("points.label")}
-                      value={field.value === null ? "" : String(field.value)}
-                      onChange={(next) => setValue("estimatePoints", next === "" ? null : Number(next), { shouldDirty: true })}
-                      options={[{ value: "", label: t("points.none") }, ...ESTIMATE_POINTS.map((points) => ({ value: String(points), label: String(points) }))]}
+              {advanced && (
+                <>
+                  <div className="space-y-1.5">
+                    <Label>{t("points.label")}</Label>
+                    <Controller
+                      control={control}
+                      name="estimatePoints"
+                      render={({ field }) => (
+                        <Segment
+                          label={t("points.label")}
+                          value={field.value === null ? "" : String(field.value)}
+                          onChange={(next) => setValue("estimatePoints", next === "" ? null : Number(next), { shouldDirty: true })}
+                          options={[{ value: "", label: t("points.none") }, ...ESTIMATE_POINTS.map((points) => ({ value: String(points), label: String(points) }))]}
+                        />
+                      )}
                     />
-                  )}
-                />
-                <p className="text-sm text-muted-foreground">{t("points.hint")}</p>
-              </div>
+                    <p className="text-sm text-muted-foreground">{t("points.hint")}</p>
+                  </div>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="task-estimate-hours">{t("time.label")}</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    id="task-estimate-hours"
-                    inputMode="numeric"
-                    maxLength={5}
-                    placeholder="0"
-                    aria-label={t("time.hours")}
-                    aria-invalid={!!errors.estimateHours}
-                    className="w-24"
-                    {...register("estimateHours")}
-                  />
-                  <span className="text-sm text-muted-foreground">{t("time.hoursUnit")}</span>
-                  <Input
-                    inputMode="numeric"
-                    maxLength={5}
-                    placeholder="0"
-                    aria-label={t("time.minutes")}
-                    aria-invalid={!!errors.estimateMinutes}
-                    className="w-24"
-                    {...register("estimateMinutes")}
-                  />
-                  <span className="text-sm text-muted-foreground">{t("time.minutesUnit")}</span>
-                </div>
-                {errors.estimateHours || errors.estimateMinutes ? (
-                  <p role="alert" className="text-sm text-destructive">
-                    {tv((errors.estimateHours ?? errors.estimateMinutes)!.message!)}
-                  </p>
-                ) : (
-                  <p className="text-sm text-muted-foreground">{totalMinutes === null ? t("time.hint") : t("time.total", { minutes: totalMinutes })}</p>
-                )}
-              </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="task-estimate-hours">{t("time.label")}</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id="task-estimate-hours"
+                        inputMode="numeric"
+                        maxLength={5}
+                        placeholder="0"
+                        aria-label={t("time.hours")}
+                        aria-invalid={!!errors.estimateHours}
+                        className="w-24"
+                        {...register("estimateHours")}
+                      />
+                      <span className="text-sm text-muted-foreground">{t("time.hoursUnit")}</span>
+                      <Input
+                        inputMode="numeric"
+                        maxLength={5}
+                        placeholder="0"
+                        aria-label={t("time.minutes")}
+                        aria-invalid={!!errors.estimateMinutes}
+                        className="w-24"
+                        {...register("estimateMinutes")}
+                      />
+                      <span className="text-sm text-muted-foreground">{t("time.minutesUnit")}</span>
+                    </div>
+                    {errors.estimateHours || errors.estimateMinutes ? (
+                      <p role="alert" className="text-sm text-destructive">
+                        {tv((errors.estimateHours ?? errors.estimateMinutes)!.message!)}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">{totalMinutes === null ? t("time.hint") : t("time.total", { minutes: totalMinutes })}</p>
+                    )}
+                  </div>
 
+                </>
+              )}
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label htmlFor="task-start">{t("start.label")}</Label>
@@ -332,11 +363,11 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
                   <Label htmlFor="task-deadline-date">{t("deadline.label")}</Label>
                   <div className="flex gap-2">
                     <Input id="task-deadline-date" type="date" aria-invalid={!!errors.deadlineDate} aria-describedby={`${ids}-deadline-note`} {...register("deadlineDate")} />
-                    <Input type="time" aria-label={t("deadline.time")} className="w-28 shrink-0" {...register("deadlineTime")} />
+                    {advanced && <Input type="time" aria-label={t("deadline.time")} className="w-28 shrink-0" {...register("deadlineTime")} />}
                   </div>
                 </div>
               </div>
-              <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label={t("deadline.quick")}>
+              {advanced && <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label={t("deadline.quick")}>
                 {QUICK.map((kind) => (
                   <Button key={kind} type="button" variant="outline" size="sm" onClick={() => applyQuick(kind)}>
                     {t(`deadline.${kind}`)}
@@ -355,72 +386,80 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
                     {t("deadline.clear")}
                   </Button>
                 )}
-              </div>
+              </div>}
               {errors.deadlineDate ? (
                 <p id={`${ids}-deadline-note`} role="alert" className="text-sm text-destructive">
                   {tv(errors.deadlineDate.message!)}
                 </p>
               ) : (
                 <p id={`${ids}-deadline-note`} className="text-sm text-muted-foreground">
-                  {t("deadline.hint")}
+                  {advanced ? t("deadline.hint") : tm("simpleDeadline")}
                 </p>
               )}
 
-              <div className="space-y-1.5">
-                <Label>{t("sprint.label")}</Label>
-                <Controller
-                  control={control}
-                  name="sprintId"
-                  render={({ field }) => (
-                    <Select value={field.value || NO_SPRINT} onValueChange={(next) => setValue("sprintId", next === NO_SPRINT ? "" : (next ?? ""), { shouldDirty: true })}>
-                      <SelectTrigger className="w-full" aria-label={t("sprint.label")}>
-                        <SelectValue>
-                          {(value: string) => (value === NO_SPRINT ? t("sprint.none") : (sprints.data?.find((sprint) => sprint.id === value)?.name ?? t("sprint.none")))}
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={NO_SPRINT}>{t("sprint.none")}</SelectItem>
-                        {sprintOptions.map((sprint) => (
-                          <SelectItem key={sprint.id} value={sprint.id}>
-                            {sprint.name}
-                            <span className="ml-2 text-xs text-muted-foreground">{tc(`sprintStatus.${sprint.status}`)}</span>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-              </div>
+              {advanced && (
+                <>
+                  <div className="space-y-1.5">
+                    <Label>{t("sprint.label")}</Label>
+                    <Controller
+                      control={control}
+                      name="sprintId"
+                      render={({ field }) => (
+                        <Select value={field.value || NO_SPRINT} onValueChange={(next) => setValue("sprintId", next === NO_SPRINT ? "" : (next ?? ""), { shouldDirty: true })}>
+                          <SelectTrigger className="w-full" aria-label={t("sprint.label")}>
+                            <SelectValue>
+                              {(value: string) => (value === NO_SPRINT ? t("sprint.none") : (sprints.data?.find((sprint) => sprint.id === value)?.name ?? t("sprint.none")))}
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value={NO_SPRINT}>{t("sprint.none")}</SelectItem>
+                            {sprintOptions.map((sprint) => (
+                              <SelectItem key={sprint.id} value={sprint.id}>
+                                {sprint.name}
+                                <span className="ml-2 text-xs text-muted-foreground">{tc(`sprintStatus.${sprint.status}`)}</span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                  </div>
 
-              <div className="space-y-1.5">
-                <Label>{t("labels.label")}</Label>
-                <Controller
-                  control={control}
-                  name="labelIds"
-                  render={({ field }) => (
-                    <LabelPicker projectId={projectId} slug={slug} value={field.value} onChange={(next) => setValue("labelIds", next, { shouldDirty: true })} max={TASK_LABELS_MAX} />
-                  )}
-                />
-              </div>
+                  <div className="space-y-1.5">
+                    <Label>{t("labels.label")}</Label>
+                    <Controller
+                      control={control}
+                      name="labelIds"
+                      render={({ field }) => (
+                        <LabelPicker projectId={projectId} slug={slug} value={field.value} onChange={(next) => setValue("labelIds", next, { shouldDirty: true })} max={TASK_LABELS_MAX} />
+                      )}
+                    />
+                  </div>
+                </>
+              )}
             </FormSection>
 
-            <FormSection id={`${ids}-assignment`} title={t("sections.assignment.title")} description={t("sections.assignment.description")}>
-              <Controller
-                control={control}
-                name="assignMode"
-                render={({ field }) => (
-                  <Segment
-                    label={t("assign.label")}
-                    value={field.value}
-                    onChange={(next) => setValue("assignMode", next as "people" | "pool", { shouldDirty: true })}
-                    options={[
-                      { value: "people", label: t("assign.people") },
-                      { value: "pool", label: t("assign.pool") },
-                    ]}
+            <FormSection id={`${ids}-assignment`} title={t("sections.assignment.title")} description={advanced ? t("sections.assignment.description") : tm("simpleAssignment")}>
+              {advanced && (
+                <>
+                  <Controller
+                    control={control}
+                    name="assignMode"
+                    render={({ field }) => (
+                      <Segment
+                        label={t("assign.label")}
+                        value={field.value}
+                        onChange={(next) => setValue("assignMode", next as "people" | "pool", { shouldDirty: true })}
+                        options={[
+                          { value: "people", label: t("assign.people") },
+                          { value: "pool", label: t("assign.pool") },
+                        ]}
+                      />
+                    )}
                   />
-                )}
-              />
 
+                </>
+              )}
               {inPool ? (
                 <div className="space-y-1.5">
                   <Label>{t("assign.poolTeam")}</Label>
@@ -465,33 +504,37 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
               )}
             </FormSection>
 
-            <FormSection id={`${ids}-checklist`} title={t("sections.checklist.title")} description={t("sections.checklist.description")}>
-              {editing ? (
-                <p className="text-sm text-muted-foreground">{t("checklist.editing")}</p>
-              ) : (
-                <div className="space-y-1.5">
-                  <Label htmlFor="task-checklist">{t("checklist.label")}</Label>
-                  <Textarea
-                    id="task-checklist"
-                    rows={4}
-                    value={checklistText}
-                    onChange={(event) => editChecklist(event.target.value)}
-                    placeholder={t("checklist.placeholder")}
-                    aria-invalid={!!errors.checklist}
-                    aria-describedby={`${ids}-checklist-note`}
-                  />
-                  {errors.checklist ? (
-                    <p id={`${ids}-checklist-note`} role="alert" className="text-sm text-destructive">
-                      {tv("tooMany")}
-                    </p>
+            {advanced && (
+              <>
+                <FormSection id={`${ids}-checklist`} title={t("sections.checklist.title")} description={t("sections.checklist.description")}>
+                  {editing ? (
+                    <p className="text-sm text-muted-foreground">{t("checklist.editing")}</p>
                   ) : (
-                    <p id={`${ids}-checklist-note`} className="text-sm text-muted-foreground">
-                      {t("checklist.hint", { count: values.checklist?.length ?? 0, max: CHECKLIST_MAX, length: CHECKLIST_TEXT_MAX })}
-                    </p>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="task-checklist">{t("checklist.label")}</Label>
+                      <Textarea
+                        id="task-checklist"
+                        rows={4}
+                        value={checklistText}
+                        onChange={(event) => editChecklist(event.target.value)}
+                        placeholder={t("checklist.placeholder")}
+                        aria-invalid={!!errors.checklist}
+                        aria-describedby={`${ids}-checklist-note`}
+                      />
+                      {errors.checklist ? (
+                        <p id={`${ids}-checklist-note`} role="alert" className="text-sm text-destructive">
+                          {tv("tooMany")}
+                        </p>
+                      ) : (
+                        <p id={`${ids}-checklist-note`} className="text-sm text-muted-foreground">
+                          {t("checklist.hint", { count: values.checklist?.length ?? 0, max: CHECKLIST_MAX, length: CHECKLIST_TEXT_MAX })}
+                        </p>
+                      )}
+                    </div>
                   )}
-                </div>
-              )}
-            </FormSection>
+                </FormSection>
+              </>
+            )}
           </div>
 
           <aside id="task-preview" aria-label={t("preview.title")} className="scroll-mt-24 lg:col-span-5">
@@ -502,6 +545,8 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
               </div>
               <div className="mx-auto max-w-sm lg:max-w-none">
                 <TaskPreview
+                  advanced={advanced}
+                  creationMode={mode}
                   projectId={projectId}
                   projectName={project.name}
                   taskKey={task?.taskKey ?? null}
@@ -509,16 +554,16 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
                   priority={priority}
                   title={values.title ?? ""}
                   description={descriptionText}
-                  estimatePoints={values.estimatePoints ?? null}
+                  estimatePoints={advanced ? values.estimatePoints ?? null : null}
                   deadlineDate={values.deadlineDate ?? ""}
                   deadlineTime={values.deadlineTime ?? ""}
-                  labelIds={values.labelIds ?? []}
+                  labelIds={advanced ? values.labelIds ?? [] : []}
                   assigneeIds={values.assigneeIds ?? []}
                   inPool={inPool}
                   poolTeamId={values.poolTeamId ?? ""}
-                  parent={parent}
-                  checklistCount={values.checklist?.length ?? 0}
-                  sprintId={values.sprintId ?? ""}
+                  parent={advanced ? parent : null}
+                  checklistCount={advanced ? values.checklist?.length ?? 0 : 0}
+                  sprintId={advanced ? values.sprintId ?? "" : ""}
                   known={known}
                 />
               </div>
@@ -528,15 +573,20 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
 
         <div data-sticky-actions className="sticky bottom-0 z-20 -mx-4 -mb-6 mt-10 sm:-mb-8 border-t bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:-mx-8 sm:px-8">
           <div className="flex items-center justify-between gap-2">
-            <Link href={backHref} className={buttonVariants({ variant: "outline" })}>
-              {t("cancel")}
-            </Link>
+            {leaving ? <ConfirmDialog
+              trigger={<Button type="button" variant="outline">{t("cancel")}</Button>}
+              title={tm("leaveTitle")}
+              description={tm("leaveDescription")}
+              confirmLabel={tm("leave")}
+              cancelLabel={tm("stay")}
+              onConfirm={async () => { created.current = true; router.push(backHref); }}
+            /> : <Link href={backHref} className={buttonVariants({ variant: "outline" })}>{t("cancel")}</Link>}
             <div className="flex items-center gap-2">
               <a href="#task-preview" className={buttonVariants({ variant: "ghost", className: "lg:hidden" })}>
                 <Eye size={16} data-icon="inline-start" aria-hidden="true" />
                 <span className="sr-only min-[440px]:not-sr-only">{t("preview.show")}</span>
               </a>
-              <Button type="submit" disabled={mutation.isPending}>
+              <Button type="submit" disabled={mutation.isPending || !canSave}>
                 {mutation.isPending && <CircleNotch size={16} className="animate-spin" aria-hidden="true" />}
                 {t(editing ? "save" : "submit")}
               </Button>
@@ -583,8 +633,10 @@ function TaskFormView({ taskId, ...context }: ProjectGateContext & { taskId?: st
     );
   }
 
+  if (!editing && context.project.taskManagementMode === null) return <TaskModelSetting project={context.project} initial />;
+
   const initialParent: TaskRef | null = preParent.data ? { id: preParent.data.id, key: preParent.data.taskKey, title: preParent.data.title } : null;
-  return <TaskFormBody {...context} task={task.data} initialSprintId={sprintParam} initialParent={initialParent} key={task.data?.version ?? "new"} />;
+  return <TaskFormBody {...context} task={task.data} initialSprintId={sprintParam} initialParent={initialParent} key={task.data?.id ?? "new"} />;
 }
 
 /** Create (`taskId` omitted) and edit share one full-page form with a live task preview. */

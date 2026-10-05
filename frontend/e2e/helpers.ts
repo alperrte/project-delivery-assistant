@@ -76,7 +76,7 @@ export async function createOrganization(page: Page, name: string) {
 export async function createProject(
   page: Page,
   name: string,
-  opts: { organizationName?: string } = {},
+  opts: { organizationName?: string; taskMode?: "SIMPLE" | "ADVANCED" | "BOTH" | null } = {},
 ): Promise<string> {
   await page.goto("/projects/new");
   await page.locator("#project-name").fill(name);
@@ -94,7 +94,13 @@ export async function createProject(
   // The create page itself is `/projects/new`, so the new project is the first detail URL that is not "new".
   await expect(page).toHaveURL(/\/tr\/projeler\/(?!yeni$)[^/]+$/, { timeout: 15_000 });
   const url = new URL(page.url());
-  return url.pathname.split("/").pop()!;
+  const slug = url.pathname.split("/").pop()!;
+  // Unrelated tests use an explicitly configured fixture; onboarding tests leave the policy unset.
+  if (opts.taskMode !== null) {
+    const project = (await api(page, "GET", `/projects/by-slug/${slug}`)).json as { id: string };
+    expect((await api(page, "PATCH", `/projects/${project.id}/task-management-mode`, { mode: opts.taskMode ?? "BOTH" })).status).toBe(200);
+  }
+  return slug;
 }
 
 /** Finds this project's card even when a reused E2E account has several pages of projects. */

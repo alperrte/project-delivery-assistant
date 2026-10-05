@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { CircleNotch, HandGrabbing, HandPalm, LockSimple, LockSimpleOpen, UsersThree } from "@phosphor-icons/react";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { Avatar } from "@/components/ui/avatar";
 import { profilePhotoSrc } from "@/features/account/api";
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,7 @@ import { AssigneeAvatars, DeadlineChip, LabelList, PoolMark } from "../task-badg
 import { LabelPicker } from "../task-form-fields";
 import { AssigneesDialog } from "./assignees-dialog";
 import { BlockDialog } from "./block-dialog";
-import { PropertyRow, type DetailContext } from "./detail-section";
+import { PropertyRow, settle, type DetailContext } from "./detail-section";
 import { LockedHint } from "./locked-hint";
 import { TimeTracking } from "./time-tracking";
 
@@ -34,13 +35,16 @@ export function PropertiesPanel(ctx: DetailContext) {
   const { task, slug, projectId, userId, perms } = ctx;
   const t = useTranslations("tasks.detail.panel");
   const tc = useTranslations("tasks.common");
+  const tm = useTranslations("taskModels");
   const format = useTaskFormat();
   const archived = !!task.archivedAt;
   const [blocking, setBlocking] = useState(false);
   const [assigning, setAssigning] = useState(false);
 
-  const sprints = useSprints(projectId);
-  const watchers = useWatchers(projectId, task.id);
+  const advanced = task.creationMode === "ADVANCED";
+  const advancedManage = ctx.advancedWritable && perms.manage && !archived;
+  const sprints = useSprints(projectId, undefined, advanced);
+  const watchers = useWatchers(projectId, task.id, advanced);
   const claim = useClaimTask(projectId);
 
   const patch = useTaskMutation(projectId, (change: Parameters<typeof payloadFromTask>[1]) => tasksApi.update(projectId, task.id, payloadFromTask(task, change)));
@@ -83,7 +87,7 @@ export function PropertiesPanel(ctx: DetailContext) {
                 </Button>
               </LockedHint>
             ) : (
-              task.status !== "DONE" && (
+              ctx.advancedWritable && task.status !== "DONE" && (
                 <LockedHint locked={lockedWork} reason="assignee">
                   <Button variant="outline" size="sm" disabled={!canWork} onClick={() => setBlocking(true)}>
                     <LockSimple aria-hidden="true" />
@@ -119,18 +123,26 @@ export function PropertiesPanel(ctx: DetailContext) {
                   {t("changeAssignees")}
                 </Button>
               </LockedHint>
-              {perms.canClaim && !archived && (
+              {ctx.advancedWritable && perms.canClaim && !archived && (
                 <Button size="sm" disabled={claim.isPending} onClick={() => claim.mutate(task.id)}>
                   {claim.isPending ? <CircleNotch className="animate-spin" aria-hidden="true" /> : <HandGrabbing aria-hidden="true" />}
                   {t("claim")}
                 </Button>
               )}
-              {perms.canRelease && !archived && (
+              {ctx.advancedWritable && perms.canRelease && !archived && (
                 <Button variant="outline" size="sm" disabled={release.isPending} onClick={() => release.mutate(undefined)}>
                   {release.isPending ? <CircleNotch className="animate-spin" aria-hidden="true" /> : <HandPalm aria-hidden="true" />}
                   {t("release")}
                 </Button>
               )}
+              {advancedManage && (task.pool?.open || task.pool?.claimed || task.pool?.teamId) && <ConfirmDialog
+                trigger={<Button variant="outline" size="sm">{tm("clearPool")}</Button>}
+                title={tm("clearPool")}
+                description={tm("clearPoolDescription")}
+                confirmLabel={tm("clearPool")}
+                cancelLabel={tm("cancel")}
+                onConfirm={() => patch.mutateAsync({ assigneeIds: task.assigneeIds, pool: { open: false, teamId: null } }).then(settle, settle)}
+              />}
             </div>
           </div>
         </PropertyRow>
@@ -160,76 +172,80 @@ export function PropertiesPanel(ctx: DetailContext) {
           </LockedHint>
         </PropertyRow>
 
-        <PropertyRow label={t("points")} htmlFor="detail-points">
-          <LockedHint locked={lockedManage} reason="manager" className="w-full">
-            <Select
-              value={task.estimatePoints === null ? NONE : String(task.estimatePoints)}
-              disabled={!canManage || patch.isPending}
-              onValueChange={(next) => {
-                if (next === null) return;
-                const points = next === NONE ? null : Number(next);
-                if (points !== task.estimatePoints) patch.mutate({ estimatePoints: points });
-              }}
-            >
-              <SelectTrigger id="detail-points" size="sm" className="w-full">
-                <SelectValue>{(value: string) => (value === NONE ? t("noPoints") : tc("points", { count: Number(value) }))}</SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={NONE}>{t("noPoints")}</SelectItem>
-                {ESTIMATE_POINTS.map((points) => (
-                  <SelectItem key={points} value={String(points)}>
-                    {tc("points", { count: points })}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </LockedHint>
-        </PropertyRow>
+        {advanced && (
+          <>
+            <PropertyRow label={t("points")} htmlFor="detail-points">
+              <LockedHint locked={lockedManage} reason="manager" className="w-full">
+                <Select
+                  value={task.estimatePoints === null ? NONE : String(task.estimatePoints)}
+                  disabled={!advancedManage || patch.isPending}
+                  onValueChange={(next) => {
+                    if (next === null) return;
+                    const points = next === NONE ? null : Number(next);
+                    if (points !== task.estimatePoints) patch.mutate({ estimatePoints: points });
+                  }}
+                >
+                  <SelectTrigger id="detail-points" size="sm" className="w-full">
+                    <SelectValue>{(value: string) => (value === NONE ? t("noPoints") : tc("points", { count: Number(value) }))}</SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NONE}>{t("noPoints")}</SelectItem>
+                    {ESTIMATE_POINTS.map((points) => (
+                      <SelectItem key={points} value={String(points)}>
+                        {tc("points", { count: points })}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </LockedHint>
+            </PropertyRow>
 
-        <PropertyRow label={t("labels")}>
-          {canManage ? (
-            <LabelPicker
-              projectId={projectId}
-              slug={slug}
-              value={task.labels.map((label) => label.id)}
-              onChange={(ids) => changeLabels.mutate(ids)}
-              max={TASK_LABELS_MAX}
-            />
-          ) : task.labels.length > 0 ? (
-            <LabelList labels={task.labels} max={task.labels.length} />
-          ) : (
-            <span className="text-muted-foreground">{t("none")}</span>
-          )}
-        </PropertyRow>
+            <PropertyRow label={t("labels")}>
+              {advancedManage ? (
+                <LabelPicker
+                  projectId={projectId}
+                  slug={slug}
+                  value={task.labels.map((label) => label.id)}
+                  onChange={(ids) => changeLabels.mutate(ids)}
+                  max={TASK_LABELS_MAX}
+                />
+              ) : task.labels.length > 0 ? (
+                <LabelList labels={task.labels} max={task.labels.length} />
+              ) : (
+                <span className="text-muted-foreground">{t("none")}</span>
+              )}
+            </PropertyRow>
 
-        <PropertyRow label={t("sprint")} htmlFor="detail-sprint">
-          <LockedHint locked={lockedManage} reason="manager" className="w-full">
-            <Select
-              value={task.sprint?.id ?? NONE}
-              disabled={!canManage || changeSprint.isPending || sprints.isPending}
-              onValueChange={(next) => {
-                if (next === null) return;
-                const sprintId = next === NONE ? null : next;
-                if (sprintId !== (task.sprint?.id ?? null)) changeSprint.mutate(sprintId);
-              }}
-            >
-              <SelectTrigger id="detail-sprint" size="sm" className="w-full">
-                <SelectValue>
-                  {(value: string) => (value === NONE ? t("backlog") : (openSprints.find((sprint) => sprint.id === value)?.name ?? task.sprint?.name ?? t("backlog")))}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={NONE}>{t("backlog")}</SelectItem>
-                {openSprints.map((sprint) => (
-                  <SelectItem key={sprint.id} value={sprint.id}>
-                    {sprint.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </LockedHint>
-        </PropertyRow>
+            <PropertyRow label={t("sprint")} htmlFor="detail-sprint">
+              <LockedHint locked={lockedManage} reason="manager" className="w-full">
+                <Select
+                  value={task.sprint?.id ?? NONE}
+                  disabled={!advancedManage || changeSprint.isPending || sprints.isPending}
+                  onValueChange={(next) => {
+                    if (next === null) return;
+                    const sprintId = next === NONE ? null : next;
+                    if (sprintId !== (task.sprint?.id ?? null)) changeSprint.mutate(sprintId);
+                  }}
+                >
+                  <SelectTrigger id="detail-sprint" size="sm" className="w-full">
+                    <SelectValue>
+                      {(value: string) => (value === NONE ? t("backlog") : (openSprints.find((sprint) => sprint.id === value)?.name ?? task.sprint?.name ?? t("backlog")))}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NONE}>{t("backlog")}</SelectItem>
+                    {openSprints.map((sprint) => (
+                      <SelectItem key={sprint.id} value={sprint.id}>
+                        {sprint.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </LockedHint>
+            </PropertyRow>
 
+          </>
+        )}
         <PropertyRow label={t("start")}>
           {task.startDate ? format.day(task.startDate) : <span className="text-muted-foreground">{t("none")}</span>}
         </PropertyRow>
@@ -246,37 +262,41 @@ export function PropertiesPanel(ctx: DetailContext) {
         </PropertyRow>
       </dl>
 
-      <section aria-labelledby="detail-time" className="space-y-3">
-        <h2 id="detail-time" className="text-sm font-semibold text-foreground">
-          {t("time")}
-        </h2>
-        <TimeTracking {...ctx} />
-      </section>
+      {advanced && (
+        <>
+          <section aria-labelledby="detail-time" className="space-y-3">
+            <h2 id="detail-time" className="text-sm font-semibold text-foreground">
+              {t("time")}
+            </h2>
+            <TimeTracking {...ctx} />
+          </section>
 
-      <section aria-labelledby="detail-watchers" className="space-y-2">
-        <h2 id="detail-watchers" className="flex items-baseline gap-2 text-sm font-semibold text-foreground">
-          {t("watchers")}
-          {watcherList.length > 0 && <span className="text-xs font-normal text-muted-foreground tabular-nums">{watcherList.length}</span>}
-        </h2>
-        {watchers.isPending ? (
-          <p className="text-xs text-muted-foreground">{t("loading")}</p>
-        ) : watcherList.length === 0 ? (
-          <p className="text-xs text-muted-foreground">{t("noWatchers")}</p>
-        ) : (
-          <ul className="flex flex-wrap gap-1.5">
-            {watcherList.slice(0, WATCHERS_SHOWN).map((person) => (
-              <li key={person.userId} className="flex items-center gap-1.5 rounded-full border bg-card py-0.5 pr-2 pl-0.5 text-xs">
-                <Avatar name={person.nickname ?? "?"} src={profilePhotoSrc(person.userId, person.profilePhotoVersion)} className="size-5 text-[9px]" />
-                <span className="max-w-28 truncate">{person.nickname ?? "?"}</span>
-              </li>
-            ))}
-            {watcherList.length > WATCHERS_SHOWN && (
-              <li className="flex items-center px-1 text-xs text-muted-foreground">{t("moreWatchers", { count: watcherList.length - WATCHERS_SHOWN })}</li>
+          <section aria-labelledby="detail-watchers" className="space-y-2">
+            <h2 id="detail-watchers" className="flex items-baseline gap-2 text-sm font-semibold text-foreground">
+              {t("watchers")}
+              {watcherList.length > 0 && <span className="text-xs font-normal text-muted-foreground tabular-nums">{watcherList.length}</span>}
+            </h2>
+            {watchers.isPending ? (
+              <p className="text-xs text-muted-foreground">{t("loading")}</p>
+            ) : watcherList.length === 0 ? (
+              <p className="text-xs text-muted-foreground">{t("noWatchers")}</p>
+            ) : (
+              <ul className="flex flex-wrap gap-1.5">
+                {watcherList.slice(0, WATCHERS_SHOWN).map((person) => (
+                  <li key={person.userId} className="flex items-center gap-1.5 rounded-full border bg-card py-0.5 pr-2 pl-0.5 text-xs">
+                    <Avatar name={person.nickname ?? "?"} src={profilePhotoSrc(person.userId, person.profilePhotoVersion)} className="size-5 text-[9px]" />
+                    <span className="max-w-28 truncate">{person.nickname ?? "?"}</span>
+                  </li>
+                ))}
+                {watcherList.length > WATCHERS_SHOWN && (
+                  <li className="flex items-center px-1 text-xs text-muted-foreground">{t("moreWatchers", { count: watcherList.length - WATCHERS_SHOWN })}</li>
+                )}
+              </ul>
             )}
-          </ul>
-        )}
-      </section>
+          </section>
 
+        </>
+      )}
       <p className="space-y-0.5 text-xs leading-5 text-muted-foreground">
         <span className="block">{t("createdBy", { name: task.createdByName ?? "?", date: format.dateTime(task.createdAt) })}</span>
         <span className="block">{t("updatedBy", { name: task.updatedByName ?? task.createdByName ?? "?", date: format.dateTime(task.updatedAt) })}</span>
