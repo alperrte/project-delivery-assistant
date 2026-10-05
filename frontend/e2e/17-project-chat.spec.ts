@@ -744,10 +744,9 @@ test.describe.serial("Project chat", () => {
         await other.close();
       }
 
-      // Not at once: the socket is still open until the server's next session check (every 30 s) ...
-      await page.waitForTimeout(3_000);
-      await expect(page).toHaveURL(new RegExp(`/tr/projeler/${slug}`));
-      // ... then the server closes it, the reconnect finds the session gone and the app leaves for the login page.
+      // The next periodic check can run immediately after logout: its phase is
+      // independent of this test. Both immediate and delayed revocation are valid.
+      // The server closes the socket; reconnect detects the revoked session.
       await expect(page).toHaveURL(/\/tr\/giris/, { timeout: 90_000 });
     } finally {
       await context.close();

@@ -46,6 +46,7 @@ Bu belge gezinme haritasıdır; gerçek dosya ve klasörler değişmiş olabilir
 | `backend/src/main/resources/db/migration/` | Sıralı Flyway SQL migration'ları |
 | `backend/src/test/java/com/pda/` | Backend testleri; modül ve use-case'e yakın tut |
 | `frontend/src/app/` | Next.js App Router sayfaları, layout ve global stil |
+| `frontend/src/styles/shadcn-compat.css` | CLI paketi olmadan kullanılan yedi UI durum varyantı; MIT attribution ve globals.css import'u |
 | `frontend/public/` | Statik frontend varlıkları |
 | `frontend/src/features/projects/components/project-mark.tsx` | Kart, oluşturma, proje başlığı ve ayarların ortak logo/ilk harf renderer'ı |
 | `frontend/src/features/projects/components/project-logo-field.tsx` | Ayarlarda bağımsız logo upload/remove; mevcut projects query invalidation |

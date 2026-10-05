@@ -51,20 +51,24 @@ for (const theme of ["light", "dark"]) {
     await expect(page.locator("#product")).toHaveAttribute("data-choreographed", "true");
     await expect(page.locator("#open-source")).toHaveAttribute("data-choreographed", "true");
     await page.screenshot({ path: path.join(captures, theme + "-welcome.png") });
-    for (const [progress, name, chapter] of [[0.04, "project-typing", "project"], [0.12, "project-form", "project"], [0.21, "project-created", "project"], [0.37, "team", "team"], [0.51, "task-typing", "task"], [0.65, "task-assigned", "task"], [0.965, "done", "delivery"]] as const) {
+    for (const [progress, name, chapter] of [[0.04, "project-typing", "project"], [0.12, "project-form", "project"], [0.21, "project-created", "project"], [0.37, "team", "team"], [0.51, "task-typing", "task"], [0.65, "task-assigned", "task"]] as const) {
       await scrollScene(page, "#product", progress);
       await expect(page.locator("#product")).toHaveAttribute("data-chapter", chapter);
       await expect(page.locator("article[data-chapter]:visible")).toHaveCount(1);
       await page.screenshot({ path: path.join(captures, theme + "-" + name + ".png") });
     }
-    await expect(page.locator("#product")).toHaveAttribute("data-task-status", "DONE");
-    await expect(page.locator('[data-pda-demo-stage="delivery"]')).toHaveAttribute("data-demo-status", "DONE");
     for (const [progress, status] of [[0.705, "TODO"], [0.76, "IN_PROGRESS"], [0.815, "IN_REVIEW"], [0.875, "TESTING"], [0.95, "DONE"]] as const) {
       await scrollScene(page, "#product", progress);
       await expect(page.locator("#product")).toHaveAttribute("data-task-status", status);
     }
+    await scrollScene(page, "#product", 0.965);
+    await expect(page.locator("#product")).toHaveAttribute("data-chapter", "delivery");
+    await expect(page.locator('[data-pda-demo-stage="delivery"]')).toHaveAttribute("data-demo-status", "DONE");
+    await page.screenshot({ path: path.join(captures, theme + "-done.png") });
     await scrollScene(page, "#product", 0.1);
+    // Scrolling still selects chapters; the demo's completed progress does not rewind.
     await expect(page.locator("#product")).toHaveAttribute("data-chapter", "project");
+    await expect(page.locator("#product")).toHaveAttribute("data-task-status", "DONE");
     for (const [progress, name] of [[0.005, "cmd-start"], [0.04, "cmd-typing"], [0.55, "cmd-docker"], [0.735, "cmd-ready"], [1, "tech-reveal"]] as const) {
       await scrollScene(page, "#open-source", progress);
       if (progress < 0.74) expect(await page.locator("[data-fact]").evaluateAll(elements => elements.every(el => getComputedStyle(el).visibility === "hidden"))).toBe(true);
@@ -79,7 +83,9 @@ for (const theme of ["light", "dark"]) {
     await page.locator("footer").scrollIntoViewIfNeeded();
     await page.screenshot({ path: path.join(captures, theme + "-footer.png") });
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(1440);
-    expect(await page.locator("img").evaluateAll((images: HTMLImageElement[]) => images.filter(img => !img.complete || img.naturalWidth === 0).map(img => img.src))).toEqual([]);
+    // Theme-hidden/lazy demo images need not load. Rendered images must finish
+    // loading and decode successfully; poll rather than sampling the network once.
+    await expect.poll(() => page.locator("img:visible").evaluateAll((images: HTMLImageElement[]) => images.filter(img => !img.complete || img.naturalWidth === 0).map(img => img.src))).toEqual([]);
     expect(errors).toEqual([]);
   });
 }

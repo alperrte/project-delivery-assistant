@@ -1,4 +1,8 @@
 # Web Sitesi Kesinlikle Olması Gerekenler — Master Checklist
+## Npm/CSS remediation — 2026-10-05 (sınırlı kapsam)
+
+Shadcn CLI kaldırıldı; kullanılan yedi durum varyantı yerel CSS'te korundu. Üretilen CSS karşılaştırması, light/dark state/animation testleri, gerçek form/settings/chat akışları ve ekran görüntüleri doğrulandı. Hedefli 73, landing 23, tam Chromium 208 passed + 1 expected production skip; son pre-push 449 backend testi ile PASSED. Full npm audit 8→5 high; production audit 6→0. Kalan ESLint/braces zinciri açık security debt. Bu kapsam proje geneli kutuları tamamlanmış saymaz. Ayrıntı: `docs/compliation/2026-10-05-npm-security-remediation.md`.
+
 
 ## Görev modeli frontend doğrulaması — 2026-10-05 (sınırlı kapsam)
 
