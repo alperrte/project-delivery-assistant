@@ -1012,6 +1012,7 @@
     "submitting": "Anmeldung läuft...",
     "noAccount": "Noch kein Konto?",
     "toRegister": "Registrieren",
+    "backHome": "Zurück zur Startseite",
     "forgotPassword": "Passwort vergessen?",
     "emailPlaceholder": "beispiel@gmail.com",
     "passwordPlaceholder": "Passwort eingeben",
@@ -1221,8 +1222,7 @@
       "description": "Diese Einstellungen werden in Ihrem Konto gespeichert und gelten bei jeder Anmeldung.",
       "ui": {
         "label": "Oberflächenanimationen",
-        "hint": "Dialoge, Menüs, die Seitenleiste und der Sprachwechsel. „Gerät folgen“ übernimmt die Einstellung „Bewegung reduzieren“ Ihres Geräts.",
-        "system": "Gerät folgen",
+        "hint": "Animationen sind standardmäßig an. Hier können Sie Animationen für Dialoge, Menüs, die Seitenleiste und den Sprachwechsel ausschalten.",
         "on": "An",
         "off": "Aus"
       },
@@ -1231,7 +1231,7 @@
         "hint": "Der kreisförmige Übergang beim Wechsel zwischen hellem und dunklem Design.",
         "on": "An",
         "off": "Aus",
-        "blocked": "Die Oberflächenanimationen sind aus oder Ihr Gerät reduziert Bewegung, daher wechselt das Design sofort."
+        "blocked": "Die Oberflächenanimationen sind aus, daher wechselt das Design sofort."
       }
     }
   },
@@ -1259,6 +1259,7 @@
   },
   "brand": {
     "skip": "Zum Inhalt springen",
+    "homeLabel": "PDA · Startseite",
     "wordmark": "PDA"
   },
   "workspace": {

@@ -1,10 +1,10 @@
 import { apiRequest } from "@/lib/api/client";
 import type { Locale } from "@/i18n/config";
-import type { MotionPreference } from "@/lib/preferences/motion";
+import { normalizeMotionPreference, type MotionPreference } from "@/lib/preferences/motion";
 
 export type ThemeChoice = "system" | "light" | "dark";
 
-/** The interface choices a person has saved. A field is absent until they have saved once. */
+/** Saved interface choices. Animation choices resolve to enabled defaults; language/theme may be absent. */
 export type SavedPreferences = {
   locale?: Locale;
   theme?: ThemeChoice;
@@ -17,8 +17,25 @@ export type PreferencesDraft = Required<SavedPreferences>;
 
 export const preferencesKey = ["preferences"] as const;
 
+// The API sends null for choices the account has never saved.
+type PreferencesResponse = {
+  locale?: Locale | null;
+  theme?: ThemeChoice | null;
+  motion?: MotionPreference | "system" | null;
+  themeTransition?: boolean | null;
+};
+
+function normalizePreferences(response: PreferencesResponse): SavedPreferences {
+  return {
+    ...(response.locale != null ? { locale: response.locale } : {}),
+    ...(response.theme != null ? { theme: response.theme } : {}),
+    motion: normalizeMotionPreference(response.motion),
+    themeTransition: response.themeTransition ?? true,
+  };
+}
+
 export const preferencesApi = {
-  get: () => apiRequest<SavedPreferences>("/users/me/preferences"),
-  save: (body: PreferencesDraft) =>
-    apiRequest<SavedPreferences>("/users/me/preferences", { method: "PUT", body }),
+  get: async () => normalizePreferences(await apiRequest<PreferencesResponse>("/users/me/preferences")),
+  save: async (body: PreferencesDraft) =>
+    normalizePreferences(await apiRequest<PreferencesResponse>("/users/me/preferences", { method: "PUT", body })),
 };

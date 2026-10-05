@@ -4,11 +4,15 @@ import { useSyncExternalStore } from "react";
 
 /**
  * How much the interface may move, chosen on the Settings page and kept on this device only.
- * - `system`: follow the device's "reduce motion" setting (the default);
- * - `on`: always animate, even when the device asks for less;
+ * - `on`: animate by default, independently of the device setting;
  * - `off`: never animate, whatever the device says.
  */
-export type MotionPreference = "system" | "on" | "off";
+export type MotionPreference = "on" | "off";
+
+/** Old "system" choices and missing preferences use the new enabled default. */
+export function normalizeMotionPreference(value: unknown): MotionPreference {
+  return value === "off" ? "off" : "on";
+}
 
 export const MOTION_KEY = "pda:motion";
 export const THEME_TRANSITION_KEY = "pda:theme-transition";
@@ -49,8 +53,7 @@ function subscribe(onChange: () => void) {
 }
 
 function motionSnapshot(): MotionPreference {
-  const value = stored(MOTION_KEY);
-  return value === "on" || value === "off" ? value : "system";
+  return normalizeMotionPreference(stored(MOTION_KEY));
 }
 
 function themeTransitionSnapshot(): boolean {
@@ -58,7 +61,7 @@ function themeTransitionSnapshot(): boolean {
 }
 
 export function setMotionPreference(next: MotionPreference) {
-  write(MOTION_KEY, next);
+  write(MOTION_KEY, normalizeMotionPreference(next));
 }
 
 export function setThemeTransitionPreference(next: boolean) {
@@ -67,8 +70,8 @@ export function setThemeTransitionPreference(next: boolean) {
 
 /** The server and the first client render always see the defaults, so hydration never mismatches. */
 export function useMotionPreference() {
-  const preference = useSyncExternalStore(subscribe, motionSnapshot, () => "system" as const);
-  return [preference, (next: MotionPreference) => write(MOTION_KEY, next)] as const;
+  const preference = useSyncExternalStore(subscribe, motionSnapshot, () => "on" as const);
+  return [preference, setMotionPreference] as const;
 }
 
 /** Whether the circular reveal plays when the theme changes. Independent of, and weaker than, the motion choice. */
@@ -77,29 +80,10 @@ export function useThemeTransitionPreference() {
   return [enabled, (next: boolean) => write(THEME_TRANSITION_KEY, next ? "on" : "off")] as const;
 }
 
-const REDUCE_QUERY = "(prefers-reduced-motion: reduce)";
-
-function subscribeToDevice(onChange: () => void) {
-  const query = matchMedia(REDUCE_QUERY);
-  query.addEventListener("change", onChange);
-  return () => query.removeEventListener("change", onChange);
-}
-
-/** The device's "reduce motion" setting, kept live (motion's own hook only reads it once and never re-renders). */
-export function useDeviceReducesMotion(): boolean {
-  return useSyncExternalStore(subscribeToDevice, () => matchMedia(REDUCE_QUERY).matches, () => false);
-}
-
-/**
- * True when animation should be skipped: an explicit "off" always wins, an explicit "on" always animates, and
- * "system" follows the device's `prefers-reduced-motion`.
- */
+/** Every animation follows the same explicit on/off preference. */
 export function useReducedMotionPreference(): boolean {
   const [preference] = useMotionPreference();
-  const osReduces = useDeviceReducesMotion();
-  if (preference === "off") return true;
-  if (preference === "on") return false;
-  return osReduces;
+  return preference === "off";
 }
 
 /** Mirrors the choice onto `<html data-motion>`, which the global stylesheet reads. */

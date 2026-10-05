@@ -34,7 +34,7 @@ function MotionPreference({ children }: { children: ReactNode }) {
   const [preference] = useMotionPreference();
   useEffect(() => applyMotionPreference(preference), [preference]);
   return (
-    <MotionConfig reducedMotion={preference === "off" ? "always" : preference === "on" ? "never" : "user"}>
+    <MotionConfig reducedMotion={preference === "off" ? "always" : "never"}>
       {children}
     </MotionConfig>
   );

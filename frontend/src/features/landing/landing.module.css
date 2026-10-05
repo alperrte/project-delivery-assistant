@@ -6,11 +6,8 @@
 .skip:focus { transform: none; }
 .header { display: flex; align-items: center; gap: 2rem; max-width: 1440px; min-height: 88px; margin: auto; padding: 1.25rem 4rem; }
 .logo { display: flex; align-items: center; width: 110px; min-height: 44px; flex-shrink: 0; }
-.nav { display: flex; margin-left: auto; gap: 2rem; }
-.nav a, .headerLogin { display: inline-flex; align-items: center; gap: .5rem; min-height: 44px; font-size: .8125rem; white-space: nowrap; }
-.nav a { color: var(--muted-foreground); }
-.nav a:hover { color: var(--foreground); }
-.controls { display: flex; align-items: center; gap: 1rem; }
+.headerLogin { gap: .5rem; height: 44px; min-height: 44px; padding-inline: 1.125rem; border-radius: 999px; font-size: .8125rem; font-weight: 600; }
+.controls { display: flex; align-items: center; margin-left: auto; gap: 1rem; }
 .eyebrow { font-size: .75rem; font-weight: 500; letter-spacing: .07em; color: var(--muted-foreground); }
 .welcome { min-height: calc(100svh - 88px); max-width: 1440px; margin: auto; padding: 5rem 4rem 1.75rem; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
 .welcome > .eyebrow { margin-top: auto; font-size: .875rem; letter-spacing: .02em; }
@@ -82,7 +79,6 @@
 .techList strong { display: block; font-size: .85rem; font-weight: 500; }
 .techList li div > span { display: block; margin-top: .25rem; color: var(--source-muted); font-size: .65rem; }
 .sourceLink { display: inline-flex; align-items: center; gap: 1rem; min-height: 44px; border-bottom: 1px solid var(--source-border); font-size: .8rem; margin-top: 1.5rem; }
-.setupNotes { margin-top: 2rem; color: var(--source-muted); text-align: center; font-size: .65rem; line-height: 1.8; }
 .openSource[data-choreographed] { height: 270svh; padding: 0; }
 .openSource[data-choreographed] .sourceViewport { position: sticky; top: 0; height: 100svh; display: flex; flex-direction: column; justify-content: center; padding-block: 2rem; }
 .openSource[data-choreographed] .sourceIntro h2 { font-size: clamp(2rem, 3vw, 2.75rem); margin-top: .75rem; }
@@ -95,40 +91,30 @@
 .openSource[data-choreographed] .sourceFacts h3 { font-size: 1.35rem; margin-top: 1rem; }
 .openSource[data-choreographed] .techList { grid-template-columns: 1fr; gap: .75rem; margin-top: 1.25rem; }
 .openSource[data-choreographed] .sourceLink { margin-top: .75rem; }
-.openSource[data-choreographed] .setupNotes { margin-top: 1rem; }
-.final { max-width: 1280px; margin: auto; padding: 7rem 3rem; }
+.productStory[data-choreographed][data-completed] { height: auto; padding-block: 4rem; }
+.productStory[data-choreographed][data-completed] .storyViewport { position: relative; height: auto; padding-block: 0; }
+.openSource[data-choreographed][data-completed] { height: auto; padding-block: 5rem; }
+.openSource[data-choreographed][data-completed] .sourceViewport { position: relative; height: auto; padding-block: 0; }
+.final { min-height: 100svh; max-width: 1280px; margin: auto; padding: 7rem 3rem; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; }
 .final h2 { font-size: clamp(2.5rem, 4.5vw, 4.5rem); line-height: 1.15; letter-spacing: -.055em; font-weight: 500; margin-top: 1.75rem; text-wrap: balance; }
 .final h2 span { color: var(--muted-foreground); }
 .final > p:not(.eyebrow) { color: var(--muted-foreground); font-size: .95rem; line-height: 1.8; max-width: 490px; margin-top: 1.75rem; }
 .actions { display: flex; align-items: center; flex-wrap: wrap; gap: 1.5rem; margin-top: 2rem; }
 .primary { min-height: 48px; padding-inline: 1.25rem; gap: 1rem; border-radius: var(--radius); }
 .textLink { display: inline-flex; align-items: center; gap: .75rem; min-height: 44px; font-size: .8rem; }
-.footer { border-top: 1px solid var(--border-strong); padding: 2rem 3rem 1rem; max-width: 1280px; margin: auto; font-size: .75rem; }
-.footerTop { display: flex; justify-content: space-between; gap: 2rem; align-items: flex-start; }
-.footerBrand { font-size: 1rem; font-weight: 600; }
-.footerBrand span { display: block; margin-top: .4rem; font-size: .7rem; font-weight: 400; color: var(--muted-foreground); }
-.footerTop > div > p:last-child { margin-top: .65rem; color: var(--muted-foreground); line-height: 1.7; }
-.footer nav { display: flex; flex-wrap: wrap; gap: 0 1.5rem; }
-.footer a { min-height: 44px; display: inline-flex; align-items: center; color: var(--muted-foreground); }
-.footer a:hover { color: var(--foreground); text-decoration: underline; text-underline-offset: 4px; }
-.footerBottom { display: flex; flex-direction: column; gap: .25rem; border-top: 1px solid var(--border); margin-top: 1.5rem; padding-top: .75rem; color: var(--muted-foreground); font-size: .65rem; }
-.footerBottom p a { font-size: .65rem; }
-.footerBottom nav { gap: 0 1.5rem; }
 @media (max-width: 1023px) {
   .header { padding-inline: 2rem; gap: 1rem; }
   .logo { width: 90px; }
-  .nav { display: none; }
-  .controls { margin-left: auto; }
   .welcome { padding-inline: 2rem; }
   .storyViewport, .sourceViewport { padding-inline: 2rem; }
   .chapter { padding: 1.5rem; }
-  .footer, .final { padding-inline: 2rem; }
+  .final { padding-inline: 2rem; }
 }
 @media (max-width: 767px) {
   .header { padding: .75rem 1.25rem; min-height: 76px; gap: .75rem; }
   .logo { width: 70px; }
   .controls { gap: .35rem; }
-  .headerLogin { font-size: .75rem; padding-left: .25rem; }
+  .headerLogin { font-size: .75rem; padding-inline: .75rem; }
   .headerLogin svg { display: none; }
   .welcome { min-height: calc(100svh - 76px); padding: 3rem 1.25rem 1.25rem; }
   .welcome h1 { font-size: clamp(2.5rem, 9vw, 4rem); letter-spacing: -.055em; overflow-wrap: anywhere; }
@@ -157,15 +143,10 @@
   .techList strong { font-size: .75rem; }
   .techList li div > span { font-size: .6rem; line-height: 1.5; }
   .techIcon { width: 22px; height: 22px; }
-  .setupNotes { text-align: left; }
   .final { padding: 4rem 1.25rem; }
   .final h2 { font-size: clamp(2rem, 8vw, 3.5rem); overflow-wrap: anywhere; }
   .final > p:not(.eyebrow) { font-size: .85rem; }
-  .footer { padding: 1.5rem 1.25rem .75rem; }
-  .footerTop { flex-direction: column; gap: 1rem; }
-  .footer nav { gap: 0 1rem; }
 }
-@media (prefers-reduced-motion: reduce) { .cursor { animation: none; } }
 :global(html[data-motion="off"]) .cursor { animation: none; }
 @media (forced-colors: active) {
   .demoWindow, .commandPrompt, .pdaFrame { border: 1px solid CanvasText; box-shadow: none; }

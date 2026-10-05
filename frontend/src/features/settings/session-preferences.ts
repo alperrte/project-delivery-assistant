@@ -62,8 +62,8 @@ function asThemeChoice(value: string | undefined): ThemeChoice {
 }
 
 /**
- * At the start of a sign-in (once per browser tab session), applies the saved defaults. Later reloads keep any
- * temporary navbar change, because the baseline marks the session as started.
+ * Animation defaults stay in sync with the account, including reloads of sessions affected by old defaults.
+ * Language/theme defaults apply once per session, preserving temporary navbar changes on later reloads.
  */
 export function useApplySavedPreferences(userId: string | undefined) {
   const saved = useSavedPreferences(userId);
@@ -72,12 +72,12 @@ export function useApplySavedPreferences(userId: string | undefined) {
 
   useEffect(() => {
     if (!userId || !saved.data) return;
-    if (readBaseline()?.userId === userId) return;
     const defaults = saved.data;
+    setMotionPreference(defaults.motion ?? "on");
+    setThemeTransitionPreference(defaults.themeTransition ?? true);
+    if (readBaseline()?.userId === userId) return;
     writeBaseline({ userId, theme: defaults.theme ?? asThemeChoice(theme), locale: defaults.locale ?? locale });
     if (defaults.theme) setTheme(defaults.theme);
-    if (defaults.motion) setMotionPreference(defaults.motion);
-    if (defaults.themeTransition !== undefined) setThemeTransitionPreference(defaults.themeTransition);
     if (defaults.locale && locales.includes(defaults.locale) && defaults.locale !== locale) {
       writeLocaleCookie(defaults.locale);
       window.location.replace(switchLocale(window.location.pathname, window.location.search, defaults.locale, window.location.hash));

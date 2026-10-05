@@ -7,8 +7,9 @@ import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowRight, Check, EnvelopeSimple, LockSimple } from "@phosphor-icons/react";
+import { ArrowLeft, ArrowRight, Check, EnvelopeSimple, LockSimple } from "@phosphor-icons/react";
 import { SubmitButton } from "@/components/common/submit-button";
+import { HomeLink } from "@/components/common/home-link";
 import { FormField } from "@/components/common/form-field";
 import { errorKey } from "@/lib/api/error-message";
 import { authApi } from "../api";
@@ -179,6 +180,14 @@ export function LoginForm({ children }: { children?: ReactNode }) {
           {t("toRegister")}
         </Link>
       </p>
+      <div className="mt-3 flex justify-center">
+        <HomeLink
+          className="inline-flex min-h-11 items-center gap-2 rounded-sm px-2 text-sm text-(--auth-muted) underline-offset-4 outline-none transition-colors hover:text-(--auth-ink) hover:underline focus-visible:ring-2 focus-visible:ring-(--glow)"
+        >
+          <ArrowLeft aria-hidden size={16} />
+          {t("backHome")}
+        </HomeLink>
+      </div>
     </div>
   );
 }
