@@ -165,7 +165,7 @@
     "archiveConfirmDescription": "Archivierte Organisationen akzeptieren keine neuen Projekte mehr. Dies kann nicht rückgängig gemacht werden.",
     "archivedBadge": "Archiviert",
     "projectsHeading": "Projekte",
-    "noProjects": "Diese Organisation hat noch keine Projekte.",
+    "noProjects": "In dieser Organisation gibt es keine aktiven Projekte, auf die Sie zugreifen können.",
     "emptyTitle": "Noch keine Organisationen",
     "emptyDescription": "Erstellen Sie eine, um verwandte Projekte zu gruppieren.",
     "columns": {
@@ -590,7 +590,8 @@
           "title": "Gefahrenbereich",
           "description": "Aktionen, die sich nicht rückgängig machen lassen."
         }
-      }
+      },
+      "organizationUnavailable": "Verknüpfte Organisation ist archiviert oder nicht verfügbar"
     }
   },
   "criteria": {

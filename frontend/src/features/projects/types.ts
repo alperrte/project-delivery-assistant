@@ -41,7 +41,7 @@ export type Project = {
   team: ProjectTeam | null;
 };
 
-export type OrganizationSummary = { id: string; name: string; slug: string };
+export type OrganizationSummary = { id: string; name: string; slug: string; canViewOrganization?: boolean };
 export type ManagerSummary = { userId: string; nickname: string };
 export type CriteriaProgress = { completed: number; total: number };
 export type CommitSummary = {

@@ -1,4 +1,9 @@
 # Web Sitesi Kesinlikle Olması Gerekenler — Master Checklist
+
+## Organization–Project remediation — 2026-10-05 (sınırlı kapsam)
+
+Explicit standalone/assign/remove/move UI→API→prepared PostgreSQL read, co-manager current summary/plain-text capability, retained archive/Home200, affected old/new cache prefix ve independent projects loading/error/retry/empty/page clamp doğrulandı. 101 owned org picker +101 linked project pagination; TR/EN/DE, keyboard,320/390/768/1440px/light-dark screenshot kontrolü geçti. Full gate PASSED:464 backend (0 fail/error/skip),232 Chromium+1 expected production crash-route skip; lint/type/build/Docker health. Schema/migration/auth/CSRF/CORS/ENV değişmedi; mevcut dev npm debt5 high/production0 ayrı. Bu scoped kanıt genel checklist kutularını topluca [x] yapmaz. Ayrıntı: `docs/compliation/2026-10-05-organization-project-integration-remediation.md`.
+
 ## 2026-10-05 ? Chat navigation, reply/reaction ve emoji kapsam do?rulamas?
 
 Full?closed page navigation, compact/bar draft persistence, modifier/cancel/back-forward intent, focus/inert cleanup, scoped reply/reaction REST/DB/WS, versioned cache ve reconnect batch50/shared2 resync do?ruland?. TR/EN/DE, keyboard/Escape/caret/IME, 2000 code-point s?n?r?, light/dark, 320/390/768/1440 px ve motion kontrolleri ge?ti; screenshot animasyon sonunda incelendi. Tam kap?: 459 backend (0 fail/error/skip), 225 Chromium + 1 expected production crash-route skip; lint/type/build/Docker health ba?ar?l?. Mevcut dev npm debt5 high / production0. Bu s?n?rl? kapsam genel accessibility, multi-browser veya production checklist kutular?n? topluca [x] yapmaz. Ayr?nt?: `docs/compliation/2026-10-05-chat-replies-reactions.md`.

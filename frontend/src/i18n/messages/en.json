@@ -165,7 +165,7 @@
     "archiveConfirmDescription": "Archived organizations no longer accept new projects. This cannot be undone.",
     "archivedBadge": "Archived",
     "projectsHeading": "Projects",
-    "noProjects": "This organization has no projects yet.",
+    "noProjects": "There are no active projects you can access in this organization.",
     "emptyTitle": "No organizations yet",
     "emptyDescription": "Create one to group related projects together.",
     "columns": {
@@ -590,7 +590,8 @@
           "title": "Danger zone",
           "description": "Actions that cannot be undone."
         }
-      }
+      },
+      "organizationUnavailable": "Linked organization is archived or unavailable"
     }
   },
   "criteria": {
