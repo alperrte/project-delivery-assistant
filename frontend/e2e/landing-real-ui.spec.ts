@@ -97,6 +97,13 @@ for (const theme of ["light", "dark"]) {
       await page.screenshot({ path: path.join(captures, `story-${theme}-${stage}.png`) });
     }
     // Capture both unchanged full forms too; the demo uses these very same components.
+    // Revisit earlier form stages in a fresh document: the completed story no
+    // longer rewinds within one page load. Reset scroll before reload so browser
+    // scroll restoration cannot immediately advance the new scene to delivery.
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+    await page.reload();
+    await expect(page.locator("#product")).toHaveAttribute("data-choreographed", "true");
+    await expect(page.locator("#product")).toHaveAttribute("data-chapter", "project");
     for (const [stage, progress, route, field] of [
       ["project", 0.079, "/projects/new", "#project-name"],
       ["task", 0.54, "/projects/pda-demo/tasks/new", "#task-title"],

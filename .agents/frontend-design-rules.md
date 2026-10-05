@@ -31,6 +31,7 @@ Dosyanın bölümleri:
 - Next.js 16 App Router, React 19, TypeScript.
 - Tailwind CSS v4. Ayrı `tailwind.config` yoktur; tema CSS içinde `@theme` ile tanımlıdır.
 - shadcn (stil `base-nova`, primitive'ler `@base-ui/react`). Bileşenler `src/components/ui/` altındadır; `components.json` CSS yolu olarak `src/app/globals.css` dosyasını gösterir.
+- Shadcn CLI npm bağımlılığı kaldırılmıştır (2026-10-05). Kullanılan open/closed/checked/disabled/active/horizontal/vertical varyantları MIT lisans notuyla `src/styles/shadcn-compat.css` içinde korunur; globals.css burayı import eder. Animasyon utility'leri `tw-animate-css` içindedir. Yeni üretilen bileşen eklenirken ihtiyaç duyduğu varyantları doğrula; kullanılmayan CLI zincirini veya tam upstream stylesheet'i otomatik ekleme.
 - `next-themes`: `attribute="class"`, `defaultTheme="system"`. Dark tema `<html class="dark">` ile gelir; Tailwind'de `dark:` varyantı `@custom-variant dark (&:is(.dark *))` ile tanımlıdır.
 - `motion/react` animasyonlar için, `next-intl` metinler için (`src/i18n/messages/{tr,en,de}.json`).
 - Sınıf birleştirme: `cn()` (`@/lib/utils`). Varyantlar: `class-variance-authority`.

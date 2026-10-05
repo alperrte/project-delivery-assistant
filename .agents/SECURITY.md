@@ -721,6 +721,14 @@ The Next.js frontend sets `X-Content-Type-Options: nosniff`, `X-Frame-Options: D
 - Lock files such as `package-lock.json` must be committed.
 - Dependency versions must not be silently changed by coding agents without the related task/context.
 
+### Open follow-up — braces advisory (2026-10-05)
+
+- [ ] **Revisit before production release or the next frontend dependency update:** CVE-2026-93687 / GHSA-vfj7-8cjw-p6xm in `eslint-config-next → @next/eslint-plugin-next → fast-glob → micromatch → braces`.
+- Last verified state (2026-10-05): full npm audit **5 high**, production audit **0** after removing the unused shadcn CLI. This is an open dependency issue, not a fixed advisory or a release waiver.
+- The user deferred custom patch/backport work. At the next relevant task, remind the user of this follow-up, check current official releases/advisory and the actual deployment/runtime path, then propose the appropriate fix. Obtain explicit approval before introducing a custom security patch or major upgrade.
+- If a patch becomes necessary, verify string and AST inputs, parse/compile/expand/stringify depth guards, Windows/glob consumers, clean installation, UI regressions and the existing pre-push gate. Keep any remaining version-based audit warning visible.
+- Evidence and scope: [remediation report](../docs/compliation/2026-10-05-npm-security-remediation.md).
+
 ---
 
 ## 17. Docker and Container Security
