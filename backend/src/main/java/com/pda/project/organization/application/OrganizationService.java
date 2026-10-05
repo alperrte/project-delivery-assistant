@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.Optional;
 
 @Service
 public class OrganizationService {
@@ -74,6 +75,11 @@ public class OrganizationService {
         Organization organization = lockedOwned(actorId, organizationId);
         organization.archive();
         organizations.save(organization);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<Organization> findActive(UUID organizationId) {
+        return organizations.findByIdAndArchivedAtIsNull(organizationId);
     }
 
     @Transactional(readOnly = true)

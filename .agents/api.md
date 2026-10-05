@@ -83,3 +83,7 @@ Proje SIMPLE'a dönerse eski gelişmiş kayıtların okuma/indirme ve temel işl
 ## Chat reply/reaction (2026-10-05)
 
 Conversation base alt?nda `PUT|DELETE /messages/{messageId}/reactions/{emojiCode}` idempotent actor-owned reaction, `GET /messages/reactions?messageIds=...` en ?ok 50 loaded ID i?in personalized snapshot sa?lar. Message `replyTo` (null veya id/sender/140-code-point preview), decimal-string `reactionVersion` ve aggregate `reactions` ta??r. Personalized message/snapshot private/no-store. `REACTIONS` WS olay? ayn? snapshot'? al?c?ya ?zg? mine flag'leriyle iletir; unread/son mesaj de?i?mez. Reconnect ve cached reopen ortak concurrency2 ile batch50 resync; yaln?z yeni version uygulan?r. Ba??ms?z reaction kotas? 60 attempt/min/user; yeni ENV yok. Scope/body/status/hata/Swagger matrisi SECURITY ?11'de.
+
+## Organization–Project association remediation (2026-10-05)
+
+Project POST optional organizationId→null; full PUT omitted/null clears, same preserves, changed non-null requires active owned target. Existing owner row lock serializes new association with archive; project membership/permissions stay independent. Org archive retains FK; Home200 organization:null is the non-throwing absent/archived branch. Active Home summary adds safe `canViewOrganization` navigation hint; owner-only profile/media authorization remains backend-enforced. UI none sentinel never goes on the wire; settings explicit null maps to standalone. Full method/body/status/error/Swagger contract is in SECURITY §11 and remediation completion.
