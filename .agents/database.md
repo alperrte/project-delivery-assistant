@@ -110,3 +110,7 @@ Migration kayıt silmez; yorum/üyelik/ekler/ilişkiler/zaman ve arşiv bilgiler
 ## V55 ? Chat replies and reactions
 
 Nullable scalar `chat_messages.reply_to_message_id`; `(reply_to_message_id, conversation_id)` composite FK, `UNIQUE(id,conversation_id)` ve self-reply CHECK ayn? konu?may? DB'de korur; non-null reply i?in partial index. `reaction_version` nonnegative BIGINT default0; content/time de?i?mez. `chat_message_reactions` scalar message/user UUID, alt?-code CHECK, timestamp; PK(message_id,user_id,emoji_code), message FK ON DELETE CASCADE. PK message prefix'i batch aggregation i?in yeterlidir; duplicate message veya gereksiz standalone user index yok. Row lock alt?nda insert/delete + version tek transaction; no-op art?rmaz. Version/count/mine tek SQL snapshot. V51/V54 de?i?medi; V54?V55 legacy round-trip, FK/PK/CHECK ve Hibernate validate ger?ek PostgreSQL testleriyle do?rulan?r.
+
+## Organization–Project lifecycle integrity (2026-10-05)
+
+No schema or migration change: V21 nullable organization_id FK, NO ACTION delete behavior and (organization_id,archived_at) index remain. Organization archive retains associations and projects stay active; project archive does not affect organization/siblings. New/changed association validation uses existing organization row lock throughout the write transaction, shared with owner archive synchronization. Same-ID co-manager metadata and null detach preserve their prior policy. PostgreSQL barrier and physical NULL/UUID round-trip tests verify integrity; organization page query count at 30/100 remains fixed.

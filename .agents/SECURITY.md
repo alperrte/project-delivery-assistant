@@ -635,6 +635,16 @@ Task writes first acquire a shared Project public-contract row lock; founder pol
 
 Swagger check: existing `API_DOCS_ENABLED=true`, `/swagger-ui/index.html` and `/v3/api-docs`; get CSRF and authenticate normally. Use fixture UUIDs, never put passwords/cookies/tokens in examples. Follow backend completion record for checks; frontend model-selection UI is a separate pending delivery.
 
+### Organization ↔ Project association remediation (2026-10-05)
+
+No new route, ENV, role, membership inheritance, CSRF/CORS/session policy or migration. Existing project POST accepts optional `organizationId` (omitted/null→standalone). Existing project PUT is full metadata: omitted/null `organizationId` clears, identical ID preserves, changed non-null ID requires active actor-owned organization. `PROJECT_UPDATE` remains required, including detach. Same-ID co-manager save remains allowed. New/changed targets use the existing organization owner row lock through the association transaction; organization archive uses that same lock. Deterministic PostgreSQL barrier tests reproduced the old check/write race and guard serialization.
+
+Organization archive **retains** all project FK associations; no automatic detach/archive/cascade. Project Home now uses a non-throwing optional active lookup for absent/archived orgs, avoiding rollback-only/UnexpectedRollbackException; authorized members get `200` with `organization:null`. Organization profile/media still use owner checks; missing/archived lookup rejection elsewhere is unchanged. Project archive does not change the organization or sibling projects.
+
+`GET /api/v1/projects/{projectId}/home` adds `organization.canViewOrganization` (boolean, only when active summary exists). It is derived from current owner equality, contains no owner/email/private metadata, and is only a navigation hint: owner-only organization detail/media endpoints still enforce access. Non-owner co-managers see the already-authorized project summary as plain text; settings uses that same current summary while new targets remain owned-only. Missing capability in an older response fails closed for navigation.
+
+Relevant inventory: POST/GET `/api/v1/projects`, PUT `/api/v1/projects/{id}`, GET `/projects/{id}`, `/projects/by-slug/{slug}`, `/projects/{id}/home`, POST `/projects/{id}/archive`; POST/GET `/organizations`, GET/PUT `/organizations/{id}`, POST archive and GET projects. Mutations require existing cookie+CSRF; no session401, nonmember/foreign target403, unknown/archived new target404, malformed/validation400. Organization projects GET is active-org + caller project membership, not general owner inheritance; profile GET remains owner-only. Safe PUT: `{"name":"Example Project","priority":"MEDIUM","status":"PLANNING","organizationId":null}`. Home active summary: `{id,name,slug,canViewOrganization}`. Swagger uses existing `/swagger-ui/index.html` and normal login/CSRF; no docs ENV changed. Full endpoint matrix is in the remediation completion record.
+
 ## 12. Error Handling
 
 API errors must not expose:

@@ -34,10 +34,10 @@ public record ProjectHomeResponse(
                 project.getCreatedAt(), project.getUpdatedAt());
     }
 
-    public record OrganizationSummaryResponse(UUID id, String name, String slug) {
+    public record OrganizationSummaryResponse(UUID id, String name, String slug, boolean canViewOrganization) {
         static OrganizationSummaryResponse from(OrganizationSummary summary) {
             return summary == null ? null
-                    : new OrganizationSummaryResponse(summary.id(), summary.name(), summary.slug());
+                    : new OrganizationSummaryResponse(summary.id(), summary.name(), summary.slug(), summary.canViewOrganization());
         }
     }
 

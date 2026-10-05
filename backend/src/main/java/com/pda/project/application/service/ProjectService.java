@@ -62,7 +62,7 @@ public class ProjectService {
                           ProjectType projectType, String tagline, String techStack) {
         Objects.requireNonNull(actorId, "actorId is required");
         if (organizationId != null) {
-            organizations.detail(actorId, organizationId);
+            organizations.lockedOwned(actorId, organizationId);
         }
         Project project = projects.saveAndFlush(Project.create(name, SlugGenerator.generate(name),
                 description, actorId, organizationId, projectType, tagline, techStack));
@@ -156,7 +156,7 @@ public class ProjectService {
         // Ownership is checked when the project is linked to an organization, not on every save: a co-manager who
         // is not the organization's owner must still be able to edit a project that is already linked to it.
         if (organizationId != null && !organizationId.equals(project.getOrganizationId())) {
-            organizations.detail(actorId, organizationId);
+            organizations.lockedOwned(actorId, organizationId);
         }
         if (status != null && status != project.getStatus()) {
             project.changeStatus(status);
