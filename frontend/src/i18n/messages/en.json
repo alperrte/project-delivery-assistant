@@ -988,6 +988,7 @@
     "submitting": "Signing in...",
     "noAccount": "Don't have an account?",
     "toRegister": "Create one",
+    "backHome": "Back to home",
     "forgotPassword": "Forgot password?",
     "emailPlaceholder": "example@gmail.com",
     "passwordPlaceholder": "Enter your password",
@@ -1197,8 +1198,7 @@
       "description": "These preferences are saved to your account and apply every time you sign in.",
       "ui": {
         "label": "Interface animations",
-        "hint": "Dialogs, menus, the sidebar and the language change. “Follow device” applies your device's “reduce motion” setting.",
-        "system": "Follow device",
+        "hint": "Animations are on by default. Turn off animations for dialogs, menus, the sidebar and language changes here.",
         "on": "On",
         "off": "Off"
       },
@@ -1207,7 +1207,7 @@
         "hint": "The circular wipe when switching between the light and dark theme.",
         "on": "On",
         "off": "Off",
-        "blocked": "Interface animations are off or your device reduces motion, so the theme changes instantly."
+        "blocked": "Interface animations are off, so the theme changes instantly."
       }
     }
   },
@@ -1235,6 +1235,7 @@
   },
   "brand": {
     "skip": "Skip to content",
+    "homeLabel": "PDA · Home",
     "wordmark": "PDA"
   },
   "workspace": {

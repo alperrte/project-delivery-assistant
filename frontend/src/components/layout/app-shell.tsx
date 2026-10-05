@@ -123,7 +123,7 @@ export function AppShellView({ children, pathname, user, collapsed = false, onLo
           className={cn("flex h-16 shrink-0 items-center justify-center", narrow ? "px-2" : "px-6")}
           aria-label="PDA"
         >
-          {narrow ? <Logo variant="emblem" size={28} priority /> : <Logo variant="wordmark" compact plain size={140} priority />}
+          {narrow ? <Logo variant="emblem" size={28} priority={!contained} /> : <Logo variant="wordmark" compact plain size={140} priority={!contained} />}
         </Link>
         <nav aria-label={tw("navigation")} className={cn("min-h-0 flex-1 space-y-1 overflow-y-auto py-3", narrow ? "px-2" : "px-3")}>
           {NAV_LINKS.map(link => {

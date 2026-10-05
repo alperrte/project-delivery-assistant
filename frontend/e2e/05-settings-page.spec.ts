@@ -10,7 +10,7 @@ import { MANAGER_STORAGE, MANAGER_USER_FILE } from "./global-setup";
  *
  * The shared manager account keeps whatever is saved, so every test that saves puts the plain defaults back.
  */
-const PLAIN = { locale: "tr", theme: "system", motion: "system", themeTransition: true };
+const PLAIN = { locale: "tr", theme: "system", motion: "on", themeTransition: true };
 
 async function restorePlainDefaults(page: Page) {
   const result = await api(page, "PUT", "/users/me/preferences", PLAIN);
@@ -50,7 +50,7 @@ test.describe("with the shared manager's session", () => {
     // The choices are only a draft: the page itself stays as it was.
     await expect(page.locator("html")).toHaveAttribute("lang", "tr");
     await expect(page.locator("html")).not.toHaveClass(/dark/);
-    await expect(page.locator("html")).toHaveAttribute("data-motion", "system");
+    await expect(page.locator("html")).toHaveAttribute("data-motion", "on");
     await expect(page.getByText("Kaydedilmemiş değişiklikler var.")).toBeVisible();
     await expect(saveButton(page)).toBeEnabled();
     // Nothing was stored either.
@@ -102,23 +102,23 @@ test.describe("with the shared manager's session", () => {
     const ui = group(page, "Arayüz animasyonları");
     const theme = group(page, "Tema geçiş animasyonu");
 
-    await expect(page.locator("html")).toHaveAttribute("data-motion", "system");
-    await expect(ui.getByRole("radio", { name: "Cihazı izle" })).toBeChecked();
+    await expect(page.locator("html")).toHaveAttribute("data-motion", "on");
+    await expect(ui.getByRole("radio", { name: "Açık", exact: true })).toBeChecked();
+    await expect(ui.getByRole("radio")).toHaveCount(2);
     await expect(theme.getByRole("radio", { name: "Açık" })).toBeEnabled();
 
     // Off in the draft already blocks the theme transition choice, but the page only changes on Kaydet.
     await ui.getByRole("radio", { name: "Kapalı" }).click();
     await expect(theme.getByRole("radio", { name: "Açık" })).toBeDisabled();
-    await expect(page.getByText("Arayüz animasyonları kapalı veya cihazınız hareketi azaltıyor")).toBeVisible();
-    await expect(page.locator("html")).toHaveAttribute("data-motion", "system");
+    await expect(page.getByText("Arayüz animasyonları kapalı, bu yüzden tema doğrudan değişir.")).toBeVisible();
+    await expect(page.locator("html")).toHaveAttribute("data-motion", "on");
     await saveButton(page).click();
     await expect(page.locator("html")).toHaveAttribute("data-motion", "off");
     await page.reload();
     await expect(page.locator("html")).toHaveAttribute("data-motion", "off");
 
-    // The device asks for less motion: following it blocks the transition, "Açık" overrides the device.
+    // The interface choice is explicit and does not change with the device setting.
     await page.emulateMedia({ reducedMotion: "reduce" });
-    await ui.getByRole("radio", { name: "Cihazı izle" }).click();
     await expect(theme.getByRole("radio", { name: "Açık" })).toBeDisabled();
     await ui.getByRole("radio", { name: "Açık", exact: true }).click();
     await expect(theme.getByRole("radio", { name: "Açık" })).toBeEnabled();

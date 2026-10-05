@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 import Image from "next/image";
-import Link from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
 import { Logo } from "@/components/common/logo";
+import { HomeLink } from "@/components/common/home-link";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { SiteFooter } from "@/components/layout/site-footer";
@@ -83,7 +83,7 @@ export async function AuthShell({ children }: { children: ReactNode }) {
         {t("skip")}
       </a>
 
-      <header className="auth-enter-controls absolute inset-x-0 top-0 z-10 flex items-center justify-between p-4 sm:p-6">
+      <header className="auth-enter-controls pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center justify-between p-4 sm:p-6 [&>*]:pointer-events-auto">
         <LocaleSwitcher triggerClassName="h-11 gap-2 rounded-full border border-(--auth-control-border) bg-(--auth-control) px-4 text-(--auth-ink) shadow-[0_6px_18px_-10px_rgb(15_23_42/0.35)] backdrop-blur-md hover:bg-(--auth-control) hover:text-(--auth-ink) aria-expanded:bg-(--auth-control) dark:hover:bg-(--auth-control)" />
         <ThemeToggle />
       </header>
@@ -93,13 +93,12 @@ export async function AuthShell({ children }: { children: ReactNode }) {
         tabIndex={-1}
         className="mx-auto flex w-full flex-1 max-w-5xl flex-col items-center px-4 pb-4 pt-20 sm:px-6 sm:pt-[clamp(3.5rem,6vh,6.5rem)]"
       >
-        <Link
-          href="/login"
-          aria-label="PDA · Project Delivery Assistant"
+        <HomeLink
+          aria-label={t("homeLabel")}
           className="auth-enter-logo w-[clamp(13.5rem,min(30vw,24vh),27.5rem)] rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-(--glow)"
         >
           <Logo variant="wordmark" size={440} priority />
-        </Link>
+        </HomeLink>
         <div className="mt-4 w-full">{children}</div>
       </main>
       <SiteFooter tone="auth" />

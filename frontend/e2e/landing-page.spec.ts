@@ -10,13 +10,14 @@ async function scrollScene(page: Page, id: string, progress: number) {
   await page.waitForTimeout(100);
 }
 
-for (const [locale, heading] of [["tr", "Fikirden teslimata."], ["en", "From idea to delivery."], ["de", "Von der Idee zum Ziel."]] as const) {
+for (const [locale, heading] of [["tr", "Fikrinle başla."], ["en", "Start with your idea."], ["de", "Starte mit deiner Idee."]] as const) {
   test("localized story, metadata and no backend requests: " + locale, async ({ page, context }) => {
     const errors: string[] = [];
     const requests: string[] = [];
     page.on("pageerror", error => errors.push(error.message));
     page.on("request", request => { if (request.url().includes("/api/v1/")) requests.push(request.url()); });
     await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.addInitScript(() => localStorage.setItem("pda:motion", "off"));
     await context.addCookies([{ name: "NEXT_LOCALE", value: locale, url: "http://localhost:3000" }]);
     expect((await page.goto("/"))?.status()).toBe(200);
     await expect(page.locator("#landing-heading")).toContainText(heading);
@@ -107,7 +108,7 @@ for (const width of [320, 390, 768, 1280, 1440, 1920]) {
   });
 }
 
-test("keyboard, chapter shortcuts and live reduced-motion changes", async ({ page }) => {
+test("keyboard, chapter shortcuts and live animation preference changes", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");
   await expect(page.locator("#product")).toHaveAttribute("data-choreographed", "true");
@@ -118,14 +119,20 @@ test("keyboard, chapter shortcuts and live reduced-motion changes", async ({ pag
   await page.locator('[data-chapter-link][href="#story-team"]').focus();
   await page.keyboard.press("Enter");
   await expect(page.locator("#product")).toHaveAttribute("data-chapter", "team");
-  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.evaluate(() => {
+    localStorage.setItem("pda:motion", "off");
+    window.dispatchEvent(new Event("pda:preferences-changed"));
+  });
   await expect(page.locator("#product")).not.toHaveAttribute("data-choreographed", "true");
   await expect(page.locator("#open-source")).not.toHaveAttribute("data-choreographed", "true");
   await expect(page.locator("article[data-chapter]:visible")).toHaveCount(4);
   await expect(page.locator("[data-command-group]:visible")).toHaveCount(8);
   expect(await page.locator("[data-cmd-window]").evaluate(el => getComputedStyle(el).transform)).toBe("none");
   await page.screenshot({ path: path.join(captures, "reduced-motion.png"), fullPage: true });
-  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.evaluate(() => {
+    localStorage.setItem("pda:motion", "on");
+    window.dispatchEvent(new Event("pda:preferences-changed"));
+  });
   await expect(page.locator("#product")).toHaveAttribute("data-choreographed", "true");
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.locator("#product")).not.toHaveAttribute("data-choreographed", "true");
@@ -134,6 +141,7 @@ test("keyboard, chapter shortcuts and live reduced-motion changes", async ({ pag
 
 test("CTA and information links reach existing routes", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.addInitScript(() => localStorage.setItem("pda:motion", "off"));
   await page.goto("/");
   await page.locator('main a[href="/tr/kayit"]').click();
   await expect(page).toHaveURL(/\/tr\/kayit$/);
@@ -145,9 +153,9 @@ test("CTA and information links reach existing routes", async ({ page }) => {
     await page.locator('footer a[href="' + target + '"]').click();
     await expect(page).toHaveURL(new RegExp(target + "$"));
   }
-  for (const file of ["README.md", "LICENSE"]) {
+  for (const target of ["https://github.com/alperrte", "https://github.com/HmzT270", "https://github.com/alperrte/project-delivery-assistant"]) {
     await page.goto("/");
-    await expect(page.locator('footer a[href$="/blob/main/' + file + '"]')).toHaveCount(1);
+    await expect(page.locator('footer a[href="' + target + '"]')).toHaveCount(1);
   }
 });
 
@@ -164,7 +172,7 @@ test("complete story and CTA render without JavaScript", async ({ browser }) => 
   const context = await browser.newContext({ javaScriptEnabled: false, locale: "tr-TR" });
   const page = await context.newPage();
   await page.goto("http://localhost:3000/");
-  await expect(page.locator("#landing-heading")).toContainText("Fikirden teslimata.");
+  await expect(page.locator("#landing-heading")).toContainText("Fikrinle başla.");
   await expect(page.locator("article[data-chapter]:visible")).toHaveCount(4);
   await expect(page.locator('main a[href="/tr/kayit"]')).toBeVisible();
   await expect(page.locator("[data-command-group]:visible")).toHaveCount(8);
@@ -188,6 +196,7 @@ test("short laptop viewport keeps the complete story in normal flow", async ({ p
 
 test("landing follows live changes to the global semantic palette", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.addInitScript(() => localStorage.setItem("pda:motion", "off"));
   await page.goto("/");
   await page.evaluate(() => {
     document.documentElement.style.setProperty("--background", "#f5ebdb");

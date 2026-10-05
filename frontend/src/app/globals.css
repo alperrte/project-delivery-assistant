@@ -602,9 +602,8 @@ html.theme-close-in::view-transition-old(root) {
 }
 
 /*
- * Reduced motion has two sources. The device's setting applies unless the user chose "always animate" on the
- * Settings page (`<html data-motion="on">`); an explicit "off" (`data-motion="off"`) applies whatever the device says.
- * Both blocks hold the same rules.
+ * Animations default to on; an explicit off stops them everywhere. The media-query block is a fallback
+ * for documents without the application's explicit data-motion attribute.
  */
 @media (prefers-reduced-motion: reduce) {
   html:not([data-motion="on"]) *,

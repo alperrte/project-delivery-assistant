@@ -6,17 +6,20 @@ import { getLocale } from "next-intl/server";
 import { Providers } from "@/components/providers";
 import "./globals.css";
 
+// Load fonts when their text is rendered instead of preloading every family/subset on every route.
 // Variable font: every weight from one file.
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin", "latin-ext"],
   display: "swap",
+  preload: false,
 });
 
 const exo2 = Exo_2({
   variable: "--font-exo2",
   subsets: ["latin", "latin-ext"],
   display: "swap",
+  preload: false,
 });
 
 const jetbrainsMono = JetBrains_Mono({
@@ -24,6 +27,7 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin", "latin-ext"],
   weight: ["400", "500"],
   display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -54,6 +58,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   return (
     <html
       lang={locale}
+      data-motion="on"
       className={`${inter.variable} ${exo2.variable} ${jetbrainsMono.variable}`}
       suppressHydrationWarning
     >

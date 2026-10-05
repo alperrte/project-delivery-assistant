@@ -14,11 +14,15 @@ function PdaViewport({ stage, progress }: { stage: DemoStage; progress: number |
     const element = root.current;
     if (!element) return;
     const measure = () => {
-      const rect = element.getBoundingClientRect();
-      if (!rect.width || !rect.height) return;
       const width = window.innerWidth;
-      const scale = element.clientWidth / width;
-      setDimensions({ width, height: Math.round(element.clientHeight / scale), scale });
+      const viewportWidth = element.clientWidth;
+      const viewportHeight = element.clientHeight;
+      // Hidden or collapsing chapters can briefly have no usable content width.
+      if (width <= 0 || viewportWidth <= 0 || viewportHeight <= 0) return;
+      const scale = viewportWidth / width;
+      const height = Math.round(viewportHeight / scale);
+      if (!Number.isFinite(scale) || scale <= 0 || !Number.isFinite(height) || height <= 0) return;
+      setDimensions(current => current.width === width && current.height === height && current.scale === scale ? current : { width, height, scale });
     };
     const observer = new ResizeObserver(measure);
     observer.observe(element);

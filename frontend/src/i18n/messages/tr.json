@@ -1012,6 +1012,7 @@
     "submitting": "Giriş yapılıyor...",
     "noAccount": "Hesabınız yok mu?",
     "toRegister": "Kayıt olun",
+    "backHome": "Ana sayfaya dön",
     "forgotPassword": "Şifremi unuttum?",
     "emailPlaceholder": "ornek@gmail.com",
     "passwordPlaceholder": "Şifrenizi girin",
@@ -1221,8 +1222,7 @@
       "description": "Bu tercihler hesabınıza kaydedilir ve her girişinizde uygulanır.",
       "ui": {
         "label": "Arayüz animasyonları",
-        "hint": "Açılır pencereler, menüler, kenar çubuğu ve dil geçişi. “Cihazı izle”, cihazınızdaki “hareketi azalt” ayarını uygular.",
-        "system": "Cihazı izle",
+        "hint": "Animasyonlar varsayılan olarak açıktır. Açılır pencereler, menüler, kenar çubuğu ve dil geçişi animasyonlarını buradan kapatabilirsiniz.",
         "on": "Açık",
         "off": "Kapalı"
       },
@@ -1231,7 +1231,7 @@
         "hint": "Açık ile koyu tema arasında geçerken ekranı saran çember geçişi.",
         "on": "Açık",
         "off": "Kapalı",
-        "blocked": "Arayüz animasyonları kapalı veya cihazınız hareketi azaltıyor, bu yüzden tema doğrudan değişir."
+        "blocked": "Arayüz animasyonları kapalı, bu yüzden tema doğrudan değişir."
       }
     }
   },
@@ -1259,6 +1259,7 @@
   },
   "brand": {
     "skip": "İçeriğe geç",
+    "homeLabel": "PDA · Ana sayfa",
     "wordmark": "PDA"
   },
   "workspace": {

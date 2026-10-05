@@ -12,7 +12,7 @@ test.use({ storageState: MANAGER_STORAGE });
  * Whether it plays follows the animation choices saved in Settings, which the shared manager account keeps: tests that
  * change them put the plain defaults back.
  */
-const PLAIN = { locale: "tr", theme: "system", motion: "system", themeTransition: true };
+const PLAIN = { locale: "tr", theme: "system", motion: "on", themeTransition: true };
 
 async function watchTransitionClasses(page: Page) {
   await page.evaluate(() => {
@@ -79,13 +79,21 @@ test("with the theme transition saved as off the theme changes straight away", a
   }
 });
 
-test("a device that reduces motion gets no transition, unless the user saved 'always animate'", async ({ page }) => {
+test("animations default to on independently of the device and can be explicitly disabled", async ({ page }) => {
   try {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/dashboard");
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await watchTransitionClasses(page);
 
+    await navbarTheme(page, "Koyu");
+    await expect(page.locator("html")).toHaveClass(/dark/);
+    expect(await seenClasses(page)).toEqual(["theme-close-in"]);
+
+    await saveAnimations(page, { ui: "Kapalı" });
+    await page.goto("/dashboard");
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    await watchTransitionClasses(page);
     await navbarTheme(page, "Koyu");
     await expect(page.locator("html")).toHaveClass(/dark/);
     expect(await seenClasses(page)).toEqual([]);

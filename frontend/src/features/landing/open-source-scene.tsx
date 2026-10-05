@@ -3,9 +3,10 @@
 import { useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { ArrowUpRight, Minus, Square, Terminal, X } from "lucide-react";
-import { useDeviceReducesMotion, useReducedMotionPreference } from "@/lib/preferences/motion";
+import { useReducedMotionPreference } from "@/lib/preferences/motion";
 import { REPOSITORY_URL } from "@/features/public-info/site-info";
 import { commandSequence } from "./command-sequence";
+import { advanceAnimationProgress, releaseCompletedAnimation } from "./animation-progress";
 import styles from "./landing.module.css";
 
 const TECHNOLOGIES = [
@@ -18,9 +19,7 @@ const TECHNOLOGIES = [
 export function OpenSourceScene() {
   const t = useTranslations("landing");
   const root = useRef<HTMLElement>(null);
-  const reducePreference = useReducedMotionPreference();
-  const reduceDevice = useDeviceReducesMotion();
-  const reduce = reducePreference || reduceDevice;
+  const reduce = useReducedMotionPreference();
   const steps = commandSequence(t("envOutput"));
 
   useEffect(() => {
@@ -60,17 +59,30 @@ export function OpenSourceScene() {
           element.dataset.command = String(active);
           element.dataset.ready = String(progress.value >= 0.72);
         };
-        const timeline = gsap.timeline({ defaults: { ease: "none" }, scrollTrigger: {
-          id: "landing-source", trigger: element, start: "top top", end: "bottom bottom", scrub: true, invalidateOnRefresh: true,
-        }});
+        const timeline = gsap.timeline({ paused: true, defaults: { ease: "none" } });
         timeline.to(progress, { value: 1, duration: 100, onUpdate: render }, 0)
           .fromTo(element.querySelector("[data-cmd-window]"), { y: 12, opacity: 0 }, { y: 0, opacity: 1, duration: 4 }, 0)
           .to(element.querySelector("[data-cmd-window]"), { scale: 0.74, xPercent: -29, duration: 10, ease: "power2.inOut" }, 74)
           .to(facts, { autoAlpha: 1, y: 0, stagger: 2, duration: 5 }, 83);
+        const update = (scrollProgress: number) => timeline.progress(advanceAnimationProgress("source", scrollProgress));
+        const trigger = ScrollTrigger.create({
+          id: "landing-source", trigger: element, start: "top top", end: "bottom bottom",
+          onUpdate: self => { update(self.progress); },
+          onRefresh: self => { update(self.progress); },
+        });
+        update(trigger.progress);
         render();
         ScrollTrigger.refresh();
+        const stopWatching = releaseCompletedAnimation("source", element, () => {
+          trigger.kill();
+          timeline.progress(1);
+          cursors.forEach(cursor => { cursor.hidden = true; });
+          requestAnimationFrame(() => { if (!disposed) ScrollTrigger.refresh(); });
+        });
         return () => {
+          stopWatching();
           delete element.dataset.choreographed;
+          delete element.dataset.completed;
           delete element.dataset.command;
           delete element.dataset.ready;
           groups.forEach(group => { group.hidden = false; });
@@ -94,7 +106,7 @@ export function OpenSourceScene() {
             <div className={styles.cmdBody} aria-hidden="true"><p className={styles.cmdGreeting}>Microsoft Windows<br />(c) Microsoft Corporation.</p>
               {steps.map((step, index) => <div className={styles.commandGroup} data-command-group key={index}><p><span>{step.prompt}&gt;</span><span data-command data-full-text={step.command}>{step.command}</span><span data-cursor className={styles.cursor} hidden /></p><div data-output>{step.output.map((line, i) => <p key={i}>{line}</p>)}</div></div>)}
             </div>
-            <figcaption className="sr-only">{t("terminalNote")}<pre>{steps.map(step => step.prompt + ">" + step.command + "\n" + step.output.join("\n")).join("\n\n")}</pre></figcaption>
+            <figcaption className="sr-only"><pre>{steps.map(step => step.prompt + ">" + step.command + "\n" + step.output.join("\n")).join("\n\n")}</pre></figcaption>
           </figure>
           <div className={styles.sourceFacts}>
             <div data-fact><p className={styles.factBrand} translate="no">PDA</p><p className={styles.factLicense}>{t("openSource")} <span>Apache 2.0</span></p></div>
@@ -103,7 +115,6 @@ export function OpenSourceScene() {
             <a data-fact href={REPOSITORY_URL} className={styles.sourceLink}>{t("source")}<ArrowUpRight size={18} aria-hidden="true" /></a>
           </div>
         </div>
-        <div className={styles.setupNotes}><p>{t("terminalNote")}</p><p>{t("setupNote")}</p></div>
       </div>
     </section>
   );

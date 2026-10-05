@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { SettingsSection } from "@/components/common/settings-section";
-import { useDeviceReducesMotion, type MotionPreference } from "@/lib/preferences/motion";
+import type { MotionPreference } from "@/lib/preferences/motion";
 import { OptionGroup } from "./option-group";
 
 type Toggle = "on" | "off";
@@ -18,12 +18,10 @@ export function MotionSection({ motion, themeTransition, onMotionChange, onTheme
   onThemeTransitionChange: (next: boolean) => void;
 }) {
   const t = useTranslations("preferences.motion");
-  const deviceReduces = useDeviceReducesMotion();
   // What the draft would give once saved: the transition cannot play when nothing is allowed to move.
-  const blocked = motion === "off" || (motion === "system" && deviceReduces);
+  const blocked = motion === "off";
 
   const motionOptions = [
-    { value: "system", label: t("ui.system") },
     { value: "on", label: t("ui.on") },
     { value: "off", label: t("ui.off") },
   ] as const;
