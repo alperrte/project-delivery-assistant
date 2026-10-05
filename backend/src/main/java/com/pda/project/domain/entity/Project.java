@@ -1,5 +1,6 @@
 package com.pda.project.domain.entity;
 
+import com.pda.project.TaskManagementMode;
 import com.pda.project.domain.enums.ProjectPriority;
 import com.pda.project.domain.enums.ProjectStatus;
 import com.pda.project.domain.enums.ProjectType;
@@ -24,6 +25,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 @Entity
+@org.hibernate.annotations.DynamicUpdate
 @Table(name = "projects",
         uniqueConstraints = @UniqueConstraint(name = "uk_projects_slug", columnNames = "slug"),
         indexes = {
@@ -105,6 +107,18 @@ public class Project {
 
     @Column(name = "archived_at")
     private Instant archivedAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "task_management_mode", length = 16)
+    private TaskManagementMode taskManagementMode;
+
+    public TaskManagementMode getTaskManagementMode() { return taskManagementMode; }
+
+    public void changeTaskManagementMode(TaskManagementMode mode, UUID actor) {
+        if (archivedAt != null) throw new IllegalStateException("Archived projects cannot be changed");
+        taskManagementMode = Objects.requireNonNull(mode, "mode is required");
+        touch(actor);
+    }
 
     protected Project() {
     }

@@ -251,7 +251,8 @@ public class SecurityBaselineConfiguration {
                                     "/api/v1/projects/*/squads/*/members/*").authenticated()
                             .requestMatchers(HttpMethod.DELETE, "/api/v1/projects/*/teams/*",
                                     "/api/v1/projects/*/teams/*/members/*").authenticated()
-                            .requestMatchers(HttpMethod.PATCH, "/api/v1/projects/*/tasks/*",
+                            .requestMatchers(HttpMethod.PATCH, "/api/v1/projects/*/task-management-mode",
+                                    "/api/v1/projects/*/tasks/*",
                                     "/api/v1/projects/*/reminders/*",
                                     "/api/v1/projects/*/tasks/*/status",
                                     "/api/v1/projects/*/tasks/*/blocked").authenticated()

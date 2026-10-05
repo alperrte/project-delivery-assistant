@@ -23,6 +23,11 @@ public interface TaskWatcherRepository extends JpaRepository<TaskWatcher, TaskWa
     int watch(@Param("taskId") UUID taskId, @Param("userId") UUID userId);
 
     @Modifying
+    @Query(value = "insert into task_watchers (task_id,user_id,created_at,manual_watch) values (:taskId,:userId,now(),true) "
+            + "on conflict (task_id,user_id) do update set manual_watch = true", nativeQuery = true)
+    int watchManually(@Param("taskId") UUID taskId, @Param("userId") UUID userId);
+
+    @Modifying
     @Query("delete from TaskWatcher w where w.taskId = :taskId and w.userId = :userId")
     int unwatch(@Param("taskId") UUID taskId, @Param("userId") UUID userId);
 

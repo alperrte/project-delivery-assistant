@@ -592,6 +592,31 @@ Swagger check path: `/swagger-ui/index.html` with `API_DOCS_ENABLED=true`. `GET 
 
 **Member removal.** `ProjectMemberRemovedEvent` clears the member's task assignments and watches.
 
+
+### Simple / advanced task policies (2026-10-05, V54)
+
+Project owns nullable `taskManagementMode` (SIMPLE / ADVANCED / BOTH); only its authenticated active founder (`createdBy`) can change it. Other Project Managers and global ADMIN have no bypass. New projects require the first choice; legacy projects are BOTH. Task owns non-null `creationMode` (SIMPLE / ADVANCED); existing tasks and POSTs omitting the type use ADVANCED. Project GET/by-slug/list responses expose the policy and existing createdBy provides the founder hint.
+
+All mutations retain the existing access cookie, CSRF, membership and per-operation permission checks. The new exact PATCH route is authenticated in SecurityBaselineConfiguration; deny-all remains the fallback. No cookie/CORS/CSRF configuration changes.
+
+| Endpoint / affected group | Scope and safe input | Success | Important errors |
+| --- | --- | --- | --- |
+| `PATCH /api/v1/projects/{projectId}/task-management-mode` | Active founder + CSRF; `{"mode":"BOTH"}` | 200 ProjectResponse including policy | 400 invalid/missing mode, 401 no session, 403 CSRF/non-founder, 404 unknown project or archived outsider, 409 PROJECT_ARCHIVED for archived founder |
+| `GET /api/v1/projects`, `/{projectId}`, `/by-slug/{slug}` | Existing project membership scope | 200, additional nullable taskManagementMode | Existing 400/401/403/404 |
+| `POST /api/v1/projects/{projectId}/tasks` | TASK_MANAGE + CSRF; `{"title":"Prepare release","creationMode":"SIMPLE"}` | 201 TaskView with creationMode | 400 TASK_SIMPLE_FIELDS_INVALID, 409 PROJECT_TASK_MODE_NOT_CONFIGURED / TASK_MODE_NOT_ALLOWED; existing validation/scope errors |
+| `PATCH /api/v1/projects/{projectId}/tasks/{taskId}` | TASK_MANAGE + CSRF; required title/priority, optional creationMode | 200; omitted estimates/parent/sprint are retained; explicit null clears only where advanced writes are enabled | 409 TASK_MODE_CONVERSION_BLOCKED if advanced data remains; 409 TASK_MODE_NOT_ALLOWED for disabled type/features |
+| `GET /api/v1/projects/{projectId}/tasks` | PROJECT_VIEW; optional `?creationMode=SIMPLE&page=0&size=20` combined with existing filters | 200, DB-filtered content/count/pages, creationMode in rows | 400 invalid enum/paging; existing scope errors |
+| Task GET/subtasks; `GET /api/v1/tasks/mine` / `pool` | Existing project/own-task scope | 200; creationMode in all TaskViews; pool lists/counts exclude disabled project policies | Existing scope/paging errors |
+| Advanced task mutations: estimates/parent/sprint/labels/pool, checklist, relations, attachments, worklogs, manual watch/unwatch, new block; project label/sprint mutations | Original permission + CSRF AND project ADVANCED/BOTH AND advanced task (where applicable); relation/parent targets must also be advanced | Existing success status/body | 409 TASK_MODE_NOT_ALLOWED or PROJECT_TASK_MODE_NOT_CONFIGURED; original permission/scope failures still apply |
+
+Simple tasks allow basic fields, people assignments, comments/mentions, status, archive and read-only history. Automatic notification followers stay available in both modes; manual subscriptions are advanced. A project switching to SIMPLE retains existing advanced tasks and all data: basic editing/comments/status/unblocking work; advanced mutation is rejected, existing data reads/downloads remain authorized. Normal direct assignment/status operations still close a pool offer when the existing workflow requires it.
+
+Conversion to SIMPLE checks estimates, parent/children (including archived children), sprint, pool/team/claim/block state, task labels, checklist, either direction of relations, active attachments/worklogs and manual watchers. No automatic deletion occurs; soft-deleted records and common timeline/comments remain stored. Historical watcher origin was unknown, so V54 conservatively marks legacy watcher rows manual. New automatic followers alone do not prevent conversion.
+
+Task writes first acquire a shared Project public-contract row lock; founder policy change/archive acquires an exclusive Project lock. Advanced ancillary mutations and model conversion serialize on the task row. Project dynamic updates prevent unrelated stale metadata from overwriting the task policy. Related task locks use a consistent UUID order.
+
+Swagger check: existing `API_DOCS_ENABLED=true`, `/swagger-ui/index.html` and `/v3/api-docs`; get CSRF and authenticate normally. Use fixture UUIDs, never put passwords/cookies/tokens in examples. Follow backend completion record for checks; frontend model-selection UI is a separate pending delivery.
+
 ## 12. Error Handling
 
 API errors must not expose:

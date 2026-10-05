@@ -59,6 +59,7 @@ public class LabelService {
     private void manage(UUID projectId, UUID actor) {
         support.requireProject(projectId, actor, true);
         support.requirePermission(projectId, actor, ProjectPermission.LABEL_MANAGE);
+        support.requireAdvancedProject(projectId);
     }
 
     private ProjectLabel active(UUID projectId, UUID labelId) {

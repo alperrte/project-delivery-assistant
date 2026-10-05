@@ -14,6 +14,14 @@ import java.util.UUID;
 
 public interface ProjectRepository extends JpaRepository<Project, UUID> {
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select p from Project p where p.id = :projectId")
+    Optional<Project> lockTaskPolicy(@Param("projectId") UUID projectId);
+
+    @Lock(LockModeType.PESSIMISTIC_READ)
+    @Query("select p from Project p where p.id = :projectId")
+    Optional<Project> lockTaskContext(@Param("projectId") UUID projectId);
+
     boolean existsBySlug(String slug);
 
     long countByArchivedAtIsNull();

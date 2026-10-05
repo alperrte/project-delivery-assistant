@@ -107,6 +107,13 @@ public class ProjectApiErrorHandler {
         return problem(HttpStatus.CONFLICT, "Membership change conflicts with project rules");
     }
 
+    @ExceptionHandler(com.pda.project.domain.exception.ProjectTaskModeConflictException.class)
+    ResponseEntity<ProblemDetail> archivedTaskPolicy() {
+        ProblemDetail body = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "Project is archived");
+        body.setProperty("code", "PROJECT_ARCHIVED");
+        return ResponseEntity.status(HttpStatus.CONFLICT).header("Cache-Control", "no-store").body(body);
+    }
+
     @ExceptionHandler(MembershipConflictException.class)
     ResponseEntity<ProblemDetail> membershipConflict(MembershipConflictException exception) {
         ProblemDetail body = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,

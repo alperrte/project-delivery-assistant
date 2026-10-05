@@ -37,7 +37,7 @@ public class TaskSupport {
 
     /** Unknown or archived projects are 404; a member mutating an archived project gets a conflict instead. */
     public ProjectTaskContext requireProject(UUID projectId, UUID actor, boolean mutation) {
-        ProjectTaskContext context = projects.taskContext(projectId);
+        ProjectTaskContext context = mutation ? projects.lockTaskContext(projectId) : projects.taskContext(projectId);
         if (context == null) throw new NoSuchElementException("Project not found");
         if (context.archived()) {
             if (mutation && projects.isMemberIncludingArchived(projectId, actor))
@@ -45,6 +45,23 @@ public class TaskSupport {
             throw new NoSuchElementException("Project not found");
         }
         return context;
+    }
+
+    public void requireCreationMode(ProjectTaskContext context, TaskCreationMode mode) {
+        if (context.taskManagementMode() == null)
+            throw new TaskConflictException("PROJECT_TASK_MODE_NOT_CONFIGURED", "Project task model has not been chosen");
+        if (!context.taskManagementMode().allows(mode.name()))
+            throw new TaskConflictException("TASK_MODE_NOT_ALLOWED", "Task model is not enabled in this project");
+    }
+
+    public void requireAdvancedProject(UUID projectId) {
+        requireCreationMode(projects.taskContext(projectId), TaskCreationMode.ADVANCED);
+    }
+
+    public void requireAdvancedTask(Task task) {
+        requireAdvancedProject(task.getProjectId());
+        if (task.getCreationMode() != TaskCreationMode.ADVANCED)
+            throw new TaskConflictException("TASK_MODE_NOT_ALLOWED", "Advanced features require an advanced task");
     }
 
     public void requirePermission(UUID projectId, UUID actor, ProjectPermission permission) {

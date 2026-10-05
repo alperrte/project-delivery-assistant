@@ -97,6 +97,14 @@ public class ProjectController {
                 request.projectType(), request.tagline()));
     }
 
+    @org.springframework.web.bind.annotation.PatchMapping("/{projectId}/task-management-mode")
+    @Operation(summary = "Choose the project task model", description = "Active project founder only, not other managers or global ADMIN. Requires CSRF.")
+    public ProjectResponse taskManagementMode(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
+                                              @PathVariable UUID projectId,
+                                              @Valid @RequestBody com.pda.project.api.dto.request.TaskManagementModeRequest request) {
+        return ProjectResponse.from(projects.changeTaskManagementMode(AuthenticatedActor.id(principal), projectId, request.mode()));
+    }
+
     @PostMapping("/{projectId}/archive")
     @Operation(summary = "Archive a project", description = "PROJECT_MANAGER only. Requires CSRF. No hard delete is performed.")
     @ApiResponse(responseCode = "204", description = "Project archived")

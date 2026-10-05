@@ -97,3 +97,12 @@ Modüller birbirinin repository implementasyonunu doğrudan kullanmaz. Başka mo
 `V35__teams_without_general.sql` `squads.updated_by` (backfill `created_by`) ve `project_invitations.team_id` ekler. Mevcut General Team'ler normal ekibe dönüşür: hiçbir özel ekipte olmayan aktif proje üyeleri ona `squad_members` satırı olarak yazılır (`added_by = projects.created_by`, `added_at = joined_at`), `ck_squads_general_root`, `uk_squads_general_per_project` ve `is_general` kaldırılır. Bekleyen eski davetler projelerinin eski General Team'ine bağlanır; `teamId` zorunluluğunu yeni davetlerde servis katmanı sağlar.
 
 İlgili kararlar: [0001](decisions/0001-modular-monolith.md), [0002](decisions/0002-postgresql.md).
+
+
+## V54 Basit / gelişmiş görev türleri (2026-10-05)
+
+`V54__task_creation_modes.sql`: projects.task_management_mode nullable VARCHAR(16), CHECK SIMPLE/ADVANCED/BOTH; mevcut bütün projeler (arşivliler dahil) BOTH, yeni projeler ilk kurucu seçimine kadar null. tasks.creation_mode NOT NULL DEFAULT ADVANCED ve CHECK SIMPLE/ADVANCED; mevcut görevler ADVANCED. Aktif görevlerin (project_id,creation_mode) kısmi indeksi tür filtresini destekler.
+
+task_watchers.manual_watch NOT NULL DEFAULT FALSE, otomatik bildirim takipçisi ile kullanıcının açık izleme tercihini ayırır. Eski köken bilinmediği için tarihsel satırlar TRUE backfill edilir. Yeni otomatik takip ON CONFLICT ile açık tercihi bozmaz; manuel watch upsert TRUE yapar. Yorum/otomatik takip basite dönüşü engellemez; açık izleme tercihi engeller.
+
+Migration kayıt silmez; yorum/üyelik/ekler/ilişkiler/zaman ve arşiv bilgileri korunur. Tür kısıtları ve veri kaybı olmadan 53→54 upgrade PostgreSQL Testcontainers ile doğrulanır. Project politika exclusive kilidi Task'ın public ProjectAccess shared kilidiyle tutarlıdır; gelişmiş ilişkili veriler Task row lock ile dönüşüme karşı korunur. Project DynamicUpdate, başka metadata değişikliklerinin politikayı eski değere döndürmesini önler. Geri dönüşte kolonları veya verileri silmeyin; eski uygulama tür politikasını uygulamayacağından eski backend ile SIMPLE projelerini çalıştırmak davranışsal olarak güvenli rollback değildir.

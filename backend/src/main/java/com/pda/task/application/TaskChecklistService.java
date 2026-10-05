@@ -94,8 +94,9 @@ public class TaskChecklistService {
     private Task writable(UUID projectId, UUID taskId, UUID actor) {
         support.requireProject(projectId, actor, true);
         support.requirePermission(projectId, actor, ProjectPermission.PROJECT_VIEW);
-        Task task = support.mutable(projectId, taskId);
+        Task task = support.locked(projectId, taskId);
         support.requireWork(projectId, actor, taskId);
+        support.requireAdvancedTask(task);
         return task;
     }
 

@@ -138,7 +138,7 @@ public class TaskViewAssembler {
                     new PoolRef(t.isPoolOpen(), t.isClaimedFromPool(), t.getPoolTeamId(),
                             t.getPoolTeamId() == null ? null : teamNames.get(t.getPoolTeamId())),
                     watched.contains(t.getId()),
-                    info == null ? null : new ProjectRef(info.id(), info.slug(), info.name(), info.logoVersion())));
+                    info == null ? null : new ProjectRef(info.id(), info.slug(), info.name(), info.logoVersion()), t.getCreationMode()));
         }
         return views;
     }

@@ -66,7 +66,8 @@ public class TaskApiErrorHandler {
         return problem(HttpStatus.CONFLICT, "Task operation conflicts with current state", exception.code());
     }
 
-    @ExceptionHandler({DataIntegrityViolationException.class, ObjectOptimisticLockingFailureException.class})
+    @ExceptionHandler({DataIntegrityViolationException.class, ObjectOptimisticLockingFailureException.class,
+            org.springframework.dao.PessimisticLockingFailureException.class})
     ResponseEntity<ProblemDetail> staleOrDuplicate() {
         return problem(HttpStatus.CONFLICT, "Task operation conflicts with current state", "TASK_CONFLICT");
     }

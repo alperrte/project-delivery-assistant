@@ -21,7 +21,8 @@ public record TaskView(
         int subtaskCount, int subtaskDoneCount, int checklistTotal, int checklistDone,
         int commentCount, int attachmentCount,
         Integer estimatePoints, Integer timeEstimateMinutes, long loggedMinutes,
-        SprintRef sprint, PoolRef pool, boolean watching, ProjectRef project) {
+        SprintRef sprint, PoolRef pool, boolean watching, ProjectRef project,
+        com.pda.task.domain.TaskCreationMode creationMode) {
 
     /** A person as shown in lists and threads; {@code profilePhotoVersion} is null when they have no photo. */
     public record PersonRef(UUID userId, String nickname, Long profilePhotoVersion) {}
