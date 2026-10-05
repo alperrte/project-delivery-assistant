@@ -4,6 +4,7 @@ import Link from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { ChatCircle, ListChecks, Paperclip, TreeStructure } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
+import { TaskModeBadge } from "./task-mode-picker";
 import type { Task } from "../types";
 import { priorityDotClass } from "../workflow";
 import { StatusMenu } from "./status-menu";
@@ -62,6 +63,7 @@ export function TaskRow({ task, href, canChangeStatus, showProject }: TaskRowPro
       </div>
 
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 md:shrink-0 md:justify-end">
+        <TaskModeBadge mode={task.creationMode} />
         {showProject && task.project && <span className="max-w-40 truncate text-xs text-muted-foreground">{task.project.name}</span>}
         {task.parent && (
           <span className="inline-flex max-w-32 items-center gap-1 truncate text-xs text-muted-foreground" title={`${task.parent.key} ${task.parent.title}`}>

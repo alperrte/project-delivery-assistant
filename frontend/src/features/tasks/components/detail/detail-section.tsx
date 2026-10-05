@@ -6,6 +6,7 @@ import type { TaskPermissions } from "../../permissions";
 /** What every part of the detail page needs; the page resolves it once. */
 export type DetailContext = {
   task: Task;
+  advancedWritable: boolean;
   slug: string;
   projectId: string;
   userId: string;

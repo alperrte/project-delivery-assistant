@@ -82,6 +82,8 @@ test.describe.serial("Task management", () => {
 
   test("the manager creates a task with the form and sees it in the list", async () => {
     await managerPage.goto(`/projects/${slug}/tasks/new`);
+    await managerPage.getByRole("button", { name: "Gelişmiş görev", exact: true }).click();
+    await managerPage.getByRole("button", { name: "Geçiş yap", exact: true }).click();
     await managerPage.locator("#task-title").fill(formTitle);
     // The radio input is visually hidden, so the visible label is what a person clicks.
     await managerPage.getByRole("radiogroup", { name: "Öncelik" }).getByText("Yüksek", { exact: true }).click();

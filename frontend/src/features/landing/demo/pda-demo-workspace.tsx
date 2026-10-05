@@ -77,7 +77,7 @@ function DemoWorkspace({ data, stage, progress }: { data: DemoData; stage: DemoS
       <AppShellView contained pathname={pathname} user={DEMO_USER} onLogout={noop} onToggleCollapsed={noop}>
         {stage === "project" && (created ? <ProjectDetail slug={data.project.slug} /> : <ProjectCreatePage presentationValues={{ name: typed(data.project.name, fraction(progress, 0.02, 0.055)), tagline: typed(data.project.tagline ?? "", fraction(progress, 0.08, 0.065)), description: data.project.description ?? "", projectType: "WEB", techStack: ["nextjs", "spring", "postgresql"] }} />)}
         {stage === "team" && <TeamDetailPage slug={data.project.slug} teamId={data.team.id} />}
-        {stage === "task" && (assigned ? <TasksPage slug={data.project.slug} /> : <TaskFormBody slug={data.project.slug} project={data.project} projectId={data.project.id} isManager userId={DEMO_USER.id} initialSprintId="" initialParent={null} presentationValues={{ ...emptyTaskForm, title: typed(data.task.title, fraction(progress, 0.47, 0.06)), description: data.task.description ?? "", assigneeIds: progress >= 0.55 ? [DEMO_USER.id] : [] }} />)}
+        {stage === "task" && (assigned ? <TasksPage slug={data.project.slug} /> : <TaskFormBody slug={data.project.slug} project={data.project} projectId={data.project.id} isManager userId={DEMO_USER.id} initialSprintId="" initialParent={null} presentationValues={{ ...emptyTaskForm, creationMode: "ADVANCED", title: typed(data.task.title, fraction(progress, 0.47, 0.06)), description: data.task.description ?? "", assigneeIds: progress >= 0.55 ? [DEMO_USER.id] : [] }} />)}
         {stage === "delivery" && <TasksPage slug={data.project.slug} />}
       </AppShellView>
     </ChatProvider>

@@ -110,7 +110,11 @@
     "ORGANIZATION_MEDIA_EMPTY": "Boş dosya yüklenemez.",
     "ORGANIZATION_MEDIA_DIMENSIONS": "Görsel izin verilen dosya boyutunu aşıyor.",
     "ORGANIZATION_MEDIA_UNAVAILABLE": "Organizasyon kaydedildi; bazı görsel işlemleri tamamlanamadı. Başarısız işlemleri tekrar deneyebilirsiniz.",
-    "ORGANIZATION_MEDIA_CONFLICT": "Organizasyon kaydedildi; bazı görsel işlemleri tamamlanamadı. Başarısız işlemleri tekrar deneyebilirsiniz."
+    "ORGANIZATION_MEDIA_CONFLICT": "Organizasyon kaydedildi; bazı görsel işlemleri tamamlanamadı. Başarısız işlemleri tekrar deneyebilirsiniz.",
+    "TASK_MODE_NOT_ALLOWED": "Bu projede gelişmiş görev oluşturma kapalı. Mevcut veriler korunuyor; temel alanları, durumu ve yorumları düzenleyebilirsiniz. Gelişmiş alanlar salt okunur.",
+    "TASK_SIMPLE_FIELDS_INVALID": "Basit görevde gelişmiş alanlar kullanılamaz.",
+    "TASK_MODE_CONVERSION_BLOCKED": "Gelişmiş verileri olan görev basite dönüştürülemez. Önce gelişmiş verileri ilgili bölümlerden kaldırın; hiçbir veri otomatik silinmez.",
+    "PROJECT_TASK_MODE_NOT_CONFIGURED": "İlk görev oluşturulmadan önce projeyi kuran kişinin bu tercihi belirlemesi gerekiyor."
   },
   "app": {
     "nav": {
@@ -1747,7 +1751,8 @@
             "deadlineAt": "son teslim zamanı",
             "estimatePoints": "tahmin puanı",
             "timeEstimateMinutes": "süre tahmini",
-            "unknown": "bir alan"
+            "unknown": "bir alan",
+            "creationMode": "Görev türü"
           },
           "blocked": "görevi engelli olarak işaretledi",
           "blockedReason": "görevi engelli olarak işaretledi: {reason}",
@@ -2435,5 +2440,55 @@
         }
       ]
     }
+  },
+  "taskModels": {
+    "type": "Görev türü",
+    "all": "Tüm görevler",
+    "mode": {
+      "SIMPLE": "Basit görev",
+      "ADVANCED": "Gelişmiş görev"
+    },
+    "policy": {
+      "SIMPLE": "Yalnız basit",
+      "ADVANCED": "Yalnız gelişmiş",
+      "BOTH": "Her ikisi"
+    },
+    "policyDescription": {
+      "SIMPLE": "Temel alanlarla hızlı görev oluşturma.",
+      "ADVANCED": "Sprint, etiket ve tüm gelişmiş araçlar.",
+      "BOTH": "Her görev için basit veya gelişmiş seçimi."
+    },
+    "setupTitle": "Bu projede görevleri nasıl oluşturmak istersiniz?",
+    "settingTitle": "Görev oluşturma tercihi",
+    "settingDescription": "Proje için basit görevleri, gelişmiş görevleri veya her ikisini kullanabilirsiniz.",
+    "preserve": "Tercih değiştiğinde mevcut görevler ve verileri korunur. Yalnız basit seçilirse eski gelişmiş görevlerin ek alanları salt okunur olur.",
+    "ownerOnly": "Bu tercihi yalnız projeyi kuran kişi değiştirebilir.",
+    "waitOwner": "İlk görev oluşturulmadan önce projeyi kuran kişinin bu tercihi belirlemesi gerekiyor.",
+    "changeLater": "Bu ayarı proje ayarlarından istediğiniz zaman güncelleyebilirsiniz.",
+    "save": "Tercihi kaydet",
+    "start": "Kaydet ve görev oluşturmaya geç",
+    "saved": "Görev oluşturma tercihi kaydedildi.",
+    "help": "Basit ve gelişmiş görevlerin farkları",
+    "helpTitle": "Hangi görev türünü seçmeliyim?",
+    "helpDescription": "İhtiyacınıza göre görev türünü seçin. Ortak alanlardaki taslağınız geçiş sırasında korunur.",
+    "simpleFeatures": "Başlık, açıklama, öncelik, başlangıç ve bitiş tarihi, kişi ataması ve durum takibi.",
+    "advancedFeatures": "Basit alanlara ek olarak üst/alt görevler, sprint, etiketler, puan ve süre tahmini, görev havuzu, kontrol listesi, görev ilişkileri, engelleme, dosya ekleri, zaman kayıtları ve takipçiler.",
+    "comments": "Yorumlar ve kişi etiketleme her iki görev türünde de kullanılabilir.",
+    "dontShow": "Geçişlerde bu açıklamayı bir daha gösterme",
+    "cancel": "Vazgeç",
+    "continue": "Geçiş yap",
+    "close": "Anladım",
+    "readOnly": "Bu projede gelişmiş görev oluşturma kapalı. Mevcut veriler korunuyor; temel alanları, durumu ve yorumları düzenleyebilirsiniz. Gelişmiş alanlar salt okunur.",
+    "conversion": "Görev türünü değiştirme",
+    "conversionBlocked": "Gelişmiş verileri olan görev basite dönüştürülemez. Önce gelişmiş verileri ilgili bölümlerden kaldırın; hiçbir veri otomatik silinmez.",
+    "simplePlanning": "Öncelik, başlangıç ve bitiş tarihini belirleyin.",
+    "simpleAssignment": "Görevi proje üyelerine atayın.",
+    "simpleDeadline": "Yeni görevde bitiş tarihi gün sonu olarak kaydedilir. Mevcut görevin saati korunur.",
+    "leaveTitle": "Kaydedilmemiş değişiklikler var",
+    "leaveDescription": "Bu sayfadan ayrılırsanız görev taslağınız kaybolacak.",
+    "leave": "Taslağı bırak ve ayrıl",
+    "stay": "Düzenlemeye devam et",
+    "clearPool": "Havuz bilgisini temizle",
+    "clearPoolDescription": "Görev havuzdan çıkarılır; havuz ekibi ve üstlenme bilgisi temizlenir. Atanan kişiler korunur."
   }
 }

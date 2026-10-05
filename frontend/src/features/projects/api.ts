@@ -1,6 +1,6 @@
 import { apiRequest, apiUrl } from "@/lib/api/client";
 import type { Page } from "@/types/pagination";
-import type { Project, ProjectHome, ProjectPriority, ProjectStatus, ProjectType } from "./types";
+import type { Project, ProjectHome, ProjectPriority, ProjectStatus, ProjectType, TaskManagementMode } from "./types";
 
 /** Cards per list page: divisible by 1, 2 and 3 so the last grid row is never half empty. */
 export const PROJECT_PAGE_SIZE = 12;
@@ -59,6 +59,8 @@ export const projectsApi = {
   bySlug: (slug: string) => apiRequest<Project>(`/projects/by-slug/${slug}`),
   home: (projectId: string) => apiRequest<ProjectHome>(`/projects/${projectId}/home`),
   create: (body: CreateProjectBody) => apiRequest<Project>("/projects", { method: "POST", body }),
+  setTaskManagementMode: (projectId: string, mode: TaskManagementMode) =>
+    apiRequest<Project>(`/projects/${projectId}/task-management-mode`, { method: "PATCH", body: { mode } }),
   update: (projectId: string, body: UpdateProjectValues) =>
     apiRequest<Project>(`/projects/${projectId}`, { method: "PUT", body }),
   uploadLogo: (projectId: string, file: File) => {

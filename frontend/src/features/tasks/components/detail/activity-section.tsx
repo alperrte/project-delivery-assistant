@@ -170,7 +170,7 @@ export function ActivitySection(ctx: DetailContext) {
   const [text, setText] = useState("");
   const [picked, setPicked] = useState<PersonRef[]>([]);
   const timeline = useTimeline(projectId, task.id, filter);
-  const eventText = useEventText(projectId);
+  const eventText = useEventText(projectId, task.creationMode === "ADVANCED");
 
   const add = useTaskMutation(projectId, (body: string) => tasksApi.addComment(projectId, task.id, body), {
     onSuccess: () => {

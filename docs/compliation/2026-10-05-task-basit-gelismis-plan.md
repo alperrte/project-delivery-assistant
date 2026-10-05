@@ -2,7 +2,7 @@
 
 ## Durum ve kapsam
 
-2026-10-05 — Bu dosya ilk planlama teslimini ve o anki kod taramasını korur. Kullanıcı daha sonra backend branch'inde uygulamaya açık izin verdi. Backend kapsamı tamamlandı: [backend teslim kaydı](2026-10-05-task-basit-gelismis-backend.md). Frontend kapsamı henüz uygulanmadı; kullanıcı backend'i pushlayıp branch değiştirdikten sonra ayrı izinle başlanacak. Bu plan, tüm özelliğin tamamlandığı anlamına gelmez.
+2026-10-05 — Bu dosya ilk planlama teslimini ve o anki kod taramasını korur. Kullanıcının ayrı backend/frontend branch izinleriyle iki kapsam da uygulandı: [backend teslim kaydı](2026-10-05-task-basit-gelismis-backend.md), [frontend teslim kaydı](2026-10-05-task-basit-gelismis-frontend.md). Son frontend tesliminde 12 görev modeli Chromium senaryosu ve 449 backend testi başarılıdır; genel frontend paketindeki 6 mevcut sohbet/landing hatası ve çalışmayan 13 serial test ayrı kaydedildi. Aşağıdaki ilk tarama/plan metni güncel uygulama kanıtı yerine kullanılmamalıdır.
 
 Amaç: görev oluşturma formunu basit/gelişmiş olarak ayırmak; görev detaylarını ve filtreleri buna uyarlamak; proje kurucusunun proje genelinde basit, gelişmiş veya iki modeli birlikte seçebilmesini sağlamak.
 

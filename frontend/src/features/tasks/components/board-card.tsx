@@ -7,6 +7,7 @@ import { ArrowsLeftRight } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { TaskModeBadge } from "./task-mode-picker";
 import type { Task, TaskStatus } from "../types";
 import { allowedTransitions } from "../workflow";
 import { PriorityDot } from "./task-row";
@@ -41,6 +42,7 @@ export function BoardCard({ task, href, movable, dragging, onMove, onDragStart, 
     >
       <div className="flex items-center gap-2">
         <PriorityDot priority={task.priority} />
+        <TaskModeBadge mode={task.creationMode} />
         <span title={task.taskKey} className="min-w-0 truncate font-mono text-xs tabular-nums text-muted-foreground">
           {task.taskKey}
         </span>

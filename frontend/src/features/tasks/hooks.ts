@@ -97,11 +97,11 @@ export function useWorklogs(projectId: string, taskId: string) {
   });
 }
 
-export function useWatchers(projectId: string, taskId: string) {
+export function useWatchers(projectId: string, taskId: string, enabled = true) {
   return useQuery({
     queryKey: taskPartKey(projectId, taskId, "watchers"),
     queryFn: () => tasksApi.watchers(projectId, taskId),
-    enabled: !!projectId && !!taskId,
+    enabled: !!projectId && !!taskId && enabled,
   });
 }
 
@@ -155,6 +155,7 @@ export function useTaskMutation<TVars, TData>(
       // A conflict or a vanished task means what is on screen is stale (someone else claimed it, moved it, archived it).
       if (err instanceof ApiError && (err.status === 409 || err.status === 404)) {
         void invalidateTaskViews(queryClient, projectId);
+        if (err.code === "TASK_MODE_NOT_ALLOWED" || err.code === "PROJECT_TASK_MODE_NOT_CONFIGURED") void queryClient.invalidateQueries({ queryKey: ["projects", "by-slug"] });
       }
       // A handler returning true took care of the message itself.
       if (options.onError?.(err, vars) === true) return;
@@ -182,11 +183,11 @@ export function useProjectMembers(projectId: string) {
 }
 
 /** Active teams of the project, for the assignee filter and the pool's target team. */
-export function useProjectTeams(projectId: string) {
+export function useProjectTeams(projectId: string, enabled = true) {
   return useQuery({
     queryKey: [...teamsKey(projectId), "all"],
     queryFn: () => squadsApi.listAll(projectId),
-    enabled: !!projectId,
+    enabled: !!projectId && enabled,
     staleTime: 60_000,
   });
 }

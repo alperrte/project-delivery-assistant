@@ -7,6 +7,7 @@ import { ChatNavItem } from "@/features/chat/components/chat-nav-item";
 import { usePendingInvitationCount } from "@/features/invitations/hooks";
 import { useCurrentMember } from "@/features/projects/hooks/use-current-member";
 import { useSelectedProject } from "@/features/projects/hooks/use-selected-project";
+import { allowsAdvanced } from "@/features/tasks/task-model";
 import {
   PROJECT_SECTIONS,
   TASK_NAV,
@@ -80,7 +81,8 @@ export function ProjectSidebarNav({
   );
 
   const taskItems = TASK_NAV.filter(
-    (item) => !("managerOnly" in item && item.managerOnly && !isManager),
+    (item) => !("managerOnly" in item && item.managerOnly && !isManager) &&
+      (item.value === "tasks" || item.value === "board" || allowsAdvanced(project?.taskManagementMode ?? null)),
   );
 
   if (collapsed) {

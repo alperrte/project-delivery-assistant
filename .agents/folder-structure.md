@@ -96,3 +96,11 @@ Squad Service kodu `squad/api`, `squad/application/service`, `squad/domain/entit
 - `project/api/dto/request/TaskManagementModeRequest` ve `ProjectController#taskManagementMode`: yalnız kurucunun ayrı PATCH işlemi; archive conflict sınıflaması `project/domain/exception/ProjectTaskModeConflictException`.
 - `task/domain/TaskCreationMode`, `task/api/TaskUpdateRequest`: kalıcı tür ve gönderilmeyen gelişmiş alanları koruyan update payload.
 - `V54__task_creation_modes.sql`, `task/TaskModesApiIntegrationTest` ve `TaskModesMigrationTest`: migration, politika/yetki/veri koruma ve eşzamanlılık testleri. Frontend bu teslimde değişmez.
+
+## Basit / gelişmiş görev frontend'i (2026-10-05)
+
+- `frontend/src/features/tasks/task-model.ts`: proje politikasına göre görünürlük ve varsayılan görev türü.
+- `features/tasks/components/task-mode-picker.tsx`: ortak tür seçici, bilgi dialogu, tür rozeti ve salt okunur uyarı.
+- `features/projects/components/task-model-setting.tsx`: ilk kurucu seçimi ve proje ayarlarındaki aynı tercih kontrolü.
+- `features/tasks/schemas.ts`: yalnız görünür türün doğrulanması, gönderilmeyen gelişmiş alanların korunması, değişmeyen atama/havuz/deadline koruması.
+- `frontend/e2e/21-task-models.spec.ts`: proje politikası, form/taslak, detay, yorumlar, URL filtresi, dönüşüm/veri koruma, yetki ve responsive/i18n kontrolleri.

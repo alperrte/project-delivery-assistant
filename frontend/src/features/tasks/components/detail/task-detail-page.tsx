@@ -4,6 +4,8 @@ import { useTranslations } from "next-intl";
 import { Archive } from "@phosphor-icons/react";
 import { PageFailure } from "@/features/errors/page-failure";
 import { ApiError } from "@/lib/api/client";
+import { allowsAdvanced } from "../../task-model";
+import { AdvancedReadOnlyNotice } from "../task-mode-picker";
 import { useTask } from "../../hooks";
 import { taskPermissions, type TaskPermissions } from "../../permissions";
 import type { Task } from "../../types";
@@ -47,7 +49,9 @@ function TaskDetailBody({ slug, project, projectId, isManager, userId, taskId }:
   }
 
   const data = task.data;
-  const ctx: DetailContext = { task: data, slug, projectId, userId, isManager, perms: permissionsFor(data, userId, isManager) };
+  const advanced = data.creationMode === "ADVANCED";
+  const advancedWritable = advanced && allowsAdvanced(project.taskManagementMode);
+  const ctx: DetailContext = { advancedWritable, task: data, slug, projectId, userId, isManager, perms: permissionsFor(data, userId, isManager) };
 
   return (
     <article aria-label={`${data.taskKey} ${data.title}`}>
@@ -60,6 +64,8 @@ function TaskDetailBody({ slug, project, projectId, isManager, userId, taskId }:
         </p>
       )}
 
+      {advanced && !advancedWritable && <AdvancedReadOnlyNotice />}
+
       {/*
         Reading order on a phone is description, subtasks, checklist, properties, relations, attachments, activity.
         On a wide screen the properties sit in a right column spanning both rows, so the DOM order is the visual one.
@@ -67,8 +73,8 @@ function TaskDetailBody({ slug, project, projectId, isManager, userId, taskId }:
       <div className="grid gap-8 lg:grid-cols-12 lg:grid-rows-[auto_1fr]">
         <div className="min-w-0 space-y-8 lg:col-span-8 lg:col-start-1 lg:row-start-1">
           <Description task={data} />
-          {!data.parent && <SubtasksSection {...ctx} />}
-          <ChecklistSection {...ctx} />
+          {advanced && !data.parent && <SubtasksSection {...ctx} />}
+          {advanced && <ChecklistSection {...ctx} />}
         </div>
 
         <div className="min-w-0 lg:col-span-4 lg:col-start-9 lg:row-span-2 lg:row-start-1">
@@ -76,8 +82,8 @@ function TaskDetailBody({ slug, project, projectId, isManager, userId, taskId }:
         </div>
 
         <div className="min-w-0 space-y-8 lg:col-span-8 lg:col-start-1 lg:row-start-2">
-          <RelationsSection {...ctx} />
-          <AttachmentsSection {...ctx} />
+          {advanced && <RelationsSection {...ctx} />}
+          {advanced && <AttachmentsSection {...ctx} />}
           <ActivitySection {...ctx} />
         </div>
       </div>

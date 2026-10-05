@@ -94,6 +94,7 @@ function SearchBox({ value, onCommit }: { value: string; onCommit: (value: strin
 
 type Props = {
   projectId: string;
+  advanced?: boolean;
   filters: TaskFilters;
   onChange: (patch: Partial<TaskFilters>) => void;
   onReset: () => void;
@@ -101,12 +102,13 @@ type Props = {
   hide?: ("status" | "sprint" | "sort" | "group")[];
 };
 
-export function TaskFilterBar({ projectId, filters, onChange, onReset, hide = [] }: Props) {
+export function TaskFilterBar({ projectId, filters, onChange, onReset, hide = [], advanced = true }: Props) {
   const t = useTranslations("tasks.filters");
   const tc = useTranslations("tasks.common");
+  const tm = useTranslations("taskModels");
   const members = useProjectMembers(projectId);
-  const labels = useLabels(projectId);
-  const sprints = useSprints(projectId);
+  const labels = useLabels(projectId, advanced);
+  const sprints = useSprints(projectId, undefined, advanced);
   const [resetKey, setResetKey] = useState(0);
   const count = activeFilterCount(filters);
 
@@ -116,6 +118,14 @@ export function TaskFilterBar({ projectId, filters, onChange, onReset, hide = []
   return (
     <div role="search" aria-label={t("label")} className="mb-4 flex flex-wrap items-center gap-2">
       <SearchBox key={resetKey} value={filters.q} onCommit={(q) => onChange({ q })} />
+
+      <FilterButton label={tm("type")} count={filters.creationMode ? 1 : 0}>
+        <DropdownMenuRadioGroup value={filters.creationMode || "any"} onValueChange={(value) => onChange({ creationMode: value === "any" ? "" : value as "SIMPLE" | "ADVANCED" })}>
+          <DropdownMenuRadioItem value="any">{tm("all")}</DropdownMenuRadioItem>
+          <DropdownMenuRadioItem value="SIMPLE">{tm("mode.SIMPLE")}</DropdownMenuRadioItem>
+          <DropdownMenuRadioItem value="ADVANCED">{tm("mode.ADVANCED")}</DropdownMenuRadioItem>
+        </DropdownMenuRadioGroup>
+      </FilterButton>
 
       {!hide.includes("status") && (
         <FilterButton label={t("status")} count={filters.status.length}>
@@ -158,7 +168,7 @@ export function TaskFilterBar({ projectId, filters, onChange, onReset, hide = []
         </DropdownMenuRadioGroup>
       </FilterButton>
 
-      {!!labels.data?.length && (
+      {advanced && !!labels.data?.length && (
         <FilterButton label={t("labels")} count={filters.label.length}>
           {labels.data.map((label) => (
             <DropdownMenuCheckboxItem
@@ -173,7 +183,7 @@ export function TaskFilterBar({ projectId, filters, onChange, onReset, hide = []
         </FilterButton>
       )}
 
-      {!hide.includes("sprint") && (
+      {advanced && !hide.includes("sprint") && (
         <FilterButton label={t("sprint")} count={filters.sprint ? 1 : 0}>
           <DropdownMenuRadioGroup value={filters.sprint || "any"} onValueChange={(value) => onChange({ sprint: value === "any" ? "" : String(value) })}>
             <DropdownMenuRadioItem value="any">{t("anySprint")}</DropdownMenuRadioItem>
@@ -254,7 +264,7 @@ export function TaskFilterBar({ projectId, filters, onChange, onReset, hide = []
                 <Rows size={12} aria-hidden="true" className="mr-1 inline" />
                 {t("groupLabel")}
               </DropdownMenuLabel>
-              {GROUPINGS.map((group) => (
+              {GROUPINGS.filter((group) => advanced || group !== "sprint").map((group) => (
                 <DropdownMenuRadioItem key={group} value={group}>
                   {t(`group.${group}`)}
                 </DropdownMenuRadioItem>

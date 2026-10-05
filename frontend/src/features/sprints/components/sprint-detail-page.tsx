@@ -17,6 +17,8 @@ import { useAllTasks } from "@/features/tasks/hooks";
 import { taskPermissions } from "@/features/tasks/permissions";
 import { TASK_STATUSES } from "@/features/tasks/types";
 import { statusDotClass } from "@/features/tasks/workflow";
+import { AdvancedReadOnlyNotice } from "@/features/tasks/components/task-mode-picker";
+import { allowsAdvanced } from "@/features/tasks/task-model";
 import { cn } from "@/lib/utils";
 import { daysLeft, percent } from "../dates";
 import { useSprint, useSprints, useSprintSummary } from "../hooks";
@@ -175,7 +177,7 @@ function SprintTasks({ projectId, slug, sprintId, userId, isManager }: { project
   );
 }
 
-function SprintDetailBody({ slug, projectId, isManager, userId, sprintId }: ProjectGateContext & { sprintId: string }) {
+function SprintDetailBody({ slug, project, projectId, isManager, userId, sprintId }: ProjectGateContext & { sprintId: string }) {
   const t = useTranslations("sprints.detail");
   const router = useRouter();
   const format = useTaskFormat();
@@ -194,6 +196,7 @@ function SprintDetailBody({ slug, projectId, isManager, userId, sprintId }: Proj
 
   return (
     <article aria-label={data.name} className="space-y-6">
+      {!allowsAdvanced(project.taskManagementMode) && <AdvancedReadOnlyNotice />}
       <div className="space-y-4">
         <Link href={`/projects/${slug}/sprints`} className="inline-flex items-center gap-1.5 rounded-sm text-sm text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50">
           <ArrowLeft size={14} aria-hidden="true" />
@@ -210,7 +213,7 @@ function SprintDetailBody({ slug, projectId, isManager, userId, sprintId }: Proj
               {format.day(data.startDate)} – {format.day(data.endDate)}
             </p>
           </div>
-          {isManager && data.status !== "COMPLETED" && (
+          {isManager && allowsAdvanced(project.taskManagementMode) && data.status !== "COMPLETED" && (
             <div className="space-y-1.5">
               <SprintActions projectId={projectId} sprint={data} size="default" blockedByActive={hasOtherActive} blockedHintId={hintId} onArchived={() => router.push(`/projects/${slug}/sprints`)} />
               {hasOtherActive && data.status === "PLANNED" && (

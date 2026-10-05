@@ -13,12 +13,13 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { tasksApi } from "../../api";
 import { useTaskMutation } from "../../hooks";
+import { TaskModeBadge } from "../task-mode-picker";
 import { BlockedMark, PoolMark, PriorityBadge, StatusBadge } from "../task-badges";
 import type { DetailContext } from "./detail-section";
 
 type HeaderProps = DetailContext & { projectName: string };
 
-export function TaskHeader({ task, slug, projectId, perms, projectName }: HeaderProps) {
+export function TaskHeader({ task, slug, projectId, perms, projectName, advancedWritable }: HeaderProps) {
   const t = useTranslations("tasks.detail");
   const locale = useLocale() as Locale;
   const router = useRouter();
@@ -74,6 +75,7 @@ export function TaskHeader({ task, slug, projectId, perms, projectName }: Header
           <h1 className="font-heading text-2xl font-semibold tracking-tight text-balance text-foreground sm:text-3xl">{task.title}</h1>
           <div className="flex flex-wrap items-center gap-1.5">
             <StatusBadge status={task.status} />
+            <TaskModeBadge mode={task.creationMode} />
             <PriorityBadge priority={task.priority} />
             <BlockedMark task={task} />
             <PoolMark task={task} />
@@ -87,10 +89,14 @@ export function TaskHeader({ task, slug, projectId, perms, projectName }: Header
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
-          <Button variant="outline" size="lg" aria-pressed={task.watching} onClick={() => watch.mutate(undefined)} disabled={watch.isPending}>
-            <WatchIcon aria-hidden="true" />
-            {t(task.watching ? "unwatch" : "watch")}
-          </Button>
+          {advancedWritable && !archived && (
+            <>
+              <Button variant="outline" size="lg" aria-pressed={task.watching} onClick={() => watch.mutate(undefined)} disabled={watch.isPending}>
+                <WatchIcon aria-hidden="true" />
+                {t(task.watching ? "unwatch" : "watch")}
+              </Button>
+            </>
+          )}
           {perms.manage && !archived && (
             <Link href={`/projects/${slug}/tasks/${task.id}/edit`} className={buttonVariants({ variant: "outline", size: "lg" })}>
               <PencilSimple aria-hidden="true" />

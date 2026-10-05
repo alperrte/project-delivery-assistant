@@ -5,11 +5,11 @@ import { sprintsKey } from "@/features/tasks/hooks";
 import { sprintsApi } from "./api";
 import type { SprintStatus } from "./types";
 
-export function useSprints(projectId: string, status?: SprintStatus) {
+export function useSprints(projectId: string, status?: SprintStatus, enabled = true) {
   return useQuery({
     queryKey: [...sprintsKey(projectId), "list", status ?? "all"],
     queryFn: () => sprintsApi.list(projectId, status),
-    enabled: !!projectId,
+    enabled: !!projectId && enabled,
   });
 }
 

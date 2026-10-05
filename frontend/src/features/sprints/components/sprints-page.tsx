@@ -11,6 +11,8 @@ import { Progress, ProgressIndicator, ProgressTrack } from "@/components/ui/prog
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProjectGate, type ProjectGateContext } from "@/features/tasks/components/project-gate";
 import { useTaskFormat } from "@/features/tasks/format";
+import { AdvancedReadOnlyNotice } from "@/features/tasks/components/task-mode-picker";
+import { allowsAdvanced } from "@/features/tasks/task-model";
 import { errorKey } from "@/lib/api/error-message";
 import { cn } from "@/lib/utils";
 import { daysLeft, percent } from "../dates";
@@ -96,7 +98,7 @@ function SprintRow({ slug, projectId, sprint, isManager, blockedByActive, blocke
   );
 }
 
-function SprintsView({ slug, projectId, isManager }: ProjectGateContext) {
+function SprintsView({ slug, projectId, project, isManager: manager }: ProjectGateContext) {
   const t = useTranslations("sprints");
   const te = useTranslations("errors");
   const hintId = useId();
@@ -105,6 +107,7 @@ function SprintsView({ slug, projectId, isManager }: ProjectGateContext) {
 
   const list = sprints.data ?? [];
   const hasActive = list.some((sprint) => sprint.status === "ACTIVE");
+  const isManager = manager && allowsAdvanced(project.taskManagementMode);
   const createButton = isManager && (
     <Button onClick={() => setCreating(true)}>
       <Plus aria-hidden="true" />
@@ -114,6 +117,7 @@ function SprintsView({ slug, projectId, isManager }: ProjectGateContext) {
 
   return (
     <div>
+      {!allowsAdvanced(project.taskManagementMode) && <AdvancedReadOnlyNotice />}
       <PageHeader title={t("title")} description={t("description")} action={createButton || undefined} />
 
       {sprints.isError && (
