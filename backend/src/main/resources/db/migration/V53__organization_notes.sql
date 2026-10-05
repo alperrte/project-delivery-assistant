@@ -1,0 +1,1 @@
+ALTER TABLE organizations ADD COLUMN notes VARCHAR(1000);

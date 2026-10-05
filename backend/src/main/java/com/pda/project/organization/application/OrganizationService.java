@@ -24,9 +24,20 @@ public class OrganizationService {
 
     @Transactional
     public Organization create(UUID actorId, String name, String description) {
+        return create(actorId, name, description, null, null, null);
+    }
+
+    @Transactional
+    public Organization create(UUID actorId, String name, String description, String website, String contactEmail, String location) {
+        return create(actorId, name, description, website, contactEmail, location, null);
+    }
+
+    @Transactional
+    public Organization create(UUID actorId, String name, String description, String website, String contactEmail, String location, String notes) {
         Objects.requireNonNull(actorId, "actorId is required");
         Organization organization = Organization.create(name, SlugGenerator.generate(name),
                 description, actorId);
+        organization.updateProfile(name, description, website, contactEmail, location, notes);
         return organizations.saveAndFlush(organization);
     }
 
@@ -43,14 +54,24 @@ public class OrganizationService {
 
     @Transactional
     public Organization update(UUID actorId, UUID organizationId, String name, String description) {
-        Organization organization = ownedOrganization(actorId, organizationId);
-        organization.updateDetails(name, description);
+        return update(actorId, organizationId, name, description, null, null, null);
+    }
+
+    @Transactional
+    public Organization update(UUID actorId, UUID organizationId, String name, String description, String website, String contactEmail, String location) {
+        return update(actorId, organizationId, name, description, website, contactEmail, location, null);
+    }
+
+    @Transactional
+    public Organization update(UUID actorId, UUID organizationId, String name, String description, String website, String contactEmail, String location, String notes) {
+        Organization organization = lockedOwned(actorId, organizationId);
+        organization.updateProfile(name, description, website, contactEmail, location, notes);
         return organizations.save(organization);
     }
 
     @Transactional
     public void archive(UUID actorId, UUID organizationId) {
-        Organization organization = ownedOrganization(actorId, organizationId);
+        Organization organization = lockedOwned(actorId, organizationId);
         organization.archive();
         organizations.save(organization);
     }
@@ -59,6 +80,14 @@ public class OrganizationService {
     public Organization requireActive(UUID organizationId) {
         return organizations.findByIdAndArchivedAtIsNull(organizationId)
                 .orElseThrow(() -> new NoSuchElementException("Organization not found"));
+    }
+
+    public Organization lockedOwned(UUID actorId, UUID organizationId) {
+        Objects.requireNonNull(actorId, "actorId is required");
+        Organization organization = organizations.lockActive(organizationId)
+                .orElseThrow(() -> new NoSuchElementException("Organization not found"));
+        if (!organization.getOwnerUserId().equals(actorId)) throw new AccessDeniedException("Organization access denied");
+        return organization;
     }
 
     private Organization ownedOrganization(UUID actorId, UUID organizationId) {

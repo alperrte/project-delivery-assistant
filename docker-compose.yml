@@ -35,8 +35,11 @@ services:
       AUTH_RATE_LIMIT_REFRESH_MAX_REQUESTS: ${AUTH_RATE_LIMIT_REFRESH_MAX_REQUESTS:-30}
       CHAT_SEND_MAX_MESSAGES: ${CHAT_SEND_MAX_MESSAGES:-30}
       CHAT_SEND_WINDOW_SECONDS: ${CHAT_SEND_WINDOW_SECONDS:-60}
+      ORGANIZATION_MEDIA_STORAGE_PATH: ${ORGANIZATION_MEDIA_STORAGE_PATH:-/app/organization-media}
     ports:
       - "${BACKEND_PORT:-8080}:8080"
+    volumes:
+      - pda_organization_media:${ORGANIZATION_MEDIA_STORAGE_PATH:-/app/organization-media}
     depends_on:
       postgres:
         condition: service_healthy
@@ -45,3 +48,4 @@ services:
 
 volumes:
   pda_postgres_data:
+  pda_organization_media:

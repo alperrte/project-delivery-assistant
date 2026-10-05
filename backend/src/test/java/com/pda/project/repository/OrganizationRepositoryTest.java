@@ -40,6 +40,9 @@ class OrganizationRepositoryTest {
     }
 
     @Autowired
+    private jakarta.persistence.EntityManager entityManager;
+
+    @Autowired
     private OrganizationRepository organizations;
 
     @Test
@@ -63,4 +66,18 @@ class OrganizationRepositoryTest {
         assertTrue(organizations.findByIdAndArchivedAtIsNull(active.getId()).isPresent());
         assertFalse(organizations.findBySlugAndArchivedAtIsNull("archived").isPresent());
     }
+    @Test
+    void expandedProfileRoundTripsWithNullableLegacyFields() {
+        Organization old = organizations.saveAndFlush(Organization.create("Legacy", "legacy", null, UUID.randomUUID()));
+        assertEquals(null, old.getWebsite());
+        old.updateProfile("Legacy", "Description", "https://example.com", "info@example.com", "Istanbul", "Persistent notes");
+        organizations.saveAndFlush(old);
+        UUID savedId = old.getId();
+        entityManager.clear();
+        Organization loaded = organizations.findById(savedId).orElseThrow();
+        assertEquals("https://example.com", loaded.getWebsite());
+        assertEquals("info@example.com", loaded.getContactEmail());
+        assertEquals("Persistent notes", loaded.getNotes());
+    }
+
 }

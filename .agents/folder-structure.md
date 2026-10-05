@@ -1,4 +1,8 @@
 ﻿# Klasör yapısı kısa rehberi
+## Organization profili (2026-10-04)
+
+Backend `project/organization/{api,application,domain,infrastructure}` profil alanlarını ve media controller/service/ledger repository'sini barındırır. `shared/{MediaStorage,FileSystemMediaStorage}` teknik port/adaptördür; V52 migration `db/migration` altındadır. Frontend `features/organizations` contract, query factory, form, card ve ortak profile header'ı içerir. Nötr image picker/mark/cover `components/common`, validation ve picked-image hook `lib/media` altındadır; Project wrapper'ları aynı bileşenleri kendi çevirileriyle kullanır. `.local/` özel host storage ve QA çıktıları için Git dışında tutulur.
+
 ## Herkese açık landing page (2026-10-03)
 
 2026-10-04 Product Story UI düzeltmesi: `features/landing/demo/{pda-demo-workspace,landing-pda-demo-provider,demo-data}` gerçek `AppShellView`, `AppHeader`, `ProjectSidebarNav`, `ProjectCreatePage`, `ProjectDetail`, `TeamDetailPage`, `TaskFormBody` ve `TasksPage` bileşenlerini statik verilerle kullanır. Ortak query client yalnız bu gösterimde sorguları kapatır ve mutation fonksiyonlarını reddeder; uygulamanın auth/API client’ları değişmez. `.workspace-preview` globals.css içindeki mevcut Titanium token bloğunu paylaşır; `.app-shell` landing köküne eklenmez. CSS contain ve orantılı viewport ölçeği uygulamanın fixed navbar’ını demo içinde tutar; form kamerası içerik alanının gerçek scrollTop değerini kullanır. Yeni iframe/public demo rotası yoktur. Görsel karşılaştırmalar `e2e/landing-real-ui.spec.ts` içindedir.

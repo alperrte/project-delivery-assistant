@@ -37,7 +37,7 @@ class OrganizationServiceTest {
         UUID ownerId = UUID.randomUUID();
         UUID organizationId = UUID.randomUUID();
         Organization organization = Organization.create("PDA", "pda", null, ownerId);
-        when(organizations.findByIdAndArchivedAtIsNull(organizationId)).thenReturn(Optional.of(organization));
+        when(organizations.lockActive(organizationId)).thenReturn(Optional.of(organization));
 
         assertThrows(AccessDeniedException.class, () ->
                 service.update(UUID.randomUUID(), organizationId, "Changed", null));

@@ -127,6 +127,9 @@ log/
 tmp/
 temp/
 
+# Private local media storage and development QA artifacts.
+.local/
+
 # Temporary mirror clone kept until GitHub Contributors refreshes.
 /pda-temiz.git/
 

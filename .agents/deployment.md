@@ -1,5 +1,9 @@
 # Kurulum ve deployment
 
+## Organization görselleri (2026-10-04)
+
+Organization logo/cover dosyaları private filesystem storage kullanır. `ORGANIZATION_MEDIA_STORAGE_PATH` Compose içinde `/app/organization-media` varsayılanına sahiptir; `pda_organization_media` named volume aynı yola bağlanır. Host Java çalıştırmada property varsayılanı `.local/organization-media`; testler ayrı geçici kök kullanır. Container kullanırken ENV mutlak container yolu olmalıdır. `down -v` bu görselleri de siler. DB metadata/reference ve volume birlikte yedeklenip geri yüklenmelidir; tek başına DB restore yeterli değildir. Bu adapter tek backend host içindir; çok host kurulumda ortak kalıcı storage adapter gerekir. Yeni S3/MinIO servisi eklenmez. Arşiv reference ve dosyayı korur, endpoint erişimini kapatır; replace/remove temizliği kalıcı lifecycle kayıtlarıyla tekrar denenir.
+
 > Durum: development düzeni planlandı; production deployment mimarisi **TBD**. Frontend/backend hosting, domain ve subdomain, TLS/reverse proxy, container registry, deploy tetikleme, free-tier davranışı ve backup/restore henüz seçilmedi. Bu belge belirli bir sağlayıcıyı veya hazır production prosedürünü ilan etmez.
 
 ## Local development
