@@ -41,7 +41,8 @@ public record ProjectResponse(
         Long bannerVersion,
         Boolean canEdit,
         UserRef updatedBy,
-        Team team
+        Team team,
+        com.pda.project.TaskManagementMode taskManagementMode
 ) {
     public record UserRef(UUID userId, String nickname, Long profilePhotoVersion) {
     }
@@ -72,6 +73,6 @@ public record ProjectResponse(
                 project.getCreatedBy(), project.getCreatedAt(), project.getUpdatedAt(),
                 project.getArchivedAt(), project.getProjectType(), project.getTagline(),
                 logoUpdatedAt == null ? null : logoUpdatedAt.toEpochMilli(),
-                bannerUpdatedAt == null ? null : bannerUpdatedAt.toEpochMilli(), canEdit, updatedBy, team);
+                bannerUpdatedAt == null ? null : bannerUpdatedAt.toEpochMilli(), canEdit, updatedBy, team, project.getTaskManagementMode());
     }
 }

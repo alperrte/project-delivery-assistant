@@ -17,6 +17,16 @@ import java.util.UUID;
 public interface TaskRepository extends JpaRepository<Task, UUID>, JpaSpecificationExecutor<Task> {
     Optional<Task> findByIdAndProjectId(UUID id, UUID projectId);
 
+    /** Persisted advanced data (including archived children) must never disappear through a model downgrade. */
+    @Query(value = "select (exists(select 1 from tasks where parent_task_id=:taskId) "
+            + "or exists(select 1 from task_labels where task_id=:taskId) "
+            + "or exists(select 1 from task_checklist_items where task_id=:taskId) "
+            + "or exists(select 1 from task_relations where source_task_id=:taskId or target_task_id=:taskId) "
+            + "or exists(select 1 from task_attachments where task_id=:taskId and deleted_at is null) "
+            + "or exists(select 1 from task_worklogs where task_id=:taskId and deleted_at is null) "
+            + "or exists(select 1 from task_watchers where task_id=:taskId and manual_watch))", nativeQuery = true)
+    boolean hasAdvancedData(@Param("taskId") UUID taskId);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select t from Task t where t.id = :taskId and t.projectId = :projectId")
     Optional<Task> lockScoped(@Param("projectId") UUID projectId, @Param("taskId") UUID taskId);

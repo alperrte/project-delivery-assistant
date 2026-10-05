@@ -40,8 +40,9 @@ public class TaskWatcherService {
     public WatchState watch(UUID projectId, UUID taskId, UUID actor) {
         support.requireProject(projectId, actor, true);
         support.requirePermission(projectId, actor, ProjectPermission.PROJECT_VIEW);
-        support.mutable(projectId, taskId);
-        support.watch(taskId, actor);
+        var task = support.locked(projectId, taskId);
+        support.requireAdvancedTask(task);
+        watchers.watchManually(taskId, actor);
         return new WatchState(true);
     }
 
@@ -49,7 +50,8 @@ public class TaskWatcherService {
     public WatchState unwatch(UUID projectId, UUID taskId, UUID actor) {
         support.requireProject(projectId, actor, true);
         support.requirePermission(projectId, actor, ProjectPermission.PROJECT_VIEW);
-        support.mutable(projectId, taskId);
+        var task = support.locked(projectId, taskId);
+        support.requireAdvancedTask(task);
         watchers.unwatch(taskId, actor);
         return new WatchState(false);
     }

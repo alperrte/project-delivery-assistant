@@ -14,7 +14,14 @@ import java.util.UUID;
 /** Server-side list filters of the project task list; every field is optional. */
 public record TaskFilter(Set<TaskStatus> status, Set<TaskPriority> priority, UUID assigneeId, boolean unassigned,
                          String q, Set<UUID> labelIds, UUID sprintId, boolean backlog, boolean pool,
-                         UUID parentId, boolean topLevel, boolean overdue, boolean blocked) {
+                         UUID parentId, boolean topLevel, boolean overdue, boolean blocked, com.pda.task.domain.TaskCreationMode creationMode) {
+
+    public TaskFilter(Set<TaskStatus> status, Set<TaskPriority> priority, UUID assigneeId, boolean unassigned,
+                      String q, Set<UUID> labelIds, UUID sprintId, boolean backlog, boolean pool,
+                      UUID parentId, boolean topLevel, boolean overdue, boolean blocked) {
+        this(status, priority, assigneeId, unassigned, q, labelIds, sprintId, backlog, pool, parentId,
+                topLevel, overdue, blocked, null);
+    }
 
     public static final int MIN_QUERY = 2;
     public static final int MAX_QUERY = 100;
@@ -40,6 +47,7 @@ public record TaskFilter(Set<TaskStatus> status, Set<TaskPriority> priority, UUI
         if (topLevel) spec = spec.and(TaskSpecifications.topLevel());
         if (overdue) spec = spec.and(TaskSpecifications.overdue(now));
         if (blocked) spec = spec.and(TaskSpecifications.blocked());
+        if (creationMode != null) spec = spec.and((root, query, cb) -> cb.equal(root.get("creationMode"), creationMode));
         return spec;
     }
 }

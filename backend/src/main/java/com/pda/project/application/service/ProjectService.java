@@ -169,9 +169,28 @@ public class ProjectService {
     }
 
     @Transactional
+    public Project changeTaskManagementMode(UUID actorId, UUID projectId, com.pda.project.TaskManagementMode mode) {
+        Project project = projects.lockTaskPolicy(projectId)
+                .orElseThrow(() -> new NoSuchElementException("Project not found"));
+        if (project.getArchivedAt() != null) {
+            if (memberships.findByProjectIdAndUserIdAndStatus(projectId, actorId, MembershipStatus.ACTIVE).isEmpty())
+                throw new NoSuchElementException("Project not found");
+            if (!project.getCreatedBy().equals(actorId)) throw new AccessDeniedException("Access denied");
+            throw new com.pda.project.domain.exception.ProjectTaskModeConflictException();
+        }
+        require(actorId, projectId, ProjectPermission.PROJECT_VIEW);
+        if (!project.getCreatedBy().equals(actorId)) {
+            throw new org.springframework.security.access.AccessDeniedException("Only the project founder may change task management mode");
+        }
+        project.changeTaskManagementMode(mode, actorId);
+        return projects.save(project);
+    }
+
+    @Transactional
     public void archive(UUID actorId, UUID projectId) {
         require(actorId, projectId, ProjectPermission.PROJECT_ARCHIVE);
-        Project project = activeProject(projectId);
+        Project project = projects.lockActive(projectId)
+                .orElseThrow(() -> new NoSuchElementException("Project not found"));
         project.archive();
         projects.save(project);
     }

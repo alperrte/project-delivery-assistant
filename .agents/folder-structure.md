@@ -88,3 +88,11 @@ Squad Service kodu `squad/api`, `squad/application/service`, `squad/domain/entit
 - `frontend/src/i18n/navigation.tsx`: yerelleştirilmiş Link/router ve mantıksal pathname yardımcıları.
 - `frontend/src/proxy.ts`: canonical 308, oturum ipucu kontrolü ve mevcut App Router ağacına rewrite.
 - `frontend/e2e/localized-routing.spec.ts`: URL, dil, eski bookmark, 404 ve metadata regresyonu.
+
+
+## Basit / gelişmiş görev backend'i (2026-10-05)
+
+- Project public `TaskManagementMode` ve genişleyen `ProjectTaskContext`/`ProjectSummaryView`/`ProjectAccess`: modül dışı politika/lock sözleşmesi.
+- `project/api/dto/request/TaskManagementModeRequest` ve `ProjectController#taskManagementMode`: yalnız kurucunun ayrı PATCH işlemi; archive conflict sınıflaması `project/domain/exception/ProjectTaskModeConflictException`.
+- `task/domain/TaskCreationMode`, `task/api/TaskUpdateRequest`: kalıcı tür ve gönderilmeyen gelişmiş alanları koruyan update payload.
+- `V54__task_creation_modes.sql`, `task/TaskModesApiIntegrationTest` ve `TaskModesMigrationTest`: migration, politika/yetki/veri koruma ve eşzamanlılık testleri. Frontend bu teslimde değişmez.

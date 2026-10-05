@@ -14,6 +14,9 @@ public class TaskWatcher {
     @Id @Column(name = "user_id", nullable = false, updatable = false) private UUID userId;
     @Column(name = "created_at", nullable = false, updatable = false) private Instant createdAt;
 
+    @Column(name = "manual_watch", nullable = false) private boolean manualWatch;
+    public boolean isManualWatch() { return manualWatch; }
+
     protected TaskWatcher() {}
 
     public TaskWatcher(UUID taskId, UUID userId) {

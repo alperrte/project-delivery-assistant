@@ -28,6 +28,9 @@ public interface ProjectAccess {
     /** Context for task creation; archived projects are visible here only for conflict classification. */
     ProjectTaskContext taskContext(UUID projectId);
 
+    /** Shared row lock, held by the caller transaction; serializes task mutations with founder policy changes. */
+    ProjectTaskContext lockTaskContext(UUID projectId);
+
     /** Active members of an active project among the supplied IDs, in one lookup. */
     Set<UUID> activeMemberIds(UUID projectId, Set<UUID> userIds);
 

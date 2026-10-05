@@ -67,6 +67,10 @@ class TaskApiIntegrationTest {
                 .andReturn().getResponse().getContentAsString();
         assertTrue(document.contains("/api/v1/projects/{projectId}/tasks"));
         assertTrue(document.contains("/api/v1/projects/{projectId}/tasks/{taskId}/history"));
+        assertTrue(document.contains("/api/v1/projects/{projectId}/task-management-mode"));
+        assertTrue(document.contains("creationMode"));
+        assertTrue(document.contains("taskManagementMode"));
+        assertFalse(document.contains("providedFields"));
         assertFalse(document.contains("PDA_ACCESS="));
         mvc.perform(get("/swagger-ui/index.html")).andExpect(status().isOk());
     }
@@ -227,7 +231,11 @@ class TaskApiIntegrationTest {
                 .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
                 .content("{\"name\":\"" + name + "\"}"))
                 .andExpect(status().isCreated()).andReturn().getResponse();
-        return UUID.fromString(JsonPath.read(response.getContentAsString(), "$.id"));
+        UUID projectId = UUID.fromString(JsonPath.read(response.getContentAsString(), "$.id"));
+        mvc.perform(patch("/api/v1/projects/" + projectId + "/task-management-mode").cookie(csrf, actor.access())
+                .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"mode\":\"BOTH\"}")).andExpect(status().isOk());
+        return projectId;
     }
     private Account account(String prefix) throws Exception {
         String suffix = UUID.randomUUID().toString().replace("-", "").substring(0, 16);

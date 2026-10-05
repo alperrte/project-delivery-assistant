@@ -101,7 +101,9 @@ public class SprintService {
                 throw new TaskValidationException("SPRINT_INVALID", "Invalid target sprint");
             }
         }
-        for (Task task : tasks.findActiveBySprint(sprintId)) {
+        for (Task candidate : tasks.findActiveBySprint(sprintId).stream().sorted(java.util.Comparator.comparing(Task::getId)).toList()) {
+            Task task = support.locked(projectId, candidate.getId());
+            support.requireAdvancedTask(task);
             if (task.getStatus() == TaskStatus.DONE) continue;
             support.record(task.getId(), projectId, actor, ActivityType.SPRINT_CHANGED, "sprint", sprintId,
                     moveOpenTasksTo);
@@ -186,6 +188,7 @@ public class SprintService {
     private void manage(UUID projectId, UUID actor) {
         support.requireProject(projectId, actor, true);
         support.requirePermission(projectId, actor, ProjectPermission.TASK_MANAGE);
+        support.requireAdvancedProject(projectId);
     }
 
     private Sprint find(UUID projectId, UUID sprintId) {

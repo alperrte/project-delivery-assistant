@@ -42,8 +42,9 @@ public class TaskWorklogService {
     public WorklogList add(UUID projectId, UUID taskId, UUID actor, int minutes, LocalDate workDate, String note) {
         support.requireProject(projectId, actor, true);
         support.requirePermission(projectId, actor, ProjectPermission.PROJECT_VIEW);
-        Task task = support.mutable(projectId, taskId);
+        Task task = support.locked(projectId, taskId);
         support.requireWork(projectId, actor, taskId);
+        support.requireAdvancedTask(task);
         worklogs.save(new TaskWorklog(taskId, projectId, actor, minutes, workDate, note, today()));
         support.record(taskId, projectId, actor, ActivityType.WORKLOG_ADDED, "worklog", null, minutes);
         task.touchedBy(actor);
@@ -72,12 +73,13 @@ public class TaskWorklogService {
     private Owned ownedEntry(UUID projectId, UUID taskId, UUID worklogId, UUID actor) {
         support.requireProject(projectId, actor, true);
         support.requirePermission(projectId, actor, ProjectPermission.PROJECT_VIEW);
-        Task task = support.mutable(projectId, taskId);
+        Task task = support.locked(projectId, taskId);
         TaskWorklog entry = worklogs.findByIdAndTaskIdAndDeletedAtIsNull(worklogId, taskId)
                 .orElseThrow(() -> new NoSuchElementException("Worklog not found"));
         if (!entry.getUserId().equals(actor) && !support.can(projectId, actor, ProjectPermission.TASK_MANAGE)) {
             throw new AccessDeniedException("Worklog permission denied");
         }
+        support.requireAdvancedTask(task);
         return new Owned(task, entry);
     }
 

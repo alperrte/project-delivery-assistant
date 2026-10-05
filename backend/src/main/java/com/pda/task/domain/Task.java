@@ -44,6 +44,17 @@ public class Task {
     @Column(name = "archived_at") private Instant archivedAt;
     @Version private long version;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "creation_mode", nullable = false, length = 16)
+    private TaskCreationMode creationMode = TaskCreationMode.ADVANCED;
+
+    public TaskCreationMode getCreationMode() { return creationMode; }
+    public void changeCreationMode(TaskCreationMode mode, UUID actor) {
+        requireActive();
+        creationMode = Objects.requireNonNull(mode);
+        touch(actor);
+    }
+
     protected Task() {}
 
     public static Task create(UUID projectId, long number, String key, TaskDraft draft, UUID actor) {

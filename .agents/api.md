@@ -70,3 +70,12 @@ Global `ADMIN` PDA instance operatörüdür (platform yönetimi; proje üyeliği
 4. Breaking change ise geçiş ve kaldırma planını sürüm notunda belirtin.
 
 İlgili kararlar: [0001](decisions/0001-modular-monolith.md), [0003](decisions/0003-cookie-auth.md).
+
+
+## Basit / gelişmiş görev modeli — backend (2026-10-05)
+
+Project GET/list/by-slug `taskManagementMode` taşır: yeni projede null, eski projede BOTH. Ayrı `PATCH /api/v1/projects/{projectId}/task-management-mode` endpoint'i `{mode:SIMPLE|ADVANCED|BOTH}` kabul eder; yalnız aktif kurucu, cookie + CSRF ile değiştirir. Mevcut createdBy alanı UI kurucu ipucudur; canEdit genel proje yetkisidir, bu ayarı değiştirme yetkisi değildir.
+
+Task POST/PATCH ve bütün TaskView'larda kalıcı `creationMode:SIMPLE|ADVANCED` vardır. POST'ta eksik tür legacy ADVANCED varsayar; yeni projede politika seçilmemişse 409. Liste `creationMode` filtresini DB'de sayfalamadan önce uygular. PATCH temel alanlarda mevcut değiştirme semantiğini korur; gönderilmeyen parent/sprint/tahminler korunur, açık null temizler. Atama/etiket/havuz null veya eksikse korunur. Basit görev gelişmiş alan kullanamaz; yükseltme proje politikasına, basite dönüş gelişmiş veri kontrolüne bağlıdır. Yorumlar/mention, durum, arşiv ve geçmiş ortaktır.
+
+Proje SIMPLE'a dönerse eski gelişmiş kayıtların okuma/indirme ve temel işlemleri kalır; gelişmiş mutation, etiket/sprint yönetimi ve havuz claim/release kapanır. Eski havuz verisi saklanır, ancak claim edilemeyen projeler pool listesi/sayacına girmez. Tam endpoint/yetki/hata matrisi SECURITY.md §11 V54 bölümündedir. Frontend bu teslimde değiştirilmemiştir.

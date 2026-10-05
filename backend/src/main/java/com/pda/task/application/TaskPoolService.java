@@ -44,6 +44,7 @@ public class TaskPoolService {
         support.requireProject(projectId, actor, true);
         support.requirePermission(projectId, actor, ProjectPermission.TASK_WORK);
         Task task = support.locked(projectId, taskId);
+        support.requireAdvancedTask(task);
         if (!task.isPoolOpen()) {
             // The row lock makes the loser of a race see the winner's committed claim here.
             if (task.isClaimedFromPool() || assignments.countByTaskId(taskId) > 0) {
@@ -71,6 +72,7 @@ public class TaskPoolService {
         support.requireProject(projectId, actor, true);
         support.requirePermission(projectId, actor, ProjectPermission.TASK_WORK);
         Task task = support.locked(projectId, taskId);
+        support.requireAdvancedTask(task);
         List<TaskAssignment> current = assignments.findByTaskId(taskId);
         boolean releasable = task.isClaimedFromPool() && task.getStatus() != TaskStatus.DONE
                 && current.size() == 1 && current.get(0).getUserId().equals(actor);
@@ -106,6 +108,7 @@ public class TaskPoolService {
     private Map<UUID, ProjectSummaryView> claimableProjects(UUID actor, UUID onlyProject) {
         return support.projects().activeProjectsForUser(actor).stream()
                 .filter(p -> p.permissions().contains(ProjectPermission.TASK_WORK))
+                .filter(p -> p.taskManagementMode() != null && p.taskManagementMode().allows("ADVANCED"))
                 .filter(p -> onlyProject == null || p.id().equals(onlyProject))
                 .collect(Collectors.toMap(ProjectSummaryView::id, Function.identity()));
     }

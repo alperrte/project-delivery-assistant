@@ -53,11 +53,12 @@ public class TaskController {
             @RequestParam(defaultValue = "false") boolean topLevel,
             @RequestParam(defaultValue = "false") boolean overdue,
             @RequestParam(defaultValue = "false") boolean blocked,
+            @RequestParam(required = false) TaskCreationMode creationMode,
             @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "updatedAt,desc") String sort) {
         SortSpec spec = SortSpec.parse(sort);
         TaskFilter filter = new TaskFilter(status, priority, assigneeId, unassigned, q, labelIds, sprintId, backlog,
-                pool, parentId, topLevel, overdue, blocked);
+                pool, parentId, topLevel, overdue, blocked, creationMode);
         Page<TaskView> result = service.list(projectId, actor(principal), filter, spec.field(), spec.ascending(),
                 page, size);
         return new PageResponse(result.getContent(), result.getNumber(), result.getSize(),
@@ -72,11 +73,11 @@ public class TaskController {
     }
 
     @PatchMapping("/{taskId}")
-    @Operation(summary = "Update task", description = "TASK_MANAGE; basic fields, parent and sprint are replaced "
-            + "(null clears); assigneeIds, labelIds and pool are left alone when omitted")
+    @Operation(summary = "Update task", description = "TASK_MANAGE; basic fields are replaced; omitted advanced "
+            + "fields, assigneeIds, labelIds and pool are retained; explicit null clears parent, sprint and estimates")
     public TaskView update(@PathVariable UUID projectId, @PathVariable UUID taskId,
             @AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
-            @Valid @RequestBody UpdateRequest request) {
+            @Valid @RequestBody TaskUpdateRequest request) {
         return service.update(projectId, taskId, actor(principal), request.toCommand());
     }
 
@@ -167,24 +168,11 @@ public class TaskController {
                                 Integer estimatePoints, Integer timeEstimateMinutes,
                                 @Size(max = 20) List<@NotNull UUID> assigneeIds,
                                 @Size(max = 10) List<@NotNull UUID> labelIds, UUID parentTaskId, UUID sprintId,
-                                @Valid PoolBody pool) {
+                                @Valid PoolBody pool, TaskCreationMode creationMode) {
         TaskCommand toCommand() {
             return new TaskCommand(new TaskDraft(title, description, priority, startDate, deadlineAt,
                     estimatePoints, timeEstimateMinutes), asSet(assigneeIds), asSet(labelIds), parentTaskId,
-                    sprintId, pool == null ? null : new TaskCommand.PoolRequest(pool.open(), pool.teamId()));
-        }
-    }
-
-    public record UpdateRequest(@NotBlank @Size(max = 160) String title, @Size(max = 10000) String description,
-                                @NotNull TaskPriority priority, LocalDate startDate, Instant deadlineAt,
-                                Integer estimatePoints, Integer timeEstimateMinutes,
-                                @Size(max = 20) List<@NotNull UUID> assigneeIds,
-                                @Size(max = 10) List<@NotNull UUID> labelIds, UUID parentTaskId, UUID sprintId,
-                                @Valid PoolBody pool) {
-        TaskCommand toCommand() {
-            return new TaskCommand(new TaskDraft(title, description, priority, startDate, deadlineAt,
-                    estimatePoints, timeEstimateMinutes), asSet(assigneeIds), asSet(labelIds), parentTaskId,
-                    sprintId, pool == null ? null : new TaskCommand.PoolRequest(pool.open(), pool.teamId()));
+                    sprintId, pool == null ? null : new TaskCommand.PoolRequest(pool.open(), pool.teamId()), creationMode, null);
         }
     }
 

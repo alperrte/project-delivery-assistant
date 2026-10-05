@@ -39,11 +39,17 @@ public class TaskRelationService {
 
     @Transactional
     public RelationsView add(UUID projectId, UUID taskId, UUID actor, RelationType type, UUID targetId) {
-        Task source = writable(projectId, taskId, actor);
+        support.requireProject(projectId, actor, true);
+        support.requirePermission(projectId, actor, ProjectPermission.PROJECT_VIEW);
+        support.requireWork(projectId, actor, taskId);
         if (taskId.equals(targetId)) {
             throw new TaskValidationException("TASK_RELATION_INVALID", "A task cannot relate to itself");
         }
-        Task target = support.mutable(projectId, targetId);
+        for (UUID id : java.util.stream.Stream.of(taskId, targetId).sorted().toList()) support.locked(projectId, id);
+        Task source = support.locked(projectId, taskId);
+        support.requireAdvancedTask(source);
+        Task target = support.locked(projectId, targetId);
+        support.requireAdvancedTask(target);
         boolean exists = type == RelationType.BLOCKS
                 ? relations.existsDirected(taskId, targetId, type)
                 : relations.existsBetween(taskId, targetId, type);
@@ -76,8 +82,9 @@ public class TaskRelationService {
     private Task writable(UUID projectId, UUID taskId, UUID actor) {
         support.requireProject(projectId, actor, true);
         support.requirePermission(projectId, actor, ProjectPermission.PROJECT_VIEW);
-        Task task = support.mutable(projectId, taskId);
+        Task task = support.locked(projectId, taskId);
         support.requireWork(projectId, actor, taskId);
+        support.requireAdvancedTask(task);
         return task;
     }
 

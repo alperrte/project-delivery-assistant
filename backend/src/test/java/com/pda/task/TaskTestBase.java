@@ -77,7 +77,11 @@ abstract class TaskTestBase {
     protected UUID project(Account actor, String name) throws Exception {
         String body = send(post("/api/v1/projects"), actor, "{\"name\":\"" + name + "\"}")
                 .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
-        return UUID.fromString(JsonPath.read(body, "$.id"));
+        UUID projectId = UUID.fromString(JsonPath.read(body, "$.id"));
+        send(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch(
+                "/api/v1/projects/" + projectId + "/task-management-mode"), actor, "{\"mode\":\"BOTH\"}")
+                .andExpect(status().isOk());
+        return projectId;
     }
 
     protected String tasksUrl(UUID project) { return "/api/v1/projects/" + project + "/tasks"; }

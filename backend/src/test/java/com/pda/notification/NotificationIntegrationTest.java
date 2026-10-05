@@ -95,6 +95,7 @@ class NotificationIntegrationTest {
     @Test void assignmentDiffSelfSuppressionPaginationAndReadIsolation() {
         UUID manager = user(); UUID a = user(); UUID b = user();
         UUID project = projects.create(manager, "Notification test " + UUID.randomUUID(), null, null).getId();
+        projects.changeTaskManagementMode(manager, project, com.pda.project.TaskManagementMode.BOTH);
         memberships.addMember(manager, project, a, Set.of(ProjectRole.TESTER));
         memberships.addMember(manager, project, b, Set.of(ProjectRole.TESTER));
         assertEquals(1, notifications.unreadCount(a));
@@ -129,6 +130,7 @@ class NotificationIntegrationTest {
     @Test void rollbackProducesNoNotificationAndMembershipEventsAreSelective() {
         UUID manager = user(); UUID member = user();
         UUID project = projects.create(manager, "Rollback notification " + UUID.randomUUID(), null, null).getId();
+        projects.changeTaskManagementMode(manager, project, com.pda.project.TaskManagementMode.BOTH);
         memberships.addMember(manager, project, member, Set.of(ProjectRole.TESTER));
         assertEquals(1, notifications.unreadCount(member));
         UUID task = tasks.create(project, manager, command("Rollback task", TaskPriority.MEDIUM, null)).id();

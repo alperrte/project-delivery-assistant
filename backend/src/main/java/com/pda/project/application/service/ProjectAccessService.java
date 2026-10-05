@@ -100,7 +100,15 @@ public class ProjectAccessService implements ProjectAccess {
     public ProjectTaskContext taskContext(UUID projectId) {
         return projectId == null ? null : projects.findById(projectId)
                 .map(project -> new ProjectTaskContext(project.getId(), project.getSlug(),
-                        project.getArchivedAt() != null)).orElse(null);
+                        project.getArchivedAt() != null, project.getTaskManagementMode())).orElse(null);
+    }
+
+    @Override
+    @Transactional
+    public ProjectTaskContext lockTaskContext(UUID projectId) {
+        return projectId == null ? null : projects.lockTaskContext(projectId)
+                .map(project -> new ProjectTaskContext(project.getId(), project.getSlug(),
+                        project.getArchivedAt() != null, project.getTaskManagementMode())).orElse(null);
     }
 
     @Override
@@ -167,7 +175,7 @@ public class ProjectAccessService implements ProjectAccess {
                 .filter(project -> project.getArchivedAt() == null)
                 .map(project -> new ProjectSummaryView(project.getId(), project.getSlug(), project.getName(),
                         project.getLogoUpdatedAt() == null ? null : project.getLogoUpdatedAt().toEpochMilli(),
-                        RolePolicy.permissions(byProject.get(project.getId()).getRoles())))
+                        RolePolicy.permissions(byProject.get(project.getId()).getRoles()), project.getTaskManagementMode()))
                 .sorted(java.util.Comparator.comparing(ProjectSummaryView::name, String.CASE_INSENSITIVE_ORDER))
                 .toList();
     }

@@ -45,6 +45,7 @@ public class TaskAttachmentService {
         support.requireProject(projectId, actor, true);
         support.requirePermission(projectId, actor, ProjectPermission.TASK_WORK);
         Task task = support.locked(projectId, taskId);
+        support.requireAdvancedTask(task);
         if (bytes == null || bytes.length == 0) {
             throw new TaskValidationException("TASK_ATTACHMENT_INVALID", "Empty file");
         }
@@ -80,12 +81,13 @@ public class TaskAttachmentService {
     public void delete(UUID projectId, UUID taskId, UUID attachmentId, UUID actor) {
         support.requireProject(projectId, actor, true);
         support.requirePermission(projectId, actor, ProjectPermission.PROJECT_VIEW);
-        Task task = support.mutable(projectId, taskId);
+        Task task = support.locked(projectId, taskId);
         TaskAttachment attachment = find(taskId, attachmentId);
         if (!attachment.getUploadedBy().equals(actor)
                 && !support.can(projectId, actor, ProjectPermission.TASK_MANAGE)) {
             throw new AccessDeniedException("Attachment permission denied");
         }
+        support.requireAdvancedTask(task);
         attachment.delete(actor);
         // The row stays as history, but the stored bytes go with it: nothing reads them again and they would
         // otherwise pile up for good.

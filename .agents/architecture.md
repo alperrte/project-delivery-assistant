@@ -44,3 +44,8 @@ Task frontend'i (2026-10-02): `frontend/src/features/{tasks,sprints,labels}/` ba
 ## Yerelleştirilmiş sayfa adresleri (2026-10-04)
 
 Dış sayfa URL’leri her dilde `/{locale}` öneki ve çevrilmiş sabit segmentler kullanır. `frontend/src/i18n/routing.ts` mantıksal App Router rota tablosu, üretim/çözümleme ve dil değiştirme sözleşmesidir; `frontend/src/proxy.ts` eski adresleri 308 ile canonical adrese yönlendirir ve içteki App Router yoluna rewrite eder. `frontend/src/i18n/navigation.tsx` sayfa linkleri, client router ve mantıksal pathname için ortak sınırdır. Dinamik slug/ID değerleri ile `/api/v1` adresleri çevrilmez. Dil değişimi tam belge yüklemesi yapar; URL, sunucu çevirisi ve `html[lang]` böylece birlikte kalır. Sohbet seçili projenin üzerinde panel olarak çalışır; ayrı sohbet URL’si yoktur.
+
+
+## Görev modeli sınırı — backend (2026-10-05)
+
+Project, taskManagementMode ve kurucuya ait politika değişiminin sahibidir. Task yalnız Project kökündeki TaskManagementMode, ProjectTaskContext/ProjectSummaryView ve ProjectAccess.lockTaskContext public sözleşmesini kullanır; Project entity/repository import etmez. Task creationMode ve gelişmiş özellik/veri koruma kontrollerini kendi servislerinde uygular. Görev mutation'ları Project shared kilidiyle politika değişimine; ilişkili gelişmiş mutation'lar Task exclusive kilidiyle tür dönüşümüne karşı korunur. V54 eski projeleri BOTH/eski görevleri ADVANCED korur; yeni projede ilk seçim zorunludur. Frontend seçim/bilgi/filtre/sidebar akışı sonraki teslimdir.
