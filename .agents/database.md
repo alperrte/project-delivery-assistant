@@ -118,3 +118,8 @@ Nullable scalar `chat_messages.reply_to_message_id`; `(reply_to_message_id, conv
 ## Organization–Project lifecycle integrity (2026-10-05)
 
 No schema or migration change: V21 nullable organization_id FK, NO ACTION delete behavior and (organization_id,archived_at) index remain. Organization archive retains associations and projects stay active; project archive does not affect organization/siblings. New/changed association validation uses existing organization row lock throughout the write transaction, shared with owner archive synchronization. Same-ID co-manager metadata and null detach preserve their prior policy. PostgreSQL barrier and physical NULL/UUID round-trip tests verify integrity; organization page query count at 30/100 remains fixed.
+
+
+## V56 Task status notification snapshots (2026-10-06)
+
+V56__task_status_notification_snapshots.sql adds nullable notifications columns task_status_previous/task_status_current VARCHAR(20), task_key VARCHAR(125), task_title VARCHAR(160), actor_nickname VARCHAR(32). Existing read/unread records remain unchanged with null snapshots. A CHECK permits all-null legacy records or complete TASK_STATUS_CHANGED/TASK snapshots with valid status names; nickname is optional. No new task/project foreign key or index is necessary: existing recipient/time/unread indexes serve the unchanged API queries. Display data is captured at the committed change, so later task renames cannot rewrite notification history. PostgreSQL upgrade from V55, constraints and Hibernate schema validation are tested. Migration is additive; do not delete old notifications or edit prior migrations.

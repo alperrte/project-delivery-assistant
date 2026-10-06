@@ -235,3 +235,8 @@ Task date picker month/year follow-up (2026-10-06): native select menus replaced
 ## Task planning and assignment verification - 2026-10-06 (scoped)
 
 Shared priority colors/critical alert, self-assignment via Assign me, shared simple/advanced pool assignment and calendar-day quick deadlines verified. Final targeted Chromium gate: 34 passed (7 planning/assignment, 5 date-picker, 12 task-model, 10 task-management). TR/EN/DE, light/dark and 320/390/768/1440px overflow/page-error checks passed; screenshots inspected. ESLint and TypeScript passed. Explicitly authorized backend pool extension: full Maven verify, 465 passed; project/team/permission/CSRF guards and concurrent claims tested. Global accessibility/responsive/production boxes remain unchanged. Details: docs/compliation/2026-10-06-task-planning-assignment.md.
+
+
+## Task progress notification verification - 2026-10-06 (backend scope)
+
+SIMPLE start/completion shortcuts, ADVANCED review/testing retention, same-project active manager recipients, actor suppression and follower deduplication verified on real PostgreSQL. No-op, rollback, concurrent same-status requests, permission/CSRF and own-notification isolation passed. V55-to-V56 upgrade retains legacy read/unread notifications; old serialized event JSON remains consumable. Final targeted gate: 19 passed; full Maven verify: 480 passed, 0 failure/error/skip, BUILD SUCCESS. Test-runner post-exit shutdown diagnostic is recorded in the completion. No frontend source/UI/browser behavior was changed or visually verified in this backend stage; global checklist boxes remain unchanged. Details: docs/compliation/2026-10-06-gorevlerim-durum-bildirim-backend.md.

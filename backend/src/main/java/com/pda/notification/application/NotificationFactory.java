@@ -6,6 +6,25 @@ import java.util.UUID;
 
 @Component
 public class NotificationFactory {
+    public Notification statusChanged(UUID recipient, UUID actor, UUID projectId, UUID taskId,
+                                      TaskStatusChange change) {
+        String actorName = change.actorNickname() == null ? "Someone" : change.actorNickname();
+        String taskName = change.taskKey() + ": " + change.taskTitle();
+        String title = switch (change.newStatus()) {
+            case "IN_PROGRESS" -> "Task started";
+            case "DONE" -> "Task completed";
+            default -> "Task status changed";
+        };
+        String message = switch (change.newStatus()) {
+            case "IN_PROGRESS" -> actorName + " started " + taskName + ".";
+            case "DONE" -> actorName + " completed " + taskName + ".";
+            default -> actorName + " changed " + taskName + " from " + change.previousStatus()
+                    + " to " + change.newStatus() + ".";
+        };
+        return new Notification(recipient, NotificationType.TASK_STATUS_CHANGED, title, message,
+                actor, projectId, ResourceType.TASK, taskId, change);
+    }
+
     public Notification create(UUID recipient, UUID actor, UUID projectId, ResourceType resourceType,
                                UUID resourceId, NotificationType type) {
         String title = switch (type) {

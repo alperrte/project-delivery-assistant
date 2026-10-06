@@ -282,7 +282,7 @@ Swagger check path: `/swagger-ui/index.html` with `API_DOCS_ENABLED=true`; call 
 
 | Endpoint | Auth / scope | Input / safe example | Success | Important errors |
 | --- | --- | --- | --- | --- |
-| `GET /api/v1/notifications` | Authenticated, own records | `?page=0&size=20&unreadOnly=true&type=TASK_ASSIGNED`; size 1–100 | `200` paged content with type, text, read timestamps, actor/project/resource IDs | `400` invalid filter/page, `401` unauthenticated |
+| `GET /api/v1/notifications` | Authenticated, own records | `?page=0&size=20&unreadOnly=true&type=TASK_ASSIGNED`; size 1–100 | `200` paged content with type, text, read timestamps, actor/project/resource IDs and nullable task statusChange snapshot | `400` invalid filter/page, `401` unauthenticated |
 | `GET /api/v1/notifications/unread-count` | Authenticated, own records | None | `200 {"count": 5}` | `401` |
 | `PATCH /api/v1/notifications/{notificationId}/read` | Authenticated, own record + CSRF | UUID path, no body | `200` updated notification | `400` bad UUID, `401`, `403` CSRF, `404` missing or other user's record |
 | `PATCH /api/v1/notifications/read-all` | Authenticated, own records + CSRF | No body | `200 {"count": 2}` (number changed) | `401`, `403` CSRF |
@@ -566,12 +566,18 @@ Swagger check path: `/swagger-ui/index.html` with `API_DOCS_ENABLED=true`. Call 
 | `GET /api/v1/projects/{projectId}/tasks/{taskId}` | `PROJECT_VIEW` | UUID path | `200`, Task including `assigneeIds` | `401`, `403`, `404` scoped/archived task |
 | `PATCH /api/v1/projects/{projectId}/tasks/{taskId}` | `TASK_MANAGE` | `{ "title": "Prepare final demo", "priority": "HIGH", "description": null, "startDate": null, "deadlineAt": null }` (full basic-field replacement) | `200`, updated Task | `400`, `401`, `403`, `404`, `409` archived/optimistic conflict |
 | `PUT /api/v1/projects/{projectId}/tasks/{taskId}/assignees` | `TASK_MANAGE` | `{ "assigneeIds": ["<active-member-uuid>"] }`; empty array clears | `200`, replacement UUID set | `400` nonmember/invalid ID, `401`, `403`, `404`, `409` archived |
-| `PATCH /api/v1/projects/{projectId}/tasks/{taskId}/status` | `TASK_MANAGE` or assigned `TASK_WORK` | `{ "status": "TODO" }` | `200`, Task; true change adds one history row | `400`, `401`, `403`, `404`, `409` invalid transition/archived |
+| `PATCH /api/v1/projects/{projectId}/tasks/{taskId}/status` | `TASK_MANAGE` or assigned `TASK_WORK` | `{ "status": "TODO" }` | `200`, Task; true change adds one history row and AFTER_COMMIT notification; IN_PROGRESS/DONE includes active project managers | `400`, `401`, `403`, `404`, `409` invalid transition/archived |
 | `PATCH /api/v1/projects/{projectId}/tasks/{taskId}/blocked` | `TASK_MANAGE` or assigned `TASK_WORK` | `{ "blocked": true, "reason": "Awaiting review" }` | `200`, Task; no status history | `400`, `401`, `403`, `404`, `409` DONE/archived |
 | `GET /api/v1/projects/{projectId}/tasks/{taskId}/history` | `PROJECT_VIEW` | UUID path | `200`, chronological history array | `401`, `403`, `404` |
 | `DELETE /api/v1/projects/{projectId}/tasks/{taskId}` | `TASK_MANAGE` | UUID path | `204`, soft archived | `401`, `403`, `404`, `409` archived |
 
 `TaskPriority` defaults to `MEDIUM`; new tasks start `BACKLOG` and unblocked. The existing role model governs Task: `PROJECT_MANAGER` holds `TASK_MANAGE`; contributors and `TESTER` hold `TASK_WORK` for tasks actively assigned to them. Cross-project task IDs return `404` to callers who can read the path project.
+
+### Task progress and manager notification contract (2026-10-06, V56)
+
+Status PATCH remains cookie + CSRF + active project membership, with TASK_MANAGE or TASK_WORK on a task assigned to the caller. SIMPLE additionally permits BACKLOG -> IN_PROGRESS and IN_PROGRESS -> DONE; ADVANCED review/testing transitions stay enforced. Same-status requests are no-ops. True IN_PROGRESS/DONE changes notify all active PROJECT_MANAGER memberships in the same project plus existing task followers, once per recipient; the actor is excluded. Global ADMIN and management of another project confer no recipient status or task permission. Rollback emits no notification.
+
+Own notification list/read responses retain TASK_STATUS_CHANGED and add nullable statusChange{previousStatus,newStatus,taskKey,taskTitle,actorNickname}. Names/titles are snapshots from the successful status transaction; old notifications and queued pre-V56 events continue without snapshots. No recipient or actor IDs are accepted from the status body. Swagger: /swagger-ui/index.html when already enabled, login through /api/v1/auth/csrf + /api/v1/auth/login and use the existing status/notifications routes with normal access cookies and X-XSRF-TOKEN for mutations. No ENV or security architecture change.
 
 ### Task Service genişletmesi (2026-10-02, V37–V46)
 

@@ -1,6 +1,5 @@
 package com.pda.task;
 
-import com.pda.task.domain.TaskStatus;
 import java.time.Instant;
 import java.util.Set;
 import java.util.UUID;
@@ -8,7 +7,8 @@ import java.util.UUID;
 /**
  * Public scalar-only integration events; consumers must not depend on Task persistence entities.
  * {@code recipientIds} are already the assignees plus watchers of the task (deduplicated); the consumer only
- * skips the acting user.
+ * skips the acting user. Status-change recipients additionally include active project managers when work starts
+ * or finishes; task and actor display values are snapshots captured in the successful mutation transaction.
  */
 public final class TaskEvents {
     private TaskEvents() {}
@@ -17,8 +17,9 @@ public final class TaskEvents {
                                     Instant occurredAt) {}
     public record TaskUnassignedEvent(UUID taskId, UUID projectId, UUID userId, UUID unassignedBy,
                                       Instant occurredAt) {}
-    public record TaskStatusChangedEvent(UUID taskId, UUID projectId, TaskStatus previousStatus,
-                                         TaskStatus newStatus, UUID changedBy, Set<UUID> assigneeIds, Instant occurredAt) {}
+    public record TaskStatusChangedEvent(UUID taskId, UUID projectId, String previousStatus,
+                                         String newStatus, UUID changedBy, Set<UUID> assigneeIds,
+                                         String taskKey, String taskTitle, String actorNickname, Instant occurredAt) {}
     public record TaskPriorityChangedEvent(UUID taskId, UUID projectId, UUID changedBy,
                                            Set<UUID> assigneeIds, Instant occurredAt) {}
     public record TaskDueDateChangedEvent(UUID taskId, UUID projectId, Instant deadlineAt, UUID changedBy,

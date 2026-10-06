@@ -64,3 +64,6 @@ Organization association is independent from ProjectMembership; no new organizat
 
 
 Task assignment update (2026-10-06): pool assignment/claim/release is common to SIMPLE and ADVANCED tasks in configured projects. TaskSupport.requirePoolTask enforces configuration separately from advanced-feature guards. Existing project/task locks, membership, roles, CSRF and team scope remain. No schema migration or module-boundary change. Model conversion preserves pool/team/claim data.
+
+
+Task progress backend (2026-10-06): SIMPLE tasks can additionally start directly from BACKLOG and complete from IN_PROGRESS; ADVANCED keeps review/testing. TaskService merges active project manager IDs via public ProjectAccess.managerUserIds only for true IN_PROGRESS/DONE transitions. TaskStatusChangedEvent uses scalar status strings and task/actor display snapshots; Notification handles AFTER_COMMIT once per deduplicated recipient, suppresses the actor, and keeps legacy publication compatibility. V56 persists optional snapshots exposed as notification.statusChange without changing notification types or module dependency direction. No-op/rollback and concurrent identical requests create no duplicate history/notification. Personal-task cards, confirmation dialogs and localization are the next frontend delivery.

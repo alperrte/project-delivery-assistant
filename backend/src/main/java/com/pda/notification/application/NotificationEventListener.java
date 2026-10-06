@@ -31,7 +31,16 @@ public class NotificationEventListener {
     }
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void status(TaskEvents.TaskStatusChangedEvent e) {
-        saveAll(e.assigneeIds(), e.changedBy(), e.projectId(), e.taskId(), NotificationType.TASK_STATUS_CHANGED);
+        // Publications persisted before V56 do not contain display snapshots.
+        if (e.taskKey() == null || e.taskTitle() == null) {
+            saveAll(e.assigneeIds(), e.changedBy(), e.projectId(), e.taskId(), NotificationType.TASK_STATUS_CHANGED);
+            return;
+        }
+        var change = new TaskStatusChange(e.previousStatus(), e.newStatus(),
+                e.taskKey(), e.taskTitle(), e.actorNickname());
+        for (UUID recipient : e.assigneeIds()) {
+            writer.saveStatusChanged(recipient, e.changedBy(), e.projectId(), e.taskId(), change);
+        }
     }
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void priority(TaskEvents.TaskPriorityChangedEvent e) {
