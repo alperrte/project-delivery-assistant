@@ -1,5 +1,9 @@
 # Web Sitesi Kesinlikle Olması Gerekenler — Master Checklist
 
+## 2026-10-06 Chat action menu / workspace history
+
+Tek chevron/menu lifecycle/focus, yakın reaction chips, native same-origin history/fallback, responsive header reserve ve full-close/dock persistence kapsamı doğrulandı. Hedefli50+2 Chromium; final gate 464 backend0 failure/error/skip, 240 Chromium+1 expected production crash-route skip, lint/type/build/Docker health PASS. Bu scoped kanıt global accessibility/multi-browser/production kutularını topluca [x] yapmaz. Ayrıntı: `docs/compliation/2026-10-06-chat-action-menu-workspace-history.md`.
+
 ## Organization–Project remediation — 2026-10-05 (sınırlı kapsam)
 
 Explicit standalone/assign/remove/move UI→API→prepared PostgreSQL read, co-manager current summary/plain-text capability, retained archive/Home200, affected old/new cache prefix ve independent projects loading/error/retry/empty/page clamp doğrulandı. 101 owned org picker +101 linked project pagination; TR/EN/DE, keyboard,320/390/768/1440px/light-dark screenshot kontrolü geçti. Full gate PASSED:464 backend (0 fail/error/skip),232 Chromium+1 expected production crash-route skip; lint/type/build/Docker health. Schema/migration/auth/CSRF/CORS/ENV değişmedi; mevcut dev npm debt5 high/production0 ayrı. Bu scoped kanıt genel checklist kutularını topluca [x] yapmaz. Ayrıntı: `docs/compliation/2026-10-05-organization-project-integration-remediation.md`.
@@ -209,3 +213,5 @@ READY / NOT READY
 ```
 
 > `READY` yalnız production blocker kalmadığında verilmelidir.
+
+2026-10-06 navbar kullanıcı düzeltmesi: viewport merkezindeki önceki konum geri alındı, sidebar collapse ile kaymaz. Güncel lint/type/build0 ve hedefli14 Chromium PASS; scope yalnız bu yerleşim. Global kutular değişmedi.

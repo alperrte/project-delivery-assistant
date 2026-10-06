@@ -1,4 +1,8 @@
 ﻿# Mimari kısa özet
+
+## 2026-10-06 Chat action menu / workspace history
+
+Workspace history yalnız native Navigation capability okur; mevcut localized router.back/forward ile aynı-origin native entry traverses eder. URL stack/history override/private Next state veya yeni storage yok. Unsupported capability unknown/disabled kalır. AppHeader main dışında; fullscreen logical page traversal ile kapanır, compact/bar aynı owner içinde korunur. Message menu yalnız presentation katmanıdır; reply/reaction REST/DB/WS/version/batch-resync contract değişmedi.
 ## Organization profili ve özel medya (2026-10-04)
 
 Organization, Project modülü içinde owner kapsamını korur. Profil metadata'sı ve opaque logo/cover referansları PostgreSQL'dedir; byte'lar `shared.MediaStorage` portunun `FileSystemMediaStorage` adaptörüyle özel persistent volume'de tutulur. Project/User BYTEA görselleri değişmez. Media ledger pending/active/delete-pending durumlarını kalıcı tutar; dosya yazımı ile referans değişimi row lock altında koordine edilir, yarım kalan upload ve silmeler yeniden denenir. V1 tek host depolamasıdır; çok host için ortak storage/future adapter gerekir. Public medya endpoint'i veya organization üye/rol modeli eklenmez.

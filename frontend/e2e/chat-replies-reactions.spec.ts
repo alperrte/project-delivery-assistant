@@ -1,3 +1,4 @@
+import { chooseMessageAction } from "./chat-actions";
 import { expect, test, type Page, type WebSocketRoute } from "@playwright/test";
 import { api, createProject } from "./helpers";
 import { MANAGER_STORAGE, MEMBER_STORAGE } from "./global-setup";
@@ -27,12 +28,12 @@ test.describe.serial("Chat replies and reactions", () => {
     await send(a,"Meeting time? <b>plain text</b>");
     const original=row(b,"Meeting time?");await expect(original).toBeVisible();
     const originalId=await original.getAttribute("data-message-id");
-    await original.hover();await original.getByTestId("chat-message-reply").click();
+    await original.hover();await chooseMessageAction(original,"reply");
     await expect(b.getByTestId("chat-reply-context")).toContainText("Meeting time?");
     await b.getByTestId("chat-composer").fill("Keep draft");await b.getByTestId("chat-composer").press("Escape");
     await expect(b.getByTestId("chat-reply-context")).toHaveCount(0);
     await expect(b.getByTestId("chat-panel")).toBeVisible();await expect(b.getByTestId("chat-composer")).toHaveValue("Keep draft");
-    await original.hover();await original.getByTestId("chat-message-reply").click();
+    await original.hover();await chooseMessageAction(original,"reply");
     const request=b.waitForRequest(r=>r.method()==="POST"&&r.url().endsWith(`/conversations/${conversation}/messages`));
     await send(b,"14:00");expect((await request).postDataJSON()).toMatchObject({content:"14:00",replyToMessageId:originalId});
     await expect(row(a,"14:00").getByTestId("chat-reply-quote")).toHaveAttribute("data-reply-id",originalId!);
@@ -50,7 +51,7 @@ test.describe.serial("Chat replies and reactions", () => {
     await b.locator(`[data-testid="chat-conversation-direct"][data-peer-id="${actorA.id}"]`).click();
     await expect(a.getByTestId("chat-composer")).toBeEnabled();await expect(b.getByTestId("chat-composer")).toBeEnabled();
     await send(a,"Direct question");const target=row(b,"Direct question");await expect(target).toBeVisible();
-    await target.hover();await target.getByTestId("chat-message-reply").click();await send(b,"Direct answer");
+    await target.hover();await chooseMessageAction(target,"reply");await send(b,"Direct answer");
     await expect(row(a,"Direct answer").getByTestId("chat-reply-quote")).toContainText("Direct question");
     await a.reload();await open(a);await a.locator(`[data-testid="chat-conversation-direct"][data-peer-id="${actorB.id}"]`).click();
     await expect(row(a,"Direct answer").getByTestId("chat-reply-quote")).toContainText("Direct question");
@@ -59,7 +60,7 @@ test.describe.serial("Chat replies and reactions", () => {
 
   test("failed reply retries its captured target even after reply mode is cleared", async () => {
     await send(a,"Retry question");const target=row(b,"Retry question");await expect(target).toBeVisible();
-    const id=await target.getAttribute("data-message-id");await target.hover();await target.getByTestId("chat-message-reply").click();
+    const id=await target.getAttribute("data-message-id");await target.hover();await chooseMessageAction(target,"reply");
     let blocked=true;
     await b.route(`**/conversations/${conversation}/messages`,route=>{if(route.request().method()==="POST"&&blocked){blocked=false;return route.abort();}return route.continue();});
     await send(b,"Retry answer");const failed=b.getByTestId("chat-pending");await expect(failed).toHaveAttribute("data-status","failed");
@@ -72,7 +73,7 @@ test.describe.serial("Chat replies and reactions", () => {
   test("reactions update the other user's open view, toggle, aggregate and never create unread messages", async () => {
     await a.goto(`/tr/projeler/${slug}`);await b.goto(`/tr/projeler/${slug}`);await open(a);await open(b);
     await send(a,"React meeting");const original=row(b,"React meeting");await expect(original).toBeVisible();
-    async function choose(page:Page,code:string){const message=row(page,"React meeting");await message.hover();await message.getByTestId("chat-message-react").click();await page.getByTestId(`emoji-${code}`).click();}
+    async function choose(page:Page,code:string){const message=row(page,"React meeting");await message.hover();await chooseMessageAction(message,"react");await page.getByTestId(`emoji-${code}`).click();}
     // Stabilize the existing read debounce before measuring reaction-only effects.
     expect((await api(a,"POST",`/projects/${project}/chat/conversations/${conversation}/read`)).status).toBe(204);
     const before=(await api(a,"GET",`/projects/${project}/chat/conversations`)).json as {totalUnread:number};
@@ -102,7 +103,7 @@ test.describe.serial("Chat replies and reactions", () => {
     await b.getByTestId("chat-composer-emoji").click();await b.getByTestId("emoji-HEART").click();
     await expect(input).toHaveValue("😂❤️");await input.press("Enter");
     await expect(row(a,"😂❤️")).toBeVisible();await a.reload();await open(a);await expect(row(a,"😂❤️")).toBeVisible();
-    const target=row(b,"React meeting");await target.hover();await target.getByTestId("chat-message-reply").click();
+    const target=row(b,"React meeting");await target.hover();await chooseMessageAction(target,"reply");
     const picker=b.getByTestId("chat-composer-emoji");await picker.focus();await picker.press("Enter");
     await expect(b.getByTestId("chat-composer-emoji-popup")).toBeVisible();
     await b.getByTestId("emoji-SMILE").press("Escape");
@@ -112,7 +113,7 @@ test.describe.serial("Chat replies and reactions", () => {
   });
 
   test("failed reaction shows error without changing chips; mobile picker fits both themes", async () => {
-    const target=row(b,"React meeting");await target.hover();await target.getByTestId("chat-message-react").click();
+    const target=row(b,"React meeting");await target.hover();await chooseMessageAction(target,"react");
     await b.route("**/messages/*/reactions/SAD",route=>route.abort());
     await b.getByTestId("emoji-SAD").click();
     await expect(b.getByText("Tepki gönderilemedi.",{exact:false})).toBeVisible();
@@ -162,11 +163,10 @@ test.describe.serial("Chat replies and reactions", () => {
   });
 
   test("reply controls translate and fit mobile light/dark; context survives compact and navigation close", async () => {
-    const labels={tr:"Yanıtla",en:"Reply",de:"Antworten"};
     for(const locale of ["tr","en","de"] as const){
       await b.goto(localizeHref(`/projects/${slug}`,locale));
       await open(b);await expect(row(b,"Retry question")).toBeVisible();
-      await row(b,"Retry question").hover();await row(b,"Retry question").getByRole("button",{name:labels[locale],exact:true}).click();
+      await row(b,"Retry question").hover();await chooseMessageAction(row(b,"Retry question"),"reply");
       await b.getByTestId("chat-composer").fill(`draft ${locale}`);
       await b.getByTestId("chat-minimize").click();await b.getByTestId("chat-bar-expand").click();
       await expect(b.getByTestId("chat-reply-context")).toContainText("Retry question");

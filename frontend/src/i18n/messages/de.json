@@ -1327,7 +1327,13 @@
     "insights": "Arbeitsbereich-Werkzeuge",
     "totalProjects": "Projekte insgesamt",
     "summaryDescription": "Ein Arbeitsbereich für Projektziele, Erfolgskriterien und dein Team.",
-    "quickActions": "Schnellaktionen"
+    "quickActions": "Schnellaktionen",
+    "history": {
+      "back": "Zur vorherigen Seite",
+      "forward": "Zur nächsten Seite",
+      "label": "Seitenverlauf",
+      "unavailable": "Verlaufsinformationen sind in diesem Browser nicht verfügbar; verwenden Sie die Browser-Pfeile."
+    }
   },
   "tasks": {
     "nav": {
@@ -2167,6 +2173,10 @@
       "action": "Reagieren",
       "chip": "{emoji}, {count} Reaktionen",
       "error": "Reaktion konnte nicht gespeichert werden."
+    },
+    "actions": {
+      "open": "Nachrichtenaktionen öffnen",
+      "label": "Nachrichtenaktionen"
     }
   },
   "siteFooter": {

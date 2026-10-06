@@ -221,21 +221,22 @@ export function MessageList({
                     </span>
                   )}
                   <div
+                    data-testid="chat-message-bubble"
                     className={cn(
-                      "rounded-2xl px-3 py-1.5 text-sm break-words whitespace-pre-wrap [overflow-wrap:anywhere]",
-                      own ? "rounded-br-sm bg-primary text-primary-foreground" : "rounded-bl-sm bg-muted text-foreground",
+                      "relative min-h-7 rounded-2xl px-3 py-1.5 text-sm break-words whitespace-pre-wrap [overflow-wrap:anywhere] max-sm:min-h-11",
+                      own ? "rounded-br-sm bg-primary pr-10 text-primary-foreground max-sm:pr-12" : "rounded-bl-sm bg-muted pl-10 text-foreground max-sm:pl-12",
                     )}
                   >
                     {message.replyTo && <ReplyPreview reply={message.replyTo} />}
                     <span data-testid="chat-message-text">{message.content}</span>
+                    <MessageActions own={own} message={message} onReply={onReply} onReact={(code,add)=>onReact(message.id,code,add)} disabled={reactionsDisabled} />
                   </div>
+                  <ReactionChips message={message} onReact={(code,add)=>onReact(message.id,code,add)} pending={code=>reactionPending(message.id,code)} disabled={reactionsDisabled} />
                   <div className="mt-0.5 flex items-center gap-1">
                   <time dateTime={message.createdAt} className="px-1 text-[10px] text-muted-foreground tabular-nums">
                     {formatClock(message.createdAt, locale)}
                   </time>
-                  <MessageActions message={message} onReply={onReply} onReact={(code,add)=>onReact(message.id,code,add)} disabled={reactionsDisabled} />
                   </div>
-                  <ReactionChips message={message} onReact={(code,add)=>onReact(message.id,code,add)} pending={code=>reactionPending(message.id,code)} disabled={reactionsDisabled} />
                 </div>
               </div>
             </Fragment>
