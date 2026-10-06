@@ -15,6 +15,8 @@ import { errorKey } from "@/lib/api/error-message";
 import { invitationsApi } from "../api";
 import type { ExternalInvitationPreview } from "../types";
 import { useInvitationToken } from "../hooks/use-invitation-token";
+import { clearPrivateInvitations } from "../query-keys";
+import {isInvalidInvitationToken,isPreviewServerFailure} from "../external-preview-error";
 
 export function ExternalInvitationRegistration() {
   const t = useTranslations("invitations");
@@ -25,22 +27,29 @@ export function ExternalInvitationRegistration() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const token = useInvitationToken();
-  const [preview, setPreview] = useState<ExternalInvitationPreview | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [previewState,setPreviewState]=useState<{token:string;attempt:number;preview:ExternalInvitationPreview|null;signedIn:boolean;failure:unknown}|null>(null);
+  const [previewAttempt,setPreviewAttempt]=useState(0);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [signedIn, setSignedIn] = useState(false);
   const [nickname, setNickname] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const invalidToken=!token?.trim() || token.length>200;
+  const current=previewState?.token===token&&previewState.attempt===previewAttempt?previewState:null;
+  const preview=current?.preview??null,signedIn=current?.signedIn??false;
+  const loading=!invalidToken&&!current;
+  const expired=invalidToken||isInvalidInvitationToken(current?.failure);
+  const previewError=expired?t("externalExpired"):isPreviewServerFailure(current?.failure)?t("externalUnavailable"):te(errorKey(current?.failure));
+  const retryable=!!current?.failure&&!expired;
 
   useEffect(() => {
-    if (!token) return;
-    Promise.all([invitationsApi.previewExternal(token), authApi.me().catch(() => null)])
-      .then(([invitation, me]) => { setPreview(invitation); setSignedIn(!!me); })
-      .catch(() => setError(t("externalExpired")))
-      .finally(() => setLoading(false));
-  }, [t, token]);
+    if (!token || invalidToken) return;
+    const controller=new AbortController();let cancelled=false;
+    Promise.all([invitationsApi.previewExternal(token,controller.signal), authApi.me().catch(() => null)])
+      .then(([invitation, me]) => { if(!cancelled){setPreviewState({token,attempt:previewAttempt,preview:invitation,signedIn:!!me,failure:null});setError(null);} })
+      .catch(cause => {if(!cancelled)setPreviewState({token,attempt:previewAttempt,preview:null,signedIn:false,failure:cause});});
+    return()=>{cancelled=true;controller.abort();};
+  }, [token,invalidToken,previewAttempt]);
 
   async function acceptExisting() {
     if (!token) return;
@@ -68,6 +77,7 @@ export function ExternalInvitationRegistration() {
         firstName: preview.firstName, lastName: preview.lastName, nickname, password, confirmPassword });
       await authApi.login({ email: preview.email, password });
       const me = await authApi.me();
+      clearPrivateInvitations(queryClient);
       queryClient.setQueryData(sessionQueryKey, me);
       router.replace(`/projects/${accepted.projectSlug}`);
     } catch (cause) { setError(te(errorKey(cause))); setBusy(false); }
@@ -75,8 +85,10 @@ export function ExternalInvitationRegistration() {
 
   return <AuthCard title={t("externalTitle")} subtitle={preview
     ? t("externalDescription", { inviter: preview.inviterName, project: preview.projectName }) : ""}>
-    {loading ? <p className="text-sm text-muted-foreground">…</p> : !preview
-      ? <p role="alert" className="text-sm text-destructive">{error ?? t("externalExpired")}</p>
+    {loading ? <p role="status" className="text-sm text-muted-foreground">…</p> : !preview
+      ? <div className="space-y-4"><p role="alert" className="text-sm text-destructive">{previewError}</p>
+          {retryable&&<button type="button" className={authCtaClass+" w-full"} onClick={()=>{setError(null);setPreviewAttempt(value=>value+1);}}>{t("retry")}</button>}
+        </div>
       : <div className="space-y-5">
           <div className="rounded-lg border border-border bg-muted/30 p-4 text-sm space-y-2">
             <p>{preview.firstName} {preview.lastName} · {preview.email}</p>

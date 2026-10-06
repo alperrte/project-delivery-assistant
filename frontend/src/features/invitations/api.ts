@@ -4,8 +4,8 @@ import type { Member, ProjectRole } from "@/features/projects/types";
 import type { CreatedInvitation, Invitation, InvitationStatus, MyInvitation, ExternalInvitationPreview, AcceptedExternalInvitation, InvitationProjectPreview } from "./types";
 
 export const invitationsApi = {
-  list: (projectId: string, page: number, size = 20, status?: InvitationStatus) =>
-    apiRequest<Page<Invitation>>(`/projects/${projectId}/invitations/all?page=${page}&size=${size}${status ? `&status=${status}` : ""}`),
+  list: (projectId: string, page: number, size = 20, status?: InvitationStatus, signal?: AbortSignal) =>
+    apiRequest<Page<Invitation>>(`/projects/${projectId}/invitations/all?page=${page}&size=${size}${status ? `&status=${status}` : ""}`, {signal}),
   create: (projectId: string, body: { teamId: string; userId?: string; email?: string; firstName?: string; lastName?: string; message?: string; roles: ProjectRole[] }) =>
     apiRequest<CreatedInvitation>(`/projects/${projectId}/invitations`, { method: "POST", body }),
   resend: (projectId: string, invitationId: string) =>
@@ -17,16 +17,16 @@ export const invitationsApi = {
   accept: (projectId: string, invitationId: string, token: string) =>
     apiRequest<Member>(`/projects/${projectId}/invitations/${invitationId}/accept`, { method: "POST", body: { token } }),
   /** `status: "PENDING"` keeps only invitations that can still be answered; omitted lists every invitation. */
-  mine: (page: number, size = 20, status?: "PENDING") =>
-    apiRequest<Page<MyInvitation>>(`/project-invitations/me?page=${page}&size=${size}${status ? `&status=${status}` : ""}`),
-  previewMine: (invitationId: string) =>
-    apiRequest<InvitationProjectPreview>(`/project-invitations/${invitationId}/preview`),
+  mine: (page: number, size = 20, status?: "PENDING", signal?: AbortSignal) =>
+    apiRequest<Page<MyInvitation>>(`/project-invitations/me?page=${page}&size=${size}${status ? `&status=${status}` : ""}`, { signal }),
+  previewMine: (invitationId: string, signal?: AbortSignal) =>
+    apiRequest<InvitationProjectPreview>(`/project-invitations/${invitationId}/preview`, { signal }),
   previewLogoUrl: (invitationId: string, logoVersion: number) =>
     apiUrl(`/project-invitations/${invitationId}/logo?v=${logoVersion}`),
   acceptMine: (invitationId: string) =>
     apiRequest<Member>(`/project-invitations/${invitationId}/accept`, { method: "POST" }),
   rejectMine: (invitationId: string, message: string) =>
     apiRequest<void>(`/project-invitations/${invitationId}/reject`, { method: "POST", body: { message } }),
-  previewExternal: (token: string) => apiRequest<ExternalInvitationPreview>("/project-invitations/external/preview", { method: "POST", body: { token } }),
+  previewExternal: (token: string, signal?:AbortSignal) => apiRequest<ExternalInvitationPreview>("/project-invitations/external/preview", { method: "POST", body: { token },signal }),
   acceptExternal: (token: string) => apiRequest<AcceptedExternalInvitation>("/project-invitations/external/accept", { method: "POST", body: { token } }),
 };

@@ -1,5 +1,9 @@
 # Frontend tasarım kuralları
 
+## Invitations remediation — 2026-10-06
+
+Invitation UI manager EXPIRED tab/empty translations mevcut status dilini kullanır; expired row resend action sunar, live pending cancel davranışı kalır. Public preview yalnız404/invalid token için expired copy;429 mevcut rate copy, network ayrı, server contextual unavailable copy. Retry state token/attempt ile bağlıdır; cancellation/abort eski response/error overwrite etmez. Navbar/current centered placement ve design tokens değiştirilmedi.
+
 Bu belge PDA frontend'inin görsel dilini özetler: renk paleti (light/dark), yazı tipleri, köşe yarıçapları, ikonlar, hareket ve erişilebilirlik kuralları. Amaç, hangi ajan çalışırsa çalışsın tüm sayfaların aynı sistemle uyumlu kalmasıdır. Süreç (skill'ler, Playwright, audit) için `.agents/FRONTEND_WORKFLOW.md` geçerlidir; bu belge onun "mevcut token'ları koru" adımının içeriğidir.
 
 ## Organization profil formu ve ortak medya (2026-10-04)

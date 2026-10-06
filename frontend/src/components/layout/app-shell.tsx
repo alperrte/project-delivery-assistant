@@ -22,6 +22,7 @@ import { ApiError, SESSION_EXPIRED_EVENT } from "@/lib/api/client";
 import { PageFailure } from "@/features/errors/page-failure";
 import { ErrorFrame } from "@/features/errors/error-frame";
 import { sessionQueryKey, useSession } from "@/features/auth/hooks/use-session";
+import { clearPrivateInvitations } from "@/features/invitations/query-keys";
 import { useApplySavedPreferences, useRestoreSessionBaseline } from "@/features/settings/session-preferences";
 
 const NAV_LINKS = [
@@ -48,6 +49,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!sessionExpired) return;
+    clearPrivateInvitations(queryClient);
     restoreBaseline();
     router.replace("/login");
     // `restoreBaseline` is recreated every render; the session ending is the only trigger that matters.
@@ -57,6 +59,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   // The access token is renewed transparently; this only fires when the session itself is over.
   useEffect(() => {
     const sessionEnded = () => {
+      clearPrivateInvitations(queryClient);
       restoreBaseline();
       queryClient.removeQueries({ queryKey: sessionQueryKey });
       router.replace("/login");
@@ -67,9 +70,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, [queryClient, router]);
 
   async function handleLogout() {
+    clearPrivateInvitations(queryClient);
     try {
       await authApi.logout();
     } finally {
+      clearPrivateInvitations(queryClient);
       restoreBaseline();
       queryClient.removeQueries({ queryKey: sessionQueryKey });
       router.replace("/login");

@@ -645,6 +645,10 @@ Organization archive **retains** all project FK associations; no automatic detac
 
 Relevant inventory: POST/GET `/api/v1/projects`, PUT `/api/v1/projects/{id}`, GET `/projects/{id}`, `/projects/by-slug/{slug}`, `/projects/{id}/home`, POST `/projects/{id}/archive`; POST/GET `/organizations`, GET/PUT `/organizations/{id}`, POST archive and GET projects. Mutations require existing cookie+CSRF; no session401, nonmember/foreign target403, unknown/archived new target404, malformed/validation400. Organization projects GET is active-org + caller project membership, not general owner inheritance; profile GET remains owner-only. Safe PUT: `{"name":"Example Project","priority":"MEDIUM","status":"PLANNING","organizationId":null}`. Home active summary: `{id,name,slug,canViewOrganization}`. Swagger uses existing `/swagger-ui/index.html` and normal login/CSRF; no docs ENV changed. Full endpoint matrix is in the remediation completion record.
 
+### Invitations remediation — 2026-10-06
+
+No new endpoint, role, cookie/session/CSRF/CORS policy or ENV. Frontend private invitation queries are principal-scoped and cancelled/removed at sign-in/out/session boundaries. Existing invitation writes lock/expire elapsed pending target rows before fresh insert; manager reads/count/candidates use effective expiry. Resend expired invitation200 creates a fresh token/ID; DELETE expired204 retains EXPIRED, grants no membership. Existing authority checks and DB constraints remain. Full inventory/manual checks in the separate implementation completion. SMTP delivery remains disabled in the audited local environment.
+
 ## 12. Error Handling
 
 API errors must not expose:
@@ -758,6 +762,13 @@ The Next.js frontend sets `X-Content-Type-Options: nosniff`, `X-Frame-Options: D
 - Evidence and scope: [remediation report](../docs/compliation/2026-10-05-npm-security-remediation.md).
 
 ---
+
+### New independent dependency follow-up — 2026-10-06
+
+- npm audit currently6 high; omit=dev1 high. Previous5 high/production0 counts are historical.
+- `source-map-js@1.2.1`, GHSA-68fv-2mgg-jv7q / CVE-2026-93749; reviewed advisory lists1.2.2 patched. Paths include Next→PostCSS (production dependency graph) and Tailwind→PostCSS/node (development). App source has no direct SourceMapConsumer use; untrusted PDA runtime reachability was not reproduced. Production classification alone is not exploit proof.
+- Package/lock files were not modified by invitation remediation. Review a separate compatible1.2.2 transitive patch before release; no security waiver. Original ESLint/braces dev debt also remains.
+- Primary source: [GitHub reviewed advisory](https://github.com/advisories/GHSA-68fv-2mgg-jv7q).
 
 ## 17. Docker and Container Security
 
