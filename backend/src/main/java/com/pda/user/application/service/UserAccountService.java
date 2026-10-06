@@ -122,6 +122,16 @@ public class UserAccountService implements UserAccounts {
 
     @Override
     @Transactional(readOnly = true)
+    public Map<UUID, ProfileSummary> findActiveProfilesByIds(Set<UUID> userIds) {
+        if (userIds == null || userIds.isEmpty()) return Map.of();
+        return users.findAllById(userIds).stream().filter(user -> user.getAccountStatus() == AccountStatus.ACTIVE)
+                .map(user -> new ProfileSummary(user.getId(), user.getNickname(), user.getFirstName(), user.getLastName(),
+                        user.getProfilePhotoUpdatedAt() == null ? null : user.getProfilePhotoUpdatedAt().toEpochMilli()))
+                .collect(Collectors.toMap(ProfileSummary::userId, user -> user));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Optional<AuthenticatedUser> findActiveByOAuthIdentity(OAuthProvider provider, String subject) {
         return identities.findByProviderAndProviderSubject(provider, subject)
                 .flatMap(identity -> users.findById(identity.getUserId()))

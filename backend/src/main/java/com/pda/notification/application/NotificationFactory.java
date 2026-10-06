@@ -6,6 +6,10 @@ import java.util.UUID;
 
 @Component
 public class NotificationFactory {
+    public Notification teamDeleted(UUID recipient, UUID actor, UUID projectId, UUID teamId,
+                                     UUID eventId, TeamDeletion deletion) {
+        return Notification.teamDeleted(recipient, actor, projectId, teamId, eventId, deletion);
+    }
     public Notification statusChanged(UUID recipient, UUID actor, UUID projectId, UUID taskId,
                                       TaskStatusChange change) {
         String actorName = change.actorNickname() == null ? "Someone" : change.actorNickname();
@@ -45,6 +49,7 @@ public class NotificationFactory {
             case PROJECT_ROLE_CHANGED -> "Project role changed";
             case SQUAD_MEMBER_ADDED -> "Added to team";
             case SQUAD_MEMBER_REMOVED -> "Removed from team";
+            case SQUAD_DELETED -> throw new IllegalArgumentException("Team deletion requires a snapshot");
             case PROJECT_INVITATION_CREATED -> "Project invitation";
             case PROJECT_INVITATION_ACCEPTED -> "Invitation accepted";
             case PROJECT_INVITATION_REJECTED -> "Invitation rejected";
@@ -67,6 +72,7 @@ public class NotificationFactory {
             case PROJECT_ROLE_CHANGED -> "Your project role was changed.";
             case SQUAD_MEMBER_ADDED -> "You were added to a team.";
             case SQUAD_MEMBER_REMOVED -> "You were removed from a team.";
+            case SQUAD_DELETED -> throw new IllegalArgumentException("Team deletion requires a snapshot");
             case PROJECT_INVITATION_CREATED -> "You were invited to a project.";
             case PROJECT_INVITATION_ACCEPTED -> "Your project invitation was accepted.";
             case PROJECT_INVITATION_REJECTED -> "Your project invitation was rejected.";

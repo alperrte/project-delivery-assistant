@@ -2,7 +2,7 @@
 
 import Link from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
-import { Bell, CaretDown, EnvelopeSimple, List, SignOut } from "@phosphor-icons/react";
+import { CaretDown, EnvelopeSimple, List, SignOut } from "@phosphor-icons/react";
 import { CONTACT_EMAIL, INFO_LINKS } from "@/features/public-info/site-info";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,6 +22,7 @@ import { LocaleSwitcher } from "./locale-switcher";
 import { ThemeToggle } from "./theme-toggle";
 import { useAutoHide } from "./use-auto-hide";
 import { WorkspaceHistoryControls } from "./workspace-history-controls";
+import { NotificationCenter } from "@/features/notifications/components/notification-center";
 
 type SessionUser = { id?: string; nickname?: string; email?: string; profilePhotoVersion?: number | null } | null | undefined;
 
@@ -79,7 +80,7 @@ export function AppHeader({
         <div className="ml-auto flex h-11 min-w-0 shrink-0 items-center gap-1 sm:h-auto sm:gap-2">
           <LocaleSwitcher triggerClassName="max-sm:px-1" hideLabelOnMobile />
           <ThemeToggle />
-          <NotificationsMenu />
+          <NotificationCenter />
           <div className="mx-1 h-5 border-l max-sm:hidden" />
           <DropdownMenu>
             <DropdownMenuTrigger
@@ -125,26 +126,5 @@ export function AppHeader({
         </div>
       </header>
     </div>
-  );
-}
-
-/** Bell icon in the navbar; backend wiring lands later, so the panel only ever shows an empty state for now. */
-function NotificationsMenu() {
-  const t = useTranslations("workspace");
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        aria-label={t("notifications")}
-        render={
-          <Button variant="ghost" size="icon">
-            <Bell size={18} aria-hidden="true" />
-          </Button>
-        }
-      />
-      <DropdownMenuContent align="end" className="min-w-56">
-        <p className="px-2 py-2 text-sm text-muted-foreground">{t("noNotifications")}</p>
-      </DropdownMenuContent>
-    </DropdownMenu>
   );
 }

@@ -11,12 +11,26 @@ import org.springframework.web.bind.annotation.*;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.http.ResponseEntity;
 
 @RestController
 @RequestMapping("/api/v1/notifications")
 public class NotificationController {
     private final NotificationService service;
     public NotificationController(NotificationService service) { this.service = service; }
+    @ModelAttribute
+    public void privateResponse(jakarta.servlet.http.HttpServletResponse response) {
+        response.setHeader("Cache-Control", "private, no-store");
+    }
+    @PostMapping("/team-deletions/claim")
+    @Operation(summary = "Claim one own unread team-deletion popup", description = "CSRF required; at-most-once presentation grant; history/read state retained")
+    public ResponseEntity<NotificationResponse> claim(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
+                                                     @RequestBody(required = false) java.util.Map<String, Object> body) {
+        if (body != null && !body.isEmpty()) throw new IllegalArgumentException("Claim has no request body");
+        return service.claimTeamDeletion(actor(principal))
+                .map(n -> ResponseEntity.ok().header("Cache-Control", "private, no-store").body(NotificationResponse.from(n)))
+                .orElseGet(() -> ResponseEntity.noContent().header("Cache-Control", "private, no-store").build());
+    }
     @GetMapping
     @Operation(summary = "List own notifications", description = "Authenticated user; newest first")
     public PageResponse list(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
@@ -55,11 +69,11 @@ public class NotificationController {
     public record NotificationResponse(UUID id, NotificationType type, String title, String message,
                                        boolean read, Instant createdAt, Instant readAt, UUID actorUserId,
                                        UUID projectId, ResourceType resourceType, UUID resourceId,
-                                       TaskStatusChange statusChange) {
+                                       TaskStatusChange statusChange, TeamDeletion teamDeletion, Instant popupPresentedAt) {
         static NotificationResponse from(Notification n) {
             return new NotificationResponse(n.getId(), n.getType(), n.getTitle(), n.getMessage(),
                     n.isRead(), n.getCreatedAt(), n.getReadAt(), n.getActorUserId(), n.getProjectId(),
-                    n.getResourceType(), n.getResourceId(), n.getStatusChange());
+                    n.getResourceType(), n.getResourceId(), n.getStatusChange(), n.getTeamDeletion(), n.getPopupPresentedAt());
         }
     }
 }

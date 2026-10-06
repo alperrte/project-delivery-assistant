@@ -12,11 +12,13 @@ import java.util.UUID;
 public record InvitationResponse(UUID id, UUID projectId, UUID invitedUserId, String email, UUID invitedBy,
                                  Set<ProjectRole> initialRoles, InvitationStatus status, Instant createdAt,
                                  Instant expiresAt, String rejectionMessage, String firstName, String lastName,
-                                 String message, String nickname, UUID teamId, String teamName) {
+                                 String message, String nickname, UUID teamId, String teamName,
+                                 String invitedByNickname, Long invitedByPhotoVersion, Long profilePhotoVersion) {
     public static InvitationResponse from(InvitationSummary summary) {
         return new InvitationResponse(summary.id(), summary.projectId(), summary.invitedUserId(), summary.email(),
                 summary.invitedBy(), summary.initialRoles(), summary.status(), summary.createdAt(),
                 summary.expiresAt(), summary.rejectionMessage(), summary.firstName(), summary.lastName(),
-                summary.message(), summary.nickname(), summary.teamId(), summary.teamName());
+                summary.message(), summary.nickname(), summary.teamId(), summary.teamName(),
+                summary.invitedByNickname(), summary.invitedByPhotoVersion(), summary.profilePhotoVersion());
     }
 }

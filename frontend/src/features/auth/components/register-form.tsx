@@ -16,6 +16,8 @@ import { authApi } from "../api";
 import { registerSchema, type RegisterValues } from "../schemas";
 import { sessionQueryKey } from "../hooks/use-session";
 import { clearPrivateInvitations } from "@/features/invitations/query-keys";
+import { clearPrivateNotifications } from "@/features/notifications/query-keys";
+import { clearPrivateTeams } from "@/features/squads/cache";
 import { authCtaClass } from "./auth-card";
 import { useShake } from "./use-shake";
 
@@ -59,6 +61,8 @@ export function RegisterForm() {
       await authApi.login({ email: values.email, password: values.password });
       const me = await authApi.me();
       clearPrivateInvitations(queryClient);
+      clearPrivateNotifications(queryClient);
+      clearPrivateTeams(queryClient);
       queryClient.setQueryData(sessionQueryKey, me);
       toast.success(t("welcome"));
       router.replace(me.mustChangePassword ? "/change-password" : "/dashboard");

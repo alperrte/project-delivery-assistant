@@ -14,8 +14,26 @@ import java.util.UUID;
 
 @Service
 public class NotificationService {
+    @jakarta.persistence.PersistenceContext private jakarta.persistence.EntityManager entityManager;
     private final NotificationRepository repository;
-    public NotificationService(NotificationRepository repository) { this.repository = repository; }
+    private final org.springframework.jdbc.core.JdbcTemplate db;
+    public NotificationService(NotificationRepository repository, org.springframework.jdbc.core.JdbcTemplate db) {
+        this.repository = repository; this.db = db;
+    }
+    @Transactional
+    public java.util.Optional<Notification> claimTeamDeletion(UUID user) {
+        if (user == null) throw new org.springframework.security.access.AccessDeniedException("Authentication required");
+        var ids = db.query("WITH next AS (SELECT id FROM notifications WHERE recipient_user_id=? "
+                        + "AND type='SQUAD_DELETED' AND is_read=false AND popup_presented_at IS NULL "
+                        + "ORDER BY created_at,id LIMIT 1 FOR UPDATE SKIP LOCKED) "
+                        + "UPDATE notifications n SET popup_presented_at=now() FROM next "
+                        + "WHERE n.id=next.id AND n.recipient_user_id=? RETURNING n.id",
+                (rs, row) -> rs.getObject(1, UUID.class), user, user);
+        if (ids.isEmpty()) return java.util.Optional.empty();
+        Notification notification = repository.findByIdAndRecipientUserId(ids.getFirst(), user).orElseThrow();
+        entityManager.refresh(notification);
+        return java.util.Optional.of(notification);
+    }
     @Transactional(readOnly = true)
     public Page<Notification> list(UUID user, boolean unreadOnly, NotificationType type, int page, int size) {
         return repository.list(user, unreadOnly, type, PageRequest.of(page, size,

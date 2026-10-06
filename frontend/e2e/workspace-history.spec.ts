@@ -30,8 +30,10 @@ test("history header stays viewport-centered, fits mobile and remains outside fu
    expect(box.x).toBeGreaterThanOrEqual(0);expect(box.x+box.width).toBeLessThanOrEqual(width);expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBe(width);
    if(width<640){expect(box.height).toBe(112);await expect.poll(async()=>(await page.getByTestId("workspace-back").boundingBox())!.width).toBe(44);}
    expect(box.x+box.width/2).toBe(width/2);
-   const controls=[];for(const button of await header.getByRole("button").all()){if(await button.isVisible()){const control=(await button.boundingBox())!;expect(control.x).toBeGreaterThanOrEqual(box.x);expect(control.x+control.width).toBeLessThanOrEqual(box.x+box.width);controls.push(control);}}
-   for(let i=0;i<controls.length;i++)for(let j=i+1;j<controls.length;j++){const a=controls[i],b=controls[j];expect(Math.max(0,Math.min(a.x+a.width,b.x+b.width)-Math.max(a.x,b.x))*Math.max(0,Math.min(a.y+a.height,b.y+b.height)-Math.max(a.y,b.y))).toBeLessThanOrEqual(0.5);}
+   // One synchronous DOM snapshot: sequential protocol reads can mix positions from responsive width transitions.
+   const controls=await header.getByRole("button").evaluateAll(buttons=>buttons.flatMap(button=>{const rect=button.getBoundingClientRect(),style=getComputedStyle(button);return rect.width>0&&rect.height>0&&style.visibility!=="hidden"?[{x:rect.x,y:rect.y,width:rect.width,height:rect.height,label:button.getAttribute("aria-label")??(button as HTMLElement).innerText}]:[];}));
+   for(const control of controls){expect(control.x).toBeGreaterThanOrEqual(box.x);expect(control.x+control.width).toBeLessThanOrEqual(box.x+box.width);}
+   for(let i=0;i<controls.length;i++)for(let j=i+1;j<controls.length;j++){const a=controls[i],b=controls[j];expect(Math.max(0,Math.min(a.x+a.width,b.x+b.width)-Math.max(a.x,b.x))*Math.max(0,Math.min(a.y+a.height,b.y+b.height)-Math.max(a.y,b.y)),JSON.stringify({width,dark,a,b})).toBeLessThanOrEqual(0.5);}
    if(width>=1024){await page.getByRole("button",{name:"Kenar çubuğunu daralt",exact:true}).click();expect((await header.boundingBox())!.x).toBe(box.x);await page.getByRole("button",{name:"Kenar çubuğunu genişlet",exact:true}).click();expect((await header.boundingBox())!.x).toBe(box.x);}
    await page.screenshot({path:path.join(screenshots,`header-${width}-${dark?"dark":"light"}.png`)});
   }

@@ -3,7 +3,7 @@
 import Link from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { ArrowRight, CalendarBlank, PencilSimple, TreeStructure } from "@phosphor-icons/react";
-import { AvatarStack } from "@/components/common/avatar-stack";
+import { TeamMemberPreview } from "./team-member-preview";
 import { EntityCard, EntityCardFooter, EntityCardLink, EntityCardSection } from "@/components/common/entity-card";
 import { buttonVariants } from "@/components/ui/button";
 import { ProjectMark } from "@/features/projects/components/project-mark";
@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { projectLogoSrc } from "../hooks";
 import { relativeTime } from "../relative-time";
 import type { Team } from "../types";
-import { ArchiveTeamButton } from "./archive-team-button";
+import { DeleteTeamButton } from "./delete-team-button";
 
 type TeamCardProject = Pick<Project, "id" | "slug" | "name" | "logoVersion">;
 
@@ -66,8 +66,8 @@ export function TeamCard({
         {team.memberCount === 0 ? (
           <p className="flex min-h-8 items-center text-sm text-muted-foreground">{t("noMembers")}</p>
         ) : (
-          <div className="flex items-center gap-3">
-            <AvatarStack people={team.memberPreview} total={team.memberCount} />
+          <div className="flex flex-wrap items-center gap-3">
+            <TeamMemberPreview people={team.memberPreview} total={team.memberCount} />
             <span className="text-sm text-muted-foreground">{t("memberCount", { count: team.memberCount })}</span>
           </div>
         )}
@@ -108,7 +108,7 @@ export function TeamCard({
                 >
                   <PencilSimple size={16} aria-hidden="true" />
                 </Link>
-                <ArchiveTeamButton projectId={project.id} teamId={team.id} teamName={name} />
+                <DeleteTeamButton projectId={project.id} teamId={team.id} teamName={name} />
               </>
             )}
           </>

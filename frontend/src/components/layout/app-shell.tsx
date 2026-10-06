@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
 import { Buildings, SquaresFour, House, GearSix, CalendarBlank, SidebarSimple, EnvelopeSimple } from "@phosphor-icons/react";
 import { AppHeader } from "./app-header";
+import { NotificationOwner } from "@/features/notifications/notification-owner";
 import { ProjectSidebarNav } from "./project-sidebar-nav";
 import { TasksNavLink } from "./tasks-nav-link";
 import { COLLAPSE_KEY, collapseEvent, useSidebarCollapsed } from "./sidebar-collapse";
@@ -23,6 +24,8 @@ import { PageFailure } from "@/features/errors/page-failure";
 import { ErrorFrame } from "@/features/errors/error-frame";
 import { sessionQueryKey, useSession } from "@/features/auth/hooks/use-session";
 import { clearPrivateInvitations } from "@/features/invitations/query-keys";
+import { clearPrivateNotifications } from "@/features/notifications/query-keys";
+import { clearPrivateTeams } from "@/features/squads/cache";
 import { useApplySavedPreferences, useRestoreSessionBaseline } from "@/features/settings/session-preferences";
 
 const NAV_LINKS = [
@@ -50,6 +53,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!sessionExpired) return;
     clearPrivateInvitations(queryClient);
+    clearPrivateNotifications(queryClient);
+    clearPrivateTeams(queryClient);
     restoreBaseline();
     router.replace("/login");
     // `restoreBaseline` is recreated every render; the session ending is the only trigger that matters.
@@ -60,6 +65,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   useEffect(() => {
     const sessionEnded = () => {
       clearPrivateInvitations(queryClient);
+      clearPrivateNotifications(queryClient);
+      clearPrivateTeams(queryClient);
       restoreBaseline();
       queryClient.removeQueries({ queryKey: sessionQueryKey });
       router.replace("/login");
@@ -71,10 +78,14 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   async function handleLogout() {
     clearPrivateInvitations(queryClient);
+    clearPrivateNotifications(queryClient);
+    clearPrivateTeams(queryClient);
     try {
       await authApi.logout();
     } finally {
       clearPrivateInvitations(queryClient);
+      clearPrivateNotifications(queryClient);
+      clearPrivateTeams(queryClient);
       restoreBaseline();
       queryClient.removeQueries({ queryKey: sessionQueryKey });
       router.replace("/login");
@@ -103,7 +114,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     );
   }
 
-  return <ChatProvider><AppShellView pathname={pathname} user={user} collapsed={collapsed} onLogout={handleLogout} onToggleCollapsed={toggleCollapsed}>{children}</AppShellView><ChatRoot /></ChatProvider>;
+  return <NotificationOwner key={user?.id ?? "none"} userId={user?.id}><ChatProvider><AppShellView pathname={pathname} user={user} collapsed={collapsed} onLogout={handleLogout} onToggleCollapsed={toggleCollapsed}>{children}</AppShellView><ChatRoot /></ChatProvider></NotificationOwner>;
 }
 
 /** Shared workspace presentation; authentication and API state stay in AppShell. */

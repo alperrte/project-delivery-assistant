@@ -90,6 +90,7 @@ export function TeamsPage({ project, isManager }: { project: Project; isManager:
   const teams = useQuery({
     queryKey: [...teamsKey(project.id), "all"],
     queryFn: () => squadsApi.listAll(project.id),
+    refetchInterval: 30_000, refetchIntervalInBackground: false, refetchOnWindowFocus: "always",
   });
   const members = useQuery({
     queryKey: ["projects", project.id, "members", "count"],
@@ -159,7 +160,7 @@ export function TeamsPage({ project, isManager }: { project: Project; isManager:
       {teams.isLoading && (
         <EntityGrid>
           {[0, 1, 2].map((key) => (
-            <li key={key} className="flex">
+            <li key={key} className="flex min-w-0">
               <TeamCardSkeleton />
             </li>
           ))}
@@ -179,7 +180,7 @@ export function TeamsPage({ project, isManager }: { project: Project; isManager:
         <>
           <EntityGrid>
             {visible.map((team) => (
-              <li key={team.id} className="flex">
+              <li key={team.id} className="flex min-w-0">
                 <TeamCard
                   team={team}
                   project={project}

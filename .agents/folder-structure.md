@@ -136,3 +136,9 @@ Task UI update (2026-10-06): tasks/task-model.ts also exposes allowsPool for con
 - backend/src/test/java/com/pda/task/TaskProgressNotificationApiIntegrationTest.java: short/simple and advanced flows, manager recipients, access/rollback/concurrency and legacy events.
 - backend/src/test/java/com/pda/notification/TaskStatusNotificationMigrationTest.java and TaskStatusNotificationFactoryTest.java: V55 upgrade/data retention, constraints and maximum-length snapshots.
 - Existing ProjectAccess, TaskService/TaskEvents and Notification listener/writer/factory/controller own the behavior; no frontend file is changed in this backend delivery.
+
+## Squad modernization additions - 2026-10-06
+
+- Backend public contracts: `project/ProjectTeamContext`, `squad/SquadLifecycleEvents`; notification `domain/TeamDeletion`, `application/TeamDeletionNotificationStore`, `TeamDeletionPublicationRecovery`; Flyway V57.
+- Frontend `features/notifications/{api,types,query-keys,notification-owner,components/notification-center}`; `squads/{cache,initials,components/delete-team-button,components/team-member-preview}`; shared `projects/role-presentation`.
+- Real QA E2E: team-deletion, team-deletion-notifications, notification-cache, team-member-preview, member-initials, team-invitations-modernization and prepared DB helpers. Private logs/screenshot artifacts stay in ignored `.local/squad-modernization/`.

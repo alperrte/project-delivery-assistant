@@ -724,7 +724,8 @@
       "sentAt": "Einladungsdatum",
       "status": "Status",
       "actions": "Aktionen",
-      "team": "Team"
+      "team": "Team",
+      "invitedBy": "Eingeladen von"
     },
     "resend": "Erneut senden",
     "resent": "Einladung erneut gesendet.",
@@ -780,7 +781,8 @@
         "description": "Abgelaufene Einladungen erscheinen hier."
       }
     },
-    "externalUnavailable": "Einladungsdetails sind derzeit nicht verfügbar. Bitte versuchen Sie es erneut."
+    "externalUnavailable": "Einladungsdetails sind derzeit nicht verfügbar. Bitte versuchen Sie es erneut.",
+    "unknownInviter": "Einladende Person nicht verfügbar"
   },
   "squads": {
     "card": {
@@ -798,7 +800,8 @@
       "open": "Team öffnen",
       "openNamed": "Team {name} öffnen",
       "edit": "Bearbeiten",
-      "editNamed": "Team {name} bearbeiten"
+      "editNamed": "Team {name} bearbeiten",
+      "additionalMembers": "{count} weitere Mitglieder"
     },
     "membersPage": {
       "back": "Zurück zu Teams",
@@ -847,14 +850,6 @@
       "label": "Ansicht",
       "list": "Liste",
       "chart": "Schema"
-    },
-    "archive": {
-      "label": "Team {name} archivieren",
-      "button": "Archivieren",
-      "title": "{name} archivieren?",
-      "description": "Ein archiviertes Team verschwindet aus der Liste und seine offenen Einladungen werden storniert. Mitglieder bleiben im Projekt.",
-      "done": "Team archiviert.",
-      "orphan": "Dieses Team kann nicht archiviert werden, weil diese Personen kein anderes Team haben: {names}. Fügen Sie sie zuerst einem anderen Team hinzu."
     },
     "chart": {
       "label": "Organigramm der Teams",
@@ -1001,6 +996,17 @@
         "removeFromProjectDescription": "{name} wird aus dem Projekt und diesen Teams entfernt: {teams}. Zum erneuten Beitritt ist eine neue Einladung nötig.",
         "removedFromProject": "Person aus dem Projekt entfernt."
       }
+    },
+    "delete": {
+      "label": "Team {name} löschen",
+      "button": "Team löschen",
+      "title": "Team {name} löschen",
+      "description": "Sie löschen das Team \"{name}\". Das Team ist danach im Projekt nicht mehr verfügbar; die anderen Teammitglieder werden benachrichtigt. Für dieses Team reservierte offene Poolangebote stehen Projektmitgliedern gemäß den bestehenden Berechtigungen zur Verfügung. Aufgaben und Verlaufsdaten bleiben erhalten.",
+      "done": "Team gelöscht.",
+      "orphan": "Fügen Sie diese Mitglieder zuerst einem anderen Team hinzu: {names}",
+      "children": "Unterteams zuerst verschieben oder löschen.",
+      "noLongerAvailable": "Das Team ist nicht mehr verfügbar. Die Liste wurde aktualisiert.",
+      "cancel": "Abbrechen"
     }
   },
   "oauth": {
@@ -2561,5 +2567,77 @@
     "today": "Heute",
     "clear": "Löschen",
     "close": "Kalender schließen"
+  },
+  "notifications": {
+    "title": "Benachrichtigungen",
+    "empty": "Sie haben noch keine Benachrichtigungen.",
+    "loading": "Benachrichtigungen werden geladen",
+    "retry": "Erneut versuchen",
+    "read": "Gelesen",
+    "unread": "Ungelesen",
+    "markRead": "Als gelesen markieren",
+    "readAll": "Alle als gelesen markieren",
+    "listLabel": "Benachrichtigungsverlauf",
+    "previous": "Vorherige Seite",
+    "next": "Nächste Seite",
+    "page": "Seite {page} von {total}",
+    "unreadCount": "{count} ungelesene Benachrichtigungen",
+    "openCenter": "Benachrichtigungen öffnen",
+    "teamDeleted": "Team gelöscht",
+    "teamDeletedBody": "Ihr Team \"{team}\" im Projekt \"{project}\" wurde von {actor} gelöscht. Die Meldung bleibt im Benachrichtigungsverlauf erhalten.",
+    "projectManager": "der Projektleitung",
+    "someone": "Jemand",
+    "taskStarted": "Aufgabe begonnen",
+    "taskCompleted": "Aufgabe abgeschlossen",
+    "taskStatusBody": "{actor} hat den Status von {task} von {previous} zu {current} geändert.",
+    "unavailable": "Der Benachrichtigungsdienst ist derzeit nicht verfügbar. Bitte versuchen Sie es erneut.",
+    "countUnavailable": "Die Anzahl ungelesener Benachrichtigungen ist derzeit nicht verfügbar.",
+    "types": {
+      "TASK_ASSIGNED": "Aufgabe zugewiesen",
+      "TASK_UNASSIGNED": "Aufgabenzuweisung entfernt",
+      "TASK_STATUS_CHANGED": "Aufgabenstatus geändert",
+      "TASK_PRIORITY_CHANGED": "Aufgabenpriorität geändert",
+      "TASK_DUE_DATE_CHANGED": "Aufgabenfrist geändert",
+      "TASK_BLOCKED": "Aufgabe blockiert",
+      "PROJECT_MEMBER_ADDED": "Zum Projekt hinzugefügt",
+      "PROJECT_MEMBER_REMOVED": "Aus dem Projekt entfernt",
+      "PROJECT_ROLE_CHANGED": "Projektrollen geändert",
+      "SQUAD_MEMBER_ADDED": "Zum Team hinzugefügt",
+      "SQUAD_MEMBER_REMOVED": "Aus dem Team entfernt",
+      "SQUAD_DELETED": "Team gelöscht",
+      "PROJECT_INVITATION_CREATED": "Projekteinladung",
+      "PROJECT_INVITATION_ACCEPTED": "Einladung angenommen",
+      "PROJECT_INVITATION_REJECTED": "Einladung abgelehnt",
+      "TASK_DEADLINE_SOON": "Aufgabenfrist nähert sich",
+      "TASK_OVERDUE": "Aufgabe überfällig",
+      "TASK_CLAIMED": "Aufgabe übernommen",
+      "TASK_RELEASED": "Aufgabe zurück im Pool",
+      "TASK_MENTIONED": "Sie wurden erwähnt",
+      "TASK_COMMENTED": "Neuer Aufgabenkommentar"
+    },
+    "close": "Benachrichtigung schließen",
+    "bodies": {
+      "TASK_ASSIGNED": "Ihnen wurde eine Aufgabe zugewiesen.",
+      "TASK_UNASSIGNED": "Ihre Zuweisung zu einer Aufgabe wurde entfernt.",
+      "TASK_STATUS_CHANGED": "Der Status einer von Ihnen verfolgten Aufgabe wurde geändert.",
+      "TASK_PRIORITY_CHANGED": "Die Priorität einer von Ihnen verfolgten Aufgabe wurde geändert.",
+      "TASK_DUE_DATE_CHANGED": "Die Frist einer von Ihnen verfolgten Aufgabe wurde geändert.",
+      "TASK_BLOCKED": "Eine von Ihnen verfolgte Aufgabe wurde blockiert.",
+      "PROJECT_MEMBER_ADDED": "Sie wurden zu einem Projekt hinzugefügt.",
+      "PROJECT_MEMBER_REMOVED": "Sie wurden aus einem Projekt entfernt.",
+      "PROJECT_ROLE_CHANGED": "Ihre Projektrollen wurden geändert.",
+      "SQUAD_MEMBER_ADDED": "Sie wurden zu einem Team hinzugefügt.",
+      "SQUAD_MEMBER_REMOVED": "Sie wurden aus einem Team entfernt.",
+      "SQUAD_DELETED": "Ein Team, dem Sie angehörten, wurde gelöscht.",
+      "PROJECT_INVITATION_CREATED": "Sie wurden zu einem Projekt eingeladen.",
+      "PROJECT_INVITATION_ACCEPTED": "Eine von Ihnen gesendete Einladung wurde angenommen.",
+      "PROJECT_INVITATION_REJECTED": "Eine von Ihnen gesendete Einladung wurde abgelehnt.",
+      "TASK_DEADLINE_SOON": "Eine Ihnen zugewiesene oder von Ihnen verfolgte Aufgabe ist innerhalb von 24 Stunden fällig.",
+      "TASK_OVERDUE": "Die Frist einer Ihnen zugewiesenen oder von Ihnen verfolgten Aufgabe ist abgelaufen.",
+      "TASK_CLAIMED": "Eine von Ihnen verfolgte Aufgabe wurde aus dem Pool übernommen.",
+      "TASK_RELEASED": "Eine von Ihnen verfolgte Aufgabe wurde in den Pool zurückgegeben.",
+      "TASK_MENTIONED": "Sie wurden in einem Aufgabenkommentar erwähnt.",
+      "TASK_COMMENTED": "Eine von Ihnen verfolgte Aufgabe erhielt einen Kommentar."
+    }
   }
 }

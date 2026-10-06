@@ -267,3 +267,9 @@ Month/year controls also use the shared themed Select menus with selected checkm
 ## Task priority and planning (2026-10-06)
 
 Shared PriorityIndicator uses existing semantic tokens: LOW label-blue, MEDIUM label-orange, HIGH destructive, CRITICAL destructive plus Lucide CircleAlert. Keep accessible localized priority text and the critical shape distinction. No new palette. People assignment excludes the signed-in user from candidate lists; Assign me adds that user explicitly. Pool assignment and calendar-day quick deadlines are common to both task models; SIMPLE sidebars show Pool while advanced-only entries stay hidden.
+
+## Squad modernization UI - 2026-10-06
+
+Existing centered navbar/bell/Popover, ConfirmDialog, Sonner and semantic tokens are reused. Team action is Delete with explicit retained-history/pool effects and inline children/orphan errors. Team cards use scoped newest5 avatar + real-name initials beneath + bounded +N; generic AvatarStack consumers unchanged. Scoped grid items use min-w-0; member row wraps.
+
+Manager invitations preserve semantic desktop table/mobile cards/status/server pages and principal keys. Safe real inviter summaries and exhaustive eight-role Phosphor presenter are shared with the selector. New role badges use content height to prevent long German labels clipping; decorative icons retain accessible text labels,44px form/action targets. TR/EN/DE, light/dark,320/390/768/1024/1440 screenshots and overflow/clipping assertions verified. Error view hides stale invitation rows; dataset shrink clamps to a real server page.

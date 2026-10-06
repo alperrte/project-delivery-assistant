@@ -30,6 +30,18 @@ import java.util.stream.Collectors;
 
 @Service
 public class ProjectAccessService implements ProjectAccess {
+    @jakarta.persistence.PersistenceContext private jakarta.persistence.EntityManager entityManager;
+    @Override
+    @Transactional
+    public com.pda.project.ProjectTeamContext lockTeamContext(UUID projectId) {
+        return projectId == null ? null : projects.lockActive(projectId)
+                .map(project -> {
+                    // Permission prechecks may have attached this row before waiting for another mutation.
+                    entityManager.refresh(project, jakarta.persistence.LockModeType.PESSIMISTIC_WRITE);
+                    return new com.pda.project.ProjectTeamContext(project.getId(), project.getName());
+                })
+                .orElse(null);
+    }
 
     private final ProjectRepository projects;
     private final ProjectMembershipRepository memberships;
@@ -85,9 +97,7 @@ public class ProjectAccessService implements ProjectAccess {
         if (projectId == null || userId == null || projects.findByIdAndArchivedAtIsNull(projectId).isEmpty()) {
             return Set.of();
         }
-        return memberships.findByProjectIdAndUserIdAndStatus(projectId, userId, MembershipStatus.ACTIVE)
-                .map(member -> RolePolicy.permissions(member.getRoles()))
-                .orElseGet(Set::of);
+        return RolePolicy.permissions(memberships.activeRoles(projectId, userId));
     }
 
     @Override
