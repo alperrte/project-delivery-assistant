@@ -74,10 +74,17 @@ export function useMyTaskFilters() {
     (patch: Partial<MyTaskFilters>) => {
       // Any change but paging itself starts again from the first page.
       const next = { ...filters, page: 0, ...patch };
-      const text = serialize(next);
+      const search = new URLSearchParams(serialize(next));
+      // A shrinking result page must not dismiss the task that is still open.
+      const current = new URLSearchParams(key);
+      for (const param of ["task", "taskProject", "comments"]) {
+        const value = current.get(param);
+        if (value) search.set(param, value);
+      }
+      const text = search.toString();
       router.replace(text ? `${pathname}?${text}` : pathname, { scroll: false });
     },
-    [filters, pathname, router],
+    [filters, key, pathname, router],
   );
 
   const reset = useCallback(() => update({ project: "", status: [], overdue: false }), [update]);

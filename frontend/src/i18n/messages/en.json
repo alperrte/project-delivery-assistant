@@ -1271,7 +1271,7 @@
     "clearSearch": "Clear search",
     "noResults": "No results found.",
     "loadError": "Projects could not be loaded. Try again.",
-    "tasks": "Tasks",
+    "tasks": "My tasks",
     "notifications": "Notifications",
     "noNotifications": "No notifications yet.",
     "calendar": "Calendar",
@@ -1387,7 +1387,15 @@
       "checklistProgress": "Checklist: {done} of {total}",
       "comments": "{count, plural, one {# comment} other {# comments}}",
       "attachments": "{count, plural, one {# attachment} other {# attachments}}",
-      "backToProjects": "Back to projects"
+      "backToProjects": "Back to projects",
+      "confirmStatus": {
+        "title": "Change the status of {key}?",
+        "description": "This task will move to “{status}”.",
+        "stale": "The task status changed. Close this dialog and try again with its current status.",
+        "notifyManagers": "Project managers will be notified of this change.",
+        "confirm": "Update status",
+        "cancel": "Cancel"
+      }
     },
     "filters": {
       "label": "Task filters",
@@ -1912,6 +1920,16 @@
           "title": "The pool is empty",
           "description": "There is nothing you can pick up right now. Tasks appear here when project managers put them in the pool."
         }
+      },
+      "cards": {
+        "open": "Open task {key}",
+        "comment": "Comment on task {key}",
+        "start": "Start",
+        "complete": "Complete",
+        "noDescription": "No description yet.",
+        "detailTitle": "Task details",
+        "detailDescription": "Review the task, update its status and add comments.",
+        "close": "Close task details"
       }
     }
   },
@@ -2614,6 +2632,12 @@
       "TASK_RELEASED": "A task you follow was returned to the pool.",
       "TASK_MENTIONED": "You were mentioned in a task comment.",
       "TASK_COMMENTED": "A comment was added to a task you follow."
-    }
+    },
+    "label": "Notifications, {count} unread",
+    "update": "New update",
+    "started": "{actor} started {key}: {title}.",
+    "completed": "{actor} completed {key}: {title}.",
+    "statusChanged": "{actor} moved {key}: {title} to “{status}”.",
+    "openTask": "Open task"
   }
 }

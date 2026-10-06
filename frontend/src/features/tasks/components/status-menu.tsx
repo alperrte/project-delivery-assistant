@@ -1,15 +1,17 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { useState } from "react";
 import { CaretDown } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { tasksApi } from "../api";
 import { useTaskMutation } from "../hooks";
-import type { Task, TaskStatus } from "../types";
+import type { TaskStatus } from "../types";
 import { allowedTransitions, statusBadgeClass } from "../workflow";
 import { StatusBadge, StatusDot } from "./task-badges";
+import { StatusConfirmation, type StatusTask } from "./status-confirmation";
 
 /** One place that changes a task's status, so every screen reports success and failure the same way. */
 export function useChangeStatus(projectId: string) {
@@ -24,14 +26,15 @@ export function useChangeStatus(projectId: string) {
  * The status chip. With `canChange` it opens the allowed transitions only (the same table the server enforces);
  * without it, it is a plain badge.
  */
-export function StatusMenu({ task, canChange, className }: { task: Pick<Task, "id" | "projectId" | "status" | "taskKey">; canChange: boolean; className?: string }) {
+export function StatusMenu({ task, canChange, className }: { task: StatusTask; canChange: boolean; className?: string }) {
   const t = useTranslations("tasks.common");
   const change = useChangeStatus(task.projectId);
+  const [target, setTarget] = useState<TaskStatus | null>(null);
 
   if (!canChange) return <StatusBadge status={task.status} className={className} />;
 
   return (
-    <DropdownMenu>
+    <><DropdownMenu>
       <DropdownMenuTrigger
         aria-label={t("changeStatus", { status: t(`status.${task.status}`) })}
         disabled={change.isPending}
@@ -48,8 +51,8 @@ export function StatusMenu({ task, canChange, className }: { task: Pick<Task, "i
       <DropdownMenuContent align="start" className="w-auto min-w-44">
         <DropdownMenuGroup>
           <DropdownMenuLabel>{t("moveTo")}</DropdownMenuLabel>
-          {allowedTransitions(task.status).map((target) => (
-            <DropdownMenuItem key={target} onClick={() => change.mutate({ taskId: task.id, status: target })}>
+          {allowedTransitions(task.status, task.creationMode).map((target) => (
+            <DropdownMenuItem key={target} onClick={() => setTarget(target)}>
               <StatusDot status={target} />
               {t(`status.${target}`)}
             </DropdownMenuItem>
@@ -57,5 +60,7 @@ export function StatusMenu({ task, canChange, className }: { task: Pick<Task, "i
         </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
+    <StatusConfirmation task={task} target={target} onClose={() => setTarget(null)} onConfirm={(status) => change.mutateAsync({ taskId: task.id, status })} />
+    </>
   );
 }

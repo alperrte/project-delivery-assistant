@@ -108,6 +108,7 @@ test.describe.serial("Task management", () => {
     await expect(managerPage.getByRole("menuitem", { name: "Yapılacak" })).toBeVisible();
     await expect(managerPage.getByRole("menuitem", { name: "Tamamlandı" })).toHaveCount(0);
     await managerPage.getByRole("menuitem", { name: "Yapılacak" }).click();
+    await managerPage.getByRole("dialog").getByRole("button", { name: "Durumu güncelle", exact: true }).click();
     await expect(managerPage.getByText(/durumuna alındı/)).toBeVisible();
 
     const skipped = await api(managerPage, "PATCH", `/projects/${projectId}/tasks/${formTask.id}/status`, { status: "DONE" });
@@ -213,8 +214,8 @@ test.describe.serial("Task management", () => {
     // Scope the worklist to this run's project; reused accounts have many older tasks on other pages.
     await memberPage.goto(`/tasks?project=${projectId}`);
     // Both the task assigned above and the one claimed from the pool are theirs now.
-    await expect(memberPage.getByRole("link", { name: formTitle })).toBeVisible();
-    await expect(memberPage.getByRole("link", { name: claimedTitle })).toBeVisible();
+    await expect(memberPage.locator(`[data-task-card="${formTask.id}"]`).getByText(formTitle, { exact: true })).toBeVisible();
+    await expect(memberPage.locator("[data-task-card]").getByText(claimedTitle, { exact: true })).toBeVisible();
 
     const mine = (await api(memberPage, "GET", "/tasks/mine?scope=OPEN")).json as { content: TaskJson[]; totalElements: number; counts: { open: number } };
     expect(mine.counts.open).toBe(mine.totalElements);
@@ -225,8 +226,8 @@ test.describe.serial("Task management", () => {
 
     // The status filter lives in the URL, so a filtered view can be shared and reloaded.
     await memberPage.goto(`/tasks?project=${projectId}&status=TODO`);
-    await expect(memberPage.getByRole("link", { name: formTitle })).toBeVisible();
-    await expect(memberPage.getByRole("link", { name: claimedTitle })).toHaveCount(0);
+    await expect(memberPage.locator(`[data-task-card="${formTask.id}"]`).getByText(formTitle, { exact: true })).toBeVisible();
+    await expect(memberPage.locator("[data-task-card]").getByText(claimedTitle, { exact: true })).toHaveCount(0);
   });
 
   test("a stranger cannot see the project's tasks", async ({ browser }) => {

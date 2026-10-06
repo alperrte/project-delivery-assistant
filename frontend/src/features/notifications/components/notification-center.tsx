@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import Link from "@/i18n/navigation";
 import { Popover } from "@base-ui/react/popover";
 import { Bell, Check, Checks, CaretLeft, CaretRight } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -14,15 +15,19 @@ import { notificationsApi } from "../api";
 import { notificationKeys } from "../query-keys";
 import { useNotificationOwner } from "../notification-owner";
 import type { Notification } from "../types";
+import { useTaskFormat } from "@/features/tasks/format";
 
-export function NotificationCenter() {
-  const owner = useNotificationOwner();
+export function NotificationCenter({ expectedUserId, disabled = false }: { expectedUserId?: string; disabled?: boolean } = {}) {
+  const context = useNotificationOwner();
+  const owner = disabled || (expectedUserId && context?.userId !== expectedUserId) ? null : context;
+  const navigatingTask = useRef(false);
   const userId = owner?.userId;
   const t = useTranslations("notifications");
   const tw = useTranslations("workspace");
   const te = useTranslations("errors");
   const ts = useTranslations("tasks.common.status");
   const locale = useLocale();
+  const format = useTaskFormat();
   const client = useQueryClient();
   const [demoOpen, setDemoOpen] = useState(false);
   const [page, setPage] = useState(0);
@@ -35,6 +40,7 @@ export function NotificationCenter() {
     queryKey: notificationKeys.list(userId, page), queryFn: ({ signal }) => notificationsApi.list(page, signal),
     enabled: !!userId && open,
     staleTime: 0,
+    refetchInterval: 15_000, refetchIntervalInBackground: false,
   });
   const refresh = () => client.invalidateQueries({ queryKey: notificationKeys.actor(userId) });
   const read = useMutation({
@@ -59,6 +65,11 @@ export function NotificationCenter() {
   function body(n: Notification) {
     if (n.teamDeletion) return t("teamDeletedBody", { project: n.teamDeletion.projectName, team: n.teamDeletion.teamName,
       actor: n.teamDeletion.actorNickname ?? t("projectManager") });
+    if (n.statusChange && (n.statusChange.newStatus === "IN_PROGRESS" || n.statusChange.newStatus === "DONE")) {
+      return t(n.statusChange.newStatus === "IN_PROGRESS" ? "started" : "completed", {
+        actor: n.statusChange.actorNickname ?? t("someone"), key: n.statusChange.taskKey, title: n.statusChange.taskTitle,
+      });
+    }
     if (n.statusChange) return t("taskStatusBody", { actor: n.statusChange.actorNickname ?? t("someone"),
       task: `${n.statusChange.taskKey}: ${n.statusChange.taskTitle}`,
       previous: ts.has(n.statusChange.previousStatus) ? ts(n.statusChange.previousStatus) : n.statusChange.previousStatus,
@@ -67,7 +78,7 @@ export function NotificationCenter() {
   }
 
   return (
-    <Popover.Root modal={false} open={open} onOpenChange={next => { if (owner) owner.setOpen(next); else setDemoOpen(next); if (next) setPage(0); }}>
+    <Popover.Root modal={false} open={open} onOpenChange={next => { if (owner) owner.setOpen(next); else setDemoOpen(next); if (next) { setPage(0); navigatingTask.current = false; } }}>
       <Popover.Trigger aria-label={tw("notifications")} render={<Button variant="ghost" size="icon" className="relative max-sm:size-11" />}>
         <Bell size={18} aria-hidden="true" />
         {count.isSuccess && count.data.count > 0 && <span className="absolute -right-0.5 -top-0.5 rounded-full bg-primary px-1.5 text-[10px] text-primary-foreground" aria-label={t("unreadCount", { count: count.data.count })}>{count.data.count > 99 ? "99+" : count.data.count}</span>}
@@ -75,6 +86,7 @@ export function NotificationCenter() {
       <Popover.Portal>
         <Popover.Positioner align="end" sideOffset={8} className="z-50 outline-none">
           <Popover.Popup className="w-[min(26rem,calc(100vw-2rem))] max-h-[min(70dvh,32rem)] overflow-y-auto rounded-xl border bg-popover p-4 text-popover-foreground shadow-lg outline-none"
+            finalFocus={() => !navigatingTask.current}
             aria-label={t("title")} onKeyDown={event => { if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); if (owner) owner.setOpen(false); else setDemoOpen(false); } }}>
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <h2 className="text-base font-semibold">{t("title")}</h2>
@@ -89,7 +101,16 @@ export function NotificationCenter() {
               {list.data.content.map(n => <li key={n.id} data-notification-id={n.id} className="rounded-lg border p-3">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0"><h3 className="break-words text-sm font-medium">{title(n)}</h3><p className="mt-1 whitespace-pre-wrap break-words text-sm text-muted-foreground">{body(n)}</p>
-                    <p className="mt-2 text-xs text-muted-foreground">{Number.isFinite(Date.parse(n.createdAt)) ? date.format(new Date(n.createdAt)) : ""} · {n.read ? t("read") : t("unread")}</p>
+                    <p className="mt-2 text-xs text-muted-foreground"><time dateTime={n.createdAt} title={Number.isFinite(Date.parse(n.createdAt)) ? date.format(new Date(n.createdAt)) : undefined}>{Number.isFinite(Date.parse(n.createdAt)) ? format.relative(n.createdAt) : ""}</time> · {n.read ? t("read") : t("unread")}</p>
+                    {n.resourceType === "TASK" && n.projectId && !!userId && <Link
+                      href={`/tasks?task=${encodeURIComponent(n.resourceId)}&taskProject=${encodeURIComponent(n.projectId)}`}
+                      className="mt-2 inline-flex min-h-11 items-center text-sm font-medium underline underline-offset-4"
+                      onClick={event => {
+                        if (!owner?.current()) { event.preventDefault(); return; }
+                        navigatingTask.current = true;
+                        if (!n.read) read.mutate(n.id);
+                        owner.setOpen(false);
+                      }}>{t("openTask")}</Link>}
                   </div>
                   {!n.read && <Button variant="ghost" size="icon" className="min-h-11 min-w-11 shrink-0" aria-label={t("markRead")} disabled={read.isPending} onClick={() => read.mutate(n.id)}><Check size={16} aria-hidden="true" /></Button>}
                 </div>

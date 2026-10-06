@@ -1,6 +1,7 @@
 import { apiRequest } from "@/lib/api/client";
 import type { Page } from "@/types/pagination";
 import type { Notification } from "./types";
+export type { Notification } from "./types";
 
 export const notificationsApi = {
   list: (page = 0, signal?: AbortSignal) => apiRequest<Page<Notification>>(`/notifications?page=${page}&size=20`, { signal }),

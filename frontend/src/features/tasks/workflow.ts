@@ -1,4 +1,4 @@
-import { TASK_PRIORITIES, TASK_STATUSES, type LabelColor, type TaskPriority, type TaskStatus } from "./types";
+import { TASK_PRIORITIES, TASK_STATUSES, type LabelColor, type TaskCreationMode, type TaskPriority, type TaskStatus } from "./types";
 
 /**
  * Client mirror of `Task.changeStatus` in the backend. The server stays the authority (it answers 409
@@ -13,12 +13,15 @@ const TRANSITIONS: Record<TaskStatus, readonly TaskStatus[]> = {
   DONE: ["IN_PROGRESS"],
 };
 
-export function allowedTransitions(status: TaskStatus): readonly TaskStatus[] {
+export function allowedTransitions(status: TaskStatus, mode: TaskCreationMode = "ADVANCED"): readonly TaskStatus[] {
+  if (mode === "SIMPLE" && status === "BACKLOG") return ["TODO", "IN_PROGRESS"];
+  if (mode === "SIMPLE" && status === "IN_PROGRESS") return ["TODO", "DONE"];
   return TRANSITIONS[status];
 }
 
-export function canTransition(from: TaskStatus, to: TaskStatus): boolean {
-  return TRANSITIONS[from].includes(to);
+export function canTransition(from: TaskStatus, to: TaskStatus, mode: TaskCreationMode = "ADVANCED"): boolean {
+  // Retained simple tasks already in review/testing may finish the legacy workflow.
+  return TRANSITIONS[from].includes(to) || allowedTransitions(from, mode).includes(to);
 }
 
 /** Board and filter order. */

@@ -142,3 +142,13 @@ Task UI update (2026-10-06): tasks/task-model.ts also exposes allowsPool for con
 - Backend public contracts: `project/ProjectTeamContext`, `squad/SquadLifecycleEvents`; notification `domain/TeamDeletion`, `application/TeamDeletionNotificationStore`, `TeamDeletionPublicationRecovery`; Flyway V57.
 - Frontend `features/notifications/{api,types,query-keys,notification-owner,components/notification-center}`; `squads/{cache,initials,components/delete-team-button,components/team-member-preview}`; shared `projects/role-presentation`.
 - Real QA E2E: team-deletion, team-deletion-notifications, notification-cache, team-member-preview, member-initials, team-invitations-modernization and prepared DB helpers. Private logs/screenshot artifacts stay in ignored `.local/squad-modernization/`.
+
+## My tasks cards frontend (2026-10-06)
+
+- features/tasks/components/my-task-card.tsx: square personal card and shared TaskProgressAction.
+- features/tasks/components/my-task-dialog.tsx: URL-controlled task detail inside My tasks; task-detail-page exports the existing shared TaskDetailBody.
+- features/tasks/components/status-confirmation.tsx: common pending/error-safe status confirmation; status-menu and board-page consume it.
+- features/notifications/{api.ts,notifications-menu.tsx}: own notification API and the real navbar menu.
+- e2e/my-task-cards.spec.ts: real task/comment/status/manager notification/board/pagination and responsive localization scenarios. Existing 09-tasks assertions follow the new personal cards.
+
+2026-10-06 merge: `features/notifications/notifications-menu.tsx` delegates to `components/notification-center.tsx`; api.ts re-exports the shared types.ts Notification contract. There is one session-scoped polling/cache/popup family.

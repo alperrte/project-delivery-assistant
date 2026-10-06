@@ -1295,7 +1295,7 @@
     "clearSearch": "Aramayı temizle",
     "noResults": "Sonuç bulunamadı.",
     "loadError": "Projeler yüklenemedi. Tekrar deneyin.",
-    "tasks": "Görevler",
+    "tasks": "Görevlerim",
     "notifications": "Bildirimler",
     "noNotifications": "Henüz bildirim yok.",
     "calendar": "Takvim",
@@ -1411,7 +1411,15 @@
       "checklistProgress": "Kontrol listesi: {done}/{total}",
       "comments": "{count} yorum",
       "attachments": "{count} ek",
-      "backToProjects": "Projelere dön"
+      "backToProjects": "Projelere dön",
+      "confirmStatus": {
+        "title": "{key} görevinin durumu değiştirilsin mi?",
+        "description": "Bu görev “{status}” durumuna alınacak.",
+        "stale": "Görevin durumu değişti. Pencereyi kapatıp güncel durumdan tekrar deneyin.",
+        "notifyManagers": "Bu değişiklik proje yöneticilerine bildirilecek.",
+        "confirm": "Durumu güncelle",
+        "cancel": "Vazgeç"
+      }
     },
     "filters": {
       "label": "Görev filtreleri",
@@ -1917,7 +1925,7 @@
         "today": "Bugün",
         "week": "Bu hafta",
         "later": "Sonra",
-        "none": "Deadline yok"
+        "none": "Son tarih yok"
       },
       "empty": {
         "open": {
@@ -1936,6 +1944,16 @@
           "title": "Havuzda görev yok",
           "description": "Üstlenebileceğiniz bir görev şu an yok. Proje yöneticileri görevleri havuza koyduğunda burada görünür."
         }
+      },
+      "cards": {
+        "open": "{key} görevini aç",
+        "comment": "{key} görevine yorum yap",
+        "start": "Başla",
+        "complete": "Tamamla",
+        "noDescription": "Açıklama eklenmemiş.",
+        "detailTitle": "Görev detayı",
+        "detailDescription": "Görevi inceleyin, durumunu güncelleyin ve yorum yapın.",
+        "close": "Görev detayını kapat"
       }
     }
   },
@@ -2638,6 +2656,12 @@
       "TASK_RELEASED": "İzlediğiniz bir görev havuza geri bırakıldı.",
       "TASK_MENTIONED": "Bir görev yorumunda sizden bahsedildi.",
       "TASK_COMMENTED": "İzlediğiniz bir göreve yorum eklendi."
-    }
+    },
+    "label": "Bildirimler, {count} okunmamış",
+    "update": "Yeni güncelleme",
+    "started": "{actor}, {key}: {title} görevine başladı.",
+    "completed": "{actor}, {key}: {title} görevini tamamladı.",
+    "statusChanged": "{actor}, {key}: {title} görevini “{status}” durumuna aldı.",
+    "openTask": "Görevi aç"
   }
 }

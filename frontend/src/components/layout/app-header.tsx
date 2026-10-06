@@ -22,7 +22,7 @@ import { LocaleSwitcher } from "./locale-switcher";
 import { ThemeToggle } from "./theme-toggle";
 import { useAutoHide } from "./use-auto-hide";
 import { WorkspaceHistoryControls } from "./workspace-history-controls";
-import { NotificationCenter } from "@/features/notifications/components/notification-center";
+import { NotificationsMenu } from "@/features/notifications/notifications-menu";
 
 type SessionUser = { id?: string; nickname?: string; email?: string; profilePhotoVersion?: number | null } | null | undefined;
 
@@ -80,7 +80,7 @@ export function AppHeader({
         <div className="ml-auto flex h-11 min-w-0 shrink-0 items-center gap-1 sm:h-auto sm:gap-2">
           <LocaleSwitcher triggerClassName="max-sm:px-1" hideLabelOnMobile />
           <ThemeToggle />
-          <NotificationCenter />
+          <NotificationsMenu userId={user?.id} disabled={contained} />
           <div className="mx-1 h-5 border-l max-sm:hidden" />
           <DropdownMenu>
             <DropdownMenuTrigger

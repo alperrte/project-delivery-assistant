@@ -39,7 +39,7 @@ export function DetailSection({
 }) {
   return (
     <section aria-labelledby={id} className={cn("space-y-3", className)}>
-      <div className="flex min-h-7 items-center justify-between gap-3">
+      <div className="flex min-h-7 flex-wrap items-center justify-between gap-3">
         <h2 id={id} className="flex items-baseline gap-2 text-sm font-semibold text-foreground">
           {title}
           {count && <span className="text-xs font-normal text-muted-foreground tabular-nums">{count}</span>}
@@ -54,7 +54,7 @@ export function DetailSection({
 /** One labelled row of the side panel. */
 export function PropertyRow({ label, children, htmlFor }: { label: string; children: ReactNode; htmlFor?: string }) {
   return (
-    <div className="grid grid-cols-[6.5rem_minmax(0,1fr)] items-start gap-3 py-2.5">
+    <div className="grid grid-cols-1 items-start gap-1 py-2.5 @min-[18rem]:grid-cols-[6.5rem_minmax(0,1fr)] @min-[18rem]:gap-3">
       <dt className="pt-0.5 text-xs font-medium text-muted-foreground">
         {htmlFor ? <label htmlFor={htmlFor}>{label}</label> : label}
       </dt>

@@ -1295,7 +1295,7 @@
     "clearSearch": "Suche leeren",
     "noResults": "Keine Ergebnisse gefunden.",
     "loadError": "Projekte konnten nicht geladen werden. Bitte erneut versuchen.",
-    "tasks": "Aufgaben",
+    "tasks": "Meine Aufgaben",
     "notifications": "Benachrichtigungen",
     "noNotifications": "Noch keine Benachrichtigungen.",
     "calendar": "Kalender",
@@ -1411,7 +1411,15 @@
       "checklistProgress": "Checkliste: {done} von {total}",
       "comments": "{count, plural, one {# Kommentar} other {# Kommentare}}",
       "attachments": "{count, plural, one {# Anhang} other {# Anhänge}}",
-      "backToProjects": "Zurück zu den Projekten"
+      "backToProjects": "Zurück zu den Projekten",
+      "confirmStatus": {
+        "title": "Status von {key} ändern?",
+        "description": "Diese Aufgabe wird auf „{status}“ gesetzt.",
+        "stale": "Der Aufgabenstatus hat sich geändert. Schließen Sie den Dialog und versuchen Sie es mit dem aktuellen Status erneut.",
+        "notifyManagers": "Die Projektmanager werden über diese Änderung informiert.",
+        "confirm": "Status aktualisieren",
+        "cancel": "Abbrechen"
+      }
     },
     "filters": {
       "label": "Aufgabenfilter",
@@ -1936,6 +1944,16 @@
           "title": "Der Pool ist leer",
           "description": "Derzeit gibt es nichts zu übernehmen. Aufgaben erscheinen hier, sobald Projektleitungen sie in den Pool stellen."
         }
+      },
+      "cards": {
+        "open": "Aufgabe {key} öffnen",
+        "comment": "Aufgabe {key} kommentieren",
+        "start": "Starten",
+        "complete": "Abschließen",
+        "noDescription": "Noch keine Beschreibung.",
+        "detailTitle": "Aufgabendetails",
+        "detailDescription": "Aufgabe ansehen, Status ändern und Kommentare hinzufügen.",
+        "close": "Aufgabendetails schließen"
       }
     }
   },
@@ -2638,6 +2656,12 @@
       "TASK_RELEASED": "Eine von Ihnen verfolgte Aufgabe wurde in den Pool zurückgegeben.",
       "TASK_MENTIONED": "Sie wurden in einem Aufgabenkommentar erwähnt.",
       "TASK_COMMENTED": "Eine von Ihnen verfolgte Aufgabe erhielt einen Kommentar."
-    }
+    },
+    "label": "Benachrichtigungen, {count} ungelesen",
+    "update": "Neue Aktualisierung",
+    "started": "{actor} hat {key}: {title} begonnen.",
+    "completed": "{actor} hat {key}: {title} abgeschlossen.",
+    "statusChanged": "{actor} hat {key}: {title} auf „{status}“ gesetzt.",
+    "openTask": "Aufgabe öffnen"
   }
 }
