@@ -7,16 +7,19 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProjectCard, type ProjectCardData } from "@/features/projects/components/project-card";
 import { invitationsApi } from "../api";
+import { invitationKeys } from "../query-keys";
+import { useSession } from "@/features/auth/hooks/use-session";
 
 export function InvitationProjectPreviewDialog({ invitationId, onClose }: {
   invitationId: string | null;
   onClose: () => void;
 }) {
   const t = useTranslations("invitations");
+  const { data: user } = useSession();
   const preview = useQuery({
-    queryKey: ["project-invitations", "preview", invitationId],
-    queryFn: () => invitationsApi.previewMine(invitationId!),
-    enabled: invitationId !== null,
+    queryKey: invitationKeys.preview(user?.id, invitationId),
+    queryFn: ({ signal }) => invitationsApi.previewMine(invitationId!, signal),
+    enabled: !!user?.id && invitationId !== null,
   });
   const project = preview.data;
   const card: ProjectCardData | null = project ? {

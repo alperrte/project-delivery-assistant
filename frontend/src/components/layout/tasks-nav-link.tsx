@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "@/i18n/navigation";
+import Link from "./workspace-link";
 import { usePathname } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { CheckCircle } from "@phosphor-icons/react";

@@ -58,6 +58,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -95,6 +97,76 @@ class ChatWebSocketIntegrationTest {
     @Autowired UserAccounts users;
     @Autowired ProjectMembershipService memberships;
     @Autowired UserSessions userSessions;
+    @Autowired com.pda.chat.application.service.ChatReactionService reactions;
+    @Autowired com.pda.chat.application.service.ChatDelivery delivery;
+    @Autowired org.springframework.transaction.support.TransactionTemplate transactions;
+    @Autowired org.springframework.jdbc.core.JdbcTemplate jdbc;
+    @Autowired tools.jackson.databind.ObjectMapper jsonMapper;
+    @org.springframework.test.context.bean.override.mockito.MockitoSpyBean
+    com.pda.chat.infrastructure.repository.ChatReactionRepository reactionRepository;
+
+    @Test void repliesAndPersonalizedReactionSnapshotsReachBothOverlapSocketsWithoutUnreadSideEffects() throws Exception {
+        Fixture f=fixture();UUID group=groupId(f.manager,f.projectId);
+        String sent=send(f.manager,f.projectId,group,"😀".repeat(300)).andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        UUID original=UUID.fromString(JsonPath.read(sent,"$.id"));
+        Socket manager=connect(f.manager), member=connect(f.member), overlap=connect(f.member), other=connect(f.otherMember), outsider=connect(f.outsider);
+        for(Socket socket:List.of(manager,member,overlap,other,outsider))socket.subscribeToOwnQueue();
+        String reply=postJson(f.member,messagesUrl(f.projectId,group),"{\"content\":\""+"😂".repeat(2000)+"\",\"replyToMessageId\":\""+original+"\"}")
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        UUID message=UUID.fromString(JsonPath.read(reply,"$.id"));
+        for(Socket socket:List.of(manager,member,overlap,other)) {
+            var event=socket.next();var data=asMap(event.get("message"));
+            assertEquals("MESSAGE",event.get("type"));assertEquals(original.toString(),asMap(data.get("replyTo")).get("id"));
+            assertTrue(jsonMapper.writeValueAsBytes(event).length<16*1024);
+        }
+        org.mockito.Mockito.clearInvocations(reactionRepository);
+        reaction(f.member,f.projectId,group,message,"THUMBS_UP",true).andExpect(status().isOk());
+        for(Socket socket:List.of(manager,member,overlap,other)) {
+            var event=socket.next();assertEquals("REACTIONS",event.get("type"));assertEquals("1",event.get("reactionVersion"));
+            var chip=asMap(((List<?>)event.get("reactions")).getFirst());
+            assertEquals(1L,((Number)chip.get("count")).longValue());
+            assertEquals(socket==member||socket==overlap,chip.get("reactedByCurrentUser"));
+            assertFalse(event.containsKey("message"));assertFalse(event.toString().contains("@example.test"));
+        }
+        org.mockito.Mockito.verify(reactionRepository,org.mockito.Mockito.times(1)).snapshots(
+                org.mockito.ArgumentMatchers.eq(group),org.mockito.ArgumentMatchers.eq(List.of(message)),
+                org.mockito.ArgumentMatchers.argThat(viewers->viewers.size()==3));
+        reaction(f.member,f.projectId,group,message,"THUMBS_UP",true).andExpect(status().isOk());
+        assertNull(manager.events.poll(150,TimeUnit.MILLISECONDS));
+        reaction(f.member,f.projectId,group,message,"THUMBS_UP",false).andExpect(status().isOk());
+        for(Socket socket:List.of(manager,member,overlap,other)) {var event=socket.next();assertEquals("2",event.get("reactionVersion"));assertEquals(List.of(),event.get("reactions"));}
+        // A delayed callback for version 1 publishes the current, internally consistent version 2.
+        delivery.reactionsChanged(new com.pda.chat.application.service.ChatDelivery.ChatReactionsChanged(f.projectId,group,
+                com.pda.chat.domain.enums.ChatConversationType.PROJECT,Set.of(),message,1));
+        for(Socket socket:List.of(manager,member,overlap,other)){var event=socket.next();assertEquals("2",event.get("reactionVersion"));assertEquals(List.of(),event.get("reactions"));}
+        assertNull(outsider.events.poll(100,TimeUnit.MILLISECONDS));
+        assertEquals(2,jdbc.queryForObject("select count(*) from chat_messages where conversation_id=?",Integer.class,group));
+        mvc.perform(get(base(f.projectId)+"/conversations").cookie(f.manager.access())).andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.group.unread").value(1));
+    }
+
+    @Test void rollbackAndRemovedRecipientsNeverReceiveReactionDataAndDirectScopeStaysPrivate() throws Exception {
+        Fixture f=fixture();UUID direct=openDirect(f.manager,f.projectId,f.member.id());
+        String body=send(f.manager,f.projectId,direct,"private").andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        UUID message=UUID.fromString(JsonPath.read(body,"$.id"));
+        Socket manager=connect(f.manager), member=connect(f.member), bystander=connect(f.otherMember);
+        for(Socket socket:List.of(manager,member,bystander))socket.subscribeToOwnQueue();
+        transactions.executeWithoutResult(status->{reactions.put(f.member.id(),f.projectId,direct,message,"HEART");status.setRollbackOnly();});
+        assertNull(manager.events.poll(150,TimeUnit.MILLISECONDS));assertNull(member.events.poll(100,TimeUnit.MILLISECONDS));
+        assertEquals(0L,jdbc.queryForObject("select reaction_version from chat_messages where id=?",Long.class,message));
+        reaction(f.member,f.projectId,direct,message,"HEART",true).andExpect(status().isOk());
+        assertEquals("REACTIONS",manager.next().get("type"));assertEquals("REACTIONS",member.next().get("type"));
+        assertNull(bystander.events.poll(100,TimeUnit.MILLISECONDS));
+        memberships.removeMember(f.manager.id(),f.projectId,f.member.id());
+        reaction(f.manager,f.projectId,direct,message,"LAUGH",true).andExpect(status().isOk());
+        assertEquals("REACTIONS",manager.next().get("type"));assertNull(member.events.poll(150,TimeUnit.MILLISECONDS));
+        assertNull(bystander.events.poll(100,TimeUnit.MILLISECONDS));
+    }
+
+    private ResultActions reaction(Account actor,UUID project,UUID conversation,UUID message,String code,boolean add) throws Exception {
+        String url=messagesUrl(project,conversation)+"/"+message+"/reactions/"+code;
+        Cookie csrf=csrfCookie();var req=add?put(url):delete(url);
+        return mvc.perform(req.cookie(csrf,actor.access()).header("X-XSRF-TOKEN",csrf.getValue()));
+    }
 
     private final List<Socket> sockets = new ArrayList<>();
     private final ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();

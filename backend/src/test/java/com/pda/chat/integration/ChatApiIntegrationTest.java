@@ -46,6 +46,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -78,6 +81,136 @@ class ChatApiIntegrationTest {
     @Autowired ChatMessageRepository messageRepository;
     @Autowired JdbcTemplate jdbc;
     @Autowired org.springframework.transaction.support.TransactionTemplate transactions;
+    @Autowired com.pda.chat.application.service.ChatReactionService reactionService;
+    @Autowired jakarta.persistence.EntityManagerFactory entityManagerFactory;
+    @org.springframework.test.context.bean.override.mockito.MockitoSpyBean
+    com.pda.chat.infrastructure.repository.ChatReactionRepository reactionRepository;
+
+    @Test void repliesAreScopedPersistedAndBoundedWithoutChangingPlainEmojiMessages() throws Exception {
+        Fixture f=fixture(); UUID group=groupId(f.manager,f.projectId);
+        UUID original=messageId(send(f.manager,f.projectId,group,"😀".repeat(300)).andExpect(status().isCreated()));
+        var reply=postJson(f.member,messagesUrl(f.projectId,group),"{\"content\":\"14:00 😂❤️\",\"replyToMessageId\":\""+original+"\"}")
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.replyTo.id").value(original.toString()))
+                .andExpect(jsonPath("$.replyTo.sender.userId").value(f.manager.id().toString()))
+                .andExpect(jsonPath("$.reactionVersion").value("0")).andExpect(jsonPath("$.reactions").isEmpty());
+        String preview=JsonPath.read(body(reply),"$.replyTo.preview");
+        assertEquals(140,preview.codePointCount(0,preview.length()));
+        UUID replyId=messageId(reply);
+        assertEquals(original,jdbc.queryForObject("select reply_to_message_id from chat_messages where id=?",UUID.class,replyId));
+        mvc.perform(get(messagesUrl(f.projectId,group)).cookie(f.manager.access()))
+                .andExpect(jsonPath("$.messages[1].replyTo.id").value(original.toString()));
+        UUID direct=openDirect(f.manager,f.projectId,f.member.id());
+        postJson(f.member,messagesUrl(f.projectId,direct),"{\"content\":\"foreign\",\"replyToMessageId\":\""+original+"\"}").andExpect(status().isNotFound());
+        UUID foreignProject=createProject(f.foreignManager,"Foreign reply"), foreignGroup=groupId(f.foreignManager,foreignProject);
+        UUID foreign=messageId(send(f.foreignManager,foreignProject,foreignGroup,"secret").andExpect(status().isCreated()));
+        postJson(f.member,messagesUrl(f.projectId,group),"{\"content\":\"foreign\",\"replyToMessageId\":\""+foreign+"\"}").andExpect(status().isNotFound());
+        postJson(f.member,messagesUrl(f.projectId,group),"{\"content\":\"missing\",\"replyToMessageId\":\""+UUID.randomUUID()+"\"}").andExpect(status().isNotFound());
+        send(f.member,f.projectId,group,"😂❤️").andExpect(status().isCreated()).andExpect(jsonPath("$.replyTo").doesNotExist());
+    }
+
+    @Test void reactionsAreIdempotentPersonalizedPersistentAndDoNotChangeUnreadOrMessageTime() throws Exception {
+        Fixture f=fixture();UUID group=groupId(f.manager,f.projectId);
+        UUID message=messageId(send(f.manager,f.projectId,group,"Meeting").andExpect(status().isCreated()));
+        var at=jdbc.queryForObject("select last_message_at from chat_conversations where id=?",java.sql.Timestamp.class,group);
+        reaction(f.member,f.projectId,group,message,"THUMBS_UP",true).andExpect(status().isOk())
+                .andExpect(jsonPath("$.reactionVersion").value("1")).andExpect(jsonPath("$.reactions[0].count").value(1))
+                .andExpect(jsonPath("$.reactions[0].reactedByCurrentUser").value(true));
+        reaction(f.member,f.projectId,group,message,"THUMBS_UP",true).andExpect(status().isOk()).andExpect(jsonPath("$.reactionVersion").value("1"));
+        reaction(f.manager,f.projectId,group,message,"THUMBS_UP",true).andExpect(status().isOk()).andExpect(jsonPath("$.reactionVersion").value("2"));
+        reaction(f.member,f.projectId,group,message,"HEART",true).andExpect(status().isOk()).andExpect(jsonPath("$.reactionVersion").value("3"));
+        mvc.perform(get(messagesUrl(f.projectId,group)).cookie(f.otherMember.access()))
+                .andExpect(jsonPath("$.messages[0].reactions[0].count").value(2))
+                .andExpect(jsonPath("$.messages[0].reactions[0].reactedByCurrentUser").value(false));
+        mvc.perform(get(messagesUrl(f.projectId,group)+"/reactions?messageIds="+message).cookie(f.member.access()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$[0].reactions[1].reactedByCurrentUser").value(true));
+        reaction(f.member,f.projectId,group,message,"THUMBS_UP",false).andExpect(status().isOk()).andExpect(jsonPath("$.reactions[0].count").value(1));
+        reaction(f.member,f.projectId,group,message,"THUMBS_UP",false).andExpect(status().isOk()).andExpect(jsonPath("$.reactionVersion").value("4"));
+        reaction(f.manager,f.projectId,group,message,"THUMBS_UP",false).andExpect(status().isOk());
+        reaction(f.member,f.projectId,group,message,"HEART",false).andExpect(status().isOk())
+                .andExpect(jsonPath("$.reactionVersion").value("6")).andExpect(jsonPath("$.reactions").isEmpty());
+        assertEquals(0,jdbc.queryForObject("select count(*) from chat_message_reactions where message_id=?",Integer.class,message));
+        assertEquals(at,jdbc.queryForObject("select last_message_at from chat_conversations where id=?",java.sql.Timestamp.class,group));
+        mvc.perform(get(base(f.projectId)+"/conversations").cookie(f.member.access())).andExpect(jsonPath("$.group.unread").value(1));
+    }
+
+    @Test void reactionScopeCsrfValidationAndBatchLimitsAreEnforced() throws Exception {
+        Fixture f=fixture();UUID group=groupId(f.manager,f.projectId), direct=openDirect(f.manager,f.projectId,f.member.id());
+        UUID message=messageId(send(f.manager,f.projectId,group,"scope").andExpect(status().isCreated()));
+        String url=reactionUrl(f.projectId,group,message,"THUMBS_UP");
+        mvc.perform(put(url).cookie(f.member.access())).andExpect(status().isForbidden());
+        mvc.perform(delete(url).cookie(f.member.access())).andExpect(status().isForbidden());
+        jdbc.update("update users set global_role='ADMIN' where id=?",f.outsider.id());
+        assertEquals("ADMIN",users.findActiveById(f.outsider.id()).orElseThrow().globalRole());
+        reaction(f.outsider,f.projectId,group,message,"THUMBS_UP",true).andExpect(status().isForbidden());
+        reaction(f.member,f.projectId,direct,message,"THUMBS_UP",true).andExpect(status().isNotFound());
+        reaction(f.member,f.projectId,group,UUID.randomUUID(),"THUMBS_UP",true).andExpect(status().isNotFound());
+        reaction(f.member,f.projectId,group,message,"INVALID",true).andExpect(status().isBadRequest());
+        var csrf=csrfCookie();mvc.perform(put(url).cookie(csrf).header("X-XSRF-TOKEN",csrf.getValue())).andExpect(status().isUnauthorized());
+        String snapshots=messagesUrl(f.projectId,group)+"/reactions";
+        mvc.perform(get(snapshots).cookie(f.member.access())).andExpect(status().isBadRequest());
+        mvc.perform(get(snapshots+"?messageIds=bad").cookie(f.member.access())).andExpect(status().isBadRequest());
+        mvc.perform(get(snapshots+"?messageIds="+UUID.randomUUID()).cookie(f.member.access())).andExpect(status().isNotFound());
+        String oversized=java.util.stream.IntStream.range(0,51).mapToObj(i->UUID.randomUUID().toString()).collect(java.util.stream.Collectors.joining(","));
+        mvc.perform(get(snapshots+"?messageIds="+oversized).cookie(f.member.access())).andExpect(status().isBadRequest());
+        UUID foreignProject=createProject(f.foreignManager,"foreign reactions"), foreignGroup=groupId(f.foreignManager,foreignProject);
+        UUID foreignMessage=messageId(send(f.foreignManager,foreignProject,foreignGroup,"private").andExpect(status().isCreated()));
+        reaction(f.member,f.projectId,group,foreignMessage,"HEART",true).andExpect(status().isNotFound());
+        mvc.perform(get(snapshots+"?messageIds="+message+","+foreignMessage).cookie(f.member.access())).andExpect(status().isNotFound());
+        memberships.removeMember(f.manager.id(),f.projectId,f.member.id());
+        reaction(f.member,f.projectId,group,message,"HEART",true).andExpect(status().isForbidden());
+        assertEquals(0,jdbc.queryForObject("select count(*) from chat_message_reactions where message_id=?",Integer.class,message));
+    }
+
+    @Test void concurrentDuplicatesAndSnapshotVersionRemainAtomic() throws Exception {
+        Fixture f=fixture();UUID group=groupId(f.manager,f.projectId);
+        UUID message=messageId(send(f.manager,f.projectId,group,"atomic").andExpect(status().isCreated()));
+        runConcurrently(8,()->reactionService.put(f.member.id(),f.projectId,group,message,"THUMBS_UP"));
+        assertEquals(1L,jdbc.queryForObject("select reaction_version from chat_messages where id=?",Long.class,message));
+        reactionService.remove(f.member.id(),f.projectId,group,message,"THUMBS_UP");
+        ExecutorService pool=Executors.newFixedThreadPool(2);
+        try {
+            Future<?> writer=pool.submit(()->{for(int i=0;i<20;i++){reactionService.put(f.member.id(),f.projectId,group,message,"THUMBS_UP");reactionService.remove(f.member.id(),f.projectId,group,message,"THUMBS_UP");}});
+            Future<?> reader=pool.submit(()->{for(int i=0;i<80;i++){var snapshot=reactionService.snapshots(f.member.id(),f.projectId,group,List.of(message)).getFirst();boolean present=Long.parseLong(snapshot.reactionVersion())%2==1;assertEquals(present,!snapshot.reactions().isEmpty());if(present){assertEquals(1,snapshot.reactions().getFirst().count());assertTrue(snapshot.reactions().getFirst().reactedByCurrentUser());}}});
+            writer.get();reader.get();
+        } finally {pool.shutdownNow();}
+    }
+
+    @Test void reactionBudgetIsSeparateAndCountsNoOpAttempts() throws Exception {
+        Fixture f=fixture();UUID group=groupId(f.manager,f.projectId);
+        UUID message=messageId(send(f.manager,f.projectId,group,"budget").andExpect(status().isCreated()));
+        for(int i=0;i<60;i++)reaction(f.member,f.projectId,group,message,"HEART",true).andExpect(status().isOk());
+        reaction(f.member,f.projectId,group,message,"HEART",true).andExpect(status().isTooManyRequests())
+                .andExpect(jsonPath("$.code").value("CHAT_REACTION_RATE_LIMITED"));
+        send(f.member,f.projectId,group,"message budget still available").andExpect(status().isCreated());
+        assertEquals(1L,jdbc.queryForObject("select reaction_version from chat_messages where id=?",Long.class,message));
+    }
+
+    @Test void historyBatchesQuotesUsersAndReactionQueriesForThirtyAndOneHundredMessages() throws Exception {
+        Fixture f=fixture();UUID group=groupId(f.manager,f.projectId);
+        UUID original=messageId(send(f.manager,f.projectId,group,"quoted source").andExpect(status().isCreated()));
+        for(int i=0;i<100;i++)jdbc.update("insert into chat_messages(id,conversation_id,sender_user_id,content,created_at,reply_to_message_id) values (?,?,?,?,now(),?)",UUID.randomUUID(),group,f.member.id(),"reply "+i,original);
+        var stats=entityManagerFactory.unwrap(org.hibernate.SessionFactory.class).getStatistics();
+        boolean enabled=stats.isStatisticsEnabled();stats.setStatisticsEnabled(true);
+        try {
+            stats.clear();org.mockito.Mockito.clearInvocations(reactionRepository);
+            mvc.perform(get(messagesUrl(f.projectId,group)+"?limit=30").cookie(f.member.access())).andExpect(status().isOk()).andExpect(jsonPath("$.messages.length()").value(30));
+            long first=stats.getPrepareStatementCount();
+            org.mockito.Mockito.verify(reactionRepository,org.mockito.Mockito.times(1)).snapshots(org.mockito.ArgumentMatchers.eq(group),org.mockito.ArgumentMatchers.anyCollection(),org.mockito.ArgumentMatchers.anyCollection());
+            stats.clear();org.mockito.Mockito.clearInvocations(reactionRepository);
+            mvc.perform(get(messagesUrl(f.projectId,group)+"?limit=100").cookie(f.member.access())).andExpect(status().isOk()).andExpect(jsonPath("$.messages.length()").value(100));
+            long second=stats.getPrepareStatementCount();
+            assertEquals(first,second);
+            System.out.println("CHAT_HISTORY_QUERY_EVIDENCE limit30="+first+" limit100="+second+" JDBC reaction snapshot statements=1 per request");
+            org.mockito.Mockito.verify(reactionRepository,org.mockito.Mockito.times(1)).snapshots(org.mockito.ArgumentMatchers.eq(group),org.mockito.ArgumentMatchers.anyCollection(),org.mockito.ArgumentMatchers.anyCollection());
+        } finally {stats.setStatisticsEnabled(enabled);}
+    }
+
+    private UUID messageId(ResultActions result) throws Exception {return UUID.fromString(JsonPath.read(body(result),"$.id"));}
+    private String reactionUrl(UUID project,UUID conversation,UUID message,String code){return messagesUrl(project,conversation)+"/"+message+"/reactions/"+code;}
+    private ResultActions reaction(Account actor,UUID project,UUID conversation,UUID message,String code,boolean add) throws Exception {
+        Cookie csrf=csrfCookie();var request=add?put(reactionUrl(project,conversation,message,code)):delete(reactionUrl(project,conversation,message,code));
+        return mvc.perform(request.cookie(csrf,actor.access()).header("X-XSRF-TOKEN",csrf.getValue()));
+    }
 
     // ---- membership ---------------------------------------------------------------------------------------------
 

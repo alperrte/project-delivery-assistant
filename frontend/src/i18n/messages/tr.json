@@ -110,7 +110,14 @@
     "ORGANIZATION_MEDIA_EMPTY": "Boş dosya yüklenemez.",
     "ORGANIZATION_MEDIA_DIMENSIONS": "Görsel izin verilen dosya boyutunu aşıyor.",
     "ORGANIZATION_MEDIA_UNAVAILABLE": "Organizasyon kaydedildi; bazı görsel işlemleri tamamlanamadı. Başarısız işlemleri tekrar deneyebilirsiniz.",
-    "ORGANIZATION_MEDIA_CONFLICT": "Organizasyon kaydedildi; bazı görsel işlemleri tamamlanamadı. Başarısız işlemleri tekrar deneyebilirsiniz."
+    "ORGANIZATION_MEDIA_CONFLICT": "Organizasyon kaydedildi; bazı görsel işlemleri tamamlanamadı. Başarısız işlemleri tekrar deneyebilirsiniz.",
+    "TASK_MODE_NOT_ALLOWED": "Bu projede gelişmiş görev oluşturma kapalı. Mevcut veriler korunuyor; temel alanları, durumu ve yorumları düzenleyebilirsiniz. Gelişmiş alanlar salt okunur.",
+    "TASK_SIMPLE_FIELDS_INVALID": "Basit görevde gelişmiş alanlar kullanılamaz.",
+    "TASK_MODE_CONVERSION_BLOCKED": "Gelişmiş verileri olan görev basite dönüştürülemez. Önce gelişmiş verileri ilgili bölümlerden kaldırın; hiçbir veri otomatik silinmez.",
+    "PROJECT_TASK_MODE_NOT_CONFIGURED": "İlk görev oluşturulmadan önce projeyi kuran kişinin bu tercihi belirlemesi gerekiyor.",
+    "CHAT_REPLY_NOT_FOUND": "Yanıtlanan mesaj bu konuşmada bulunamadı.",
+    "CHAT_REACTION_INVALID": "Bu tepki desteklenmiyor.",
+    "CHAT_REACTION_RATE_LIMITED": "Çok sık tepki bıraktınız. Biraz bekleyip tekrar deneyin."
   },
   "app": {
     "nav": {
@@ -158,7 +165,7 @@
     "archiveConfirmDescription": "Arşivlenen organizasyonlar yeni proje kabul etmez. Bu işlem geri alınamaz.",
     "archivedBadge": "Arşivlendi",
     "projectsHeading": "Projeler",
-    "noProjects": "Bu organizasyonun henüz projesi yok.",
+    "noProjects": "Bu organizasyonda erişebildiğiniz aktif proje yok.",
     "emptyTitle": "Henüz organizasyon yok",
     "emptyDescription": "İlişkili projeleri bir arada tutmak için bir tane oluşturun.",
     "columns": {
@@ -583,7 +590,8 @@
           "title": "Tehlikeli bölge",
           "description": "Geri alınamayan işlemler."
         }
-      }
+      },
+      "organizationUnavailable": "Bağlı organizasyon arşivlenmiş veya kullanılamıyor"
     }
   },
   "criteria": {
@@ -766,8 +774,13 @@
       "CANCELLED": {
         "title": "İptal edilen davet yok",
         "description": "İptal edilen davetler burada listelenir."
+      },
+      "EXPIRED": {
+        "title": "Süresi dolmuş davet yok",
+        "description": "Süresi dolan davetler burada görünür."
       }
-    }
+    },
+    "externalUnavailable": "Davet bilgileri şu anda alınamıyor. Lütfen tekrar deneyin."
   },
   "squads": {
     "card": {
@@ -1319,7 +1332,13 @@
     "insights": "Çalışma alanı araçları",
     "totalProjects": "Toplam proje",
     "summaryDescription": "Proje hedeflerin, başarı kriterlerin ve ekibin için tek bir çalışma alanı.",
-    "quickActions": "Hızlı işlemler"
+    "quickActions": "Hızlı işlemler",
+    "history": {
+      "back": "Önceki sayfaya git",
+      "forward": "Sonraki sayfaya git",
+      "label": "Sayfa geçmişi",
+      "unavailable": "Geçmiş bilgisi bu tarayıcıda okunamıyor; tarayıcı oklarını kullanın."
+    }
   },
   "tasks": {
     "nav": {
@@ -1747,7 +1766,8 @@
             "deadlineAt": "son teslim zamanı",
             "estimatePoints": "tahmin puanı",
             "timeEstimateMinutes": "süre tahmini",
-            "unknown": "bir alan"
+            "unknown": "bir alan",
+            "creationMode": "Görev türü"
           },
           "blocked": "görevi engelli olarak işaretledi",
           "blockedReason": "görevi engelli olarak işaretledi: {reason}",
@@ -2116,6 +2136,52 @@
     "dock": {
       "label": "Küçültülmüş mesajlaşma",
       "open": "Mesajlaşmayı aç"
+    },
+    "reply": {
+      "action": "Yanıtla",
+      "senderUnknown": "Bilinmeyen kullanıcı",
+      "context": "Yanıtlanan mesaj: {name}",
+      "cancel": "Yanıtı iptal et",
+      "unavailable": "Yanıtlanan mesaj kullanılamıyor."
+    },
+    "emoji": {
+      "action": "Emoji seç",
+      "close": "Emoji seçiciyi kapat",
+      "names": {
+        "SMILE": "Gülümseme",
+        "GRIN": "Mutlu yüz",
+        "LAUGH": "Gülmek",
+        "ROFL": "Kahkaha",
+        "BLUSH": "Gülümseyen yüz",
+        "LOVE": "Kalp gözler",
+        "PARTY": "Parti yüzü",
+        "COOL": "Havalı",
+        "THINK": "Düşünceli",
+        "SURPRISED": "Şaşkın",
+        "SAD": "Üzgün",
+        "CRY": "Ağlamak",
+        "SWEAT": "Terleyen gülümseme",
+        "SLEEP": "Uykulu",
+        "THUMBS_UP": "Beğenmek",
+        "THUMBS_DOWN": "Beğenmemek",
+        "CLAP": "Alkış",
+        "RAISE": "Eller havada",
+        "THANKS": "Teşekkür",
+        "HEART": "Kalp",
+        "FIRE": "Ateş",
+        "CELEBRATE": "Kutlama",
+        "CHECK": "Onay",
+        "ROCKET": "Roket"
+      }
+    },
+    "reactions": {
+      "action": "Tepki ver",
+      "chip": "{emoji}, {count} tepki",
+      "error": "Tepki gönderilemedi."
+    },
+    "actions": {
+      "open": "Mesaj seçeneklerini aç",
+      "label": "Mesaj seçenekleri"
     }
   },
   "siteFooter": {
@@ -2435,5 +2501,65 @@
         }
       ]
     }
+  },
+  "taskModels": {
+    "type": "Görev türü",
+    "all": "Tüm görevler",
+    "mode": {
+      "SIMPLE": "Basit görev",
+      "ADVANCED": "Gelişmiş görev"
+    },
+    "policy": {
+      "SIMPLE": "Yalnız basit",
+      "ADVANCED": "Yalnız gelişmiş",
+      "BOTH": "Her ikisi"
+    },
+    "policyDescription": {
+      "SIMPLE": "Temel alanlarla hızlı görev oluşturma.",
+      "ADVANCED": "Sprint, etiket ve tüm gelişmiş araçlar.",
+      "BOTH": "Her görev için basit veya gelişmiş seçimi."
+    },
+    "setupTitle": "Bu projede görevleri nasıl oluşturmak istersiniz?",
+    "settingTitle": "Görev oluşturma tercihi",
+    "settingDescription": "Proje için basit görevleri, gelişmiş görevleri veya her ikisini kullanabilirsiniz.",
+    "preserve": "Tercih değiştiğinde mevcut görevler ve verileri korunur. Yalnız basit seçilirse eski gelişmiş görevlerin ek alanları salt okunur olur.",
+    "ownerOnly": "Bu tercihi yalnız projeyi kuran kişi değiştirebilir.",
+    "waitOwner": "İlk görev oluşturulmadan önce projeyi kuran kişinin bu tercihi belirlemesi gerekiyor.",
+    "changeLater": "Bu ayarı proje ayarlarından istediğiniz zaman güncelleyebilirsiniz.",
+    "save": "Tercihi kaydet",
+    "start": "Kaydet ve görev oluşturmaya geç",
+    "saved": "Görev oluşturma tercihi kaydedildi.",
+    "help": "Basit ve gelişmiş görevlerin farkları",
+    "helpTitle": "Hangi görev türünü seçmeliyim?",
+    "helpDescription": "İhtiyacınıza göre görev türünü seçin. Ortak alanlardaki taslağınız geçiş sırasında korunur.",
+    "simpleFeatures": "Başlık, açıklama, öncelik, başlangıç ve bitiş tarihi, kişi ataması ve durum takibi.",
+    "advancedFeatures": "Basit alanlara ek olarak üst/alt görevler, sprint, etiketler, puan ve süre tahmini, görev havuzu, kontrol listesi, görev ilişkileri, engelleme, dosya ekleri, zaman kayıtları ve takipçiler.",
+    "comments": "Yorumlar ve kişi etiketleme her iki görev türünde de kullanılabilir.",
+    "dontShow": "Geçişlerde bu açıklamayı bir daha gösterme",
+    "cancel": "Vazgeç",
+    "continue": "Geçiş yap",
+    "close": "Anladım",
+    "readOnly": "Bu projede gelişmiş görev oluşturma kapalı. Mevcut veriler korunuyor; temel alanları, durumu ve yorumları düzenleyebilirsiniz. Gelişmiş alanlar salt okunur.",
+    "conversion": "Görev türünü değiştirme",
+    "conversionBlocked": "Gelişmiş verileri olan görev basite dönüştürülemez. Önce gelişmiş verileri ilgili bölümlerden kaldırın; hiçbir veri otomatik silinmez.",
+    "simplePlanning": "Öncelik, başlangıç ve bitiş tarihini belirleyin.",
+    "simpleAssignment": "Görevi proje üyelerine atayın.",
+    "simpleDeadline": "Yeni görevde bitiş tarihi gün sonu olarak kaydedilir. Mevcut görevin saati korunur.",
+    "leaveTitle": "Kaydedilmemiş değişiklikler var",
+    "leaveDescription": "Bu sayfadan ayrılırsanız görev taslağınız kaybolacak.",
+    "leave": "Taslağı bırak ve ayrıl",
+    "stay": "Düzenlemeye devam et",
+    "clearPool": "Havuz bilgisini temizle",
+    "clearPoolDescription": "Görev havuzdan çıkarılır; havuz ekibi ve üstlenme bilgisi temizlenir. Atanan kişiler korunur."
+  },
+  "datePicker": {
+    "placeholder": "Tarih seçin",
+    "previousMonth": "Önceki ay",
+    "nextMonth": "Sonraki ay",
+    "month": "Ay",
+    "year": "Yıl",
+    "today": "Bugün",
+    "clear": "Temizle",
+    "close": "Takvimi kapat"
   }
 }

@@ -18,6 +18,7 @@ import { activeFilterCount, toListParams, useTaskFilters } from "../filters";
 import { groupTasks, type TaskGroup } from "../grouping";
 import { useAllTasks, useTaskList } from "../hooks";
 import { taskPermissions } from "../permissions";
+import { allowsAdvanced } from "../task-model";
 import type { Task } from "../types";
 import { ProjectGate, type ProjectGateContext } from "./project-gate";
 import { TaskFilterBar } from "./task-filter-bar";
@@ -98,7 +99,7 @@ function GroupedList({ groups, row }: { groups: TaskGroup[]; row: (task: Task, g
   );
 }
 
-function TasksView({ slug, projectId, isManager, userId }: ProjectGateContext) {
+function TasksView({ slug, project, projectId, isManager, userId }: ProjectGateContext) {
   const t = useTranslations("tasks.list");
   const te = useTranslations("errors");
   const { filters, update, reset } = useTaskFilters();
@@ -134,7 +135,7 @@ function TasksView({ slug, projectId, isManager, userId }: ProjectGateContext) {
   return (
     <div>
       <PageHeader title={t("title")} description={t("description")} action={createLink || undefined} />
-      <TaskFilterBar projectId={projectId} filters={filters} onChange={update} onReset={reset} />
+      <TaskFilterBar advanced={allowsAdvanced(project.taskManagementMode)} projectId={projectId} filters={filters} onChange={update} onReset={reset} />
 
       {query.isError && (
         <div role="alert" className="space-y-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4">

@@ -167,6 +167,9 @@ public class SecurityBaselineConfiguration {
                             // Project chat WebSocket handshake (STOMP over native WebSocket); the PDA_ACCESS cookie is
                             // Path=/api, which is why the endpoint lives under /api.
                             .requestMatchers(HttpMethod.GET, "/api/v1/ws").authenticated()
+                            .requestMatchers(HttpMethod.GET, "/api/v1/projects/*/chat/conversations/*/messages/reactions").authenticated()
+                            .requestMatchers(HttpMethod.PUT, "/api/v1/projects/*/chat/conversations/*/messages/*/reactions/*").authenticated()
+                            .requestMatchers(HttpMethod.DELETE, "/api/v1/projects/*/chat/conversations/*/messages/*/reactions/*").authenticated()
                             .requestMatchers(HttpMethod.PATCH, "/api/v1/notifications/read-all",
                                     "/api/v1/notifications/*/read").authenticated()
                             // Platform administration: ADMIN only; the services re-check the platform permission.

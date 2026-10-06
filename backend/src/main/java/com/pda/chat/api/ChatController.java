@@ -3,6 +3,9 @@ package com.pda.chat.api;
 import com.pda.chat.api.dto.request.SendMessageRequest;
 import com.pda.chat.api.dto.response.ChatResponses;
 import com.pda.chat.application.service.ChatService;
+import com.pda.chat.application.service.ChatReactionService;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import com.pda.user.UserAccounts;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -26,9 +29,11 @@ import java.util.UUID;
 public class ChatController {
 
     private final ChatService chat;
+    private final ChatReactionService reactions;
 
-    public ChatController(ChatService chat) {
+    public ChatController(ChatService chat, ChatReactionService reactions) {
         this.chat = chat;
+        this.reactions = reactions;
     }
 
     @GetMapping("/conversations")
@@ -63,13 +68,13 @@ public class ChatController {
             description = "Newest page by default; before=messageId pages back, after=messageId returns newer "
                     + "messages oldest first (reconnect catch-up). limit 1..100, default 30. Messages are oldest to "
                     + "newest in every case.")
-    public ChatResponses.MessagePage messages(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
+    public ResponseEntity<ChatResponses.MessagePage> messages(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
                                               @PathVariable UUID projectId, @PathVariable UUID conversationId,
                                               @RequestParam(required = false) UUID before,
                                               @RequestParam(required = false) UUID after,
                                               @RequestParam(required = false) Integer limit) {
-        return ChatResponses.MessagePage.from(
-                chat.messages(actorId(principal), projectId, conversationId, before, after, limit));
+        return ResponseEntity.ok().header("Cache-Control","private, no-store").body(
+                ChatResponses.MessagePage.from(chat.messages(actorId(principal), projectId, conversationId, before, after, limit)));
     }
 
     @PostMapping("/conversations/{conversationId}/messages")
@@ -81,8 +86,8 @@ public class ChatController {
                                                       @PathVariable UUID projectId, @PathVariable UUID conversationId,
                                                       @RequestBody SendMessageRequest request) {
         ChatResponses.Message body = ChatResponses.Message.from(
-                chat.send(actorId(principal), projectId, conversationId, request.content()));
-        return ResponseEntity.status(HttpStatus.CREATED).header("Cache-Control", "no-store").body(body);
+                chat.send(actorId(principal), projectId, conversationId, request.content(), request.replyToMessageId()));
+        return ResponseEntity.status(HttpStatus.CREATED).header("Cache-Control", "private, no-store").body(body);
     }
 
     @PostMapping("/conversations/{conversationId}/read")
@@ -92,6 +97,28 @@ public class ChatController {
                                          @PathVariable UUID projectId, @PathVariable UUID conversationId) {
         chat.markRead(actorId(principal), projectId, conversationId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/conversations/{conversationId}/messages/{messageId}/reactions/{emojiCode}")
+    @Operation(summary="Add own reaction", description="Idempotent; active project member and conversation participant only. Requires CSRF. Six canonical codes; 60 attempts per minute independently of message sends.")
+    public ResponseEntity<ChatResponses.Reactions> react(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
+            @PathVariable UUID projectId,@PathVariable UUID conversationId,@PathVariable UUID messageId,@PathVariable String emojiCode) {
+        return ResponseEntity.ok().header("Cache-Control","private, no-store").body(
+                ChatResponses.Reactions.from(reactions.put(actorId(principal),projectId,conversationId,messageId,emojiCode)));
+    }
+    @DeleteMapping("/conversations/{conversationId}/messages/{messageId}/reactions/{emojiCode}")
+    @Operation(summary="Remove own reaction", description="Idempotent; cannot remove another user's reaction. Requires CSRF. Returns current versioned snapshot, including an empty list after last removal.")
+    public ResponseEntity<ChatResponses.Reactions> unreact(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
+            @PathVariable UUID projectId,@PathVariable UUID conversationId,@PathVariable UUID messageId,@PathVariable String emojiCode) {
+        return ResponseEntity.ok().header("Cache-Control","private, no-store").body(
+                ChatResponses.Reactions.from(reactions.remove(actorId(principal),projectId,conversationId,messageId,emojiCode)));
+    }
+    @GetMapping("/conversations/{conversationId}/messages/reactions")
+    @Operation(summary="Refresh reactions of loaded messages", description="One scoped batch, 1..50 message UUIDs. Any foreign or missing message is 404; no per-message fetch. Personalized flags and version/count share a SQL snapshot.")
+    public ResponseEntity<List<ChatResponses.Reactions>> reactionSnapshots(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
+            @PathVariable UUID projectId,@PathVariable UUID conversationId,@RequestParam List<UUID> messageIds) {
+        return ResponseEntity.ok().header("Cache-Control","private, no-store").body(
+                reactions.snapshots(actorId(principal),projectId,conversationId,messageIds).stream().map(ChatResponses.Reactions::from).toList());
     }
 
     private static UUID actorId(UserAccounts.AuthenticatedUser principal) {

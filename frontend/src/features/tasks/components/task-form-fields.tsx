@@ -277,7 +277,7 @@ export function ParentPicker({ projectId, value, onChange, excludeId, excludeIds
   const listId = useId();
 
   const search = committed.trim().length >= MIN_SEARCH ? committed.trim() : undefined;
-  const results = useTaskList(projectId, { topLevel: topLevelOnly, q: search, sort: "updatedAt", direction: "desc", size: 8 });
+  const results = useTaskList(projectId, { creationMode: "ADVANCED", topLevel: topLevelOnly, q: search, sort: "updatedAt", direction: "desc", size: 8 });
   const options = (results.data?.content ?? []).filter((task) => task.id !== excludeId && !excludeIds.includes(task.id));
 
   function handleChange(next: string) {

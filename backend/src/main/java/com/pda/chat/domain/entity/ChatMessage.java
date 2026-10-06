@@ -40,15 +40,26 @@ public class ChatMessage {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    @Column(name = "reply_to_message_id", updatable = false)
+    private UUID replyToMessageId;
+
+    @Column(name = "reaction_version", nullable = false)
+    private long reactionVersion;
+
     protected ChatMessage() {
         // JPA
     }
 
     public static ChatMessage create(UUID conversationId, UUID senderUserId, String content, Instant now) {
+        return create(conversationId, senderUserId, content, null, now);
+    }
+
+    public static ChatMessage create(UUID conversationId, UUID senderUserId, String content, UUID replyToMessageId, Instant now) {
         ChatMessage message = new ChatMessage();
         message.conversationId = Objects.requireNonNull(conversationId, "conversationId is required");
         message.senderUserId = Objects.requireNonNull(senderUserId, "senderUserId is required");
         message.content = normalize(content);
+        message.replyToMessageId = replyToMessageId;
         // PostgreSQL keeps microseconds: truncating here keeps the (created_at, id) cursor identical before and after
         // a round trip through the database.
         message.createdAt = Objects.requireNonNull(now, "now is required").truncatedTo(ChronoUnit.MICROS);
@@ -93,4 +104,7 @@ public class ChatMessage {
     public UUID getSenderUserId() { return senderUserId; }
     public String getContent() { return content; }
     public Instant getCreatedAt() { return createdAt; }
+    public UUID getReplyToMessageId() { return replyToMessageId; }
+    public long getReactionVersion() { return reactionVersion; }
+    public void reactionsChanged() { reactionVersion = Math.addExact(reactionVersion, 1); }
 }

@@ -15,14 +15,14 @@ import { AssigneeAvatars, StatusBadge, StatusDot } from "../task-badges";
 import { DetailSection, type DetailContext } from "./detail-section";
 
 /** Subtasks are one level deep, so a subtask never shows this section. */
-export function SubtasksSection({ task, slug, projectId, perms }: DetailContext) {
+export function SubtasksSection({ task, slug, projectId, perms, advancedWritable }: DetailContext) {
   const t = useTranslations("tasks.detail.subtasks");
   const [title, setTitle] = useState("");
   const subtasks = useSubtasks(projectId, task.id);
 
   const add = useTaskMutation(
     projectId,
-    (text: string) => tasksApi.create(projectId, toTaskPayload({ ...emptyTaskForm, title: text, parentTaskId: task.id })),
+    (text: string) => tasksApi.create(projectId, toTaskPayload({ ...emptyTaskForm, creationMode: "ADVANCED", title: text, parentTaskId: task.id })),
     { onSuccess: () => setTitle("") },
   );
 
@@ -37,7 +37,7 @@ export function SubtasksSection({ task, slug, projectId, perms }: DetailContext)
       title={t("title")}
       count={total > 0 ? `${done}/${total}` : undefined}
       action={
-        perms.manage && !task.archivedAt ? (
+        perms.manage && advancedWritable && !task.archivedAt ? (
           <Link href={`/projects/${slug}/tasks/new?parent=${task.id}`} className={buttonVariants({ variant: "ghost", size: "sm" })}>
             {t("detailed")}
           </Link>
@@ -75,7 +75,7 @@ export function SubtasksSection({ task, slug, projectId, perms }: DetailContext)
         </ul>
       )}
 
-      {perms.manage && !task.archivedAt && (
+      {perms.manage && advancedWritable && !task.archivedAt && (
         <form
           className="flex gap-2"
           onSubmit={(event) => {

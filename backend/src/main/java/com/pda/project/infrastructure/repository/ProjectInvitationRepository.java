@@ -23,6 +23,24 @@ public interface ProjectInvitationRepository extends JpaRepository<ProjectInvita
     Optional<ProjectInvitation> findByProjectIdAndEmailAndStatus(UUID projectId, String email,
                                                                  InvitationStatus status);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select i from ProjectInvitation i where i.projectId=:projectId and i.invitedUserId=:userId "
+            + "and i.status=com.pda.project.domain.enums.InvitationStatus.PENDING")
+    Optional<ProjectInvitation> lockPendingUser(UUID projectId, UUID userId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select i from ProjectInvitation i where i.projectId=:projectId and lower(i.email)=:email "
+            + "and i.status=com.pda.project.domain.enums.InvitationStatus.PENDING")
+    Optional<ProjectInvitation> lockPendingEmail(UUID projectId, String email);
+
+    Page<ProjectInvitation> findByProjectIdAndStatusAndExpiresAtAfter(UUID projectId, InvitationStatus status,
+                                                                     Instant now, Pageable pageable);
+
+    @Query("select i from ProjectInvitation i where i.projectId=:projectId and "
+            + "(i.status=com.pda.project.domain.enums.InvitationStatus.EXPIRED or "
+            + "(i.status=com.pda.project.domain.enums.InvitationStatus.PENDING and i.expiresAt<=:now))")
+    Page<ProjectInvitation> findExpiredInProject(UUID projectId, Instant now, Pageable pageable);
+
     Page<ProjectInvitation> findByProjectIdAndStatus(UUID projectId, InvitationStatus status, Pageable pageable);
 
     Optional<ProjectInvitation> findByTokenHash(String tokenHash);
@@ -44,8 +62,9 @@ public interface ProjectInvitationRepository extends JpaRepository<ProjectInvita
     Page<ProjectInvitation> findByProjectId(UUID projectId, Pageable pageable);
 
     @Query("select i.invitedUserId from ProjectInvitation i where i.projectId = :projectId "
-            + "and i.status = com.pda.project.domain.enums.InvitationStatus.PENDING and i.invitedUserId in :userIds")
-    List<UUID> findPendingInviteeIds(UUID projectId, Collection<UUID> userIds);
+            + "and i.status = com.pda.project.domain.enums.InvitationStatus.PENDING and i.expiresAt > :now "
+            + "and i.invitedUserId in :userIds")
+    List<UUID> findPendingInviteeIds(UUID projectId, Collection<UUID> userIds, Instant now);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select i from ProjectInvitation i where i.projectId = :projectId and i.teamId = :teamId "

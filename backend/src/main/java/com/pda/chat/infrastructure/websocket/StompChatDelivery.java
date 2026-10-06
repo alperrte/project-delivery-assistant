@@ -3,6 +3,7 @@ package com.pda.chat.infrastructure.websocket;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.pda.chat.api.dto.response.ChatResponses;
 import com.pda.chat.application.service.ChatDelivery;
+import com.pda.chat.application.service.ChatReactionViewReader;
 import com.pda.chat.domain.enums.ChatConversationType;
 import com.pda.project.ProjectAccess;
 import com.pda.project.ProjectMemberView;
@@ -33,10 +34,12 @@ class StompChatDelivery implements ChatDelivery {
 
     private final SimpMessagingTemplate messaging;
     private final ProjectAccess projects;
+    private final ChatReactionViewReader reactionViews;
 
-    StompChatDelivery(SimpMessagingTemplate messaging, ProjectAccess projects) {
+    StompChatDelivery(SimpMessagingTemplate messaging, ProjectAccess projects, ChatReactionViewReader reactionViews) {
         this.messaging = messaging;
         this.projects = projects;
+        this.reactionViews = reactionViews;
     }
 
     /** What travels over the socket. {@code message} is absent for READ. */
@@ -50,7 +53,7 @@ class StompChatDelivery implements ChatDelivery {
         try {
             SocketEvent payload = new SocketEvent("MESSAGE", event.projectId(), event.conversationId(),
                     event.type(), ChatResponses.Message.from(event.message()));
-            for (UUID recipient : recipients(event)) {
+            for (UUID recipient : recipients(event.projectId(),event.type(),event.directParticipants())) {
                 messaging.convertAndSendToUser(recipient.toString(), ChatWebSocketConfiguration.USER_QUEUE, payload);
             }
         } catch (RuntimeException failure) {
@@ -70,18 +73,39 @@ class StompChatDelivery implements ChatDelivery {
         }
     }
 
-    private Set<UUID> recipients(ChatMessageSent event) {
+    public record ReactionSocketEvent(String type, UUID projectId, UUID conversationId, UUID messageId,
+                                      String reactionVersion, java.util.List<ChatResponses.Reaction> reactions) { }
+
+    @Override
+    public void reactionsChanged(ChatReactionsChanged event) {
+        try {
+            var recipients=recipients(event.projectId(),event.type(),event.directParticipants());
+            if(recipients.isEmpty())return;
+            var raw=reactionViews.forDelivery(event.conversationId(),java.util.List.of(event.messageId()),recipients).get(event.messageId());
+            if(raw==null)return;
+            if(Long.parseLong(raw.version())<event.committedVersion())throw new IllegalStateException("Reaction snapshot predates commit");
+            for(UUID recipient:recipients){
+                var snapshot=ChatResponses.Reactions.from(raw.forUser(recipient));
+                messaging.convertAndSendToUser(recipient.toString(),ChatWebSocketConfiguration.USER_QUEUE,
+                        new ReactionSocketEvent("REACTIONS",event.projectId(),event.conversationId(),event.messageId(),snapshot.reactionVersion(),snapshot.reactions()));
+            }
+        } catch(RuntimeException failure){
+            log.warn("Chat reaction delivery failed: project={} conversation={} message={} ({})",event.projectId(),event.conversationId(),event.messageId(),failure.getClass().getSimpleName());
+        }
+    }
+
+    private Set<UUID> recipients(UUID projectId,ChatConversationType type,Set<UUID> directParticipants) {
         Set<UUID> recipients = new LinkedHashSet<>();
-        if (event.type() == ChatConversationType.DIRECT) {
-            for (UUID participant : event.directParticipants()) {
-                if (projects.isMember(event.projectId(), participant)) {
+        if (type == ChatConversationType.DIRECT) {
+            for (UUID participant : directParticipants) {
+                if (projects.isMember(projectId, participant)) {
                     recipients.add(participant);
                 }
             }
             return recipients;
         }
         for (int page = 0; page < MAX_MEMBER_PAGES; page++) {
-            Page<ProjectMemberView> members = projects.members(event.projectId(),
+            Page<ProjectMemberView> members = projects.members(projectId,
                     PageRequest.of(page, MEMBER_PAGE, Sort.by("joinedAt").ascending().and(Sort.by("id"))));
             members.forEach(member -> recipients.add(member.userId()));
             if (!members.hasNext()) {

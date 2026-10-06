@@ -37,13 +37,13 @@ function RelatedRow({ related, slug, removable, onRemove, removing, removeLabel 
   );
 }
 
-export function RelationsSection({ task, slug, projectId, perms }: DetailContext) {
+export function RelationsSection({ task, slug, projectId, perms, advancedWritable }: DetailContext) {
   const t = useTranslations("tasks.detail.relations");
   const relations = useRelations(projectId, task.id);
   const [adding, setAdding] = useState(false);
   const [type, setType] = useState<RelationType>("RELATES");
   const [target, setTarget] = useState<TaskRef | null>(null);
-  const editable = perms.work && !task.archivedAt;
+  const editable = perms.work && advancedWritable && !task.archivedAt;
 
   const add = useTaskMutation(projectId, ({ kind, id }: { kind: RelationType; id: string }) => tasksApi.addRelation(projectId, task.id, kind, id), {
     onSuccess: () => {

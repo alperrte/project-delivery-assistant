@@ -34,6 +34,10 @@ const CODE_KEYS: Record<string, string> = {
   LAST_PROJECT_MANAGER: "LAST_PROJECT_MANAGER",
   ...Object.fromEntries(
     [
+      "PROJECT_TASK_MODE_NOT_CONFIGURED",
+      "TASK_MODE_NOT_ALLOWED",
+      "TASK_SIMPLE_FIELDS_INVALID",
+      "TASK_MODE_CONVERSION_BLOCKED",
       "TASK_ARCHIVED",
       "PROJECT_ARCHIVED",
       "TASK_INVALID_TRANSITION",
@@ -77,6 +81,9 @@ const CODE_KEYS: Record<string, string> = {
       "CHAT_RATE_LIMITED",
       "CHAT_INVALID_REQUEST",
       "CHAT_CONFLICT",
+      "CHAT_REPLY_NOT_FOUND",
+      "CHAT_REACTION_INVALID",
+      "CHAT_REACTION_RATE_LIMITED",
     ].map((code) => [code, code]),
   ),
 };

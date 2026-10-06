@@ -1,4 +1,12 @@
 ﻿# Klasör yapısı kısa rehberi
+
+## Invitations remediation — 2026-10-06
+
+Frontend `features/invitations/query-keys.ts`, `invalidation.ts`, `external-preview-error.ts`; protected scopes, successful legacy membership refresh ve status-aware public preview error ayrımı. Tests `e2e/invitation-remediation.spec.ts`, `invitation-db.ts` (QA prepared UUID read/expiry fixture), `invitations-cache.spec.ts`, `invitations-errors.spec.ts`. Backend existing invitation repository/service ve ProjectAccessService etkin expiry filtrelerini taşır; ProjectInvitationServiceTest fresh SQL ve deterministic two-reinvite barrier kapsar. Private artifacts `.local/invitations-remediation/`.
+
+## 2026-10-06 Chat action menu / workspace history
+
+`components/layout/workspace-history.ts` salt okunur capability adapter, `use-workspace-history.ts` SSR-safe external-store hook, `workspace-history-controls.tsx` header Button/Tooltip pair içerir. Ortak responsive reserve `app/globals.css`; `message-actions.tsx` tek chevron/menu lifecycle handoff, `emoji-picker.tsx` mevcut composer ile controlled anchored reaction kullanımını paylaşır. Gerçek browser regresyonları `e2e/{native-history,workspace-history,workspace-history-context,chat-action-menu}.spec.ts`; menu locator helper `e2e/chat-actions.ts`. QA artifacts `.local/chat-action-nav-implementation/` Git dışındadır.
 ## Organization profili (2026-10-04)
 
 Backend `project/organization/{api,application,domain,infrastructure}` profil alanlarını ve media controller/service/ledger repository'sini barındırır. `shared/{MediaStorage,FileSystemMediaStorage}` teknik port/adaptördür; V52 migration `db/migration` altındadır. Frontend `features/organizations` contract, query factory, form, card ve ortak profile header'ı içerir. Nötr image picker/mark/cover `components/common`, validation ve picked-image hook `lib/media` altındadır; Project wrapper'ları aynı bileşenleri kendi çevirileriyle kullanır. `.local/` özel host storage ve QA çıktıları için Git dışında tutulur.
@@ -46,6 +54,7 @@ Bu belge gezinme haritasıdır; gerçek dosya ve klasörler değişmiş olabilir
 | `backend/src/main/resources/db/migration/` | Sıralı Flyway SQL migration'ları |
 | `backend/src/test/java/com/pda/` | Backend testleri; modül ve use-case'e yakın tut |
 | `frontend/src/app/` | Next.js App Router sayfaları, layout ve global stil |
+| `frontend/src/styles/shadcn-compat.css` | CLI paketi olmadan kullanılan yedi UI durum varyantı; MIT attribution ve globals.css import'u |
 | `frontend/public/` | Statik frontend varlıkları |
 | `frontend/src/features/projects/components/project-mark.tsx` | Kart, oluşturma, proje başlığı ve ayarların ortak logo/ilk harf renderer'ı |
 | `frontend/src/features/projects/components/project-logo-field.tsx` | Ayarlarda bağımsız logo upload/remove; mevcut projects query invalidation |
@@ -96,3 +105,22 @@ Squad Service kodu `squad/api`, `squad/application/service`, `squad/domain/entit
 - `project/api/dto/request/TaskManagementModeRequest` ve `ProjectController#taskManagementMode`: yalnız kurucunun ayrı PATCH işlemi; archive conflict sınıflaması `project/domain/exception/ProjectTaskModeConflictException`.
 - `task/domain/TaskCreationMode`, `task/api/TaskUpdateRequest`: kalıcı tür ve gönderilmeyen gelişmiş alanları koruyan update payload.
 - `V54__task_creation_modes.sql`, `task/TaskModesApiIntegrationTest` ve `TaskModesMigrationTest`: migration, politika/yetki/veri koruma ve eşzamanlılık testleri. Frontend bu teslimde değişmez.
+
+## Basit / gelişmiş görev frontend'i (2026-10-05)
+
+- `frontend/src/features/tasks/task-model.ts`: proje politikasına göre görünürlük ve varsayılan görev türü.
+- `features/tasks/components/task-mode-picker.tsx`: ortak tür seçici, bilgi dialogu, tür rozeti ve salt okunur uyarı.
+- `features/projects/components/task-model-setting.tsx`: ilk kurucu seçimi ve proje ayarlarındaki aynı tercih kontrolü.
+- `features/tasks/schemas.ts`: yalnız görünür türün doğrulanması, gönderilmeyen gelişmiş alanların korunması, değişmeyen atama/havuz/deadline koruması.
+- `frontend/e2e/21-task-models.spec.ts`: proje politikası, form/taslak, detay, yorumlar, URL filtresi, dönüşüm/veri koruma, yetki ve responsive/i18n kontrolleri.
+
+## Chat V55 geni?lemesi (2026-10-05)
+
+Backend: application/service `ChatReactionService`, `ChatReactionViewReader`, `ChatReactionRateLimiter`; domain/enums `ChatReactionCode`, domain/entity `ChatMessageReaction`; infrastructure/repository `ChatReactionRepository`; V55 migration, `chat/integration/ChatReplyReactionMigrationTest`. Frontend chat: `reactions.ts`, `reaction-resync.ts`, `pending.ts`, `emoji-catalog.ts`; components `reply-preview`, `message-actions`, `reaction-chips`, `emoji-picker`. Kabul edilen workspace link intent `components/layout/workspace-link.tsx`. E2E `chat-cache.spec.ts`, `chat-replies-reactions.spec.ts`, `chat-responsive.spec.ts`; navigation/renewal mevcut `17-project-chat.spec.ts`.
+
+Organization–Project remediation: `features/projects/query-invalidation.ts` invalidates projects plus affected old/new organization projects page prefixes; `project-settings-form` uses the existing safe Home summary. `organization-detail` owns its separate projects query loading/error/retry and page clamp. Acceptance E2E: `organization-project-association.spec.ts`; QA-only direct PostgreSQL read helper `organization-project-db.ts` uses prepared UUID SQL inside the local PostgreSQL container, without exposing credentials.
+
+
+## Task form date picker (2026-10-06)
+
+`frontend/src/components/ui/date-picker.tsx` is the shared optional-date calendar dropdown; task form Controllers live in `features/tasks/components/task-form-page.tsx`. The existing deadline.ts owns local time/ISO conversion. Browser coverage is `frontend/e2e/task-date-picker.spec.ts`; no new package or backend path.

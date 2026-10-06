@@ -84,7 +84,7 @@ public class ProjectInvitationController {
     }
 
     @PostMapping("/{invitationId}/resend")
-    @Operation(summary = "Cancel a pending invitation and reissue it to the same target with a new token",
+    @Operation(summary = "Reissue a pending or expired invitation to the same target with a new token",
             description = "PROJECT_MANAGER only. Requires CSRF.")
     public ResponseEntity<CreatedInvitationResponse> resend(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
                                            @PathVariable UUID projectId, @PathVariable UUID invitationId) {
@@ -93,7 +93,7 @@ public class ProjectInvitationController {
     }
 
     @DeleteMapping("/{invitationId}")
-    @Operation(summary = "Cancel a pending invitation", description = "PROJECT_MANAGER only. Requires CSRF.")
+    @Operation(summary = "Clear a pending invitation", description = "PROJECT_MANAGER only. Requires CSRF. Expired invitations retain EXPIRED status and are acknowledged without granting membership.")
     @ApiResponse(responseCode = "204", description = "Invitation cancelled")
     public ResponseEntity<Void> cancel(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
                                       @PathVariable UUID projectId, @PathVariable UUID invitationId) {

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { tasksApi } from "../api";
 import { useTaskMutation } from "../hooks";
+import { TaskModeBadge } from "./task-mode-picker";
 import type { Task } from "../types";
 import { DeadlineChip, LabelList, PointsBadge, PoolMark, PriorityBadge } from "./task-badges";
 
@@ -23,9 +24,10 @@ type PoolCardProps = {
   href: string;
   /** Görevlerim lists pool tasks of every project, so the project leads the card. */
   showProject?: boolean;
+  readOnly?: boolean;
 };
 
-export function PoolCard({ task, href, showProject }: PoolCardProps) {
+export function PoolCard({ task, href, showProject, readOnly = false }: PoolCardProps) {
   const t = useTranslations("tasks.pool");
   const claim = useClaimTask(task.projectId);
 
@@ -36,6 +38,7 @@ export function PoolCard({ task, href, showProject }: PoolCardProps) {
           {task.taskKey}
         </span>
         <PriorityBadge priority={task.priority} />
+        <TaskModeBadge mode={task.creationMode} />
         {showProject && task.project && <span className="min-w-0 truncate text-xs text-muted-foreground">{task.project.name}</span>}
       </div>
 
@@ -57,7 +60,7 @@ export function PoolCard({ task, href, showProject }: PoolCardProps) {
 
       <div className="relative z-10 mt-auto flex items-center justify-between gap-2 border-t pt-3">
         <span className="text-xs text-muted-foreground">{task.pool?.teamName ? t("teamOnly", { team: task.pool.teamName }) : t("everyone")}</span>
-        <Button size="sm" disabled={claim.isPending} onClick={() => claim.mutate(task.id)}>
+        <Button size="sm" disabled={readOnly || claim.isPending} onClick={() => claim.mutate(task.id)}>
           {claim.isPending ? <CircleNotch size={14} className="animate-spin" aria-hidden="true" /> : <HandGrabbing size={14} aria-hidden="true" />}
           {t("claim")}
         </Button>

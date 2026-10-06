@@ -11,14 +11,15 @@ import type { TaskEvent } from "../../types";
  * The backend stores raw values (enum names, ids, ISO dates); ids are resolved through the project's members,
  * teams and sprints, and anything that can no longer be resolved falls back to a neutral word.
  */
-export function useEventText(projectId: string) {
+export function useEventText(projectId: string, advanced = true) {
   const t = useTranslations("tasks.detail.activity.events");
   const tc = useTranslations("tasks.common");
+  const tm = useTranslations("taskModels.mode");
   const trel = useTranslations("tasks.detail.relations.types");
   const format = useTaskFormat();
   const members = useProjectMembers(projectId);
   const teams = useProjectTeams(projectId);
-  const sprints = useSprints(projectId);
+  const sprints = useSprints(projectId, undefined, advanced);
 
   const person = (id: string | null) => (members.data ?? []).find((member) => member.userId === id)?.nickname ?? t("someone");
   const team = (id: string | null) => (teams.data ?? []).find((item) => item.id === id)?.name ?? t("aTeam");
@@ -28,6 +29,8 @@ export function useEventText(projectId: string) {
   function fieldValue(field: string | null, value: string | null): string {
     if (value === null || value === "") return none;
     switch (field) {
+      case "creationMode":
+        return value === "SIMPLE" || value === "ADVANCED" ? tm(value) : none;
       case "priority":
         return tc(`priority.${value}`);
       case "startDate":

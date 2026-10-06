@@ -13,6 +13,8 @@ import { settle } from "@/features/tasks/components/detail/detail-section";
 import { ProjectGate, type ProjectGateContext } from "@/features/tasks/components/project-gate";
 import { LabelChip } from "@/features/tasks/components/task-badges";
 import { useTaskMutation } from "@/features/tasks/hooks";
+import { AdvancedReadOnlyNotice } from "@/features/tasks/components/task-mode-picker";
+import { allowsAdvanced } from "@/features/tasks/task-model";
 import { errorKey } from "@/lib/api/error-message";
 import { labelsApi } from "../api";
 import { useLabels } from "../hooks";
@@ -55,7 +57,7 @@ function LabelRow({ projectId, label, isManager, onEdit }: { projectId: string; 
   );
 }
 
-function LabelsView({ projectId, isManager }: ProjectGateContext) {
+function LabelsView({ projectId, project, isManager: manager }: ProjectGateContext) {
   const t = useTranslations("labels");
   const te = useTranslations("errors");
   const labels = useLabels(projectId);
@@ -63,6 +65,7 @@ function LabelsView({ projectId, isManager }: ProjectGateContext) {
   const [editing, setEditing] = useState<Label | null>(null);
 
   const list = [...(labels.data ?? [])].sort((a, b) => a.name.localeCompare(b.name));
+  const isManager = manager && allowsAdvanced(project.taskManagementMode);
   const createButton = isManager && (
     <Button onClick={() => setCreating(true)}>
       <Plus aria-hidden="true" />
@@ -72,6 +75,7 @@ function LabelsView({ projectId, isManager }: ProjectGateContext) {
 
   return (
     <div>
+      {!allowsAdvanced(project.taskManagementMode) && <AdvancedReadOnlyNotice />}
       <PageHeader title={t("title")} description={isManager ? t("description") : t("memberDescription")} action={createButton || undefined} />
 
       {labels.isError && (

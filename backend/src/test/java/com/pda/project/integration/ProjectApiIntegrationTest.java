@@ -75,13 +75,110 @@ class ProjectApiIntegrationTest {
 
     @Autowired MockMvc mvc;
     @Autowired UserAccounts users;
-    @Autowired ProjectRepository projects;
+    @org.springframework.test.context.bean.override.mockito.MockitoSpyBean ProjectRepository projects;
+    @Autowired com.pda.project.application.service.ProjectService projectService;
     @Autowired ProjectMembershipService memberships;
     @Autowired ProjectAccess projectAccess;
     @Autowired JdbcTemplate jdbc;
+    @Autowired jakarta.persistence.EntityManagerFactory entityManagerFactory;
     @Autowired com.pda.project.organization.application.OrganizationMediaService organizationMedia;
     @Autowired com.pda.project.organization.application.OrganizationService organizations;
     @org.springframework.test.context.bean.override.mockito.MockitoSpyBean com.pda.shared.MediaStorage organizationStorage;
+
+    @Test
+    void associationTransitionsStayScopedAndOrganizationOwnerDoesNotInheritProjectAccess() throws Exception {
+        Account owner=account("assocowner"),other=account("assocother"),admin=account("assocadmin");Cookie csrf=csrfCookie();
+        jdbc.update("update users set global_role='ADMIN' where id=?",admin.id());
+        assertEquals("ADMIN",users.findActiveById(admin.id()).orElseThrow().globalRole());
+        UUID a=organizations.create(owner.id(),"Assoc A",null).getId(),b=organizations.create(owner.id(),"Assoc B",null).getId();
+        UUID foreign=organizations.create(other.id(),"Assoc foreign",null).getId();
+        var created=mvc.perform(post("/api/v1/projects").cookie(csrf,owner.access()).header("X-XSRF-TOKEN",csrf.getValue())
+                .contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Association matrix\"}"))
+                .andExpect(status().isCreated()).andReturn().getResponse();
+        UUID pid=UUID.fromString(JsonPath.read(created.getContentAsString(),"$.id"));
+        assertNull(jdbc.queryForObject("select organization_id from projects where id=?",UUID.class,pid));
+        String base="/api/v1/projects/"+pid;
+        for(Account outsider:List.of(other,admin)) {
+            mvc.perform(get(base).cookie(outsider.access())).andExpect(status().isForbidden());
+            mvc.perform(put(base).cookie(csrf,outsider.access()).header("X-XSRF-TOKEN",csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
+                    .content(associationBody(a))).andExpect(status().isForbidden());
+        }
+        mvc.perform(put(base).cookie(csrf).header("X-XSRF-TOKEN",csrf.getValue()).contentType(MediaType.APPLICATION_JSON).content(associationBody(a))).andExpect(status().isUnauthorized());
+        mvc.perform(put(base).cookie(owner.access()).contentType(MediaType.APPLICATION_JSON).content(associationBody(a))).andExpect(status().isForbidden());
+        for(UUID target:List.of(a,b)){
+            mvc.perform(put(base).cookie(csrf,owner.access()).header("X-XSRF-TOKEN",csrf.getValue()).contentType(MediaType.APPLICATION_JSON).content(associationBody(target)))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.organizationId").value(target.toString()));
+            assertEquals(target,jdbc.queryForObject("select organization_id from projects where id=?",UUID.class,pid));
+        }
+        mvc.perform(put(base).cookie(csrf,owner.access()).header("X-XSRF-TOKEN",csrf.getValue()).contentType(MediaType.APPLICATION_JSON).content(associationBody(foreign))).andExpect(status().isForbidden());
+        mvc.perform(put(base).cookie(csrf,owner.access()).header("X-XSRF-TOKEN",csrf.getValue()).contentType(MediaType.APPLICATION_JSON).content(associationBody(UUID.randomUUID()))).andExpect(status().isNotFound());
+        assertEquals(b,jdbc.queryForObject("select organization_id from projects where id=?",UUID.class,pid));
+        organizations.archive(owner.id(),a);
+        mvc.perform(put(base).cookie(csrf,owner.access()).header("X-XSRF-TOKEN",csrf.getValue()).contentType(MediaType.APPLICATION_JSON).content(associationBody(a))).andExpect(status().isNotFound());
+        mvc.perform(put(base).cookie(csrf,owner.access()).header("X-XSRF-TOKEN",csrf.getValue()).contentType(MediaType.APPLICATION_JSON).content(associationBody(null))).andExpect(status().isOk());
+        assertNull(jdbc.queryForObject("select organization_id from projects where id=?",UUID.class,pid));
+        memberships.addMember(owner.id(),pid,other.id(),Set.of(ProjectRole.PROJECT_MANAGER));
+        mvc.perform(put(base).cookie(csrf,other.access()).header("X-XSRF-TOKEN",csrf.getValue()).contentType(MediaType.APPLICATION_JSON).content(associationBody(foreign))).andExpect(status().isOk());
+        memberships.removeMember(owner.id(),pid,other.id());
+        assertEquals(foreign,jdbc.queryForObject("select organization_id from projects where id=?",UUID.class,pid));
+        mvc.perform(get("/api/v1/organizations/"+foreign+"/projects").cookie(other.access())).andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(0));
+        mvc.perform(get(base).cookie(other.access())).andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/organizations/"+foreign).cookie(admin.access())).andExpect(status().isForbidden());
+    }
+
+    private static String associationBody(UUID id) {
+        return "{\"name\":\"Association matrix\",\"priority\":\"HIGH\",\"status\":\"PLANNING\",\"organizationId\":"+(id==null?"null":"\""+id+"\"")+"}";
+    }
+
+    @Test
+    void organizationProjectPagesHaveBoundedQueryCountAtThirtyAndOneHundred() throws Exception {
+        Account owner=account("orgpages");UUID oid=organizations.create(owner.id(),"Org page stats",null).getId();
+        for(int n=0;n<101;n++)projectService.create(owner.id(),"Stats "+n,null,oid);
+        var stats=entityManagerFactory.unwrap(org.hibernate.SessionFactory.class).getStatistics();boolean previous=stats.isStatisticsEnabled();stats.setStatisticsEnabled(true);
+        try {
+            stats.clear();mvc.perform(get("/api/v1/organizations/"+oid+"/projects?size=30").cookie(owner.access())).andExpect(status().isOk()).andExpect(jsonPath("$.content.length()").value(30));long small=stats.getPrepareStatementCount();
+            stats.clear();mvc.perform(get("/api/v1/organizations/"+oid+"/projects?size=100").cookie(owner.access())).andExpect(status().isOk()).andExpect(jsonPath("$.content.length()").value(100)).andExpect(jsonPath("$.totalElements").value(101));long large=stats.getPrepareStatementCount();
+            System.out.println("ORG_PAGE_QUERY_EVIDENCE size30="+small+" size100="+large);assertEquals(small,large);
+        }finally{stats.setStatisticsEnabled(previous);}
+    }
+
+    @Test
+    void organizationArchiveCannotCommitBetweenValidationAndAssociationWrite() throws Exception {
+        Account owner=account("orgrace");
+        for(boolean updating:List.of(false,true)) {
+            UUID oid=organizations.create(owner.id(),"Race "+UUID.randomUUID(),null).getId();
+            UUID seed=updating?projectService.create(owner.id(),"Standalone "+UUID.randomUUID(),null,null).getId():null;
+            CountDownLatch validated=new CountDownLatch(1),release=new CountDownLatch(1);
+            var delegate=org.mockito.Mockito.mockingDetails(projects).getMockCreationSettings().getDefaultAnswer();
+            org.mockito.stubbing.Answer<Object> barrier=invocation->{
+                var target=invocation.<com.pda.project.domain.entity.Project>getArgument(0);
+                if(oid.equals(target.getOrganizationId())){
+                    validated.countDown();assertTrue(release.await(10,TimeUnit.SECONDS));
+                }
+                return delegate.answer(invocation);
+            };
+            org.mockito.Mockito.doAnswer(barrier).when(projects).saveAndFlush(org.mockito.ArgumentMatchers.any());
+            org.mockito.Mockito.doAnswer(barrier).when(projects).save(org.mockito.ArgumentMatchers.any());
+            var pool=Executors.newFixedThreadPool(2);
+            Future<com.pda.project.domain.entity.Project> writer=null;Future<?> archiver=null;
+            try {
+                writer=pool.submit(()->updating?projectService.update(owner.id(),seed,"Changed",null,
+                        com.pda.project.domain.enums.ProjectPriority.MEDIUM,ProjectStatus.PLANNING,null,null,null,null,oid)
+                        :projectService.create(owner.id(),"Linked "+UUID.randomUUID(),null,oid));
+                assertTrue(validated.await(10,TimeUnit.SECONDS));
+                archiver=pool.submit(()->organizations.archive(owner.id(),oid));
+                boolean committedEarly;
+                try{archiver.get(300,TimeUnit.MILLISECONDS);committedEarly=true;}catch(java.util.concurrent.TimeoutException expected){committedEarly=false;}
+                System.out.println("ORG_RACE_EVIDENCE update="+updating+" archiveCommittedBeforeAssociation="+committedEarly);
+                assertFalse(committedEarly,"archive must wait for validated association transaction");
+            } finally {
+                release.countDown();
+                if(writer!=null)writer.get(10,TimeUnit.SECONDS);
+                if(archiver!=null)archiver.get(10,TimeUnit.SECONDS);
+                pool.shutdownNow();org.mockito.Mockito.reset(projects);
+            }
+        }
+    }
 
     @Test
     void creatorBecomesManagerAndCrossProjectAccessIsDenied() throws Exception {

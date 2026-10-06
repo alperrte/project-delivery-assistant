@@ -1,5 +1,9 @@
 # Frontend tasarım kuralları
 
+## Invitations remediation — 2026-10-06
+
+Invitation UI manager EXPIRED tab/empty translations mevcut status dilini kullanır; expired row resend action sunar, live pending cancel davranışı kalır. Public preview yalnız404/invalid token için expired copy;429 mevcut rate copy, network ayrı, server contextual unavailable copy. Retry state token/attempt ile bağlıdır; cancellation/abort eski response/error overwrite etmez. Navbar/current centered placement ve design tokens değiştirilmedi.
+
 Bu belge PDA frontend'inin görsel dilini özetler: renk paleti (light/dark), yazı tipleri, köşe yarıçapları, ikonlar, hareket ve erişilebilirlik kuralları. Amaç, hangi ajan çalışırsa çalışsın tüm sayfaların aynı sistemle uyumlu kalmasıdır. Süreç (skill'ler, Playwright, audit) için `.agents/FRONTEND_WORKFLOW.md` geçerlidir; bu belge onun "mevcut token'ları koru" adımının içeriğidir.
 
 ## Organization profil formu ve ortak medya (2026-10-04)
@@ -31,6 +35,7 @@ Dosyanın bölümleri:
 - Next.js 16 App Router, React 19, TypeScript.
 - Tailwind CSS v4. Ayrı `tailwind.config` yoktur; tema CSS içinde `@theme` ile tanımlıdır.
 - shadcn (stil `base-nova`, primitive'ler `@base-ui/react`). Bileşenler `src/components/ui/` altındadır; `components.json` CSS yolu olarak `src/app/globals.css` dosyasını gösterir.
+- Shadcn CLI npm bağımlılığı kaldırılmıştır (2026-10-05). Kullanılan open/closed/checked/disabled/active/horizontal/vertical varyantları MIT lisans notuyla `src/styles/shadcn-compat.css` içinde korunur; globals.css burayı import eder. Animasyon utility'leri `tw-animate-css` içindedir. Yeni üretilen bileşen eklenirken ihtiyaç duyduğu varyantları doğrula; kullanılmayan CLI zincirini veya tam upstream stylesheet'i otomatik ekleme.
 - `next-themes`: `attribute="class"`, `defaultTheme="system"`. Dark tema `<html class="dark">` ile gelir; Tailwind'de `dark:` varyantı `@custom-variant dark (&:is(.dark *))` ile tanımlıdır.
 - `motion/react` animasyonlar için, `next-intl` metinler için (`src/i18n/messages/{tr,en,de}.json`).
 - Sınıf birleştirme: `cn()` (`@/lib/utils`). Varyantlar: `class-variance-authority`.
@@ -70,7 +75,7 @@ Dashboard, Projeler, Organizasyonlar ve proje detayları `app-shell` ile aynı s
 
 Projeler, Organizasyonlar ve proje Ekipler listeleri tablo yerine ortak kart ızgarası kullanır (`components/common/entity-card.tsx`: `EntityCard`, `EntityCardSection`, `EntityCardFooter`, `EntityCardLink`, `EntityStatusPill`, `EntityGrid`). Kart üstünde tonlu bir başlık bandı (durum rengi: aktif → `success`, beklemede → `warning`, diğerleri nötr), harf/ikon karosu, ad, açıklama ve durum hapı bulunur; altında ayraçlı bölümler ve tek bir alt link vardır. Alt linkin `::after` katmanı kartın tamamını kaplar, yani kart tek bir link hedefidir; kart içindeki ek kontroller (ör. ekip düzenle/arşivle) `relative z-10` almalıdır. Veri olmayan alan için sahte içerik üretme: teknoloji `techStack` metninden bölünür (katalogdaki adlar logo olarak, diğerleri metin çipi olarak), ekip sayısı ve baş harf avatarları liste yanıtındaki `team` alanından gelir; kart başına `/home` gibi ek sorgu atma. Izgara en fazla 3 sütundur (`md:2 / xl:3`) ve sayfa başına 12 kart gösterilir; 4 sütun kartın teknoloji ve avatar satırlarını sıkıştırır. Sayfalama numaralıdır (`PaginationBar` `pageSize` ile) ve sayfa URL'de `?page=` olarak tutulur.
 
-Üst çubuk (`app-header.tsx`) içerik kolonunun üstünde kenarlardan ayrık, yuvarlak köşeli, bulanık camsı bir şerittir (`bg-background/70` + `backdrop-blur-xl`; `backdrop-filter` desteklenmiyorsa `bg-background/95`). `use-auto-hide.ts` ile 2,5 sn hareketsizlikten veya aşağı kaydırmadan sonra yukarı kayarak gizlenir; imleç ekranın üst 24 px'ine gelince, yukarı kaydırınca, çubuğa odaklanınca veya Ctrl/Cmd+K'da geri gelir; üstünde bir açılır menü açıkken asla gizlenmez (`[data-popup-open]`/`aria-expanded`). Dokunmatik cihazlarda yalnız kaydırma davranışı geçerlidir. Sırasıyla mobil menü düğmesi, `app-breadcrumb.tsx` (yalnız md ve üzeri), navbar'a gömülü `global-search.tsx` (modalsız, ARIA combobox), dil seçici, `theme-toggle.tsx`'in `tone="app"` pilli, boş durumlu bildirim zili ve mevcut hesap menüsünü barındırır. `main` her sayfada `pt-20` alır, böylece içerik dinlenme halinde çubuğun altında kalmaz.
+Üst çubuk (`app-header.tsx`) fiziksel viewport merkezindeki eski konumunu korur; sidebar expanded/collapsed konumu etkilemez (2026-10-06 kullanıcı düzeltmesi); ≤small viewport iki row kullanır. Birinci row mobil menü, native history geri/ileri ve GlobalSearch; ikinci row dil/tema/bildirim/hesap; sm üstünde tek row. `--workspace-header-reserve` main ve full chat için ortak128px mobile/72px desktop değeridir; autohide reserve değiştirmez. `use-auto-hide.ts` mevcut700ms idle, top24px/scroll-up/focus/Ctrl-K davranışını korur; popup açıkken gizlenmez. PDA okları yalnız güvenilir native same-origin capability ile enabled olur; unsupported görünür disabled ve localized açıklamalıdır; browser history intercept edilmez.
 
 ### Avatar ve profil fotoğrafı
 
@@ -238,3 +243,22 @@ Sohbet full/bar/compact tek provider state'idir. Seçili proje aynı kaldığın
 3. Renkleri token sınıflarıyla ver. Yeni token gerekiyorsa `:root` + `.dark` (+ gerekiyorsa `@theme inline`) içine ekle ve bu belgeyi güncelle.
 4. Uygulama içi sayfalarda `--auth-*` token'larını ve auth efektlerini kullanma.
 5. Light, dark, mobil (390 px) ve reduced motion ile Playwright'ta kontrol et.
+
+### Chat reply / reaction / emoji UI (2026-10-05)
+
+Confirmed mesajlarda Reply/React desktop hover/focus-within, mobile 44px kontrollerle eri?ilir. Quote tek seviyeli plain text; reply iptali text tasla??n? silmez. Escape ?nce picker, sonra reply context, sonra mevcut panel davran???n? t?ketir. Payla??lan Base UI popover composer24 Unicode emoji, reaction6 code sunar; native button group, token renkleri, viewport s?n?r?, focus/caret restore. Yeni paket yok. Chips count/mine/aria-pressed g?sterir; server response/WS snapshot esas, additive optimistic delta yok. Navigation eski trigger'a focus ?almaz; inert layout cleanup ile kald?r?l?r.
+
+### Optional organization association UX (2026-10-05)
+
+Create/settings always expose a none/standalone option using existing Select/tokens and localized labels; UI sentinel maps to omitted create or explicit-null PUT. Current non-owned association label comes from safe Project Home summary, unavailable retained FK is distinct from standalone. Home organization name is a link only with server capability; otherwise plain text. Organization project list has its own loading/error/retry and caller-visible empty copy; retry refreshes page prefixes before last-page clamp. No palette/component library redesign.
+
+## 2026-10-06 Chat action menu / workspace history
+
+Confirmed chat bubble tek absolute chevron taşır; kalıcı own/other gutter metni korur, hover/open ölçüleri değiştirmez. Bubble → reaction chips (mt1/4px) → timestamp; action flow row yok. Existing nonmodal Menu close-complete reply composer veya aynı chevron anchorındaki reaction picker’a focus handoff yapar; Escape önce açık layer’ı tüketir. Composer24/caret ve reaction6/version behavior değişmez. Mobil44px hit area, viewport collision, token/theme/i18n ve native text selection korunur.
+
+
+## Task form date picker (2026-10-06)
+
+Task create/edit dates use the shared `components/ui/date-picker.tsx`: existing Base UI Popover/Button/Select, Lucide icons and semantic tokens, without a new calendar dependency. TR/EN/DE use Monday-first calendars with month/year navigation, selected/today state and today/clear actions. Local date strings remain YYYY-MM-DD; instant conversion stays in tasks/deadline.ts. Preserve keyboard navigation, focus return, viewport collision/vertical scrolling, the visible footer and form validation when reusing the component.
+
+Month/year controls also use the shared themed Select menus with selected checkmarks, bounded scrolling and named listboxes; do not reintroduce native select popups. Nested Escape dismisses the inner list first. SelectContent accepts optional listProps to label its actual List without changing other consumers.

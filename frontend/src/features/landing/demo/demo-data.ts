@@ -12,6 +12,7 @@ export function demoData(text: { projectName: string; projectAbout: string; team
   ];
   const people = members.map(m => ({ userId: m.userId, nickname: m.nickname! }));
   const project: Project = {
+    taskManagementMode: "BOTH",
     id: "pda-demo-project", slug: "pda-demo", name: text.projectName, description: text.projectAbout,
     status: "PLANNING", priority: "MEDIUM", startDate: null, targetEndDate: null, projectGoal: text.projectAbout,
     techStack: "Next.js, Spring Boot, PostgreSQL", visibility: "PRIVATE", organizationId: null,
@@ -31,6 +32,7 @@ export function demoData(text: { projectName: string; projectAbout: string; team
   };
   const roster: TeamMember[] = members.map(m => ({ ...m, email: `${m.nickname!.toLowerCase()}@example.com`, addedBy: DEMO_USER.id, addedAt: date, otherTeams: [] }));
   const task: Task = {
+    creationMode: "ADVANCED",
     id: "pda-demo-task", projectId: project.id, taskNumber: 1, taskKey: "PDA-1", title: text.taskName, description: text.projectAbout,
     status: "DONE", priority: "MEDIUM", startDate: null, deadlineAt: null, overdue: false, blocked: false, blockedReason: null,
     hasOpenBlockers: false, createdBy: DEMO_USER.id, createdByName: "Alper", createdAt: date, updatedBy: DEMO_USER.id, updatedByName: "Alper", updatedAt: date,

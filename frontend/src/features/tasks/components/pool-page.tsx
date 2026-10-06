@@ -8,6 +8,8 @@ import { PageHeader } from "@/components/common/page-header";
 import { PaginationBar } from "@/components/common/pagination-bar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AdvancedReadOnlyNotice } from "@/features/tasks/components/task-mode-picker";
+import { allowsAdvanced } from "@/features/tasks/task-model";
 import { errorKey } from "@/lib/api/error-message";
 import { TASK_PAGE_SIZE } from "../api";
 import { useTaskList } from "../hooks";
@@ -18,7 +20,7 @@ function PoolGrid({ children }: { children: ReactNode }) {
   return <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{children}</ul>;
 }
 
-function PoolView({ slug, projectId }: ProjectGateContext) {
+function PoolView({ slug, projectId, project }: ProjectGateContext) {
   const t = useTranslations("tasks.pool");
   const te = useTranslations("errors");
   const router = useRouter();
@@ -38,6 +40,7 @@ function PoolView({ slug, projectId }: ProjectGateContext) {
     <div>
       <PageHeader title={t("title")} description={t("description")} />
 
+      {!allowsAdvanced(project.taskManagementMode) && <AdvancedReadOnlyNotice />}
       {pool.isError && (
         <div role="alert" className="space-y-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4">
           <p className="text-sm text-destructive">{te(errorKey(pool.error))}</p>
@@ -66,7 +69,7 @@ function PoolView({ slug, projectId }: ProjectGateContext) {
           </p>
           <PoolGrid>
             {pool.data.content.map((task) => (
-              <PoolCard key={task.id} task={task} href={`/projects/${slug}/tasks/${task.id}`} />
+              <PoolCard readOnly={!allowsAdvanced(project.taskManagementMode)} key={task.id} task={task} href={`/projects/${slug}/tasks/${task.id}`} />
             ))}
           </PoolGrid>
           <PaginationBar

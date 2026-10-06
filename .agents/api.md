@@ -1,5 +1,9 @@
 # API rehberi
 
+## Invitations remediation — 2026-10-06
+
+Endpoint/path/auth/request model değişmedi. Manager invitation GET PENDING yalnız expiresAt>now; EXPIRED filtresi physical EXPIRED veya logical elapsed PENDING döndürür; all response etkin status gösterir. POST resend live pending veya expired invitation için fresh ID/token; team active/same-project doğrulanır. DELETE expired invitation204 ile EXPIRED state retained/no grant, live pending→CANCELLED. Başka final state409; expired token accept/reject kapalı. Create expired target row lock+expire/flush sonrası fresh pending INSERT; duplicate current pending409 ve existing DB unique constraint korunur. Client preview404/token-field validation expired;429/network/server separate retry. Legacy membership mutation invalidation reload gerektirmez.
+
 ## Organization profili ve görselleri (2026-10-04)
 
 2026-10-05 ek kapsam: POST/PUT ve response'a nullable `notes` eklendi (en fazla 1000, trim, whitespace→null). Description ayrı kalır. PUT tam metadata semantiği notes için de geçerlidir; görsel mutation notes'a dokunmaz. Notes sadece owner'a açık profile/list response'unda, düzenleme formunda ve detail'ın ek notlar bölümünde görünür.
@@ -79,3 +83,12 @@ Project GET/list/by-slug `taskManagementMode` taşır: yeni projede null, eski p
 Task POST/PATCH ve bütün TaskView'larda kalıcı `creationMode:SIMPLE|ADVANCED` vardır. POST'ta eksik tür legacy ADVANCED varsayar; yeni projede politika seçilmemişse 409. Liste `creationMode` filtresini DB'de sayfalamadan önce uygular. PATCH temel alanlarda mevcut değiştirme semantiğini korur; gönderilmeyen parent/sprint/tahminler korunur, açık null temizler. Atama/etiket/havuz null veya eksikse korunur. Basit görev gelişmiş alan kullanamaz; yükseltme proje politikasına, basite dönüş gelişmiş veri kontrolüne bağlıdır. Yorumlar/mention, durum, arşiv ve geçmiş ortaktır.
 
 Task pool assignment is common to SIMPLE and ADVANCED tasks (2026-10-06, explicitly approved). POST/PATCH accepts pool{open,teamId} for either type; TASK_MANAGE, membership, CSRF, active-team and no-assignee guards remain. Claim/release keeps TASK_WORK, atomic row locking, team membership and sole-claimant checks. Global pool lists/counts include every configured project policy; unconfigured policies remain blocked. Retained tasks can use the pool after a policy change, and conversion preserves pool/team/claim state. Estimates, parent/subtasks, sprint, labels and other advanced mutations remain restricted; existing advanced data stays readable under SIMPLE. Full contract: SECURITY.md section 11.
+Proje SIMPLE'a dönerse eski gelişmiş kayıtların okuma/indirme ve temel işlemleri kalır; gelişmiş mutation, etiket/sprint yönetimi ve havuz claim/release kapanır. Eski havuz verisi saklanır, ancak claim edilemeyen projeler pool listesi/sayacına girmez. Tam endpoint/yetki/hata matrisi SECURITY.md §11 V54 bölümündedir. Frontend bu teslimde değiştirilmemiştir.
+
+## Chat reply/reaction (2026-10-05)
+
+Conversation base alt?nda `PUT|DELETE /messages/{messageId}/reactions/{emojiCode}` idempotent actor-owned reaction, `GET /messages/reactions?messageIds=...` en ?ok 50 loaded ID i?in personalized snapshot sa?lar. Message `replyTo` (null veya id/sender/140-code-point preview), decimal-string `reactionVersion` ve aggregate `reactions` ta??r. Personalized message/snapshot private/no-store. `REACTIONS` WS olay? ayn? snapshot'? al?c?ya ?zg? mine flag'leriyle iletir; unread/son mesaj de?i?mez. Reconnect ve cached reopen ortak concurrency2 ile batch50 resync; yaln?z yeni version uygulan?r. Ba??ms?z reaction kotas? 60 attempt/min/user; yeni ENV yok. Scope/body/status/hata/Swagger matrisi SECURITY ?11'de.
+
+## Organization–Project association remediation (2026-10-05)
+
+Project POST optional organizationId→null; full PUT omitted/null clears, same preserves, changed non-null requires active owned target. Existing owner row lock serializes new association with archive; project membership/permissions stay independent. Org archive retains FK; Home200 organization:null is the non-throwing absent/archived branch. Active Home summary adds safe `canViewOrganization` navigation hint; owner-only profile/media authorization remains backend-enforced. UI none sentinel never goes on the wire; settings explicit null maps to standalone. Full method/body/status/error/Swagger contract is in SECURITY §11 and remediation completion.

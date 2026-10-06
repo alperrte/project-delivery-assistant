@@ -5,6 +5,7 @@ import { Client } from "@stomp/stompjs";
 import { apiRequest, getAccessExpiresAt, renewAccessSession } from "@/lib/api/client";
 import { chatSocketUrl } from "./api";
 import type { ChatConnection, ChatSocketEvent } from "./types";
+import { normalizeChatMessage, validReactionSnapshot } from "./reactions";
 
 /** The only destination a client may subscribe to; the server resolves `/user` to this user's own sessions. */
 const USER_QUEUE = "/user/queue/chat";
@@ -20,11 +21,16 @@ const RETRY_RENEW_MS = 20_000;
 /** The old socket stays subscribed this long after the new one has taken over, so nothing falls between the two. */
 const OVERLAP_MS = 3_000;
 
-function parseEvent(body: string): ChatSocketEvent | null {
+export function parseChatSocketEvent(body: string): ChatSocketEvent | null {
   try {
     const value = JSON.parse(body) as Partial<ChatSocketEvent> | null;
-    if (!value || (value.type !== "MESSAGE" && value.type !== "READ")) return null;
-    if (typeof value.projectId !== "string" || typeof value.conversationId !== "string") return null;
+    if (!value || (value.type !== "MESSAGE" && value.type !== "READ" && value.type !== "REACTIONS")) return null;
+    if (typeof value.projectId !== "string" || !value.projectId.length || value.projectId.length > 128 || typeof value.conversationId !== "string" || !value.conversationId.length || value.conversationId.length > 128) return null;
+    if (value.type === "REACTIONS") return validReactionSnapshot(value) ? value as ChatSocketEvent : null;
+    if (value.type === "MESSAGE") {
+      if (!value.message || typeof value.message.id !== "string" || typeof value.message.content !== "string" || value.message.conversationId !== value.conversationId) return null;
+      return { ...value, message: normalizeChatMessage(value.message) } as ChatSocketEvent;
+    }
     return value as ChatSocketEvent;
   } catch {
     return null;
@@ -131,7 +137,7 @@ export function useChatSocket({
           if (disposed) { void client.deactivate({ force: true }); return; }
           client.subscribe(USER_QUEUE, (frame) => {
             if (disposed) return;
-            const event = parseEvent(frame.body);
+            const event = parseChatSocketEvent(frame.body);
             if (event) onEventRef.current(event);
           });
           const previous = active;

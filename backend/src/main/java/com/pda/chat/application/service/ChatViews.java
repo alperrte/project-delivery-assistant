@@ -1,6 +1,7 @@
 package com.pda.chat.application.service;
 
 import com.pda.chat.domain.enums.ChatConversationType;
+import com.pda.chat.domain.enums.ChatReactionCode;
 
 import java.time.Instant;
 import java.util.List;
@@ -16,7 +17,14 @@ public final class ChatViews {
     public record ChatUser(UUID userId, String nickname, Long profilePhotoVersion) {
     }
 
-    public record MessageView(UUID id, UUID conversationId, String content, Instant createdAt, ChatUser sender) {
+    public record ReplyView(UUID id, ChatUser sender, String preview) { }
+    public record ReactionView(ChatReactionCode code, String emoji, long count, boolean reactedByCurrentUser) { }
+    public record ReactionSnapshot(UUID messageId, String reactionVersion, List<ReactionView> reactions) { }
+    public record MessageView(UUID id, UUID conversationId, String content, Instant createdAt, ChatUser sender,
+                              ReplyView replyTo, String reactionVersion, List<ReactionView> reactions) {
+        public MessageView(UUID id, UUID conversationId, String content, Instant createdAt, ChatUser sender) {
+            this(id,conversationId,content,createdAt,sender,null,"0",List.of());
+        }
     }
 
     /** What the conversation list shows of the newest message: a short single-line preview. */

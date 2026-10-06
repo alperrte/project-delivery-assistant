@@ -20,6 +20,7 @@ import { useSession } from "@/features/auth/hooks/use-session";
 import { organizationsApi } from "@/features/organizations/api";
 import { errorKey } from "@/lib/api/error-message";
 import { projectsApi } from "../api";
+import { invalidateProjectMutation } from "../query-invalidation";
 import { createProjectSchema, TAGLINE_MAX, type CreateProjectValues } from "../schemas";
 import { MAX_TECH_SELECTION } from "../tech-catalog";
 import { formatTechStack } from "../tech-stack";
@@ -116,9 +117,9 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
       }
       return { project, logoFailed, bannerFailed };
     },
-    onSuccess: ({ project, logoFailed, bannerFailed }) => {
+    onSuccess: async ({ project, logoFailed, bannerFailed }) => {
       created.current = true;
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      await invalidateProjectMutation(queryClient, project.organizationId);
       toast.success(t("actions.created"));
       if (logoFailed) toast.warning(t("actions.logoFailed"));
       if (bannerFailed) toast.warning(t("actions.bannerFailed"));
@@ -248,21 +249,22 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
             </Section>
 
             <Section id={`${ids}-details`} title={t("sections.details.title")} description={t("sections.details.description")}>
-              {organizations && organizations.content.length > 0 && (
+              {(
                 <div className="space-y-1.5">
                   <Label>{t("details.organization")}</Label>
                   <Controller
                     control={control}
                     name="organizationId"
                     render={({ field }) => (
-                      <Select value={field.value ?? ""} onValueChange={(next) => setValue("organizationId", next || undefined, { shouldDirty: true })}>
+                      <Select value={field.value ?? "__standalone__"} disabled={!organizations} onValueChange={(next) => setValue("organizationId", next === "__standalone__" ? undefined : next || undefined, { shouldDirty: true })}>
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder={t("details.organizationNone")}>
-                            {(value: string) => organizations.content.find((org) => org.id === value)?.name ?? t("details.organizationNone")}
+                            {(value: string) => organizations?.content.find((org) => org.id === value)?.name ?? t("details.organizationNone")}
                           </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
-                          {organizations.content.map((org) => (
+                          <SelectItem value="__standalone__">{t("details.organizationNone")}</SelectItem>
+                          {(organizations?.content ?? []).map((org) => (
                             <SelectItem key={org.id} value={org.id}>
                               {org.name}
                             </SelectItem>

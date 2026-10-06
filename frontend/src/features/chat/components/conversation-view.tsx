@@ -9,6 +9,10 @@ import { useChatMessages } from "../hooks";
 import { MessageComposer } from "./message-composer";
 import { GroupAvatar, PersonAvatar } from "./person-avatar";
 import { MessageList } from "./message-list";
+import type { ChatMessage, ChatReply } from "../types";
+import { previewOf } from "../limits";
+import { toast } from "sonner";
+import { errorKey } from "@/lib/api/error-message";
 
 function subscribeToVisibility(onChange: () => void) {
   document.addEventListener("visibilitychange", onChange);
@@ -61,6 +65,14 @@ export function ConversationView({ autoFocus }: { autoFocus?: boolean }) {
   const selfId = user?.id;
   const { projectId, activeConversationId: conversationId, active, overview, reportView, markRead } = chat;
   const query = useChatMessages(projectId, conversationId);
+  const key = active ? draftKey(active) : "none";
+  const [reply, setReply] = useState<ChatReply | null>(() => chat.getReply(key));
+  function chooseReply(message: ChatMessage) {
+    if (message.conversationId !== conversationId) return;
+    const quote = { id: message.id, sender: { ...message.sender }, preview: previewOf(message.content) };
+    setReply(quote); chat.setReply(key, quote);
+  }
+  function cancelReply() { setReply(null); chat.setReply(key, null); }
   const visible = useDocumentVisible();
   const [atBottom, setAtBottom] = useState(true);
   const markedRef = useRef<string | null>(null);
@@ -96,7 +108,6 @@ export function ConversationView({ autoFocus }: { autoFocus?: boolean }) {
   }, [conversationId, atBottom, visible, lastId, lastFromOther, unread, markRead]);
 
   const opening = !conversationId;
-  const key = active ? draftKey(active) : "none";
 
   return (
     <div className="flex min-h-0 flex-1 flex-col" data-testid="chat-conversation">
@@ -124,6 +135,10 @@ export function ConversationView({ autoFocus }: { autoFocus?: boolean }) {
           onRetrySend={(clientId) => chat.retry(conversationId, clientId)}
           onDiscard={(clientId) => chat.discard(conversationId, clientId)}
           errorLabel={(errorKey) => te(errorKey)}
+          onReply={chooseReply}
+          onReact={(messageId,code,add)=>{void chat.react(messageId,code,add).catch(error=>toast.error(`${t("reactions.error")} ${te(errorKey(error))}`));}}
+          reactionPending={chat.reactionPending}
+          reactionsDisabled={chat.sendBlocked}
         />
       )}
       <MessageComposer
@@ -132,11 +147,13 @@ export function ConversationView({ autoFocus }: { autoFocus?: boolean }) {
         initialDraft={chat.getDraft(key)}
         onDraftChange={(text) => chat.setDraft(key, text)}
         onSend={(text) => {
-          if (conversationId) chat.send(conversationId, text);
+          if (conversationId && chat.send(conversationId, text, reply).ok) cancelReply();
         }}
         disabled={opening || chat.sendBlocked}
         disabledReason={chat.sendBlocked ? t("disconnected") : undefined}
         autoFocus={autoFocus}
+        reply={reply}
+        onCancelReply={cancelReply}
       />
     </div>
   );

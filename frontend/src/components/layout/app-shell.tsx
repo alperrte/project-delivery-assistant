@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, type ReactNode, type ComponentProps } from "react";
-import Link from "@/i18n/navigation";
+import { useEffect, useState, type ReactNode, type ComponentProps, type CSSProperties } from "react";
+import Link from "./workspace-link";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
@@ -22,6 +22,7 @@ import { ApiError, SESSION_EXPIRED_EVENT } from "@/lib/api/client";
 import { PageFailure } from "@/features/errors/page-failure";
 import { ErrorFrame } from "@/features/errors/error-frame";
 import { sessionQueryKey, useSession } from "@/features/auth/hooks/use-session";
+import { clearPrivateInvitations } from "@/features/invitations/query-keys";
 import { useApplySavedPreferences, useRestoreSessionBaseline } from "@/features/settings/session-preferences";
 
 const NAV_LINKS = [
@@ -48,6 +49,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!sessionExpired) return;
+    clearPrivateInvitations(queryClient);
     restoreBaseline();
     router.replace("/login");
     // `restoreBaseline` is recreated every render; the session ending is the only trigger that matters.
@@ -57,6 +59,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   // The access token is renewed transparently; this only fires when the session itself is over.
   useEffect(() => {
     const sessionEnded = () => {
+      clearPrivateInvitations(queryClient);
       restoreBaseline();
       queryClient.removeQueries({ queryKey: sessionQueryKey });
       router.replace("/login");
@@ -67,9 +70,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, [queryClient, router]);
 
   async function handleLogout() {
+    clearPrivateInvitations(queryClient);
     try {
       await authApi.logout();
     } finally {
+      clearPrivateInvitations(queryClient);
       restoreBaseline();
       queryClient.removeQueries({ queryKey: sessionQueryKey });
       router.replace("/login");
@@ -187,7 +192,7 @@ export function AppShellView({ children, pathname, user, collapsed = false, onLo
   }
 
   const shell = (
-    <div style={contained ? { height: "var(--demo-height)" } : undefined} className={cn("flex bg-background", contained ? "workspace-preview min-h-full" : "app-shell min-h-[100dvh]")}>
+    <div style={{height:contained?"var(--demo-height)":undefined,"--workspace-sidebar-width":collapsed?"4rem":"15rem"} as CSSProperties} className={cn("flex bg-background", contained ? "workspace-preview min-h-full" : "app-shell min-h-[100dvh]")}>
       {!contained && <a href="#main-content" className="sr-only z-50 rounded bg-primary p-3 text-primary-foreground focus:not-sr-only focus:fixed focus:top-2 focus:left-2">{tw("skip")}</a>}
       <aside style={contained ? { height: "var(--demo-height)" } : undefined} className={cn("sticky top-0 hidden h-[100dvh] shrink-0 flex-col border-r bg-surface-2 transition-[width] duration-300 lg:flex", collapsed ? "w-16" : "w-60")}>
         {renderNavigation(collapsed)}
@@ -214,7 +219,7 @@ export function AppShellView({ children, pathname, user, collapsed = false, onLo
       </Dialog>
       <div className="flex min-w-0 flex-1 flex-col">
         <AppHeader contained={contained} user={user} onOpenMobileMenu={() => setMenuOpen(true)} onLogout={onLogout} />
-        <main id={contained ? undefined : "main-content"} style={contained ? { height: "var(--demo-height)", overflowY: "auto" } : undefined} tabIndex={-1} className={cn("w-full min-w-0 flex-1 pt-[4.5rem]", pathname === "/dashboard" ? "" : "mx-auto max-w-[1560px] px-4 pb-6 sm:px-8 sm:pb-8")}>{children}</main>
+        <main id={contained ? undefined : "main-content"} style={contained ? { height: "var(--demo-height)", overflowY: "auto" } : undefined} tabIndex={-1} className={cn("w-full min-w-0 flex-1 pt-(--workspace-header-reserve)", pathname === "/dashboard" ? "" : "mx-auto max-w-[1560px] px-4 pb-6 sm:px-8 sm:pb-8")}>{children}</main>
       </div>
     </div>
   );

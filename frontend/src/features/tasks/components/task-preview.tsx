@@ -6,10 +6,13 @@ import { useLabels } from "@/features/labels/hooks";
 import { useSprints } from "@/features/sprints/hooks";
 import { toDeadlineIso } from "../deadline";
 import { useProjectMembers, useProjectTeams } from "../hooks";
-import type { LabelRef, PersonRef, TaskPriority, TaskRef, TaskStatus } from "../types";
+import { TaskModeBadge } from "./task-mode-picker";
+import type { TaskCreationMode, LabelRef, PersonRef, TaskPriority, TaskRef, TaskStatus } from "../types";
 import { AssigneeAvatars, DeadlineChip, LabelList, PointsBadge, PoolMark, PriorityBadge, StatusBadge } from "./task-badges";
 
 type TaskPreviewProps = {
+  advanced: boolean;
+  creationMode: TaskCreationMode;
   projectId: string;
   projectName: string;
   /** `null` while creating: the key is only assigned by the server. */
@@ -35,10 +38,10 @@ type TaskPreviewProps = {
 /** The card exactly as the list and the pool will show it, rebuilt from the form values on every keystroke. */
 export function TaskPreview(props: TaskPreviewProps) {
   const t = useTranslations("tasks.form.preview");
-  const labels = useLabels(props.projectId);
+  const labels = useLabels(props.projectId, props.advanced);
   const members = useProjectMembers(props.projectId);
-  const teams = useProjectTeams(props.projectId);
-  const sprints = useSprints(props.projectId);
+  const teams = useProjectTeams(props.projectId, props.advanced);
+  const sprints = useSprints(props.projectId, undefined, props.advanced);
 
   const chosenLabels: LabelRef[] = props.labelIds.flatMap((id) => {
     const label = labels.data?.find((item) => item.id === id);
@@ -59,6 +62,7 @@ export function TaskPreview(props: TaskPreviewProps) {
       <div className="flex flex-wrap items-center gap-2">
         <span className="font-mono text-xs tabular-nums text-muted-foreground">{props.taskKey ?? t("keyPending")}</span>
         <StatusBadge status={props.status} />
+        <TaskModeBadge mode={props.creationMode} />
         <PriorityBadge priority={props.priority} />
         <span className="min-w-0 truncate text-xs text-muted-foreground">{props.projectName}</span>
       </div>

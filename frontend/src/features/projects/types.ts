@@ -9,7 +9,10 @@ export type UserRef = { userId: string; nickname: string; profilePhotoVersion?: 
 /** Filled by the list endpoint only (aggregated per page); detail responses carry `null`. */
 export type ProjectTeam = { memberCount: number; preview: UserRef[] };
 
+export type TaskManagementMode = "SIMPLE" | "ADVANCED" | "BOTH";
+
 export type Project = {
+  taskManagementMode: TaskManagementMode | null;
   id: string;
   name: string;
   slug: string;
@@ -38,7 +41,7 @@ export type Project = {
   team: ProjectTeam | null;
 };
 
-export type OrganizationSummary = { id: string; name: string; slug: string };
+export type OrganizationSummary = { id: string; name: string; slug: string; canViewOrganization?: boolean };
 export type ManagerSummary = { userId: string; nickname: string };
 export type CriteriaProgress = { completed: number; total: number };
 export type CommitSummary = {

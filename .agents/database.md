@@ -1,5 +1,9 @@
 # Veritabanı ve kalıcılık
 
+## Invitations remediation — 2026-10-06
+
+Migration/entity/cardinality değişmedi. Existing physical PENDING+past expiry target row mutation sırasında pessimistic lock ile EXPIRED yapılıp flush edilir; unique partial index bypass/drop edilmez. Reads effective expiry representation/filter kullanır, GET DB state mutation yapmaz. Resend expired row retained EXPIRED ve new pending row; expired cancel acknowledges204 without membership grant. PostgreSQL barrier iki create'i aynı expired row üzerinde bekletti; yalnız biri yeni pending commit etti, other conflict. Current module model/roles/team membership transaction unchanged.
+
 ## V52 Organization profili ve media ledger (2026-10-04)
 
 ### V53 — Organization notes (2026-10-05)
@@ -106,3 +110,11 @@ Modüller birbirinin repository implementasyonunu doğrudan kullanmaz. Başka mo
 task_watchers.manual_watch NOT NULL DEFAULT FALSE, otomatik bildirim takipçisi ile kullanıcının açık izleme tercihini ayırır. Eski köken bilinmediği için tarihsel satırlar TRUE backfill edilir. Yeni otomatik takip ON CONFLICT ile açık tercihi bozmaz; manuel watch upsert TRUE yapar. Yorum/otomatik takip basite dönüşü engellemez; açık izleme tercihi engeller.
 
 Migration kayıt silmez; yorum/üyelik/ekler/ilişkiler/zaman ve arşiv bilgileri korunur. Tür kısıtları ve veri kaybı olmadan 53→54 upgrade PostgreSQL Testcontainers ile doğrulanır. Project politika exclusive kilidi Task'ın public ProjectAccess shared kilidiyle tutarlıdır; gelişmiş ilişkili veriler Task row lock ile dönüşüme karşı korunur. Project DynamicUpdate, başka metadata değişikliklerinin politikayı eski değere döndürmesini önler. Geri dönüşte kolonları veya verileri silmeyin; eski uygulama tür politikasını uygulamayacağından eski backend ile SIMPLE projelerini çalıştırmak davranışsal olarak güvenli rollback değildir.
+
+## V55 ? Chat replies and reactions
+
+Nullable scalar `chat_messages.reply_to_message_id`; `(reply_to_message_id, conversation_id)` composite FK, `UNIQUE(id,conversation_id)` ve self-reply CHECK ayn? konu?may? DB'de korur; non-null reply i?in partial index. `reaction_version` nonnegative BIGINT default0; content/time de?i?mez. `chat_message_reactions` scalar message/user UUID, alt?-code CHECK, timestamp; PK(message_id,user_id,emoji_code), message FK ON DELETE CASCADE. PK message prefix'i batch aggregation i?in yeterlidir; duplicate message veya gereksiz standalone user index yok. Row lock alt?nda insert/delete + version tek transaction; no-op art?rmaz. Version/count/mine tek SQL snapshot. V51/V54 de?i?medi; V54?V55 legacy round-trip, FK/PK/CHECK ve Hibernate validate ger?ek PostgreSQL testleriyle do?rulan?r.
+
+## Organization–Project lifecycle integrity (2026-10-05)
+
+No schema or migration change: V21 nullable organization_id FK, NO ACTION delete behavior and (organization_id,archived_at) index remain. Organization archive retains associations and projects stay active; project archive does not affect organization/siblings. New/changed association validation uses existing organization row lock throughout the write transaction, shared with owner archive synchronization. Same-ID co-manager metadata and null detach preserve their prior policy. PostgreSQL barrier and physical NULL/UUID round-trip tests verify integrity; organization page query count at 30/100 remains fixed.

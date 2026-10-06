@@ -22,7 +22,10 @@ export type SprintRef = { id: string; name: string; status: SprintStatus };
 export type PoolRef = { open: boolean; claimed: boolean; teamId: string | null; teamName: string | null };
 export type TaskProjectRef = { id: string; slug: string; name: string; logoVersion: number | null };
 
+export type TaskCreationMode = "SIMPLE" | "ADVANCED";
+
 export type Task = {
+  creationMode: TaskCreationMode;
   id: string;
   projectId: string;
   taskNumber: number;
@@ -172,6 +175,7 @@ export type SortDirection = "asc" | "desc";
 
 /** Server-side list filters of `GET /projects/{id}/tasks`. Empty arrays and `false` flags are not sent. */
 export type TaskListParams = {
+  creationMode?: TaskCreationMode;
   status?: TaskStatus[];
   priority?: TaskPriority[];
   assigneeId?: string;

@@ -1,8 +1,12 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "shadcn/tailwind.css";
+@import "../styles/shadcn-compat.css";
 
 @custom-variant dark (&:is(.dark *));
+
+/* One layout reserve for the workspace header, main content and full chat. */
+:root { --workspace-header-reserve: 8rem; --workspace-sidebar-width: 15rem; }
+@media (min-width: 640px) { :root { --workspace-header-reserve: 4.5rem; } }
 
 @theme inline {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;

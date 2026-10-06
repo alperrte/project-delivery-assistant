@@ -14,6 +14,7 @@ import { useSprints } from "@/features/sprints/hooks";
 import { ApiError } from "@/lib/api/client";
 import { errorKey } from "@/lib/api/error-message";
 import { cn } from "@/lib/utils";
+import { allowsAdvanced } from "../task-model";
 import { tasksApi } from "../api";
 import { invalidateTaskViews, tasksKey, useAllTasks } from "../hooks";
 import { taskPermissions } from "../permissions";
@@ -47,7 +48,7 @@ function BoardSkeleton() {
   );
 }
 
-function BoardView({ slug, projectId, userId, isManager }: ProjectGateContext) {
+function BoardView({ slug, project, projectId, userId, isManager }: ProjectGateContext) {
   const t = useTranslations("tasks.board");
   const tc = useTranslations("tasks.common");
   const te = useTranslations("errors");
@@ -55,12 +56,13 @@ function BoardView({ slug, projectId, userId, isManager }: ProjectGateContext) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
-  const sprints = useSprints(projectId);
+  const advanced = allowsAdvanced(project.taskManagementMode);
+  const sprints = useSprints(projectId, undefined, advanced);
 
   // Without an explicit choice the board shows the active sprint, or every task when none runs.
   const activeSprint = sprints.data?.find((sprint) => sprint.status === "ACTIVE");
   const requested = searchParams.get("sprint");
-  const sprintChoice = requested ?? (sprints.isPending ? null : (activeSprint?.id ?? ALL));
+  const sprintChoice = !advanced ? ALL : requested ?? (sprints.isPending ? null : (activeSprint?.id ?? ALL));
   const onlyMine = searchParams.get("mine") === "1";
 
   const params: TaskListParams = {
@@ -144,7 +146,7 @@ function BoardView({ slug, projectId, userId, isManager }: ProjectGateContext) {
       <PageHeader title={t("title")} description={t("description")} />
 
       <div className="mb-4 flex flex-wrap items-center gap-2" role="group" aria-label={t("toolbar")}>
-        <Select value={sprintChoice ?? ALL} onValueChange={(next) => setParam("sprint", next ?? ALL)}>
+        {advanced && <Select value={sprintChoice ?? ALL} onValueChange={(next) => setParam("sprint", next ?? ALL)}>
           <SelectTrigger className="h-8 w-auto min-w-44" aria-label={t("sprint")}>
             <SelectValue>{(value: string) => sprintLabel(value)}</SelectValue>
           </SelectTrigger>
@@ -158,7 +160,7 @@ function BoardView({ slug, projectId, userId, isManager }: ProjectGateContext) {
               </SelectItem>
             ))}
           </SelectContent>
-        </Select>
+        </Select>}
         <Button variant={onlyMine ? "secondary" : "outline"} size="lg" aria-pressed={onlyMine} onClick={() => setParam("mine", onlyMine ? null : "1")}>
           {t("onlyMine")}
         </Button>

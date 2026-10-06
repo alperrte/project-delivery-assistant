@@ -63,7 +63,7 @@ public class ProjectHomeService {
         Project project = activeProject(projectId);
 
         OrganizationSummary organization = project.getOrganizationId() == null ? null
-                : organizationSummary(project.getOrganizationId());
+                : organizationSummary(project.getOrganizationId(), actorId);
 
         List<ManagerSummary> managers = memberships
                 .findByProjectIdAndStatusAndRole(projectId, MembershipStatus.ACTIVE, ProjectRole.PROJECT_MANAGER)
@@ -83,13 +83,10 @@ public class ProjectHomeService {
     }
 
     /** An organization that was archived/removed after being linked never breaks Project Home. */
-    private OrganizationSummary organizationSummary(UUID organizationId) {
-        try {
-            Organization organization = organizations.requireActive(organizationId);
-            return new OrganizationSummary(organization.getId(), organization.getName(), organization.getSlug());
-        } catch (NoSuchElementException ex) {
-            return null;
-        }
+    private OrganizationSummary organizationSummary(UUID organizationId, UUID actorId) {
+        return organizations.findActive(organizationId)
+                .map(organization -> new OrganizationSummary(organization.getId(), organization.getName(), organization.getSlug(), organization.getOwnerUserId().equals(actorId)))
+                .orElse(null);
     }
 
     private ManagerSummary managerSummary(ProjectMembership membership) {
@@ -141,7 +138,7 @@ public class ProjectHomeService {
                                      List<ManagerSummary> managers, long teamMemberCount,
                                      CriteriaProgress criteriaProgress, RepositorySummary repository) {}
 
-    public record OrganizationSummary(UUID id, String name, String slug) {}
+    public record OrganizationSummary(UUID id, String name, String slug, boolean canViewOrganization) {}
 
     public record ManagerSummary(UUID userId, String nickname) {}
 
