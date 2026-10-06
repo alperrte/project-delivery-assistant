@@ -18,11 +18,13 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AddTeamMemberDialog } from "@/features/squads/components/add-team-member-dialog";
 import { errorKey } from "@/lib/api/error-message";
 import { invitationsApi } from "../api";
+import { invitationKeys } from "../query-keys";
+import { useSession } from "@/features/auth/hooks/use-session";
 import type { Invitation, InvitationStatus } from "../types";
 import { InvitationStatusBadge } from "./invitation-status-badge";
 
 const PAGE_SIZE = 20;
-export const INVITATION_TABS = ["PENDING", "ACCEPTED", "REJECTED", "CANCELLED"] as const satisfies readonly InvitationStatus[];
+export const INVITATION_TABS = ["PENDING", "ACCEPTED", "REJECTED", "CANCELLED", "EXPIRED"] as const satisfies readonly InvitationStatus[];
 type Tab = (typeof INVITATION_TABS)[number];
 
 const isTab = (value: string | null): value is Tab => INVITATION_TABS.some((tab) => tab === value);
@@ -69,14 +71,16 @@ export function InvitationsPage({ projectId }: { projectId: string }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
+  const {data:user}=useSession();
 
   const requestedTab = searchParams.get("status");
   const tab: Tab = isTab(requestedTab) ? requestedTab : "PENDING";
   const page = pageFromParam(searchParams.get("page"));
 
   const invitations = useQuery({
-    queryKey: ["projects", projectId, "invitations", tab, page],
-    queryFn: () => invitationsApi.list(projectId, page, PAGE_SIZE, tab),
+    queryKey: [...invitationKeys.project(projectId,user?.id), tab, page],
+    queryFn: ({signal}) => invitationsApi.list(projectId, page, PAGE_SIZE, tab,signal),
+    enabled: !!user?.id,
   });
 
   function go(changes: { status?: Tab; page?: number }) {
@@ -107,7 +111,7 @@ export function InvitationsPage({ projectId }: { projectId: string }) {
   const rows = invitations.data?.content ?? [];
 
   const actions = (invitation: Invitation) =>
-    invitation.status === "PENDING" && (
+    (invitation.status === "PENDING" || invitation.status === "EXPIRED") && (
       <div className="flex items-center gap-1.5">
         <Button
           variant="outline"
@@ -119,7 +123,7 @@ export function InvitationsPage({ projectId }: { projectId: string }) {
           <ArrowClockwise size={15} aria-hidden="true" />
           {t("resend")}
         </Button>
-        <ConfirmDialog
+        {invitation.status === "PENDING" && <ConfirmDialog
           trigger={
             <Button variant="ghost" size="sm" aria-label={t("cancelNamed", { name: targetName(invitation) })}>
               <X size={15} aria-hidden="true" />
@@ -141,7 +145,7 @@ export function InvitationsPage({ projectId }: { projectId: string }) {
               throw err;
             }
           }}
-        />
+        />}
       </div>
     );
 

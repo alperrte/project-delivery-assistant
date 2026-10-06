@@ -774,8 +774,13 @@
       "CANCELLED": {
         "title": "Keine stornierten Einladungen",
         "description": "Stornierte Einladungen werden hier aufgelistet."
+      },
+      "EXPIRED": {
+        "title": "Keine abgelaufenen Einladungen",
+        "description": "Abgelaufene Einladungen erscheinen hier."
       }
-    }
+    },
+    "externalUnavailable": "Einladungsdetails sind derzeit nicht verfügbar. Bitte versuchen Sie es erneut."
   },
   "squads": {
     "card": {

@@ -1,5 +1,9 @@
 ﻿# Mimari kısa özet
 
+## Invitations remediation — 2026-10-06
+
+Private invitation list/preview/project-history/count keys actor ID ile scope edilir; sign-in/out/session boundary yalnız invitation private family cancel/remove yapar. Recipient local modal state actor key ile remount olur. Expired pending mutation row lock altında EXPIRED + flush olur; yeni INSERT mevcut partial unique constraint ile korunur. GET presentation/count/candidates etkin expiry kullanır; arka plan scheduler, auth policy, yeni migration veya General Team eklenmedi. Legacy accept mevcut projects/private invitation roots invalidates; external signed-in baseline zaten geçti ve callback gereksiz değiştirilmedi.
+
 ## 2026-10-06 Chat action menu / workspace history
 
 Workspace history yalnız native Navigation capability okur; mevcut localized router.back/forward ile aynı-origin native entry traverses eder. URL stack/history override/private Next state veya yeni storage yok. Unsupported capability unknown/disabled kalır. AppHeader main dışında; fullscreen logical page traversal ile kapanır, compact/bar aynı owner içinde korunur. Message menu yalnız presentation katmanıdır; reply/reaction REST/DB/WS/version/batch-resync contract değişmedi.

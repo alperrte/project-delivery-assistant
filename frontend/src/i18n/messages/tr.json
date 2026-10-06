@@ -774,8 +774,13 @@
       "CANCELLED": {
         "title": "İptal edilen davet yok",
         "description": "İptal edilen davetler burada listelenir."
+      },
+      "EXPIRED": {
+        "title": "Süresi dolmuş davet yok",
+        "description": "Süresi dolan davetler burada görünür."
       }
-    }
+    },
+    "externalUnavailable": "Davet bilgileri şu anda alınamıyor. Lütfen tekrar deneyin."
   },
   "squads": {
     "card": {

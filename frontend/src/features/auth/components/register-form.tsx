@@ -15,6 +15,7 @@ import { errorKey } from "@/lib/api/error-message";
 import { authApi } from "../api";
 import { registerSchema, type RegisterValues } from "../schemas";
 import { sessionQueryKey } from "../hooks/use-session";
+import { clearPrivateInvitations } from "@/features/invitations/query-keys";
 import { authCtaClass } from "./auth-card";
 import { useShake } from "./use-shake";
 
@@ -57,6 +58,7 @@ export function RegisterForm() {
     try {
       await authApi.login({ email: values.email, password: values.password });
       const me = await authApi.me();
+      clearPrivateInvitations(queryClient);
       queryClient.setQueryData(sessionQueryKey, me);
       toast.success(t("welcome"));
       router.replace(me.mustChangePassword ? "/change-password" : "/dashboard");
