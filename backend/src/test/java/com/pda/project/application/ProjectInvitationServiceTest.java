@@ -72,6 +72,8 @@ class ProjectInvitationServiceTest {
     @Autowired UserAccounts users;
     @Autowired SquadService squadService;
     @Autowired JdbcTemplate jdbc;
+    @Autowired com.pda.project.ProjectAccess access;
+    @Autowired javax.sql.DataSource dataSource;
     @MockitoBean ProjectInvitationMailPort mailPort;
 
     @Test
@@ -310,7 +312,7 @@ class ProjectInvitationServiceTest {
     }
 
     @Test
-    void expiredInvitationIsRejectedForAcceptRejectCancelAndResend() {
+    void expiredInvitationCannotGrantMembershipButCanBeClearedAndRenewed() {
         UUID manager = registerUser("manager7");
         UUID target = registerUser("target7");
         UUID projectId = projectService.create(manager, "Expired invite project", null, null).getId();
@@ -324,8 +326,10 @@ class ProjectInvitationServiceTest {
                 created.rawToken()));
         assertThrows(IllegalStateException.class, () -> invitationService.reject(target, projectId, invitationId,
                 created.rawToken()));
-        assertThrows(IllegalStateException.class, () -> invitationService.cancel(manager, projectId, invitationId));
-        assertThrows(IllegalStateException.class, () -> invitationService.resend(manager, projectId, invitationId));
+        invitationService.cancel(manager, projectId, invitationId);
+        assertEquals("EXPIRED",storedStatus(created));
+        CreatedInvitation renewed=invitationService.resend(manager, projectId, invitationId);
+        assertEquals("PENDING",storedStatus(renewed));
     }
 
     @Test
@@ -403,6 +407,95 @@ class ProjectInvitationServiceTest {
                 com.pda.project.application.service.MembershipConflictException.class,
                 () -> membershipService.replaceRoles(second, projectId, founder, Set.of(ProjectRole.TESTER)));
         assertEquals("PROJECT_OWNER_PROTECTED", demoted.code());
+    }
+
+    @Test
+    void expiredRegisteredInviteIsNotPendingAndReinviteMaterializesExpiryBeforeUniqueInsert() {
+        UUID manager=registerUser("expmanager"),target=registerUser("exptarget");
+        UUID project=projectService.create(manager,"Expired registered",null,null).getId(),team=team(project);
+        CreatedInvitation old=invitationService.inviteRegisteredUser(manager,project,target,Set.of(ProjectRole.TESTER),null,team);
+        age(old);
+        assertEquals(0,invitationService.listPending(manager,project,PageRequest.of(0,20)).getTotalElements());
+        assertEquals(0,invitationService.listProject(manager,project,InvitationStatus.PENDING,PageRequest.of(0,20)).getTotalElements());
+        assertEquals(InvitationStatus.EXPIRED,invitationService.listProject(manager,project,InvitationStatus.EXPIRED,PageRequest.of(0,20)).getContent().getFirst().status());
+        assertEquals(Set.of(),access.pendingInviteeIds(project,Set.of(target)));
+        assertThrows(IllegalStateException.class,()->invitationService.accept(target,project,old.invitation().getId(),old.rawToken()));
+        CreatedInvitation next=invitationService.inviteRegisteredUser(manager,project,target,Set.of(ProjectRole.FRONTEND_DEVELOPER),null,team);
+        assertNotEquals(old.invitation().getId(),next.invitation().getId());
+        assertEquals("EXPIRED",storedStatus(old));assertEquals("PENDING",storedStatus(next));
+        assertEquals(1L,jdbc.queryForObject("SELECT count(*) FROM project_invitations WHERE project_id=? AND invited_user_id=? AND status='PENDING'",Long.class,project,target));
+        assertThrows(InvitationConflictException.class,()->invitationService.inviteRegisteredUser(manager,project,target,Set.of(ProjectRole.TESTER),null,team));
+    }
+
+    @Test
+    void expiredEmailReinviteRetainsCaseInsensitiveUniqueProtection() {
+        UUID manager=registerUser("emailmanager"),project=projectService.create(manager,"Expired email",null,null).getId(),team=team(project);
+        String email="expiry-"+UUID.randomUUID()+"@example.test";
+        CreatedInvitation old=invitationService.inviteByEmail(manager,project,email,"Audit","Guest",Set.of(ProjectRole.TESTER),null,team);age(old);
+        CreatedInvitation next=invitationService.inviteByEmail(manager,project,email.toUpperCase(java.util.Locale.ROOT),"Audit","Guest",Set.of(ProjectRole.TESTER),null,team);
+        assertEquals("EXPIRED",storedStatus(old));assertEquals(email,next.invitation().getEmail());
+        assertThrows(InvitationConflictException.class,()->invitationService.inviteByEmail(manager,project,email,"Audit","Guest",Set.of(ProjectRole.TESTER),null,team));
+    }
+
+    @Test
+    void expiredResendIssuesFreshTokenAndExpiredCancelAcknowledgesWithoutGrant() {
+        UUID manager=registerUser("renewmanager"),target=registerUser("renewtarget"),other=registerUser("cleartarget");
+        UUID project=projectService.create(manager,"Expired renew",null,null).getId(),team=team(project);
+        CreatedInvitation old=invitationService.inviteRegisteredUser(manager,project,target,Set.of(ProjectRole.TESTER),null,team);age(old);
+        CreatedInvitation next=invitationService.resend(manager,project,old.invitation().getId());
+        assertEquals("EXPIRED",storedStatus(old));assertEquals("PENDING",storedStatus(next));assertNotEquals(old.rawToken(),next.rawToken());
+        assertThrows(IllegalStateException.class,()->invitationService.accept(target,project,old.invitation().getId(),old.rawToken()));
+        CreatedInvitation clear=invitationService.inviteRegisteredUser(manager,project,other,Set.of(ProjectRole.TESTER),null,team);age(clear);
+        invitationService.cancel(manager,project,clear.invitation().getId());invitationService.cancel(manager,project,clear.invitation().getId());
+        assertEquals("EXPIRED",storedStatus(clear));assertEquals(0L,jdbc.queryForObject("SELECT count(*) FROM project_memberships WHERE project_id=? AND user_id=?",Long.class,project,other));
+        invitationService.inviteRegisteredUser(manager,project,other,Set.of(ProjectRole.TESTER),null,team);
+    }
+
+    @Test
+    void expiredInvitationCannotBeRenewedIntoAnArchivedTeam() {
+        UUID manager=registerUser("archmanager"),target=registerUser("archtarget"),project=projectService.create(manager,"Expired archived team",null,null).getId(),first=team(project);
+        CreatedInvitation old=invitationService.inviteRegisteredUser(manager,project,target,Set.of(ProjectRole.TESTER),null,first);age(old);
+        UUID backup=squadService.create(manager,project,"Backup",null,null,true).getId();squadService.archive(manager,project,first);
+        assertThrows(NoSuchElementException.class,()->invitationService.resend(manager,project,old.invitation().getId()));
+        invitationService.inviteRegisteredUser(manager,project,target,Set.of(ProjectRole.TESTER),null,backup);
+    }
+
+    @Test
+    void twoReinvitesWaitingOnTheExpiredRowStillCommitOnlyOnePendingInvitation() throws Exception {
+        UUID manager=registerUser("racemanager"),target=registerUser("racetarget"),project=projectService.create(manager,"Expired reinvite race",null,null).getId(),team=team(project);
+        CreatedInvitation old=invitationService.inviteRegisteredUser(manager,project,target,Set.of(ProjectRole.TESTER),null,team);age(old);
+        var pool=java.util.concurrent.Executors.newFixedThreadPool(2);
+        try(var gate=dataSource.getConnection()) {
+            gate.setAutoCommit(false);
+            try(var statement=gate.prepareStatement("SELECT id FROM project_invitations WHERE id=? FOR UPDATE")) {
+                statement.setObject(1,old.invitation().getId());statement.executeQuery().close();
+            }
+            java.util.concurrent.Callable<Object> create=()->{
+                try{return invitationService.inviteRegisteredUser(manager,project,target,Set.of(ProjectRole.TESTER),null,team);}
+                catch(InvitationConflictException|org.springframework.dao.DataIntegrityViolationException conflict){return conflict;}
+            };
+            var first=pool.submit(create);var second=pool.submit(create);
+            try {
+                long deadline=System.nanoTime()+java.util.concurrent.TimeUnit.SECONDS.toNanos(10);
+                int waiting=0;
+                while(waiting<2&&System.nanoTime()<deadline) {
+                    waiting=jdbc.queryForObject("SELECT count(*) FROM pg_stat_activity WHERE datname=current_database() AND wait_event_type='Lock' AND query LIKE '%project_invitations%'",Integer.class);
+                    if(waiting<2)Thread.sleep(20);
+                }
+                assertEquals(2,waiting,"Both real transactions must reach the locked pending row");
+            } finally {gate.rollback();}
+            Object one=first.get(10,java.util.concurrent.TimeUnit.SECONDS),two=second.get(10,java.util.concurrent.TimeUnit.SECONDS);
+            assertEquals(1,(one instanceof CreatedInvitation?1:0)+(two instanceof CreatedInvitation?1:0));
+            assertEquals("EXPIRED",storedStatus(old));
+            assertEquals(1L,jdbc.queryForObject("SELECT count(*) FROM project_invitations WHERE project_id=? AND invited_user_id=? AND status='PENDING'",Long.class,project,target));
+        } finally {pool.shutdownNow();}
+    }
+
+    private void age(CreatedInvitation invitation) {
+        jdbc.update("UPDATE project_invitations SET expires_at=now()-interval '1 minute' WHERE id=?",invitation.invitation().getId());
+    }
+    private String storedStatus(CreatedInvitation invitation) {
+        return jdbc.queryForObject("SELECT status FROM project_invitations WHERE id=?",String.class,invitation.invitation().getId());
     }
 
     /** The project's first active team; creates one (with the founder in it) when the project has none yet. */

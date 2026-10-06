@@ -774,8 +774,13 @@
       "CANCELLED": {
         "title": "No cancelled invitations",
         "description": "Cancelled invitations are listed here."
+      },
+      "EXPIRED": {
+        "title": "No expired invitations",
+        "description": "Expired invitations appear here."
       }
-    }
+    },
+    "externalUnavailable": "Invitation details are currently unavailable. Please try again."
   },
   "squads": {
     "title": "Squads",

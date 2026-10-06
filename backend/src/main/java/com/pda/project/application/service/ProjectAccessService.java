@@ -160,7 +160,7 @@ public class ProjectAccessService implements ProjectAccess {
     @Transactional(readOnly = true)
     public Set<UUID> pendingInviteeIds(UUID projectId, Set<UUID> userIds) {
         if (projectId == null || userIds == null || userIds.isEmpty()) return Set.of();
-        return Set.copyOf(invitations.findPendingInviteeIds(projectId, userIds));
+        return Set.copyOf(invitations.findPendingInviteeIds(projectId, userIds, clock.instant()));
     }
 
     @Override

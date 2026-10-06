@@ -1,5 +1,9 @@
 # Web Sitesi Kesinlikle Olması Gerekenler — Master Checklist
 
+## Invitations remediation — 2026-10-06
+
+INV-AUD-003/001/002/004 approved minimum remediation: real actor switch/late response, expiry/resend/reinvite/prepared DB, legacy warm client navigation, external signed-in unchanged baseline and status/retry/real429 verified. Final canonical gate 469 backend0 fail/error/skip, 248 Chromium+1 expected production crash-route skip, lint/type/build/Docker health PASS. Scope-only note, global checklist boxes unchanged. New independent npm audit6 high/production1 (source-map-js) remains follow-up; package/lock untouched. See `docs/compliation/2026-10-06-invitations-integration-remediation.md`.
+
 ## 2026-10-06 Chat action menu / workspace history
 
 Tek chevron/menu lifecycle/focus, yakın reaction chips, native same-origin history/fallback, responsive header reserve ve full-close/dock persistence kapsamı doğrulandı. Hedefli50+2 Chromium; final gate 464 backend0 failure/error/skip, 240 Chromium+1 expected production crash-route skip, lint/type/build/Docker health PASS. Bu scoped kanıt global accessibility/multi-browser/production kutularını topluca [x] yapmaz. Ayrıntı: `docs/compliation/2026-10-06-chat-action-menu-workspace-history.md`.

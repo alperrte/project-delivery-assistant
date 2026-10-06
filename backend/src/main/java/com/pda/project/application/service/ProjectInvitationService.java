@@ -106,14 +106,8 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
                 .isPresent()) {
             throw new InvitationConflictException("User is already a project member");
         }
-        if (invitations.findByProjectIdAndInvitedUserIdAndStatus(projectId, targetUserId, InvitationStatus.PENDING)
-                .isPresent()) {
-            throw new InvitationConflictException("An invitation is already pending for this user");
-        }
-        if (invitations.findByProjectIdAndEmailAndStatus(projectId, target.email().strip().toLowerCase(java.util.Locale.ROOT),
-                InvitationStatus.PENDING).isPresent()) {
-            throw new InvitationConflictException("An invitation is already pending for this email");
-        }
+        expireOrReject(invitations.lockPendingUser(projectId, targetUserId));
+        expireOrReject(invitations.lockPendingEmail(projectId, target.email().strip().toLowerCase(java.util.Locale.ROOT)));
         String rawToken = generateToken();
         ProjectInvitation invitation = ProjectInvitation.forRegisteredUser(projectId, targetUserId, actorId,
                 roles, message, rawToken, clock.instant().plus(INVITATION_TTL)).inTeam(teamId);
@@ -144,8 +138,7 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
         if (firstName == null || firstName.isBlank() || lastName == null || lastName.isBlank()) {
             throw new IllegalArgumentException("First and last name are required for an external invitation");
         }
-        if (invitations.findByProjectIdAndEmailAndStatus(projectId, normalizedEmail, InvitationStatus.PENDING)
-                .isPresent()) throw new InvitationConflictException("An invitation is already pending for this email");
+        expireOrReject(invitations.lockPendingEmail(projectId, normalizedEmail));
         String rawToken = generateToken();
         ProjectInvitation invitation = ProjectInvitation.forEmail(projectId, normalizedEmail, firstName, lastName,
                 actorId, roles, message, rawToken, clock.instant().plus(INVITATION_TTL)).inTeam(teamId);
@@ -157,7 +150,8 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
     @Transactional(readOnly = true)
     public Page<InvitationSummary> listPending(UUID actorId, UUID projectId, Pageable pageable) {
         requireManager(actorId, projectId);
-        return withNicknames(invitations.findByProjectIdAndStatus(projectId, InvitationStatus.PENDING, pageable));
+        Instant now=clock.instant();
+        return withNicknames(invitations.findByProjectIdAndStatusAndExpiresAtAfter(projectId, InvitationStatus.PENDING, now, pageable),now);
     }
 
     /** Project invitation history, optionally narrowed to one status. */
@@ -165,18 +159,27 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
     public Page<InvitationSummary> listProject(UUID actorId, UUID projectId, InvitationStatus status,
                                                Pageable pageable) {
         requireManager(actorId, projectId);
-        return withNicknames(status == null ? invitations.findByProjectId(projectId, pageable)
-                : invitations.findByProjectIdAndStatus(projectId, status, pageable));
+        Instant now=clock.instant();
+        Page<ProjectInvitation> page;
+        if(status==null)page=invitations.findByProjectId(projectId,pageable);
+        else if(status==InvitationStatus.PENDING)page=invitations.findByProjectIdAndStatusAndExpiresAtAfter(projectId,status,now,pageable);
+        else if(status==InvitationStatus.EXPIRED)page=invitations.findExpiredInProject(projectId,now,pageable);
+        else page=invitations.findByProjectIdAndStatus(projectId,status,pageable);
+        return withNicknames(page,now);
     }
 
-    private Page<InvitationSummary> withNicknames(Page<ProjectInvitation> page) {
+    private Page<InvitationSummary> withNicknames(Page<ProjectInvitation> page, Instant now) {
         Set<UUID> targetIds = page.getContent().stream().map(ProjectInvitation::getInvitedUserId)
                 .filter(Objects::nonNull).collect(Collectors.toSet());
         Map<UUID, UserAccounts.AuthenticatedUser> targetUsers = users.findActiveByIds(targetIds);
         Map<UUID, String> teamNames = teamNames(page.getContent());
-        return page.map(invitation -> InvitationSummary.from(invitation,
+        return page.map(invitation -> {
+            InvitationSummary summary=InvitationSummary.from(invitation,
                 nicknameOf(targetUsers, invitation.getInvitedUserId()),
-                invitation.getTeamId() == null ? null : teamNames.get(invitation.getTeamId())));
+                invitation.getTeamId() == null ? null : teamNames.get(invitation.getTeamId()));
+            return invitation.getStatus()==InvitationStatus.PENDING&&!invitation.isPending(now)
+                    ?summary.withStatus(InvitationStatus.EXPIRED):summary;
+        });
     }
 
     /** E-mail invitations have no target account yet, and the lookup maps are immutable (null keys throw). */
@@ -353,13 +356,14 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
     @Transactional
     public CreatedInvitation resend(UUID actorId, UUID projectId, UUID invitationId) {
         Project project = requireManager(actorId, projectId);
-        ProjectInvitation current = pendingInvitationIn(projectId, invitationId);
-        current.cancel(clock.instant());
+        ProjectInvitation current = renewableInvitationIn(projectId, invitationId);
+        if(current.isPending(clock.instant()))current.cancel(clock.instant());
+        else current.expire(clock.instant());
         invitations.saveAndFlush(current);
 
         String rawToken = generateToken();
         String teamName = current.getTeamId() == null ? null
-                : teams.teamNames(Set.of(current.getTeamId())).get(current.getTeamId());
+                : requireActiveTeam(projectId, current.getTeamId());
         ProjectInvitation next = current.getInvitedUserId() == null
                 ? ProjectInvitation.forEmail(projectId, current.getEmail(), current.getInviteeFirstName(),
                         current.getInviteeLastName(), actorId, current.getInitialRoles(), current.getMessage(),
@@ -384,8 +388,9 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
     @Transactional
     public void cancel(UUID actorId, UUID projectId, UUID invitationId) {
         requireManager(actorId, projectId);
-        ProjectInvitation invitation = pendingInvitationIn(projectId, invitationId);
-        invitation.cancel(clock.instant());
+        ProjectInvitation invitation = renewableInvitationIn(projectId, invitationId);
+        if(invitation.isPending(clock.instant()))invitation.cancel(clock.instant());
+        else invitation.expire(clock.instant());
         invitations.saveAndFlush(invitation);
     }
 
@@ -491,15 +496,26 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
         return invitation;
     }
 
-    private ProjectInvitation pendingInvitationIn(UUID projectId, UUID invitationId) {
+    /** A live pending or expired invitation can be renewed/cleared; answered/cancelled ones cannot. */
+    private ProjectInvitation renewableInvitationIn(UUID projectId, UUID invitationId) {
         Objects.requireNonNull(invitationId, "invitationId is required");
         ProjectInvitation invitation = invitations.lockById(invitationId)
                 .filter(candidate -> candidate.getProjectId().equals(projectId))
                 .orElseThrow(() -> new NoSuchElementException("Invitation not found"));
-        if (!invitation.isPending(clock.instant())) {
+        if (invitation.getStatus()!=InvitationStatus.PENDING&&invitation.getStatus()!=InvitationStatus.EXPIRED) {
             throw new IllegalStateException("Invitation is not pending");
         }
         return invitation;
+    }
+
+    /** Existing target row is locked; flush frees the existing partial unique constraint before a new INSERT. */
+    private void expireOrReject(java.util.Optional<ProjectInvitation> pending) {
+        pending.ifPresent(invitation -> {
+            Instant now=clock.instant();
+            if(invitation.isPending(now))throw new InvitationConflictException("An invitation is already pending for this target");
+            invitation.expire(now);
+            invitations.saveAndFlush(invitation);
+        });
     }
 
     /** Returns the team name (for the mail); a missing or foreign team is reported as not found. */

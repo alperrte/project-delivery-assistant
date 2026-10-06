@@ -1,5 +1,9 @@
 ﻿# Klasör yapısı kısa rehberi
 
+## Invitations remediation — 2026-10-06
+
+Frontend `features/invitations/query-keys.ts`, `invalidation.ts`, `external-preview-error.ts`; protected scopes, successful legacy membership refresh ve status-aware public preview error ayrımı. Tests `e2e/invitation-remediation.spec.ts`, `invitation-db.ts` (QA prepared UUID read/expiry fixture), `invitations-cache.spec.ts`, `invitations-errors.spec.ts`. Backend existing invitation repository/service ve ProjectAccessService etkin expiry filtrelerini taşır; ProjectInvitationServiceTest fresh SQL ve deterministic two-reinvite barrier kapsar. Private artifacts `.local/invitations-remediation/`.
+
 ## 2026-10-06 Chat action menu / workspace history
 
 `components/layout/workspace-history.ts` salt okunur capability adapter, `use-workspace-history.ts` SSR-safe external-store hook, `workspace-history-controls.tsx` header Button/Tooltip pair içerir. Ortak responsive reserve `app/globals.css`; `message-actions.tsx` tek chevron/menu lifecycle handoff, `emoji-picker.tsx` mevcut composer ile controlled anchored reaction kullanımını paylaşır. Gerçek browser regresyonları `e2e/{native-history,workspace-history,workspace-history-context,chat-action-menu}.spec.ts`; menu locator helper `e2e/chat-actions.ts`. QA artifacts `.local/chat-action-nav-implementation/` Git dışındadır.
