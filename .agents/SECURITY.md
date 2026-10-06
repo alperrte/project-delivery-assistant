@@ -759,6 +759,14 @@ The Next.js frontend sets `X-Content-Type-Options: nosniff`, `X-Frame-Options: D
 
 ---
 
+### source-map-js dependency remediation — 2026-10-06
+
+- [x] User-approved separate remediation: `source-map-js` transitive lock entry updated from1.2.1 to1.2.2 by real `npm update source-map-js`; existing consumers require `^1.2.1`. Package manifest, other package versions, application/invitation code and auth policy unchanged.
+- GHSA-68fv-2mgg-jv7q / CVE-2026-93749 closed in the installed dependency graph. Next→PostCSS and Tailwind→PostCSS/node now resolve1.2.2. App source has no direct SourceMapConsumer use; untrusted PDA runtime reachability was not reproduced. Production classification alone is not exploit proof.
+- Clean `npm ci` PASS. Current full npm audit5 high/exit1 (existing ESLint/braces debt); omit=dev0/exit0. Previous6 high/production1 was the pre-patch state. Existing dev debt remains subject to the follow-up above; this is not a release waiver.
+- Bounded source-map regression,33 targeted Chromium, lint/type/build and canonical pre-push passed:469 backend0 failure/error/skip,248 Chromium+1 expected crash-route skip, Docker build/start/health. Separate delivery: [source-map-js remediation](../docs/compliation/2026-10-06-source-map-js-security-remediation.md).
+- Primary source: [GitHub reviewed advisory](https://github.com/advisories/GHSA-68fv-2mgg-jv7q).
+
 ## 17. Docker and Container Security
 
 - Secrets must not be baked into Docker images.

@@ -1,5 +1,9 @@
 # Web Sitesi Kesinlikle Olması Gerekenler — Master Checklist
 
+## source-map-js security follow-up — 2026-10-06
+
+Onaylı ayrı transitive patch1.2.1→1.2.2; application/invitation/UI/test kaynakları aynı. Temiz npm ci, lint/type/build,33 targeted Chromium ve canonical469 backend0 fail/error/skip +248 Chromium/1 expected crash-route skip +Docker health geçti. Full audit5 high eski dev debt; production0. Global checklist kutuları değişmedi. Ayrı kayıt: `docs/compliation/2026-10-06-source-map-js-security-remediation.md`.
+
 ## 2026-10-06 Chat action menu / workspace history
 
 Tek chevron/menu lifecycle/focus, yakın reaction chips, native same-origin history/fallback, responsive header reserve ve full-close/dock persistence kapsamı doğrulandı. Hedefli50+2 Chromium; final gate 464 backend0 failure/error/skip, 240 Chromium+1 expected production crash-route skip, lint/type/build/Docker health PASS. Bu scoped kanıt global accessibility/multi-browser/production kutularını topluca [x] yapmaz. Ayrıntı: `docs/compliation/2026-10-06-chat-action-menu-workspace-history.md`.
