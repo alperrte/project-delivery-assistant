@@ -2546,5 +2546,15 @@
     "stay": "Weiter bearbeiten",
     "clearPool": "Pool-Zuordnung entfernen",
     "clearPoolDescription": "Entfernt das Pool-Angebot sowie Pool-Team und Übernahmeinformationen. Zugewiesene Personen bleiben erhalten."
+  },
+  "datePicker": {
+    "placeholder": "Datum auswählen",
+    "previousMonth": "Vorheriger Monat",
+    "nextMonth": "Nächster Monat",
+    "month": "Monat",
+    "year": "Jahr",
+    "today": "Heute",
+    "clear": "Löschen",
+    "close": "Kalender schließen"
   }
 }

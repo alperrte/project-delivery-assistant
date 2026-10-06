@@ -2546,5 +2546,15 @@
     "stay": "Düzenlemeye devam et",
     "clearPool": "Havuz bilgisini temizle",
     "clearPoolDescription": "Görev havuzdan çıkarılır; havuz ekibi ve üstlenme bilgisi temizlenir. Atanan kişiler korunur."
+  },
+  "datePicker": {
+    "placeholder": "Tarih seçin",
+    "previousMonth": "Önceki ay",
+    "nextMonth": "Sonraki ay",
+    "month": "Ay",
+    "year": "Yıl",
+    "today": "Bugün",
+    "clear": "Temizle",
+    "close": "Takvimi kapat"
   }
 }

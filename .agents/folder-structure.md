@@ -115,3 +115,8 @@ Squad Service kodu `squad/api`, `squad/application/service`, `squad/domain/entit
 Backend: application/service `ChatReactionService`, `ChatReactionViewReader`, `ChatReactionRateLimiter`; domain/enums `ChatReactionCode`, domain/entity `ChatMessageReaction`; infrastructure/repository `ChatReactionRepository`; V55 migration, `chat/integration/ChatReplyReactionMigrationTest`. Frontend chat: `reactions.ts`, `reaction-resync.ts`, `pending.ts`, `emoji-catalog.ts`; components `reply-preview`, `message-actions`, `reaction-chips`, `emoji-picker`. Kabul edilen workspace link intent `components/layout/workspace-link.tsx`. E2E `chat-cache.spec.ts`, `chat-replies-reactions.spec.ts`, `chat-responsive.spec.ts`; navigation/renewal mevcut `17-project-chat.spec.ts`.
 
 Organization–Project remediation: `features/projects/query-invalidation.ts` invalidates projects plus affected old/new organization projects page prefixes; `project-settings-form` uses the existing safe Home summary. `organization-detail` owns its separate projects query loading/error/retry and page clamp. Acceptance E2E: `organization-project-association.spec.ts`; QA-only direct PostgreSQL read helper `organization-project-db.ts` uses prepared UUID SQL inside the local PostgreSQL container, without exposing credentials.
+
+
+## Task form date picker (2026-10-06)
+
+`frontend/src/components/ui/date-picker.tsx` is the shared optional-date calendar dropdown; task form Controllers live in `features/tasks/components/task-form-page.tsx`. The existing deadline.ts owns local time/ISO conversion. Browser coverage is `frontend/e2e/task-date-picker.spec.ts`; no new package or backend path.
