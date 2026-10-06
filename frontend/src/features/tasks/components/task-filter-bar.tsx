@@ -33,8 +33,8 @@ export function toggle<T>(list: T[], value: T): T[] {
 export function FilterButton({ label, count, children, width = "min-w-48" }: { label: string; count?: number; children: ReactNode; width?: string }) {
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className={cn(TRIGGER, count ? "border-primary/40 bg-primary/5" : "")}>
-        {label}
+      <DropdownMenuTrigger className={cn(TRIGGER, "max-w-full", count ? "border-primary/40 bg-primary/5" : "")}>
+        <span className="truncate">{label}</span>
         {!!count && (
           <span className="inline-flex min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold tabular-nums text-primary-foreground">
             {count}

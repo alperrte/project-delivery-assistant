@@ -267,3 +267,7 @@ Month/year controls also use the shared themed Select menus with selected checkm
 ## Task priority and planning (2026-10-06)
 
 Shared PriorityIndicator uses existing semantic tokens: LOW label-blue, MEDIUM label-orange, HIGH destructive, CRITICAL destructive plus Lucide CircleAlert. Keep accessible localized priority text and the critical shape distinction. No new palette. People assignment excludes the signed-in user from candidate lists; Assign me adds that user explicitly. Pool assignment and calendar-day quick deadlines are common to both task models; SIMPLE sidebars show Pool while advanced-only entries stay hidden.
+
+## Personal task cards and status confirmations (2026-10-06)
+
+My tasks uses semantic card/background/border tokens and a responsive square grid (one column, md two, xl three). Task title buttons open the shared detail dialog on the current page; comment actions focus its composer. Preserve localized accessible names, keyboard/Escape focus restoration, URL reload selection and pending/error/retry states. Every task status action requires shared confirmation before mutation; cancellation writes nothing. SIMPLE tasks expose Start/Complete shortcuts; ADVANCED retains review/testing. The navbar notification menu is user-scoped, localized, bounded to the viewport and disabled for the public demo. Optional statusChange snapshots drive start/completion copy; legacy notifications retain a translated type label. Do not add a second palette, detail implementation or notification backend for these surfaces.

@@ -1265,7 +1265,7 @@
     "clearSearch": "Clear search",
     "noResults": "No results found.",
     "loadError": "Projects could not be loaded. Try again.",
-    "tasks": "Tasks",
+    "tasks": "My tasks",
     "notifications": "Notifications",
     "noNotifications": "No notifications yet.",
     "calendar": "Calendar",
@@ -1381,7 +1381,15 @@
       "checklistProgress": "Checklist: {done} of {total}",
       "comments": "{count, plural, one {# comment} other {# comments}}",
       "attachments": "{count, plural, one {# attachment} other {# attachments}}",
-      "backToProjects": "Back to projects"
+      "backToProjects": "Back to projects",
+      "confirmStatus": {
+        "title": "Change the status of {key}?",
+        "description": "This task will move to “{status}”.",
+        "stale": "The task status changed. Close this dialog and try again with its current status.",
+        "notifyManagers": "Project managers will be notified of this change.",
+        "confirm": "Update status",
+        "cancel": "Cancel"
+      }
     },
     "filters": {
       "label": "Task filters",
@@ -1906,6 +1914,16 @@
           "title": "The pool is empty",
           "description": "There is nothing you can pick up right now. Tasks appear here when project managers put them in the pool."
         }
+      },
+      "cards": {
+        "open": "Open task {key}",
+        "comment": "Comment on task {key}",
+        "start": "Start",
+        "complete": "Complete",
+        "noDescription": "No description yet.",
+        "detailTitle": "Task details",
+        "detailDescription": "Review the task, update its status and add comments.",
+        "close": "Close task details"
       }
     }
   },
@@ -2537,5 +2555,40 @@
     "today": "Today",
     "clear": "Clear",
     "close": "Close calendar"
+  },
+  "notifications": {
+    "label": "Notifications, {count} unread",
+    "update": "New update",
+    "someone": "Someone",
+    "readAll": "Mark all read",
+    "retry": "Try again",
+    "loading": "Loading notifications…",
+    "previous": "Previous notifications",
+    "next": "Next notifications",
+    "started": "{actor} started {key}: {title}.",
+    "completed": "{actor} completed {key}: {title}.",
+    "statusChanged": "{actor} moved {key}: {title} to “{status}”.",
+    "types": {
+      "TASK_ASSIGNED": "Task assigned",
+      "TASK_UNASSIGNED": "Task assignment removed",
+      "TASK_STATUS_CHANGED": "Task status changed",
+      "TASK_PRIORITY_CHANGED": "Task priority changed",
+      "TASK_DUE_DATE_CHANGED": "Task deadline changed",
+      "TASK_BLOCKED": "Task blocked",
+      "TASK_DEADLINE_SOON": "Task deadline approaching",
+      "TASK_OVERDUE": "Task overdue",
+      "TASK_CLAIMED": "Task claimed",
+      "TASK_RELEASED": "Task returned to the pool",
+      "TASK_MENTIONED": "You were mentioned",
+      "TASK_COMMENTED": "New task comment",
+      "PROJECT_MEMBER_ADDED": "Added to project",
+      "PROJECT_MEMBER_REMOVED": "Project membership removed",
+      "PROJECT_ROLE_CHANGED": "Project role changed",
+      "SQUAD_MEMBER_ADDED": "Added to team",
+      "SQUAD_MEMBER_REMOVED": "Team membership removed",
+      "PROJECT_INVITATION_CREATED": "Project invitation",
+      "PROJECT_INVITATION_ACCEPTED": "Project invitation accepted",
+      "PROJECT_INVITATION_REJECTED": "Project invitation rejected"
+    }
   }
 }

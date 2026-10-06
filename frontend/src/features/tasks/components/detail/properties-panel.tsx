@@ -66,7 +66,7 @@ export function PropertiesPanel(ctx: DetailContext) {
 
   return (
     <aside aria-label={t("title")} className="min-w-0 space-y-6">
-      <dl className="divide-y rounded-xl border bg-card px-4">
+      <dl className="@container divide-y rounded-xl border bg-card px-4">
         <PropertyRow label={t("status")}>
           <div className="space-y-2">
             <LockedHint locked={lockedWork} reason="assignee">
@@ -103,9 +103,9 @@ export function PropertiesPanel(ctx: DetailContext) {
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               {task.assignees.length > 0 ? (
-                <ul className="flex flex-wrap gap-x-3 gap-y-1">
+                <ul className="flex min-w-0 max-w-full flex-wrap gap-x-3 gap-y-1">
                   {task.assignees.map((person) => (
-                    <li key={person.userId} className="flex min-w-0 items-center gap-1.5 text-sm">
+                    <li key={person.userId} className="flex min-w-0 max-w-full items-center gap-1.5 text-sm">
                       <Avatar name={person.nickname ?? "?"} src={profilePhotoSrc(person.userId, person.profilePhotoVersion)} className="size-5 text-[9px]" />
                       <span className="truncate">{person.nickname ?? "?"}</span>
                     </li>
@@ -118,7 +118,7 @@ export function PropertiesPanel(ctx: DetailContext) {
             </div>
             <div className="flex flex-wrap gap-2">
               <LockedHint locked={lockedManage} reason="manager">
-                <Button variant="outline" size="sm" disabled={!canManage} onClick={() => setAssigning(true)}>
+                <Button variant="outline" size="sm" className="h-auto min-h-7 max-w-full py-1 whitespace-normal" disabled={!canManage} onClick={() => setAssigning(true)}>
                   <UsersThree aria-hidden="true" />
                   {t("changeAssignees")}
                 </Button>

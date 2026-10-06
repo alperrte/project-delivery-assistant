@@ -18,13 +18,15 @@ test("native adapter distinguishes unknown/no-entry, rechecks capabilities and c
 
 test("real native same-origin capabilities follow push/replace/query/hash/back/forward/branch/reload",async({page})=>{
  await page.goto("/tr/giris");
+ // Manual history entries must start after React/Next has hydrated the document.
+ await expect(page.getByRole("group",{name:"Tema",exact:true}).locator('button[aria-pressed="true"]')).toBeVisible();
  const read=async()=>page.evaluate(()=>{const n=(window as unknown as {navigation:{canGoBack:boolean;canGoForward:boolean;currentEntry:{index:number}}}).navigation;return {canGoBack:n.canGoBack,canGoForward:n.canGoForward,currentEntry:{index:n.currentEntry.index}};});
  expect(historySnapshot(await read())).toBe(1);
  await page.evaluate(()=>history.pushState({qa:true},"",location.pathname+"?native=1"));expect(historySnapshot(await read())).toBe(3);
  await page.evaluate(()=>history.replaceState({...history.state},"",location.pathname+"?native=2"));expect((await read()).currentEntry.index).toBe(1);
  await page.evaluate(()=>history.pushState({...history.state},"",location.pathname+"?native=3#qa"));expect((await read()).currentEntry.index).toBe(2);
- await page.goBack();expect(historySnapshot(await read())).toBe(7);expect(page.url()).toContain("native=2");
- await page.goForward();expect(historySnapshot(await read())).toBe(3);expect(page.url()).toContain("#qa");
+ await page.goBack();await expect(page).toHaveURL(/native=2/);expect(historySnapshot(await read())).toBe(7);
+ await page.goForward();await expect(page).toHaveURL(/#qa$/);expect(historySnapshot(await read())).toBe(3);
  await page.goBack();await page.evaluate(()=>history.pushState({...history.state},"",location.pathname+"?native=new"));expect(historySnapshot(await read())).toBe(3);
  await page.reload();expect(historySnapshot(await read())).toBe(3);
  // Native browser traversal remains available at the application's same-origin boundary.

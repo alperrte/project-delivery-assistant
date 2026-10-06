@@ -1289,7 +1289,7 @@
     "clearSearch": "Suche leeren",
     "noResults": "Keine Ergebnisse gefunden.",
     "loadError": "Projekte konnten nicht geladen werden. Bitte erneut versuchen.",
-    "tasks": "Aufgaben",
+    "tasks": "Meine Aufgaben",
     "notifications": "Benachrichtigungen",
     "noNotifications": "Noch keine Benachrichtigungen.",
     "calendar": "Kalender",
@@ -1405,7 +1405,15 @@
       "checklistProgress": "Checkliste: {done} von {total}",
       "comments": "{count, plural, one {# Kommentar} other {# Kommentare}}",
       "attachments": "{count, plural, one {# Anhang} other {# Anhänge}}",
-      "backToProjects": "Zurück zu den Projekten"
+      "backToProjects": "Zurück zu den Projekten",
+      "confirmStatus": {
+        "title": "Status von {key} ändern?",
+        "description": "Diese Aufgabe wird auf „{status}“ gesetzt.",
+        "stale": "Der Aufgabenstatus hat sich geändert. Schließen Sie den Dialog und versuchen Sie es mit dem aktuellen Status erneut.",
+        "notifyManagers": "Die Projektmanager werden über diese Änderung informiert.",
+        "confirm": "Status aktualisieren",
+        "cancel": "Abbrechen"
+      }
     },
     "filters": {
       "label": "Aufgabenfilter",
@@ -1930,6 +1938,16 @@
           "title": "Der Pool ist leer",
           "description": "Derzeit gibt es nichts zu übernehmen. Aufgaben erscheinen hier, sobald Projektleitungen sie in den Pool stellen."
         }
+      },
+      "cards": {
+        "open": "Aufgabe {key} öffnen",
+        "comment": "Aufgabe {key} kommentieren",
+        "start": "Starten",
+        "complete": "Abschließen",
+        "noDescription": "Noch keine Beschreibung.",
+        "detailTitle": "Aufgabendetails",
+        "detailDescription": "Aufgabe ansehen, Status ändern und Kommentare hinzufügen.",
+        "close": "Aufgabendetails schließen"
       }
     }
   },
@@ -2561,5 +2579,40 @@
     "today": "Heute",
     "clear": "Löschen",
     "close": "Kalender schließen"
+  },
+  "notifications": {
+    "label": "Benachrichtigungen, {count} ungelesen",
+    "update": "Neue Aktualisierung",
+    "someone": "Jemand",
+    "readAll": "Alle als gelesen markieren",
+    "retry": "Erneut versuchen",
+    "loading": "Benachrichtigungen werden geladen…",
+    "previous": "Vorherige Benachrichtigungen",
+    "next": "Nächste Benachrichtigungen",
+    "started": "{actor} hat {key}: {title} begonnen.",
+    "completed": "{actor} hat {key}: {title} abgeschlossen.",
+    "statusChanged": "{actor} hat {key}: {title} auf „{status}“ gesetzt.",
+    "types": {
+      "TASK_ASSIGNED": "Aufgabe zugewiesen",
+      "TASK_UNASSIGNED": "Aufgabenzuweisung entfernt",
+      "TASK_STATUS_CHANGED": "Aufgabenstatus geändert",
+      "TASK_PRIORITY_CHANGED": "Aufgabenpriorität geändert",
+      "TASK_DUE_DATE_CHANGED": "Aufgabenfrist geändert",
+      "TASK_BLOCKED": "Aufgabe blockiert",
+      "TASK_DEADLINE_SOON": "Aufgabenfrist nähert sich",
+      "TASK_OVERDUE": "Aufgabe überfällig",
+      "TASK_CLAIMED": "Aufgabe übernommen",
+      "TASK_RELEASED": "Aufgabe in den Pool zurückgegeben",
+      "TASK_MENTIONED": "Sie wurden erwähnt",
+      "TASK_COMMENTED": "Neuer Aufgabenkommentar",
+      "PROJECT_MEMBER_ADDED": "Zum Projekt hinzugefügt",
+      "PROJECT_MEMBER_REMOVED": "Projektmitgliedschaft entfernt",
+      "PROJECT_ROLE_CHANGED": "Projektrolle geändert",
+      "SQUAD_MEMBER_ADDED": "Zum Team hinzugefügt",
+      "SQUAD_MEMBER_REMOVED": "Teammitgliedschaft entfernt",
+      "PROJECT_INVITATION_CREATED": "Projekteinladung",
+      "PROJECT_INVITATION_ACCEPTED": "Projekteinladung angenommen",
+      "PROJECT_INVITATION_REJECTED": "Projekteinladung abgelehnt"
+    }
   }
 }
