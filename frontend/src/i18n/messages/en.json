@@ -1303,7 +1303,13 @@
     "insights": "Workspace tools",
     "totalProjects": "Total projects",
     "summaryDescription": "One workspace for your project goals, success criteria and team.",
-    "quickActions": "Quick actions"
+    "quickActions": "Quick actions",
+    "history": {
+      "back": "Go to previous page",
+      "forward": "Go to next page",
+      "label": "Page history",
+      "unavailable": "History information is unavailable in this browser; use the browser arrows."
+    }
   },
   "tasks": {
     "nav": {
@@ -2143,6 +2149,10 @@
       "action": "React",
       "chip": "{emoji}, {count} reactions",
       "error": "Reaction could not be saved."
+    },
+    "actions": {
+      "open": "Open message actions",
+      "label": "Message actions"
     }
   },
   "siteFooter": {

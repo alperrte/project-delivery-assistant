@@ -1,4 +1,8 @@
 ﻿# Klasör yapısı kısa rehberi
+
+## 2026-10-06 Chat action menu / workspace history
+
+`components/layout/workspace-history.ts` salt okunur capability adapter, `use-workspace-history.ts` SSR-safe external-store hook, `workspace-history-controls.tsx` header Button/Tooltip pair içerir. Ortak responsive reserve `app/globals.css`; `message-actions.tsx` tek chevron/menu lifecycle handoff, `emoji-picker.tsx` mevcut composer ile controlled anchored reaction kullanımını paylaşır. Gerçek browser regresyonları `e2e/{native-history,workspace-history,workspace-history-context,chat-action-menu}.spec.ts`; menu locator helper `e2e/chat-actions.ts`. QA artifacts `.local/chat-action-nav-implementation/` Git dışındadır.
 ## Organization profili (2026-10-04)
 
 Backend `project/organization/{api,application,domain,infrastructure}` profil alanlarını ve media controller/service/ledger repository'sini barındırır. `shared/{MediaStorage,FileSystemMediaStorage}` teknik port/adaptördür; V52 migration `db/migration` altındadır. Frontend `features/organizations` contract, query factory, form, card ve ortak profile header'ı içerir. Nötr image picker/mark/cover `components/common`, validation ve picked-image hook `lib/media` altındadır; Project wrapper'ları aynı bileşenleri kendi çevirileriyle kullanır. `.local/` özel host storage ve QA çıktıları için Git dışında tutulur.

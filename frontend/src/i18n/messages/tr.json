@@ -1327,7 +1327,13 @@
     "insights": "Çalışma alanı araçları",
     "totalProjects": "Toplam proje",
     "summaryDescription": "Proje hedeflerin, başarı kriterlerin ve ekibin için tek bir çalışma alanı.",
-    "quickActions": "Hızlı işlemler"
+    "quickActions": "Hızlı işlemler",
+    "history": {
+      "back": "Önceki sayfaya git",
+      "forward": "Sonraki sayfaya git",
+      "label": "Sayfa geçmişi",
+      "unavailable": "Geçmiş bilgisi bu tarayıcıda okunamıyor; tarayıcı oklarını kullanın."
+    }
   },
   "tasks": {
     "nav": {
@@ -2167,6 +2173,10 @@
       "action": "Tepki ver",
       "chip": "{emoji}, {count} tepki",
       "error": "Tepki gönderilemedi."
+    },
+    "actions": {
+      "open": "Mesaj seçeneklerini aç",
+      "label": "Mesaj seçenekleri"
     }
   },
   "siteFooter": {

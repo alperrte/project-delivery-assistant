@@ -21,20 +21,16 @@ import { GlobalSearch } from "./global-search";
 import { LocaleSwitcher } from "./locale-switcher";
 import { ThemeToggle } from "./theme-toggle";
 import { useAutoHide } from "./use-auto-hide";
+import { WorkspaceHistoryControls } from "./workspace-history-controls";
 
 type SessionUser = { id?: string; nickname?: string; email?: string; profilePhotoVersion?: number | null } | null | undefined;
 
 /**
- * Floating glass navbar: a compact pill fixed to the true viewport (so it's
- * centered on the physical screen, not the content column next to the
- * sidebar), blurred, and driven by `useAutoHide` so it slides away when the
- * user isn't interacting with it and comes back on a cursor-to-top,
- * scroll-up, focus, or Ctrl/Cmd+K. Width steps up at each breakpoint
- * (`lg`/`xl`/`2xl`) using the sidebar's widest (expanded, 240px) state as the
- * clearance floor, so the pill never overlaps it. A thin handle stays visible
- * at the top center while hidden so the behavior is discoverable, not just
- * implicit. `main` compensates with `pt-[4.5rem]` in `app-shell.tsx` so
- * resting content is never tucked under it.
+ * Glass navbar centered on the physical viewport, independent of sidebar
+ * collapse. Below sm it uses two rows and the same responsive reserve as main
+ * and fullscreen chat. History controls remain outside main's inert region.
+ * useAutoHide preserves pointer, scroll, focus and search-shortcut behavior;
+ * hiding the header never changes the space reserved for page content.
  */
 export function AppHeader({
   user,
@@ -53,7 +49,7 @@ export function AppHeader({
   const { ref, hidden, reveal } = useAutoHide<HTMLElement>(!contained);
 
   return (
-    <>
+    <div className="pointer-events-none fixed inset-x-3 top-0 z-40 sm:inset-x-auto sm:left-1/2 sm:w-[min(calc(100vw-1.5rem),620px)] sm:-translate-x-1/2 lg:w-[620px] xl:w-[700px] 2xl:w-[760px]">
       <button
         type="button"
         aria-hidden={!hidden}
@@ -62,22 +58,25 @@ export function AppHeader({
         onFocus={reveal}
         onClick={reveal}
         className={cn(
-          "fixed inset-x-0 top-0 z-30 mx-auto h-1.5 w-10 rounded-b-full bg-border transition-opacity duration-300",
+          "pointer-events-auto absolute top-0 left-1/2 h-1.5 w-10 -translate-x-1/2 rounded-b-full bg-border transition-opacity duration-300",
           hidden ? "opacity-100" : "pointer-events-none opacity-0",
         )}
       />
       <header
         ref={ref}
         className={cn(
-          "fixed inset-x-3 top-3 z-40 flex h-12 items-center gap-2 rounded-full border border-border/60 bg-background/95 px-3 shadow-[0_10px_30px_-14px_hsl(var(--shadow-tint)/0.35)] backdrop-saturate-150 transition-[translate,scale,opacity] duration-500 ease-out supports-[backdrop-filter]:bg-background/55 supports-[backdrop-filter]:backdrop-blur-2xl sm:inset-x-auto sm:left-1/2 sm:w-[min(90vw,560px)] sm:-translate-x-1/2 sm:px-4 lg:w-[480px] xl:w-[620px] 2xl:w-[760px]",
+          "pointer-events-auto relative top-3 flex h-28 w-full flex-col items-center gap-1 rounded-2xl border border-border/60 bg-background/95 px-3 py-2 shadow-[0_10px_30px_-14px_hsl(var(--shadow-tint)/0.35)] backdrop-saturate-150 transition-[translate,scale,opacity] duration-500 ease-out supports-[backdrop-filter]:bg-background/55 supports-[backdrop-filter]:backdrop-blur-2xl sm:h-12 sm:flex-row sm:gap-2 sm:rounded-full sm:px-4 sm:py-0",
           hidden && "pointer-events-none scale-95 -translate-y-[calc(100%+16px)] opacity-0",
         )}
       >
-        <Button variant="ghost" size="icon" className="shrink-0 lg:hidden" aria-label={tw("navigation")} onClick={onOpenMobileMenu}>
+        <div className="flex h-11 w-full min-w-0 shrink-0 items-center gap-2 sm:contents">
+        <Button variant="ghost" size="icon" className="shrink-0 max-sm:size-11 lg:hidden" aria-label={tw("navigation")} onClick={onOpenMobileMenu}>
           <List size={20} aria-hidden="true" />
         </Button>
+        <WorkspaceHistoryControls enabled={!contained} />
         <GlobalSearch className="min-w-0 flex-1" keyboardShortcut={!contained} />
-        <div className="ml-auto flex min-w-0 shrink-0 items-center gap-1 sm:gap-2">
+        </div>
+        <div className="ml-auto flex h-11 min-w-0 shrink-0 items-center gap-1 sm:h-auto sm:gap-2">
           <LocaleSwitcher triggerClassName="max-sm:px-1" hideLabelOnMobile />
           <ThemeToggle />
           <NotificationsMenu />
@@ -125,7 +124,7 @@ export function AppHeader({
           </DropdownMenu>
         </div>
       </header>
-    </>
+    </div>
   );
 }
 

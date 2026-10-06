@@ -69,7 +69,7 @@ export function ChatPanel() {
       data-testid="chat-panel"
       onKeyDown={keyDown}
       className={cn(
-        "fixed inset-x-0 top-[4.5rem] bottom-0 z-30 flex min-h-0 flex-col border-t bg-background outline-none lg:border-l",
+        "fixed inset-x-0 top-(--workspace-header-reserve) bottom-0 z-30 flex min-h-0 flex-col border-t bg-background outline-none lg:border-l",
         collapsed ? "lg:left-16" : "lg:left-60",
       )}
     >
