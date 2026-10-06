@@ -2527,5 +2527,15 @@
     "stay": "Keep editing",
     "clearPool": "Clear pool metadata",
     "clearPoolDescription": "Closes the pool offer and clears its team and claim information. Assigned people are preserved."
+  },
+  "datePicker": {
+    "placeholder": "Select a date",
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "month": "Month",
+    "year": "Year",
+    "today": "Today",
+    "clear": "Clear",
+    "close": "Close calendar"
   }
 }

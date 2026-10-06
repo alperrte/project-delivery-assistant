@@ -222,3 +222,11 @@ READY / NOT READY
 > `READY` yalnız production blocker kalmadığında verilmelidir.
 
 2026-10-06 navbar kullanıcı düzeltmesi: viewport merkezindeki önceki konum geri alındı, sidebar collapse ile kaymaz. Güncel lint/type/build0 ve hedefli14 Chromium PASS; scope yalnız bu yerleşim. Global kutular değişmedi.
+
+
+## Task date picker verification - 2026-10-06 (scoped)
+
+Task create/edit calendar, date ordering/persistence, advanced deadline time/clear, leap-day/month keyboard navigation and focus/dismissal passed. TR/EN/DE, light/dark, 320/390/768/1440 px and reduced-motion popup/form overflow and page-error checks passed; screenshots inspected. Initial targeted Chromium gate: 16 passed (4 date-picker + 12 task-model regressions); ESLint/TypeScript passed. Global accessibility/responsive/production checkboxes are not marked complete from this limited evidence. Details: `docs/compliation/2026-10-06-task-date-picker.md`.
+
+Task date picker month/year follow-up (2026-10-06): native select menus replaced with shared themed Select, named listboxes and nested Escape/focus support. Final follow-up gate: 5 targeted Chromium tests passed; TR/EN/DE, both themes, 320/390/768/1440px inner-list viewport/selected-option checks, screenshots after animation, lint/type passed. Prior 12 task-model regressions were not repeated in this follow-up. Trace disabled on final run after Windows EBUSY artifact lock. Global checkboxes remain unchanged; same task-date-picker completion record contains commands and results.
+2026-10-06 navbar kullanıcı düzeltmesi: viewport merkezindeki önceki konum geri alındı, sidebar collapse ile kaymaz. Güncel lint/type/build0 ve hedefli14 Chromium PASS; scope yalnız bu yerleşim. Global kutular değişmedi.

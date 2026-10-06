@@ -255,3 +255,10 @@ Create/settings always expose a none/standalone option using existing Select/tok
 ## 2026-10-06 Chat action menu / workspace history
 
 Confirmed chat bubble tek absolute chevron taşır; kalıcı own/other gutter metni korur, hover/open ölçüleri değiştirmez. Bubble → reaction chips (mt1/4px) → timestamp; action flow row yok. Existing nonmodal Menu close-complete reply composer veya aynı chevron anchorındaki reaction picker’a focus handoff yapar; Escape önce açık layer’ı tüketir. Composer24/caret ve reaction6/version behavior değişmez. Mobil44px hit area, viewport collision, token/theme/i18n ve native text selection korunur.
+
+
+## Task form date picker (2026-10-06)
+
+Task create/edit dates use the shared `components/ui/date-picker.tsx`: existing Base UI Popover/Button/Select, Lucide icons and semantic tokens, without a new calendar dependency. TR/EN/DE use Monday-first calendars with month/year navigation, selected/today state and today/clear actions. Local date strings remain YYYY-MM-DD; instant conversion stays in tasks/deadline.ts. Preserve keyboard navigation, focus return, viewport collision/vertical scrolling, the visible footer and form validation when reusing the component.
+
+Month/year controls also use the shared themed Select menus with selected checkmarks, bounded scrolling and named listboxes; do not reintroduce native select popups. Nested Escape dismisses the inner list first. SelectContent accepts optional listProps to label its actual List without changing other consumers.
