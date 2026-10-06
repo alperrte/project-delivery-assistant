@@ -16,6 +16,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface ProjectInvitationRepository extends JpaRepository<ProjectInvitation, UUID> {
+    @Query("select i.projectId from ProjectInvitation i where i.tokenHash = :hash")
+    Optional<UUID> projectIdByTokenHash(String hash);
+
+    @Query("select i.projectId from ProjectInvitation i where i.id = :id and i.invitedUserId = :recipient")
+    Optional<UUID> projectIdByRecipient(UUID id, UUID recipient);
 
     Optional<ProjectInvitation> findByProjectIdAndInvitedUserIdAndStatus(UUID projectId, UUID invitedUserId,
                                                                          InvitationStatus status);

@@ -724,7 +724,8 @@
       "sentAt": "Davet tarihi",
       "status": "Durum",
       "actions": "İşlemler",
-      "team": "Ekip"
+      "team": "Ekip",
+      "invitedBy": "Davet eden"
     },
     "resend": "Yeniden gönder",
     "resent": "Davet yeniden gönderildi.",
@@ -780,7 +781,8 @@
         "description": "Süresi dolan davetler burada görünür."
       }
     },
-    "externalUnavailable": "Davet bilgileri şu anda alınamıyor. Lütfen tekrar deneyin."
+    "externalUnavailable": "Davet bilgileri şu anda alınamıyor. Lütfen tekrar deneyin.",
+    "unknownInviter": "Davet eden kullanıcı kullanılamıyor"
   },
   "squads": {
     "card": {
@@ -798,7 +800,8 @@
       "open": "Ekibi aç",
       "openNamed": "{name} ekibini aç",
       "edit": "Düzenle",
-      "editNamed": "{name} ekibini düzenle"
+      "editNamed": "{name} ekibini düzenle",
+      "additionalMembers": "{count} ek üye"
     },
     "membersPage": {
       "back": "Ekiplere dön",
@@ -847,14 +850,6 @@
       "label": "Görünüm",
       "list": "Liste",
       "chart": "Şema"
-    },
-    "archive": {
-      "label": "{name} ekibini arşivle",
-      "button": "Arşivle",
-      "title": "{name} arşivlensin mi?",
-      "description": "Arşivlenen ekip listeden kalkar ve bekleyen davetleri iptal edilir. Üyeler projede kalır.",
-      "done": "Ekip arşivlendi.",
-      "orphan": "Şu kişilerin başka ekibi olmadığı için arşivlenemiyor: {names}. Önce onları başka bir ekibe ekleyin."
     },
     "chart": {
       "label": "Ekip organizasyon şeması",
@@ -1001,6 +996,17 @@
         "removeFromProjectDescription": "{name} projeden ve şu ekiplerden çıkarılır: {teams}. Tekrar katılması için yeni bir davet gerekir.",
         "removedFromProject": "Kişi projeden çıkarıldı."
       }
+    },
+    "delete": {
+      "label": "{name} ekibini sil",
+      "button": "Ekibi Sil",
+      "title": "{name} ekibini sil",
+      "description": "\"{name}\" ekibini silmek üzeresiniz. Ekip artık projede kullanılamayacak ve diğer ekip üyeleri bilgilendirilecek. Bu ekibe ayrılmış açık görev havuzu teklifleri mevcut yetkilerle proje üyelerine açılır. Görevler ve geçmiş veriler korunur.",
+      "done": "Ekip silindi.",
+      "orphan": "Önce bu üyeleri başka bir ekibe ekleyin: {names}",
+      "children": "Önce alt ekipleri taşıyın veya silin.",
+      "noLongerAvailable": "Ekip artık mevcut değil. Liste güncellendi.",
+      "cancel": "İptal"
     }
   },
   "oauth": {
@@ -2581,38 +2587,81 @@
     "close": "Takvimi kapat"
   },
   "notifications": {
-    "label": "Bildirimler, {count} okunmamış",
-    "update": "Yeni güncelleme",
-    "someone": "Bir kullanıcı",
-    "readAll": "Tümünü okundu yap",
+    "title": "Bildirimler",
+    "empty": "Henüz bildiriminiz yok.",
+    "loading": "Bildirimler yükleniyor",
     "retry": "Tekrar dene",
-    "loading": "Bildirimler yükleniyor…",
-    "previous": "Önceki bildirimler",
-    "next": "Sonraki bildirimler",
-    "started": "{actor}, {key}: {title} görevine başladı.",
-    "completed": "{actor}, {key}: {title} görevini tamamladı.",
-    "statusChanged": "{actor}, {key}: {title} görevini “{status}” durumuna aldı.",
+    "read": "Okundu",
+    "unread": "Okunmadı",
+    "markRead": "Okundu olarak işaretle",
+    "readAll": "Tümünü okundu yap",
+    "listLabel": "Bildirim geçmişi",
+    "previous": "Önceki sayfa",
+    "next": "Sonraki sayfa",
+    "page": "Sayfa {page} / {total}",
+    "unreadCount": "{count} okunmamış bildirim",
+    "openCenter": "Bildirimleri aç",
+    "teamDeleted": "Ekip silindi",
+    "teamDeletedBody": "\"{project}\" projesinde üyesi olduğunuz \"{team}\" ekibi {actor} tarafından silindi. Bildirim geçmişinizde saklanır.",
+    "projectManager": "proje lideri",
+    "someone": "Bir kullanıcı",
+    "taskStarted": "Görev başladı",
+    "taskCompleted": "Görev tamamlandı",
+    "taskStatusBody": "{actor}, {task} görevinin durumunu {previous} durumundan {current} durumuna değiştirdi.",
+    "unavailable": "Bildirim hizmeti şu anda kullanılamıyor. Tekrar deneyin.",
+    "countUnavailable": "Okunmamış bildirim sayısı şu anda alınamıyor.",
     "types": {
       "TASK_ASSIGNED": "Görev atandı",
       "TASK_UNASSIGNED": "Görev ataması kaldırıldı",
-      "TASK_STATUS_CHANGED": "Görev durumu güncellendi",
-      "TASK_PRIORITY_CHANGED": "Görev önceliği güncellendi",
-      "TASK_DUE_DATE_CHANGED": "Görev tarihi güncellendi",
+      "TASK_STATUS_CHANGED": "Görev durumu değişti",
+      "TASK_PRIORITY_CHANGED": "Görev önceliği değişti",
+      "TASK_DUE_DATE_CHANGED": "Görev bitiş tarihi değişti",
       "TASK_BLOCKED": "Görev engellendi",
-      "TASK_DEADLINE_SOON": "Görev tarihi yaklaşıyor",
-      "TASK_OVERDUE": "Görev gecikti",
-      "TASK_CLAIMED": "Görev üstlenildi",
-      "TASK_RELEASED": "Görev havuza bırakıldı",
-      "TASK_MENTIONED": "Bir yorumda bahsedildiniz",
-      "TASK_COMMENTED": "Yeni görev yorumu",
       "PROJECT_MEMBER_ADDED": "Projeye eklendiniz",
-      "PROJECT_MEMBER_REMOVED": "Proje üyeliği kaldırıldı",
-      "PROJECT_ROLE_CHANGED": "Proje rolü güncellendi",
+      "PROJECT_MEMBER_REMOVED": "Projeden çıkarıldınız",
+      "PROJECT_ROLE_CHANGED": "Proje rolleriniz değişti",
       "SQUAD_MEMBER_ADDED": "Ekibe eklendiniz",
-      "SQUAD_MEMBER_REMOVED": "Ekip üyeliği kaldırıldı",
+      "SQUAD_MEMBER_REMOVED": "Ekipten çıkarıldınız",
+      "SQUAD_DELETED": "Ekip silindi",
       "PROJECT_INVITATION_CREATED": "Proje daveti",
-      "PROJECT_INVITATION_ACCEPTED": "Proje daveti kabul edildi",
-      "PROJECT_INVITATION_REJECTED": "Proje daveti reddedildi"
-    }
+      "PROJECT_INVITATION_ACCEPTED": "Davet kabul edildi",
+      "PROJECT_INVITATION_REJECTED": "Davet reddedildi",
+      "TASK_DEADLINE_SOON": "Görev bitiş tarihi yaklaşıyor",
+      "TASK_OVERDUE": "Görev bitiş tarihi geçti",
+      "TASK_CLAIMED": "Görev üstlenildi",
+      "TASK_RELEASED": "Görev havuza döndü",
+      "TASK_MENTIONED": "Bir görevde bahsedildiniz",
+      "TASK_COMMENTED": "Göreve yorum geldi"
+    },
+    "close": "Bildirimi kapat",
+    "bodies": {
+      "TASK_ASSIGNED": "Bir görev size atandı.",
+      "TASK_UNASSIGNED": "Bir görevden atamanız kaldırıldı.",
+      "TASK_STATUS_CHANGED": "İzlediğiniz bir görevin durumu değişti.",
+      "TASK_PRIORITY_CHANGED": "İzlediğiniz bir görevin önceliği değişti.",
+      "TASK_DUE_DATE_CHANGED": "İzlediğiniz bir görevin bitiş tarihi değişti.",
+      "TASK_BLOCKED": "İzlediğiniz bir görev engellendi.",
+      "PROJECT_MEMBER_ADDED": "Bir projeye eklendiniz.",
+      "PROJECT_MEMBER_REMOVED": "Bir projeden çıkarıldınız.",
+      "PROJECT_ROLE_CHANGED": "Projedeki rolleriniz değişti.",
+      "SQUAD_MEMBER_ADDED": "Bir ekibe eklendiniz.",
+      "SQUAD_MEMBER_REMOVED": "Bir ekipten çıkarıldınız.",
+      "SQUAD_DELETED": "Üyesi olduğunuz bir ekip silindi.",
+      "PROJECT_INVITATION_CREATED": "Bir projeye davet edildiniz.",
+      "PROJECT_INVITATION_ACCEPTED": "Gönderdiğiniz davet kabul edildi.",
+      "PROJECT_INVITATION_REJECTED": "Gönderdiğiniz davet reddedildi.",
+      "TASK_DEADLINE_SOON": "Atandığınız veya izlediğiniz bir görevin bitiş tarihine 24 saatten az kaldı.",
+      "TASK_OVERDUE": "Atandığınız veya izlediğiniz bir görevin bitiş tarihi geçti.",
+      "TASK_CLAIMED": "İzlediğiniz bir görev havuzdan üstlenildi.",
+      "TASK_RELEASED": "İzlediğiniz bir görev havuza geri bırakıldı.",
+      "TASK_MENTIONED": "Bir görev yorumunda sizden bahsedildi.",
+      "TASK_COMMENTED": "İzlediğiniz bir göreve yorum eklendi."
+    },
+    "label": "Bildirimler, {count} okunmamış",
+    "update": "Yeni güncelleme",
+    "started": "{actor}, {key}: {title} görevine başladı.",
+    "completed": "{actor}, {key}: {title} görevini tamamladı.",
+    "statusChanged": "{actor}, {key}: {title} görevini “{status}” durumuna aldı.",
+    "openTask": "Görevi aç"
   }
 }

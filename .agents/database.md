@@ -123,3 +123,9 @@ No schema or migration change: V21 nullable organization_id FK, NO ACTION delete
 ## V56 Task status notification snapshots (2026-10-06)
 
 V56__task_status_notification_snapshots.sql adds nullable notifications columns task_status_previous/task_status_current VARCHAR(20), task_key VARCHAR(125), task_title VARCHAR(160), actor_nickname VARCHAR(32). Existing read/unread records remain unchanged with null snapshots. A CHECK permits all-null legacy records or complete TASK_STATUS_CHANGED/TASK snapshots with valid status names; nickname is optional. No new task/project foreign key or index is necessary: existing recipient/time/unread indexes serve the unchanged API queries. Display data is captured at the committed change, so later task renames cannot rewrite notification history. PostgreSQL upgrade from V55, constraints and Hibernate schema validation are tested. Migration is additive; do not delete old notifications or edit prior migrations.
+
+## Squad modernization persistence - 2026-10-06
+
+V57 additive notification migration introduces source_event_id, bounded team-deletion scalar display snapshot and popup_presented_at. SQUAD_DELETED consistency CHECK, partial event/recipient unique dedup and oldest own unpresented/unread claim index; V56 task snapshot and older migrations unchanged. Claim atomic CTE UPDATE + SKIP LOCKED does not alter read/read_at. Notification DynamicUpdate prevents stale JPA read writes from reverting a concurrent presentation marker.
+
+Team deletion reuses squads.archived_at; retains team/member rows and task/invitation FK history. Effective pending invitations finalize CANCELLED/EXPIRED under existing project-first locks. No hard delete/reopen/cascade or automatic General Team. Existing project row lock -> ordered team locks -> invitation row lock/revalidation. Prepared team-page statement count size30=11 and size100=11 on actual100-team/500-member fixture.

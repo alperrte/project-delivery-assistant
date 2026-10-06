@@ -16,6 +16,8 @@ import { invitationsApi } from "../api";
 import type { ExternalInvitationPreview } from "../types";
 import { useInvitationToken } from "../hooks/use-invitation-token";
 import { clearPrivateInvitations } from "../query-keys";
+import { clearPrivateNotifications } from "@/features/notifications/query-keys";
+import { clearPrivateTeams } from "@/features/squads/cache";
 import {isInvalidInvitationToken,isPreviewServerFailure} from "../external-preview-error";
 
 export function ExternalInvitationRegistration() {
@@ -78,6 +80,8 @@ export function ExternalInvitationRegistration() {
       await authApi.login({ email: preview.email, password });
       const me = await authApi.me();
       clearPrivateInvitations(queryClient);
+      clearPrivateNotifications(queryClient);
+      clearPrivateTeams(queryClient);
       queryClient.setQueryData(sessionQueryKey, me);
       router.replace(`/projects/${accepted.projectSlug}`);
     } catch (cause) { setError(te(errorKey(cause))); setBusy(false); }

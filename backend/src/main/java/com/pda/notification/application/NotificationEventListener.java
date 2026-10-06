@@ -5,6 +5,7 @@ import com.pda.project.ProjectMemberRemovedEvent;
 import com.pda.project.ProjectInvitationEvents;
 import com.pda.project.ProjectMembershipEvents;
 import com.pda.squad.SquadMembershipEvents;
+import com.pda.squad.SquadLifecycleEvents;
 import com.pda.task.TaskEvents;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
@@ -15,9 +16,12 @@ import java.util.UUID;
 @Component
 public class NotificationEventListener {
     private final NotificationWriter writer;
-    public NotificationEventListener(NotificationWriter writer) {
-        this.writer = writer;
+    private final TeamDeletionNotificationStore teamDeletions;
+    public NotificationEventListener(NotificationWriter writer, TeamDeletionNotificationStore teamDeletions) {
+        this.writer = writer; this.teamDeletions = teamDeletions;
     }
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void teamDeleted(SquadLifecycleEvents.TeamDeleted event) { teamDeletions.save(event); }
     private void saveAll(Set<UUID> recipients, UUID actor, UUID project, UUID task, NotificationType type) {
         for (UUID recipient : recipients) writer.save(recipient, actor, project, ResourceType.TASK, task, type);
     }

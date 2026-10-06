@@ -60,6 +60,38 @@ class SquadApiIntegrationTest {
     @Autowired UserAccounts users;
     @Autowired ProjectMembershipService memberships;
     @Autowired SquadService squadService;
+    @Autowired org.springframework.jdbc.core.JdbcTemplate jdbc;
+
+    @Test
+    void deletionRejectsAdminNonmemberRemovedAndDisabledAccountsAndWrongProjectOrCsrf() throws Exception {
+        Cookie csrf = csrfCookie();
+        Account manager = account("deletescope"), viewer = account("deleteviewer"), admin = account("deleteadmin");
+        UUID project = createProject(manager, csrf, "Delete security scope");
+        UUID otherProject = createProject(manager, csrf, "Other delete scope");
+        UUID team = squadService.create(manager.id(), project, "Retained scoped team", null, null, true).getId();
+        memberships.addMember(manager.id(), project, viewer.id(), Set.of(ProjectRole.TESTER));
+        jdbc.update("UPDATE users SET global_role='ADMIN' WHERE id=?", admin.id());
+        String path = "/api/v1/projects/" + project + "/teams/" + team;
+        mvc.perform(get(path).cookie(viewer.access())).andExpect(status().isOk());
+        for (Account denied : java.util.List.of(viewer, admin)) {
+            mvc.perform(delete(path).cookie(csrf, denied.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                    .andExpect(status().isForbidden());
+        }
+        mvc.perform(get(path).cookie(admin.access())).andExpect(status().isForbidden());
+        mvc.perform(delete("/api/v1/projects/" + otherProject + "/teams/" + team)
+                        .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isNotFound());
+        mvc.perform(delete(path).cookie(manager.access())).andExpect(status().isForbidden());
+        memberships.removeMember(manager.id(), project, viewer.id());
+        mvc.perform(get(path).cookie(viewer.access())).andExpect(status().isForbidden());
+        mvc.perform(delete(path).cookie(csrf, viewer.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isForbidden());
+        jdbc.update("UPDATE users SET account_status='DISABLED' WHERE id=?", viewer.id());
+        mvc.perform(delete(path).cookie(csrf, viewer.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isUnauthorized());
+        org.junit.jupiter.api.Assertions.assertNull(jdbc.queryForObject("SELECT archived_at FROM squads WHERE id=?", java.time.OffsetDateTime.class, team));
+        org.junit.jupiter.api.Assertions.assertEquals(0, jdbc.queryForObject("SELECT count(*) FROM notifications WHERE resource_id=? AND type='SQUAD_DELETED'", Integer.class, team));
+    }
 
     @Test
     void managerManagesSquadLifecycleWhileContributorOnlyViews() throws Exception {

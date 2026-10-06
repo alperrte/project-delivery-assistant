@@ -724,7 +724,8 @@
       "sentAt": "Invited on",
       "status": "Status",
       "actions": "Actions",
-      "team": "Team"
+      "team": "Team",
+      "invitedBy": "Invited by"
     },
     "resend": "Resend",
     "resent": "Invitation resent.",
@@ -780,7 +781,8 @@
         "description": "Expired invitations appear here."
       }
     },
-    "externalUnavailable": "Invitation details are currently unavailable. Please try again."
+    "externalUnavailable": "Invitation details are currently unavailable. Please try again.",
+    "unknownInviter": "Inviter unavailable"
   },
   "squads": {
     "title": "Squads",
@@ -810,15 +812,8 @@
       "open": "Open team",
       "openNamed": "Open team {name}",
       "edit": "Edit",
-      "editNamed": "Edit team {name}"
-    },
-    "archive": {
-      "label": "Archive team {name}",
-      "button": "Archive",
-      "title": "Archive {name}?",
-      "description": "An archived team leaves the list and its pending invitations are cancelled. Members stay in the project.",
-      "done": "Team archived.",
-      "orphan": "This team cannot be archived because these people have no other team: {names}. Add them to another team first."
+      "editNamed": "Edit team {name}",
+      "additionalMembers": "{count} additional members"
     },
     "chart": {
       "label": "Team organization chart",
@@ -977,6 +972,17 @@
         "removeFromProjectDescription": "{name} is removed from the project and from these teams: {teams}. A new invitation is needed to rejoin.",
         "removedFromProject": "Person removed from the project."
       }
+    },
+    "delete": {
+      "label": "Delete team {name}",
+      "button": "Delete Team",
+      "title": "Delete team {name}",
+      "description": "You are about to delete \"{name}\". The team will no longer be available in the project and its other members will be notified. Open pool offers reserved for this team become available to project members under existing permissions. Tasks and history are retained.",
+      "done": "Team deleted.",
+      "orphan": "First add these members to another team: {names}",
+      "children": "Move or delete child teams first.",
+      "noLongerAvailable": "The team is no longer available. The list was refreshed.",
+      "cancel": "Cancel"
     }
   },
   "oauth": {
@@ -2557,17 +2563,29 @@
     "close": "Close calendar"
   },
   "notifications": {
-    "label": "Notifications, {count} unread",
-    "update": "New update",
+    "title": "Notifications",
+    "empty": "You have no notifications yet.",
+    "loading": "Loading notifications",
+    "retry": "Retry",
+    "read": "Read",
+    "unread": "Unread",
+    "markRead": "Mark as read",
+    "readAll": "Mark all as read",
+    "listLabel": "Notification history",
+    "previous": "Previous page",
+    "next": "Next page",
+    "page": "Page {page} of {total}",
+    "unreadCount": "{count} unread notifications",
+    "openCenter": "Open notifications",
+    "teamDeleted": "Team deleted",
+    "teamDeletedBody": "Your team \"{team}\" in project \"{project}\" was deleted by {actor}. It remains in your notification history.",
+    "projectManager": "a project manager",
     "someone": "Someone",
-    "readAll": "Mark all read",
-    "retry": "Try again",
-    "loading": "Loading notifications…",
-    "previous": "Previous notifications",
-    "next": "Next notifications",
-    "started": "{actor} started {key}: {title}.",
-    "completed": "{actor} completed {key}: {title}.",
-    "statusChanged": "{actor} moved {key}: {title} to “{status}”.",
+    "taskStarted": "Task started",
+    "taskCompleted": "Task completed",
+    "taskStatusBody": "{actor} changed {task} from {previous} to {current}.",
+    "unavailable": "The notification service is currently unavailable. Please retry.",
+    "countUnavailable": "The unread notification count is currently unavailable.",
     "types": {
       "TASK_ASSIGNED": "Task assigned",
       "TASK_UNASSIGNED": "Task assignment removed",
@@ -2575,20 +2593,51 @@
       "TASK_PRIORITY_CHANGED": "Task priority changed",
       "TASK_DUE_DATE_CHANGED": "Task deadline changed",
       "TASK_BLOCKED": "Task blocked",
+      "PROJECT_MEMBER_ADDED": "Added to project",
+      "PROJECT_MEMBER_REMOVED": "Removed from project",
+      "PROJECT_ROLE_CHANGED": "Project roles changed",
+      "SQUAD_MEMBER_ADDED": "Added to team",
+      "SQUAD_MEMBER_REMOVED": "Removed from team",
+      "SQUAD_DELETED": "Team deleted",
+      "PROJECT_INVITATION_CREATED": "Project invitation",
+      "PROJECT_INVITATION_ACCEPTED": "Invitation accepted",
+      "PROJECT_INVITATION_REJECTED": "Invitation rejected",
       "TASK_DEADLINE_SOON": "Task deadline approaching",
       "TASK_OVERDUE": "Task overdue",
       "TASK_CLAIMED": "Task claimed",
       "TASK_RELEASED": "Task returned to the pool",
       "TASK_MENTIONED": "You were mentioned",
-      "TASK_COMMENTED": "New task comment",
-      "PROJECT_MEMBER_ADDED": "Added to project",
-      "PROJECT_MEMBER_REMOVED": "Project membership removed",
-      "PROJECT_ROLE_CHANGED": "Project role changed",
-      "SQUAD_MEMBER_ADDED": "Added to team",
-      "SQUAD_MEMBER_REMOVED": "Team membership removed",
-      "PROJECT_INVITATION_CREATED": "Project invitation",
-      "PROJECT_INVITATION_ACCEPTED": "Project invitation accepted",
-      "PROJECT_INVITATION_REJECTED": "Project invitation rejected"
-    }
+      "TASK_COMMENTED": "New task comment"
+    },
+    "close": "Close notification",
+    "bodies": {
+      "TASK_ASSIGNED": "You were assigned to a task.",
+      "TASK_UNASSIGNED": "You were unassigned from a task.",
+      "TASK_STATUS_CHANGED": "A task you follow changed status.",
+      "TASK_PRIORITY_CHANGED": "A task you follow changed priority.",
+      "TASK_DUE_DATE_CHANGED": "A task you follow changed its deadline.",
+      "TASK_BLOCKED": "A task you follow was blocked.",
+      "PROJECT_MEMBER_ADDED": "You were added to a project.",
+      "PROJECT_MEMBER_REMOVED": "You were removed from a project.",
+      "PROJECT_ROLE_CHANGED": "Your project roles changed.",
+      "SQUAD_MEMBER_ADDED": "You were added to a team.",
+      "SQUAD_MEMBER_REMOVED": "You were removed from a team.",
+      "SQUAD_DELETED": "A team you belonged to was deleted.",
+      "PROJECT_INVITATION_CREATED": "You were invited to a project.",
+      "PROJECT_INVITATION_ACCEPTED": "An invitation you sent was accepted.",
+      "PROJECT_INVITATION_REJECTED": "An invitation you sent was rejected.",
+      "TASK_DEADLINE_SOON": "A task assigned to you or followed by you is due within 24 hours.",
+      "TASK_OVERDUE": "A task assigned to you or followed by you passed its deadline.",
+      "TASK_CLAIMED": "A task you follow was claimed from the pool.",
+      "TASK_RELEASED": "A task you follow was returned to the pool.",
+      "TASK_MENTIONED": "You were mentioned in a task comment.",
+      "TASK_COMMENTED": "A comment was added to a task you follow."
+    },
+    "label": "Notifications, {count} unread",
+    "update": "New update",
+    "started": "{actor} started {key}: {title}.",
+    "completed": "{actor} completed {key}: {title}.",
+    "statusChanged": "{actor} moved {key}: {title} to “{status}”.",
+    "openTask": "Open task"
   }
 }

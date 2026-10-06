@@ -13,6 +13,8 @@ import org.springframework.data.domain.Pageable;
  * client-supplied one. Unknown, archived or non-member combinations always answer "no access".
  */
 public interface ProjectAccess {
+    /** Existing exclusive project row lock, before team/invitation locks; caller checks permission before and after. */
+    ProjectTeamContext lockTeamContext(UUID projectId);
     boolean isMember(UUID projectId, UUID userId);
     /** Membership lookup for archived-project conflict classification only; grants no permission. */
     boolean isMemberIncludingArchived(UUID projectId, UUID userId);

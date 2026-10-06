@@ -17,6 +17,9 @@ public interface UserAccounts {
     Optional<AuthenticatedUser> findActiveById(UUID userId);
     /** Active, non-sensitive user summaries in one query for paginated team/member views. */
     Map<UUID, AuthenticatedUser> findActiveByIds(Set<UUID> userIds);
+    /** Safe internal batch display profiles; callers derive IDs from their authorized membership scope. */
+    Map<UUID, ProfileSummary> findActiveProfilesByIds(Set<UUID> userIds);
+    record ProfileSummary(UUID userId, String nickname, String firstName, String lastName, Long profilePhotoVersion) {}
 
     /** ACTIVE user connected to this provider identity; empty when unknown or the account is not active. */
     Optional<AuthenticatedUser> findActiveByOAuthIdentity(OAuthProvider provider, String subject);

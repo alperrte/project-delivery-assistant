@@ -12,6 +12,8 @@ import java.util.Collection;
 import java.util.UUID;
 
 public interface SquadMembershipRepository extends JpaRepository<SquadMembership, UUID> {
+    @Query("select m.projectMembershipId from SquadMembership m where m.squadId = :teamId")
+    java.util.List<UUID> membershipIds(UUID teamId);
 
     boolean existsBySquadIdAndProjectMembershipId(UUID squadId, UUID projectMembershipId);
 

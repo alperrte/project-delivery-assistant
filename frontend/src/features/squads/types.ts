@@ -1,6 +1,7 @@
 import type { ProjectRole, UserRef } from "@/features/projects/types";
 
 export type TeamLastJoined = { userId: string; nickname: string | null; joinedAt: string };
+export type TeamMemberPreview = { userId: string; nickname: string | null; profilePhotoVersion?: number | null; firstName?: string | null; lastName?: string | null };
 
 export type Team = {
   id: string;
@@ -14,7 +15,7 @@ export type Team = {
   updatedAt: string;
   updatedBy: UserRef;
   /** Newest members first, at most five. */
-  memberPreview: UserRef[];
+  memberPreview: TeamMemberPreview[];
   lastJoined: TeamLastJoined | null;
 };
 

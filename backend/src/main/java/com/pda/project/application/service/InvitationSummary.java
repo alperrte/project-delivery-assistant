@@ -18,12 +18,14 @@ import java.util.UUID;
 public record InvitationSummary(UUID id, UUID projectId, UUID invitedUserId, String email, UUID invitedBy,
                                 Set<ProjectRole> initialRoles, InvitationStatus status, Instant createdAt,
                                 Instant expiresAt, String rejectionMessage, String firstName, String lastName,
-                                String message, String nickname, UUID teamId, String teamName) {
+                                String message, String nickname, UUID teamId, String teamName,
+                                String invitedByNickname, Long invitedByPhotoVersion, Long profilePhotoVersion) {
 
     /** Same invitation with a different status; used to report a lapsed pending invitation as expired. */
     public InvitationSummary withStatus(InvitationStatus newStatus) {
         return new InvitationSummary(id, projectId, invitedUserId, email, invitedBy, initialRoles, newStatus, createdAt,
-                expiresAt, rejectionMessage, firstName, lastName, message, nickname, teamId, teamName);
+                expiresAt, rejectionMessage, firstName, lastName, message, nickname, teamId, teamName,
+                invitedByNickname, invitedByPhotoVersion, profilePhotoVersion);
     }
 
     public static InvitationSummary from(ProjectInvitation invitation) {
@@ -31,11 +33,16 @@ public record InvitationSummary(UUID id, UUID projectId, UUID invitedUserId, Str
     }
 
     public static InvitationSummary from(ProjectInvitation invitation, String nickname, String teamName) {
+        return from(invitation, nickname, teamName, null, null, null);
+    }
+
+    public static InvitationSummary from(ProjectInvitation invitation, String nickname, String teamName,
+                                         String invitedByNickname, Long invitedByPhotoVersion, Long profilePhotoVersion) {
         return new InvitationSummary(invitation.getId(), invitation.getProjectId(), invitation.getInvitedUserId(),
                 invitation.getEmail(), invitation.getInvitedBy(), invitation.getInitialRoles(),
                 invitation.getStatus(), invitation.getCreatedAt(), invitation.getExpiresAt(),
                 invitation.getRejectionMessage(), invitation.getInviteeFirstName(),
                 invitation.getInviteeLastName(), invitation.getMessage(), nickname,
-                invitation.getTeamId(), teamName);
+                invitation.getTeamId(), teamName, invitedByNickname, invitedByPhotoVersion, profilePhotoVersion);
     }
 }

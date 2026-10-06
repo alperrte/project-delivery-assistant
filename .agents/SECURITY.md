@@ -288,6 +288,20 @@ Swagger check path: `/swagger-ui/index.html` with `API_DOCS_ENABLED=true`; call 
 | `PATCH /api/v1/notifications/read-all` | Authenticated, own records + CSRF | No body | `200 {"count": 2}` (number changed) | `401`, `403` CSRF |
 
 
+
+### Squad deletion and own notification presentation - 2026-10-06
+
+Existing team DELETE and legacy archive adapters enforce active project SQUAD_MANAGE/PROJECT_MANAGER, CSRF and scoped IDs; no founder/global ADMIN bypass. Permission checks after waiting use fresh scalar active-role data with the existing RolePolicy. Project-first/ordered-team/invitation lock revalidation serializes invitation grants with deletion. Soft-delete retains history and current pool semantics; no authorization/session/CORS/cookie/ENV model change.
+
+| Endpoint | Scope/body | Success | Important failures |
+| --- | --- | --- | --- |
+| POST `/api/v1/notifications/team-deletions/claim` | Session principal own records + CSRF; no body/actor/ID |200 one own notification or204; private/no-store |400 nonempty body,401 no active session,403 CSRF |
+| DELETE `/api/v1/projects/{p}/teams/{t}` | Active PROJECT_MANAGER + CSRF; no body |204 retained soft-delete/history, one committed event |403 permission/CSRF,404 missing/deleted/wrong project,409 children/orphan |
+
+Claim sets popupPresentedAt atomically on oldest unread SQUAD_DELETED; read/readAt stays independent. At-most-once grant may lose a popup when the response is lost after commit; durable own history remains. Fanout uses committed immutable recipient snapshot, replay event/recipient dedup and existing registry recovery; rollback creates no notification. Additive nullable teamDeletion snapshot carries bounded plain text. Actor-scoped frontend notification cache/AbortSignal/lifetime cleanup prevents prior-user responses/toasts surfacing after logout/login. No browser auth/private list persistence.
+
+Team memberPreview adds safe real first/last names only after project/team authorization; no email/global directory expansion. Existing manager invitation list batch adds safe inviter nickname/photo version and target photo version; target email privacy/token rules retained. Swagger `/swagger-ui/index.html` and `/v3/api-docs`, normal login/CSRF. Delete/claim have no JSON body; safe team create `{"name":"Example Team","includeCreator":true}`.
+
 Swagger/OpenAPI is intended for development and testing.
 
 - Swagger/OpenAPI must be enabled in development/test environments as required.
@@ -880,3 +894,9 @@ For security-sensitive features, verify as applicable:
 > Security controls belong on the backend and must fail safely by default.
 
 Convenience, frontend behavior, development speed, or debugging requirements must not silently weaken PDA's security baseline.
+
+### Independent sharp dependency follow-up - 2026-10-06
+
+Final read-only audit reports6 high total /1 production high. The new production finding is sharp0.35.4, GHSA-wq5f-xc86-pv6w (reviewed2026-10-06), affected<0.35.5/patched0.35.5. Upstream describes conditional librsvg memory vulnerability on glibc Linux while decoding SVG. PDA exploit/runtime reachability was not reproduced; production audit classification alone is not proof. Reviewed source: https://github.com/advisories/GHSA-wq5f-xc86-pv6w .
+
+source-map-js remains patched1.2.2. Existing ESLint/braces5 high dev debt remains. Squad modernization does not update package/lock/ENV; separate compatible sharp patch review is needed before release, no waiver. Earlier5/production0 counts are historical.

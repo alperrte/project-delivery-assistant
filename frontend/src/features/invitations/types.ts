@@ -12,6 +12,9 @@ export type Invitation = {
   message: string | null;
   nickname: string | null;
   invitedBy: string;
+  invitedByNickname?: string | null;
+  invitedByPhotoVersion?: number | null;
+  profilePhotoVersion?: number | null;
   initialRoles: ProjectRole[];
   status: InvitationStatus;
   rejectionMessage: string | null;

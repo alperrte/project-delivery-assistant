@@ -88,10 +88,11 @@ test("a non-following co-manager receives localized work notifications and opens
     await expect(confirmDialog(page)).toHaveCount(0);
     await manager.goto("/tasks");
     await manager.getByRole("button", { name: /^Bildirimler/ }).click();
-    const started = manager.getByRole("menuitem").filter({ hasText: `${f.task.taskKey}: ${f.task.title} görevine başladı.` });
+    const started = manager.locator("[data-notification-id]").filter({ hasText: `${f.task.taskKey}: ${f.task.title} görevine başladı.` });
     await expect(started).toBeVisible();
-    await started.click();
+    await started.getByRole("link", { name: "Görevi aç", exact: true }).click();
     await expect(taskDialog(manager).getByRole("heading", { name: f.task.title })).toBeVisible();
+    await expect.poll(() => taskDialog(manager).evaluate(dialog => dialog.contains(document.activeElement))).toBe(true);
     await expect(manager).toHaveURL(/\/tr\/gorevler\?/);
     const records = (await api(manager, "GET", "/notifications?type=TASK_STATUS_CHANGED&size=100")).json as { content: { resourceId: string; read: boolean }[] };
     expect(records.content.filter(n => n.resourceId === f.task.id)).toEqual([expect.objectContaining({ read: true })]);
@@ -100,7 +101,7 @@ test("a non-following co-manager receives localized work notifications and opens
     await expect(confirmDialog(page)).toHaveCount(0);
     await taskDialog(manager).getByRole("button", { name: "Görev detayını kapat", exact: true }).click();
     await manager.getByRole("button", { name: /^Bildirimler/ }).click();
-    await expect(manager.getByRole("menuitem").filter({ hasText: `${f.task.taskKey}: ${f.task.title} görevini tamamladı.` })).toBeVisible();
+    await expect(manager.locator("[data-notification-id]").filter({ hasText: `${f.task.taskKey}: ${f.task.title} görevini tamamladı.` })).toBeVisible();
   } finally { await context.close(); }
 });
 

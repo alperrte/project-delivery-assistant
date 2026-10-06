@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "@/i18n/navigation";
 import { usePathname, useRouter, useSearchParams } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -18,13 +18,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useSession } from "@/features/auth/hooks/use-session";
 import { PROJECT_ROLES, type ProjectRole } from "@/features/projects/types";
 import { errorKey } from "@/lib/api/error-message";
+import { ApiError } from "@/lib/api/client";
+import { invalidateTeamDeletion } from "../cache";
 import { cn } from "@/lib/utils";
 import { squadsApi } from "../api";
 import { projectLogoSrc, teamsKey, useProjectContext } from "../hooks";
 import { relativeTime } from "../relative-time";
 import type { TeamMember } from "../types";
 import { AddTeamMemberDialog } from "./add-team-member-dialog";
-import { ArchiveTeamButton } from "./archive-team-button";
+import { DeleteTeamButton } from "./delete-team-button";
 import { TeamMembersTable } from "./team-members-table";
 
 const PAGE_SIZE = 20;
@@ -68,6 +70,7 @@ export function TeamDetailPage({ slug, teamId }: { slug: string; teamId: string 
   const team = useQuery({
     queryKey: [...teamsKey(projectId), teamId],
     queryFn: () => squadsApi.detail(projectId, teamId),
+    refetchInterval: 30_000, refetchIntervalInBackground: false, refetchOnWindowFocus: "always",
     enabled: ready,
   });
   const roster = useQuery({
@@ -151,6 +154,15 @@ export function TeamDetailPage({ slug, teamId }: { slug: string; teamId: string 
   }
 
   const backHref = `/projects/${slug}?section=teams`;
+  const redirected = useRef<string | null>(null);
+  useEffect(() => {
+    if (team.error instanceof ApiError && team.error.status === 404 && ready && redirected.current !== teamId) {
+      redirected.current = teamId;
+      void invalidateTeamDeletion(queryClient, projectId);
+      router.replace(backHref);
+    }
+  }, [team.error, ready, teamId, projectId, queryClient, router, backHref]);
+
 
   if (project.isPending || (!sessionError && !user) || (!!project.data && currentMember.isPending) || (ready && team.isPending)) {
     return (
@@ -251,6 +263,7 @@ export function TeamDetailPage({ slug, teamId }: { slug: string; teamId: string 
               {editMode ? <Check data-icon="inline-start" size={16} aria-hidden="true" /> : <PencilSimple data-icon="inline-start" size={16} aria-hidden="true" />}
               {editMode ? t("editMode.done") : t("editTeam")}
             </Button>
+            <DeleteTeamButton projectId={projectId} teamId={teamId} teamName={teamData.name} onDeleted={() => router.replace(backHref)} />
           </div>
         )}
       </header>
@@ -264,7 +277,6 @@ export function TeamDetailPage({ slug, teamId }: { slug: string; teamId: string 
             <Link href={`/projects/${slug}/teams/${teamId}/edit`} className={buttonVariants({ variant: "outline", size: "sm" })}>
               {t("editMode.editInfo")}
             </Link>
-            <ArchiveTeamButton projectId={projectId} teamId={teamId} teamName={teamData.name} onArchived={() => router.replace(backHref)} />
           </div>
         </div>
       )}

@@ -26,7 +26,7 @@ export const squadsApi = {
   /** `null` moves the team to the top level. */
   move: (projectId: string, teamId: string, parentTeamId: string | null) =>
     apiRequest<Team>(`/projects/${projectId}/teams/${teamId}/parent`, { method: "PUT", body: { parentTeamId } }),
-  archive: (projectId: string, teamId: string) =>
+  delete: (projectId: string, teamId: string) =>
     apiRequest<void>(`/projects/${projectId}/teams/${teamId}`, { method: "DELETE" }),
   members: (projectId: string, teamId: string, page: number, size = 20) =>
     apiRequest<Page<TeamMember>>(`/projects/${projectId}/teams/${teamId}/members?page=${page}&size=${size}`),
