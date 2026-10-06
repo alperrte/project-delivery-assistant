@@ -127,3 +127,12 @@ Organization–Project remediation: `features/projects/query-invalidation.ts` in
 
 
 Task UI update (2026-10-06): tasks/task-model.ts also exposes allowsPool for configured policies; shared PriorityIndicator in task-badges.tsx renders the token colors and critical alert icon across form/preview/list/board/detail/filter. Pool remains an assignment feature when advanced sidebar entries are hidden. Quick calendar-day deadlines are shared by both form modes.
+
+
+## Task progress notification backend (2026-10-06)
+
+- backend/src/main/java/com/pda/notification/domain/TaskStatusChange.java: optional immutable notification snapshot.
+- backend/src/main/resources/db/migration/V56__task_status_notification_snapshots.sql: additive nullable snapshot columns and CHECK.
+- backend/src/test/java/com/pda/task/TaskProgressNotificationApiIntegrationTest.java: short/simple and advanced flows, manager recipients, access/rollback/concurrency and legacy events.
+- backend/src/test/java/com/pda/notification/TaskStatusNotificationMigrationTest.java and TaskStatusNotificationFactoryTest.java: V55 upgrade/data retention, constraints and maximum-length snapshots.
+- Existing ProjectAccess, TaskService/TaskEvents and Notification listener/writer/factory/controller own the behavior; no frontend file is changed in this backend delivery.

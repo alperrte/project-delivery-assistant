@@ -112,9 +112,11 @@ public class Task {
         Objects.requireNonNull(next);
         if (next == status) return false;
         boolean allowed = switch (status) {
-            case BACKLOG -> next == TaskStatus.TODO;
+            case BACKLOG -> next == TaskStatus.TODO
+                    || (creationMode == TaskCreationMode.SIMPLE && next == TaskStatus.IN_PROGRESS);
             case TODO -> next == TaskStatus.BACKLOG || next == TaskStatus.IN_PROGRESS;
-            case IN_PROGRESS -> next == TaskStatus.TODO || next == TaskStatus.IN_REVIEW;
+            case IN_PROGRESS -> next == TaskStatus.TODO || next == TaskStatus.IN_REVIEW
+                    || (creationMode == TaskCreationMode.SIMPLE && next == TaskStatus.DONE);
             case IN_REVIEW -> next == TaskStatus.IN_PROGRESS || next == TaskStatus.TESTING;
             case TESTING -> next == TaskStatus.IN_REVIEW || next == TaskStatus.DONE;
             case DONE -> next == TaskStatus.IN_PROGRESS;

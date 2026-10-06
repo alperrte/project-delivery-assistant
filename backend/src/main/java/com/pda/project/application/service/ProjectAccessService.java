@@ -10,6 +10,7 @@ import com.pda.project.infrastructure.repository.ProjectInvitationRepository;
 import com.pda.project.infrastructure.repository.ProjectMembershipRepository;
 import com.pda.project.infrastructure.repository.ProjectRepository;
 import com.pda.user.ProjectPermission;
+import com.pda.user.ProjectRole;
 import com.pda.user.RolePolicy;
 import com.pda.user.UserAccounts;
 import org.springframework.data.domain.Page;
@@ -119,6 +120,15 @@ public class ProjectAccessService implements ProjectAccess {
             return Set.of();
         }
         return Set.copyOf(memberships.findActiveUserIds(projectId, userIds));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Set<UUID> managerUserIds(UUID projectId) {
+        if (projectId == null || projects.findByIdAndArchivedAtIsNull(projectId).isEmpty()) return Set.of();
+        return memberships.findByProjectIdAndStatusAndRole(projectId, MembershipStatus.ACTIVE,
+                ProjectRole.PROJECT_MANAGER).stream().map(ProjectMembership::getUserId)
+                .collect(Collectors.toUnmodifiableSet());
     }
 
     @Override

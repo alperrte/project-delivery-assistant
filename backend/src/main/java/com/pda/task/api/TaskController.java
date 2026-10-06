@@ -91,7 +91,9 @@ public class TaskController {
     }
 
     @PatchMapping("/{taskId}/status")
-    @Operation(summary = "Change task status", description = "TASK_MANAGE or assigned TASK_WORK; controlled transitions")
+    @Operation(summary = "Change task status", description = "TASK_MANAGE or assigned TASK_WORK; controlled transitions. "
+            + "SIMPLE additionally allows BACKLOG to IN_PROGRESS and IN_PROGRESS to DONE. "
+            + "IN_PROGRESS/DONE changes notify active project managers; repeated same-status requests are no-ops.")
     public TaskView status(@PathVariable UUID projectId, @PathVariable UUID taskId,
             @AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
             @Valid @RequestBody StatusRequest request) {

@@ -34,6 +34,9 @@ public interface ProjectAccess {
     /** Active members of an active project among the supplied IDs, in one lookup. */
     Set<UUID> activeMemberIds(UUID projectId, Set<UUID> userIds);
 
+    /** Active project managers of an active project; global roles confer no membership here. */
+    Set<UUID> managerUserIds(UUID projectId);
+
     /** Safe active membership view; null when absent. Does not grant access by itself. */
     ProjectMemberView member(UUID projectId, UUID userId);
 

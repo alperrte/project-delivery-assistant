@@ -54,11 +54,12 @@ public class NotificationController {
     public record CountResponse(long count) {}
     public record NotificationResponse(UUID id, NotificationType type, String title, String message,
                                        boolean read, Instant createdAt, Instant readAt, UUID actorUserId,
-                                       UUID projectId, ResourceType resourceType, UUID resourceId) {
+                                       UUID projectId, ResourceType resourceType, UUID resourceId,
+                                       TaskStatusChange statusChange) {
         static NotificationResponse from(Notification n) {
             return new NotificationResponse(n.getId(), n.getType(), n.getTitle(), n.getMessage(),
                     n.isRead(), n.getCreatedAt(), n.getReadAt(), n.getActorUserId(), n.getProjectId(),
-                    n.getResourceType(), n.getResourceId());
+                    n.getResourceType(), n.getResourceId(), n.getStatusChange());
         }
     }
 }

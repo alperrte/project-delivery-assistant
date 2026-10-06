@@ -20,15 +20,32 @@ public class Notification {
     @Enumerated(EnumType.STRING) @Column(name = "resource_type", nullable = false, length = 20)
     private ResourceType resourceType;
     @Column(name = "resource_id", nullable = false) private UUID resourceId;
+    @Column(name = "task_status_previous", length = 20) private String taskStatusPrevious;
+    @Column(name = "task_status_current", length = 20) private String taskStatusCurrent;
+    @Column(name = "task_key", length = 125) private String taskKey;
+    @Column(name = "task_title", length = 160) private String taskTitle;
+    @Column(name = "actor_nickname", length = 32) private String actorNickname;
 
     protected Notification() {}
     public Notification(UUID recipientUserId, NotificationType type, String title, String message,
                         UUID actorUserId, UUID projectId, ResourceType resourceType, UUID resourceId) {
+        this(recipientUserId, type, title, message, actorUserId, projectId, resourceType, resourceId, null);
+    }
+    public Notification(UUID recipientUserId, NotificationType type, String title, String message,
+                        UUID actorUserId, UUID projectId, ResourceType resourceType, UUID resourceId,
+                        TaskStatusChange statusChange) {
         this.id = UUID.randomUUID(); this.recipientUserId = recipientUserId;
         this.type = type; this.title = title; this.message = message;
         this.actorUserId = actorUserId; this.projectId = projectId;
         this.resourceType = resourceType; this.resourceId = resourceId;
         this.createdAt = Instant.now();
+        if (statusChange != null) {
+            this.taskStatusPrevious = statusChange.previousStatus();
+            this.taskStatusCurrent = statusChange.newStatus();
+            this.taskKey = statusChange.taskKey();
+            this.taskTitle = statusChange.taskTitle();
+            this.actorNickname = statusChange.actorNickname();
+        }
     }
     public void markRead() { if (!read) { read = true; readAt = Instant.now(); } }
     public UUID getId() { return id; }
@@ -43,4 +60,8 @@ public class Notification {
     public UUID getProjectId() { return projectId; }
     public ResourceType getResourceType() { return resourceType; }
     public UUID getResourceId() { return resourceId; }
+    public TaskStatusChange getStatusChange() {
+        return taskStatusCurrent == null ? null : new TaskStatusChange(taskStatusPrevious, taskStatusCurrent,
+                taskKey, taskTitle, actorNickname);
+    }
 }
