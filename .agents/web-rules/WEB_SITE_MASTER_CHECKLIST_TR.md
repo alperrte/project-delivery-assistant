@@ -1,8 +1,12 @@
 # Web Sitesi Kesinlikle Olması Gerekenler — Master Checklist
 
+## source-map-js security follow-up — 2026-10-06
+
+Onaylı ayrı transitive patch 1.2.1→1.2.2; application/invitation/UI/test kaynakları değişmedi. Temiz npm ci, lint/TypeScript/build, 33 targeted Chromium ve canonical pre-push geçti: 469 backend testi, 0 failure/error/skip; 248 Chromium passed + 1 expected crash-route skip; Docker health PASS. Güncelleme sonrası full audit 5 high (mevcut dev debt), production audit 0. Global checklist kutuları değişmedi. Ayrı kayıt: `docs/compliation/2026-10-06-source-map-js-security-remediation.md`.
+
 ## Invitations remediation — 2026-10-06
 
-INV-AUD-003/001/002/004 approved minimum remediation: real actor switch/late response, expiry/resend/reinvite/prepared DB, legacy warm client navigation, external signed-in unchanged baseline and status/retry/real429 verified. Final canonical gate 469 backend0 fail/error/skip, 248 Chromium+1 expected production crash-route skip, lint/type/build/Docker health PASS. Scope-only note, global checklist boxes unchanged. New independent npm audit6 high/production1 (source-map-js) remains follow-up; package/lock untouched. See `docs/compliation/2026-10-06-invitations-integration-remediation.md`.
+INV-AUD-003/001/002/004 minimum kapsamla düzeltildi: gerçek actor switch/late response, expiry/resend/reinvite/prepared DB, legacy warm client navigation, external signed-in regression ve status/retry/real429 doğrulandı. Canonical gate geçti: 469 backend testi, 0 failure/error/skip; 248 Chromium passed + 1 expected production crash-route skip; lint/TypeScript/build/Docker health PASS. Global checklist kutuları değişmedi. Invitation tesliminde package/lock değişmemişti ve audit 6 high/production1 idi; source-map-js bulgusu daha sonraki ayrı security remediation ile kapatıldı. Ayrı kayıt: `docs/compliation/2026-10-06-invitations-integration-remediation.md`.
 
 ## 2026-10-06 Chat action menu / workspace history
 
@@ -12,23 +16,22 @@ Tek chevron/menu lifecycle/focus, yakın reaction chips, native same-origin hist
 
 Explicit standalone/assign/remove/move UI→API→prepared PostgreSQL read, co-manager current summary/plain-text capability, retained archive/Home200, affected old/new cache prefix ve independent projects loading/error/retry/empty/page clamp doğrulandı. 101 owned org picker +101 linked project pagination; TR/EN/DE, keyboard,320/390/768/1440px/light-dark screenshot kontrolü geçti. Full gate PASSED:464 backend (0 fail/error/skip),232 Chromium+1 expected production crash-route skip; lint/type/build/Docker health. Schema/migration/auth/CSRF/CORS/ENV değişmedi; mevcut dev npm debt5 high/production0 ayrı. Bu scoped kanıt genel checklist kutularını topluca [x] yapmaz. Ayrıntı: `docs/compliation/2026-10-05-organization-project-integration-remediation.md`.
 
-## 2026-10-05 ? Chat navigation, reply/reaction ve emoji kapsam do?rulamas?
+## 2026-10-05 — Chat navigation, reply/reaction ve emoji kapsam doğrulaması
 
-Full?closed page navigation, compact/bar draft persistence, modifier/cancel/back-forward intent, focus/inert cleanup, scoped reply/reaction REST/DB/WS, versioned cache ve reconnect batch50/shared2 resync do?ruland?. TR/EN/DE, keyboard/Escape/caret/IME, 2000 code-point s?n?r?, light/dark, 320/390/768/1440 px ve motion kontrolleri ge?ti; screenshot animasyon sonunda incelendi. Tam kap?: 459 backend (0 fail/error/skip), 225 Chromium + 1 expected production crash-route skip; lint/type/build/Docker health ba?ar?l?. Mevcut dev npm debt5 high / production0. Bu s?n?rl? kapsam genel accessibility, multi-browser veya production checklist kutular?n? topluca [x] yapmaz. Ayr?nt?: `docs/compliation/2026-10-05-chat-replies-reactions.md`.
+Full→closed page navigation, compact/bar draft persistence, modifier/cancel/back-forward intent, focus/inert cleanup, scoped reply/reaction REST/DB/WS, versioned cache ve reconnect batch50/shared2 resync doğrulandı. TR/EN/DE, keyboard/Escape/caret/IME, 2000 code-point sınırı, light/dark, 320/390/768/1440 px ve motion kontrolleri geçti; screenshot animasyon sonunda incelendi. Tam kapı: 459 backend (0 fail/error/skip), 225 Chromium + 1 expected production crash-route skip; lint/type/build/Docker health başarılı. Mevcut dev npm debt5 high / production0. Bu sınırlı kapsam genel accessibility, multi-browser veya production checklist kutularını topluca [x] yapmaz. Ayrıntı: `docs/compliation/2026-10-05-chat-replies-reactions.md`.
 
 ## Npm/CSS remediation — 2026-10-05 (sınırlı kapsam)
 
 Shadcn CLI kaldırıldı; kullanılan yedi durum varyantı yerel CSS'te korundu. Üretilen CSS karşılaştırması, light/dark state/animation testleri, gerçek form/settings/chat akışları ve ekran görüntüleri doğrulandı. Hedefli 73, landing 23, tam Chromium 208 passed + 1 expected production skip; son pre-push 449 backend testi ile PASSED. Full npm audit 8→5 high; production audit 6→0. Kalan ESLint/braces zinciri açık security debt. Bu kapsam proje geneli kutuları tamamlanmış saymaz. Ayrıntı: `docs/compliation/2026-10-05-npm-security-remediation.md`.
 
-
 ## Görev modeli frontend doğrulaması — 2026-10-05 (sınırlı kapsam)
 
 Basit/gelişmiş form ve detay, yorum/mention, kurucunun ilk tercihi/proje ayarı, açıklama tercihi, taslak koruma, URL tür filtresi, dönüşüm/veri koruma ve ortak sidebar politikası uygulandı. Son kaynak üzerinde 12 Chromium senaryosu; light/dark 390/1440 px form ve 390/768/1024/1440 px DE proje ayarı, keyboard/focus/validation ve reduced-motion kontrolleri başarılı. ESLint, TypeScript, production build ve 449 backend testi geçti. Tam frontend koşumu: 188 passed, 6 mevcut sohbet/landing failure, 13 serial test çalışmadı; genel E2E kapısı yeşil sayılmaz. Form/keyboard/loading/error gibi proje geneli maddeler bu sınırlı kanıtla [x] yapılmaz. Ayrıntı: `docs/compliation/2026-10-05-task-basit-gelismis-frontend.md`.
 
-
 ## Görev modeli backend doğrulaması — 2026-10-05
 
 Basit/gelişmiş proje ve görev modeli için backend validation, cookie/CSRF/kurucu-yetki kapsamı, ProblemDetail, veri koruma, DB filtre/sayfalama, migration ve eşzamanlı işlemler test edildi. Tam kapı 447 test; son kilit yanıtı ve havuz temizleme düzenlemelerinden sonra 43 hedefli test başarılı, failure/error/skip yok. Yerel Docker backend health UP ve V54 migration doğrulandı. Frontend kaynakları, form/dialog/sidebar/i18n/görsel davranış bu aşamada değişmedi veya yeniden doğrulanmadı; proje geneli checklist maddeleri bu sınırlı backend kanıtıyla [x] yapılmaz. Detay: `docs/compliation/2026-10-05-task-basit-gelismis-backend.md`.
+
 ## Backend integration audit — 2026-10-05 (sınırlı kapsam)
 
 Organization metadata/media gerçek API, PostgreSQL, dosya storage ve cache-disabled reload ile doğrulandı; logo ve cover container force-recreate sonrasında aynı byte hash'lerine sahip. Project settings logosu yeni browser context'te gerçek detail/image GET ile doğrulandı. Organization picker 101. kayıt ve rename → Project Home cache regresyonları ayrı onayla düzeltildi. Chat navigation/proje/hesap sınırları ve iki subscription renewal overlap sırasında tek mesaj unread artışı doğrulandı; duplicate MESSAGE side effect'i ayrı onayla giderildi. Son kaynak tam kapı: 415 backend + 182 Chromium passed, 1 expected production skip; lint/TypeScript/build/Docker health başarılı. Bu sınırlı audit proje geneli maddeleri [x] yapmaz. Ayrıntı: `docs/compliation/2026-10-05-backend-integration-mock-audit.md`.
@@ -39,9 +42,7 @@ Organization metadata/media gerçek API, PostgreSQL, dosya storage ve cache-disa
 
 Referans tasarım ek kapsamı: ikonlu dört bölüm, geniş iki kolon, tile upload, üç preview ve kaydedilen notes alanı TR/EN/DE, light/dark, 320/390/768/1280/1440 px kontrollerinden geçti; 1536×1024 referans screenshot incelendi. Notes error/counter/owner/1000 sınırı ve persistence doğrulandı; ortak Project picker ve sohbet dock regresyonları geçti. Yeni final kapı: 415 backend, 180 Chromium passed + production kontrollü crash route için 1 expected skip. Kapsam kaydı: `docs/compliation/2026-10-05-organization-reference-ui-notes.md`; global checklist maddeleri bu sınırlı kanıtla tamamlanmış sayılmaz.
 
-
 Organization create/edit/detail/list ve ortak media picker için dosya/URL/e-posta validation, hata/başarı/partial retry, initials/cover fallback, klavye/focus, decorative görseller, object URL cleanup ve sticky actions kontrol edildi. TR/EN/DE, light/dark, 320/390/768/1280/1440 px ve reduced motion hedefli Chromium testleri geçti; screenshot incelendi. Sohbet barı Save alanını 320/390/1280 px'te örtmüyor. Full gate: 413 backend testi ve 180 Playwright testi başarılı; production'da kapalı kontrollü crash route testi 1 expected skip. Bu sınırlı kanıt aşağıdaki proje geneli accessibility/çok tarayıcı/production maddelerini `[x]` yapmaz. Detay: `docs/compliation/2026-10-05-organization-profile-expansion.md`.
-
 
 Chat persistence ve proje logo ayarlarında client-side navigasyon, klavye/focus, X/Escape, boş/hata/yüklenme/başarı durumları, görsel fallback, dosya doğrulaması ve mobil dock/ayar çubuğu yerleşimi kontrol edildi. TR/EN/DE ve açık/koyu tema için hedefli Chromium E2E ve ekran görüntüsü incelemesi yapıldı. Proje oluşturma, banner ve mevcut yetki kontrolleri regresyona dahil edildi. Bu kanıt yalnız değişen akışları kapsar; aşağıdaki proje geneli accessibility, tüm tarayıcılar ve production QA maddeleri bununla `[x]` yapılmaz. Ayrıntılı sonuç tamamlanan teslimin `docs/compliation/2026-10-04-chat-persistence-project-logo.md` kaydında tutulur.
 
@@ -207,10 +208,12 @@ PRODUCTION BLOCKERS:
 KRİTİK EKSİKLER:
 1.
 2.
+3.
 
 İYİLEŞTİRMELER:
 1.
 2.
+3.
 
 SONUÇ:
 READY / NOT READY

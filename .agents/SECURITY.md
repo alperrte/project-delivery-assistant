@@ -763,12 +763,13 @@ The Next.js frontend sets `X-Content-Type-Options: nosniff`, `X-Frame-Options: D
 
 ---
 
-### New independent dependency follow-up — 2026-10-06
+### source-map-js dependency remediation — 2026-10-06
 
-- npm audit currently6 high; omit=dev1 high. Previous5 high/production0 counts are historical.
-- `source-map-js@1.2.1`, GHSA-68fv-2mgg-jv7q / CVE-2026-93749; reviewed advisory lists1.2.2 patched. Paths include Next→PostCSS (production dependency graph) and Tailwind→PostCSS/node (development). App source has no direct SourceMapConsumer use; untrusted PDA runtime reachability was not reproduced. Production classification alone is not exploit proof.
-- Package/lock files were not modified by invitation remediation. Review a separate compatible1.2.2 transitive patch before release; no security waiver. Original ESLint/braces dev debt also remains.
-- Primary source: [GitHub reviewed advisory](https://github.com/advisories/GHSA-68fv-2mgg-jv7q).
+- [x] User-approved remediation: `source-map-js` updated from 1.2.1 to 1.2.2 through a semver-compatible transitive update. Existing consumers require `^1.2.1`. Package manifest and application/invitation code unchanged.
+- GHSA-68fv-2mgg-jv7q / CVE-2026-93749 resolved in the validated dependency graph. Next/PostCSS and Tailwind resolve 1.2.2. Untrusted PDA runtime exploitability was not reproduced.
+- Clean `npm ci` passed. Post-patch full npm audit: 5 high, exit1, from existing ESLint/braces development debt. Production audit: 0, exit0. Pre-patch counts were 6 high / production1. Existing development debt remains open; this is not a release waiver.
+- Validation passed: 33 targeted Chromium tests; canonical pre-push with 469 backend tests (0 failures/errors/skips), 248 Chromium passed + 1 expected skip, lint, TypeScript, production build and Docker health.
+- Separate delivery: [source-map-js remediation](../docs/compliation/2026-10-06-source-map-js-security-remediation.md).
 
 ## 17. Docker and Container Security
 
