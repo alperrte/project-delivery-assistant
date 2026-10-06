@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
+import { usePathname, useRouter, useSearchParams } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import { X } from "@phosphor-icons/react";
@@ -24,7 +25,8 @@ import { TASK_STATUSES, type MyTaskCounts, type Task, type TaskStatus } from "..
 import { PoolCard } from "./pool-card";
 import { FilterButton, toggle } from "./task-filter-bar";
 import { StatusDot } from "./task-badges";
-import { TaskRow } from "./task-row";
+import { MyTaskCard } from "./my-task-card";
+import { MyTaskDialog } from "./my-task-dialog";
 
 const BUCKETS: DeadlineBucket[] = ["overdue", "today", "week", "later", "none"];
 const TRIGGER = buttonVariants({ variant: "outline", size: "sm", className: "max-md:h-9" });
@@ -58,22 +60,16 @@ function Summary({ counts }: { counts: MyTaskCounts | undefined }) {
 function useProjectOptions() {
   return useQuery({
     queryKey: ["projects", "filter-options"],
-    queryFn: async () => (await projectsApi.list(0, 100)).content.map((project) => ({ id: project.id, name: project.name })),
+    queryFn: async () => (await projectsApi.allVisible()).map((project) => ({ id: project.id, name: project.name })),
     staleTime: 60_000,
   });
 }
 
 function ListSkeleton() {
   return (
-    <ul className="divide-y rounded-xl border bg-card" aria-hidden="true">
+    <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3" aria-hidden="true">
       {[0, 1, 2, 3, 4].map((key) => (
-        <li key={key} className="flex items-center gap-3 px-3 py-3">
-          <Skeleton className="h-5 w-24" />
-          <Skeleton className="h-4 w-12" />
-          <Skeleton className="h-4 flex-1" />
-          <Skeleton className="hidden h-4 w-24 sm:block" />
-          <Skeleton className="size-6 rounded-full" />
-        </li>
+        <li key={key}><Skeleton className="aspect-square min-h-72 rounded-xl" /></li>
       ))}
     </ul>
   );
@@ -96,7 +92,9 @@ function taskHref(task: Task): string {
   return `/projects/${task.project?.slug ?? ""}/tasks/${task.id}`;
 }
 
-function BucketedList({ tasks, userId }: { tasks: Task[]; userId: string }) {
+type OpenTask = (task: Task, comments?: boolean) => void;
+
+function BucketedList({ tasks, userId, onOpen }: { tasks: Task[]; userId: string; onOpen: OpenTask }) {
   const t = useTranslations("tasks.my");
   const groups = useMemo(() => {
     const now = new Date();
@@ -111,9 +109,9 @@ function BucketedList({ tasks, userId }: { tasks: Task[]; userId: string }) {
             {t(`buckets.${bucket}`)}
             <span className="text-xs font-normal tabular-nums text-muted-foreground">{items.length}</span>
           </h2>
-          <ul className="divide-y overflow-hidden rounded-xl border bg-card">
+          <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {items.map((task) => (
-              <TaskRow key={task.id} task={task} href={taskHref(task)} showProject canChangeStatus={taskPermissions(task, userId, false).work} />
+              <MyTaskCard key={task.id} task={task} onOpen={(comments) => onOpen(task, comments)} canChange={taskPermissions(task, userId, false).work} />
             ))}
           </ul>
         </section>
@@ -122,20 +120,25 @@ function BucketedList({ tasks, userId }: { tasks: Task[]; userId: string }) {
   );
 }
 
-function FlatList({ tasks, userId, fetching }: { tasks: Task[]; userId: string; fetching: boolean }) {
+function FlatList({ tasks, userId, fetching, onOpen }: { tasks: Task[]; userId: string; fetching: boolean; onOpen: OpenTask }) {
   return (
-    <ul className={cn("divide-y overflow-hidden rounded-xl border bg-card transition-opacity", fetching && "opacity-70")}>
+    <ul className={cn("grid gap-4 transition-opacity md:grid-cols-2 xl:grid-cols-3", fetching && "opacity-70")}>
       {tasks.map((task) => (
-        <TaskRow key={task.id} task={task} href={taskHref(task)} showProject canChangeStatus={taskPermissions(task, userId, false).work} />
+        <MyTaskCard key={task.id} task={task} onOpen={(comments) => onOpen(task, comments)} canChange={taskPermissions(task, userId, false).work} />
       ))}
     </ul>
   );
 }
 
-function TasksPanel({ tab, userId, onClear, filtered }: { tab: Exclude<MyTab, "pool">; userId: string; onClear: () => void; filtered: boolean }) {
+function TasksPanel({ tab, userId, onClear, filtered, onOpen }: { tab: Exclude<MyTab, "pool">; userId: string; onClear: () => void; filtered: boolean; onOpen: OpenTask }) {
   const t = useTranslations("tasks.my");
   const { filters, update } = useMyTaskFilters();
   const query = useMyTasks(toMyTasksParams(filters));
+  useEffect(() => {
+    if (query.data && !query.isPlaceholderData && filters.page > 0 && filters.page >= query.data.totalPages) {
+      update({ page: Math.max(0, query.data.totalPages - 1) });
+    }
+  }, [query.data, query.isPlaceholderData, filters.page, update]);
 
   if (query.isError) return <ErrorPanel error={query.error} onRetry={() => void query.refetch()} />;
   if (query.isPending) return <ListSkeleton />;
@@ -162,7 +165,7 @@ function TasksPanel({ tab, userId, onClear, filtered }: { tab: Exclude<MyTab, "p
       <p aria-live="polite" className="mb-2 text-xs tabular-nums text-muted-foreground">
         {t("count", { count: totalElements })}
       </p>
-      {tab === "open" ? <BucketedList tasks={content} userId={userId} /> : <FlatList tasks={content} userId={userId} fetching={query.isFetching} />}
+      {tab === "open" ? <BucketedList tasks={content} userId={userId} onOpen={onOpen} /> : <FlatList tasks={content} userId={userId} fetching={query.isFetching} onOpen={onOpen} />}
       <PaginationBar
         page={Math.min(filters.page, totalPages - 1)}
         totalPages={totalPages}
@@ -245,6 +248,26 @@ export function MyTasksPage() {
   const projects = useProjectOptions();
   const filtered = activeMyFilterCount(filters) > 0;
   const poolTab = filters.tab === "pool";
+  const router = useRouter();
+  const pathname = usePathname();
+  const search = useSearchParams();
+  const selectedId = search.get("task");
+  const selectedProject = search.get("taskProject");
+  const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const selection = selectedId && selectedProject && uuid.test(selectedId) && uuid.test(selectedProject)
+    ? { taskId: selectedId, projectId: selectedProject, comments: search.get("comments") === "1" } : null;
+
+  function openTask(task: Task, comments?: boolean) {
+    const next = new URLSearchParams(search.toString());
+    next.set("task", task.id); next.set("taskProject", task.projectId);
+    if (comments) next.set("comments", "1"); else next.delete("comments");
+    router.push(`${pathname}?${next}`, { scroll: false });
+  }
+  function closeTask() {
+    const next = new URLSearchParams(search.toString());
+    for (const key of ["task", "taskProject", "comments"]) next.delete(key);
+    router.replace(next.size ? `${pathname}?${next}` : pathname, { scroll: false });
+  }
   const projectName = projects.data?.find((project) => project.id === filters.project)?.name;
 
   function selectTab(next: string) {
@@ -315,8 +338,9 @@ export function MyTasksPage() {
       ) : poolTab ? (
         <PoolPanel onClear={reset} filtered={filtered} />
       ) : (
-        <TasksPanel tab={filters.tab as Exclude<MyTab, "pool">} userId={user.id} onClear={reset} filtered={filtered} />
+        <TasksPanel tab={filters.tab as Exclude<MyTab, "pool">} userId={user.id} onClear={reset} filtered={filtered} onOpen={openTask} />
       )}
+      <MyTaskDialog selection={selection} onClose={closeTask} />
     </div>
   );
 }

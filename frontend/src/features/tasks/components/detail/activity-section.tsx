@@ -163,10 +163,10 @@ function EventRow({ event, text }: { event: TaskEvent; text: string }) {
   );
 }
 
-export function ActivitySection(ctx: DetailContext) {
+export function ActivitySection(ctx: DetailContext & { focusComments?: boolean }) {
   const { task, projectId } = ctx;
   const t = useTranslations("tasks.detail.activity");
-  const [filter, setFilter] = useState<TimelineFilter>("ALL");
+  const [filter, setFilter] = useState<TimelineFilter>(ctx.focusComments ? "COMMENTS" : "ALL");
   const [text, setText] = useState("");
   const [picked, setPicked] = useState<PersonRef[]>([]);
   const timeline = useTimeline(projectId, task.id, filter);
@@ -224,6 +224,7 @@ export function ActivitySection(ctx: DetailContext) {
             onChange={setText}
             onPick={(person) => setPicked((current) => (current.some((p) => p.userId === person.userId) ? current : [...current, person]))}
             onSubmit={submit}
+            autoFocus={ctx.focusComments}
             label={t("composer.label")}
             placeholder={t("composer.placeholder")}
             maxLength={COMMENT_MAX}

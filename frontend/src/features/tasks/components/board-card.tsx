@@ -27,7 +27,7 @@ type BoardCardProps = {
 export function BoardCard({ task, href, movable, dragging, onMove, onDragStart, onDragEnd }: BoardCardProps) {
   const t = useTranslations("tasks.board");
   const tc = useTranslations("tasks.common");
-  const targets = allowedTransitions(task.status);
+  const targets = allowedTransitions(task.status, task.creationMode);
 
   return (
     <li

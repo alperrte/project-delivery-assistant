@@ -1289,7 +1289,7 @@
     "clearSearch": "Aramayı temizle",
     "noResults": "Sonuç bulunamadı.",
     "loadError": "Projeler yüklenemedi. Tekrar deneyin.",
-    "tasks": "Görevler",
+    "tasks": "Görevlerim",
     "notifications": "Bildirimler",
     "noNotifications": "Henüz bildirim yok.",
     "calendar": "Takvim",
@@ -1405,7 +1405,15 @@
       "checklistProgress": "Kontrol listesi: {done}/{total}",
       "comments": "{count} yorum",
       "attachments": "{count} ek",
-      "backToProjects": "Projelere dön"
+      "backToProjects": "Projelere dön",
+      "confirmStatus": {
+        "title": "{key} görevinin durumu değiştirilsin mi?",
+        "description": "Bu görev “{status}” durumuna alınacak.",
+        "stale": "Görevin durumu değişti. Pencereyi kapatıp güncel durumdan tekrar deneyin.",
+        "notifyManagers": "Bu değişiklik proje yöneticilerine bildirilecek.",
+        "confirm": "Durumu güncelle",
+        "cancel": "Vazgeç"
+      }
     },
     "filters": {
       "label": "Görev filtreleri",
@@ -1911,7 +1919,7 @@
         "today": "Bugün",
         "week": "Bu hafta",
         "later": "Sonra",
-        "none": "Deadline yok"
+        "none": "Son tarih yok"
       },
       "empty": {
         "open": {
@@ -1930,6 +1938,16 @@
           "title": "Havuzda görev yok",
           "description": "Üstlenebileceğiniz bir görev şu an yok. Proje yöneticileri görevleri havuza koyduğunda burada görünür."
         }
+      },
+      "cards": {
+        "open": "{key} görevini aç",
+        "comment": "{key} görevine yorum yap",
+        "start": "Başla",
+        "complete": "Tamamla",
+        "noDescription": "Açıklama eklenmemiş.",
+        "detailTitle": "Görev detayı",
+        "detailDescription": "Görevi inceleyin, durumunu güncelleyin ve yorum yapın.",
+        "close": "Görev detayını kapat"
       }
     }
   },
@@ -2561,5 +2579,40 @@
     "today": "Bugün",
     "clear": "Temizle",
     "close": "Takvimi kapat"
+  },
+  "notifications": {
+    "label": "Bildirimler, {count} okunmamış",
+    "update": "Yeni güncelleme",
+    "someone": "Bir kullanıcı",
+    "readAll": "Tümünü okundu yap",
+    "retry": "Tekrar dene",
+    "loading": "Bildirimler yükleniyor…",
+    "previous": "Önceki bildirimler",
+    "next": "Sonraki bildirimler",
+    "started": "{actor}, {key}: {title} görevine başladı.",
+    "completed": "{actor}, {key}: {title} görevini tamamladı.",
+    "statusChanged": "{actor}, {key}: {title} görevini “{status}” durumuna aldı.",
+    "types": {
+      "TASK_ASSIGNED": "Görev atandı",
+      "TASK_UNASSIGNED": "Görev ataması kaldırıldı",
+      "TASK_STATUS_CHANGED": "Görev durumu güncellendi",
+      "TASK_PRIORITY_CHANGED": "Görev önceliği güncellendi",
+      "TASK_DUE_DATE_CHANGED": "Görev tarihi güncellendi",
+      "TASK_BLOCKED": "Görev engellendi",
+      "TASK_DEADLINE_SOON": "Görev tarihi yaklaşıyor",
+      "TASK_OVERDUE": "Görev gecikti",
+      "TASK_CLAIMED": "Görev üstlenildi",
+      "TASK_RELEASED": "Görev havuza bırakıldı",
+      "TASK_MENTIONED": "Bir yorumda bahsedildiniz",
+      "TASK_COMMENTED": "Yeni görev yorumu",
+      "PROJECT_MEMBER_ADDED": "Projeye eklendiniz",
+      "PROJECT_MEMBER_REMOVED": "Proje üyeliği kaldırıldı",
+      "PROJECT_ROLE_CHANGED": "Proje rolü güncellendi",
+      "SQUAD_MEMBER_ADDED": "Ekibe eklendiniz",
+      "SQUAD_MEMBER_REMOVED": "Ekip üyeliği kaldırıldı",
+      "PROJECT_INVITATION_CREATED": "Proje daveti",
+      "PROJECT_INVITATION_ACCEPTED": "Proje daveti kabul edildi",
+      "PROJECT_INVITATION_REJECTED": "Proje daveti reddedildi"
+    }
   }
 }

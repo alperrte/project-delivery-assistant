@@ -136,3 +136,11 @@ Task UI update (2026-10-06): tasks/task-model.ts also exposes allowsPool for con
 - backend/src/test/java/com/pda/task/TaskProgressNotificationApiIntegrationTest.java: short/simple and advanced flows, manager recipients, access/rollback/concurrency and legacy events.
 - backend/src/test/java/com/pda/notification/TaskStatusNotificationMigrationTest.java and TaskStatusNotificationFactoryTest.java: V55 upgrade/data retention, constraints and maximum-length snapshots.
 - Existing ProjectAccess, TaskService/TaskEvents and Notification listener/writer/factory/controller own the behavior; no frontend file is changed in this backend delivery.
+
+## My tasks cards frontend (2026-10-06)
+
+- features/tasks/components/my-task-card.tsx: square personal card and shared TaskProgressAction.
+- features/tasks/components/my-task-dialog.tsx: URL-controlled task detail inside My tasks; task-detail-page exports the existing shared TaskDetailBody.
+- features/tasks/components/status-confirmation.tsx: common pending/error-safe status confirmation; status-menu and board-page consume it.
+- features/notifications/{api.ts,notifications-menu.tsx}: own notification API and the real navbar menu.
+- e2e/my-task-cards.spec.ts: real task/comment/status/manager notification/board/pagination and responsive localization scenarios. Existing 09-tasks assertions follow the new personal cards.
