@@ -23,7 +23,6 @@ import { TaskModelSetting } from "@/features/projects/components/task-model-sett
 import { allowsAdvanced, allowsCreation, initialCreationMode } from "../task-model";
 import { AdvancedReadOnlyNotice, TaskModePicker } from "./task-mode-picker";
 import { errorKey } from "@/lib/api/error-message";
-import { cn } from "@/lib/utils";
 import { tasksApi } from "../api";
 import { fromDeadlineIso, quickDeadline, splitMinutes, type QuickDeadline } from "../deadline";
 import { invalidateTaskViews, useTask } from "../hooks";
@@ -42,14 +41,14 @@ import {
 } from "../schemas";
 import { useProjectTeams } from "../hooks";
 import { ESTIMATE_POINTS, TASK_PRIORITIES, type PersonRef, type Task, type TaskPriority, type TaskRef } from "../types";
-import { priorityDotClass } from "../workflow";
+import { PriorityIndicator } from "./task-badges";
 import { AssigneePicker, FormSection, LabelPicker, ParentPicker, Segment } from "./task-form-fields";
 import { TaskPreview } from "./task-preview";
 import { ProjectGate, type ProjectGateContext } from "./project-gate";
 
 const NO_SPRINT = "__none";
 const WHOLE_PROJECT = "__project";
-const QUICK: QuickDeadline[] = ["today", "tomorrow", "friday", "nextWeek"];
+const QUICK: QuickDeadline[] = ["today", "tomorrow", "weekEnd", "nextWeek"];
 
 function initialValues(task: Task | undefined, sprintId: string, parentId: string): TaskFormValues {
   if (!task) return { ...emptyTaskForm, sprintId, parentTaskId: parentId };
@@ -118,7 +117,7 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
   const advancedWritable = allowsAdvanced(project.taskManagementMode);
   const advanced = mode === "ADVANCED" && advancedWritable;
   const sprints = useSprints(projectId, undefined, advanced);
-  const teams = useProjectTeams(projectId, advanced);
+  const teams = useProjectTeams(projectId);
   const canSave = !task?.archivedAt && (editing ? mode === task.creationMode || allowsCreation(project.taskManagementMode, mode) : allowsCreation(project.taskManagementMode, mode));
 
   const [parent, setParent] = useState<TaskRef | null>(task?.parent ?? initialParent);
@@ -181,7 +180,7 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
   const priority = (values.priority ?? "MEDIUM") as TaskPriority;
   const titleLength = values.title?.length ?? 0;
   const descriptionText = values.description ?? "";
-  const inPool = advanced && values.assignMode === "pool";
+  const inPool = values.assignMode === "pool";
   const lockedParent = editing && (task?.subtaskCount ?? 0) > 0;
   const sprintOptions = (sprints.data ?? []).filter((sprint) => sprint.status !== "COMPLETED" || sprint.id === values.sprintId);
 
@@ -191,7 +190,8 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
   function applyQuick(kind: QuickDeadline) {
     const next = quickDeadline(kind);
     setValue("deadlineDate", next.date, { shouldDirty: true, shouldValidate: true });
-    if (advanced) setValue("deadlineTime", next.time, { shouldDirty: true });
+    // Simple tasks hide the time field; quick picks use the same end-of-day semantics.
+    setValue("deadlineTime", advanced ? next.time : "", { shouldDirty: true });
   }
 
   return (
@@ -293,7 +293,7 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
                       options={TASK_PRIORITIES.map((item) => ({
                         value: item,
                         label: tc(`priority.${item}`),
-                        adornment: <span aria-hidden="true" className={cn("size-1.5 rounded-full", priorityDotClass(item))} />,
+                        adornment: <PriorityIndicator priority={item} />,
                       }))}
                     />
                   )}
@@ -377,7 +377,7 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
                   </div>
                 </div>
               </div>
-              {advanced && <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label={t("deadline.quick")}>
+              <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label={t("deadline.quick")}>
                 {QUICK.map((kind) => (
                   <Button key={kind} type="button" variant="outline" size="sm" onClick={() => applyQuick(kind)}>
                     {t(`deadline.${kind}`)}
@@ -396,7 +396,7 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
                     {t("deadline.clear")}
                   </Button>
                 )}
-              </div>}
+              </div>
               {errors.deadlineDate ? (
                 <p id={`${ids}-deadline-note`} role="alert" className="text-sm text-destructive">
                   {tv(errors.deadlineDate.message!)}
@@ -449,27 +449,22 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
               )}
             </FormSection>
 
-            <FormSection id={`${ids}-assignment`} title={t("sections.assignment.title")} description={advanced ? t("sections.assignment.description") : tm("simpleAssignment")}>
-              {advanced && (
-                <>
-                  <Controller
-                    control={control}
-                    name="assignMode"
-                    render={({ field }) => (
-                      <Segment
-                        label={t("assign.label")}
-                        value={field.value}
-                        onChange={(next) => setValue("assignMode", next as "people" | "pool", { shouldDirty: true })}
-                        options={[
-                          { value: "people", label: t("assign.people") },
-                          { value: "pool", label: t("assign.pool") },
-                        ]}
-                      />
-                    )}
+            <FormSection id={`${ids}-assignment`} title={t("sections.assignment.title")} description={t("sections.assignment.description")}>
+              <Controller
+                control={control}
+                name="assignMode"
+                render={({ field }) => (
+                  <Segment
+                    label={t("assign.label")}
+                    value={field.value}
+                    onChange={(next) => setValue("assignMode", next as "people" | "pool", { shouldDirty: true })}
+                    options={[
+                      { value: "people", label: t("assign.people") },
+                      { value: "pool", label: t("assign.pool") },
+                    ]}
                   />
-
-                </>
-              )}
+                )}
+              />
               {inPool ? (
                 <div className="space-y-1.5">
                   <Label>{t("assign.poolTeam")}</Label>
@@ -568,7 +563,7 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
                   deadlineDate={values.deadlineDate ?? ""}
                   deadlineTime={values.deadlineTime ?? ""}
                   labelIds={advanced ? values.labelIds ?? [] : []}
-                  assigneeIds={values.assigneeIds ?? []}
+                  assigneeIds={inPool ? [] : values.assigneeIds ?? []}
                   inPool={inPool}
                   poolTeamId={values.poolTeamId ?? ""}
                   parent={advanced ? parent : null}

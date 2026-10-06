@@ -28,7 +28,7 @@ export function taskPermissions(task: Task, userId: string | undefined, isManage
     collaborate: true,
     canClaim: !!task.pool?.open && open && !!userId && !assigned,
     // Only the sole assignee who took the task from the pool may hand it back.
-    canRelease: !!task.pool?.claimed && task.assigneeIds.length === 1 && assigned,
+    canRelease: open && !!task.pool?.claimed && task.assigneeIds.length === 1 && assigned,
   };
 }
 

@@ -107,7 +107,7 @@ export type TaskPayload = {
 /** Hidden advanced fields are omitted, never cleared by a basic edit. */
 export function toTaskPayload(values: TaskFormValues, original?: Task, advancedWritable = true): TaskPayload {
   const advanced = values.creationMode === "ADVANCED" && advancedWritable;
-  const inPool = advanced && values.assignMode === "pool";
+  const inPool = values.assignMode === "pool";
   const previous = fromDeadlineIso(original?.deadlineAt ?? null);
   const deadlineAt = original && values.deadlineDate === previous.date && values.deadlineTime === previous.time
     ? original.deadlineAt
@@ -121,14 +121,14 @@ export function toTaskPayload(values: TaskFormValues, original?: Task, advancedW
     deadlineAt,
     ...(!original || original.assigneeIds.length !== (inPool ? 0 : values.assigneeIds.length) || (!inPool && values.assigneeIds.some(id => !original.assigneeIds.includes(id)))
       ? { assigneeIds: inPool ? [] : values.assigneeIds } : {}),
+    ...((!original && inPool) || (original && (inPool !== !!original.pool?.open || values.poolTeamId !== (original.pool?.teamId ?? "")))
+      ? { pool: inPool ? { open: true, teamId: values.poolTeamId || null } : { open: false, teamId: null } } : {}),
     ...(advanced ? {
       estimatePoints: values.estimatePoints,
       timeEstimateMinutes: estimateMinutes(values.estimateHours, values.estimateMinutes),
       labelIds: values.labelIds,
       parentTaskId: values.parentTaskId || null,
       sprintId: values.sprintId || null,
-      ...(!original || inPool !== !!original.pool?.open || values.poolTeamId !== (original.pool?.teamId ?? "")
-        ? { pool: inPool ? { open: true, teamId: values.poolTeamId || null } : { open: false, teamId: null } } : {}),
     } : {}),
   };
 }

@@ -17,10 +17,10 @@ import { useTaskFormat } from "../../format";
 import { useTaskMutation, useWatchers } from "../../hooks";
 import { payloadFromTask, TASK_LABELS_MAX } from "../../schemas";
 import { ESTIMATE_POINTS, TASK_PRIORITIES, type TaskPriority } from "../../types";
-import { deadlineToneClass, priorityDotClass } from "../../workflow";
+import { deadlineToneClass } from "../../workflow";
 import { useClaimTask } from "../pool-card";
 import { StatusMenu } from "../status-menu";
-import { AssigneeAvatars, DeadlineChip, LabelList, PoolMark } from "../task-badges";
+import { AssigneeAvatars, DeadlineChip, LabelList, PoolMark, PriorityIndicator } from "../task-badges";
 import { LabelPicker } from "../task-form-fields";
 import { AssigneesDialog } from "./assignees-dialog";
 import { BlockDialog } from "./block-dialog";
@@ -123,19 +123,19 @@ export function PropertiesPanel(ctx: DetailContext) {
                   {t("changeAssignees")}
                 </Button>
               </LockedHint>
-              {ctx.advancedWritable && perms.canClaim && !archived && (
+              {ctx.poolWritable && perms.canClaim && !archived && (
                 <Button size="sm" disabled={claim.isPending} onClick={() => claim.mutate(task.id)}>
                   {claim.isPending ? <CircleNotch className="animate-spin" aria-hidden="true" /> : <HandGrabbing aria-hidden="true" />}
                   {t("claim")}
                 </Button>
               )}
-              {ctx.advancedWritable && perms.canRelease && !archived && (
+              {ctx.poolWritable && perms.canRelease && !archived && (
                 <Button variant="outline" size="sm" disabled={release.isPending} onClick={() => release.mutate(undefined)}>
                   {release.isPending ? <CircleNotch className="animate-spin" aria-hidden="true" /> : <HandPalm aria-hidden="true" />}
                   {t("release")}
                 </Button>
               )}
-              {advancedManage && (task.pool?.open || task.pool?.claimed || task.pool?.teamId) && <ConfirmDialog
+              {ctx.poolWritable && perms.manage && !archived && (task.pool?.open || task.pool?.claimed || task.pool?.teamId) && <ConfirmDialog
                 trigger={<Button variant="outline" size="sm">{tm("clearPool")}</Button>}
                 title={tm("clearPool")}
                 description={tm("clearPoolDescription")}
@@ -154,7 +154,7 @@ export function PropertiesPanel(ctx: DetailContext) {
                 <SelectValue>
                   {(value: string) => (
                     <span className="flex items-center gap-2">
-                      <span className={cn("size-2 rounded-full", priorityDotClass(value as TaskPriority))} aria-hidden="true" />
+                      <PriorityIndicator priority={value as TaskPriority} />
                       {tc(`priority.${value}`)}
                     </span>
                   )}
@@ -163,7 +163,7 @@ export function PropertiesPanel(ctx: DetailContext) {
               <SelectContent>
                 {TASK_PRIORITIES.map((priority) => (
                   <SelectItem key={priority} value={priority}>
-                    <span className={cn("size-2 rounded-full", priorityDotClass(priority))} aria-hidden="true" />
+                    <PriorityIndicator priority={priority} />
                     {tc(`priority.${priority}`)}
                   </SelectItem>
                 ))}

@@ -68,12 +68,12 @@ export function priorityDotClass(priority: TaskPriority): string {
     case "CRITICAL":
       return "bg-destructive";
     case "HIGH":
-      return "bg-warning";
+      return "bg-destructive";
     case "MEDIUM":
-      return "bg-primary";
+      return "bg-label-orange";
     case "LOW":
     default:
-      return "bg-muted-foreground/40";
+      return "bg-label-blue";
   }
 }
 
@@ -82,12 +82,12 @@ export function priorityBadgeClass(priority: TaskPriority): string {
     case "CRITICAL":
       return "border border-destructive/25 bg-destructive/10 text-destructive";
     case "HIGH":
-      return "border border-warning/25 bg-warning/10 text-warning";
+      return "border border-destructive/25 bg-destructive/10 text-destructive";
     case "MEDIUM":
-      return "border border-primary/25 bg-primary/10 text-primary";
+      return "border border-label-orange/25 bg-label-orange/10 text-label-orange";
     case "LOW":
     default:
-      return "border border-border bg-muted text-muted-foreground";
+      return "border border-label-blue/25 bg-label-blue/10 text-label-blue";
   }
 }
 

@@ -40,7 +40,7 @@ export function TaskPreview(props: TaskPreviewProps) {
   const t = useTranslations("tasks.form.preview");
   const labels = useLabels(props.projectId, props.advanced);
   const members = useProjectMembers(props.projectId);
-  const teams = useProjectTeams(props.projectId, props.advanced);
+  const teams = useProjectTeams(props.projectId, props.inPool || props.advanced);
   const sprints = useSprints(props.projectId, undefined, props.advanced);
 
   const chosenLabels: LabelRef[] = props.labelIds.flatMap((id) => {

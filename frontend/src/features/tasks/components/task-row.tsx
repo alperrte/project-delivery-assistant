@@ -6,15 +6,14 @@ import { ChatCircle, ListChecks, Paperclip, TreeStructure } from "@phosphor-icon
 import { cn } from "@/lib/utils";
 import { TaskModeBadge } from "./task-mode-picker";
 import type { Task } from "../types";
-import { priorityDotClass } from "../workflow";
 import { StatusMenu } from "./status-menu";
-import { AssigneeAvatars, BlockedMark, DeadlineChip, LabelList, PointsBadge, PoolMark, ProgressPill } from "./task-badges";
+import { AssigneeAvatars, BlockedMark, DeadlineChip, LabelList, PointsBadge, PoolMark, PriorityIndicator, ProgressPill } from "./task-badges";
 
 export function PriorityDot({ priority, className }: { priority: Task["priority"]; className?: string }) {
   const t = useTranslations("tasks.common.priority");
   return (
-    <span title={t(priority)} className={cn("inline-flex size-3 shrink-0 items-center justify-center", className)}>
-      <span aria-hidden="true" className={cn("size-2 rounded-[3px]", priorityDotClass(priority))} />
+    <span title={t(priority)} className={cn("inline-flex size-3.5 shrink-0 items-center justify-center", className)}>
+      <PriorityIndicator priority={priority} />
       <span className="sr-only">{t(priority)}</span>
     </span>
   );

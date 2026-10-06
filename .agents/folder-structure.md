@@ -124,3 +124,6 @@ Organization–Project remediation: `features/projects/query-invalidation.ts` in
 ## Task form date picker (2026-10-06)
 
 `frontend/src/components/ui/date-picker.tsx` is the shared optional-date calendar dropdown; task form Controllers live in `features/tasks/components/task-form-page.tsx`. The existing deadline.ts owns local time/ISO conversion. Browser coverage is `frontend/e2e/task-date-picker.spec.ts`; no new package or backend path.
+
+
+Task UI update (2026-10-06): tasks/task-model.ts also exposes allowsPool for configured policies; shared PriorityIndicator in task-badges.tsx renders the token colors and critical alert icon across form/preview/list/board/detail/filter. Pool remains an assignment feature when advanced sidebar entries are hidden. Quick calendar-day deadlines are shared by both form modes.
