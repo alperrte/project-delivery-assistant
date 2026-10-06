@@ -22,7 +22,7 @@ import { activeFilterCount, defaultDirection, GROUPINGS, MIN_SEARCH, SORT_FIELDS
 import { useProjectMembers } from "../hooks";
 import { TASK_STATUSES, type TaskPriority, type TaskSortField, type TaskStatus } from "../types";
 import { labelDotClass, PRIORITY_DESC } from "../workflow";
-import { StatusDot } from "./task-badges";
+import { PriorityIndicator, StatusDot } from "./task-badges";
 
 const TRIGGER = buttonVariants({ variant: "outline", size: "sm", className: "max-md:h-9" });
 
@@ -149,6 +149,7 @@ export function TaskFilterBar({ projectId, filters, onChange, onReset, hide = []
             checked={filters.priority.includes(priority)}
             onCheckedChange={() => onChange({ priority: toggle(filters.priority, priority) })}
           >
+            <PriorityIndicator priority={priority} />
             {tc(`priority.${priority}`)}
           </DropdownMenuCheckboxItem>
         ))}

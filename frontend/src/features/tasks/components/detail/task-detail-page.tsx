@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import { Archive } from "@phosphor-icons/react";
 import { PageFailure } from "@/features/errors/page-failure";
 import { ApiError } from "@/lib/api/client";
-import { allowsAdvanced } from "../../task-model";
+import { allowsAdvanced, allowsPool } from "../../task-model";
 import { AdvancedReadOnlyNotice } from "../task-mode-picker";
 import { useTask } from "../../hooks";
 import { taskPermissions, type TaskPermissions } from "../../permissions";
@@ -51,7 +51,7 @@ function TaskDetailBody({ slug, project, projectId, isManager, userId, taskId }:
   const data = task.data;
   const advanced = data.creationMode === "ADVANCED";
   const advancedWritable = advanced && allowsAdvanced(project.taskManagementMode);
-  const ctx: DetailContext = { advancedWritable, task: data, slug, projectId, userId, isManager, perms: permissionsFor(data, userId, isManager) };
+  const ctx: DetailContext = { advancedWritable, poolWritable: allowsPool(project.taskManagementMode), task: data, slug, projectId, userId, isManager, perms: permissionsFor(data, userId, isManager) };
 
   return (
     <article aria-label={`${data.taskKey} ${data.title}`}>

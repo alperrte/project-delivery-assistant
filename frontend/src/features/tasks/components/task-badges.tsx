@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { CheckCircle, Clock, Lock, Prohibit, Tray } from "@phosphor-icons/react";
+import { CircleAlert } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { profilePhotoSrc } from "@/features/account/api";
 import { cn } from "@/lib/utils";
@@ -38,10 +39,19 @@ export function PriorityBadge({ priority, className }: { priority: TaskPriority;
   const t = useTranslations("tasks.common.priority");
   return (
     <span className={cn(CHIP, priorityBadgeClass(priority), className)}>
-      <span aria-hidden="true" className={cn("size-1.5 rounded-full", priorityDotClass(priority))} />
+      <PriorityIndicator priority={priority} />
       {t(priority)}
     </span>
   );
+}
+
+/** One marker for forms, details, filters and cards; critical also carries a shape cue. */
+export function PriorityIndicator({ priority, className }: { priority: TaskPriority; className?: string }) {
+  return <span aria-hidden="true" data-priority={priority} className={cn("inline-flex size-3.5 shrink-0 items-center justify-center", className)}>
+    {priority === "CRITICAL"
+      ? <CircleAlert data-priority-alert className="size-full text-destructive" strokeWidth={2.5} />
+      : <span className={cn("size-2 rounded-full", priorityDotClass(priority))} />}
+  </span>;
 }
 
 export function LabelChip({ label, className }: { label: Pick<LabelRef, "name" | "color">; className?: string }) {
