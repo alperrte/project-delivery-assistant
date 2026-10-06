@@ -6,6 +6,8 @@ import com.pda.task.application.TaskDeadlineService;
 import com.pda.task.application.TaskPoolService;
 import com.pda.task.domain.TaskConflictException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.Instant;
@@ -26,12 +28,14 @@ class TaskPoolAndMyTasksApiIntegrationTest extends TaskTestBase {
     @Autowired TaskDeadlineService deadlines;
     @Autowired NotificationService notifications;
 
-    @Test void twoPeopleClaimingTheSameTaskLeaveExactlyOneWinner() throws Exception {
+    @ParameterizedTest @ValueSource(strings = {"SIMPLE", "ADVANCED"})
+    void twoPeopleClaimingTheSameTaskLeaveExactlyOneWinner(String mode) throws Exception {
         Account pm = account("racepm");
         UUID project = project(pm, "Claim race project");
         Account a = member(project, pm, "racea");
         Account b = member(project, pm, "raceb");
-        UUID task = createTask(project, pm, "{\"title\":\"Contested\",\"pool\":{\"open\":true}}");
+        send(patch("/api/v1/projects/" + project + "/task-management-mode"), pm, "{\"mode\":\"" + mode + "\"}").andExpect(status().isOk());
+        UUID task = createTask(project, pm, "{\"title\":\"Contested\",\"creationMode\":\"" + mode + "\",\"pool\":{\"open\":true}}");
 
         CountDownLatch go = new CountDownLatch(1);
         List<Future<UUID>> attempts = new ArrayList<>();
@@ -63,7 +67,8 @@ class TaskPoolAndMyTasksApiIntegrationTest extends TaskTestBase {
         send(post(tasksUrl(project) + "/" + task + "/claim"), a, null).andExpect(status().isConflict());
     }
 
-    @Test void claimReleaseTeamTargetAndAuthorization() throws Exception {
+    @ParameterizedTest @ValueSource(strings = {"SIMPLE", "ADVANCED"})
+    void claimReleaseTeamTargetAndAuthorization(String mode) throws Exception {
         Account pm = account("poolpm");
         UUID project = project(pm, "Pool project");
         Account inTeam = member(project, pm, "poolin");
@@ -74,10 +79,11 @@ class TaskPoolAndMyTasksApiIntegrationTest extends TaskTestBase {
         UUID team = UUID.fromString(JsonPath.read(teamBody, "$.id"));
         send(post("/api/v1/projects/" + project + "/teams/" + team + "/members"), pm,
                 "{\"userId\":\"" + inTeam.id() + "\"}").andExpect(status().isCreated());
+        send(patch("/api/v1/projects/" + project + "/task-management-mode"), pm, "{\"mode\":\"" + mode + "\"}").andExpect(status().isOk());
 
         UUID teamTask = createTask(project, pm,
-                "{\"title\":\"Team only\",\"pool\":{\"open\":true,\"teamId\":\"" + team + "\"}}");
-        UUID openTask = createTask(project, pm, "{\"title\":\"Everyone\",\"pool\":{\"open\":true}}");
+                "{\"title\":\"Team only\",\"creationMode\":\"" + mode + "\",\"pool\":{\"open\":true,\"teamId\":\"" + team + "\"}}");
+        UUID openTask = createTask(project, pm, "{\"title\":\"Everyone\",\"creationMode\":\"" + mode + "\",\"pool\":{\"open\":true}}");
         String claim = tasksUrl(project) + "/" + teamTask + "/claim";
 
         mvc.perform(post(claim)).andExpect(status().isForbidden());
@@ -88,9 +94,14 @@ class TaskPoolAndMyTasksApiIntegrationTest extends TaskTestBase {
                 .andExpect(jsonPath("$.content[?(@.id=='" + teamTask + "')]").isEmpty())
                 .andExpect(jsonPath("$.content[?(@.id=='" + openTask + "')]").isNotEmpty());
         read("/api/v1/tasks/pool", inTeam).andExpect(jsonPath("$.content[?(@.id=='" + teamTask + "')]").isNotEmpty());
+        read("/api/v1/tasks/mine?projectId=" + project, inTeam).andExpect(jsonPath("$.counts.poolAvailable").value(2));
+        read("/api/v1/tasks/mine?projectId=" + project, notInTeam).andExpect(jsonPath("$.counts.poolAvailable").value(1));
+        send(patch(tasksUrl(project) + "/" + openTask), notInTeam,
+                "{\"title\":\"Forbidden\",\"priority\":\"MEDIUM\",\"pool\":{\"open\":false}}").andExpect(status().isForbidden());
         mvc.perform(get("/api/v1/tasks/pool")).andExpect(status().isUnauthorized());
 
         send(post(claim), inTeam, null).andExpect(status().isOk());
+        read("/api/v1/tasks/mine?projectId=" + project, inTeam).andExpect(jsonPath("$.counts.poolAvailable").value(1));
         send(post(claim), inTeam, null).andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("TASK_ALREADY_CLAIMED"));
         send(post(tasksUrl(project) + "/" + teamTask + "/release"), notInTeam, null)
