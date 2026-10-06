@@ -22,6 +22,8 @@ import { invitationsApi } from "@/features/invitations/api";
 import { InvitationProjectPreviewDialog } from "@/features/invitations/components/invitation-project-preview-dialog";
 import { InvitationStatusBadge } from "@/features/invitations/components/invitation-status-badge";
 import type { MyInvitation } from "@/features/invitations/types";
+import { invitationKeys } from "@/features/invitations/query-keys";
+import { useSession } from "@/features/auth/hooks/use-session";
 
 /** The inviter's photo (or initials) next to their name. */
 function Inviter({ invitation }: { invitation: MyInvitation }) {
@@ -37,6 +39,12 @@ const FILTERS = ["PENDING", "ALL"] as const;
 type Filter = (typeof FILTERS)[number];
 
 export default function MyInvitationsPage() {
+  const {data:user}=useSession();
+  return <RecipientInvitations key={user?.id ?? "signed-out"} userId={user?.id} />;
+}
+
+/** Local preview/rejection state has the same principal boundary as the server query data. */
+function RecipientInvitations({userId}:{userId:string|undefined}) {
   const t = useTranslations("invitations");
   const tr = useTranslations("roles");
   const te = useTranslations("errors");
@@ -48,14 +56,15 @@ export default function MyInvitationsPage() {
   const [rejectInvitation, setRejectInvitation] = useState<MyInvitation | null>(null);
   const [reason, setReason] = useState("");
   const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ["project-invitations", "me", filter, page],
-    queryFn: () => invitationsApi.mine(page, PAGE_SIZE, filter === "PENDING" ? "PENDING" : undefined),
+    queryKey: invitationKeys.mine(userId, filter, page),
+    queryFn: ({ signal }) => invitationsApi.mine(page, PAGE_SIZE, filter === "PENDING" ? "PENDING" : undefined, signal),
+    enabled: !!userId,
     // New invitations arrive while the app is open, so this list is always read fresh instead of from the 30 s cache.
     staleTime: 0,
     refetchOnMount: "always",
     refetchOnWindowFocus: true,
   });
-  const refresh = () => queryClient.invalidateQueries({ queryKey: ["project-invitations", "me"] });
+  const refresh = () => queryClient.invalidateQueries({ queryKey: invitationKeys.mineRoot(userId) });
   const accept = useMutation({
     mutationFn: invitationsApi.acceptMine,
     onSuccess: async () => {

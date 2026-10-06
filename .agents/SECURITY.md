@@ -645,6 +645,10 @@ Organization archive **retains** all project FK associations; no automatic detac
 
 Relevant inventory: POST/GET `/api/v1/projects`, PUT `/api/v1/projects/{id}`, GET `/projects/{id}`, `/projects/by-slug/{slug}`, `/projects/{id}/home`, POST `/projects/{id}/archive`; POST/GET `/organizations`, GET/PUT `/organizations/{id}`, POST archive and GET projects. Mutations require existing cookie+CSRF; no session401, nonmember/foreign target403, unknown/archived new target404, malformed/validation400. Organization projects GET is active-org + caller project membership, not general owner inheritance; profile GET remains owner-only. Safe PUT: `{"name":"Example Project","priority":"MEDIUM","status":"PLANNING","organizationId":null}`. Home active summary: `{id,name,slug,canViewOrganization}`. Swagger uses existing `/swagger-ui/index.html` and normal login/CSRF; no docs ENV changed. Full endpoint matrix is in the remediation completion record.
 
+### Invitations remediation — 2026-10-06
+
+No new endpoint, role, cookie/session/CSRF/CORS policy or ENV. Frontend private invitation queries are principal-scoped and cancelled/removed at sign-in/out/session boundaries. Existing invitation writes lock/expire elapsed pending target rows before fresh insert; manager reads/count/candidates use effective expiry. Resend expired invitation200 creates a fresh token/ID; DELETE expired204 retains EXPIRED, grants no membership. Existing authority checks and DB constraints remain. Full inventory/manual checks in the separate implementation completion. SMTP delivery remains disabled in the audited local environment.
+
 ## 12. Error Handling
 
 API errors must not expose:
@@ -761,11 +765,11 @@ The Next.js frontend sets `X-Content-Type-Options: nosniff`, `X-Frame-Options: D
 
 ### source-map-js dependency remediation — 2026-10-06
 
-- [x] User-approved separate remediation: `source-map-js` transitive lock entry updated from1.2.1 to1.2.2 by real `npm update source-map-js`; existing consumers require `^1.2.1`. Package manifest, other package versions, application/invitation code and auth policy unchanged.
-- GHSA-68fv-2mgg-jv7q / CVE-2026-93749 closed in the installed dependency graph. Next→PostCSS and Tailwind→PostCSS/node now resolve1.2.2. App source has no direct SourceMapConsumer use; untrusted PDA runtime reachability was not reproduced. Production classification alone is not exploit proof.
-- Clean `npm ci` PASS. Current full npm audit5 high/exit1 (existing ESLint/braces debt); omit=dev0/exit0. Previous6 high/production1 was the pre-patch state. Existing dev debt remains subject to the follow-up above; this is not a release waiver.
-- Bounded source-map regression,33 targeted Chromium, lint/type/build and canonical pre-push passed:469 backend0 failure/error/skip,248 Chromium+1 expected crash-route skip, Docker build/start/health. Separate delivery: [source-map-js remediation](../docs/compliation/2026-10-06-source-map-js-security-remediation.md).
-- Primary source: [GitHub reviewed advisory](https://github.com/advisories/GHSA-68fv-2mgg-jv7q).
+- [x] User-approved remediation: `source-map-js` updated from 1.2.1 to 1.2.2 through a semver-compatible transitive update. Existing consumers require `^1.2.1`. Package manifest and application/invitation code unchanged.
+- GHSA-68fv-2mgg-jv7q / CVE-2026-93749 resolved in the validated dependency graph. Next/PostCSS and Tailwind resolve 1.2.2. Untrusted PDA runtime exploitability was not reproduced.
+- Clean `npm ci` passed. Post-patch full npm audit: 5 high, exit1, from existing ESLint/braces development debt. Production audit: 0, exit0. Pre-patch counts were 6 high / production1. Existing development debt remains open; this is not a release waiver.
+- Validation passed: 33 targeted Chromium tests; canonical pre-push with 469 backend tests (0 failures/errors/skips), 248 Chromium passed + 1 expected skip, lint, TypeScript, production build and Docker health.
+- Separate delivery: [source-map-js remediation](../docs/compliation/2026-10-06-source-map-js-security-remediation.md).
 
 ## 17. Docker and Container Security
 

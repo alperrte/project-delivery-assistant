@@ -1,5 +1,9 @@
 # API rehberi
 
+## Invitations remediation — 2026-10-06
+
+Endpoint/path/auth/request model değişmedi. Manager invitation GET PENDING yalnız expiresAt>now; EXPIRED filtresi physical EXPIRED veya logical elapsed PENDING döndürür; all response etkin status gösterir. POST resend live pending veya expired invitation için fresh ID/token; team active/same-project doğrulanır. DELETE expired invitation204 ile EXPIRED state retained/no grant, live pending→CANCELLED. Başka final state409; expired token accept/reject kapalı. Create expired target row lock+expire/flush sonrası fresh pending INSERT; duplicate current pending409 ve existing DB unique constraint korunur. Client preview404/token-field validation expired;429/network/server separate retry. Legacy membership mutation invalidation reload gerektirmez.
+
 ## Organization profili ve görselleri (2026-10-04)
 
 2026-10-05 ek kapsam: POST/PUT ve response'a nullable `notes` eklendi (en fazla 1000, trim, whitespace→null). Description ayrı kalır. PUT tam metadata semantiği notes için de geçerlidir; görsel mutation notes'a dokunmaz. Notes sadece owner'a açık profile/list response'unda, düzenleme formunda ve detail'ın ek notlar bölümünde görünür.

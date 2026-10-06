@@ -1,5 +1,9 @@
 # Veritabanı ve kalıcılık
 
+## Invitations remediation — 2026-10-06
+
+Migration/entity/cardinality değişmedi. Existing physical PENDING+past expiry target row mutation sırasında pessimistic lock ile EXPIRED yapılıp flush edilir; unique partial index bypass/drop edilmez. Reads effective expiry representation/filter kullanır, GET DB state mutation yapmaz. Resend expired row retained EXPIRED ve new pending row; expired cancel acknowledges204 without membership grant. PostgreSQL barrier iki create'i aynı expired row üzerinde bekletti; yalnız biri yeni pending commit etti, other conflict. Current module model/roles/team membership transaction unchanged.
+
 ## V52 Organization profili ve media ledger (2026-10-04)
 
 ### V53 — Organization notes (2026-10-05)

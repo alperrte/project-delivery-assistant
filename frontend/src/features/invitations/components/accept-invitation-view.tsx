@@ -3,12 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle, CircleNotch, EnvelopeSimple, WarningCircle, XCircle } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { errorKey } from "@/lib/api/error-message";
 import { invitationsApi } from "../api";
+import { invalidateInvitationMembership } from "../invalidation";
 
 export function AcceptInvitationView({
   projectId,
@@ -22,11 +23,12 @@ export function AcceptInvitationView({
   const t = useTranslations("invitations.respond");
   const te = useTranslations("errors");
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [done, setDone] = useState<"accepted" | "rejected" | null>(null);
 
   const accept = useMutation({
     mutationFn: () => invitationsApi.accept(projectId, invitationId, token!),
-    onSuccess: () => setDone("accepted"),
+    onSuccess: async () => { await invalidateInvitationMembership(queryClient); setDone("accepted"); },
     onError: (err) => toast.error(te(errorKey(err))),
   });
 
