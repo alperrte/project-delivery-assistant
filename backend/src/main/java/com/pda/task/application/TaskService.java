@@ -288,6 +288,7 @@ public class TaskService {
     }
 
     private void applyPool(Task task, UUID projectId, TaskCommand.PoolRequest request, UUID actor) {
+        support.requirePoolTask(task);
         UUID taskId = task.getId();
         if (request.open()) {
             if (assignments.countByTaskId(taskId) > 0) {
@@ -328,15 +329,13 @@ public class TaskService {
     private static void requireSimpleCommand(TaskCommand command) {
         if (command.draft().estimatePoints() != null || command.draft().timeEstimateMinutes() != null
                 || command.parentTaskId() != null || command.sprintId() != null
-                || (command.labelIds() != null && !command.labelIds().isEmpty())
-                || (command.pool() != null && (command.pool().open() || command.pool().teamId() != null)))
+                || (command.labelIds() != null && !command.labelIds().isEmpty()))
             throw new TaskValidationException("TASK_SIMPLE_FIELDS_INVALID", "Simple tasks cannot use advanced fields");
     }
 
     private boolean hasAdvancedData(Task task) {
         return task.getEstimatePoints() != null || task.getTimeEstimateMinutes() != null
-                || task.getParentTaskId() != null || task.getSprintId() != null || task.isPoolOpen()
-                || task.isClaimedFromPool() || task.getPoolTeamId() != null || task.isBlocked()
+                || task.getParentTaskId() != null || task.getSprintId() != null || task.isBlocked()
                 || tasks.hasAdvancedData(task.getId());
     }
 
@@ -346,9 +345,7 @@ public class TaskService {
                 || (command.provides("parentTaskId") && !Objects.equals(command.parentTaskId(), task.getParentTaskId()))
                 || (command.provides("sprintId") && !Objects.equals(command.sprintId(), task.getSprintId()))
                 || (command.labelIds() != null && !command.labelIds().equals(taskLabels.findByTaskId(task.getId()).stream()
-                        .map(TaskLabel::getLabelId).collect(Collectors.toSet())))
-                || (command.pool() != null && (command.pool().open() != task.isPoolOpen()
-                        || !Objects.equals(command.pool().teamId(), task.getPoolTeamId())));
+                        .map(TaskLabel::getLabelId).collect(Collectors.toSet())));
     }
 
     private static TaskValidationException invalidParent() {
