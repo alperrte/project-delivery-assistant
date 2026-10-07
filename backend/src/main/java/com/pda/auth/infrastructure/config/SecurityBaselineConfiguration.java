@@ -160,7 +160,7 @@ public class SecurityBaselineConfiguration {
                             .requestMatchers(HttpMethod.POST, "/api/v1/auth/password/change").authenticated()
                             .requestMatchers(HttpMethod.GET, "/api/v1/users/me/preferences",
                                     "/api/v1/users/me/profile-photo", "/api/v1/users/*/profile-photo").authenticated()
-                            .requestMatchers(HttpMethod.PUT, "/api/v1/users/me/preferences",
+                            .requestMatchers(HttpMethod.PUT, "/api/v1/users/me/profile", "/api/v1/users/me/preferences",
                                     "/api/v1/users/me/profile-photo").authenticated()
                             .requestMatchers(HttpMethod.DELETE, "/api/v1/users/me/profile-photo").authenticated()
                             .requestMatchers(HttpMethod.GET, "/api/v1/notifications", "/api/v1/notifications/unread-count").authenticated()

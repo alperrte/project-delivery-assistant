@@ -141,7 +141,7 @@ export function AppShellView({ children, pathname, user, collapsed = false, onLo
         >
           {narrow ? <Logo variant="emblem" size={28} priority={!contained} /> : <Logo variant="wordmark" compact plain size={140} priority={!contained} />}
         </Link>
-        <nav aria-label={tw("navigation")} className={cn("min-h-0 flex-1 space-y-1 overflow-y-auto py-3", narrow ? "px-2" : "px-3")}>
+        <nav data-workspace-scroll={contained ? undefined : "sidebar"} aria-label={tw("navigation")} className={cn("min-h-0 flex-1 space-y-1 overflow-y-auto py-3", narrow ? "px-2" : "px-3")}>
           {NAV_LINKS.map(link => {
             const Icon = link.icon;
             // Inside one project the selected-project group owns the highlight, so "Projeler" lights up only on
@@ -225,11 +225,11 @@ export function AppShellView({ children, pathname, user, collapsed = false, onLo
       <Dialog open={menuOpen} onOpenChange={setMenuOpen}>
         <DialogContent className="top-0 left-0 h-[100dvh] max-h-[100dvh] w-72 max-w-[85vw] translate-x-0 translate-y-0 gap-0 rounded-none p-0 sm:max-w-72">
           <DialogTitle className="sr-only">{tw("navigation")}</DialogTitle>
-          <div className="flex min-h-0 flex-col overflow-y-auto">{renderNavigation(false)}</div>
+          <div data-workspace-scroll={contained ? undefined : "drawer"} className="flex min-h-0 flex-col overflow-y-auto">{renderNavigation(false)}</div>
         </DialogContent>
       </Dialog>
       <div className="flex min-w-0 flex-1 flex-col">
-        <AppHeader contained={contained} user={user} onOpenMobileMenu={() => setMenuOpen(true)} onLogout={onLogout} />
+        <AppHeader contained={contained} user={user} mobileMenuOpen={menuOpen} onOpenMobileMenu={() => setMenuOpen(true)} onLogout={onLogout} />
         <main id={contained ? undefined : "main-content"} style={contained ? { height: "var(--demo-height)", overflowY: "auto" } : undefined} tabIndex={-1} className={cn("w-full min-w-0 flex-1 pt-(--workspace-header-reserve)", pathname === "/dashboard" ? "" : "mx-auto max-w-[1560px] px-4 pb-6 sm:px-8 sm:pb-8")}>{children}</main>
       </div>
     </div>

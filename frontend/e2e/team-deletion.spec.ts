@@ -1,7 +1,6 @@
 import { test, expect, type Page, type Browser } from "@playwright/test";
-import { readFileSync } from "node:fs";
-import { api, login } from "./helpers";
-import { MANAGER_STORAGE, MEMBER_USER_FILE } from "./global-setup";
+import { api } from "./helpers";
+import { MANAGER_STORAGE, MEMBER_STORAGE } from "./global-setup";
 import { teamDeletionInDatabase } from "./team-deletion-db";
 
 type Project = { id: string; slug: string };
@@ -13,9 +12,9 @@ async function setup(browser: Browser, withMember = false) {
   const name = `Delete UX target ${Date.now()}`;
   const team = (await api(a, "POST", `/projects/${p.id}/teams`, { name, includeCreator: true })).json as { id: string };
   const actor = (await api(a, "GET", "/auth/me")).json as { id: string };
-  const bc = await browser.newContext(), b = await bc.newPage(); let user: { id: string } | undefined;
+  const bc = await browser.newContext({ storageState: MEMBER_STORAGE }), b = await bc.newPage(); let user: { id: string } | undefined;
   if (withMember) {
-    const member = JSON.parse(readFileSync(MEMBER_USER_FILE, "utf8")); await login(b, member.email, member.password);
+    await b.goto("/projects");
     user = (await api(b, "GET", "/auth/me")).json as { id: string };
     const invited = (await api(a, "POST", `/projects/${p.id}/invitations`, { userId: user.id, teamId: backup.id, roles: ["TESTER"] })).json as { invitationId: string };
     expect((await api(b, "POST", `/project-invitations/${invited.invitationId}/accept`)).status).toBe(200);

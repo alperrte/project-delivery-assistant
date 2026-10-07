@@ -152,3 +152,7 @@ Task UI update (2026-10-06): tasks/task-model.ts also exposes allowsPool for con
 - e2e/my-task-cards.spec.ts: real task/comment/status/manager notification/board/pagination and responsive localization scenarios. Existing 09-tasks assertions follow the new personal cards.
 
 2026-10-06 merge: `features/notifications/notifications-menu.tsx` delegates to `components/notification-center.tsx`; api.ts re-exports the shared types.ts Notification contract. There is one session-scoped polling/cache/popup family.
+
+## Frontend foundation additions - 2026-10-07
+
+Backend UserProfileController/UserProfileService/NicknameTakenException/domain NicknameRules, existing User/Repository/error handler and exact own security matcher. Frontend account nickname-field/nickname validation and identity predicates; layout authenticated-route, extended native history and single lifecycle auto-hide controller. Existing AppShell nav/drawer carry data-workspace-scroll scope markers; globals owns scoped scrollbar aliases. New real nickname/authenticated-history/navbar-auto-hide/workspace-scrollbars tests and UserProfileApiIntegrationTest. Private evidence `.local/frontend-foundation/`, never a public auth trace.

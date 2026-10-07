@@ -81,3 +81,11 @@ Global /tasks now renders square assigned-task cards. The task/taskProject/comme
 ## Squad/main notification merge integration - 2026-10-06
 
 NotificationsMenu is a compatibility entry point delegating to the single NotificationCenter/session owner. Actor-scoped AbortSignal/cache cleanup and atomic team-deletion popup claims stay intact. Open own history polls15s; unread count/team claim use30s foreground cadence. Task notifications retain localized start/completion snapshots and relative timestamps, mark read and open the existing task/taskProject dialog URL. Task navigation suppresses old popup focus return; normal Escape restores the bell. Header placement/demo isolation are unchanged. Scoped merged validation: lint/type/build and34 Chromium PASS; existing historical delivery counts are not reused as merge proof.
+
+## Frontend foundation - 2026-10-07
+
+Own profile nickname PUT stays in User module; Auth still email login and UUID/session identity with fresh active UserAccounts principal. Same-actor fresh DTO session set cancels old in-flight session queries (AbortSignal); only live identity-bearing query families invalidate. Chat userid/project owner generation and draft/outbox remain, historical event snapshots retained.
+
+PDA arrows read native capabilities + index-adjacent URL and centralized allowlist of actual authenticated app layouts via localized matchPath. Current session/fetch readiness and fresh action guard required; public/auth/external/unknown target disabled. Browser navigation unchanged; no visited stack/storage/history patch/Next private state. Persisted pageshow revalidates existing session query.
+
+Navbar uses one700ms timer for desktop/touch with hover/top/focus/owned popup/search/drawer guards and full listener/RAF/observer cleanup. Actual document scroll container retained. Root/sidebar/drawer scrollbar uses scoped label-blue alias and body inheritance reset; portals/forms/chat not styled.

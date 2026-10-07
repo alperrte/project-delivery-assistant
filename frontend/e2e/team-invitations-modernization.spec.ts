@@ -1,8 +1,7 @@
 import { test, expect } from "@playwright/test";
-import { readFileSync } from "node:fs";
 import path from "node:path";
-import { api, login } from "./helpers";
-import { MANAGER_STORAGE, MEMBER_USER_FILE } from "./global-setup";
+import { api } from "./helpers";
+import { MANAGER_STORAGE, MEMBER_STORAGE } from "./global-setup";
 import { invitationInDatabase, seedQaInvitationPage } from "./invitation-db";
 import { PROJECT_ROLES } from "../src/features/projects/types";
 import tr from "../src/i18n/messages/tr.json";
@@ -10,7 +9,7 @@ import tr from "../src/i18n/messages/tr.json";
 test("real invitation form, eight role icons, inviter summary and responsive history preserve resend/cancel/accept", async ({ browser }) => {
   test.setTimeout(150_000);
   const context = await browser.newContext({ storageState: MANAGER_STORAGE }), page = await context.newPage();
-  const memberContext = await browser.newContext(), member = await memberContext.newPage();
+  const memberContext = await browser.newContext({ storageState: MEMBER_STORAGE }), member = await memberContext.newPage();
   page.setDefaultTimeout(15_000);
   await page.goto("/tr/projeler");
   const project = (await api(page, "POST", "/projects", { name: `Invitation UI QA ${Date.now()}`, projectType: "WEB" })).json as { id: string; slug: string };
@@ -50,7 +49,7 @@ test("real invitation form, eight role icons, inviter summary and responsive his
     await page.getByRole("dialog").getByRole("button", { name: tr.invitations.cancel, exact: true }).click();
     await expect(row).toHaveCount(0);
     expect(await page.evaluate(() => (window as unknown as { invitationDocument: number }).invitationDocument)).toBe(5);
-    const user = JSON.parse(readFileSync(MEMBER_USER_FILE, "utf8")); await login(member, user.email, user.password);
+    await member.goto("/projects");
     const principal = (await api(member, "GET", "/auth/me")).json as { id: string };
     const registered = (await api(page, "POST", `/projects/${project.id}/invitations`, { userId: principal.id, teamId: team.id, roles: PROJECT_ROLES })).json as { invitationId: string };
     expect((await api(member, "POST", `/project-invitations/${registered.invitationId}/accept`)).status).toBe(200);

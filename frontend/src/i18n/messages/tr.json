@@ -1265,7 +1265,18 @@
     "profile": "Profil",
     "nickname": "Kullanıcı adı",
     "email": "E-posta",
-    "security": "Güvenlik"
+    "security": "Güvenlik",
+    "nicknameEdit": {
+      "label": "Kullanıcı adı",
+      "hint": "3–32 harf, rakam veya alt çizgi. Büyük/küçük harf farklıdır.",
+      "save": "Kullanıcı adını kaydet",
+      "saving": "Kaydediliyor…",
+      "cancel": "Vazgeç",
+      "saved": "Kullanıcı adı güncellendi.",
+      "taken": "Bu kullanıcı adı kullanılıyor.",
+      "invalid": "3–32 harf, rakam veya alt çizgi kullanın.",
+      "failed": "Kullanıcı adı kaydedilemedi. Tekrar deneyin."
+    }
   },
   "changePassword": {
     "title": "Şifrenizi güncelleyin",
@@ -1348,7 +1359,14 @@
       "back": "Önceki sayfaya git",
       "forward": "Sonraki sayfaya git",
       "label": "Sayfa geçmişi",
-      "unavailable": "Geçmiş bilgisi bu tarayıcıda okunamıyor; tarayıcı oklarını kullanın."
+      "unavailable": "Geçmiş bilgisi bu tarayıcıda okunamıyor; tarayıcı oklarını kullanın.",
+      "reasons": {
+        "pending": "Geçmiş hazırlanıyor.",
+        "unauthenticated": "Uygulama oturumu doğrulanıyor.",
+        "unavailable": "Bu tarayıcıda güvenli uygulama geçmişi doğrulanamıyor; tarayıcı oklarını kullanabilirsiniz.",
+        "boundary": "Bu yön uygulama alanının dışına çıkar.",
+        "noSafeEntry": "Bu yönde güvenli uygulama geçmişi yok."
+      }
     }
   },
   "tasks": {

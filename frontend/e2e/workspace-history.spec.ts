@@ -46,7 +46,7 @@ test("history header stays viewport-centered, fits mobile and remains outside fu
 
 test("unknown native capability stays visibly disabled with an honest explanation",async({browser})=>{
  const context=await browser.newContext({storageState:MANAGER_STORAGE});await context.addInitScript(()=>Object.defineProperty(window,"navigation",{configurable:true,value:undefined}));const page=await context.newPage();
- try{await page.goto("/tr/projeler");await expect(page.getByTestId("workspace-history")).toHaveAttribute("data-history-status","unavailable");await expect(page.getByTestId("workspace-back")).toBeDisabled();await expect(page.getByTestId("workspace-forward")).toBeDisabled();await expect(page.getByText("Geçmiş bilgisi bu tarayıcıda okunamıyor; tarayıcı oklarını kullanın.")).toHaveCount(1);}finally{await context.close();}
+ try{await page.goto("/tr/projeler");await expect(page.getByTestId("workspace-history")).toHaveAttribute("data-history-status","unavailable");await expect(page.getByTestId("workspace-back")).toBeDisabled();await expect(page.getByTestId("workspace-forward")).toBeDisabled();await expect(page.getByText("Bu tarayıcıda güvenli uygulama geçmişi doğrulanamıyor; tarayıcı oklarını kullanabilirsiniz.")).toHaveCount(2);}finally{await context.close();}
 });
 
 test("PDA and browser traversal preserve native entries and close only fullscreen logical navigation",async({page})=>{

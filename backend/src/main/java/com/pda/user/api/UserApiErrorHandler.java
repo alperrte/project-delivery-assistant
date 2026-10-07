@@ -18,6 +18,12 @@ import java.util.NoSuchElementException;
 /** Safe, code-based answers for the user module's own endpoints; internal details never reach the client. */
 @RestControllerAdvice(basePackages = "com.pda.user.api")
 class UserApiErrorHandler {
+    @ExceptionHandler(com.pda.user.application.service.NicknameTakenException.class)
+    ResponseEntity<ProblemDetail> nicknameTaken() {
+        var body = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "Nickname unavailable");
+        body.setProperty("code", "NICKNAME_TAKEN");
+        return ResponseEntity.status(HttpStatus.CONFLICT).header("Cache-Control", "private, no-store").body(body);
+    }
 
     @ExceptionHandler(ProfilePhotoException.class)
     ResponseEntity<ProblemDetail> invalidPhoto(ProfilePhotoException exception) {
@@ -37,7 +43,12 @@ class UserApiErrorHandler {
 
     @ExceptionHandler({MethodArgumentNotValidException.class, HttpMessageNotReadableException.class,
             MethodArgumentTypeMismatchException.class, IllegalArgumentException.class})
-    ResponseEntity<ProblemDetail> invalidInput() {
+    ResponseEntity<ProblemDetail> invalidInput(jakarta.servlet.http.HttpServletRequest request) {
+        if ("/api/v1/users/me/profile".equals(request.getRequestURI())) {
+            var body = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Invalid nickname request");
+            body.setProperty("code", "NICKNAME_INVALID");
+            return ResponseEntity.badRequest().header("Cache-Control", "private, no-store").body(body);
+        }
         return problem(HttpStatus.BAD_REQUEST, "Invalid request");
     }
 

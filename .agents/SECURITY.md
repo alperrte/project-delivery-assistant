@@ -302,6 +302,17 @@ Claim sets popupPresentedAt atomically on oldest unread SQUAD_DELETED; read/read
 
 Team memberPreview adds safe real first/last names only after project/team authorization; no email/global directory expansion. Existing manager invitation list batch adds safe inviter nickname/photo version and target photo version; target email privacy/token rules retained. Swagger `/swagger-ui/index.html` and `/v3/api-docs`, normal login/CSRF. Delete/claim have no JSON body; safe team create `{"name":"Example Team","includeCreator":true}`.
 
+
+### Own nickname profile update - 2026-10-07
+
+| Endpoint | Auth / request | Success | Expected errors |
+| --- | --- | --- | --- |
+| PUT `/api/v1/users/me/profile` |Active authenticated own principal+CSRF, nickname-only JSON `{"nickname":"Yeni_ad"}` |200 existing own AuthenticatedUser, private/no-store |400 NICKNAME_INVALID/unknown identity fields;409 NICKNAME_TAKEN;401 session;403 CSRF/foreign route/forced password |
+
+Existing Unicode letter/number/underscore3-32 and case-sensitive uk_users_nickname constraint retained; shared Unicode White_Space trim, no NFC/casefold/migration/backfill. Active own row lock and unique flush prevent concurrent duplicate; narrow constraint mapping does not expose another user. User DynamicUpdate prevents unrelated stale photo/password writes reverting nickname; actual PostgreSQL barriers verified. No email/UUID/session/refresh/provider/role fields changed or accepted from client. JWT subject remains UUID and fresh UserAccounts principal supplies nickname. Existing current/future email login/refresh/forced-password/admin/OAuth/photo tests pass.
+
+Fresh DTO session cache writes and query cancellation are same-actor/lifetime guarded; prior-user late mutation cannot overwrite next account. PDA history checks readonly actual adjacent native entry against authenticated app route policy; unavailable/public/auth/external boundaries disabled, browser controls/route authorization unchanged. No auth token/private history storage or global history rewrite. Swagger `/swagger-ui/index.html`/`/v3/api-docs`, normal login/CSRF; no credentials in examples.
+
 Swagger/OpenAPI is intended for development and testing.
 
 - Swagger/OpenAPI must be enabled in development/test environments as required.

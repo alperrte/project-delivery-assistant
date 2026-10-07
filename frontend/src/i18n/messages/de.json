@@ -1265,7 +1265,18 @@
     "profile": "Profil",
     "nickname": "Benutzername",
     "email": "E-Mail",
-    "security": "Sicherheit"
+    "security": "Sicherheit",
+    "nicknameEdit": {
+      "label": "Benutzername",
+      "hint": "3–32 Buchstaben, Ziffern oder Unterstriche. Groß-/Kleinschreibung wird unterschieden.",
+      "save": "Benutzernamen speichern",
+      "saving": "Wird gespeichert…",
+      "cancel": "Abbrechen",
+      "saved": "Benutzername aktualisiert.",
+      "taken": "Dieser Benutzername wird bereits verwendet.",
+      "invalid": "Verwenden Sie 3–32 Buchstaben, Ziffern oder Unterstriche.",
+      "failed": "Benutzername konnte nicht gespeichert werden. Erneut versuchen."
+    }
   },
   "changePassword": {
     "title": "Passwort aktualisieren",
@@ -1348,7 +1359,14 @@
       "back": "Zur vorherigen Seite",
       "forward": "Zur nächsten Seite",
       "label": "Seitenverlauf",
-      "unavailable": "Verlaufsinformationen sind in diesem Browser nicht verfügbar; verwenden Sie die Browser-Pfeile."
+      "unavailable": "Verlaufsinformationen sind in diesem Browser nicht verfügbar; verwenden Sie die Browser-Pfeile.",
+      "reasons": {
+        "pending": "Verlauf wird vorbereitet.",
+        "unauthenticated": "Workspace-Sitzung wird geprüft.",
+        "unavailable": "Sicherer Workspace-Verlauf ist in diesem Browser nicht prüfbar; Browser-Pfeile bleiben verfügbar.",
+        "boundary": "Diese Richtung verlässt den Workspace.",
+        "noSafeEntry": "Kein sicherer Workspace-Eintrag in dieser Richtung."
+      }
     }
   },
   "tasks": {

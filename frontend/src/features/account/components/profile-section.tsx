@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { SettingsSection } from "@/components/common/settings-section";
 import type { AuthenticatedUser } from "@/features/auth/api";
 import { ProfilePhotoField } from "./profile-photo-field";
+import { NicknameField } from "./nickname-field";
 
 function ProfileRow({ label, value }: { label: string; value: string }) {
   return (
@@ -22,10 +23,10 @@ export function ProfileSection({ user }: { user: AuthenticatedUser }) {
       <div className="mb-6">
         <ProfilePhotoField user={user} />
       </div>
-      <dl className="grid gap-4 sm:grid-cols-2">
-        <ProfileRow label={ta("nickname")} value={user.nickname} />
-        <ProfileRow label={ta("email")} value={user.email} />
-      </dl>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div><NicknameField key={user.id} user={user} /></div>
+        <dl><ProfileRow label={ta("email")} value={user.email} /></dl>
+      </div>
     </SettingsSection>
   );
 }

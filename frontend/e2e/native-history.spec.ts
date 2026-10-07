@@ -4,8 +4,8 @@ import { historySnapshot,subscribeHistory,attemptHistoryTraversal,HISTORY_BACK,H
 test("native adapter distinguishes unknown/no-entry, rechecks capabilities and cleans subscriptions",()=>{
  expect(historySnapshot(undefined)).toBe(0);expect(historySnapshot({currentEntry:null,canGoBack:false,canGoForward:false})).toBe(0);
  expect(historySnapshot({currentEntry:{index:0},canGoBack:false,canGoForward:false})).toBe(1);
- const native=Object.assign(new EventTarget(),{currentEntry:{index:1},canGoBack:true,canGoForward:false});
- const fake=Object.assign(new EventTarget(),{navigation:native});const descriptor=Object.getOwnPropertyDescriptor(globalThis,"window");
+ const native=Object.assign(new EventTarget(),{currentEntry:{index:1},canGoBack:true,canGoForward:false,entries:()=>[{index:0,url:"https://pda.test/tr/genel-bakis"},{index:1,url:"https://pda.test/tr/projeler"}]});
+ const fake=Object.assign(new EventTarget(),{navigation:native,location:{href:"https://pda.test/tr/projeler"}});const descriptor=Object.getOwnPropertyDescriptor(globalThis,"window");
  Object.defineProperty(globalThis,"window",{configurable:true,value:fake});
  try {
   let notifications=0,calls=0;const cleanup=subscribeHistory(()=>notifications++);
