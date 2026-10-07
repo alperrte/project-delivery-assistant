@@ -2,6 +2,7 @@ package com.pda.project.application.service;
 
 import com.pda.project.domain.entity.Project;
 import com.pda.project.ProjectCreatedEvent;
+import com.pda.project.ProjectDeletedEvent;
 import com.pda.project.domain.entity.ProjectMembership;
 import com.pda.project.domain.enums.MembershipStatus;
 import com.pda.project.domain.enums.ProjectPriority;
@@ -193,6 +194,23 @@ public class ProjectService {
                 .orElseThrow(() -> new NoSuchElementException("Project not found"));
         project.archive();
         projects.save(project);
+    }
+
+    /**
+     * Permanent and irreversible: the database cascades every project-owned row (V58). Only the founder may do it,
+     * and only while they are still an active manager; other managers and the global ADMIN cannot.
+     */
+    @Transactional
+    public void delete(UUID actorId, UUID projectId) {
+        require(actorId, projectId, ProjectPermission.PROJECT_ARCHIVE);
+        Project project = projects.lockActive(projectId)
+                .orElseThrow(() -> new NoSuchElementException("Project not found"));
+        if (!project.getCreatedBy().equals(actorId)) {
+            throw new AccessDeniedException("Only the project founder may delete the project");
+        }
+        events.publishEvent(new ProjectDeletedEvent(projectId, actorId));
+        projects.delete(project);
+        projects.flush();
     }
 
     @Transactional(readOnly = true)

@@ -459,7 +459,7 @@
       "viewMembers": "View members",
       "projectProfile": "Project profile",
       "goal": "Project goal",
-      "noGoal": "No goal has been set for this project yet.",
+      "noGoal": "No description has been added to this project yet.",
       "techStack": "Technology stack",
       "timeline": "Target date",
       "notSpecified": "Not specified",
@@ -492,12 +492,8 @@
     },
     "settings": {
       "title": "Project settings",
-      "archive": "Archive",
-      "archiveConfirmTitle": "Archive this project?",
-      "archiveConfirmDescription": "Archived projects no longer accept changes and are hidden from active lists. This cannot be undone.",
       "cancel": "Cancel",
       "saved": "Settings saved.",
-      "archived": "Project archived.",
       "name": "Name",
       "description": "Description",
       "status": "Status",
@@ -518,20 +514,14 @@
       "targetEndDate": "Target end date",
       "organization": "Organization",
       "organizationNone": "No organization",
-      "goal": "Project goal",
       "techStack": "Tech stack",
       "save": "Save changes",
       "namePlaceholder": "e.g. PDA Web Platform",
       "descriptionPlaceholder": "What does this project do, and for whom?",
-      "goalPlaceholder": "What should we have achieved when the project is done?",
-      "goalHint": "The team's shared goal. Shown in the project header when there is no description.",
-      "techStackHint": "Type and press Enter or comma to add. Shown as badges on the project card.",
-      "techStackPlaceholder": "e.g. Spring Boot",
-      "techStackRemove": "Remove {name}",
       "unsaved": "You have unsaved changes",
       "discard": "Discard changes",
-      "dangerTitle": "Archive project",
-      "dangerDescription": "An archived project can no longer be changed and is hidden from active lists. This cannot be undone.",
+      "dangerTitle": "Delete this project",
+      "dangerDescription": "The project and everything in it is permanently deleted. This cannot be undone.",
       "tagline": "Tagline",
       "taglinePlaceholder": "Describe the project in one sentence",
       "type": "Project type",
@@ -576,7 +566,7 @@
         },
         "general": {
           "title": "General",
-          "description": "The project's name, description and goal. Shown in lists and the project header."
+          "description": "The project's name, tagline and description. Shown in the list and the project header."
         },
         "planning": {
           "title": "Planning",
@@ -591,7 +581,22 @@
           "description": "Actions that cannot be undone."
         }
       },
-      "organizationUnavailable": "Linked organization is archived or unavailable"
+      "organizationUnavailable": "Linked organization is archived or unavailable",
+      "delete": "Delete project",
+      "deleteConfirmTitle": "Permanently delete this project?",
+      "deleteConfirmDescription": "All tasks, sprints, teams, invitations, chat messages, comments, files and notifications in this project are permanently deleted. This cannot be undone.",
+      "deleteTypeName": "To confirm, type the project name: <strong>{name}</strong>",
+      "deleteConfirm": "Delete this project",
+      "deleted": "Project deleted.",
+      "techNone": "No technology selected yet.",
+      "previewCaption": "The card will look like this in the Projects list with your changes.",
+      "techDialog": {
+        "edit": "Edit technologies",
+        "title": "Edit technologies",
+        "description": "You can pick up to {max} technologies. Current ones come pre-selected.",
+        "cancel": "Cancel",
+        "apply": "Apply"
+      }
     }
   },
   "criteria": {

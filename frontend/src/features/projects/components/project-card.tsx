@@ -11,6 +11,7 @@ import { TableCell, TableRow } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { projectBannerUrl, projectLogoSource } from "../api";
+import { canonicalTech } from "../tech-catalog";
 import { parseTechStack } from "../tech-stack";
 import type { Project, ProjectType } from "../types";
 import {
@@ -41,7 +42,7 @@ export type ProjectCardData = Pick<
 /** Live preview on the create page: the link is inert and the logo comes from the file the user just picked. */
 export type ProjectCardPreview = { logoSrc: string | null; bannerSrc?: string | null; updatedLabel: string };
 
-const techChip = "relative z-10 inline-flex h-8 min-w-8 items-center justify-center rounded-md border bg-surface-2 px-1.5 text-xs font-medium text-muted-foreground";
+const techChip = "relative z-10 inline-flex size-8 items-center justify-center rounded-md border bg-surface-2 text-xs font-medium text-muted-foreground";
 
 function logoSource(project: Pick<Project, "id" | "logoVersion">, preview?: ProjectCardPreview,
                     invitationLogoSrc?: string | null): string | null {
@@ -61,32 +62,35 @@ function bannerSource(project: Pick<ProjectCardData, "id" | "bannerVersion">, pr
   return projectBannerUrl(project.id, project.bannerVersion);
 }
 
-/** Logos only; the name lives in a tooltip and in the accessible label. Free text from older projects stays a text chip. */
+/**
+ * One row of equal square logos, never wrapped, so every card's strip has the same height. A technology listed twice
+ * (or under two spellings) shows once; the name lives in a tooltip and in the accessible label. Free text from older
+ * projects has no logo and shows its first letter instead.
+ */
 function TechStrip({ labels }: { labels: string[] }) {
   const t = useTranslations("projects.card");
-  const items = toTechLabels(labels);
+  const items = toTechLabels(canonicalTech(labels));
   const shown = items.slice(0, MAX_TECH_LOGOS);
   const rest = items.slice(MAX_TECH_LOGOS);
   const restNames = rest.map(({ label, tech }) => tech?.name ?? label).join(", ");
 
   return (
-    <ul aria-label={t("technology")} className="flex flex-wrap items-center gap-1.5">
-      {shown.map(({ label, tech }) => (
-        <li key={label}>
-          {tech ? (
+    <ul aria-label={t("technology")} className="flex h-8 flex-nowrap items-center gap-1.5 overflow-hidden">
+      {shown.map(({ label, tech }) => {
+        const name = tech?.name ?? label;
+        return (
+          <li key={name} className="shrink-0">
             <Tooltip>
-              <TooltipTrigger render={<span role="img" aria-label={tech.name} className={techChip} />}>
-                <TechLogo tech={tech} />
+              <TooltipTrigger render={<span role="img" aria-label={name} className={techChip} />}>
+                {tech ? <TechLogo tech={tech} /> : <span aria-hidden="true" className="font-heading text-xs font-semibold uppercase">{name.slice(0, 1)}</span>}
               </TooltipTrigger>
-              <TooltipContent>{tech.name}</TooltipContent>
+              <TooltipContent>{name}</TooltipContent>
             </Tooltip>
-          ) : (
-            <span className={cn(techChip, "max-w-32 justify-start truncate")} title={label}>{label}</span>
-          )}
-        </li>
-      ))}
+          </li>
+        );
+      })}
       {rest.length > 0 && (
-        <li>
+        <li className="shrink-0">
           <Tooltip>
             <TooltipTrigger render={<span role="img" aria-label={restNames} className={techChip} />}>+{rest.length}</TooltipTrigger>
             <TooltipContent>{restNames}</TooltipContent>
@@ -236,7 +240,7 @@ export function ProjectRow({ project }: { project: Project }) {
         </span>
       </TableCell>
       <TableCell className="text-muted-foreground">{t(`card.types.${project.projectType}`)}</TableCell>
-      <TableCell className="text-muted-foreground">{project.techStack || "—"}</TableCell>
+      <TableCell className="text-muted-foreground">{canonicalTech(parseTechStack(project.techStack)).join(", ") || "—"}</TableCell>
       <TableCell className="text-right text-muted-foreground">{date.format(new Date(project.updatedAt))}</TableCell>
     </TableRow>
   );

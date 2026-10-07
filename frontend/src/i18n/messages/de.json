@@ -459,7 +459,7 @@
       "viewMembers": "Mitglieder anzeigen",
       "projectProfile": "Projektprofil",
       "goal": "Projektziel",
-      "noGoal": "Für dieses Projekt wurde noch kein Ziel festgelegt.",
+      "noGoal": "Für dieses Projekt wurde noch keine Beschreibung hinzugefügt.",
       "techStack": "Technologie-Stack",
       "timeline": "Zieldatum",
       "notSpecified": "Nicht angegeben",
@@ -492,12 +492,8 @@
     },
     "settings": {
       "title": "Projekteinstellungen",
-      "archive": "Archivieren",
-      "archiveConfirmTitle": "Dieses Projekt archivieren?",
-      "archiveConfirmDescription": "Archivierte Projekte können nicht mehr geändert werden und werden aus aktiven Listen ausgeblendet. Dies kann nicht rückgängig gemacht werden.",
       "cancel": "Abbrechen",
       "saved": "Einstellungen gespeichert.",
-      "archived": "Projekt archiviert.",
       "name": "Name",
       "description": "Beschreibung",
       "status": "Status",
@@ -518,20 +514,14 @@
       "targetEndDate": "Geplantes Enddatum",
       "organization": "Organisation",
       "organizationNone": "Keine Organisation",
-      "goal": "Projektziel",
       "techStack": "Tech-Stack",
       "save": "Änderungen speichern",
       "namePlaceholder": "z. B. PDA Web Platform",
       "descriptionPlaceholder": "Was macht dieses Projekt und für wen?",
-      "goalPlaceholder": "Was sollen wir erreicht haben, wenn das Projekt fertig ist?",
-      "goalHint": "Das gemeinsame Ziel des Teams. Wird im Projektkopf angezeigt, wenn es keine Beschreibung gibt.",
-      "techStackHint": "Eingeben und mit Enter oder Komma hinzufügen. Wird als Badge auf der Projektkarte angezeigt.",
-      "techStackPlaceholder": "z. B. Spring Boot",
-      "techStackRemove": "{name} entfernen",
       "unsaved": "Es gibt ungespeicherte Änderungen",
       "discard": "Änderungen verwerfen",
-      "dangerTitle": "Projekt archivieren",
-      "dangerDescription": "Ein archiviertes Projekt kann nicht mehr geändert werden und wird aus aktiven Listen ausgeblendet. Das lässt sich nicht rückgängig machen.",
+      "dangerTitle": "Projekt löschen",
+      "dangerDescription": "Das Projekt und alles darin wird dauerhaft gelöscht. Das lässt sich nicht rückgängig machen.",
       "tagline": "Slogan",
       "taglinePlaceholder": "Beschreiben Sie das Projekt in einem Satz",
       "type": "Projektart",
@@ -576,7 +566,7 @@
         },
         "general": {
           "title": "Allgemein",
-          "description": "Name, Beschreibung und Ziel des Projekts. Sichtbar in Listen und im Projektkopf."
+          "description": "Name, Slogan und Beschreibung des Projekts. Sie erscheinen in der Liste und im Projektkopf."
         },
         "planning": {
           "title": "Planung",
@@ -591,7 +581,22 @@
           "description": "Aktionen, die sich nicht rückgängig machen lassen."
         }
       },
-      "organizationUnavailable": "Verknüpfte Organisation ist archiviert oder nicht verfügbar"
+      "organizationUnavailable": "Verknüpfte Organisation ist archiviert oder nicht verfügbar",
+      "delete": "Projekt löschen",
+      "deleteConfirmTitle": "Dieses Projekt dauerhaft löschen?",
+      "deleteConfirmDescription": "Alle Aufgaben, Sprints, Teams, Einladungen, Chat-Nachrichten, Kommentare, Dateien und Benachrichtigungen dieses Projekts werden dauerhaft gelöscht. Das lässt sich nicht rückgängig machen.",
+      "deleteTypeName": "Geben Sie zur Bestätigung den Projektnamen ein: <strong>{name}</strong>",
+      "deleteConfirm": "Dieses Projekt löschen",
+      "deleted": "Projekt gelöscht.",
+      "techNone": "Noch keine Technologie ausgewählt.",
+      "previewCaption": "So sieht die Karte mit Ihren Änderungen in der Projektliste aus.",
+      "techDialog": {
+        "edit": "Technologien bearbeiten",
+        "title": "Technologien bearbeiten",
+        "description": "Sie können bis zu {max} Technologien wählen. Aktuelle sind vorausgewählt.",
+        "cancel": "Abbrechen",
+        "apply": "Übernehmen"
+      }
     }
   },
   "criteria": {

@@ -103,6 +103,19 @@ export async function createProject(
   return slug;
 }
 
+/** Picks a day in a `DatePicker` (year, then month, then the day cell), the way a person does. */
+export async function chooseDate(page: Page, id: string, date: string) {
+  await page.locator(`#${id}`).click();
+  const calendar = page.locator(`#${id}-calendar`);
+  await calendar.getByRole("combobox", { name: "Yıl", exact: true }).click();
+  await page.getByRole("option", { name: date.slice(0, 4), exact: true }).click();
+  await calendar.getByRole("combobox", { name: "Ay", exact: true }).click();
+  const month = new Intl.DateTimeFormat("tr", { month: "long" }).format(new Date(2024, Number(date.slice(5, 7)) - 1, 1));
+  await page.getByRole("option", { name: month, exact: true }).click();
+  await calendar.locator(`[data-date="${date}"]`).click();
+  await expect(calendar).toHaveCount(0);
+}
+
 /** Finds this project's card even when a reused E2E account has several pages of projects. */
 export async function openProjectListPage(page: Page, slug: string) {
   const project = (await api(page, "GET", `/projects/by-slug/${slug}`)).json as { id: string };

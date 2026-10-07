@@ -398,6 +398,7 @@ Authorization rule of every sensitive endpoint that exists today:
 | `GET /api/v1/projects/{id}`, `/by-slug/{slug}` | `PROJECT_VIEW` in that project (else `403`) |
 | `PUT /api/v1/projects/{id}` | `PROJECT_UPDATE` |
 | `POST /api/v1/projects/{id}/archive` | `PROJECT_ARCHIVE` |
+| `DELETE /api/v1/projects/{id}` | `PROJECT_ARCHIVE` **and** the caller is the project's founder (`createdBy`); permanent delete, `204`, no body. `401` no session, `403` CSRF missing / not a member / not a Project Manager / not the founder, `404` unknown or archived project. No global `ADMIN` bypass; a second Project Manager is refused |
 | `GET /api/v1/projects/{id}/members`, `/members/{userId}` | `PROJECT_VIEW` |
 | `POST|PUT|DELETE .../members/**` (roles, remove member) | `MEMBER_MANAGE`; the last Project Manager cannot be removed |
 | `/api/v1/organizations/**` | organization owner rules (not project roles) |
@@ -911,3 +912,7 @@ Convenience, frontend behavior, development speed, or debugging requirements mus
 Final read-only audit reports6 high total /1 production high. The new production finding is sharp0.35.4, GHSA-wq5f-xc86-pv6w (reviewed2026-10-06), affected<0.35.5/patched0.35.5. Upstream describes conditional librsvg memory vulnerability on glibc Linux while decoding SVG. PDA exploit/runtime reachability was not reproduced; production audit classification alone is not proof. Reviewed source: https://github.com/advisories/GHSA-wq5f-xc86-pv6w .
 
 source-map-js remains patched1.2.2. Existing ESLint/braces5 high dev debt remains. Squad modernization does not update package/lock/ENV; separate compatible sharp patch review is needed before release, no waiver. Earlier5/production0 counts are historical.
+
+## Permanent project deletion (2026-10-07)
+
+`DELETE /api/v1/projects/{projectId}` is the only path that removes a project row. Order in `ProjectService.delete`: `PROJECT_ARCHIVE` check (`403`) -> row lock of an active project (`404`, so an archived or unknown project never reveals itself) -> founder check (`createdBy` equals the caller, else `403`) -> `ProjectDeletedEvent` -> delete + flush. The role matrix (`RolePolicy`) is unchanged and no permission was added; the founder rule follows the task-management-mode precedent. Children go through the database (`V58` `ON DELETE CASCADE`), so modules never delete each other's tables; the notification module removes the project's notifications in the same transaction through a synchronous `@EventListener`. Nobody is notified. The frontend only offers the button to the founder, the server decides. CSRF, cookie auth and the URL whitelist are unchanged apart from the new `DELETE /api/v1/projects/*` row in `SecurityBaselineConfiguration` (authenticated; the authorization above is in the service).
