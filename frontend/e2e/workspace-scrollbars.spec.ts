@@ -1,17 +1,15 @@
 import { test, expect } from "@playwright/test";
 import path from "node:path";
-import { readFileSync } from "node:fs";
-import { MANAGER_USER_FILE } from "./global-setup";
-import { login } from "./helpers";
+import { MEMBER_STORAGE } from "./global-setup";
 
 // Real scrollbar paint must be visible in this visual acceptance case.
 test.use({ launchOptions: { ignoreDefaultArgs: ["--hide-scrollbars"] } });
 
 test("workspace document/sidebar blue scrollbars exclude nested form/chat/modal surfaces across themes and locales", async ({ browser }) => {
   test.setTimeout(120_000);
-  const context = await browser.newContext(), page = await context.newPage();
+  const context = await browser.newContext({ storageState: MEMBER_STORAGE }), page = await context.newPage();
   try {
-    const manager = JSON.parse(readFileSync(MANAGER_USER_FILE, "utf8")); await login(page, manager.email, manager.password);
+    // Layout acceptance reuses a real session; login/account-switch behavior has separate coverage.
     for (const locale of ["tr", "en", "de"]) {
       for (const dark of [false, true]) {
         await page.goto(`/${locale}/account`); await expect(page.locator("#main-content")).toBeVisible();
