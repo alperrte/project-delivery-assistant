@@ -69,11 +69,13 @@ public class NotificationController {
     public record NotificationResponse(UUID id, NotificationType type, String title, String message,
                                        boolean read, Instant createdAt, Instant readAt, UUID actorUserId,
                                        UUID projectId, ResourceType resourceType, UUID resourceId,
-                                       TaskStatusChange statusChange, TeamDeletion teamDeletion, Instant popupPresentedAt) {
+                                       TaskStatusChange statusChange, TeamDeletion teamDeletion,
+                                       RepositoryCommits repositoryCommits, Instant popupPresentedAt) {
         static NotificationResponse from(Notification n) {
             return new NotificationResponse(n.getId(), n.getType(), n.getTitle(), n.getMessage(),
                     n.isRead(), n.getCreatedAt(), n.getReadAt(), n.getActorUserId(), n.getProjectId(),
-                    n.getResourceType(), n.getResourceId(), n.getStatusChange(), n.getTeamDeletion(), n.getPopupPresentedAt());
+                    n.getResourceType(), n.getResourceId(), n.getStatusChange(), n.getTeamDeletion(),
+                    n.getRepositoryCommits(), n.getPopupPresentedAt());
         }
     }
 }

@@ -20,6 +20,10 @@ public class NotificationWriter {
             repository.save(factory.statusChanged(recipient, actor, project, task, change));
     }
     @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void saveRepositoryCommits(UUID recipient, UUID project, RepositoryCommits commits) {
+        if (recipient != null) repository.save(factory.repositoryCommits(recipient, project, commits));
+    }
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void save(UUID recipient, UUID actor, UUID project, ResourceType resourceType, UUID resource,
                      NotificationType type) {
         if (recipient != null && !recipient.equals(actor))
