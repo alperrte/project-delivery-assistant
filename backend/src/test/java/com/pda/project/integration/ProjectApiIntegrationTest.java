@@ -236,7 +236,7 @@ class ProjectApiIntegrationTest {
         assertTrue(projectAccess.rolesForUserInProject(projectId, manager.id()).isEmpty());
         mvc.perform(delete("/api/v1/projects/" + projectId).cookie(csrf, manager.access())
                         .header("X-XSRF-TOKEN", csrf.getValue()))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -401,6 +401,81 @@ class ProjectApiIntegrationTest {
         }
         mvc.perform(get("/api/v1/projects/" + projectId).cookie(developer.access())).andExpect(status().isOk());
         assertNull(projects.findById(projectId).orElseThrow().getArchivedAt());
+    }
+
+    @Test
+    void onlyTheFounderCanPermanentlyDeleteAProjectAndItsDataAndNotificationsGoWithIt() throws Exception {
+        Cookie csrf = csrfCookie();
+        Account founder = account("delfounder");
+        Account coManager = account("delcomanager");
+        Account developer = account("deldeveloper");
+        Account outsider = account("deloutsider");
+        UUID projectId = createProject(founder, csrf, "Delete me");
+        UUID otherProjectId = createProject(founder, csrf, "Keep me");
+        memberships.addMember(founder.id(), projectId, coManager.id(), Set.of(ProjectRole.PROJECT_MANAGER));
+        memberships.addMember(founder.id(), projectId, developer.id(), Set.of(ProjectRole.FULL_STACK_DEVELOPER));
+        String slug = jdbc.queryForObject("SELECT slug FROM projects WHERE id=?", String.class, projectId);
+        String path = "/api/v1/projects/" + projectId;
+        UUID doomedNotification = notification(developer.id(), projectId);
+        UUID keptNotification = notification(developer.id(), otherProjectId);
+        UUID unscopedNotification = notification(developer.id(), null);
+
+        mvc.perform(delete(path).cookie(csrf, founder.access())).andExpect(status().isForbidden());
+        mvc.perform(delete(path).cookie(csrf).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(delete(path).cookie(csrf, outsider.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isForbidden());
+        mvc.perform(delete(path).cookie(csrf, developer.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isForbidden());
+        // Another active manager has PROJECT_ARCHIVE too, but only the founder may delete.
+        mvc.perform(delete(path).cookie(csrf, coManager.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isForbidden());
+        mvc.perform(delete("/api/v1/projects/" + UUID.randomUUID()).cookie(csrf, founder.access())
+                        .header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isForbidden());
+        assertEquals(1, jdbc.queryForObject("SELECT count(*) FROM projects WHERE id=?", Integer.class, projectId));
+        assertEquals(3, jdbc.queryForObject("SELECT count(*) FROM project_memberships WHERE project_id=?", Integer.class, projectId));
+
+        mvc.perform(delete(path).cookie(csrf, founder.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isNoContent());
+
+        assertEquals(0, jdbc.queryForObject("SELECT count(*) FROM projects WHERE id=?", Integer.class, projectId));
+        assertEquals(0, jdbc.queryForObject("SELECT count(*) FROM project_memberships WHERE project_id=?", Integer.class, projectId));
+        assertEquals(0, jdbc.queryForObject("SELECT count(*) FROM project_task_counters WHERE project_id=?", Integer.class, projectId));
+        assertEquals(0, jdbc.queryForObject("SELECT count(*) FROM notifications WHERE id=?", Integer.class, doomedNotification));
+        assertEquals(1, jdbc.queryForObject("SELECT count(*) FROM notifications WHERE id=?", Integer.class, keptNotification));
+        assertEquals(1, jdbc.queryForObject("SELECT count(*) FROM notifications WHERE id=?", Integer.class, unscopedNotification));
+        assertEquals(1, jdbc.queryForObject("SELECT count(*) FROM projects WHERE id=?", Integer.class, otherProjectId));
+        mvc.perform(get(path).cookie(founder.access())).andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/projects/by-slug/" + slug).cookie(founder.access())).andExpect(status().isNotFound());
+        mvc.perform(get("/api/v1/projects").cookie(founder.access()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(1));
+        // Deleting twice is a plain denial, and the name is free to use again.
+        mvc.perform(delete(path).cookie(csrf, founder.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isForbidden());
+        assertNotNull(createProject(founder, csrf, "Delete me"));
+    }
+
+    @Test
+    void anArchivedProjectCannotBeDeletedAndSurvivesTheAttempt() throws Exception {
+        Cookie csrf = csrfCookie();
+        Account founder = account("delarchived");
+        UUID projectId = createProject(founder, csrf, "Archived then delete");
+        mvc.perform(post("/api/v1/projects/" + projectId + "/archive").cookie(csrf, founder.access())
+                        .header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isNoContent());
+        mvc.perform(delete("/api/v1/projects/" + projectId).cookie(csrf, founder.access())
+                        .header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isNotFound());
+        assertNotNull(projects.findById(projectId).orElseThrow().getArchivedAt());
+    }
+
+    private UUID notification(UUID recipient, UUID projectId) {
+        UUID id = UUID.randomUUID();
+        jdbc.update("INSERT INTO notifications(id,recipient_user_id,type,title,message,created_at,resource_type,resource_id,project_id) "
+                + "VALUES (?, ?, 'PROJECT_MEMBER_ADDED', 'Title', 'Message', now(), 'PROJECT', ?, ?)",
+                id, recipient, projectId == null ? UUID.randomUUID() : projectId, projectId);
+        return id;
     }
 
     @Test

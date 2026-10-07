@@ -91,3 +91,27 @@ Conversation base alt?nda `PUT|DELETE /messages/{messageId}/reactions/{emojiCode
 ## Organization–Project association remediation (2026-10-05)
 
 Project POST optional organizationId→null; full PUT omitted/null clears, same preserves, changed non-null requires active owned target. Existing owner row lock serializes new association with archive; project membership/permissions stay independent. Org archive retains FK; Home200 organization:null is the non-throwing absent/archived branch. Active Home summary adds safe `canViewOrganization` navigation hint; owner-only profile/media authorization remains backend-enforced. UI none sentinel never goes on the wire; settings explicit null maps to standalone. Full method/body/status/error/Swagger contract is in SECURITY §11 and remediation completion.
+
+
+## Task progress and manager notifications (2026-10-06, backend)
+
+Existing PATCH /api/v1/projects/{projectId}/tasks/{taskId}/status keeps TASK_MANAGE or assigned TASK_WORK, active-project membership, cookie and CSRF requirements. SIMPLE additionally allows BACKLOG -> IN_PROGRESS and IN_PROGRESS -> DONE; TODO -> IN_PROGRESS and DONE -> IN_PROGRESS remain supported. ADVANCED retains the review/testing workflow. Repeating the current status is a no-op with no extra history, activity or notification.
+
+A successful IN_PROGRESS or DONE transition adds this project's active PROJECT_MANAGER memberships to the existing assignee/watcher recipients, deduplicated and excluding the actor. Other transitions retain follower-only delivery. Events publish in the status transaction and notifications are written AFTER_COMMIT. The public event carries status names as strings and immutable task/nickname display snapshots; consumers do not import Task persistence types or internal enums.
+
+Notification type remains TASK_STATUS_CHANGED. GET /api/v1/notifications and PATCH /api/v1/notifications/{notificationId}/read add nullable statusChange{previousStatus,newStatus,taskKey,taskTitle,actorNickname}; old records/events have null. actorUserId/projectId/resourceId remain unchanged. Snapshot text does not follow subsequent task renames. Existing English title/message also describe started/completed work, and the frontend can localize from statusChange. No new endpoint, role, dependency or environment setting.
+
+## Squad modernization API contracts - 2026-10-06
+
+- Existing `DELETE /api/v1/projects/{p}/teams/{t}`: active PROJECT_MANAGER/SQUAD_MANAGE + CSRF, no body,204. Existing legacy squad archive routes delegate to the same delete use-case. Missing/deleted/wrong-project404; children/orphan409 (`TEAM_HAS_CHILDREN`, `TEAM_ARCHIVE_WOULD_ORPHAN`); unauthorized/CSRF403. Retained rows/FKs, pending invitations CANCELLED or elapsed EXPIRED, no project/task/membership cascade. Existing archived-target pool claim/release semantics retained.
+- Own `POST /api/v1/notifications/team-deletions/claim`: cookie session+CSRF, no body/actor/ID;200 one NotificationResponse or204. Nonempty body400; unauthenticated401; CSRF403. Private/no-store. Oldest unread/unpresented SQUAD_DELETED row gets an atomic presentation timestamp; read/unread stays separate. This grants at-most-once presentation, not guaranteed visual delivery after a lost response.
+- Existing own notification list/count/read/read-all contracts remain. Additive nullable `teamDeletion={projectName,teamName,actorNickname,occurredAt}` and `popupPresentedAt`; SQUAD_DELETED/resource SQUAD.
+- Authorized team `memberPreview` adds nullable real firstName/lastName; bounded newest5 batch data, no email/global directory expansion. Manager invitation list adds nullable invitedByNickname/invitedByPhotoVersion/profilePhotoVersion from one authorized page batch; no token in list responses.
+- Swagger: `/swagger-ui/index.html`, `/v3/api-docs`; normal login/CSRF. Safe inputs: create team `{"name":"Example Team","includeCreator":true}`; delete/claim have no body.
+
+## Kalıcı proje silme (2026-10-07)
+
+- `DELETE /api/v1/projects/{projectId}`: çerez oturumu + CSRF, gövde yok, `204`. Yalnız projenin kurucusu (`createdBy`, hâlâ aktif `PROJECT_MANAGER`) silebilir; eş yönetici, üye, üye olmayan ve CSRF'siz istek `403`, oturumsuz `401`, bilinmeyen veya arşivli proje `404`. Silme geri alınamaz: görevler, ekipler, davetler, sohbetler, sprintler, kriterler, hatırlatıcılar, depo bağlantısı, logo/banner ve projenin bildirimleri gider. Aynı adla yeni proje oluşturulabilir.
+- `POST /api/v1/projects/{id}/archive` backend'de durur; arayüz artık kullanmaz.
+- `PUT /api/v1/projects/{id}` tam güncellemedir: arayüz `projectGoal` alanını artık düzenlemez ama kayıtlı değeri aynen geri gönderir.
+- Swagger: `/swagger-ui/index.html` (`API_DOCS_ENABLED=true`), normal giriş + `GET /api/v1/auth/csrf`; güvenli deneme için önce kendi açtığınız bir deneme projesini silin.
