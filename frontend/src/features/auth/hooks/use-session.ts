@@ -3,10 +3,11 @@ import { authApi } from "../api";
 
 export const sessionQueryKey = ["session"] as const;
 
-export function useSession() {
+export function useSession(enabled = true) {
   return useQuery({
     queryKey: sessionQueryKey,
-    queryFn: authApi.me,
+    queryFn: ({ signal }) => authApi.me(signal),
     retry: false,
+    enabled,
   });
 }

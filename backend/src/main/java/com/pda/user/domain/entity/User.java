@@ -24,6 +24,7 @@ import java.util.UUID;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @Entity
+@org.hibernate.annotations.DynamicUpdate
 @Table(name = "users", uniqueConstraints = {
         @UniqueConstraint(name = "uk_users_email", columnNames = "email"),
         @UniqueConstraint(name = "uk_users_nickname", columnNames = "nickname")
@@ -91,6 +92,11 @@ public class User {
 
     public void profilePhotoRemoved() {
         this.profilePhotoUpdatedAt = null;
+    }
+
+    public void renameNickname(String value) {
+        if (!com.pda.user.domain.NicknameRules.valid(value)) throw new IllegalArgumentException("Invalid nickname");
+        this.nickname = value;
     }
 
     public static User registerLocal(String email, String nickname, String rawPassword,

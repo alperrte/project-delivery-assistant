@@ -17,7 +17,7 @@ test("the navbar's account menu opens Hesap ayarları with the account details a
   await expect(page).toHaveURL(/\/tr\/hesap$/);
   await expect(page.getByRole("heading", { level: 1, name: "Hesap ayarları" })).toBeVisible();
   const main = page.locator("#main-content");
-  await expect(main.getByText(manager.nickname, { exact: true })).toBeVisible();
+  await expect(main.getByRole("textbox", { name: "Kullanıcı adı", exact: true })).toHaveValue(manager.nickname);
   await expect(main.getByText(manager.email, { exact: true })).toBeVisible();
   await expect(main.getByRole("button", { name: "Şifreyi güncelle" })).toBeVisible();
   // The interface choices are not here: they are on Settings.

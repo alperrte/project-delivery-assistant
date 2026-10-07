@@ -1236,7 +1236,18 @@
     "profile": "Profile",
     "nickname": "Username",
     "email": "Email",
-    "security": "Security"
+    "security": "Security",
+    "nicknameEdit": {
+      "label": "Username",
+      "hint": "3–32 letters, numbers or underscores. Case-sensitive.",
+      "save": "Save username",
+      "saving": "Saving…",
+      "cancel": "Cancel",
+      "saved": "Username updated.",
+      "taken": "This username is already in use.",
+      "invalid": "Use 3–32 letters, numbers or underscores.",
+      "failed": "Could not save username. Try again."
+    }
   },
   "changePassword": {
     "title": "Update your password",
@@ -1319,7 +1330,14 @@
       "back": "Go to previous page",
       "forward": "Go to next page",
       "label": "Page history",
-      "unavailable": "History information is unavailable in this browser; use the browser arrows."
+      "unavailable": "History information is unavailable in this browser; use the browser arrows.",
+      "reasons": {
+        "pending": "Preparing history.",
+        "unauthenticated": "Verifying the workspace session.",
+        "unavailable": "Safe workspace history cannot be verified in this browser; browser arrows remain available.",
+        "boundary": "This direction leaves the workspace.",
+        "noSafeEntry": "No safe workspace entry in this direction."
+      }
     }
   },
   "tasks": {

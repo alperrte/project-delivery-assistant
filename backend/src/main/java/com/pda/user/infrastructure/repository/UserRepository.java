@@ -13,6 +13,9 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 
 public interface UserRepository extends JpaRepository<User, UUID> {
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select u from User u where u.id = :id and u.accountStatus = com.pda.user.domain.enums.AccountStatus.ACTIVE")
+    Optional<User> lockActiveProfile(UUID id);
     Optional<User> findByEmail(String email);
     Optional<User> findByEmailIgnoreCase(String email);
     boolean existsByEmail(String email);

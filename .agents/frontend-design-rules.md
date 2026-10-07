@@ -281,3 +281,9 @@ My tasks uses semantic card/background/border tokens and a responsive square gri
 ## Squad/main notification merge integration - 2026-10-06
 
 NotificationsMenu is a compatibility entry point delegating to the single NotificationCenter/session owner. Actor-scoped AbortSignal/cache cleanup and atomic team-deletion popup claims stay intact. Open own history polls15s; unread count/team claim use30s foreground cadence. Task notifications retain localized start/completion snapshots and relative timestamps, mark read and open the existing task/taskProject dialog URL. Task navigation suppresses old popup focus return; normal Escape restores the bell. Header placement/demo isolation are unchanged. Scoped merged validation: lint/type/build and34 Chromium PASS; existing historical delivery counts are not reused as merge proof.
+
+## Frontend foundation UI - 2026-10-07
+
+Account SettingsSection gains labeled own nickname input/save/cancel with dirty/busy/error associations and44px actions, existing photo/email/password kept. Backend existing alphabet/case/Unicode rules apply; all new copy TR/EN/DE. Navbar stays viewport-centered with existing128/72 reserve; touch now shares700ms idle as explicitly approved. Focus/owned menu/search/drawer prevent hide. History native disabled states expose directional localized safe-boundary/unavailable reasons.
+
+Workspace primary remains monochrome; scrollbar thumb uses existing semantic label-blue through workspace-scrollbar alias, hover palette mix and transparent track. Only document/root and actual sidebar/drawer boxes opt in; body inheritance reset stops descendant leakage. Standard thin/color + WebKit fallback, forced-colors auto; no hidden scrollbar or main scroll reparent. Screenshot native viewport thumb paint, both themes/three languages and320-1440 bounds verified; Firefox real visual test not claimed.

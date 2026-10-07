@@ -109,3 +109,7 @@ Notification type remains TASK_STATUS_CHANGED. GET /api/v1/notifications and PAT
 - Existing own notification list/count/read/read-all contracts remain. Additive nullable `teamDeletion={projectName,teamName,actorNickname,occurredAt}` and `popupPresentedAt`; SQUAD_DELETED/resource SQUAD.
 - Authorized team `memberPreview` adds nullable real firstName/lastName; bounded newest5 batch data, no email/global directory expansion. Manager invitation list adds nullable invitedByNickname/invitedByPhotoVersion/profilePhotoVersion from one authorized page batch; no token in list responses.
 - Swagger: `/swagger-ui/index.html`, `/v3/api-docs`; normal login/CSRF. Safe inputs: create team `{"name":"Example Team","includeCreator":true}`; delete/claim have no body.
+
+## Frontend foundation own nickname API - 2026-10-07
+
+PUT `/api/v1/users/me/profile`, authenticated active principal+CSRF, body `{"nickname":"Yeni_ad"}` only; unknown identity/role/email fields400. Returns200 existing own AuthenticatedUser/private,no-store. Invalid request400 codeNICKNAME_INVALID; exact duplicate409 NICKNAME_TAKEN. Foreign /users/{id}/profile deny-all403; session401/CSRF403 and existing forced-password restriction retained. Existing /auth/me returns fresh name; UUID/email/session/token/provider identity unchanged. Unicode White_Space trim, letters/numbers/underscore3-32 codepoints, existing case-sensitive unique constraint; no NFC/casefold/reserved list/backfill. Swagger existing `/swagger-ui/index.html` and `/v3/api-docs`, normal session/CSRF.
