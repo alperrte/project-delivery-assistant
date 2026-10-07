@@ -243,6 +243,7 @@ public class SecurityBaselineConfiguration {
                                     "/api/v1/projects/*/logo",
                                     "/api/v1/projects/*/banner").authenticated()
                             .requestMatchers(HttpMethod.DELETE, "/api/v1/organizations/*/logo", "/api/v1/organizations/*/cover",
+                                    "/api/v1/projects/*",
                                     "/api/v1/projects/*/members/*",
                                     "/api/v1/projects/*/logo",
                                     "/api/v1/projects/*/banner",
