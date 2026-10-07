@@ -119,3 +119,12 @@ PUT `/api/v1/users/me/profile`, authenticated active principal+CSRF, body `{"nic
 - `POST /api/v1/projects/{id}/archive` backend'de durur; arayüz artık kullanmaz.
 - `PUT /api/v1/projects/{id}` tam güncellemedir: arayüz `projectGoal` alanını artık düzenlemez ama kayıtlı değeri aynen geri gönderir.
 - Swagger: `/swagger-ui/index.html` (`API_DOCS_ENABLED=true`), normal giriş + `GET /api/v1/auth/csrf`; güvenli deneme için önce kendi açtığınız bir deneme projesini silin.
+
+## GitHub depo yönetimi ve commit bildirimleri (2026-10-07)
+
+- `GET /api/v1/projects/{projectId}/repository/branches` → `{branches:[{name,isDefault,isProtected,headShortSha}],truncated}`; varsayılan dal başta, en çok 100 dal (`truncated`).
+- `GET /api/v1/projects/{projectId}/repository/commits?branch=&author=&page=&limit=` → `[{sha,shortSha,message,author,authorLogin,authorAvatarUrl,committedAt,commitUrl}]`. `branch` yoksa varsayılan dal; `limit` 1..50 (varsayılan 10), `page` 1..10; `author` GitHub kullanıcı adıdır. Eski istemci için geriye uyumludur (iki yeni alan eklendi).
+- `GET /api/v1/projects/{projectId}/repository/compare?branch=` → `{base,branch,aheadBy,behindBy,unmergedCommits[],truncated}`; `unmergedCommits` dalın ana dala girmemiş commit'leridir (en çok 100, `truncated`). Varsayılan dal için sıfır/boş.
+- Hata kodları: `400` geçersiz dal/yazar ya da `REPOSITORY_PRIVATE`; `404` dal/depo bulunamadı; `429` `REPOSITORY_READ_LIMIT` ya da GitHub sınırı (`Retry-After`); `503` GitHub erişilemiyor.
+- Bildirim: `type=REPOSITORY_COMMITS_PUSHED`, `resourceType=PROJECT`, `resourceId=projectId`, `repositoryCommits:{projectName,repositoryFullName,branch,commitCount,truncated,headMessage,headAuthor}`.
+- Swagger: `/swagger-ui/index.html` (`API_DOCS_ENABLED=true`), normal giriş + `GET /api/v1/auth/csrf`; `GET` uçları CSRF istemez.

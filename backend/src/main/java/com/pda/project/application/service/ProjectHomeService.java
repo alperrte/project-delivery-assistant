@@ -40,19 +40,21 @@ public class ProjectHomeService {
     private final ProjectCriterionRepository criteria;
     private final ProjectRepositoryConnectionRepository repositoryConnections;
     private final GitHubRepositoryClient gitHub;
+    private final GitHubReadCache cache;
     private final OrganizationService organizations;
     private final UserAccounts users;
 
     public ProjectHomeService(ProjectRepository projects, ProjectMembershipRepository memberships,
                               ProjectCriterionRepository criteria,
                               ProjectRepositoryConnectionRepository repositoryConnections,
-                              GitHubRepositoryClient gitHub, OrganizationService organizations,
+                              GitHubRepositoryClient gitHub, GitHubReadCache cache, OrganizationService organizations,
                               UserAccounts users) {
         this.projects = projects;
         this.memberships = memberships;
         this.criteria = criteria;
         this.repositoryConnections = repositoryConnections;
         this.gitHub = gitHub;
+        this.cache = cache;
         this.organizations = organizations;
         this.users = users;
     }
@@ -103,9 +105,11 @@ public class ProjectHomeService {
                     GitHubRepositoryClient.CommitSummary lastCommit = null;
                     boolean unavailable = false;
                     try {
-                        List<GitHubRepositoryClient.CommitSummary> commits = gitHub.fetchLatestCommits(
-                                connection.getRepositoryOwner(), connection.getRepositoryName(),
-                                connection.getDefaultBranch(), 1);
+                        List<GitHubRepositoryClient.CommitSummary> commits = cache.get(
+                                "latest:" + connection.getRepositoryOwner() + "/" + connection.getRepositoryName()
+                                        + ":" + connection.getDefaultBranch(),
+                                () -> gitHub.fetchLatestCommits(connection.getRepositoryOwner(),
+                                        connection.getRepositoryName(), connection.getDefaultBranch(), 1));
                         lastCommit = commits.isEmpty() ? null : commits.get(0);
                     } catch (GitHubIntegrationException ex) {
                         unavailable = true;

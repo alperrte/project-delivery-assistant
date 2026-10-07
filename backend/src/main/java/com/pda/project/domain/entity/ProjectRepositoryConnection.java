@@ -65,6 +65,13 @@ public class ProjectRepositoryConnection {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    /** Default-branch tip members were last notified about; null until the first scan writes a baseline. */
+    @Column(name = "notified_head_sha", length = 64)
+    private String notifiedHeadSha;
+
+    @Column(name = "last_scanned_at")
+    private Instant lastScannedAt;
+
     protected ProjectRepositoryConnection() {
         // JPA
     }
@@ -88,6 +95,19 @@ public class ProjectRepositoryConnection {
         this.repositoryName = requiredText(repositoryName, NAME_LIMIT, "repositoryName");
         this.repositoryUrl = requiredText(repositoryUrl, URL_LIMIT, "repositoryUrl");
         this.defaultBranch = requiredText(defaultBranch, BRANCH_LIMIT, "defaultBranch");
+    }
+
+    /** Starts commit tracking from {@code headSha} (may be null): history before the connect is never announced. */
+    public void trackFrom(String headSha) {
+        this.notifiedHeadSha = headSha == null || headSha.isBlank() ? null : headSha.trim();
+        this.lastScannedAt = Instant.now();
+    }
+
+    /** GitHub moved the default branch: take the new name and wait for the next scan to set a fresh baseline. */
+    public void changeDefaultBranch(String defaultBranch) {
+        this.defaultBranch = requiredText(defaultBranch, BRANCH_LIMIT, "defaultBranch");
+        this.notifiedHeadSha = null;
+        this.lastScannedAt = Instant.now();
     }
 
     @PrePersist
@@ -122,4 +142,6 @@ public class ProjectRepositoryConnection {
     public UUID getConnectedBy() { return connectedBy; }
     public Instant getConnectedAt() { return connectedAt; }
     public Instant getUpdatedAt() { return updatedAt; }
+    public String getNotifiedHeadSha() { return notifiedHeadSha; }
+    public Instant getLastScannedAt() { return lastScannedAt; }
 }
