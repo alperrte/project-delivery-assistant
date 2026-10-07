@@ -75,5 +75,6 @@ export const projectsApi = {
     return apiRequest<void>(`/projects/${projectId}/banner`, { method: "PUT", body });
   },
   deleteBanner: (projectId: string) => apiRequest<void>(`/projects/${projectId}/banner`, { method: "DELETE" }),
-  archive: (projectId: string) => apiRequest<void>(`/projects/${projectId}/archive`, { method: "POST" }),
+  /** Permanent: the project and everything in it. Only the project's founder may call it. */
+  remove: (projectId: string) => apiRequest<void>(`/projects/${projectId}`, { method: "DELETE" }),
 };

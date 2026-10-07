@@ -281,3 +281,13 @@ My tasks uses semantic card/background/border tokens and a responsive square gri
 ## Squad/main notification merge integration - 2026-10-06
 
 NotificationsMenu is a compatibility entry point delegating to the single NotificationCenter/session owner. Actor-scoped AbortSignal/cache cleanup and atomic team-deletion popup claims stay intact. Open own history polls15s; unread count/team claim use30s foreground cadence. Task notifications retain localized start/completion snapshots and relative timestamps, mark read and open the existing task/taskProject dialog URL. Task navigation suppresses old popup focus return; normal Escape restores the bell. Header placement/demo isolation are unchanged. Scoped merged validation: lint/type/build and34 Chromium PASS; existing historical delivery counts are not reused as merge proof.
+
+## Proje ayarları ve kalıcı silme (2026-10-07)
+
+- **Sayfa:** `PageContainer width="wide"`, `lg` ve üzerinde 7/5 ızgara: solda bölümler, sağda `ProjectPreviewPanel` (`project-preview-panel.tsx`; oluşturma sayfasıyla ortak, gerçek `ProjectCard` `preview` kipinde, `lg` altında formun altına iner). `<form>` ızgaranın kendisidir; sabit kaydet çubuğu (`data-sticky-actions`) tam genişlikte son çocuktur, düğme grubu `flex-wrap` ile 320 px'te taşmaz, `lg` altında "Önizleme" bağlantısı (`#project-preview`) gösterir.
+- **Proje hedefi** formda yoktur; kayıtlı metin güncellemede aynen geri gönderilir, genel bakış "Proje profili" bloğu `açıklama || hedef || boş metin` gösterir.
+- **Kapak önizlemesi:** `BannerField` kontrollerin üstünde `EntityCover` ile kapağı (yoksa noktalı yedek yüzey) gösterir, `data-testid="project-settings-banner"`.
+- **Tarihler** ortak `components/ui/date-picker.tsx` ile seçilir (`Controller`, `YYYY-MM-DD`); başlangıç değişince bitiş sırası yeniden doğrulanır.
+- **Teknolojiler:** ayarlarda logo + ad chip'leri ve "Teknolojileri düzenle" ile açılan `ProjectTechDialog` (içinde oluşturma ekranındaki `TechPicker`, seçili gelir, "Uygula" forma yazar, kalıcı kayıt kaydet çubuğuyla). Bu dialog, "Dialog yalnız kısa onay içindir" kuralına kullanıcı kararıyla verilmiş bilinçli bir istisnadır; başka uzun form dialogu için emsal değildir.
+- **Silme:** tehlikeli bölge yalnız kurucuya görünür. `ConfirmDialog` `requireText` ile proje adının birebir yazılmasını ister (büyük/küçük harf duyarlı, onay düğmesi eşleşene kadar pasif, kapanınca sıfırlanır); metin neyin gideceğini ve geri alınamadığını söyler. Başarıda toast ve `/projects`.
+- **Kart teknoloji şeridi:** tek satır, `size-8` kare logolar, sarma yok (`flex-nowrap overflow-hidden`), kanonik ada göre tekilleştirilir, en çok 6 + `+N`; katalog dışı etiket baş harfli kare olur, ad tooltip'te ve `aria-label`'dedir.

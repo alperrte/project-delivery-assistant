@@ -29,7 +29,8 @@ import { BannerPickField } from "./create/banner-pick-field";
 import { LogoField } from "./create/logo-field";
 import { TechPicker } from "./create/tech-picker";
 import { TypePicker } from "./create/type-picker";
-import { ProjectCard, type ProjectCardData } from "./project-card";
+import type { ProjectCardData } from "./project-card";
+import { ProjectPreviewPanel } from "./project-preview-panel";
 
 /** Mirrors the server's slug rules closely enough for a hint; the server appends a random suffix. */
 function slugHint(name: string): string {
@@ -294,17 +295,12 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
             </Section>
           </div>
 
-          <aside id="project-preview" aria-label={t("preview.title")} className="scroll-mt-24 lg:col-span-5">
-            <div className="space-y-3 lg:sticky lg:top-24">
-              <div className="space-y-0.5">
-                <h2 className="font-heading text-base font-semibold text-foreground">{t("preview.title")}</h2>
-                <p className="text-sm text-muted-foreground">{t("preview.caption")}</p>
-              </div>
-              <div className="mx-auto max-w-sm lg:max-w-none">
-                <ProjectCard project={previewProject} preview={{ logoSrc: logoUrl, bannerSrc: bannerUrl, updatedLabel: t("preview.now") }} />
-              </div>
-            </div>
-          </aside>
+          <ProjectPreviewPanel
+            title={t("preview.title")}
+            caption={t("preview.caption")}
+            project={previewProject}
+            preview={{ logoSrc: logoUrl, bannerSrc: bannerUrl, updatedLabel: t("preview.now") }}
+          />
         </div>
 
         <div data-sticky-actions className="sticky bottom-0 z-20 -mx-4 -mb-6 mt-10 sm:-mb-8 border-t bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:-mx-8 sm:px-8">

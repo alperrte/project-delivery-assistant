@@ -8,7 +8,7 @@ import { MANAGER_STORAGE, MANAGER_USER_FILE } from "./global-setup";
  *   1. Login -> Create Organization -> Create Project -> creator becomes PROJECT_MANAGER
  *   2. Edit Settings -> Add Criteria -> Complete Criterion
  *   8. Connect Public GitHub Repo -> Latest Commits visible
- *   9. Archive Project
+ *   9. Delete Project (type its name to confirm)
  *
  * Uses the shared manager session from global-setup (no fresh registration here)
  * to keep total /auth/register calls per suite run low.
@@ -87,11 +87,13 @@ test.describe.serial("Project lifecycle (manager)", () => {
     await expect(page.getByRole("listitem").first()).toBeVisible({ timeout: 15_000 });
   });
 
-  test("archive the project", async () => {
+  test("delete the project by typing its name", async () => {
     await page.goto(`/projects/${slug}?section=settings`);
-    await page.getByRole("button", { name: /^Arşivle$/ }).click();
-    await page.getByRole("dialog").getByRole("button", { name: /^Arşivle$/ }).click();
+    await page.getByRole("button", { name: /^Projeyi sil$/ }).click();
+    const dialog = page.getByRole("dialog");
+    await dialog.getByLabel(/Onaylamak için proje adını yazın/).fill(projectName);
+    await dialog.getByRole("button", { name: /^Bu projeyi sil$/ }).click();
     await expect(page).toHaveURL(/\/tr\/projeler$/, { timeout: 15_000 });
-    await expect(page.getByText("Proje arşivlendi.")).toBeVisible();
+    await expect(page.getByText("Proje silindi.")).toBeVisible();
   });
 });
