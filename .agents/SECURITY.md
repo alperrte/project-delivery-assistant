@@ -911,3 +911,11 @@ Convenience, frontend behavior, development speed, or debugging requirements mus
 Final read-only audit reports6 high total /1 production high. The new production finding is sharp0.35.4, GHSA-wq5f-xc86-pv6w (reviewed2026-10-06), affected<0.35.5/patched0.35.5. Upstream describes conditional librsvg memory vulnerability on glibc Linux while decoding SVG. PDA exploit/runtime reachability was not reproduced; production audit classification alone is not proof. Reviewed source: https://github.com/advisories/GHSA-wq5f-xc86-pv6w .
 
 source-map-js remains patched1.2.2. Existing ESLint/braces5 high dev debt remains. Squad modernization does not update package/lock/ENV; separate compatible sharp patch review is needed before release, no waiver. Earlier5/production0 counts are historical.
+
+### Sharp dependency remediation - 2026-10-07
+
+User-approved separate transitive patch sharp0.35.4->0.35.5 via real npm update sharp; Next16.3.6 already permits ^0.35.4, Node24.19.0 meets >=20.9.0. Lock updates only27 sharp/platform/libvips-family entries; unrelated fast-deep-equal metadata normalization reverted. Manifest/application/invitation/backend/config/migrations/ENV unchanged. One scrollbar E2E setup reuses the real shared member session after an actual full-suite login429; assertions and auth quotas unchanged.
+
+GHSA-wq5f-xc86-pv6w closed in installed graph; native runtime reports librsvg2.63.2. Benign PNG/JPEG/WebP/AVIF/SVG/invalid-image smoke6 PASS; no PDA/Linux exploit proof or production rollout claimed. Final clean npm ci PASS; full npm audit5 high/exit1 (existing ESLint/braces dev debt), production0/exit0. Previous6 high/production1 is historical; source-map-js1.2.2 retained. Remaining dev debt is separate, not a release waiver.
+
+21 targeted Chromium+5 fixture/history regressions PASS; lint/type/build and final canonical pre-push exit0:512 backend0 failure/error/skip,291 Chromium+1 expected production crash-route skip, Docker build/start/health. Final Next dev3000/backend8080/Swagger/API docs200. Separate delivery: [sharp remediation](../docs/compliation/2026-10-07-sharp-security-remediation.md).
