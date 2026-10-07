@@ -37,6 +37,28 @@ class TaskDomainTest {
     }
 
     @Test
+    void simpleTasksCanStartFromBacklogAndCompleteWithoutReview() {
+        Task task = create("Simple");
+        task.changeCreationMode(TaskCreationMode.SIMPLE, actor);
+        assertThrows(TaskConflictException.class, () -> task.changeStatus(TaskStatus.DONE, actor));
+        assertTrue(task.changeStatus(TaskStatus.IN_PROGRESS, actor));
+        assertTrue(task.changeStatus(TaskStatus.TODO, actor));
+        assertTrue(task.changeStatus(TaskStatus.IN_PROGRESS, actor));
+        assertTrue(task.changeStatus(TaskStatus.DONE, actor));
+        assertFalse(task.changeStatus(TaskStatus.DONE, actor));
+        assertTrue(task.changeStatus(TaskStatus.IN_PROGRESS, actor));
+    }
+
+    @Test
+    void advancedTasksStillRequireReviewAndTesting() {
+        Task task = create("Advanced");
+        assertThrows(TaskConflictException.class, () -> task.changeStatus(TaskStatus.IN_PROGRESS, actor));
+        task.changeStatus(TaskStatus.TODO, actor);
+        task.changeStatus(TaskStatus.IN_PROGRESS, actor);
+        assertThrows(TaskConflictException.class, () -> task.changeStatus(TaskStatus.DONE, actor));
+    }
+
+    @Test
     void rejectsInvalidDatesEstimatesAndLongText() {
         Task task = create("Title");
         Instant deadline = Instant.parse("2026-10-01T12:00:00Z");

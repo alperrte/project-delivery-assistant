@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import { Archive } from "@phosphor-icons/react";
 import { PageFailure } from "@/features/errors/page-failure";
 import { ApiError } from "@/lib/api/client";
-import { allowsAdvanced } from "../../task-model";
+import { allowsAdvanced, allowsPool } from "../../task-model";
 import { AdvancedReadOnlyNotice } from "../task-mode-picker";
 import { useTask } from "../../hooks";
 import { taskPermissions, type TaskPermissions } from "../../permissions";
@@ -18,6 +18,9 @@ import { PropertiesPanel } from "./properties-panel";
 import { RelationsSection } from "./relations-section";
 import { SubtasksSection } from "./subtasks-section";
 import { TaskHeader } from "./task-header";
+import { StatusBadge, PriorityBadge } from "../task-badges";
+import { TaskModeBadge } from "../task-mode-picker";
+import { TaskProgressAction } from "../my-task-card";
 
 /** An archived task is read only for everybody, including the manager. */
 function permissionsFor(task: Task, userId: string, isManager: boolean): TaskPermissions {
@@ -39,7 +42,7 @@ function Description({ task }: { task: Task }) {
   );
 }
 
-function TaskDetailBody({ slug, project, projectId, isManager, userId, taskId }: ProjectGateContext & { taskId: string }) {
+export function TaskDetailBody({ slug, project, projectId, isManager, userId, taskId, embedded = false, focusComments = false }: ProjectGateContext & { taskId: string; embedded?: boolean; focusComments?: boolean }) {
   const t = useTranslations("tasks.detail");
   const task = useTask(projectId, taskId);
 
@@ -51,11 +54,15 @@ function TaskDetailBody({ slug, project, projectId, isManager, userId, taskId }:
   const data = task.data;
   const advanced = data.creationMode === "ADVANCED";
   const advancedWritable = advanced && allowsAdvanced(project.taskManagementMode);
-  const ctx: DetailContext = { advancedWritable, task: data, slug, projectId, userId, isManager, perms: permissionsFor(data, userId, isManager) };
+  const ctx: DetailContext = { advancedWritable, poolWritable: allowsPool(project.taskManagementMode), task: data, slug, projectId, userId, isManager, perms: permissionsFor(data, userId, isManager) };
 
   return (
     <article aria-label={`${data.taskKey} ${data.title}`}>
-      <TaskHeader {...ctx} projectName={project.name} />
+      {embedded ? <header className="mb-6 space-y-3">
+        <p className="pr-8 text-xs break-words text-muted-foreground">{project.name} · {data.taskKey}</p>
+        <h2 className="pr-8 text-2xl font-semibold break-words">{data.title}</h2>
+        <div className="flex flex-wrap items-center gap-2"><StatusBadge status={data.status} /><TaskModeBadge mode={data.creationMode} /><PriorityBadge priority={data.priority} /><TaskProgressAction task={data} canChange={ctx.perms.work} /></div>
+      </header> : <TaskHeader {...ctx} projectName={project.name} />}
 
       {data.archivedAt && (
         <p role="status" className="mb-6 flex items-center gap-2 rounded-xl border bg-muted px-4 py-3 text-sm text-muted-foreground">
@@ -84,7 +91,7 @@ function TaskDetailBody({ slug, project, projectId, isManager, userId, taskId }:
         <div className="min-w-0 space-y-8 lg:col-span-8 lg:col-start-1 lg:row-start-2">
           {advanced && <RelationsSection {...ctx} />}
           {advanced && <AttachmentsSection {...ctx} />}
-          <ActivitySection {...ctx} />
+          <ActivitySection {...ctx} focusComments={focusComments} />
         </div>
       </div>
     </article>

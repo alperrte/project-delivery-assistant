@@ -13,6 +13,8 @@ import org.springframework.data.domain.Pageable;
  * client-supplied one. Unknown, archived or non-member combinations always answer "no access".
  */
 public interface ProjectAccess {
+    /** Existing exclusive project row lock, before team/invitation locks; caller checks permission before and after. */
+    ProjectTeamContext lockTeamContext(UUID projectId);
     boolean isMember(UUID projectId, UUID userId);
     /** Membership lookup for archived-project conflict classification only; grants no permission. */
     boolean isMemberIncludingArchived(UUID projectId, UUID userId);
@@ -33,6 +35,9 @@ public interface ProjectAccess {
 
     /** Active members of an active project among the supplied IDs, in one lookup. */
     Set<UUID> activeMemberIds(UUID projectId, Set<UUID> userIds);
+
+    /** Active project managers of an active project; global roles confer no membership here. */
+    Set<UUID> managerUserIds(UUID projectId);
 
     /** Safe active membership view; null when absent. Does not grant access by itself. */
     ProjectMemberView member(UUID projectId, UUID userId);

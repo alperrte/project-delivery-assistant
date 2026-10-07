@@ -64,6 +64,12 @@ public class TaskSupport {
             throw new TaskConflictException("TASK_MODE_NOT_ALLOWED", "Advanced features require an advanced task");
     }
 
+    /** Pool assignment is shared by both task models, including tasks retained after a policy change. */
+    public void requirePoolTask(Task task) {
+        if (projects.taskContext(task.getProjectId()).taskManagementMode() == null)
+            throw new TaskConflictException("PROJECT_TASK_MODE_NOT_CONFIGURED", "Project task model has not been chosen");
+    }
+
     public void requirePermission(UUID projectId, UUID actor, ProjectPermission permission) {
         if (!projects.hasPermission(projectId, actor, permission))
             throw new AccessDeniedException("Project permission denied");

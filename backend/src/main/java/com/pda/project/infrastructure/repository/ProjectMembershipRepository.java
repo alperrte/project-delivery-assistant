@@ -15,6 +15,10 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface ProjectMembershipRepository extends JpaRepository<ProjectMembership, UUID> {
+    /** Scalar roles reflect committed changes after a project-lock wait, without a stale attached membership. */
+    @Query("select r from ProjectMembership m join m.roles r where m.projectId=:projectId and m.userId=:userId "
+            + "and m.status=com.pda.project.domain.enums.MembershipStatus.ACTIVE")
+    List<ProjectRole> activeRoles(UUID projectId, UUID userId);
 
     Optional<ProjectMembership> findByProjectIdAndUserId(UUID projectId, UUID userId);
 
@@ -39,6 +43,7 @@ public interface ProjectMembershipRepository extends JpaRepository<ProjectMember
     Page<ProjectMembership> findByProjectIdAndStatus(UUID projectId, MembershipStatus status,
                                                      Pageable pageable);
 
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = "roles")
     List<ProjectMembership> findByProjectIdAndIdInAndStatus(UUID projectId, Collection<UUID> ids,
                                                             MembershipStatus status);
 

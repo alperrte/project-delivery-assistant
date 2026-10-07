@@ -102,7 +102,7 @@ class TaskModesApiIntegrationTest extends TaskTestBase {
             ",\"estimatePoints\":3", ",\"timeEstimateMinutes\":30",
             ",\"parentTaskId\":\"00000000-0000-0000-0000-000000000001\"",
             ",\"sprintId\":\"00000000-0000-0000-0000-000000000001\"",
-            ",\"labelIds\":[\"00000000-0000-0000-0000-000000000001\"]", ",\"pool\":{\"open\":true}"
+            ",\"labelIds\":[\"00000000-0000-0000-0000-000000000001\"]"
     })
     void simpleCreateRejectsEveryAdvancedPayload(String extra) throws Exception {
         Account owner = account("payload");
@@ -147,9 +147,9 @@ class TaskModesApiIntegrationTest extends TaskTestBase {
         UUID target = task(project, owner, "ADVANCED");
         if (scenario.equals("CLOSED_PROJECT")) policy(project, owner, "SIMPLE");
         String base = tasksUrl(project) + "/" + task;
-        String[] posts = {"/checklist", "/worklogs", "/relations", "/claim", "/release"};
+        String[] posts = {"/checklist", "/worklogs", "/relations"};
         String[] jsons = {"{\"text\":\"Item\"}", "{\"minutes\":30,\"workDate\":\"" + LocalDate.now() + "\"}",
-                "{\"type\":\"RELATES\",\"targetTaskId\":\"" + target + "\"}", null, null};
+                "{\"type\":\"RELATES\",\"targetTaskId\":\"" + target + "\"}"};
         for (int i=0; i<posts.length; i++) send(post(base + posts[i]), owner, jsons[i])
                 .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("TASK_MODE_NOT_ALLOWED"));
         send(put(base + "/watch"), owner, null).andExpect(status().isConflict());
@@ -258,9 +258,10 @@ class TaskModesApiIntegrationTest extends TaskTestBase {
         read(tasksUrl(project) + "?creationMode=UNKNOWN", owner).andExpect(status().isBadRequest());
         read("/api/v1/tasks/pool?projectId=" + project, owner).andExpect(jsonPath("$.totalElements").value(1));
         policy(project, owner, "SIMPLE");
-        read("/api/v1/tasks/pool?projectId=" + project, owner).andExpect(jsonPath("$.totalElements").value(0));
-        send(post(tasksUrl(project) + "/" + pooled + "/claim"), owner, null).andExpect(status().isConflict());
-        read(tasksUrl(project) + "/" + pooled, owner).andExpect(jsonPath("$.pool.open").value(true));
+        read("/api/v1/tasks/pool?projectId=" + project, owner).andExpect(jsonPath("$.totalElements").value(1));
+        send(post(tasksUrl(project) + "/" + pooled + "/claim"), owner, null).andExpect(status().isOk());
+        read(tasksUrl(project) + "/" + pooled, owner).andExpect(jsonPath("$.pool.claimed").value(true));
+        send(post(tasksUrl(project) + "/" + pooled + "/release"), owner, null).andExpect(status().isOk());
         send(delete(tasksUrl(project) + "/" + simple), owner, null).andExpect(status().isNoContent());
         read(tasksUrl(project) + "?creationMode=SIMPLE", owner).andExpect(jsonPath("$.totalElements").value(1));
     }
@@ -322,8 +323,8 @@ class TaskModesApiIntegrationTest extends TaskTestBase {
         } finally { release.countDown(); }
     }
 
-    @ParameterizedTest @ValueSource(strings = {"LABEL", "CHILD", "ARCHIVED_CHILD", "RELATION_SOURCE", "RELATION_TARGET", "ATTACHMENT", "WORKLOG", "POOL"})
-    void conversionChecksRelatedTablesAndPoolInsteadOfOnlyFormFields(String data) throws Exception {
+    @ParameterizedTest @ValueSource(strings = {"LABEL", "CHILD", "ARCHIVED_CHILD", "RELATION_SOURCE", "RELATION_TARGET", "ATTACHMENT", "WORKLOG"})
+    void conversionChecksRelatedTablesInsteadOfOnlyFormFields(String data) throws Exception {
         Account owner = account("stored");
         UUID project = project(owner, "Stored " + data);
         UUID task = task(project, owner, "ADVANCED");
@@ -348,7 +349,6 @@ class TaskModesApiIntegrationTest extends TaskTestBase {
                     .file(new org.springframework.mock.web.MockMultipartFile("file", "keep.txt", "text/plain", "Keep".getBytes())), owner, null)
                     .andExpect(status().isCreated());
             case "WORKLOG" -> send(post(base + "/worklogs"), owner, "{\"minutes\":30,\"workDate\":\"" + LocalDate.now() + "\"}").andExpect(status().isCreated());
-            case "POOL" -> send(patch(base), owner, update(",\"pool\":{\"open\":true}")).andExpect(status().isOk());
             default -> throw new AssertionError(data);
         }
         send(patch(base), owner, update(",\"creationMode\":\"SIMPLE\"")).andExpect(status().isConflict())
@@ -392,7 +392,7 @@ class TaskModesApiIntegrationTest extends TaskTestBase {
                 null, null, null, null, null, mode, Set.of());
     }
 
-    @Test void explicitPoolCleanupClearsRetainedTeamAndClaimWithoutRemovingPeople() throws Exception {
+    @Test void conversionPreservesClaimedPoolAndSimplePolicyAllowsExplicitCleanupWithoutRemovingPeople() throws Exception {
         Account owner = account("clearteam");
         UUID project = project(owner, "Pool cleanup");
         UUID team = id(send(post("/api/v1/projects/" + project + "/teams"), owner,
@@ -401,16 +401,38 @@ class TaskModesApiIntegrationTest extends TaskTestBase {
         UUID task = createTask(project, owner, "{\"title\":\"Claimed\",\"pool\":{\"open\":true,\"teamId\":\"" + team + "\"}}");
         String base = tasksUrl(project) + "/" + task;
         send(post(base + "/claim"), owner, null).andExpect(status().isOk()).andExpect(jsonPath("$.pool.claimed").value(true));
-        send(patch(base), owner, update(",\"creationMode\":\"SIMPLE\"")).andExpect(status().isConflict());
+        send(patch(base), owner, update(",\"creationMode\":\"SIMPLE\"")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.pool.teamId").value(team.toString())).andExpect(jsonPath("$.pool.claimed").value(true));
         policy(project, owner, "SIMPLE");
-        send(patch(base), owner, update(",\"pool\":{\"open\":false,\"teamId\":null}")).andExpect(status().isConflict());
         read(base, owner).andExpect(jsonPath("$.pool.teamId").value(team.toString())).andExpect(jsonPath("$.pool.claimed").value(true));
-        policy(project, owner, "BOTH");
         send(patch(base), owner, update(",\"pool\":{\"open\":false,\"teamId\":null}")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.pool.teamId").isEmpty()).andExpect(jsonPath("$.pool.claimed").value(false))
                 .andExpect(jsonPath("$.assigneeIds[0]").value(owner.id().toString()));
         send(patch(base), owner, update(",\"creationMode\":\"SIMPLE\"")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.creationMode").value("SIMPLE"));
+    }
+
+    @Test void simplePoolCanBeOpenedUpdatedAndConvertedWithoutDroppingAssignmentScope() throws Exception {
+        Account owner = account("simplepool");
+        UUID project = project(owner, "Shared pool");
+        UUID team = id(send(post("/api/v1/projects/" + project + "/teams"), owner,
+                "{\"name\":\"Shared team\",\"includeCreator\":true}").andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString());
+        UUID task = task(project, owner, "SIMPLE");
+        String base = tasksUrl(project) + "/" + task;
+        policy(project, owner, "SIMPLE");
+        send(patch(base), owner, update(",\"pool\":{\"open\":true,\"teamId\":\"" + team + "\"}")).andExpect(status().isOk());
+        send(patch(base), owner, update(",\"pool\":{\"open\":true,\"teamId\":null}")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.pool.open").value(true)).andExpect(jsonPath("$.pool.teamId").isEmpty());
+        policy(project, owner, "BOTH");
+        send(patch(base), owner, update(",\"creationMode\":\"ADVANCED\"")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.pool.open").value(true));
+        send(patch(base), owner, update(",\"creationMode\":\"SIMPLE\"")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.pool.open").value(true));
+        policy(project, owner, "ADVANCED");
+        send(post(base + "/claim"), owner, null).andExpect(status().isOk())
+                .andExpect(jsonPath("$.creationMode").value("SIMPLE"));
+        send(post(base + "/release"), owner, null).andExpect(status().isOk());
     }
 
     @Test void creationWaitingBehindPolicyChangeUsesCommittedPolicy() throws Exception {

@@ -111,7 +111,7 @@ export function AssigneePicker({ projectId, userId, value, onChange, max, known 
   const source = teamId === ALL_MEMBERS ? everyone : teamMembers;
   const people: PersonRef[] = (source.data ?? []).map((member) => ({ userId: member.userId, nickname: member.nickname }));
   const needle = query.trim().toLowerCase();
-  const visible = needle ? people.filter((person) => (person.nickname ?? "").toLowerCase().includes(needle)) : people;
+  const visible = people.filter(person => person.userId !== userId && (!needle || (person.nickname ?? "").toLowerCase().includes(needle)));
 
   const names = new Map<string, PersonRef>();
   for (const person of [...known, ...(everyone.data ?? []).map((member) => ({ userId: member.userId, nickname: member.nickname }))]) {

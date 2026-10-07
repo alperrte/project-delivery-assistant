@@ -33,8 +33,8 @@ export function TaskModePicker({ value, policy, userId, onChange }: { value: Tas
   }
   return <>
     <div className="mb-8 flex flex-wrap items-center gap-3">
-      <div role="group" aria-label={t("type")} className="flex gap-1 rounded-lg border bg-muted/40 p-1">
-        {(["SIMPLE", "ADVANCED"] as const).map((mode) => <Button key={mode} type="button" variant={value === mode ? "secondary" : "ghost"} aria-pressed={value === mode} disabled={value !== mode && !allowsCreation(policy, mode)} onClick={() => select(mode)}>{t(`mode.${mode}`)}</Button>)}
+      <div role="group" aria-label={t("type")} className="flex min-w-0 max-w-full gap-1 rounded-lg border bg-muted/40 p-1">
+        {(["SIMPLE", "ADVANCED"] as const).map((mode) => <Button key={mode} type="button" className="h-auto min-h-10 min-w-0 shrink whitespace-normal px-3 py-2" variant={value === mode ? "secondary" : "ghost"} aria-pressed={value === mode} disabled={value !== mode && !allowsCreation(policy, mode)} onClick={() => select(mode)}>{t(`mode.${mode}`)}</Button>)}
       </div>
       <Button type="button" variant="ghost" size="icon" aria-label={t("help")} onClick={() => { setPending(null); setOpen(true); }}><Info size={20} aria-hidden="true" /></Button>
     </div>

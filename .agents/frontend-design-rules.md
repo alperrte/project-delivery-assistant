@@ -255,3 +255,29 @@ Create/settings always expose a none/standalone option using existing Select/tok
 ## 2026-10-06 Chat action menu / workspace history
 
 Confirmed chat bubble tek absolute chevron taşır; kalıcı own/other gutter metni korur, hover/open ölçüleri değiştirmez. Bubble → reaction chips (mt1/4px) → timestamp; action flow row yok. Existing nonmodal Menu close-complete reply composer veya aynı chevron anchorındaki reaction picker’a focus handoff yapar; Escape önce açık layer’ı tüketir. Composer24/caret ve reaction6/version behavior değişmez. Mobil44px hit area, viewport collision, token/theme/i18n ve native text selection korunur.
+
+
+## Task form date picker (2026-10-06)
+
+Task create/edit dates use the shared `components/ui/date-picker.tsx`: existing Base UI Popover/Button/Select, Lucide icons and semantic tokens, without a new calendar dependency. TR/EN/DE use Monday-first calendars with month/year navigation, selected/today state and today/clear actions. Local date strings remain YYYY-MM-DD; instant conversion stays in tasks/deadline.ts. Preserve keyboard navigation, focus return, viewport collision/vertical scrolling, the visible footer and form validation when reusing the component.
+
+Month/year controls also use the shared themed Select menus with selected checkmarks, bounded scrolling and named listboxes; do not reintroduce native select popups. Nested Escape dismisses the inner list first. SelectContent accepts optional listProps to label its actual List without changing other consumers.
+
+
+## Task priority and planning (2026-10-06)
+
+Shared PriorityIndicator uses existing semantic tokens: LOW label-blue, MEDIUM label-orange, HIGH destructive, CRITICAL destructive plus Lucide CircleAlert. Keep accessible localized priority text and the critical shape distinction. No new palette. People assignment excludes the signed-in user from candidate lists; Assign me adds that user explicitly. Pool assignment and calendar-day quick deadlines are common to both task models; SIMPLE sidebars show Pool while advanced-only entries stay hidden.
+
+## Squad modernization UI - 2026-10-06
+
+Existing centered navbar/bell/Popover, ConfirmDialog, Sonner and semantic tokens are reused. Team action is Delete with explicit retained-history/pool effects and inline children/orphan errors. Team cards use scoped newest5 avatar + real-name initials beneath + bounded +N; generic AvatarStack consumers unchanged. Scoped grid items use min-w-0; member row wraps.
+
+Manager invitations preserve semantic desktop table/mobile cards/status/server pages and principal keys. Safe real inviter summaries and exhaustive eight-role Phosphor presenter are shared with the selector. New role badges use content height to prevent long German labels clipping; decorative icons retain accessible text labels,44px form/action targets. TR/EN/DE, light/dark,320/390/768/1024/1440 screenshots and overflow/clipping assertions verified. Error view hides stale invitation rows; dataset shrink clamps to a real server page.
+
+## Personal task cards and status confirmations (2026-10-06)
+
+My tasks uses semantic card/background/border tokens and a responsive square grid (one column, md two, xl three). Task title buttons open the shared detail dialog on the current page; comment actions focus its composer. Preserve localized accessible names, keyboard/Escape focus restoration, URL reload selection and pending/error/retry states. Every task status action requires shared confirmation before mutation; cancellation writes nothing. SIMPLE tasks expose Start/Complete shortcuts; ADVANCED retains review/testing. The navbar notification menu is user-scoped, localized, bounded to the viewport and disabled for the public demo. Optional statusChange snapshots drive start/completion copy; legacy notifications retain a translated type label. Do not add a second palette, detail implementation or notification backend for these surfaces.
+
+## Squad/main notification merge integration - 2026-10-06
+
+NotificationsMenu is a compatibility entry point delegating to the single NotificationCenter/session owner. Actor-scoped AbortSignal/cache cleanup and atomic team-deletion popup claims stay intact. Open own history polls15s; unread count/team claim use30s foreground cadence. Task notifications retain localized start/completion snapshots and relative timestamps, mark read and open the existing task/taskProject dialog URL. Task navigation suppresses old popup focus return; normal Escape restores the bell. Header placement/demo isolation are unchanged. Scoped merged validation: lint/type/build and34 Chromium PASS; existing historical delivery counts are not reused as merge proof.

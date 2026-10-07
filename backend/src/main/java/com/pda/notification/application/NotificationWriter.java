@@ -15,6 +15,11 @@ public class NotificationWriter {
         this.repository = repository; this.factory = factory;
     }
     @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void saveStatusChanged(UUID recipient, UUID actor, UUID project, UUID task, TaskStatusChange change) {
+        if (recipient != null && !recipient.equals(actor))
+            repository.save(factory.statusChanged(recipient, actor, project, task, change));
+    }
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void save(UUID recipient, UUID actor, UUID project, ResourceType resourceType, UUID resource,
                      NotificationType type) {
         if (recipient != null && !recipient.equals(actor))

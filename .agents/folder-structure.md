@@ -119,3 +119,36 @@ Squad Service kodu `squad/api`, `squad/application/service`, `squad/domain/entit
 Backend: application/service `ChatReactionService`, `ChatReactionViewReader`, `ChatReactionRateLimiter`; domain/enums `ChatReactionCode`, domain/entity `ChatMessageReaction`; infrastructure/repository `ChatReactionRepository`; V55 migration, `chat/integration/ChatReplyReactionMigrationTest`. Frontend chat: `reactions.ts`, `reaction-resync.ts`, `pending.ts`, `emoji-catalog.ts`; components `reply-preview`, `message-actions`, `reaction-chips`, `emoji-picker`. Kabul edilen workspace link intent `components/layout/workspace-link.tsx`. E2E `chat-cache.spec.ts`, `chat-replies-reactions.spec.ts`, `chat-responsive.spec.ts`; navigation/renewal mevcut `17-project-chat.spec.ts`.
 
 Organization–Project remediation: `features/projects/query-invalidation.ts` invalidates projects plus affected old/new organization projects page prefixes; `project-settings-form` uses the existing safe Home summary. `organization-detail` owns its separate projects query loading/error/retry and page clamp. Acceptance E2E: `organization-project-association.spec.ts`; QA-only direct PostgreSQL read helper `organization-project-db.ts` uses prepared UUID SQL inside the local PostgreSQL container, without exposing credentials.
+
+
+## Task form date picker (2026-10-06)
+
+`frontend/src/components/ui/date-picker.tsx` is the shared optional-date calendar dropdown; task form Controllers live in `features/tasks/components/task-form-page.tsx`. The existing deadline.ts owns local time/ISO conversion. Browser coverage is `frontend/e2e/task-date-picker.spec.ts`; no new package or backend path.
+
+
+Task UI update (2026-10-06): tasks/task-model.ts also exposes allowsPool for configured policies; shared PriorityIndicator in task-badges.tsx renders the token colors and critical alert icon across form/preview/list/board/detail/filter. Pool remains an assignment feature when advanced sidebar entries are hidden. Quick calendar-day deadlines are shared by both form modes.
+
+
+## Task progress notification backend (2026-10-06)
+
+- backend/src/main/java/com/pda/notification/domain/TaskStatusChange.java: optional immutable notification snapshot.
+- backend/src/main/resources/db/migration/V56__task_status_notification_snapshots.sql: additive nullable snapshot columns and CHECK.
+- backend/src/test/java/com/pda/task/TaskProgressNotificationApiIntegrationTest.java: short/simple and advanced flows, manager recipients, access/rollback/concurrency and legacy events.
+- backend/src/test/java/com/pda/notification/TaskStatusNotificationMigrationTest.java and TaskStatusNotificationFactoryTest.java: V55 upgrade/data retention, constraints and maximum-length snapshots.
+- Existing ProjectAccess, TaskService/TaskEvents and Notification listener/writer/factory/controller own the behavior; no frontend file is changed in this backend delivery.
+
+## Squad modernization additions - 2026-10-06
+
+- Backend public contracts: `project/ProjectTeamContext`, `squad/SquadLifecycleEvents`; notification `domain/TeamDeletion`, `application/TeamDeletionNotificationStore`, `TeamDeletionPublicationRecovery`; Flyway V57.
+- Frontend `features/notifications/{api,types,query-keys,notification-owner,components/notification-center}`; `squads/{cache,initials,components/delete-team-button,components/team-member-preview}`; shared `projects/role-presentation`.
+- Real QA E2E: team-deletion, team-deletion-notifications, notification-cache, team-member-preview, member-initials, team-invitations-modernization and prepared DB helpers. Private logs/screenshot artifacts stay in ignored `.local/squad-modernization/`.
+
+## My tasks cards frontend (2026-10-06)
+
+- features/tasks/components/my-task-card.tsx: square personal card and shared TaskProgressAction.
+- features/tasks/components/my-task-dialog.tsx: URL-controlled task detail inside My tasks; task-detail-page exports the existing shared TaskDetailBody.
+- features/tasks/components/status-confirmation.tsx: common pending/error-safe status confirmation; status-menu and board-page consume it.
+- features/notifications/{api.ts,notifications-menu.tsx}: own notification API and the real navbar menu.
+- e2e/my-task-cards.spec.ts: real task/comment/status/manager notification/board/pagination and responsive localization scenarios. Existing 09-tasks assertions follow the new personal cards.
+
+2026-10-06 merge: `features/notifications/notifications-menu.tsx` delegates to `components/notification-center.tsx`; api.ts re-exports the shared types.ts Notification contract. There is one session-scoped polling/cache/popup family.

@@ -21,9 +21,14 @@ async function mockRealApp(page: Page) {
     // The reference is the real protected route with fixture responses. No request reaches a backend.
     const headers = { "access-control-allow-origin": "http://localhost:3000", "access-control-allow-credentials": "true" };
     if (request.method() === "OPTIONS") return route.fulfill({ status: 204, headers });
+    // TEST-ONLY visual reference: no live notification owner data or mutation is exercised here.
+    if (pathname === "/notifications/team-deletions/claim") return route.fulfill({ status: 204, headers });
     if (request.method() !== "GET") return route.fulfill({ status: 403, headers, body: "read only visual reference" });
     let body: unknown = {};
     if (pathname === "/auth/me") body = DEMO_USER;
+    else if (pathname === "/auth/csrf") body = { headerName: "X-XSRF-TOKEN" };
+    else if (pathname === "/notifications/unread-count") body = { count: 0 };
+    else if (pathname === "/notifications") body = demoPage([]);
     else if (pathname === "/projects") body = demoPage([data.project]);
     else if (pathname.includes("/by-slug/")) body = data.project;
     else if (pathname.endsWith("/home")) body = data.home;

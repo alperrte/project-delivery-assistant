@@ -70,6 +70,7 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
     private final String frontendUrl;
     private final ApplicationEventPublisher events;
     private final ProjectTeamDirectory teams;
+    @jakarta.persistence.PersistenceContext private jakarta.persistence.EntityManager entityManager;
 
     public ProjectInvitationService(ProjectRepository projects, ProjectMembershipRepository memberships,
                                     ProjectInvitationRepository invitations, ProjectLogoRepository logos,
@@ -96,7 +97,7 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
     @Transactional
     public CreatedInvitation inviteRegisteredUser(UUID actorId, UUID projectId, UUID targetUserId,
                                                   Set<ProjectRole> roles, String message, UUID teamId) {
-        Project project = requireManager(actorId, projectId);
+        Project project = lockedManager(actorId, projectId);
         String teamName = requireActiveTeam(projectId, teamId);
         Objects.requireNonNull(targetUserId, "targetUserId is required");
         if (targetUserId.equals(actorId)) throw new IllegalArgumentException("Cannot invite yourself");
@@ -120,7 +121,7 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
     @Transactional
     public CreatedInvitation inviteByEmail(UUID actorId, UUID projectId, String email, String firstName,
                                            String lastName, Set<ProjectRole> roles, String message, UUID teamId) {
-        Project project = requireManager(actorId, projectId);
+        Project project = lockedManager(actorId, projectId);
         String teamName = requireActiveTeam(projectId, teamId);
         if (email == null || email.isBlank()) throw new IllegalArgumentException("email is required");
         String normalizedEmail = email.strip().toLowerCase(java.util.Locale.ROOT);
@@ -171,12 +172,17 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
     private Page<InvitationSummary> withNicknames(Page<ProjectInvitation> page, Instant now) {
         Set<UUID> targetIds = page.getContent().stream().map(ProjectInvitation::getInvitedUserId)
                 .filter(Objects::nonNull).collect(Collectors.toSet());
+        page.getContent().stream().map(ProjectInvitation::getInvitedBy).filter(Objects::nonNull).forEach(targetIds::add);
         Map<UUID, UserAccounts.AuthenticatedUser> targetUsers = users.findActiveByIds(targetIds);
         Map<UUID, String> teamNames = teamNames(page.getContent());
         return page.map(invitation -> {
+            var inviter = targetUsers.get(invitation.getInvitedBy());
+            var target = invitation.getInvitedUserId() == null ? null : targetUsers.get(invitation.getInvitedUserId());
             InvitationSummary summary=InvitationSummary.from(invitation,
                 nicknameOf(targetUsers, invitation.getInvitedUserId()),
-                invitation.getTeamId() == null ? null : teamNames.get(invitation.getTeamId()));
+                invitation.getTeamId() == null ? null : teamNames.get(invitation.getTeamId()),
+                inviter == null ? null : inviter.nickname(), inviter == null ? null : inviter.profilePhotoVersion(),
+                target == null ? null : target.profilePhotoVersion());
             return invitation.getStatus()==InvitationStatus.PENDING&&!invitation.isPending(now)
                     ?summary.withStatus(InvitationStatus.EXPIRED):summary;
         });
@@ -321,6 +327,7 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
             throw new NoSuchElementException("Project not found");
         }
         requireInviterStillManages(invitation);
+        if (invitation.getTeamId() != null) requireActiveTeam(projectId, invitation.getTeamId());
         if (memberships.findByProjectIdAndUserIdAndStatus(projectId, userId, MembershipStatus.ACTIVE).isPresent()) {
             throw new InvitationConflictException("User is already a project member");
         }
@@ -345,7 +352,11 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
     private ProjectInvitation requireExternalToken(String token, boolean lock) {
         if (token == null || token.isBlank()) throw new IllegalArgumentException("Token is required");
         String hash = ProjectInvitation.hashToken(token);
-        ProjectInvitation invitation = (lock ? invitations.lockByTokenHash(hash) : invitations.findByTokenHash(hash))
+        if (lock) {
+            UUID projectId = invitations.projectIdByTokenHash(hash).orElseThrow(() -> new NoSuchElementException("Invitation not found"));
+            lockInvitationProject(projectId);
+        }
+        ProjectInvitation invitation = (lock ? fresh(invitations.lockByTokenHash(hash)) : invitations.findByTokenHash(hash))
                 .filter(candidate -> candidate.getInvitedUserId() == null && candidate.matchesToken(token)
                         && candidate.isPending(clock.instant()))
                 .orElseThrow(() -> new NoSuchElementException("Invitation not found"));
@@ -355,7 +366,7 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
     /** Cancels the existing pending invitation and issues a fresh one to the same target with the same roles. */
     @Transactional
     public CreatedInvitation resend(UUID actorId, UUID projectId, UUID invitationId) {
-        Project project = requireManager(actorId, projectId);
+        Project project = lockedManager(actorId, projectId);
         ProjectInvitation current = renewableInvitationIn(projectId, invitationId);
         if(current.isPending(clock.instant()))current.cancel(clock.instant());
         else current.expire(clock.instant());
@@ -387,7 +398,7 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
 
     @Transactional
     public void cancel(UUID actorId, UUID projectId, UUID invitationId) {
-        requireManager(actorId, projectId);
+        lockedManager(actorId, projectId);
         ProjectInvitation invitation = renewableInvitationIn(projectId, invitationId);
         if(invitation.isPending(clock.instant()))invitation.cancel(clock.instant());
         else invitation.expire(clock.instant());
@@ -439,6 +450,7 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
         projects.findByIdAndArchivedAtIsNull(projectId)
                 .orElseThrow(() -> new NoSuchElementException("Project not found"));
         requireInviterStillManages(invitation);
+        if (invitation.getTeamId() != null) requireActiveTeam(projectId, invitation.getTeamId());
         UserAccounts.AuthenticatedUser account = users.findActiveById(actorId)
                 .orElseThrow(() -> new NoSuchElementException("Active user not found"));
         ProjectMembership membership = memberships.findByProjectIdAndUserId(projectId, actorId)
@@ -464,15 +476,16 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
      * leave a PROJECT_MANAGER invitation behind for somebody else).
      */
     private void requireInviterStillManages(ProjectInvitation invitation) {
-        boolean stillManages = memberships.findByProjectIdAndUserIdAndStatus(invitation.getProjectId(),
-                        invitation.getInvitedBy(), MembershipStatus.ACTIVE)
-                .map(inviter -> RolePolicy.allows(inviter.getRoles(), ProjectPermission.MEMBER_MANAGE))
-                .orElse(false);
+        boolean stillManages = RolePolicy.allows(memberships.activeRoles(invitation.getProjectId(),
+                invitation.getInvitedBy()), ProjectPermission.MEMBER_MANAGE);
         if (!stillManages) throw new InvitationConflictException("Invitation is no longer valid");
     }
 
     private ProjectInvitation ownPending(UUID actorId, UUID invitationId) {
-        ProjectInvitation invitation = invitations.lockById(invitationId)
+        UUID projectId = invitations.projectIdByRecipient(invitationId, actorId)
+                .orElseThrow(() -> new NoSuchElementException("Invitation not found"));
+        lockInvitationProject(projectId);
+        ProjectInvitation invitation = fresh(invitations.lockById(invitationId))
                 .filter(candidate -> actorId.equals(candidate.getInvitedUserId()))
                 .orElseThrow(() -> new NoSuchElementException("Invitation not found"));
         if (!invitation.isPending(clock.instant())) throw new InvitationConflictException("Invitation is not pending");
@@ -485,7 +498,8 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
         if (rawToken == null || rawToken.isBlank()) {
             throw new IllegalArgumentException("token is required");
         }
-        ProjectInvitation invitation = invitations.lockByTokenHash(ProjectInvitation.hashToken(rawToken))
+        lockInvitationProject(projectId);
+        ProjectInvitation invitation = fresh(invitations.lockByTokenHash(ProjectInvitation.hashToken(rawToken)))
                 .filter(candidate -> candidate.matchesToken(rawToken))
                 .filter(candidate -> candidate.getProjectId().equals(projectId)
                         && candidate.getId().equals(invitationId))
@@ -499,7 +513,7 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
     /** A live pending or expired invitation can be renewed/cleared; answered/cancelled ones cannot. */
     private ProjectInvitation renewableInvitationIn(UUID projectId, UUID invitationId) {
         Objects.requireNonNull(invitationId, "invitationId is required");
-        ProjectInvitation invitation = invitations.lockById(invitationId)
+        ProjectInvitation invitation = fresh(invitations.lockById(invitationId))
                 .filter(candidate -> candidate.getProjectId().equals(projectId))
                 .orElseThrow(() -> new NoSuchElementException("Invitation not found"));
         if (invitation.getStatus()!=InvitationStatus.PENDING&&invitation.getStatus()!=InvitationStatus.EXPIRED) {
@@ -525,6 +539,23 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
         return teams.teamNames(Set.of(teamId)).get(teamId);
     }
 
+    private Project lockedManager(UUID actorId, UUID projectId) {
+        requireManager(actorId, projectId);
+        projects.lockActive(projectId).orElseThrow(() -> new NoSuchElementException("Project not found"));
+        return requireManager(actorId, projectId);
+    }
+
+    private void lockInvitationProject(UUID projectId) {
+        // Lock ordering only; archived-project reject behavior is not broadened into an access grant.
+        projects.lockTaskPolicy(projectId).orElseThrow(() -> new NoSuchElementException("Project not found"));
+    }
+
+    private java.util.Optional<ProjectInvitation> fresh(java.util.Optional<ProjectInvitation> row) {
+        // Onboarding preview may already have attached the entity before waiting for the project lock.
+        row.ifPresent(value -> entityManager.refresh(value, jakarta.persistence.LockModeType.PESSIMISTIC_WRITE));
+        return row;
+    }
+
     private Project requireManager(UUID actorId, UUID projectId) {
         Objects.requireNonNull(actorId, "actorId is required");
         Objects.requireNonNull(projectId, "projectId is required");
@@ -533,7 +564,7 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
         ProjectMembership membership = memberships.findByProjectIdAndUserIdAndStatus(projectId, actorId,
                         MembershipStatus.ACTIVE)
                 .orElseThrow(() -> new AccessDeniedException("Project access denied"));
-        if (!RolePolicy.allows(membership.getRoles(), ProjectPermission.MEMBER_MANAGE)) {
+        if (!RolePolicy.allows(memberships.activeRoles(projectId, actorId), ProjectPermission.MEMBER_MANAGE)) {
             throw new AccessDeniedException("Project management denied");
         }
         return project;

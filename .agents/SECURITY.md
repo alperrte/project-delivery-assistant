@@ -282,11 +282,25 @@ Swagger check path: `/swagger-ui/index.html` with `API_DOCS_ENABLED=true`; call 
 
 | Endpoint | Auth / scope | Input / safe example | Success | Important errors |
 | --- | --- | --- | --- | --- |
-| `GET /api/v1/notifications` | Authenticated, own records | `?page=0&size=20&unreadOnly=true&type=TASK_ASSIGNED`; size 1–100 | `200` paged content with type, text, read timestamps, actor/project/resource IDs | `400` invalid filter/page, `401` unauthenticated |
+| `GET /api/v1/notifications` | Authenticated, own records | `?page=0&size=20&unreadOnly=true&type=TASK_ASSIGNED`; size 1–100 | `200` paged content with type, text, read timestamps, actor/project/resource IDs and nullable task statusChange snapshot | `400` invalid filter/page, `401` unauthenticated |
 | `GET /api/v1/notifications/unread-count` | Authenticated, own records | None | `200 {"count": 5}` | `401` |
 | `PATCH /api/v1/notifications/{notificationId}/read` | Authenticated, own record + CSRF | UUID path, no body | `200` updated notification | `400` bad UUID, `401`, `403` CSRF, `404` missing or other user's record |
 | `PATCH /api/v1/notifications/read-all` | Authenticated, own records + CSRF | No body | `200 {"count": 2}` (number changed) | `401`, `403` CSRF |
 
+
+
+### Squad deletion and own notification presentation - 2026-10-06
+
+Existing team DELETE and legacy archive adapters enforce active project SQUAD_MANAGE/PROJECT_MANAGER, CSRF and scoped IDs; no founder/global ADMIN bypass. Permission checks after waiting use fresh scalar active-role data with the existing RolePolicy. Project-first/ordered-team/invitation lock revalidation serializes invitation grants with deletion. Soft-delete retains history and current pool semantics; no authorization/session/CORS/cookie/ENV model change.
+
+| Endpoint | Scope/body | Success | Important failures |
+| --- | --- | --- | --- |
+| POST `/api/v1/notifications/team-deletions/claim` | Session principal own records + CSRF; no body/actor/ID |200 one own notification or204; private/no-store |400 nonempty body,401 no active session,403 CSRF |
+| DELETE `/api/v1/projects/{p}/teams/{t}` | Active PROJECT_MANAGER + CSRF; no body |204 retained soft-delete/history, one committed event |403 permission/CSRF,404 missing/deleted/wrong project,409 children/orphan |
+
+Claim sets popupPresentedAt atomically on oldest unread SQUAD_DELETED; read/readAt stays independent. At-most-once grant may lose a popup when the response is lost after commit; durable own history remains. Fanout uses committed immutable recipient snapshot, replay event/recipient dedup and existing registry recovery; rollback creates no notification. Additive nullable teamDeletion snapshot carries bounded plain text. Actor-scoped frontend notification cache/AbortSignal/lifetime cleanup prevents prior-user responses/toasts surfacing after logout/login. No browser auth/private list persistence.
+
+Team memberPreview adds safe real first/last names only after project/team authorization; no email/global directory expansion. Existing manager invitation list batch adds safe inviter nickname/photo version and target photo version; target email privacy/token rules retained. Swagger `/swagger-ui/index.html` and `/v3/api-docs`, normal login/CSRF. Delete/claim have no JSON body; safe team create `{"name":"Example Team","includeCreator":true}`.
 
 Swagger/OpenAPI is intended for development and testing.
 
@@ -567,12 +581,18 @@ Swagger check path: `/swagger-ui/index.html` with `API_DOCS_ENABLED=true`. Call 
 | `GET /api/v1/projects/{projectId}/tasks/{taskId}` | `PROJECT_VIEW` | UUID path | `200`, Task including `assigneeIds` | `401`, `403`, `404` scoped/archived task |
 | `PATCH /api/v1/projects/{projectId}/tasks/{taskId}` | `TASK_MANAGE` | `{ "title": "Prepare final demo", "priority": "HIGH", "description": null, "startDate": null, "deadlineAt": null }` (full basic-field replacement) | `200`, updated Task | `400`, `401`, `403`, `404`, `409` archived/optimistic conflict |
 | `PUT /api/v1/projects/{projectId}/tasks/{taskId}/assignees` | `TASK_MANAGE` | `{ "assigneeIds": ["<active-member-uuid>"] }`; empty array clears | `200`, replacement UUID set | `400` nonmember/invalid ID, `401`, `403`, `404`, `409` archived |
-| `PATCH /api/v1/projects/{projectId}/tasks/{taskId}/status` | `TASK_MANAGE` or assigned `TASK_WORK` | `{ "status": "TODO" }` | `200`, Task; true change adds one history row | `400`, `401`, `403`, `404`, `409` invalid transition/archived |
+| `PATCH /api/v1/projects/{projectId}/tasks/{taskId}/status` | `TASK_MANAGE` or assigned `TASK_WORK` | `{ "status": "TODO" }` | `200`, Task; true change adds one history row and AFTER_COMMIT notification; IN_PROGRESS/DONE includes active project managers | `400`, `401`, `403`, `404`, `409` invalid transition/archived |
 | `PATCH /api/v1/projects/{projectId}/tasks/{taskId}/blocked` | `TASK_MANAGE` or assigned `TASK_WORK` | `{ "blocked": true, "reason": "Awaiting review" }` | `200`, Task; no status history | `400`, `401`, `403`, `404`, `409` DONE/archived |
 | `GET /api/v1/projects/{projectId}/tasks/{taskId}/history` | `PROJECT_VIEW` | UUID path | `200`, chronological history array | `401`, `403`, `404` |
 | `DELETE /api/v1/projects/{projectId}/tasks/{taskId}` | `TASK_MANAGE` | UUID path | `204`, soft archived | `401`, `403`, `404`, `409` archived |
 
 `TaskPriority` defaults to `MEDIUM`; new tasks start `BACKLOG` and unblocked. The existing role model governs Task: `PROJECT_MANAGER` holds `TASK_MANAGE`; contributors and `TESTER` hold `TASK_WORK` for tasks actively assigned to them. Cross-project task IDs return `404` to callers who can read the path project.
+
+### Task progress and manager notification contract (2026-10-06, V56)
+
+Status PATCH remains cookie + CSRF + active project membership, with TASK_MANAGE or TASK_WORK on a task assigned to the caller. SIMPLE additionally permits BACKLOG -> IN_PROGRESS and IN_PROGRESS -> DONE; ADVANCED review/testing transitions stay enforced. Same-status requests are no-ops. True IN_PROGRESS/DONE changes notify all active PROJECT_MANAGER memberships in the same project plus existing task followers, once per recipient; the actor is excluded. Global ADMIN and management of another project confer no recipient status or task permission. Rollback emits no notification.
+
+Own notification list/read responses retain TASK_STATUS_CHANGED and add nullable statusChange{previousStatus,newStatus,taskKey,taskTitle,actorNickname}. Names/titles are snapshots from the successful status transaction; old notifications and queued pre-V56 events continue without snapshots. No recipient or actor IDs are accepted from the status body. Swagger: /swagger-ui/index.html when already enabled, login through /api/v1/auth/csrf + /api/v1/auth/login and use the existing status/notifications routes with normal access cookies and X-XSRF-TOKEN for mutations. No ENV or security architecture change.
 
 ### Task Service genişletmesi (2026-10-02, V37–V46)
 
@@ -625,12 +645,12 @@ All mutations retain the existing access cookie, CSRF, membership and per-operat
 | `POST /api/v1/projects/{projectId}/tasks` | TASK_MANAGE + CSRF; `{"title":"Prepare release","creationMode":"SIMPLE"}` | 201 TaskView with creationMode | 400 TASK_SIMPLE_FIELDS_INVALID, 409 PROJECT_TASK_MODE_NOT_CONFIGURED / TASK_MODE_NOT_ALLOWED; existing validation/scope errors |
 | `PATCH /api/v1/projects/{projectId}/tasks/{taskId}` | TASK_MANAGE + CSRF; required title/priority, optional creationMode | 200; omitted estimates/parent/sprint are retained; explicit null clears only where advanced writes are enabled | 409 TASK_MODE_CONVERSION_BLOCKED if advanced data remains; 409 TASK_MODE_NOT_ALLOWED for disabled type/features |
 | `GET /api/v1/projects/{projectId}/tasks` | PROJECT_VIEW; optional `?creationMode=SIMPLE&page=0&size=20` combined with existing filters | 200, DB-filtered content/count/pages, creationMode in rows | 400 invalid enum/paging; existing scope errors |
-| Task GET/subtasks; `GET /api/v1/tasks/mine` / `pool` | Existing project/own-task scope | 200; creationMode in all TaskViews; pool lists/counts exclude disabled project policies | Existing scope/paging errors |
-| Advanced task mutations: estimates/parent/sprint/labels/pool, checklist, relations, attachments, worklogs, manual watch/unwatch, new block; project label/sprint mutations | Original permission + CSRF AND project ADVANCED/BOTH AND advanced task (where applicable); relation/parent targets must also be advanced | Existing success status/body | 409 TASK_MODE_NOT_ALLOWED or PROJECT_TASK_MODE_NOT_CONFIGURED; original permission/scope failures still apply |
+| Task GET/subtasks; `GET /api/v1/tasks/mine` / `pool` | Existing project/own-task scope | 200; creationMode in all TaskViews; pool lists/counts include configured SIMPLE, ADVANCED and BOTH projects, with existing membership/team filters | Existing scope/paging errors |
+| Advanced task mutations: estimates/parent/sprint/labels, checklist, relations, attachments, worklogs, manual watch/unwatch, new block; project label/sprint mutations | Original permission + CSRF AND project ADVANCED/BOTH AND advanced task (where applicable); relation/parent targets must also be advanced | Existing success status/body | 409 TASK_MODE_NOT_ALLOWED or PROJECT_TASK_MODE_NOT_CONFIGURED; original permission/scope failures still apply |
 
-Simple tasks allow basic fields, people assignments, comments/mentions, status, archive and read-only history. Automatic notification followers stay available in both modes; manual subscriptions are advanced. A project switching to SIMPLE retains existing advanced tasks and all data: basic editing/comments/status/unblocking work; advanced mutation is rejected, existing data reads/downloads remain authorized. Normal direct assignment/status operations still close a pool offer when the existing workflow requires it.
+Simple tasks allow basic fields, people and pool assignments, pool claim/release, comments/mentions, status, archive and read-only history. Pool assignment is common to both task models in any configured project policy, including retained tasks after a policy change. Opening or cleaning a pool still requires TASK_MANAGE; claiming/releasing still requires TASK_WORK, active membership and the existing team/sole-claimant guards. Unconfigured policies reject pool mutations with PROJECT_TASK_MODE_NOT_CONFIGURED. This extension was explicitly authorized by the user on 2026-10-06. Automatic notification followers stay available in both modes; manual subscriptions are advanced. A project switching to SIMPLE retains existing advanced tasks and all data: basic editing/comments/status/unblocking work; advanced mutation is rejected, existing data reads/downloads remain authorized. Normal direct assignment/status operations still close a pool offer when the existing workflow requires it.
 
-Conversion to SIMPLE checks estimates, parent/children (including archived children), sprint, pool/team/claim/block state, task labels, checklist, either direction of relations, active attachments/worklogs and manual watchers. No automatic deletion occurs; soft-deleted records and common timeline/comments remain stored. Historical watcher origin was unknown, so V54 conservatively marks legacy watcher rows manual. New automatic followers alone do not prevent conversion.
+Conversion to SIMPLE checks estimates, parent/children (including archived children), sprint, block state, task labels, checklist, either direction of relations, active attachments/worklogs and manual watchers. No automatic deletion occurs; pool/team/claim state, assignees, soft-deleted records and common timeline/comments remain stored. Historical watcher origin was unknown, so V54 conservatively marks legacy watcher rows manual. New automatic followers alone do not prevent conversion.
 
 Task writes first acquire a shared Project public-contract row lock; founder policy change/archive acquires an exclusive Project lock. Advanced ancillary mutations and model conversion serialize on the task row. Project dynamic updates prevent unrelated stale metadata from overwriting the task policy. Related task locks use a consistent UUID order.
 
@@ -764,12 +784,13 @@ The Next.js frontend sets `X-Content-Type-Options: nosniff`, `X-Frame-Options: D
 
 ---
 
-### New independent dependency follow-up — 2026-10-06
+### source-map-js dependency remediation — 2026-10-06
 
-- npm audit currently6 high; omit=dev1 high. Previous5 high/production0 counts are historical.
-- `source-map-js@1.2.1`, GHSA-68fv-2mgg-jv7q / CVE-2026-93749; reviewed advisory lists1.2.2 patched. Paths include Next→PostCSS (production dependency graph) and Tailwind→PostCSS/node (development). App source has no direct SourceMapConsumer use; untrusted PDA runtime reachability was not reproduced. Production classification alone is not exploit proof.
-- Package/lock files were not modified by invitation remediation. Review a separate compatible1.2.2 transitive patch before release; no security waiver. Original ESLint/braces dev debt also remains.
-- Primary source: [GitHub reviewed advisory](https://github.com/advisories/GHSA-68fv-2mgg-jv7q).
+- [x] User-approved remediation: `source-map-js` updated from 1.2.1 to 1.2.2 through a semver-compatible transitive update. Existing consumers require `^1.2.1`. Package manifest and application/invitation code unchanged.
+- GHSA-68fv-2mgg-jv7q / CVE-2026-93749 resolved in the validated dependency graph. Next/PostCSS and Tailwind resolve 1.2.2. Untrusted PDA runtime exploitability was not reproduced.
+- Clean `npm ci` passed. Post-patch full npm audit: 5 high, exit1, from existing ESLint/braces development debt. Production audit: 0, exit0. Pre-patch counts were 6 high / production1. Existing development debt remains open; this is not a release waiver.
+- Validation passed: 33 targeted Chromium tests; canonical pre-push with 469 backend tests (0 failures/errors/skips), 248 Chromium passed + 1 expected skip, lint, TypeScript, production build and Docker health.
+- Separate delivery: [source-map-js remediation](../docs/compliation/2026-10-06-source-map-js-security-remediation.md).
 
 ## 17. Docker and Container Security
 

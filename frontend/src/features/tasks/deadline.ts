@@ -32,18 +32,17 @@ export function fromDeadlineIso(iso: string | null): { date: string; time: strin
   return { date: dateKeyOf(value), time: `${pad(value.getHours())}:${pad(value.getMinutes())}` };
 }
 
-export type QuickDeadline = "today" | "tomorrow" | "friday" | "nextWeek";
+export type QuickDeadline = "today" | "tomorrow" | "weekEnd" | "nextWeek";
 
-/** Presets of the deadline field; they all land on 18:00 local time. */
+/** Calendar-day presets end at 23:59 local time; the current week ends on Sunday. */
 export function quickDeadline(kind: QuickDeadline, now: Date = new Date()): { date: string; time: string } {
   const target = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   switch (kind) {
     case "tomorrow":
       target.setDate(target.getDate() + 1);
       break;
-    case "friday": {
-      // The coming Friday; on a Friday that is the same day, so "Friday" never silently means a week from now.
-      target.setDate(target.getDate() + ((5 - target.getDay() + 7) % 7));
+    case "weekEnd": {
+      target.setDate(target.getDate() + ((7 - target.getDay()) % 7));
       break;
     }
     case "nextWeek":
@@ -53,7 +52,7 @@ export function quickDeadline(kind: QuickDeadline, now: Date = new Date()): { da
     default:
       break;
   }
-  return { date: dateKeyOf(target), time: "18:00" };
+  return { date: dateKeyOf(target), time: DEFAULT_DEADLINE_TIME };
 }
 
 export type DeadlineState = "overdue" | "soon" | "upcoming";

@@ -63,7 +63,26 @@ class NotificationIntegrationTest {
     @Autowired NotificationService notifications;
     @Autowired ApplicationEventPublisher events;
     @Autowired TransactionTemplate transaction;
+    @Autowired com.pda.notification.infrastructure.NotificationRepository notificationRows;
     @Autowired MockMvc mvc;
+
+    @Test void teamDeletionSnapshotRoundTripsThroughIndependentJpaTransactions() {
+        UUID recipient = user(), actor = user(), event = UUID.randomUUID();
+        var snapshot = new com.pda.notification.domain.TeamDeletion("Project at deletion", "Team at deletion",
+                "manager", Instant.parse("2026-10-06T12:00:00Z"));
+        UUID id = transaction.execute(status -> notificationRows.saveAndFlush(
+                new com.pda.notification.application.NotificationFactory().teamDeleted(recipient, actor,
+                        UUID.randomUUID(), UUID.randomUUID(), event, snapshot)).getId());
+        var restored = transaction.execute(status -> notificationRows.findByIdAndRecipientUserId(id, recipient)
+                .orElseThrow());
+        assertNotNull(restored);
+        assertEquals(snapshot, restored.getTeamDeletion());
+        assertEquals(event, restored.getSourceEventId());
+        assertFalse(restored.isRead());
+        assertNull(restored.getPopupPresentedAt());
+        assertNull(restored.getStatusChange());
+        assertTrue(notificationRows.findByIdAndRecipientUserId(id, actor).isEmpty());
+    }
 
     @Test void apiRequiresOwnSessionAndCsrf() throws Exception {
         Account manager = account(); Account member = account(); Account other = account();

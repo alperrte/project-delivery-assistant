@@ -16,6 +16,8 @@ import { authApi } from "../api";
 import { loginSchema, type LoginValues } from "../schemas";
 import { sessionQueryKey } from "../hooks/use-session";
 import { clearPrivateInvitations } from "@/features/invitations/query-keys";
+import { clearPrivateNotifications } from "@/features/notifications/query-keys";
+import { clearPrivateTeams } from "@/features/squads/cache";
 import { matchPath } from "@/i18n/routing";
 import { authCtaClass } from "./auth-card";
 import { useShake } from "./use-shake";
@@ -77,6 +79,8 @@ export function LoginForm({ children }: { children?: ReactNode }) {
       writeRememberedEmail(remember ? credentials.email : null);
       const me = await authApi.me();
       clearPrivateInvitations(queryClient);
+      clearPrivateNotifications(queryClient);
+      clearPrivateTeams(queryClient);
       queryClient.setQueryData(sessionQueryKey, me);
       const invitation = new URLSearchParams(window.location.hash.slice(1)).get("invitation");
       const requested = new URLSearchParams(window.location.search).get("next");

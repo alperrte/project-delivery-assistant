@@ -73,11 +73,11 @@ public class TeamController {
     }
 
     @DeleteMapping("/{teamId}")
-    @Operation(summary = "Archive a project team",
+    @Operation(summary = "Delete a project team",
             description = "SQUAD_MANAGE; child teams must move first; refused when it would leave a member without a team; CSRF")
     public ResponseEntity<Void> delete(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
                                        @PathVariable UUID projectId, @PathVariable UUID teamId) {
-        teams.archive(actor(principal), projectId, teamId);
+        teams.deleteTeam(actor(principal), projectId, teamId);
         return ResponseEntity.noContent().build();
     }
 
@@ -139,10 +139,11 @@ public class TeamController {
     public record MemberRequest(@NotNull UUID userId) {}
     public record CandidateResponse(UUID userId, String nickname, TeamCandidate.Status status) {}
     public record UserRefResponse(UUID userId, String nickname, Long profilePhotoVersion) {}
+    public record MemberPreviewResponse(UUID userId, String nickname, Long profilePhotoVersion, String firstName, String lastName) {}
     public record LastJoinedResponse(UUID userId, String nickname, Instant joinedAt) {}
     public record TeamResponse(UUID id, UUID projectId, String name, String description, UUID parentTeamId,
                                long memberCount, UUID createdBy, Instant createdAt, Instant updatedAt,
-                               UserRefResponse updatedBy, List<UserRefResponse> memberPreview,
+                               UserRefResponse updatedBy, List<MemberPreviewResponse> memberPreview,
                                LastJoinedResponse lastJoined) {
         static TeamResponse from(TeamView view) {
             Squad team = view.team();
@@ -151,7 +152,7 @@ public class TeamController {
                     team.getUpdatedAt(), new UserRefResponse(view.updatedBy().userId(), view.updatedBy().nickname(),
                             view.updatedBy().profilePhotoVersion()),
                     view.memberPreview().stream()
-                            .map(user -> new UserRefResponse(user.userId(), user.nickname(), user.profilePhotoVersion())).toList(),
+                            .map(user -> new MemberPreviewResponse(user.userId(), user.nickname(), user.profilePhotoVersion(), user.firstName(), user.lastName())).toList(),
                     view.lastJoined() == null ? null : new LastJoinedResponse(view.lastJoined().userId(),
                             view.lastJoined().nickname(), view.lastJoined().joinedAt()));
         }

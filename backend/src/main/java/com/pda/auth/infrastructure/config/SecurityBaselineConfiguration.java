@@ -164,6 +164,7 @@ public class SecurityBaselineConfiguration {
                                     "/api/v1/users/me/profile-photo").authenticated()
                             .requestMatchers(HttpMethod.DELETE, "/api/v1/users/me/profile-photo").authenticated()
                             .requestMatchers(HttpMethod.GET, "/api/v1/notifications", "/api/v1/notifications/unread-count").authenticated()
+                            .requestMatchers(HttpMethod.POST, "/api/v1/notifications/team-deletions/claim").authenticated()
                             // Project chat WebSocket handshake (STOMP over native WebSocket); the PDA_ACCESS cookie is
                             // Path=/api, which is why the endpoint lives under /api.
                             .requestMatchers(HttpMethod.GET, "/api/v1/ws").authenticated()

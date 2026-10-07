@@ -17,10 +17,10 @@ import { useTaskFormat } from "../../format";
 import { useTaskMutation, useWatchers } from "../../hooks";
 import { payloadFromTask, TASK_LABELS_MAX } from "../../schemas";
 import { ESTIMATE_POINTS, TASK_PRIORITIES, type TaskPriority } from "../../types";
-import { deadlineToneClass, priorityDotClass } from "../../workflow";
+import { deadlineToneClass } from "../../workflow";
 import { useClaimTask } from "../pool-card";
 import { StatusMenu } from "../status-menu";
-import { AssigneeAvatars, DeadlineChip, LabelList, PoolMark } from "../task-badges";
+import { AssigneeAvatars, DeadlineChip, LabelList, PoolMark, PriorityIndicator } from "../task-badges";
 import { LabelPicker } from "../task-form-fields";
 import { AssigneesDialog } from "./assignees-dialog";
 import { BlockDialog } from "./block-dialog";
@@ -66,7 +66,7 @@ export function PropertiesPanel(ctx: DetailContext) {
 
   return (
     <aside aria-label={t("title")} className="min-w-0 space-y-6">
-      <dl className="divide-y rounded-xl border bg-card px-4">
+      <dl className="@container divide-y rounded-xl border bg-card px-4">
         <PropertyRow label={t("status")}>
           <div className="space-y-2">
             <LockedHint locked={lockedWork} reason="assignee">
@@ -103,9 +103,9 @@ export function PropertiesPanel(ctx: DetailContext) {
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               {task.assignees.length > 0 ? (
-                <ul className="flex flex-wrap gap-x-3 gap-y-1">
+                <ul className="flex min-w-0 max-w-full flex-wrap gap-x-3 gap-y-1">
                   {task.assignees.map((person) => (
-                    <li key={person.userId} className="flex min-w-0 items-center gap-1.5 text-sm">
+                    <li key={person.userId} className="flex min-w-0 max-w-full items-center gap-1.5 text-sm">
                       <Avatar name={person.nickname ?? "?"} src={profilePhotoSrc(person.userId, person.profilePhotoVersion)} className="size-5 text-[9px]" />
                       <span className="truncate">{person.nickname ?? "?"}</span>
                     </li>
@@ -118,24 +118,24 @@ export function PropertiesPanel(ctx: DetailContext) {
             </div>
             <div className="flex flex-wrap gap-2">
               <LockedHint locked={lockedManage} reason="manager">
-                <Button variant="outline" size="sm" disabled={!canManage} onClick={() => setAssigning(true)}>
+                <Button variant="outline" size="sm" className="h-auto min-h-7 max-w-full py-1 whitespace-normal" disabled={!canManage} onClick={() => setAssigning(true)}>
                   <UsersThree aria-hidden="true" />
                   {t("changeAssignees")}
                 </Button>
               </LockedHint>
-              {ctx.advancedWritable && perms.canClaim && !archived && (
+              {ctx.poolWritable && perms.canClaim && !archived && (
                 <Button size="sm" disabled={claim.isPending} onClick={() => claim.mutate(task.id)}>
                   {claim.isPending ? <CircleNotch className="animate-spin" aria-hidden="true" /> : <HandGrabbing aria-hidden="true" />}
                   {t("claim")}
                 </Button>
               )}
-              {ctx.advancedWritable && perms.canRelease && !archived && (
+              {ctx.poolWritable && perms.canRelease && !archived && (
                 <Button variant="outline" size="sm" disabled={release.isPending} onClick={() => release.mutate(undefined)}>
                   {release.isPending ? <CircleNotch className="animate-spin" aria-hidden="true" /> : <HandPalm aria-hidden="true" />}
                   {t("release")}
                 </Button>
               )}
-              {advancedManage && (task.pool?.open || task.pool?.claimed || task.pool?.teamId) && <ConfirmDialog
+              {ctx.poolWritable && perms.manage && !archived && (task.pool?.open || task.pool?.claimed || task.pool?.teamId) && <ConfirmDialog
                 trigger={<Button variant="outline" size="sm">{tm("clearPool")}</Button>}
                 title={tm("clearPool")}
                 description={tm("clearPoolDescription")}
@@ -154,7 +154,7 @@ export function PropertiesPanel(ctx: DetailContext) {
                 <SelectValue>
                   {(value: string) => (
                     <span className="flex items-center gap-2">
-                      <span className={cn("size-2 rounded-full", priorityDotClass(value as TaskPriority))} aria-hidden="true" />
+                      <PriorityIndicator priority={value as TaskPriority} />
                       {tc(`priority.${value}`)}
                     </span>
                   )}
@@ -163,7 +163,7 @@ export function PropertiesPanel(ctx: DetailContext) {
               <SelectContent>
                 {TASK_PRIORITIES.map((priority) => (
                   <SelectItem key={priority} value={priority}>
-                    <span className={cn("size-2 rounded-full", priorityDotClass(priority))} aria-hidden="true" />
+                    <PriorityIndicator priority={priority} />
                     {tc(`priority.${priority}`)}
                   </SelectItem>
                 ))}

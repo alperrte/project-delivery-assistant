@@ -13,6 +13,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,7 +23,6 @@ import { TaskModelSetting } from "@/features/projects/components/task-model-sett
 import { allowsAdvanced, allowsCreation, initialCreationMode } from "../task-model";
 import { AdvancedReadOnlyNotice, TaskModePicker } from "./task-mode-picker";
 import { errorKey } from "@/lib/api/error-message";
-import { cn } from "@/lib/utils";
 import { tasksApi } from "../api";
 import { fromDeadlineIso, quickDeadline, splitMinutes, type QuickDeadline } from "../deadline";
 import { invalidateTaskViews, useTask } from "../hooks";
@@ -41,14 +41,14 @@ import {
 } from "../schemas";
 import { useProjectTeams } from "../hooks";
 import { ESTIMATE_POINTS, TASK_PRIORITIES, type PersonRef, type Task, type TaskPriority, type TaskRef } from "../types";
-import { priorityDotClass } from "../workflow";
+import { PriorityIndicator } from "./task-badges";
 import { AssigneePicker, FormSection, LabelPicker, ParentPicker, Segment } from "./task-form-fields";
 import { TaskPreview } from "./task-preview";
 import { ProjectGate, type ProjectGateContext } from "./project-gate";
 
 const NO_SPRINT = "__none";
 const WHOLE_PROJECT = "__project";
-const QUICK: QuickDeadline[] = ["today", "tomorrow", "friday", "nextWeek"];
+const QUICK: QuickDeadline[] = ["today", "tomorrow", "weekEnd", "nextWeek"];
 
 function initialValues(task: Task | undefined, sprintId: string, parentId: string): TaskFormValues {
   if (!task) return { ...emptyTaskForm, sprintId, parentTaskId: parentId };
@@ -117,7 +117,7 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
   const advancedWritable = allowsAdvanced(project.taskManagementMode);
   const advanced = mode === "ADVANCED" && advancedWritable;
   const sprints = useSprints(projectId, undefined, advanced);
-  const teams = useProjectTeams(projectId, advanced);
+  const teams = useProjectTeams(projectId);
   const canSave = !task?.archivedAt && (editing ? mode === task.creationMode || allowsCreation(project.taskManagementMode, mode) : allowsCreation(project.taskManagementMode, mode));
 
   const [parent, setParent] = useState<TaskRef | null>(task?.parent ?? initialParent);
@@ -180,7 +180,7 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
   const priority = (values.priority ?? "MEDIUM") as TaskPriority;
   const titleLength = values.title?.length ?? 0;
   const descriptionText = values.description ?? "";
-  const inPool = advanced && values.assignMode === "pool";
+  const inPool = values.assignMode === "pool";
   const lockedParent = editing && (task?.subtaskCount ?? 0) > 0;
   const sprintOptions = (sprints.data ?? []).filter((sprint) => sprint.status !== "COMPLETED" || sprint.id === values.sprintId);
 
@@ -190,7 +190,8 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
   function applyQuick(kind: QuickDeadline) {
     const next = quickDeadline(kind);
     setValue("deadlineDate", next.date, { shouldDirty: true, shouldValidate: true });
-    if (advanced) setValue("deadlineTime", next.time, { shouldDirty: true });
+    // Simple tasks hide the time field; quick picks use the same end-of-day semantics.
+    setValue("deadlineTime", advanced ? next.time : "", { shouldDirty: true });
   }
 
   return (
@@ -201,7 +202,7 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
       {mode === "ADVANCED" && !advancedWritable && <AdvancedReadOnlyNotice />}
       <form onSubmit={handleSubmit((form) => { if (canSave) mutation.mutate(form); })} noValidate>
         <div className="grid gap-10 lg:grid-cols-12 lg:gap-12">
-          <div className="space-y-8 lg:col-span-7">
+          <div className="min-w-0 space-y-8 lg:col-span-7">
             <FormSection id={`${ids}-definition`} title={t("sections.definition.title")} description={t("sections.definition.description")}>
               <div className="space-y-1.5">
                 <Label htmlFor="task-title">{t("titleField.label")}</Label>
@@ -292,7 +293,7 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
                       options={TASK_PRIORITIES.map((item) => ({
                         value: item,
                         label: tc(`priority.${item}`),
-                        adornment: <span aria-hidden="true" className={cn("size-1.5 rounded-full", priorityDotClass(item))} />,
+                        adornment: <PriorityIndicator priority={item} />,
                       }))}
                     />
                   )}
@@ -354,20 +355,29 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
 
                 </>
               )}
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-1.5">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="min-w-0 space-y-1.5">
                   <Label htmlFor="task-start">{t("start.label")}</Label>
-                  <Input id="task-start" type="date" aria-invalid={!!errors.startDate} {...register("startDate")} />
+                  <Controller control={control} name="startDate" render={({ field }) => (
+                    <DatePicker id="task-start" label={t("start.label")} value={field.value} ref={field.ref} onBlur={field.onBlur}
+                      invalid={!!errors.startDate} onChange={next => setValue("startDate", next, { shouldDirty: true, shouldValidate: true })} />
+                  )} />
                 </div>
-                <div className="space-y-1.5">
+                <div className="min-w-0 space-y-1.5">
                   <Label htmlFor="task-deadline-date">{t("deadline.label")}</Label>
                   <div className="flex gap-2">
-                    <Input id="task-deadline-date" type="date" aria-invalid={!!errors.deadlineDate} aria-describedby={`${ids}-deadline-note`} {...register("deadlineDate")} />
-                    {advanced && <Input type="time" aria-label={t("deadline.time")} className="w-28 shrink-0" {...register("deadlineTime")} />}
+                    <Controller control={control} name="deadlineDate" render={({ field }) => (
+                      <DatePicker id="task-deadline-date" label={t("deadline.label")} value={field.value} ref={field.ref} onBlur={field.onBlur}
+                        invalid={!!errors.deadlineDate} describedBy={`${ids}-deadline-note`} onChange={next => {
+                          if (!next) setValue("deadlineTime", "", { shouldDirty: true });
+                          setValue("deadlineDate", next, { shouldDirty: true, shouldValidate: true });
+                        }} />
+                    )} />
+                    {advanced && <Input type="time" aria-label={t("deadline.time")} className="h-10 w-28 shrink-0" {...register("deadlineTime")} />}
                   </div>
                 </div>
               </div>
-              {advanced && <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label={t("deadline.quick")}>
+              <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label={t("deadline.quick")}>
                 {QUICK.map((kind) => (
                   <Button key={kind} type="button" variant="outline" size="sm" onClick={() => applyQuick(kind)}>
                     {t(`deadline.${kind}`)}
@@ -386,7 +396,7 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
                     {t("deadline.clear")}
                   </Button>
                 )}
-              </div>}
+              </div>
               {errors.deadlineDate ? (
                 <p id={`${ids}-deadline-note`} role="alert" className="text-sm text-destructive">
                   {tv(errors.deadlineDate.message!)}
@@ -439,27 +449,22 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
               )}
             </FormSection>
 
-            <FormSection id={`${ids}-assignment`} title={t("sections.assignment.title")} description={advanced ? t("sections.assignment.description") : tm("simpleAssignment")}>
-              {advanced && (
-                <>
-                  <Controller
-                    control={control}
-                    name="assignMode"
-                    render={({ field }) => (
-                      <Segment
-                        label={t("assign.label")}
-                        value={field.value}
-                        onChange={(next) => setValue("assignMode", next as "people" | "pool", { shouldDirty: true })}
-                        options={[
-                          { value: "people", label: t("assign.people") },
-                          { value: "pool", label: t("assign.pool") },
-                        ]}
-                      />
-                    )}
+            <FormSection id={`${ids}-assignment`} title={t("sections.assignment.title")} description={t("sections.assignment.description")}>
+              <Controller
+                control={control}
+                name="assignMode"
+                render={({ field }) => (
+                  <Segment
+                    label={t("assign.label")}
+                    value={field.value}
+                    onChange={(next) => setValue("assignMode", next as "people" | "pool", { shouldDirty: true })}
+                    options={[
+                      { value: "people", label: t("assign.people") },
+                      { value: "pool", label: t("assign.pool") },
+                    ]}
                   />
-
-                </>
-              )}
+                )}
+              />
               {inPool ? (
                 <div className="space-y-1.5">
                   <Label>{t("assign.poolTeam")}</Label>
@@ -537,7 +542,7 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
             )}
           </div>
 
-          <aside id="task-preview" aria-label={t("preview.title")} className="scroll-mt-24 lg:col-span-5">
+          <aside id="task-preview" aria-label={t("preview.title")} className="min-w-0 scroll-mt-24 lg:col-span-5">
             <div className="space-y-3 lg:sticky lg:top-24">
               <div className="space-y-0.5">
                 <h2 className="font-heading text-base font-semibold text-foreground">{t("preview.title")}</h2>
@@ -558,7 +563,7 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
                   deadlineDate={values.deadlineDate ?? ""}
                   deadlineTime={values.deadlineTime ?? ""}
                   labelIds={advanced ? values.labelIds ?? [] : []}
-                  assigneeIds={values.assigneeIds ?? []}
+                  assigneeIds={inPool ? [] : values.assigneeIds ?? []}
                   inPool={inPool}
                   poolTeamId={values.poolTeamId ?? ""}
                   parent={advanced ? parent : null}
@@ -581,12 +586,12 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
               cancelLabel={tm("stay")}
               onConfirm={async () => { created.current = true; router.push(backHref); }}
             /> : <Link href={backHref} className={buttonVariants({ variant: "outline" })}>{t("cancel")}</Link>}
-            <div className="flex items-center gap-2">
+            <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
               <a href="#task-preview" className={buttonVariants({ variant: "ghost", className: "lg:hidden" })}>
                 <Eye size={16} data-icon="inline-start" aria-hidden="true" />
                 <span className="sr-only min-[440px]:not-sr-only">{t("preview.show")}</span>
               </a>
-              <Button type="submit" disabled={mutation.isPending || !canSave}>
+              <Button type="submit" className="h-auto min-h-10 min-w-0 shrink whitespace-normal px-3 py-2" disabled={mutation.isPending || !canSave}>
                 {mutation.isPending && <CircleNotch size={16} className="animate-spin" aria-hidden="true" />}
                 {t(editing ? "save" : "submit")}
               </Button>

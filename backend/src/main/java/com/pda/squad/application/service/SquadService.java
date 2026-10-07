@@ -5,9 +5,11 @@ import com.pda.project.ProjectInvitationEvents;
 import com.pda.project.ProjectMemberView;
 import com.pda.project.ProjectMembershipEvents;
 import com.pda.squad.SquadMembershipEvents;
+import com.pda.squad.SquadLifecycleEvents;
 import com.pda.squad.application.service.SquadMemberSummary.TeamRef;
 import com.pda.squad.application.service.TeamView.LastJoined;
 import com.pda.squad.application.service.TeamView.UserRef;
+import com.pda.squad.application.service.TeamView.MemberPreview;
 import com.pda.squad.domain.entity.Squad;
 import com.pda.squad.domain.entity.SquadMembership;
 import com.pda.squad.infrastructure.repository.SquadMembershipRepository;
@@ -70,9 +72,10 @@ public class SquadService {
     @Transactional
     public void invitationAccepted(ProjectInvitationEvents.Accepted event) {
         if (event.teamId() == null || event.membershipId() == null) return;
+        if (projects.lockTeamContext(event.projectId()) == null) throw new NoSuchElementException("Project not found");
         Squad team = teams.findByIdAndArchivedAtIsNull(event.teamId())
                 .filter(candidate -> candidate.getProjectId().equals(event.projectId())).orElse(null);
-        if (team == null) return;
+        if (team == null) throw new NoSuchElementException("Team not found");
         if (teamMembers.existsBySquadIdAndProjectMembershipId(team.getId(), event.membershipId())) return;
         teamMembers.saveAndFlush(SquadMembership.add(team.getId(), event.membershipId(), event.invitedBy()));
         team.touch(event.invitedBy());
@@ -92,7 +95,7 @@ public class SquadService {
     @Transactional
     public Squad create(UUID actor, UUID projectId, String name, String description, UUID parentId,
                         boolean includeCreator) {
-        requireManager(actor, projectId);
+        lockManager(actor, projectId);
         // Serializes team creation per project; the locked list also tells whether this is the first team.
         List<Squad> existing = teams.lockActiveProjectTeams(projectId);
         UUID parent = null;
@@ -133,7 +136,7 @@ public class SquadService {
 
     @Transactional
     public TeamView update(UUID actor, UUID projectId, UUID teamId, String name, String description) {
-        requireManager(actor, projectId);
+        lockManager(actor, projectId);
         Squad team = activeTeam(projectId, teamId);
         team.updateDetails(name, description, actor);
         return view(projectId, teams.save(team));
@@ -142,7 +145,7 @@ public class SquadService {
     /** A {@code null} {@code parentId} moves the team to the top level. */
     @Transactional
     public TeamView move(UUID actor, UUID projectId, UUID teamId, UUID parentId) {
-        requireManager(actor, projectId);
+        lockManager(actor, projectId);
         List<Squad> locked = teams.lockActiveProjectTeams(projectId);
         Map<UUID, Squad> byId = locked.stream().collect(Collectors.toMap(Squad::getId, team -> team));
         Squad team = byId.get(teamId);
@@ -161,7 +164,13 @@ public class SquadService {
 
     @Transactional
     public void archive(UUID actor, UUID projectId, UUID teamId) {
-        requireManager(actor, projectId);
+        deleteTeam(actor, projectId, teamId);
+    }
+
+    @Transactional
+    public void deleteTeam(UUID actor, UUID projectId, UUID teamId) {
+        com.pda.project.ProjectTeamContext context = lockManager(actor, projectId);
+        teams.lockActiveProjectTeams(projectId);
         Squad team = activeTeam(projectId, teamId);
         if (teams.existsByParentSquadIdAndArchivedAtIsNull(teamId))
             throw new SquadConflictException("Move or delete child teams first", SquadConflictException.HAS_CHILDREN);
@@ -172,10 +181,17 @@ public class SquadService {
             throw new SquadConflictException("Archiving would leave members without a team",
                     SquadConflictException.ARCHIVE_WOULD_ORPHAN, names);
         }
-        // An invitation into an archived team could never put its invitee anywhere.
+        Set<UUID> memberIds = new HashSet<>(teamMembers.membershipIds(teamId));
+        Set<UUID> recipients = projects.membersByIds(projectId, memberIds).values().stream()
+                .map(ProjectMemberView::userId).filter(id -> !id.equals(actor)).collect(Collectors.toSet());
+        String actorName = users.findActiveById(actor).map(UserAccounts.AuthenticatedUser::nickname).orElse(null);
+        var event = new SquadLifecycleEvents.TeamDeleted(UUID.randomUUID(), projectId, context.name(),
+                teamId, team.getName(), actor, actorName, recipients, Instant.now());
+        // The existing rows and task pool target remain historical references.
         projects.cancelPendingInvitationsForTeam(projectId, teamId);
         team.archive(actor);
         teams.save(team);
+        events.publishEvent(event);
     }
 
     @Transactional(readOnly = true)
@@ -200,7 +216,7 @@ public class SquadService {
 
     @Transactional
     public SquadMemberSummary addMember(UUID actor, UUID projectId, UUID teamId, UUID userId) {
-        requireManager(actor, projectId);
+        lockManager(actor, projectId);
         Squad team = activeTeam(projectId, teamId);
         ProjectMemberView view = projects.member(projectId, userId);
         if (view == null) throw new NoSuchElementException("Active project member not found");
@@ -219,7 +235,7 @@ public class SquadService {
     /** A member's last team cannot be left: that would be removing them from the project, which is a separate act. */
     @Transactional
     public void removeMember(UUID actor, UUID projectId, UUID teamId, UUID userId) {
-        requireManager(actor, projectId);
+        lockManager(actor, projectId);
         Squad team = activeTeam(projectId, teamId);
         ProjectMemberView view = projects.member(projectId, userId);
         if (view == null) throw new NoSuchElementException("Active project member not found");
@@ -280,17 +296,21 @@ public class SquadService {
                 .collect(Collectors.toSet());
         Map<UUID, ProjectMemberView> memberViews = membershipIds.isEmpty() ? Map.of()
                 : projects.membersByIds(projectId, membershipIds);
+        Map<UUID, UserAccounts.ProfileSummary> profiles = users.findActiveProfilesByIds(memberViews.values().stream()
+                .map(ProjectMemberView::userId).collect(Collectors.toSet()));
         Map<UUID, UserAccounts.AuthenticatedUser> updaters = users.findActiveByIds(
                 listed.stream().map(Squad::getUpdatedBy).collect(Collectors.toSet()));
 
         Map<UUID, TeamView> result = new HashMap<>();
         for (Squad team : listed) {
-            List<UserRef> preview = new ArrayList<>();
+            List<MemberPreview> preview = new ArrayList<>();
             LastJoined lastJoined = null;
             for (UUID membershipId : newestMembershipIds.getOrDefault(team.getId(), List.of())) {
                 ProjectMemberView member = memberViews.get(membershipId);
                 if (member == null) continue;
-                preview.add(new UserRef(member.userId(), member.nickname(), member.profilePhotoVersion()));
+                var profile = profiles.get(member.userId());
+                preview.add(new MemberPreview(member.userId(), member.nickname(), member.profilePhotoVersion(),
+                        profile == null ? null : profile.firstName(), profile == null ? null : profile.lastName()));
                 if (lastJoined == null)
                     lastJoined = new LastJoined(member.userId(), member.nickname(), joinedAt.get(membershipId));
             }
@@ -346,5 +366,13 @@ public class SquadService {
         requireMember(actor, projectId);
         if (!projects.hasPermission(projectId, actor, ProjectPermission.SQUAD_MANAGE))
             throw new AccessDeniedException("Team management denied");
+    }
+
+    private com.pda.project.ProjectTeamContext lockManager(UUID actor, UUID projectId) {
+        requireManager(actor, projectId);
+        var context = projects.lockTeamContext(projectId);
+        if (context == null) throw new NoSuchElementException("Project not found");
+        requireManager(actor, projectId);
+        return context;
     }
 }

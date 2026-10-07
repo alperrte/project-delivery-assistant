@@ -86,6 +86,11 @@ class ProjectInvitationServiceTest {
         assertNotNull(created.rawToken());
         assertEquals(InvitationStatus.PENDING, created.invitation().getStatus());
         assertEquals(1, invitationService.listPending(manager, projectId, PageRequest.of(0, 10)).getTotalElements());
+        var display = invitationService.listPending(manager, projectId, PageRequest.of(0, 10)).getContent().getFirst();
+        assertEquals(users.findActiveById(manager).orElseThrow().nickname(), display.invitedByNickname());
+        assertEquals(users.findActiveById(target).orElseThrow().nickname(), display.nickname());
+        assertNull(display.invitedByPhotoVersion());
+        assertNull(display.profilePhotoVersion());
 
         UUID invitationId = created.invitation().getId();
         assertThrows(AccessDeniedException.class, () -> invitationService.reject(manager, projectId, invitationId,
@@ -479,10 +484,11 @@ class ProjectInvitationServiceTest {
                 long deadline=System.nanoTime()+java.util.concurrent.TimeUnit.SECONDS.toNanos(10);
                 int waiting=0;
                 while(waiting<2&&System.nanoTime()<deadline) {
-                    waiting=jdbc.queryForObject("SELECT count(*) FROM pg_stat_activity WHERE datname=current_database() AND wait_event_type='Lock' AND query LIKE '%project_invitations%'",Integer.class);
+                    waiting=jdbc.queryForObject("SELECT count(*) FROM pg_stat_activity WHERE datname=current_database() AND wait_event_type='Lock' "
+                            + "AND (query LIKE '%project_invitations%' OR query LIKE '%projects%')",Integer.class);
                     if(waiting<2)Thread.sleep(20);
                 }
-                assertEquals(2,waiting,"Both real transactions must reach the locked pending row");
+                assertEquals(2,waiting,"Both real transactions must wait on the project-to-invitation mutation chain");
             } finally {gate.rollback();}
             Object one=first.get(10,java.util.concurrent.TimeUnit.SECONDS),two=second.get(10,java.util.concurrent.TimeUnit.SECONDS);
             assertEquals(1,(one instanceof CreatedInvitation?1:0)+(two instanceof CreatedInvitation?1:0));

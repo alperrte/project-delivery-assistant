@@ -18,16 +18,17 @@ import { allowsAdvanced } from "../task-model";
 import { tasksApi } from "../api";
 import { invalidateTaskViews, tasksKey, useAllTasks } from "../hooks";
 import { taskPermissions } from "../permissions";
-import type { Task, TaskListParams, TaskStatus } from "../types";
+import type { Task, TaskCreationMode, TaskListParams, TaskStatus } from "../types";
 import { canTransition, STATUS_ORDER } from "../workflow";
 import { BoardCard } from "./board-card";
 import { ProjectGate, type ProjectGateContext } from "./project-gate";
 import { StatusDot } from "./task-badges";
+import { StatusConfirmation } from "./status-confirmation";
 
 const ALL = "all";
 const BACKLOG = "backlog";
 
-type DragState = { taskId: string; projectId: string; from: TaskStatus };
+type DragState = { taskId: string; projectId: string; from: TaskStatus; mode: TaskCreationMode };
 
 /** Cards live in the `all` query of the project, so a status change only has to patch that cache. */
 function patchStatus(tasks: Task[] | undefined, taskId: string, status: TaskStatus) {
@@ -76,6 +77,7 @@ function BoardView({ slug, project, projectId, userId, isManager }: ProjectGateC
   const [drag, setDrag] = useState<DragState | null>(null);
   const [overColumn, setOverColumn] = useState<TaskStatus | null>(null);
   const [announcement, setAnnouncement] = useState("");
+  const [confirmation, setConfirmation] = useState<{ task: Task; target: TaskStatus } | null>(null);
   const pending = useRef(new Set<string>());
 
   function setParam(key: string, value: string | null) {
@@ -88,7 +90,7 @@ function BoardView({ slug, project, projectId, userId, isManager }: ProjectGateC
 
   async function move(task: Task, status: TaskStatus) {
     if (task.status === status || pending.current.has(task.id)) return;
-    if (!canTransition(task.status, status)) {
+    if (!canTransition(task.status, status, task.creationMode)) {
       toast.error(te("TASK_INVALID_TRANSITION"));
       return;
     }
@@ -106,6 +108,7 @@ function BoardView({ slug, project, projectId, userId, isManager }: ProjectGateC
       for (const [cacheKey, data] of snapshot) queryClient.setQueryData(cacheKey, data);
       toast.error(te(errorKey(error)));
       if (!(error instanceof ApiError)) setAnnouncement(te(errorKey(error)));
+      throw error;
     } finally {
       pending.current.delete(task.id);
       void invalidateTaskViews(queryClient, projectId);
@@ -115,7 +118,7 @@ function BoardView({ slug, project, projectId, userId, isManager }: ProjectGateC
   function handleDragStart(event: DragEvent<HTMLLIElement>, task: Task) {
     event.dataTransfer.effectAllowed = "move";
     event.dataTransfer.setData("text/plain", task.id);
-    setDrag({ taskId: task.id, projectId: task.projectId, from: task.status });
+    setDrag({ taskId: task.id, projectId: task.projectId, from: task.status, mode: task.creationMode });
   }
 
   function endDrag() {
@@ -127,10 +130,10 @@ function BoardView({ slug, project, projectId, userId, isManager }: ProjectGateC
     event.preventDefault();
     const dropped = tasks.data?.find((task) => task.id === drag?.taskId);
     endDrag();
-    if (dropped) void move(dropped, status);
+    if (dropped) setConfirmation({ task: dropped, target: status });
   }
 
-  const droppable = (status: TaskStatus) => !!drag && drag.from !== status && canTransition(drag.from, status);
+  const droppable = (status: TaskStatus) => !!drag && drag.from !== status && canTransition(drag.from, status, drag.mode);
 
   const byStatus = new Map<TaskStatus, Task[]>(STATUS_ORDER.map((status) => [status, []]));
   for (const task of tasks.data ?? []) byStatus.get(task.status)?.push(task);
@@ -140,6 +143,7 @@ function BoardView({ slug, project, projectId, userId, isManager }: ProjectGateC
     if (value === BACKLOG) return t("backlog");
     return sprints.data?.find((sprint) => sprint.id === value)?.name ?? t("allTasks");
   };
+  const confirmedTask = confirmation && (tasks.data?.find((task) => task.id === confirmation.task.id) ?? confirmation.task);
 
   return (
     <div>
@@ -229,7 +233,7 @@ function BoardView({ slug, project, projectId, userId, isManager }: ProjectGateC
                           href={`/projects/${slug}/tasks/${task.id}`}
                           movable={taskPermissions(task, userId, isManager).work}
                           dragging={drag?.taskId === task.id}
-                          onMove={(next) => void move(task, next)}
+                          onMove={(next) => setConfirmation({ task, target: next })}
                           onDragStart={(event) => handleDragStart(event, task)}
                           onDragEnd={endDrag}
                         />
@@ -242,6 +246,7 @@ function BoardView({ slug, project, projectId, userId, isManager }: ProjectGateC
           </div>
         </div>
       )}
+      {confirmation && confirmedTask && <StatusConfirmation task={confirmedTask} target={confirmation.target} onClose={() => setConfirmation(null)} onConfirm={(target) => move(confirmedTask, target)} />}
     </div>
   );
 }

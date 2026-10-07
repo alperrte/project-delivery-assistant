@@ -174,8 +174,14 @@ public class TaskService {
             histories.save(new TaskStatusHistory(taskId, previous, status, actor));
             support.record(taskId, projectId, actor, ActivityType.STATUS_CHANGED, "status", previous, status);
             if (wasPoolOpen && !task.isPoolOpen()) support.record(taskId, projectId, actor, ActivityType.POOL_CLOSED);
-            support.publish(new TaskEvents.TaskStatusChangedEvent(taskId, projectId, previous, status, actor,
-                    support.followerIds(taskId), clock.instant()));
+            Set<UUID> recipients = new HashSet<>(support.followerIds(taskId));
+            if (status == TaskStatus.IN_PROGRESS || status == TaskStatus.DONE) {
+                recipients.addAll(projects.managerUserIds(projectId));
+            }
+            var member = projects.member(projectId, actor);
+            support.publish(new TaskEvents.TaskStatusChangedEvent(taskId, projectId, previous.name(), status.name(), actor,
+                    Set.copyOf(recipients), task.getTaskKey(), task.getTitle(),
+                    member == null ? null : member.nickname(), clock.instant()));
             if (status == TaskStatus.DONE) support.publish(new TaskEvents.TaskCompletedEvent(
                     taskId, projectId, actor, clock.instant()));
         }
@@ -288,6 +294,7 @@ public class TaskService {
     }
 
     private void applyPool(Task task, UUID projectId, TaskCommand.PoolRequest request, UUID actor) {
+        support.requirePoolTask(task);
         UUID taskId = task.getId();
         if (request.open()) {
             if (assignments.countByTaskId(taskId) > 0) {
@@ -328,15 +335,13 @@ public class TaskService {
     private static void requireSimpleCommand(TaskCommand command) {
         if (command.draft().estimatePoints() != null || command.draft().timeEstimateMinutes() != null
                 || command.parentTaskId() != null || command.sprintId() != null
-                || (command.labelIds() != null && !command.labelIds().isEmpty())
-                || (command.pool() != null && (command.pool().open() || command.pool().teamId() != null)))
+                || (command.labelIds() != null && !command.labelIds().isEmpty()))
             throw new TaskValidationException("TASK_SIMPLE_FIELDS_INVALID", "Simple tasks cannot use advanced fields");
     }
 
     private boolean hasAdvancedData(Task task) {
         return task.getEstimatePoints() != null || task.getTimeEstimateMinutes() != null
-                || task.getParentTaskId() != null || task.getSprintId() != null || task.isPoolOpen()
-                || task.isClaimedFromPool() || task.getPoolTeamId() != null || task.isBlocked()
+                || task.getParentTaskId() != null || task.getSprintId() != null || task.isBlocked()
                 || tasks.hasAdvancedData(task.getId());
     }
 
@@ -346,9 +351,7 @@ public class TaskService {
                 || (command.provides("parentTaskId") && !Objects.equals(command.parentTaskId(), task.getParentTaskId()))
                 || (command.provides("sprintId") && !Objects.equals(command.sprintId(), task.getSprintId()))
                 || (command.labelIds() != null && !command.labelIds().equals(taskLabels.findByTaskId(task.getId()).stream()
-                        .map(TaskLabel::getLabelId).collect(Collectors.toSet())))
-                || (command.pool() != null && (command.pool().open() != task.isPoolOpen()
-                        || !Objects.equals(command.pool().teamId(), task.getPoolTeamId())));
+                        .map(TaskLabel::getLabelId).collect(Collectors.toSet())));
     }
 
     private static TaskValidationException invalidParent() {
