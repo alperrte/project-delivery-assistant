@@ -63,6 +63,8 @@ class ProjectHomeApiIntegrationTest {
         registry.add("spring.datasource.password", postgres::getPassword);
         registry.add("FRONTEND_URL", () -> "http://localhost:3000");
         registry.add("JWT_SECRET", () -> Base64.getEncoder().encodeToString(JWT_KEY));
+        // The test re-stubs GitHub between calls, so the read cache must not remember earlier answers.
+        registry.add("pda.github.cache-ttl", () -> "PT0S");
     }
 
     @Autowired MockMvc mvc;
@@ -177,7 +179,7 @@ class ProjectHomeApiIntegrationTest {
                 .andExpect(jsonPath("$.criteriaProgress.total").value(2));
 
         Mockito.when(gitHub.fetchMetadata("alperrte", "project-delivery-assistant"))
-                .thenReturn(new RepositoryMetadata("main"));
+                .thenReturn(new RepositoryMetadata("main", false));
         mvc.perform(post("/api/v1/projects/" + projectId + "/repository")
                         .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -185,8 +187,8 @@ class ProjectHomeApiIntegrationTest {
                 .andExpect(status().isCreated());
 
         Mockito.when(gitHub.fetchLatestCommits("alperrte", "project-delivery-assistant", "main", 1))
-                .thenReturn(List.of(new CommitSummary("abcdef1", "Fix bug", "Alper", null,
-                        Instant.parse("2026-09-27T10:00:00Z"), "https://github.com/a/b/commit/abcdef1")));
+                .thenReturn(List.of(new CommitSummary("abcdef1234567890", "abcdef1", "Fix bug", "Alper", "alperrte",
+                        null, Instant.parse("2026-09-27T10:00:00Z"), "https://github.com/a/b/commit/abcdef1")));
         mvc.perform(get("/api/v1/projects/" + projectId + "/home").cookie(manager.access()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.repository.connected").value(true))

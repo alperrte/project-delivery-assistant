@@ -2,6 +2,8 @@ package com.pda.project.api;
 
 import com.pda.project.api.dto.request.ConnectRepositoryRequest;
 import com.pda.project.api.dto.response.CommitResponse;
+import com.pda.project.api.dto.response.RepositoryBranchesResponse;
+import com.pda.project.api.dto.response.RepositoryCompareResponse;
 import com.pda.project.api.dto.response.RepositoryConnectionResponse;
 import com.pda.project.application.service.ProjectRepositoryConnectionService;
 import com.pda.user.UserAccounts;
@@ -63,13 +65,35 @@ public class ProjectRepositoryController {
     }
 
     @GetMapping("/commits")
-    @Operation(summary = "List the latest commits on the connected repository's default branch",
-            description = "Project members only. Read-only; a GitHub failure never fails the whole request beyond "
-                    + "this endpoint.")
+    @Operation(summary = "List commits of a branch of the connected repository (default branch when omitted)",
+            description = "Project members only. Read-only. branch must be an existing branch, author a GitHub "
+                    + "login, page 1..10, limit 1..50 (default 10). A GitHub failure never fails the whole request "
+                    + "beyond this endpoint; 429 when the per-user read limit or GitHub's limit is reached.")
     public List<CommitResponse> commits(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
                                        @PathVariable UUID projectId,
+                                       @RequestParam(required = false) String branch,
+                                       @RequestParam(required = false) String author,
+                                       @RequestParam(required = false) Integer page,
                                        @RequestParam(required = false) Integer limit) {
-        return repository.latestCommits(AuthenticatedActor.id(principal), projectId, limit).stream()
+        return repository.commits(AuthenticatedActor.id(principal), projectId, branch, author, page, limit).stream()
                 .map(CommitResponse::from).toList();
+    }
+
+    @GetMapping("/branches")
+    @Operation(summary = "List the connected repository's branches (default branch first)",
+            description = "Project members only. Read-only; at most 100 branches, truncated=true when there are more.")
+    public RepositoryBranchesResponse branches(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
+                                               @PathVariable UUID projectId) {
+        return RepositoryBranchesResponse.from(repository.branches(AuthenticatedActor.id(principal), projectId));
+    }
+
+    @GetMapping("/compare")
+    @Operation(summary = "Commits of a branch that are not on the default branch yet",
+            description = "Project members only. Read-only; empty for the default branch itself, at most 100 "
+                    + "commits (truncated=true when there are more).")
+    public RepositoryCompareResponse compare(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
+                                             @PathVariable UUID projectId,
+                                             @RequestParam(required = false) String branch) {
+        return RepositoryCompareResponse.from(repository.compare(AuthenticatedActor.id(principal), projectId, branch));
     }
 }

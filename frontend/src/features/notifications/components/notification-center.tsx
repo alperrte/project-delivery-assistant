@@ -19,6 +19,15 @@ import { useNotificationOwner } from "../notification-owner";
 import type { Notification } from "../types";
 import { useNotificationRead, type ReadAction } from "../hooks/use-notification-read";
 import { useTaskFormat } from "@/features/tasks/format";
+import { projectsApi } from "@/features/projects/api";
+
+/** Deep link into the repository page; the slug comes from the project (cached), hidden while unknown or inaccessible. */
+function RepositoryLink({ projectId, label, onOpen }: { projectId: string; label: string; onOpen: () => void }) {
+  const project = useQuery({ queryKey: ["projects", "detail", projectId], queryFn: () => projectsApi.detail(projectId), retry: false, staleTime: 60_000 });
+  if (!project.data?.slug) return null;
+  return <Link href={`/projects/${encodeURIComponent(project.data.slug)}?section=repository`}
+    className="mt-2 inline-flex min-h-11 items-center text-sm font-medium underline underline-offset-4" onClick={onOpen}>{label}</Link>;
+}
 
 export function NotificationCenter({ expectedUserId, disabled = false }: { expectedUserId?: string; disabled?: boolean } = {}) {
   const context = useNotificationOwner();
@@ -111,6 +120,13 @@ export function NotificationCenter({ expectedUserId, disabled = false }: { expec
       task: `${n.statusChange.taskKey}: ${n.statusChange.taskTitle}`,
       previous: ts.has(n.statusChange.previousStatus) ? ts(n.statusChange.previousStatus) : n.statusChange.previousStatus,
       current: ts.has(n.statusChange.newStatus) ? ts(n.statusChange.newStatus) : n.statusChange.newStatus });
+    if (n.repositoryCommits) {
+      const c = n.repositoryCommits;
+      const summary = t(c.truncated ? "repositoryCommitsBodyMore" : "repositoryCommitsBody", { repo: c.repositoryFullName, branch: c.branch, count: c.commitCount });
+      if (!c.headMessage) return summary;
+      return `${summary}
+${c.headAuthor ? t("repositoryCommitsHeadBy", { message: c.headMessage, author: c.headAuthor }) : t("repositoryCommitsHead", { message: c.headMessage })}`;
+    }
     return t.has(`bodies.${n.type}`) ? t(`bodies.${n.type}`) : n.message;
   }
 
@@ -159,6 +175,13 @@ export function NotificationCenter({ expectedUserId, disabled = false }: { expec
                         navigatingTask.current = true;
                         setOpen(false);
                       }}>{t("openTask")}</Link>}
+                    {n.repositoryCommits && n.projectId && !!userId && <RepositoryLink projectId={n.projectId} label={t("openRepository")}
+                      onOpen={() => {
+                        if (!owner?.current()) return;
+                        navigatingTask.current = true;
+                        if (!n.read) read.mutate(n.id);
+                        owner.setOpen(false);
+                      }} />}
                   </div>
                   {!n.read && <Tooltip><TooltipTrigger render={<Button variant="ghost" size="icon" className="min-h-11 min-w-11 shrink-0" aria-label={t("markRead")} aria-describedby={`notification-title-${n.id}`} data-notification-read-id={n.id} disabled={read.isPending} onClick={event => executeRead({ kind: "read", id: n.id }, event.currentTarget)}><Check size={16} aria-hidden="true" /></Button>} /><TooltipContent>{t("markRead")}</TooltipContent></Tooltip>}
                 </div>

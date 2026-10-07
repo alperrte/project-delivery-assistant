@@ -11,6 +11,8 @@ const CODE_KEYS: Record<string, string> = {
   password_confirmation_mismatch: "passwordMismatch",
   current_password_incorrect: "currentPasswordIncorrect",
   password_unchanged: "passwordUnchanged",
+  REPOSITORY_PRIVATE: "REPOSITORY_PRIVATE",
+  REPOSITORY_READ_LIMIT: "tooManyRequests",
   account_unavailable: "accountUnavailable",
   PROJECT_LOGO_INVALID_TYPE: "PROJECT_LOGO_INVALID_TYPE",
   PROJECT_LOGO_TOO_LARGE: "PROJECT_LOGO_TOO_LARGE",

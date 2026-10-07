@@ -55,6 +55,7 @@
     "TEAM_ARCHIVE_WOULD_ORPHAN": "Bu ekip arşivlenirse bazı kişiler ekipsiz kalır.",
     "PROJECT_OWNER_PROTECTED": "Projenin kurucusu projeden çıkarılamaz ve Proje Yöneticisi rolü alınamaz.",
     "LAST_PROJECT_MANAGER": "Projede en az bir Proje Yöneticisi kalmalıdır.",
+    "REPOSITORY_PRIVATE": "Bu depo herkese açık değil. Yalnızca herkese açık GitHub depoları bağlanabilir.",
     "TASK_ARCHIVED": "Arşivlenmiş görev üzerinde işlem yapılamaz.",
     "PROJECT_ARCHIVED": "Arşivlenmiş projede değişiklik yapılamaz.",
     "TASK_INVALID_TRANSITION": "Görev bu duruma doğrudan taşınamaz.",
@@ -634,7 +635,7 @@
   },
   "repository": {
     "title": "Depo",
-    "description": "Proje ana sayfasında son etkinliği göstermek için genel bir GitHub deposu bağlayın.",
+    "description": "Genel bir GitHub deposu bağlayın; dalları inceleyin, kimin ne yaptığını görün ve ana dala gelen commit'lerden haberdar olun.",
     "noneTitle": "Bağlı depo yok",
     "noneDescription": "Son commit'leri burada görmek için genel bir GitHub deposu bağlayın.",
     "connect": "Depo bağla",
@@ -645,6 +646,54 @@
     "cancel": "Vazgeç",
     "urlLabel": "GitHub depo URL'si",
     "defaultBranch": "Varsayılan dal: {branch}",
+    "publicOnly": "Yalnızca herkese açık depolar bağlanabilir. Bağlantı salt okunurdur.",
+    "notifyNote": "{branch} dalına yeni commit geldiğinde proje üyelerine bildirim gönderilir (birkaç dakika gecikmeyle).",
+    "views": { "label": "Depo görünümü", "overview": "Özet", "branches": "Dallar" },
+    "overview": {
+      "latestTitle": "{branch} dalındaki son commit'ler",
+      "branchCount": "{count, plural, other {# dal}}",
+      "branchCountMore": "{count, plural, other {# dal}} (liste kısaltıldı)",
+      "exploreBranches": "Dalları incele"
+    },
+    "errors": {
+      "rateLimited": "GitHub çok fazla istek aldı. Biraz bekleyip tekrar deneyin.",
+      "notFound": "Depo ya da dal GitHub'da bulunamadı.",
+      "unavailable": "GitHub şu anda yanıt vermiyor. Tekrar deneyin.",
+      "retry": "Tekrar dene"
+    },
+    "branches": {
+      "searchPlaceholder": "Dal ara",
+      "searchLabel": "Dallarda ara",
+      "listLabel": "Dallar",
+      "noMatch": "Eşleşen dal yok.",
+      "protected": "Korumalı dal",
+      "defaultBadge": "Varsayılan",
+      "truncated": "İlk {count} dal gösteriliyor.",
+      "missingTitle": "Dal bulunamadı",
+      "missingDescription": "\"{branch}\" dalı artık yok ya da silinmiş olabilir.",
+      "backToDefault": "{branch} dalına dön",
+      "mergedBadge": "Ana dalda",
+      "unmergedBadge": "Birleşmedi",
+      "statusLabel": "Dal durumu",
+      "isDefault": "Bu, deponun varsayılan (ana) dalıdır.",
+      "upToDate": "{base} ile aynı noktada.",
+      "aheadBehind": "{base} dalının {ahead, plural, other {# commit}} ilerisinde, {behind, plural, other {# commit}} gerisinde.",
+      "compareTruncated": "Karşılaştırma ilk 100 commit ile sınırlı; sayılar eksik olabilir.",
+      "authorsTitle": "Kim ne yapmış",
+      "authorsHint": "Yüklenen son {count} commit'e göre.",
+      "authorMeta": "{count, plural, other {# commit}} · {time}",
+      "filterByAuthor": "{author} commit'lerini süz",
+      "commitsTitle": "Commit'ler",
+      "commitsByAuthor": "{author} commit'leri",
+      "filterLabel": "Birleşme durumuna göre süz",
+      "filter": { "all": "Tümü", "unmerged": "Ana dala girmemiş", "merged": "Ana dala girmiş" },
+      "empty": "Bu dalda commit yok.",
+      "emptyAuthor": "Bu yazarın bu dalda commit'i yok.",
+      "emptyFiltered": "Bu süzgece uyan commit yok.",
+      "loadMore": "Daha fazla yükle",
+      "historyLimit": "GitHub'dan en fazla son {count} commit gösterilir.",
+      "loading": "Dallar yükleniyor"
+    },
     "commits": {
       "title": "Son commit'ler",
       "refresh": "Yenile",
@@ -2663,7 +2712,8 @@
       "TASK_CLAIMED": "Görev üstlenildi",
       "TASK_RELEASED": "Görev havuza döndü",
       "TASK_MENTIONED": "Bir görevde bahsedildiniz",
-      "TASK_COMMENTED": "Göreve yorum geldi"
+      "TASK_COMMENTED": "Göreve yorum geldi",
+      "REPOSITORY_COMMITS_PUSHED": "Depoya yeni commit geldi"
     },
     "close": "Bildirimi kapat",
     "bodies": {
@@ -2687,13 +2737,19 @@
       "TASK_CLAIMED": "İzlediğiniz bir görev havuzdan üstlenildi.",
       "TASK_RELEASED": "İzlediğiniz bir görev havuza geri bırakıldı.",
       "TASK_MENTIONED": "Bir görev yorumunda sizden bahsedildi.",
-      "TASK_COMMENTED": "İzlediğiniz bir göreve yorum eklendi."
+      "TASK_COMMENTED": "İzlediğiniz bir göreve yorum eklendi.",
+      "REPOSITORY_COMMITS_PUSHED": "Depoya yeni commit geldi"
     },
     "label": "Bildirimler, {count} okunmamış",
     "update": "Yeni güncelleme",
     "started": "{actor}, {key}: {title} görevine başladı.",
     "completed": "{actor}, {key}: {title} görevini tamamladı.",
     "statusChanged": "{actor}, {key}: {title} görevini “{status}” durumuna aldı.",
-    "openTask": "Görevi aç"
+    "openTask": "Görevi aç",
+    "openRepository": "Depoyu aç",
+    "repositoryCommitsBody": "{repo} deposunun {branch} dalına {count, plural, other {# yeni commit}} geldi.",
+    "repositoryCommitsBodyMore": "{repo} deposunun {branch} dalına {count, plural, other {# veya daha fazla yeni commit}} geldi.",
+    "repositoryCommitsHead": "Son commit: {message}",
+    "repositoryCommitsHeadBy": "Son commit: {message} ({author})"
   }
 }

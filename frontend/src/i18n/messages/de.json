@@ -55,6 +55,7 @@
     "TEAM_ARCHIVE_WOULD_ORPHAN": "Das Archivieren dieses Teams würde einige Personen ohne Team lassen.",
     "PROJECT_OWNER_PROTECTED": "Der Gründer kann nicht aus dem Projekt entfernt werden und die Rolle Projektmanager nicht verlieren.",
     "LAST_PROJECT_MANAGER": "Das Projekt muss mindestens einen Projektmanager behalten.",
+    "REPOSITORY_PRIVATE": "Dieses Repository ist nicht öffentlich. Nur öffentliche GitHub-Repositories können verbunden werden.",
     "TASK_ARCHIVED": "Eine archivierte Aufgabe kann nicht geändert werden.",
     "PROJECT_ARCHIVED": "Ein archiviertes Projekt kann nicht geändert werden.",
     "TASK_INVALID_TRANSITION": "Die Aufgabe kann nicht direkt in diesen Status wechseln.",
@@ -634,7 +635,7 @@
   },
   "repository": {
     "title": "Repository",
-    "description": "Verbinden Sie ein öffentliches GitHub-Repository, um die letzte Aktivität auf der Projektstartseite anzuzeigen.",
+    "description": "Verbinden Sie ein öffentliches GitHub-Repository, um Branches zu erkunden, zu sehen wer was getan hat und über Commits im Hauptbranch benachrichtigt zu werden.",
     "noneTitle": "Kein Repository verbunden",
     "noneDescription": "Verbinden Sie ein öffentliches GitHub-Repository, um die neuesten Commits hier zu sehen.",
     "connect": "Repository verbinden",
@@ -645,6 +646,54 @@
     "cancel": "Abbrechen",
     "urlLabel": "GitHub-Repository-URL",
     "defaultBranch": "Standard-Branch: {branch}",
+    "publicOnly": "Nur öffentliche Repositories können verbunden werden. Die Verbindung ist schreibgeschützt.",
+    "notifyNote": "Projektmitglieder werden benachrichtigt, wenn neue Commits im Branch {branch} eintreffen (nach wenigen Minuten).",
+    "views": { "label": "Repository-Ansicht", "overview": "Übersicht", "branches": "Branches" },
+    "overview": {
+      "latestTitle": "Neueste Commits auf {branch}",
+      "branchCount": "{count, plural, one {# Branch} other {# Branches}}",
+      "branchCountMore": "{count, plural, one {# Branch} other {# Branches}} (Liste gekürzt)",
+      "exploreBranches": "Branches erkunden"
+    },
+    "errors": {
+      "rateLimited": "GitHub hat zu viele Anfragen erhalten. Bitte warten Sie einen Moment und versuchen Sie es erneut.",
+      "notFound": "Das Repository oder der Branch wurde auf GitHub nicht gefunden.",
+      "unavailable": "GitHub antwortet gerade nicht. Bitte versuchen Sie es erneut.",
+      "retry": "Erneut versuchen"
+    },
+    "branches": {
+      "searchPlaceholder": "Branches suchen",
+      "searchLabel": "Branches durchsuchen",
+      "listLabel": "Branches",
+      "noMatch": "Kein passender Branch.",
+      "protected": "Geschützter Branch",
+      "defaultBadge": "Standard",
+      "truncated": "Die ersten {count} Branches werden angezeigt.",
+      "missingTitle": "Branch nicht gefunden",
+      "missingDescription": "Der Branch \"{branch}\" existiert nicht mehr oder wurde gelöscht.",
+      "backToDefault": "Zurück zu {branch}",
+      "mergedBadge": "Im Hauptbranch",
+      "unmergedBadge": "Nicht gemergt",
+      "statusLabel": "Branch-Status",
+      "isDefault": "Dies ist der Standard-Branch (Hauptbranch) des Repositorys.",
+      "upToDate": "Auf demselben Stand wie {base}.",
+      "aheadBehind": "{ahead, plural, one {# Commit} other {# Commits}} vor und {behind, plural, one {# Commit} other {# Commits}} hinter {base}.",
+      "compareTruncated": "Der Vergleich ist auf die ersten 100 Commits begrenzt; die Zahlen können unvollständig sein.",
+      "authorsTitle": "Wer hat was getan",
+      "authorsHint": "Basierend auf den zuletzt geladenen {count} Commits.",
+      "authorMeta": "{count, plural, one {# Commit} other {# Commits}} · {time}",
+      "filterByAuthor": "Nach {author} filtern",
+      "commitsTitle": "Commits",
+      "commitsByAuthor": "Commits von {author}",
+      "filterLabel": "Nach Merge-Status filtern",
+      "filter": { "all": "Alle", "unmerged": "Nicht im Hauptbranch", "merged": "Im Hauptbranch" },
+      "empty": "Keine Commits in diesem Branch.",
+      "emptyAuthor": "Diese Person hat keine Commits in diesem Branch.",
+      "emptyFiltered": "Keine Commits entsprechen diesem Filter.",
+      "loadMore": "Mehr laden",
+      "historyLimit": "Es werden höchstens die letzten {count} Commits von GitHub angezeigt.",
+      "loading": "Branches werden geladen"
+    },
     "commits": {
       "title": "Neueste Commits",
       "refresh": "Aktualisieren",
@@ -2663,7 +2712,8 @@
       "TASK_CLAIMED": "Aufgabe übernommen",
       "TASK_RELEASED": "Aufgabe zurück im Pool",
       "TASK_MENTIONED": "Sie wurden erwähnt",
-      "TASK_COMMENTED": "Neuer Aufgabenkommentar"
+      "TASK_COMMENTED": "Neuer Aufgabenkommentar",
+      "REPOSITORY_COMMITS_PUSHED": "Neue Commits gepusht"
     },
     "close": "Benachrichtigung schließen",
     "bodies": {
@@ -2687,13 +2737,19 @@
       "TASK_CLAIMED": "Eine von Ihnen verfolgte Aufgabe wurde aus dem Pool übernommen.",
       "TASK_RELEASED": "Eine von Ihnen verfolgte Aufgabe wurde in den Pool zurückgegeben.",
       "TASK_MENTIONED": "Sie wurden in einem Aufgabenkommentar erwähnt.",
-      "TASK_COMMENTED": "Eine von Ihnen verfolgte Aufgabe erhielt einen Kommentar."
+      "TASK_COMMENTED": "Eine von Ihnen verfolgte Aufgabe erhielt einen Kommentar.",
+      "REPOSITORY_COMMITS_PUSHED": "Neue Commits gepusht"
     },
     "label": "Benachrichtigungen, {count} ungelesen",
     "update": "Neue Aktualisierung",
     "started": "{actor} hat {key}: {title} begonnen.",
     "completed": "{actor} hat {key}: {title} abgeschlossen.",
     "statusChanged": "{actor} hat {key}: {title} auf „{status}“ gesetzt.",
-    "openTask": "Aufgabe öffnen"
+    "openTask": "Aufgabe öffnen",
+    "openRepository": "Repository öffnen",
+    "repositoryCommitsBody": "{count, plural, one {# neuer Commit} other {# neue Commits}} in {branch} von {repo}.",
+    "repositoryCommitsBodyMore": "{count, plural, one {# oder mehr neue Commits} other {# oder mehr neue Commits}} in {branch} von {repo}.",
+    "repositoryCommitsHead": "Zuletzt: {message}",
+    "repositoryCommitsHeadBy": "Zuletzt: {message} ({author})"
   }
 }

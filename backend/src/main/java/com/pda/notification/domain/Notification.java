@@ -32,6 +32,13 @@ public class Notification {
     @Column(name = "team_deleted_actor_nickname", length = 32) private String teamDeletedActorNickname;
     @Column(name = "team_deleted_at") private Instant teamDeletedAt;
     @Column(name = "popup_presented_at") private Instant popupPresentedAt;
+    @Column(name = "repo_project_name", length = 160) private String repoProjectName;
+    @Column(name = "repo_full_name", length = 201) private String repoFullName;
+    @Column(name = "repo_branch", length = 250) private String repoBranch;
+    @Column(name = "repo_commit_count") private Integer repoCommitCount;
+    @Column(name = "repo_commits_truncated") private Boolean repoCommitsTruncated;
+    @Column(name = "repo_head_message", length = 160) private String repoHeadMessage;
+    @Column(name = "repo_head_author", length = 100) private String repoHeadAuthor;
 
     protected Notification() {}
     public Notification(UUID recipientUserId, NotificationType type, String title, String message,
@@ -69,6 +76,30 @@ public class Notification {
         notification.teamDeletedActorNickname = deletion.actorNickname();
         notification.teamDeletedAt = deletion.occurredAt();
         return notification;
+    }
+
+    /** New default-branch commits seen on GitHub; no actor (GitHub authors are not PDA users). */
+    public static Notification repositoryCommits(UUID recipient, UUID project, RepositoryCommits commits) {
+        java.util.Objects.requireNonNull(commits, "commits");
+        java.util.Objects.requireNonNull(project, "project");
+        var notification = new Notification(recipient, NotificationType.REPOSITORY_COMMITS_PUSHED,
+                "New repository commits",
+                commits.commitCount() + (commits.truncated() ? "+" : "") + " new commit(s) on "
+                        + commits.repositoryFullName() + " (" + commits.branch() + ").",
+                null, project, ResourceType.PROJECT, project);
+        notification.repoProjectName = commits.projectName();
+        notification.repoFullName = commits.repositoryFullName();
+        notification.repoBranch = commits.branch();
+        notification.repoCommitCount = commits.commitCount();
+        notification.repoCommitsTruncated = commits.truncated();
+        notification.repoHeadMessage = commits.headMessage();
+        notification.repoHeadAuthor = commits.headAuthor();
+        return notification;
+    }
+
+    public RepositoryCommits getRepositoryCommits() {
+        return repoCommitCount == null ? null : new RepositoryCommits(repoProjectName, repoFullName, repoBranch,
+                repoCommitCount, Boolean.TRUE.equals(repoCommitsTruncated), repoHeadMessage, repoHeadAuthor);
     }
 
     public TeamDeletion getTeamDeletion() {
