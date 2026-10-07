@@ -2635,6 +2635,15 @@
     "close": "Close calendar"
   },
   "notifications": {
+    "readFailed": "The read status could not be updated. Please try again.",
+    "refreshFailed": "The read status was saved, but the notification list could not be refreshed. Please try again.",
+    "sections": "Notification sections",
+    "newLabel": "New",
+    "historyLabel": "History",
+    "newEmpty": "You have no new notifications.",
+    "historyEmpty": "You have no notification history yet.",
+    "newListLabel": "New notifications",
+    "historyListLabel": "Past notifications",
     "title": "Notifications",
     "empty": "You have no notifications yet.",
     "loading": "Loading notifications",

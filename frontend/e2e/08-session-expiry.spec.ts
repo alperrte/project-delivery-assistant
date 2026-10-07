@@ -28,7 +28,7 @@ test("an expired access token is renewed in place instead of showing a permissio
   await expect(page.getByRole("heading", { level: 1, name: "Projeler" })).toBeVisible();
   await expect(page.getByText("Bu işlem için yetkiniz yok.")).toHaveCount(0);
   // The list call was refused once for lack of a session, then repeated successfully after the renewal.
-  expect(statuses.at(-1)).toBe(200);
+  await expect.poll(() => statuses.at(-1)).toBe(200);
 
   await context.close();
 });

@@ -282,7 +282,7 @@ Swagger check path: `/swagger-ui/index.html` with `API_DOCS_ENABLED=true`; call 
 
 | Endpoint | Auth / scope | Input / safe example | Success | Important errors |
 | --- | --- | --- | --- | --- |
-| `GET /api/v1/notifications` | Authenticated, own records | `?page=0&size=20&unreadOnly=true&type=TASK_ASSIGNED`; size 1–100 | `200` paged content with type, text, read timestamps, actor/project/resource IDs and nullable task statusChange snapshot | `400` invalid filter/page, `401` unauthenticated |
+| `GET /api/v1/notifications` | Authenticated, own records | `?page=0&size=20&read=false&type=TASK_ASSIGNED; optional read=true for history; legacy unreadOnly retained`; size 1–100 | `200` paged content with type, text, read timestamps, actor/project/resource IDs and nullable task statusChange snapshot | `400` invalid filter/page, `401` unauthenticated |
 | `GET /api/v1/notifications/unread-count` | Authenticated, own records | None | `200 {"count": 5}` | `401` |
 | `PATCH /api/v1/notifications/{notificationId}/read` | Authenticated, own record + CSRF | UUID path, no body | `200` updated notification | `400` bad UUID, `401`, `403` CSRF, `404` missing or other user's record |
 | `PATCH /api/v1/notifications/read-all` | Authenticated, own records + CSRF | No body | `200 {"count": 2}` (number changed) | `401`, `403` CSRF |
@@ -680,6 +680,12 @@ Relevant inventory: POST/GET `/api/v1/projects`, PUT `/api/v1/projects/{id}`, GE
 ### Invitations remediation — 2026-10-06
 
 No new endpoint, role, cookie/session/CSRF/CORS policy or ENV. Frontend private invitation queries are principal-scoped and cancelled/removed at sign-in/out/session boundaries. Existing invitation writes lock/expire elapsed pending target rows before fresh insert; manager reads/count/candidates use effective expiry. Resend expired invitation200 creates a fresh token/ID; DELETE expired204 retains EXPIRED, grants no membership. Existing authority checks and DB constraints remain. Full inventory/manual checks in the separate implementation completion. SMTP delivery remains disabled in the audited local environment.
+
+### Notification read/history compatibility - 2026-10-07
+
+Existing GET /api/v1/notifications adds nullable read: false only unread,true only read,omitted retains unreadOnly/all; read=true with unreadOnly=true400. Recipient predicate always principal-scoped, size1-100 and createdAt DESC,id DESC unchanged. Own PATCH/{id}/read and /read-all retain session+CSRF; no request body selects recipient, foreign ID404 and anonymous/session401 (CSRF-valid), forced-password/CSRF403. No new matcher/role/auth/storage policy or migration.
+
+Conditional own-unread read UPDATE and fresh readback preserve first committed readAt under stale JPA/bulk races. No content/snapshot/presentation deletion; popupPresentedAt remains distinct from readAt. Read-all count is changed rows; badge reconciles real unread-count. UI lifetime/AbortSignal and actor-scoped active/history/count keys block late previous-user results, preserving existing login/logout cleanup. Task-open read behavior retained; existing project hard-delete notification cleanup remains a separate lifecycle. Swagger /swagger-ui/index.html and /v3/api-docs, normal login/CSRF; safe GET ?read=true&page=0&size=20, read PATCH own QA UUID/no body.
 
 ## 12. Error Handling
 

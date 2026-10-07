@@ -297,6 +297,9 @@ Workspace primary remains monochrome; scrollbar thumb uses existing semantic lab
 - **Silme:** tehlikeli bölge yalnız kurucuya görünür. `ConfirmDialog` `requireText` ile proje adının birebir yazılmasını ister (büyük/küçük harf duyarlı, onay düğmesi eşleşene kadar pasif, kapanınca sıfırlanır); metin neyin gideceğini ve geri alınamadığını söyler. Başarıda toast ve `/projects`.
 - **Kart teknoloji şeridi:** tek satır, `size-8` kare logolar, sarma yok (`flex-nowrap overflow-hidden`), kanonik ada göre tekilleştirilir, en çok 6 + `+N`; katalog dışı etiket baş harfli kare olur, ad tooltip'te ve `aria-label`'dedir.
 
+## Notification New/History center - 2026-10-07
+
+Existing nonmodal bell Popover contains New(default)/History Base UI Tabs with manual keyboard activation (arrows focus, Enter/Space select), server pages20 and per-tab loading/error/retry/empty. Individual Check with tooltip/title description and44px targets; global own mark-all header action disabled for pending/unknown/zero. Server-confirmed read reconciles both lists/count; committed refresh failure has GET-only retry. Row-removal focus goes to next/previous action or named empty section only if the user did not move focus; task navigation suppresses old-trigger restore. TR/EN/DE, existing tokens and viewport-centered navbar/reserve retained. No new palette/library or hidden mobile action.
 ## Depo sayfası (2026-10-07)
 
 - `RepositorySettings` `PageContainer width="wide"` kullanır: başlık kartı (depo adı `safeGitHubLink` ile, varsayılan dal, "ana dala commit gelince üyelere bildirim" notu, yalnız yöneticiye "Bağlantıyı kes") ve altında **Özet / Dallar** sekmeleri. Görünüm ve dal URL'dedir (`?section=repository&view=branches&branch=...`), bağlantı paylaşılabilir ve yenilemede korunur.
