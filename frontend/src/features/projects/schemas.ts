@@ -26,7 +26,6 @@ export const projectSettingsSchema = z
     status: z.enum(projectStatuses),
     startDate: z.string().optional(),
     targetEndDate: z.string().optional(),
-    projectGoal: z.string().max(2000, "maxLength").optional(),
     techStack: z.string().max(1000, "maxLength").optional(),
     organizationId: z.string().uuid().optional(),
     projectType: z.enum(PROJECT_TYPES),

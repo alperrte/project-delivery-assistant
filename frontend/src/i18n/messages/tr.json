@@ -459,7 +459,7 @@
       "viewMembers": "Üyeleri görüntüle",
       "projectProfile": "Proje profili",
       "goal": "Proje hedefi",
-      "noGoal": "Bu proje için henüz hedef belirtilmedi.",
+      "noGoal": "Bu proje için henüz açıklama eklenmedi.",
       "techStack": "Teknoloji yığını",
       "timeline": "Hedef tarih",
       "notSpecified": "Belirtilmedi",
@@ -492,12 +492,8 @@
     },
     "settings": {
       "title": "Proje ayarları",
-      "archive": "Arşivle",
-      "archiveConfirmTitle": "Bu proje arşivlensin mi?",
-      "archiveConfirmDescription": "Arşivlenen projeler artık değiştirilemez ve aktif listelerden gizlenir. Bu işlem geri alınamaz.",
       "cancel": "Vazgeç",
       "saved": "Ayarlar kaydedildi.",
-      "archived": "Proje arşivlendi.",
       "name": "Ad",
       "description": "Açıklama",
       "status": "Durum",
@@ -518,20 +514,14 @@
       "targetEndDate": "Hedef bitiş tarihi",
       "organization": "Organizasyon",
       "organizationNone": "Organizasyon yok",
-      "goal": "Proje hedefi",
       "techStack": "Teknoloji yığını",
       "save": "Değişiklikleri kaydet",
       "namePlaceholder": "ör. PDA Web Platformu",
       "descriptionPlaceholder": "Bu proje ne yapıyor, kimin için?",
-      "goalPlaceholder": "Proje bittiğinde neyi başarmış olmalıyız?",
-      "goalHint": "Ekibin ortak hedefi. Proje başlığında açıklama yoksa bu metin gösterilir.",
-      "techStackHint": "Yazıp Enter veya virgül ile ekleyin. Proje kartında rozet olarak görünür.",
-      "techStackPlaceholder": "ör. Spring Boot",
-      "techStackRemove": "{name} teknolojisini kaldır",
       "unsaved": "Kaydedilmemiş değişiklikler var",
       "discard": "Değişiklikleri at",
-      "dangerTitle": "Projeyi arşivle",
-      "dangerDescription": "Arşivlenen proje değiştirilemez ve aktif listelerden gizlenir. Bu işlem geri alınamaz.",
+      "dangerTitle": "Projeyi sil",
+      "dangerDescription": "Proje ve içindeki her şey kalıcı olarak silinir. Bu işlem geri alınamaz.",
       "tagline": "Slogan",
       "taglinePlaceholder": "Projeyi tek cümleyle anlatın",
       "type": "Proje türü",
@@ -576,7 +566,7 @@
         },
         "general": {
           "title": "Genel",
-          "description": "Projenin adı, açıklaması ve hedefi. Liste ve proje başlığında görünür."
+          "description": "Projenin adı, sloganı ve açıklaması. Liste ve proje başlığında görünür."
         },
         "planning": {
           "title": "Planlama",
@@ -591,7 +581,22 @@
           "description": "Geri alınamayan işlemler."
         }
       },
-      "organizationUnavailable": "Bağlı organizasyon arşivlenmiş veya kullanılamıyor"
+      "organizationUnavailable": "Bağlı organizasyon arşivlenmiş veya kullanılamıyor",
+      "delete": "Projeyi sil",
+      "deleteConfirmTitle": "Bu proje kalıcı olarak silinsin mi?",
+      "deleteConfirmDescription": "Projedeki tüm görevler, sprintler, ekipler, davetler, sohbet mesajları, yorumlar, dosyalar ve bildirimler kalıcı olarak silinir. Bu işlem geri alınamaz.",
+      "deleteTypeName": "Onaylamak için proje adını yazın: <strong>{name}</strong>",
+      "deleteConfirm": "Bu projeyi sil",
+      "deleted": "Proje silindi.",
+      "techNone": "Henüz teknoloji seçilmedi.",
+      "previewCaption": "Kart, Projeler listesinde bu değişikliklerle görünecek.",
+      "techDialog": {
+        "edit": "Teknolojileri düzenle",
+        "title": "Teknolojileri düzenle",
+        "description": "En fazla {max} teknoloji seçebilirsiniz. Mevcut seçimler işaretli gelir.",
+        "cancel": "Vazgeç",
+        "apply": "Uygula"
+      }
     }
   },
   "criteria": {

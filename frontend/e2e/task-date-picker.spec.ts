@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { api, createProject } from "./helpers";
+import { api, chooseDate as choose, createProject } from "./helpers";
 import { MANAGER_STORAGE } from "./global-setup";
 
 test.use({ storageState: MANAGER_STORAGE, timezoneId: "Europe/Istanbul" });
@@ -10,18 +10,6 @@ async function fixture(page: Page, taskMode: "SIMPLE" | "ADVANCED" = "SIMPLE") {
   await page.goto(`/projects/${slug}/tasks/new`);
   await expect(page.locator("#task-title")).toBeVisible();
   return { slug, id: project.id };
-}
-
-async function choose(page: Page, id: string, date: string) {
-  await page.locator(`#${id}`).click();
-  const calendar = page.locator(`#${id}-calendar`);
-  await calendar.getByRole("combobox", { name: "Yıl", exact: true }).click();
-  await page.getByRole("option", { name: date.slice(0, 4), exact: true }).click();
-  await calendar.getByRole("combobox", { name: "Ay", exact: true }).click();
-  const month = new Intl.DateTimeFormat("tr", { month: "long" }).format(new Date(2024, Number(date.slice(5, 7)) - 1, 1));
-  await page.getByRole("option", { name: month, exact: true }).click();
-  await calendar.locator(`[data-date="${date}"]`).click();
-  await expect(calendar).toHaveCount(0);
 }
 
 test("simple task dates validate, persist, and reopen on the selected month when editing", async ({ page }) => {

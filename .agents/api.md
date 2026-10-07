@@ -113,3 +113,9 @@ Notification type remains TASK_STATUS_CHANGED. GET /api/v1/notifications and PAT
 ## Frontend foundation own nickname API - 2026-10-07
 
 PUT `/api/v1/users/me/profile`, authenticated active principal+CSRF, body `{"nickname":"Yeni_ad"}` only; unknown identity/role/email fields400. Returns200 existing own AuthenticatedUser/private,no-store. Invalid request400 codeNICKNAME_INVALID; exact duplicate409 NICKNAME_TAKEN. Foreign /users/{id}/profile deny-all403; session401/CSRF403 and existing forced-password restriction retained. Existing /auth/me returns fresh name; UUID/email/session/token/provider identity unchanged. Unicode White_Space trim, letters/numbers/underscore3-32 codepoints, existing case-sensitive unique constraint; no NFC/casefold/reserved list/backfill. Swagger existing `/swagger-ui/index.html` and `/v3/api-docs`, normal session/CSRF.
+## Kalıcı proje silme (2026-10-07)
+
+- `DELETE /api/v1/projects/{projectId}`: çerez oturumu + CSRF, gövde yok, `204`. Yalnız projenin kurucusu (`createdBy`, hâlâ aktif `PROJECT_MANAGER`) silebilir; eş yönetici, üye, üye olmayan ve CSRF'siz istek `403`, oturumsuz `401`, bilinmeyen veya arşivli proje `404`. Silme geri alınamaz: görevler, ekipler, davetler, sohbetler, sprintler, kriterler, hatırlatıcılar, depo bağlantısı, logo/banner ve projenin bildirimleri gider. Aynı adla yeni proje oluşturulabilir.
+- `POST /api/v1/projects/{id}/archive` backend'de durur; arayüz artık kullanmaz.
+- `PUT /api/v1/projects/{id}` tam güncellemedir: arayüz `projectGoal` alanını artık düzenlemez ama kayıtlı değeri aynen geri gönderir.
+- Swagger: `/swagger-ui/index.html` (`API_DOCS_ENABLED=true`), normal giriş + `GET /api/v1/auth/csrf`; güvenli deneme için önce kendi açtığınız bir deneme projesini silin.

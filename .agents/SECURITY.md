@@ -398,6 +398,7 @@ Authorization rule of every sensitive endpoint that exists today:
 | `GET /api/v1/projects/{id}`, `/by-slug/{slug}` | `PROJECT_VIEW` in that project (else `403`) |
 | `PUT /api/v1/projects/{id}` | `PROJECT_UPDATE` |
 | `POST /api/v1/projects/{id}/archive` | `PROJECT_ARCHIVE` |
+| `DELETE /api/v1/projects/{id}` | `PROJECT_ARCHIVE` **and** the caller is the project's founder (`createdBy`); permanent delete, `204`, no body. `401` no session, `403` CSRF missing / not a member / not a Project Manager / not the founder, `404` unknown or archived project. No global `ADMIN` bypass; a second Project Manager is refused |
 | `GET /api/v1/projects/{id}/members`, `/members/{userId}` | `PROJECT_VIEW` |
 | `POST|PUT|DELETE .../members/**` (roles, remove member) | `MEMBER_MANAGE`; the last Project Manager cannot be removed |
 | `/api/v1/organizations/**` | organization owner rules (not project roles) |
@@ -919,3 +920,7 @@ User-approved separate transitive patch sharp0.35.4->0.35.5 via real npm update 
 GHSA-wq5f-xc86-pv6w closed in installed graph; native runtime reports librsvg2.63.2. Benign PNG/JPEG/WebP/AVIF/SVG/invalid-image smoke6 PASS; no PDA/Linux exploit proof or production rollout claimed. Final clean npm ci PASS; full npm audit5 high/exit1 (existing ESLint/braces dev debt), production0/exit0. Previous6 high/production1 is historical; source-map-js1.2.2 retained. Remaining dev debt is separate, not a release waiver.
 
 21 targeted Chromium+5 fixture/history regressions PASS; lint/type/build and final canonical pre-push exit0:512 backend0 failure/error/skip,291 Chromium+1 expected production crash-route skip, Docker build/start/health. Final Next dev3000/backend8080/Swagger/API docs200. Separate delivery: [sharp remediation](../docs/compliation/2026-10-07-sharp-security-remediation.md).
+
+## Permanent project deletion (2026-10-07)
+
+`DELETE /api/v1/projects/{projectId}` is the only path that removes a project row. Order in `ProjectService.delete`: `PROJECT_ARCHIVE` check (`403`) -> row lock of an active project (`404`, so an archived or unknown project never reveals itself) -> founder check (`createdBy` equals the caller, else `403`) -> `ProjectDeletedEvent` -> delete + flush. The role matrix (`RolePolicy`) is unchanged and no permission was added; the founder rule follows the task-management-mode precedent. Children go through the database (`V58` `ON DELETE CASCADE`), so modules never delete each other's tables; the notification module removes the project's notifications in the same transaction through a synchronous `@EventListener`. Nobody is notified. The frontend only offers the button to the founder, the server decides. CSRF, cookie auth and the URL whitelist are unchanged apart from the new `DELETE /api/v1/projects/*` row in `SecurityBaselineConfiguration` (authenticated; the authorization above is in the service).

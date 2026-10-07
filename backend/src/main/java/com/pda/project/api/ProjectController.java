@@ -15,6 +15,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -106,11 +107,24 @@ public class ProjectController {
     }
 
     @PostMapping("/{projectId}/archive")
-    @Operation(summary = "Archive a project", description = "PROJECT_MANAGER only. Requires CSRF. No hard delete is performed.")
+    @Operation(summary = "Archive a project", description = "PROJECT_MANAGER only. Requires CSRF. Soft delete: the "
+            + "project disappears but its data is kept. The web app no longer offers it; use DELETE to remove a project.")
     @ApiResponse(responseCode = "204", description = "Project archived")
     public ResponseEntity<Void> archive(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
                                         @PathVariable UUID projectId) {
         projects.archive(AuthenticatedActor.id(principal), projectId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{projectId}")
+    @Operation(summary = "Permanently delete a project", description = "Active project founder who is still a "
+            + "PROJECT_MANAGER only, not other managers or global ADMIN. Requires CSRF. Irreversible: the project and "
+            + "everything in it (members, teams, invitations, tasks, comments, attachments, chat, criteria, "
+            + "reminders, logo and banner) is removed, and its notifications are cleared. Archived projects are 404.")
+    @ApiResponse(responseCode = "204", description = "Project and all of its data deleted")
+    public ResponseEntity<Void> delete(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
+                                       @PathVariable UUID projectId) {
+        projects.delete(AuthenticatedActor.id(principal), projectId);
         return ResponseEntity.noContent().build();
     }
 

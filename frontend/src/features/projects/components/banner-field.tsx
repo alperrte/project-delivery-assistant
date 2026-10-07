@@ -6,18 +6,19 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { UploadSimple } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
+import { EntityCover } from "@/components/common/entity-cover";
 import { Button } from "@/components/ui/button";
 import { errorKey } from "@/lib/api/error-message";
-import { projectsApi } from "../api";
+import { projectBannerUrl, projectsApi } from "../api";
 import type { Project } from "../types";
 
 export const BANNER_MAX_BYTES = 2 * 1024 * 1024;
 const ACCEPTED = ["image/png", "image/jpeg", "image/webp"];
 
 /**
- * Upload, replace and remove the project's cover image. The image itself shows only on the project's card in the
- * Projeler list, so this field has no preview, just the state and the controls. Client checks only save a round
- * trip; the server re-validates.
+ * Upload, replace and remove the project's cover image. The current cover is previewed above the controls in the
+ * proportions the card uses, with the quiet dotted surface when there is none. Client checks only save a round trip;
+ * the server re-validates.
  */
 export function BannerField({ project }: { project: Project }) {
   const t = useTranslations("projects.settings.banner");
@@ -53,8 +54,12 @@ export function BannerField({ project }: { project: Project }) {
   }
 
   const hasBanner = project.bannerVersion != null;
+  const bannerSrc = project.bannerVersion != null ? projectBannerUrl(project.id, project.bannerVersion) : null;
   return (
     <div className="space-y-3">
+      <div data-testid="project-settings-banner" className="overflow-hidden rounded-lg border">
+        <EntityCover key={bannerSrc ?? "none"} src={bannerSrc} />
+      </div>
       <p className="text-sm text-foreground">{hasBanner ? t("statusSet") : t("statusNone")}</p>
       <div className="flex flex-wrap items-center gap-2">
         <Button type="button" variant="outline" size="sm" disabled={upload.isPending} onClick={() => inputRef.current?.click()}>
