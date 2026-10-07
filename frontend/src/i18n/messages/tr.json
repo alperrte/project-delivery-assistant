@@ -2610,6 +2610,15 @@
     "close": "Takvimi kapat"
   },
   "notifications": {
+    "readFailed": "Okuma durumu güncellenemedi. Tekrar deneyin.",
+    "refreshFailed": "Okuma durumu kaydedildi, ancak bildirim listesi yenilenemedi. Tekrar deneyin.",
+    "sections": "Bildirim bölümleri",
+    "newLabel": "Yeni",
+    "historyLabel": "Geçmiş",
+    "newEmpty": "Yeni bildiriminiz yok.",
+    "historyEmpty": "Henüz geçmiş bildiriminiz yok.",
+    "newListLabel": "Yeni bildirimler",
+    "historyListLabel": "Geçmiş bildirimler",
     "title": "Bildirimler",
     "empty": "Henüz bildiriminiz yok.",
     "loading": "Bildirimler yükleniyor",

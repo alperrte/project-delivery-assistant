@@ -2610,6 +2610,15 @@
     "close": "Kalender schließen"
   },
   "notifications": {
+    "readFailed": "Der Lesestatus konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut.",
+    "refreshFailed": "Der Lesestatus wurde gespeichert, aber die Benachrichtigungsliste konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut.",
+    "sections": "Benachrichtigungsbereiche",
+    "newLabel": "Neu",
+    "historyLabel": "Verlauf",
+    "newEmpty": "Sie haben keine neuen Benachrichtigungen.",
+    "historyEmpty": "Sie haben noch keine gelesenen Benachrichtigungen.",
+    "newListLabel": "Neue Benachrichtigungen",
+    "historyListLabel": "Gelesene Benachrichtigungen",
     "title": "Benachrichtigungen",
     "empty": "Sie haben noch keine Benachrichtigungen.",
     "loading": "Benachrichtigungen werden geladen",

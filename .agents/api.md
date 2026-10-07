@@ -119,3 +119,7 @@ PUT `/api/v1/users/me/profile`, authenticated active principal+CSRF, body `{"nic
 - `POST /api/v1/projects/{id}/archive` backend'de durur; arayüz artık kullanmaz.
 - `PUT /api/v1/projects/{id}` tam güncellemedir: arayüz `projectGoal` alanını artık düzenlemez ama kayıtlı değeri aynen geri gönderir.
 - Swagger: `/swagger-ui/index.html` (`API_DOCS_ENABLED=true`), normal giriş + `GET /api/v1/auth/csrf`; güvenli deneme için önce kendi açtığınız bir deneme projesini silin.
+
+## Notification read/history filter - 2026-10-07
+
+GET /api/v1/notifications adds optional nullable read: false=unread, true=history, omitted retains legacy unreadOnly/all behavior. read=true with unreadOnly=true returns400; existing type/page/size and createdAt DESC,id DESC remain. Same own principal, cookie/CSRF/private no-store contracts and PATCH/read/count routes. read-all response count is changed rows, not remaining unread. Conditional own-unread UPDATE plus fresh readback preserves first committed readAt under stale individual/bulk races; content/snapshots/popupPresentedAt unchanged. No new endpoint/migration/permission.

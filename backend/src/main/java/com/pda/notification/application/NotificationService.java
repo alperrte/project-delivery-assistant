@@ -36,16 +36,24 @@ public class NotificationService {
     }
     @Transactional(readOnly = true)
     public Page<Notification> list(UUID user, boolean unreadOnly, NotificationType type, int page, int size) {
-        return repository.list(user, unreadOnly, type, PageRequest.of(page, size,
+        return list(user, unreadOnly, null, type, page, size);
+    }
+    @Transactional(readOnly = true)
+    public Page<Notification> list(UUID user, boolean unreadOnly, Boolean read, NotificationType type, int page, int size) {
+        if (unreadOnly && Boolean.TRUE.equals(read)) throw new IllegalArgumentException("Conflicting read filters");
+        Boolean state = read != null ? read : unreadOnly ? Boolean.FALSE : null;
+        return repository.listByReadState(user, state, type, PageRequest.of(page, size,
                 Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("id"))));
     }
     @Transactional(readOnly = true)
     public long unreadCount(UUID user) { return repository.countByRecipientUserIdAndReadFalse(user); }
     @Transactional
     public Notification markRead(UUID user, UUID id) {
+        repository.markRead(user, id, Instant.now());
         Notification notification = repository.findByIdAndRecipientUserId(id, user)
                 .orElseThrow(() -> new NoSuchElementException("Notification not found"));
-        notification.markRead();
+        // Bulk SQL may have changed an entity already loaded by this transaction. Never write its stale readAt back.
+        entityManager.refresh(notification);
         return notification;
     }
     @Transactional
