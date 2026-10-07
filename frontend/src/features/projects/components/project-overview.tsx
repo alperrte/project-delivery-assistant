@@ -226,7 +226,7 @@ export function ProjectOverview({ project, isManager, onNavigate }: {
       <section className="workspace-panel flex flex-col gap-x-8 gap-y-4 p-6 md:flex-row md:items-start" aria-label={t("projectProfile")}>
         <div className="w-full flex-1 md:min-w-48">
           <h2 className="text-base font-semibold text-foreground">{t("projectProfile")}</h2>
-          <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">{project.projectGoal || t("noGoal")}</p>
+          <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">{project.description || project.projectGoal || t("noGoal")}</p>
         </div>
         <dl className="grid w-full flex-[2] gap-x-6 gap-y-3 text-sm sm:grid-cols-2 xl:grid-cols-4">
           <div><dt className="inline-flex items-center gap-1.5 text-xs text-muted-foreground"><CalendarBlank size={15} aria-hidden="true" />{t("timeline")}</dt><dd className="mt-1 font-medium">{home.targetEndDate ? date.format(new Date(home.targetEndDate)) : t("notSpecified")}</dd></div>

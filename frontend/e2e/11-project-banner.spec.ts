@@ -100,9 +100,9 @@ test.describe.serial("Project banner", () => {
     await managerPage.goto(`/projects/${slug}?section=settings`);
     await managerPage.getByLabel("Kapak görseli", { exact: true }).setInputFiles({ name: "kapak.png", mimeType: "image/png", buffer: PNG });
     await expect(managerPage.getByText("Kapak görseli güncellendi.")).toBeVisible();
-    // The settings only state it: no picture there, and none in the project page header.
+    // The settings preview the banner (and the live card beside the form shows it too); the project page header does not.
     await expect(managerPage.getByText("Bu proje için bir kapak görseli yüklü.")).toBeVisible();
-    await expect(managerPage.locator(BANNER_IMG)).toHaveCount(0);
+    await expect(managerPage.getByTestId("project-settings-banner").locator(BANNER_IMG)).toBeVisible();
     await managerPage.goto(`/projects/${slug}`);
     await expect(managerPage.getByRole("heading", { level: 1, name: projectName })).toBeVisible();
     await expect(managerPage.locator(BANNER_IMG)).toHaveCount(0);
