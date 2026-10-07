@@ -83,8 +83,12 @@ test.describe.serial("Project lifecycle (manager)", () => {
     await expect(page.getByText("Depo bağlandı.")).toBeVisible();
 
     await expect(page.getByText("octocat/Hello-World")).toBeVisible();
-    await expect(page.getByText("Son commit'ler")).toBeVisible();
+    // The page opens on the overview; the branch view is one click away.
+    await expect(page.getByRole("heading", { name: /dalındaki son commit'ler/ })).toBeVisible();
     await expect(page.getByRole("listitem").first()).toBeVisible({ timeout: 15_000 });
+    await page.getByRole("tab", { name: "Dallar" }).click();
+    await expect(page).toHaveURL(/view=branches/);
+    await expect(page.getByRole("list", { name: "Dallar" }).getByRole("button").first()).toBeVisible({ timeout: 15_000 });
   });
 
   test("delete the project by typing its name", async () => {

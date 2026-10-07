@@ -55,6 +55,7 @@
     "TEAM_ARCHIVE_WOULD_ORPHAN": "Archiving this team would leave some people without a team.",
     "PROJECT_OWNER_PROTECTED": "The founder cannot be removed from the project or lose the Project Manager role.",
     "LAST_PROJECT_MANAGER": "The project must keep at least one Project Manager.",
+    "REPOSITORY_PRIVATE": "This repository is not public. Only public GitHub repositories can be connected.",
     "TASK_ARCHIVED": "An archived task cannot be changed.",
     "PROJECT_ARCHIVED": "An archived project cannot be changed.",
     "TASK_INVALID_TRANSITION": "The task cannot move to that status directly.",
@@ -634,7 +635,7 @@
   },
   "repository": {
     "title": "Repository",
-    "description": "Connect a public GitHub repository to show recent activity on the project home.",
+    "description": "Connect a public GitHub repository to explore its branches, see who did what and get notified about commits reaching the main branch.",
     "noneTitle": "No repository connected",
     "noneDescription": "Connect a public GitHub repository to see its latest commits here.",
     "connect": "Connect repository",
@@ -645,6 +646,54 @@
     "cancel": "Cancel",
     "urlLabel": "GitHub repository URL",
     "defaultBranch": "Default branch: {branch}",
+    "publicOnly": "Only public repositories can be connected. The connection is read-only.",
+    "notifyNote": "Project members are notified when new commits reach the {branch} branch (within a few minutes).",
+    "views": { "label": "Repository view", "overview": "Overview", "branches": "Branches" },
+    "overview": {
+      "latestTitle": "Latest commits on {branch}",
+      "branchCount": "{count, plural, one {# branch} other {# branches}}",
+      "branchCountMore": "{count, plural, one {# branch} other {# branches}} (list shortened)",
+      "exploreBranches": "Explore branches"
+    },
+    "errors": {
+      "rateLimited": "GitHub received too many requests. Please wait a moment and try again.",
+      "notFound": "The repository or branch was not found on GitHub.",
+      "unavailable": "GitHub is not responding right now. Please try again.",
+      "retry": "Try again"
+    },
+    "branches": {
+      "searchPlaceholder": "Search branches",
+      "searchLabel": "Search branches",
+      "listLabel": "Branches",
+      "noMatch": "No matching branch.",
+      "protected": "Protected branch",
+      "defaultBadge": "Default",
+      "truncated": "Showing the first {count} branches.",
+      "missingTitle": "Branch not found",
+      "missingDescription": "The branch \"{branch}\" no longer exists or may have been deleted.",
+      "backToDefault": "Back to {branch}",
+      "mergedBadge": "On main",
+      "unmergedBadge": "Not merged",
+      "statusLabel": "Branch status",
+      "isDefault": "This is the repository's default (main) branch.",
+      "upToDate": "Even with {base}.",
+      "aheadBehind": "{ahead, plural, one {# commit} other {# commits}} ahead of and {behind, plural, one {# commit} other {# commits}} behind {base}.",
+      "compareTruncated": "The comparison is limited to the first 100 commits; counts may be incomplete.",
+      "authorsTitle": "Who did what",
+      "authorsHint": "Based on the latest {count} loaded commits.",
+      "authorMeta": "{count, plural, one {# commit} other {# commits}} · {time}",
+      "filterByAuthor": "Filter by {author}",
+      "commitsTitle": "Commits",
+      "commitsByAuthor": "Commits by {author}",
+      "filterLabel": "Filter by merge state",
+      "filter": { "all": "All", "unmerged": "Not on main", "merged": "On main" },
+      "empty": "No commits on this branch.",
+      "emptyAuthor": "This author has no commits on this branch.",
+      "emptyFiltered": "No commits match this filter.",
+      "loadMore": "Load more",
+      "historyLimit": "At most the latest {count} commits from GitHub are shown.",
+      "loading": "Loading branches"
+    },
     "commits": {
       "title": "Latest commits",
       "refresh": "Refresh",
@@ -2612,7 +2661,8 @@
       "TASK_CLAIMED": "Task claimed",
       "TASK_RELEASED": "Task returned to the pool",
       "TASK_MENTIONED": "You were mentioned",
-      "TASK_COMMENTED": "New task comment"
+      "TASK_COMMENTED": "New task comment",
+      "REPOSITORY_COMMITS_PUSHED": "New commits pushed"
     },
     "close": "Close notification",
     "bodies": {
@@ -2636,13 +2686,19 @@
       "TASK_CLAIMED": "A task you follow was claimed from the pool.",
       "TASK_RELEASED": "A task you follow was returned to the pool.",
       "TASK_MENTIONED": "You were mentioned in a task comment.",
-      "TASK_COMMENTED": "A comment was added to a task you follow."
+      "TASK_COMMENTED": "A comment was added to a task you follow.",
+      "REPOSITORY_COMMITS_PUSHED": "New commits pushed"
     },
     "label": "Notifications, {count} unread",
     "update": "New update",
     "started": "{actor} started {key}: {title}.",
     "completed": "{actor} completed {key}: {title}.",
     "statusChanged": "{actor} moved {key}: {title} to “{status}”.",
-    "openTask": "Open task"
+    "openTask": "Open task",
+    "openRepository": "Open repository",
+    "repositoryCommitsBody": "{count, plural, one {# new commit} other {# new commits}} reached {branch} in {repo}.",
+    "repositoryCommitsBodyMore": "{count, plural, one {# or more new commits} other {# or more new commits}} reached {branch} in {repo}.",
+    "repositoryCommitsHead": "Latest: {message}",
+    "repositoryCommitsHeadBy": "Latest: {message} ({author})"
   }
 }
