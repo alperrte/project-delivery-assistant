@@ -1,26 +1,19 @@
 "use client";
 
-import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { GithubLogo, LinkSimple, CircleNotch, ArrowSquareOut, BellRinging } from "@phosphor-icons/react";
-import { usePathname, useRouter, useSearchParams } from "@/i18n/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { GithubLogo, ArrowSquareOut, BellRinging, BellSlash, GearSix } from "@phosphor-icons/react";
+import Link, { usePathname, useRouter, useSearchParams } from "@/i18n/navigation";
 import { PageHeader } from "@/components/common/page-header";
 import { PageContainer } from "@/components/common/page-container";
 import { EmptyState } from "@/components/common/empty-state";
-import { ConfirmDialog } from "@/components/common/confirm-dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ApiError } from "@/lib/api/client";
 import { errorKey } from "@/lib/api/error-message";
 import { repositoryApi, repositoryKeys } from "../api";
-import { connectRepositorySchema, type ConnectRepositoryValues } from "../schemas";
 import { safeGitHubLink } from "../links";
 import { RepositoryBranches } from "./repository-branches";
 import { RepositoryOverview } from "./repository-overview";
@@ -29,16 +22,10 @@ type RepositoryView = "overview" | "branches";
 
 export function RepositorySettings({ projectId, isManager }: { projectId: string; isManager: boolean }) {
   const t = useTranslations("repository");
-  const tv = useTranslations("validation");
   const te = useTranslations("errors");
-  const queryClient = useQueryClient();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [connecting, setConnecting] = useState(false);
-
-  const view: RepositoryView = searchParams.get("view") === "branches" ? "branches" : "overview";
-  const branchParam = searchParams.get("branch") || null;
 
   const { data: connection, isLoading, error } = useQuery({
     queryKey: repositoryKeys.root(projectId),
@@ -49,7 +36,10 @@ export function RepositorySettings({ projectId, isManager }: { projectId: string
   const notConnected = error instanceof ApiError && error.status === 404;
   const realError = error && !notConnected;
 
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: repositoryKeys.root(projectId) });
+  // Branch exploration belongs to the advanced mode; a shared `view=branches` link on a basic project falls back to the overview.
+  const advanced = connection?.trackingMode === "ADVANCED";
+  const view: RepositoryView = advanced && searchParams.get("view") === "branches" ? "branches" : "overview";
+  const branchParam = searchParams.get("branch") || null;
 
   /** The view and the branch live in the URL so a link to a branch can be shared and survives a reload. */
   function navigate(next: { view: RepositoryView; branch?: string | null }) {
@@ -64,35 +54,6 @@ export function RepositorySettings({ projectId, isManager }: { projectId: string
     router.push(`${pathname}?${params.toString()}`, { scroll: false });
   }
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors, isSubmitting },
-  } = useForm<ConnectRepositoryValues>({ resolver: zodResolver(connectRepositorySchema), mode: "onBlur" });
-
-  const connect = useMutation({
-    mutationFn: (values: ConnectRepositoryValues) => repositoryApi.connect(projectId, values.repositoryUrl),
-    onSuccess: () => {
-      invalidate();
-      toast.success(t("connected"));
-      setConnecting(false);
-      reset();
-    },
-    onError: (err) => toast.error(te(errorKey(err))),
-  });
-
-  const disconnect = useMutation({
-    mutationFn: () => repositoryApi.disconnect(projectId),
-    onSuccess: () => {
-      queryClient.removeQueries({ queryKey: [...repositoryKeys.root(projectId), "commits"] });
-      queryClient.removeQueries({ queryKey: repositoryKeys.branches(projectId) });
-      invalidate();
-      toast.success(t("disconnected"));
-    },
-    onError: (err) => toast.error(te(errorKey(err))),
-  });
-
   if (isLoading) return <Skeleton className="h-32 w-full" />;
 
   const repositoryLink = connection ? safeGitHubLink(connection.repositoryUrl) : null;
@@ -104,50 +65,13 @@ export function RepositorySettings({ projectId, isManager }: { projectId: string
 
         {realError && <p className="text-sm text-destructive">{te(errorKey(error))}</p>}
 
-        {notConnected && !connecting && isManager && (
+        {notConnected && (
           <EmptyState
             title={t("noneTitle")}
-            description={t("noneDescription")}
+            description={isManager ? t("noneDescriptionManager") : t("noneDescription")}
             className="flex min-h-72 flex-col items-center justify-center text-center [&_p]:mx-auto"
-            action={<Button onClick={() => setConnecting(true)}><LinkSimple data-icon="inline-start" size={16} />{t("connect")}</Button>}
+            action={isManager ? <Link href={`${pathname}?section=settings`} className={buttonVariants()}><GearSix data-icon="inline-start" size={16} aria-hidden="true" />{t("goToSettings")}</Link> : undefined}
           />
-        )}
-
-        {notConnected && !isManager && (
-          <EmptyState title={t("noneTitle")} description={t("noneDescription")} className="flex min-h-72 flex-col items-center justify-center text-center [&_p]:mx-auto" />
-        )}
-
-        {notConnected && connecting && (
-          <form
-            onSubmit={handleSubmit((values) => connect.mutate(values))}
-            noValidate
-            className="max-w-xl space-y-5 rounded-2xl border bg-card p-6 shadow-sm"
-          >
-            <div className="space-y-1.5">
-              <Label htmlFor="repository-url">{t("urlLabel")}</Label>
-              <Input
-                id="repository-url"
-                type="url"
-                autoComplete="off"
-                placeholder="https://github.com/owner/repo"
-                aria-invalid={!!errors.repositoryUrl}
-                {...register("repositoryUrl")}
-              />
-              <p className="text-xs text-muted-foreground">{t("publicOnly")}</p>
-              {errors.repositoryUrl && (
-                <p className="text-sm text-destructive">{tv(errors.repositoryUrl.message!)}</p>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <Button type="button" variant="outline" onClick={() => setConnecting(false)}>
-                {t("cancel")}
-              </Button>
-              <Button type="submit" disabled={isSubmitting || connect.isPending}>
-                {connect.isPending && <CircleNotch size={16} className="animate-spin" />}
-                {t("connect")}
-              </Button>
-            </div>
-          </form>
         )}
 
         {connection && (
@@ -170,40 +94,45 @@ export function RepositorySettings({ projectId, isManager }: { projectId: string
                     <span className="text-sm font-medium text-foreground">{connection.repositoryOwner}/{connection.repositoryName}</span>
                   )}
                   <p className="text-sm text-muted-foreground">{t("defaultBranch", { branch: connection.defaultBranch })}</p>
-                  <p className="mt-2 flex items-start gap-1.5 text-xs text-muted-foreground">
-                    <BellRinging size={14} aria-hidden="true" className="mt-px shrink-0" />
-                    {t("notifyNote", { branch: connection.defaultBranch })}
-                  </p>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <Badge variant="outline">{t(`mode.${connection.trackingMode}`)}</Badge>
+                    <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                      {connection.notifyOnCommits
+                        ? <BellRinging size={14} aria-hidden="true" className="mt-px shrink-0" />
+                        : <BellSlash size={14} aria-hidden="true" className="mt-px shrink-0" />}
+                      {connection.notifyOnCommits ? t("notifyNote", { branch: connection.defaultBranch }) : t("notifyOff")}
+                    </p>
+                  </div>
                 </div>
               </div>
               {isManager && (
-                <ConfirmDialog
-                  trigger={<Button variant="destructive">{t("disconnect")}</Button>}
-                  title={t("disconnectConfirmTitle")}
-                  confirmLabel={t("disconnect")}
-                  cancelLabel={t("cancel")}
-                  destructive
-                  onConfirm={() => disconnect.mutateAsync()}
-                />
+                <Link href={`${pathname}?section=settings`} className={buttonVariants({ variant: "outline" })}>
+                  <GearSix data-icon="inline-start" size={16} aria-hidden="true" />
+                  {t("manageSettings")}
+                </Link>
               )}
             </div>
 
-            <TabsList aria-label={t("views.label")}>
-              <TabsTrigger value="overview" className="px-3">{t("views.overview")}</TabsTrigger>
-              <TabsTrigger value="branches" className="px-3">{t("views.branches")}</TabsTrigger>
-            </TabsList>
+            {advanced && (
+              <TabsList aria-label={t("views.label")}>
+                <TabsTrigger value="overview" className="px-3">{t("views.overview")}</TabsTrigger>
+                <TabsTrigger value="branches" className="px-3">{t("views.branches")}</TabsTrigger>
+              </TabsList>
+            )}
 
             <TabsContent value="overview">
-              <RepositoryOverview projectId={projectId} connection={connection} onOpenBranches={() => navigate({ view: "branches" })} />
+              <RepositoryOverview projectId={projectId} connection={connection} onOpenBranches={advanced ? () => navigate({ view: "branches" }) : undefined} />
             </TabsContent>
-            <TabsContent value="branches">
-              <RepositoryBranches
-                projectId={projectId}
-                connection={connection}
-                branchParam={branchParam}
-                onSelectBranch={(branch) => navigate({ view: "branches", branch })}
-              />
-            </TabsContent>
+            {advanced && (
+              <TabsContent value="branches">
+                <RepositoryBranches
+                  projectId={projectId}
+                  connection={connection}
+                  branchParam={branchParam}
+                  onSelectBranch={(branch) => navigate({ view: "branches", branch })}
+                />
+              </TabsContent>
+            )}
           </Tabs>
         )}
       </div>

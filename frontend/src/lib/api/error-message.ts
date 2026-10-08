@@ -12,6 +12,7 @@ const CODE_KEYS: Record<string, string> = {
   current_password_incorrect: "currentPasswordIncorrect",
   password_unchanged: "passwordUnchanged",
   REPOSITORY_PRIVATE: "REPOSITORY_PRIVATE",
+  REPOSITORY_ADVANCED_REQUIRED: "REPOSITORY_ADVANCED_REQUIRED",
   REPOSITORY_READ_LIMIT: "tooManyRequests",
   account_unavailable: "accountUnavailable",
   PROJECT_LOGO_INVALID_TYPE: "PROJECT_LOGO_INVALID_TYPE",

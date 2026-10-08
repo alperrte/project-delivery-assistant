@@ -23,7 +23,7 @@ export function demoData(text: { projectName: string; projectAbout: string; team
     id: project.id, slug: project.slug, name: project.name, status: project.status, priority: project.priority,
     startDate: null, targetEndDate: null, organization: null, managers: [people[0]], teamMemberCount: 3,
     criteriaProgress: { completed: 0, total: 0 }, createdAt: date, updatedAt: date,
-    repository: { connected: false, provider: null, repositoryOwner: null, repositoryName: null, defaultBranch: null, lastCommit: null, githubUnavailable: false },
+    repository: { connected: false, provider: null, repositoryOwner: null, repositoryName: null, defaultBranch: null, trackingMode: null, notifyOnCommits: false, lastCommit: null, githubUnavailable: false },
   };
   const team: Team = {
     id: "pda-demo-team", projectId: project.id, name: text.teamName, description: text.teamAbout,

@@ -56,6 +56,7 @@
     "PROJECT_OWNER_PROTECTED": "The founder cannot be removed from the project or lose the Project Manager role.",
     "LAST_PROJECT_MANAGER": "The project must keep at least one Project Manager.",
     "REPOSITORY_PRIVATE": "This repository is not public. Only public GitHub repositories can be connected.",
+    "REPOSITORY_ADVANCED_REQUIRED": "This feature is only available in the Advanced repository mode.",
     "TASK_ARCHIVED": "An archived task cannot be changed.",
     "PROJECT_ARCHIVED": "An archived project cannot be changed.",
     "TASK_INVALID_TRANSITION": "The task cannot move to that status directly.",
@@ -302,6 +303,10 @@
           "title": "Technologies",
           "description": "Only their logos appear on the card. Pick up to {max}."
         },
+        "repository": {
+          "title": "GitHub repository",
+          "description": "Optional. Connect a public repository now, or add it later from the project settings."
+        },
         "details": {
           "title": "Details",
           "description": "Organization and description are optional."
@@ -369,6 +374,17 @@
         "description": "Description",
         "descriptionPlaceholder": "What does this project do, and for whom?"
       },
+      "repository": {
+        "label": "Repository URL",
+        "optional": "Optional",
+        "hint": "Only public repositories can be connected. The connection is read-only."
+      },
+      "teamPrompt": {
+        "title": "Project created",
+        "description": "You do not have a project team yet. Would you like to create one now?",
+        "yes": "Yes",
+        "no": "No"
+      },
       "preview": {
         "title": "Preview",
         "caption": "This is how the card will look in the list.",
@@ -383,7 +399,8 @@
         "submit": "Create project",
         "created": "Project created.",
         "logoFailed": "The logo could not be uploaded. You can try again from the project settings.",
-        "bannerFailed": "The cover image could not be uploaded. You can try again from the project settings."
+        "bannerFailed": "The cover image could not be uploaded. You can try again from the project settings.",
+        "repositoryFailed": "The repository could not be connected. You can try again from the project settings."
       },
       "types": {
         "WEB": {
@@ -490,6 +507,12 @@
       "criteriaProgress": "Success criteria",
       "repository": "Repository",
       "noRepository": "No repository connected",
+      "repositoryStrip": {
+        "label": "Repository tracking",
+        "unavailable": "GitHub is not responding right now; the latest commit cannot be shown.",
+        "by": "pushed by {author}",
+        "noCommits": "No commits in the repository yet."
+      },
       "githubUnavailable": "GitHub is temporarily unavailable",
       "pendingInvitations": "Pending invitations"
     },
@@ -650,6 +673,42 @@
     "defaultBranch": "Default branch: {branch}",
     "publicOnly": "Only public repositories can be connected. The connection is read-only.",
     "notifyNote": "Project members are notified when new commits reach the {branch} branch (within a few minutes).",
+    "mode": { "BASIC": "Basic", "ADVANCED": "Advanced" },
+    "notifyOff": "New-commit notifications are off.",
+    "manageSettings": "Repository settings",
+    "goToSettings": "Connect in settings",
+    "noneDescriptionManager": "Connect a public GitHub repository from the project settings.",
+    "options": {
+      "modeLabel": "Tracking mode",
+      "help": "Show the difference between Basic and Advanced",
+      "mode": { "BASIC": "Basic", "ADVANCED": "Advanced" },
+      "modeSummary": { "BASIC": "The repository is connected and the latest commits merged into the default branch are tracked.", "ADVANCED": "Follow branches; see all merged or unmerged commits and who pushed them." },
+      "notifyLabel": "Notify members about new commits",
+      "notifyHint": "In both modes, notifications only cover commits that reach the default branch.",
+      "helpTitle": "Basic and Advanced mode",
+      "helpDescription": "You can change the mode any time from the project settings.",
+      "modeDetail": { "BASIC": "The repository is connected and the latest commits merged into the default branch are tracked. The repository page shows only the default branch's commit list.", "ADVANCED": "Follow branches, and see every merged or unmerged commit per branch and who pushed each one. The repository page opens the Overview and Branches views." },
+      "helpNotify": "New-commit notifications cover the default branch only in both modes; you can turn them off with the switch.",
+      "close": "Close"
+    },
+    "setting": {
+      "title": "GitHub repository",
+      "description": "Connect the repository and manage the tracking mode and notifications.",
+      "notConnected": "No repository is connected to this project yet. Once connected, a Repository item appears in the sidebar.",
+      "urlLabel": "GitHub repository URL",
+      "publicOnly": "Only public repositories can be connected. The connection is read-only.",
+      "connect": "Connect repository",
+      "connected": "Repository connected.",
+      "saved": "Repository settings saved.",
+      "save": "Save",
+      "defaultBranch": "Default branch: {branch}",
+      "openPage": "Open repository page",
+      "disconnect": "Disconnect",
+      "disconnected": "Repository disconnected.",
+      "disconnectConfirmTitle": "Disconnect this repository?",
+      "disconnectConfirmDescription": "The repository page and the repository strip on the overview are removed. The repository on GitHub is not affected.",
+      "cancel": "Cancel"
+    },
     "views": { "label": "Repository view", "overview": "Overview", "branches": "Branches" },
     "overview": {
       "latestTitle": "Latest commits on {branch}",

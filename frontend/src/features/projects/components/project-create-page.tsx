@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, type ReactNode } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { usePickedImage } from "@/lib/media/use-picked-image";
 import Link from "@/i18n/navigation";
 import { useRouter } from "@/i18n/navigation";
@@ -12,12 +12,17 @@ import { CircleNotch, Eye } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/common/page-header";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useSession } from "@/features/auth/hooks/use-session";
 import { organizationsApi } from "@/features/organizations/api";
+import { repositoryApi } from "@/features/repository/api";
+import { DEFAULT_REPOSITORY_SETTINGS, RepositoryOptions } from "@/features/repository/components/repository-options";
+import { GITHUB_REPOSITORY_URL } from "@/features/repository/schemas";
+import type { RepositorySettings } from "@/features/repository/types";
 import { errorKey } from "@/lib/api/error-message";
 import { projectsApi } from "../api";
 import { invalidateProjectMutation } from "../query-invalidation";
@@ -88,7 +93,11 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
   });
 
   const values = useWatch({ control });
-  const dirty = isDirty || logoFile !== null || bannerFile !== null;
+  const [repositoryUrl, setRepositoryUrl] = useState("");
+  const [repositoryUrlInvalid, setRepositoryUrlInvalid] = useState(false);
+  const [repositorySettings, setRepositorySettings] = useState<RepositorySettings>(DEFAULT_REPOSITORY_SETTINGS);
+  const [teamPromptSlug, setTeamPromptSlug] = useState<string | null>(null);
+  const dirty = isDirty || logoFile !== null || bannerFile !== null || repositoryUrl.trim() !== "";
 
   const mutation = useMutation({
     mutationFn: async (form: CreateProjectValues) => {
@@ -116,15 +125,25 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
           bannerFailed = true;
         }
       }
-      return { project, logoFailed, bannerFailed };
+      let repositoryFailed = false;
+      const url = repositoryUrl.trim();
+      if (url) {
+        try {
+          await repositoryApi.connect(project.id, { repositoryUrl: url, ...repositorySettings });
+        } catch {
+          repositoryFailed = true;
+        }
+      }
+      return { project, logoFailed, bannerFailed, repositoryFailed };
     },
-    onSuccess: async ({ project, logoFailed, bannerFailed }) => {
+    onSuccess: async ({ project, logoFailed, bannerFailed, repositoryFailed }) => {
       created.current = true;
       await invalidateProjectMutation(queryClient, project.organizationId);
       toast.success(t("actions.created"));
       if (logoFailed) toast.warning(t("actions.logoFailed"));
       if (bannerFailed) toast.warning(t("actions.bannerFailed"));
-      router.push(`/projects/${project.slug}`);
+      if (repositoryFailed) toast.warning(t("actions.repositoryFailed"));
+      setTeamPromptSlug(project.slug);
     },
     onError: (err) => toast.error(te(errorKey(err))),
   });
@@ -173,7 +192,14 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
     <div>
       <PageHeader title={t("title")} description={t("description")} />
 
-      <form onSubmit={handleSubmit((form) => mutation.mutate(form))} noValidate>
+      <form
+        onSubmit={handleSubmit((form) => {
+          const invalid = repositoryUrl.trim() !== "" && !GITHUB_REPOSITORY_URL.test(repositoryUrl.trim());
+          setRepositoryUrlInvalid(invalid);
+          if (!invalid) mutation.mutate(form);
+        })}
+        noValidate
+      >
         <div className="grid gap-10 lg:grid-cols-12 lg:gap-12">
           <div className="space-y-8 lg:col-span-7">
             <Section id={`${ids}-identity`} title={t("sections.identity.title")} description={t("sections.identity.description")}>
@@ -293,6 +319,40 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
                 )}
               </div>
             </Section>
+
+            <Section id={`${ids}-repository`} title={t("sections.repository.title")} description={t("sections.repository.description")}>
+              <div className="space-y-1.5">
+                <div className="flex items-baseline justify-between gap-3">
+                  <Label htmlFor="project-repository-url">{t("repository.label")}</Label>
+                  <span className="text-xs text-muted-foreground">{t("repository.optional")}</span>
+                </div>
+                <Input
+                  id="project-repository-url"
+                  type="url"
+                  inputMode="url"
+                  autoComplete="off"
+                  maxLength={500}
+                  placeholder="https://github.com/owner/repo"
+                  value={repositoryUrl}
+                  aria-invalid={repositoryUrlInvalid}
+                  aria-describedby={`${ids}-repository-note`}
+                  onChange={(event) => {
+                    setRepositoryUrl(event.target.value);
+                    setRepositoryUrlInvalid(false);
+                  }}
+                />
+                {repositoryUrlInvalid ? (
+                  <p id={`${ids}-repository-note`} role="alert" className="text-sm text-destructive">
+                    {tv("githubUrl")}
+                  </p>
+                ) : (
+                  <p id={`${ids}-repository-note`} className="text-sm text-muted-foreground">
+                    {t("repository.hint")}
+                  </p>
+                )}
+              </div>
+              {repositoryUrl.trim() !== "" && <RepositoryOptions value={repositorySettings} onChange={setRepositorySettings} />}
+            </Section>
           </div>
 
           <ProjectPreviewPanel
@@ -321,6 +381,23 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
           </div>
         </div>
       </form>
+
+      <Dialog open={teamPromptSlug !== null} onOpenChange={(open) => { if (!open && teamPromptSlug) router.push(`/projects/${teamPromptSlug}`); }}>
+        <DialogContent showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>{t("teamPrompt.title")}</DialogTitle>
+            <DialogDescription>{t("teamPrompt.description")}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => router.push(`/projects/${teamPromptSlug}`)}>
+              {t("teamPrompt.no")}
+            </Button>
+            <Button type="button" onClick={() => router.push(`/projects/${teamPromptSlug}/teams/new`)}>
+              {t("teamPrompt.yes")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

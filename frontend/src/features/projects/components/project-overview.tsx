@@ -12,12 +12,13 @@ import { profilePhotoSrc } from "@/features/account/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { errorKey } from "@/lib/api/error-message";
 import { criteriaApi } from "@/features/criteria/api";
+import { relativeTime, safeAvatarSrc, safeGitHubLink } from "@/features/repository/links";
 import { usePendingInvitationCount } from "@/features/invitations/hooks";
 import { squadsApi } from "@/features/squads/api";
 import { membersApi } from "../members-api";
 import { projectsApi } from "../api";
 import { parseTechStack } from "../tech-stack";
-import type { Project } from "../types";
+import type { Project, RepositorySummary } from "../types";
 import { TechLogo, toTechLabels } from "./tech-logo";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ProjectCriteriaActivity, ProjectCriteriaTrend } from "./project-criteria-insights";
@@ -44,6 +45,40 @@ function RailRow({ label, value, onClick, leading }: { label: string; value: str
 function Dot({ tone }: { tone: "live" | "primary" | "muted" }) {
   const color = tone === "live" ? "bg-live" : tone === "primary" ? "bg-primary" : "bg-muted-foreground/40";
   return <span className={`size-2 shrink-0 rounded-full ${color}`} aria-hidden="true" />;
+}
+
+/** One line: which repository, and the latest commit on its default branch with who pushed it. */
+function RepositoryStrip({ repository, locale, onOpen }: { repository: RepositorySummary; locale: string; onOpen: () => void }) {
+  const t = useTranslations("projects.overview");
+  const commit = repository.lastCommit;
+  const commitLink = commit ? safeGitHubLink(commit.commitUrl) : null;
+
+  return (
+    <section aria-label={t("repositoryStrip.label")} className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2 rounded-[0.875rem] border bg-card px-4 py-3 shadow-sm">
+      <button type="button" onClick={onOpen} className="flex min-w-0 items-center gap-2 text-left text-sm font-medium text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+        <GithubLogo size={18} className="shrink-0" aria-hidden="true" />
+        <span className="truncate">{repository.repositoryOwner}/{repository.repositoryName}</span>
+        <span className="shrink-0 text-xs font-normal text-muted-foreground">· {repository.defaultBranch}</span>
+      </button>
+      {repository.githubUnavailable ? (
+        <p className="min-w-0 flex-1 text-sm text-muted-foreground">{t("repositoryStrip.unavailable")}</p>
+      ) : commit ? (
+        <p className="flex min-w-0 flex-1 items-center gap-2 text-sm">
+          <Avatar name={commit.author} src={safeAvatarSrc(commit.authorAvatarUrl)} className="size-5 text-[9px]" />
+          {commitLink ? (
+            <a href={commitLink} target="_blank" rel="noreferrer" title={commit.message} className="min-w-0 truncate text-foreground hover:underline">{commit.message}</a>
+          ) : (
+            <span title={commit.message} className="min-w-0 truncate text-foreground">{commit.message}</span>
+          )}
+          <span className="hidden shrink-0 text-xs text-muted-foreground sm:inline">
+            {t("repositoryStrip.by", { author: commit.author })} · <time dateTime={commit.committedAt}>{relativeTime(commit.committedAt, locale)}</time>
+          </span>
+        </p>
+      ) : (
+        <p className="min-w-0 flex-1 text-sm text-muted-foreground">{t("repositoryStrip.noCommits")}</p>
+      )}
+    </section>
+  );
 }
 
 export function ProjectOverview({ project, isManager, onNavigate }: {
@@ -167,12 +202,14 @@ export function ProjectOverview({ project, isManager, onNavigate }: {
               )
             }
           />
-          <RailRow
-            label={t("repository")}
-            value={home.repository.connected ? `${home.repository.repositoryOwner}/${home.repository.repositoryName}` : t("noRepository")}
-            onClick={() => onNavigate("repository")}
-            leading={<Dot tone={home.repository.connected ? "live" : "muted"} />}
-          />
+          {(home.repository.connected || isManager) && (
+            <RailRow
+              label={t("repository")}
+              value={home.repository.connected ? `${home.repository.repositoryOwner}/${home.repository.repositoryName}` : t("noRepository")}
+              onClick={() => onNavigate(home.repository.connected ? "repository" : "settings")}
+              leading={<Dot tone={home.repository.connected ? "live" : "muted"} />}
+            />
+          )}
           {isManager && (
             <RailRow
               label={t("invitations")}
@@ -199,12 +236,14 @@ export function ProjectOverview({ project, isManager, onNavigate }: {
                   </button>
                 </li>
               )}
-              <li>
-                <button type="button" onClick={() => onNavigate("repository")} className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-foreground transition-colors hover:bg-muted/60">
-                  <GithubLogo size={15} className="text-muted-foreground" aria-hidden="true" />
-                  {home.repository.connected || !isManager ? t("viewRepository") : t("connectRepository")}
-                </button>
-              </li>
+              {(home.repository.connected || isManager) && (
+                <li>
+                  <button type="button" onClick={() => onNavigate(home.repository.connected ? "repository" : "settings")} className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-foreground transition-colors hover:bg-muted/60">
+                    <GithubLogo size={15} className="text-muted-foreground" aria-hidden="true" />
+                    {home.repository.connected ? t("viewRepository") : t("connectRepository")}
+                  </button>
+                </li>
+              )}
               {isManager && (
                 <li>
                   <button type="button" onClick={() => onNavigate("settings")} className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-foreground transition-colors hover:bg-muted/60">
@@ -217,6 +256,10 @@ export function ProjectOverview({ project, isManager, onNavigate }: {
           </div>
         </aside>
       </div>
+
+      {home.repository.connected && (
+        <RepositoryStrip repository={home.repository} locale={locale} onOpen={() => onNavigate("repository")} />
+      )}
 
       <div className="grid gap-5 lg:grid-cols-2">
         <ProjectCriteriaActivity criteria={criteria} />
