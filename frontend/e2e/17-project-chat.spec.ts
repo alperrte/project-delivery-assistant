@@ -83,6 +83,7 @@ test.describe.serial("Project chat", () => {
     await api(managerPage, "DELETE", "/users/me/profile-photo").catch(() => undefined);
     await managerPage.close();
     await memberPage.close();
+    if(manager?.id)await outsiderPage.context().storageState({path:path.join(AUTH_DIR,`chat-outsider-session-${manager.id}.json`)});
     await outsiderPage.close();
   });
 

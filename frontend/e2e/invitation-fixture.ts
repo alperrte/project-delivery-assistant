@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type Page, type BrowserContext } from "@playwright/test";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { AUTH_DIR } from "./global-setup";
@@ -11,8 +11,12 @@ export async function createIsolatedInvitationRecipient(manager: Page, recipient
  if(!/^[a-f0-9-]{36}$/.test(managerId))throw Error("Invalid suite QA manager UUID");
  const fixtureFile=path.join(AUTH_DIR,`invitation-recipient-${managerId}.json`);
  if(existsSync(fixtureFile)) {
-  const saved=JSON.parse(readFileSync(fixtureFile,"utf8")) as {account:ReturnType<typeof uniqueUser>;bootstrapId:string};
-  await login(recipient,saved.account.email,saved.account.password);
+  const saved=JSON.parse(readFileSync(fixtureFile,"utf8")) as {account:ReturnType<typeof uniqueUser>;bootstrapId:string;storageState?:Awaited<ReturnType<BrowserContext["storageState"]>>};
+  if(!saved.storageState)throw Error("Current-run recipient session missing");
+  await recipient.context().addCookies(saved.storageState.cookies);
+  await recipient.goto("/projects");
+  const current=await api(recipient,"GET","/auth/me");expect(current.status).toBe(200);
+  expect((current.json as {email:string}).email).toBe(saved.account.email);
   return {bootstrapId:saved.bootstrapId};
  }
  const account=uniqueUser("recipient"); let bootstrapId: string | undefined;
@@ -24,7 +28,7 @@ export async function createIsolatedInvitationRecipient(manager: Page, recipient
   const invitation=await api(manager,"POST",`/projects/${bootstrapId}/invitations`,{email:account.email,firstName:"QA",lastName:"Recipient",teamId:(team.json as {id:string}).id,roles:["TESTER"]});expect(invitation.status).toBe(201);
   expect((await api(recipient,"POST","/auth/register/invitation",{token:(invitation.json as {token:string}).token,...account,firstName:"QA",lastName:"Recipient",confirmPassword:account.password})).status).toBe(200);
   await login(recipient,account.email,account.password);
-  writeFileSync(fixtureFile,JSON.stringify({account,bootstrapId}));
+  writeFileSync(fixtureFile,JSON.stringify({account,bootstrapId,storageState:await recipient.context().storageState()}));
   return {bootstrapId};
  } catch(error) {if(bootstrapId)await api(manager,"POST",`/projects/${bootstrapId}/archive`);throw error;}
 }
