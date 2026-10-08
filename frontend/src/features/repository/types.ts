@@ -1,9 +1,19 @@
+/** BASIC follows the default branch only; ADVANCED adds branches and per-branch commits. */
+export type RepositoryTrackingMode = "BASIC" | "ADVANCED";
+
+export type RepositorySettings = {
+  trackingMode: RepositoryTrackingMode;
+  notifyOnCommits: boolean;
+};
+
 export type RepositoryConnection = {
   provider: "GITHUB";
   repositoryUrl: string;
   repositoryOwner: string;
   repositoryName: string;
   defaultBranch: string;
+  trackingMode: RepositoryTrackingMode;
+  notifyOnCommits: boolean;
   connectedBy: string;
   connectedAt: string;
   updatedAt: string;

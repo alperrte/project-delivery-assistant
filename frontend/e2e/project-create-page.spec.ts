@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { MANAGER_STORAGE } from "./global-setup";
-import { api, createProject, openProjectListPage } from "./helpers";
+import { api, createProject, declineTeamPrompt, openProjectListPage } from "./helpers";
 
 test.use({ storageState: MANAGER_STORAGE });
 
@@ -74,6 +74,7 @@ test.describe("Yeni proje sayfası", () => {
     await page.getByRole("radio", { name: /^Web/ }).click();
     await page.getByRole("button", { name: "React", exact: true }).click();
     await page.getByRole("button", { name: /^Projeyi oluştur$/ }).click();
+    await declineTeamPrompt(page);
     await expect(page).toHaveURL(/\/tr\/projeler\/(?!yeni$)[^/]+$/, { timeout: 15_000 });
 
     // The detail page loads its own /home; let it finish so only requests made by the list page are counted.
@@ -89,7 +90,8 @@ test.describe("Yeni proje sayfası", () => {
     await expect(card).toBeVisible();
     await expect(card.locator('img[src*="/logo?v="]')).toBeVisible();
     await expect(card.getByText("1 üye")).toBeVisible();
-    expect(homeCalls).toHaveLength(0);
+    // A full page load lets the sidebar read the selected project's home once (for the "Depo" item); cards never do.
+    expect(homeCalls.length).toBeLessThanOrEqual(1);
   });
 
   test("kapak görseli oluşturma sırasında seçilir, önizleme kartında görünür ve proje kartına yüklenir", async ({ page }) => {
@@ -108,6 +110,7 @@ test.describe("Yeni proje sayfası", () => {
     await page.getByRole("radio", { name: /^Web/ }).click();
     await page.getByRole("button", { name: "React", exact: true }).click();
     await page.getByRole("button", { name: /^Projeyi oluştur$/ }).click();
+    await declineTeamPrompt(page);
     await expect(page).toHaveURL(/\/tr\/projeler\/(?!yeni$)[^/]+$/, { timeout: 15_000 });
 
     const slug = new URL(page.url()).pathname.split("/").pop()!;

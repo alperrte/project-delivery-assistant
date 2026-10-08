@@ -58,6 +58,8 @@ export type RepositorySummary = {
   repositoryOwner: string | null;
   repositoryName: string | null;
   defaultBranch: string | null;
+  trackingMode: "BASIC" | "ADVANCED" | null;
+  notifyOnCommits: boolean;
   lastCommit: CommitSummary | null;
   githubUnavailable: boolean;
 };

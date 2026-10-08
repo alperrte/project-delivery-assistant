@@ -23,6 +23,7 @@ import { useSession } from "@/features/auth/hooks/use-session";
 import { errorKey } from "@/lib/api/error-message";
 import { cn } from "@/lib/utils";
 import { organizationsApi } from "@/features/organizations/api";
+import { RepositorySetting } from "@/features/repository/components/repository-setting";
 import { projectBannerUrl, projectLogoSource, projectsApi } from "../api";
 import { invalidateProjectMutation } from "../query-invalidation";
 import { ProjectLogoField } from "./project-logo-field";
@@ -357,6 +358,8 @@ export function ProjectSettingsForm({ project, organization }: { project: Projec
           </SettingsSection>
 
   
+        <RepositorySetting projectId={project.id} projectSlug={project.slug} />
+
         <TaskModelSetting project={project} />
 
         {founder && (

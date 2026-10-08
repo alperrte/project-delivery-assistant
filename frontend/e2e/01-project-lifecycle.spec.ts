@@ -7,7 +7,7 @@ import { MANAGER_STORAGE, MANAGER_USER_FILE } from "./global-setup";
  * HMZ-PROJ-52 flows covered here (single PROJECT_MANAGER, one project, run in order):
  *   1. Login -> Create Organization -> Create Project -> creator becomes PROJECT_MANAGER
  *   2. Edit Settings -> Add Criteria -> Complete Criterion
- *   8. Connect Public GitHub Repo -> Latest Commits visible
+ *   8. Connect Public GitHub Repo (project settings) -> Latest Commits visible
  *   9. Delete Project (type its name to confirm)
  *
  * Uses the shared manager session from global-setup (no fresh registration here)
@@ -62,14 +62,18 @@ test.describe.serial("Project lifecycle (manager)", () => {
     await expect(page.getByText("1/1 tamamlandı")).toBeVisible();
   });
 
-  test("connect a public GitHub repository and see latest commits", async () => {
+  test("connect a public GitHub repository from the project settings and see latest commits", async () => {
     test.setTimeout(90_000);
-    await page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Depo" }).click();
-    await page.getByRole("button", { name: /^Depo bağla$/ }).click();
-    await page.locator("#repository-url").fill("https://github.com/octocat/Hello-World");
+    const nav = page.getByRole("navigation", { name: "Gezinme menüsü" });
+    // Without a connected repository the sidebar has no "Depo" item; the connection is made in the settings.
+    await page.goto(`/projects/${slug}?section=settings`);
+    await expect(nav.getByRole("link", { name: "Depo" })).toHaveCount(0);
+    const section = page.locator("section").filter({ has: page.getByRole("heading", { name: "GitHub deposu", exact: true }) });
+    await section.locator("#settings-repository-url").fill("https://github.com/octocat/Hello-World");
+    await section.getByRole("radio", { name: /Gelişmiş/ }).check();
     // This fixture calls the real external GitHub service. Retry only its explicit temporary-unavailable response;
     // permission, validation, rate-limit and application errors must still fail, and no response is mocked.
-    const submit = page.getByRole("button", { name: /^Depo bağla$/ });
+    const submit = section.getByRole("button", { name: /^Depo bağla$/ });
     let status = 0;
     for (let attempt = 0; attempt < 3; attempt += 1) {
       const answered = page.waitForResponse((response) => response.request().method() === "POST" &&
@@ -82,13 +86,18 @@ test.describe.serial("Project lifecycle (manager)", () => {
     expect(status).toBe(201);
     await expect(page.getByText("Depo bağlandı.")).toBeVisible();
 
-    await expect(page.getByText("octocat/Hello-World")).toBeVisible();
-    // The page opens on the overview; the branch view is one click away.
+    // The sidebar item appears right away and the repository page opens on the overview with the branch view.
+    await nav.getByRole("link", { name: "Depo" }).click();
+    await expect(page.getByText("octocat/Hello-World").first()).toBeVisible();
     await expect(page.getByRole("heading", { name: /dalındaki son commit'ler/ })).toBeVisible();
     await expect(page.getByRole("listitem").first()).toBeVisible({ timeout: 15_000 });
     await page.getByRole("tab", { name: "Dallar" }).click();
     await expect(page).toHaveURL(/view=branches/);
     await expect(page.getByRole("list", { name: "Dallar" }).getByRole("button").first()).toBeVisible({ timeout: 15_000 });
+
+    // The project overview shows the one-line repository strip.
+    await nav.getByRole("link", { name: "Genel bakış" }).click();
+    await expect(page.getByRole("region", { name: "Depo takibi" })).toBeVisible();
   });
 
   test("delete the project by typing its name", async () => {

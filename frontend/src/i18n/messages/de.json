@@ -56,6 +56,7 @@
     "PROJECT_OWNER_PROTECTED": "Der Gründer kann nicht aus dem Projekt entfernt werden und die Rolle Projektmanager nicht verlieren.",
     "LAST_PROJECT_MANAGER": "Das Projekt muss mindestens einen Projektmanager behalten.",
     "REPOSITORY_PRIVATE": "Dieses Repository ist nicht öffentlich. Nur öffentliche GitHub-Repositories können verbunden werden.",
+    "REPOSITORY_ADVANCED_REQUIRED": "Diese Funktion ist nur im erweiterten Repository-Modus verfügbar.",
     "TASK_ARCHIVED": "Eine archivierte Aufgabe kann nicht geändert werden.",
     "PROJECT_ARCHIVED": "Ein archiviertes Projekt kann nicht geändert werden.",
     "TASK_INVALID_TRANSITION": "Die Aufgabe kann nicht direkt in diesen Status wechseln.",
@@ -302,6 +303,10 @@
           "title": "Technologien",
           "description": "Auf der Karte erscheinen nur die Logos. Wählen Sie bis zu {max}."
         },
+        "repository": {
+          "title": "GitHub-Repository",
+          "description": "Optional. Verbinden Sie jetzt ein öffentliches Repository oder fügen Sie es später in den Projekteinstellungen hinzu."
+        },
         "details": {
           "title": "Details",
           "description": "Organisation und Beschreibung sind optional."
@@ -368,6 +373,17 @@
         "description": "Beschreibung",
         "descriptionPlaceholder": "Was macht dieses Projekt und für wen?"
       },
+      "repository": {
+        "label": "Repository-URL",
+        "optional": "Optional",
+        "hint": "Nur öffentliche Repositories können verbunden werden. Die Verbindung ist schreibgeschützt."
+      },
+      "teamPrompt": {
+        "title": "Projekt erstellt",
+        "description": "Sie haben noch kein Projektteam. Möchten Sie jetzt eines erstellen?",
+        "yes": "Ja",
+        "no": "Nein"
+      },
       "preview": {
         "title": "Vorschau",
         "caption": "So sieht die Karte in der Liste aus.",
@@ -382,7 +398,8 @@
         "submit": "Projekt erstellen",
         "created": "Projekt erstellt.",
         "logoFailed": "Das Logo konnte nicht hochgeladen werden. Sie können es in den Projekteinstellungen erneut versuchen.",
-        "bannerFailed": "Das Titelbild konnte nicht hochgeladen werden. Sie können es in den Projekteinstellungen erneut versuchen."
+        "bannerFailed": "Das Titelbild konnte nicht hochgeladen werden. Sie können es in den Projekteinstellungen erneut versuchen.",
+        "repositoryFailed": "Das Repository konnte nicht verbunden werden. Sie können es in den Projekteinstellungen erneut versuchen."
       },
       "types": {
         "WEB": {
@@ -488,6 +505,12 @@
       "criteriaProgress": "Erfolgskriterien",
       "repository": "Repository",
       "noRepository": "Kein Repository verbunden",
+      "repositoryStrip": {
+        "label": "Repository-Tracking",
+        "unavailable": "GitHub antwortet gerade nicht; der letzte Commit kann nicht angezeigt werden.",
+        "by": "von {author}",
+        "noCommits": "Noch keine Commits im Repository."
+      },
       "githubUnavailable": "GitHub ist vorübergehend nicht verfügbar",
       "pendingInvitations": "Offene Einladungen"
     },
@@ -648,6 +671,42 @@
     "defaultBranch": "Standard-Branch: {branch}",
     "publicOnly": "Nur öffentliche Repositories können verbunden werden. Die Verbindung ist schreibgeschützt.",
     "notifyNote": "Projektmitglieder werden benachrichtigt, wenn neue Commits im Branch {branch} eintreffen (nach wenigen Minuten).",
+    "mode": { "BASIC": "Einfach", "ADVANCED": "Erweitert" },
+    "notifyOff": "Benachrichtigungen für neue Commits sind aus.",
+    "manageSettings": "Repository-Einstellungen",
+    "goToSettings": "In den Einstellungen verbinden",
+    "noneDescriptionManager": "Verbinden Sie ein öffentliches GitHub-Repository in den Projekteinstellungen.",
+    "options": {
+      "modeLabel": "Tracking-Modus",
+      "help": "Unterschied zwischen Einfach und Erweitert anzeigen",
+      "mode": { "BASIC": "Einfach", "ADVANCED": "Erweitert" },
+      "modeSummary": { "BASIC": "Das Repository wird verbunden und die neuesten in den Standard-Branch gemergten Commits werden verfolgt.", "ADVANCED": "Branches verfolgen; alle gemergten oder ungemergten Commits und deren Autoren sehen." },
+      "notifyLabel": "Mitglieder über neue Commits benachrichtigen",
+      "notifyHint": "In beiden Modi betrifft die Benachrichtigung nur Commits im Standard-Branch.",
+      "helpTitle": "Einfacher und erweiterter Modus",
+      "helpDescription": "Sie können den Modus jederzeit in den Projekteinstellungen ändern.",
+      "modeDetail": { "BASIC": "Das Repository wird verbunden und die neuesten in den Standard-Branch gemergten Commits werden verfolgt. Die Repository-Seite zeigt nur die Commit-Liste des Standard-Branches.", "ADVANCED": "Sie können Branches verfolgen und pro Branch alle gemergten oder ungemergten Commits samt Autor sehen. Die Repository-Seite öffnet die Ansichten Übersicht und Branches." },
+      "helpNotify": "Benachrichtigungen über neue Commits gelten in beiden Modi nur für den Standard-Branch; Sie können sie mit dem Schalter ausschalten.",
+      "close": "Schließen"
+    },
+    "setting": {
+      "title": "GitHub-Repository",
+      "description": "Repository verbinden sowie Tracking-Modus und Benachrichtigungen verwalten.",
+      "notConnected": "Mit diesem Projekt ist noch kein Repository verbunden. Nach dem Verbinden erscheint der Eintrag Repository in der Seitenleiste.",
+      "urlLabel": "GitHub-Repository-URL",
+      "publicOnly": "Nur öffentliche Repositories können verbunden werden. Die Verbindung ist schreibgeschützt.",
+      "connect": "Repository verbinden",
+      "connected": "Repository verbunden.",
+      "saved": "Repository-Einstellungen gespeichert.",
+      "save": "Speichern",
+      "defaultBranch": "Standard-Branch: {branch}",
+      "openPage": "Repository-Seite öffnen",
+      "disconnect": "Trennen",
+      "disconnected": "Repository-Verbindung getrennt.",
+      "disconnectConfirmTitle": "Dieses Repository trennen?",
+      "disconnectConfirmDescription": "Die Repository-Seite und die Repository-Zeile in der Übersicht werden entfernt. Das Repository auf GitHub bleibt unberührt.",
+      "cancel": "Abbrechen"
+    },
     "views": { "label": "Repository-Ansicht", "overview": "Übersicht", "branches": "Branches" },
     "overview": {
       "latestTitle": "Neueste Commits auf {branch}",

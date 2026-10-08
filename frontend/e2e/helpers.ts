@@ -73,6 +73,12 @@ export async function createOrganization(page: Page, name: string) {
 }
 
 /** Creates a project and returns its slug, parsed from the post-create redirect URL. */
+/** After "Projeyi oluştur" the page asks whether to create a team now; most tests just want the project page. */
+export async function declineTeamPrompt(page: Page) {
+  const dialog = page.getByRole("dialog").filter({ hasText: "Henüz bir proje ekibiniz yok" });
+  await dialog.getByRole("button", { name: "Hayır", exact: true }).click();
+}
+
 export async function createProject(
   page: Page,
   name: string,
@@ -91,6 +97,7 @@ export async function createProject(
   }
 
   await page.getByRole("button", { name: /^Projeyi oluştur$/ }).click();
+  await declineTeamPrompt(page);
   // The create page itself is `/projects/new`, so the new project is the first detail URL that is not "new".
   await expect(page).toHaveURL(/\/tr\/projeler\/(?!yeni$)[^/]+$/, { timeout: 15_000 });
   const url = new URL(page.url());

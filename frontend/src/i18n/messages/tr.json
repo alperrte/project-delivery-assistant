@@ -56,6 +56,7 @@
     "PROJECT_OWNER_PROTECTED": "Projenin kurucusu projeden çıkarılamaz ve Proje Yöneticisi rolü alınamaz.",
     "LAST_PROJECT_MANAGER": "Projede en az bir Proje Yöneticisi kalmalıdır.",
     "REPOSITORY_PRIVATE": "Bu depo herkese açık değil. Yalnızca herkese açık GitHub depoları bağlanabilir.",
+    "REPOSITORY_ADVANCED_REQUIRED": "Bu özellik yalnız Gelişmiş depo modunda kullanılabilir.",
     "TASK_ARCHIVED": "Arşivlenmiş görev üzerinde işlem yapılamaz.",
     "PROJECT_ARCHIVED": "Arşivlenmiş projede değişiklik yapılamaz.",
     "TASK_INVALID_TRANSITION": "Görev bu duruma doğrudan taşınamaz.",
@@ -302,6 +303,10 @@
           "title": "Teknolojiler",
           "description": "Kartta yalnızca logoları görünür. En fazla {max} teknoloji seçebilirsiniz."
         },
+        "repository": {
+          "title": "GitHub deposu",
+          "description": "İsteğe bağlı. Genel bir depoyu şimdi bağlayabilir ya da sonra proje ayarlarından ekleyebilirsiniz."
+        },
         "details": {
           "title": "Detaylar",
           "description": "Organizasyon ve açıklama isteğe bağlıdır."
@@ -368,6 +373,17 @@
         "description": "Açıklama",
         "descriptionPlaceholder": "Bu proje ne yapıyor, kimin için?"
       },
+      "repository": {
+        "label": "Depo adresi",
+        "optional": "İsteğe bağlı",
+        "hint": "Yalnız genel depolar bağlanabilir. Bağlantı salt okunurdur."
+      },
+      "teamPrompt": {
+        "title": "Proje oluşturuldu",
+        "description": "Henüz bir proje ekibiniz yok. Şimdi ekip oluşturmak ister misiniz?",
+        "yes": "Evet",
+        "no": "Hayır"
+      },
       "preview": {
         "title": "Önizleme",
         "caption": "Kart listede böyle görünecek.",
@@ -382,7 +398,8 @@
         "submit": "Projeyi oluştur",
         "created": "Proje oluşturuldu.",
         "logoFailed": "Logo yüklenemedi. Proje ayarlarından tekrar deneyebilirsiniz.",
-        "bannerFailed": "Kapak görseli yüklenemedi. Proje ayarlarından tekrar deneyebilirsiniz."
+        "bannerFailed": "Kapak görseli yüklenemedi. Proje ayarlarından tekrar deneyebilirsiniz.",
+        "repositoryFailed": "Depo bağlanamadı. Proje ayarlarından tekrar deneyebilirsiniz."
       },
       "types": {
         "WEB": {
@@ -488,6 +505,12 @@
       "criteriaProgress": "Başarı kriterleri",
       "repository": "Depo",
       "noRepository": "Bağlı depo yok",
+      "repositoryStrip": {
+        "label": "Depo takibi",
+        "unavailable": "GitHub şu an yanıt vermiyor; son commit gösterilemiyor.",
+        "by": "{author} gönderdi",
+        "noCommits": "Depoda henüz commit yok."
+      },
       "githubUnavailable": "GitHub geçici olarak erişilemez durumda",
       "pendingInvitations": "Bekleyen davet"
     },
@@ -648,6 +671,42 @@
     "defaultBranch": "Varsayılan dal: {branch}",
     "publicOnly": "Yalnızca herkese açık depolar bağlanabilir. Bağlantı salt okunurdur.",
     "notifyNote": "{branch} dalına yeni commit geldiğinde proje üyelerine bildirim gönderilir (birkaç dakika gecikmeyle).",
+    "mode": { "BASIC": "Basit", "ADVANCED": "Gelişmiş" },
+    "notifyOff": "Yeni commit bildirimleri kapalı.",
+    "manageSettings": "Depo ayarları",
+    "goToSettings": "Ayarlarda bağla",
+    "noneDescriptionManager": "Genel bir GitHub deposunu proje ayarlarından bağlayın.",
+    "options": {
+      "modeLabel": "Takip modu",
+      "help": "Basit ve Gelişmiş mod farkını göster",
+      "mode": { "BASIC": "Basit", "ADVANCED": "Gelişmiş" },
+      "modeSummary": { "BASIC": "Depo bağlanır, ana dala giren son commit'ler izlenir.", "ADVANCED": "Dalları takip edin; merge edilen veya edilmeyen tüm commit'leri ve kimin attığını görün." },
+      "notifyLabel": "Yeni commit'lerde üyelere bildirim gönder",
+      "notifyHint": "İki modda da bildirim yalnız ana dala gelen commit'ler içindir.",
+      "helpTitle": "Basit ve Gelişmiş mod",
+      "helpDescription": "Modu istediğiniz zaman proje ayarlarından değiştirebilirsiniz.",
+      "modeDetail": { "BASIC": "Depo bağlanır ve ana dala merge edilen son commit'ler izlenir. Depo sayfasında yalnız ana dalın commit listesi gösterilir.", "ADVANCED": "Dalları takip edebilir, dal bazında merge edilen veya edilmeyen tüm commit'leri ve her commit'i kimin attığını görebilirsiniz. Depo sayfasında Özet ve Dallar görünümleri açılır." },
+      "helpNotify": "Yeni commit bildirimi iki modda da yalnız ana dal içindir; anahtarla kapatabilirsiniz.",
+      "close": "Kapat"
+    },
+    "setting": {
+      "title": "GitHub deposu",
+      "description": "Depoyu bağlayın, takip modunu ve bildirimleri yönetin.",
+      "notConnected": "Bu projeye henüz depo bağlanmadı. Bağlanınca kenar çubuğunda Depo öğesi görünür.",
+      "urlLabel": "GitHub depo adresi",
+      "publicOnly": "Yalnız genel depolar bağlanabilir. Bağlantı salt okunurdur.",
+      "connect": "Depo bağla",
+      "connected": "Depo bağlandı.",
+      "saved": "Depo ayarları kaydedildi.",
+      "save": "Kaydet",
+      "defaultBranch": "Ana dal: {branch}",
+      "openPage": "Depo sayfasını aç",
+      "disconnect": "Bağlantıyı kes",
+      "disconnected": "Depo bağlantısı kesildi.",
+      "disconnectConfirmTitle": "Bu deponun bağlantısı kesilsin mi?",
+      "disconnectConfirmDescription": "Depo sayfası ve genel bakıştaki depo takibi kaldırılır. GitHub'daki depo etkilenmez.",
+      "cancel": "Vazgeç"
+    },
     "views": { "label": "Depo görünümü", "overview": "Özet", "branches": "Dallar" },
     "overview": {
       "latestTitle": "{branch} dalındaki son commit'ler",
