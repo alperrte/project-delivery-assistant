@@ -5,11 +5,15 @@ import { FlagBanner } from "@phosphor-icons/react";
 import { dateFromKey } from "@/features/reminders/dates";
 import { ReminderList } from "@/features/reminders/components/reminder-list";
 import type { Reminder } from "@/features/reminders/types";
+import type { CalendarTaskEntry } from "../hooks/use-calendar-tasks";
+import { TaskAgenda } from "./task-agenda";
 
 /** The reminders (and the project deadline, if it falls there) of the selected day, with edit/delete where allowed. */
 export function DayAgenda({
   selected,
   reminders,
+  tasks = [],
+  slug,
   projectId,
   currentUserId,
   isManager,
@@ -18,6 +22,9 @@ export function DayAgenda({
 }: {
   selected: string;
   reminders: Reminder[];
+  /** The user's assigned tasks that start or are due on the selected day. */
+  tasks?: CalendarTaskEntry[];
+  slug: string;
   projectId: string;
   currentUserId?: string;
   isManager: boolean;
@@ -43,7 +50,8 @@ export function DayAgenda({
         {reminders.length > 0 && (
           <ReminderList reminders={reminders} projectId={projectId} currentUserId={currentUserId} isManager={isManager} actions={actions} />
         )}
-        {reminders.length === 0 && !isDeadline && <p className="text-sm leading-6 text-muted-foreground">{t("noRemindersForDay")}</p>}
+        <TaskAgenda entries={tasks} slug={slug} />
+        {reminders.length === 0 && tasks.length === 0 && !isDeadline && <p className="text-sm leading-6 text-muted-foreground">{t("noItemsForDay")}</p>}
       </div>
     </section>
   );

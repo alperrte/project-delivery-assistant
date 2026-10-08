@@ -1228,13 +1228,19 @@
     "backToLogin": "Girişe dön"
   },
   "calendarPage": {
-    "description": "Seçili projenin anımsatıcılarını ve hedef bitiş tarihini ay ay takip et.",
+    "description": "Seçili projenin anımsatıcılarını, sana atanan görevleri ve hedef bitiş tarihini ay ay takip et.",
     "today": "Bugün",
     "create": "Anımsatıcı oluştur",
     "project": "Proje",
     "selectProject": "Proje seçin",
     "projectDeadline": "Projenin hedef bitiş tarihi",
-    "noRemindersForDay": "Bu gün için anımsatıcı yok.",
+    "noItemsForDay": "Bu gün için anımsatıcı veya görev yok.",
+    "tasks": {
+      "heading": "Sana atanan görevler",
+      "start": "Görev başlangıcı",
+      "deadline": "Görev son tarihi",
+      "loadError": "Görevler yüklenemedi."
+    },
     "noProjectTitle": "Takvim bir projeye bağlıdır",
     "noProjectDescription": "Anımsatıcı oluşturmak için önce bir proje oluşturun veya bir projeye katılın.",
     "projectNotFound": "Seçili proje bulunamadı. Yukarıdan başka bir proje seçin.",
@@ -1436,7 +1442,7 @@
     "expandSidebar": "Kenar çubuğunu genişlet",
     "previousMonth": "Önceki ay",
     "nextMonth": "Sonraki ay",
-    "calendarScope": "Takvim seçili projenin anımsatıcılarını ve hedef bitiş tarihini gösterir.",
+    "calendarScope": "Takvim seçili projenin anımsatıcılarını, sana atanan görevlerin başlangıç ve son tarihlerini ve hedef bitiş tarihini gösterir.",
     "create": "Proje oluştur",
     "updates": "Son güncellemeler",
     "projectUpdated": "Proje güncellendi",
@@ -1491,9 +1497,9 @@
     },
     "common": {
       "status": {
-        "BACKLOG": "Backlog",
-        "TODO": "Yapılacak",
-        "IN_PROGRESS": "Devam ediyor",
+        "BACKLOG": "Bekleyen işler",
+        "TODO": "Sırada",
+        "IN_PROGRESS": "Yapılıyor",
         "IN_REVIEW": "İncelemede",
         "TESTING": "Testte",
         "DONE": "Tamamlandı"
@@ -1568,7 +1574,7 @@
       "labels": "Etiketler",
       "sprint": "Sprint",
       "anySprint": "Tüm sprintler",
-      "backlog": "Backlog",
+      "backlog": "Bekleyen işler",
       "overdue": "Gecikmiş",
       "blocked": "Engelli",
       "clear": "Temizle",
@@ -1626,7 +1632,7 @@
       "toolbar": "Pano seçenekleri",
       "sprint": "Sprint",
       "allTasks": "Tüm görevler",
-      "backlog": "Backlog",
+      "backlog": "Bekleyen işler",
       "onlyMine": "Yalnız bana atananlar",
       "dragHint": "Bırakılabilecek sütunlar vurgulandı",
       "retry": "Tekrar dene",
@@ -1735,7 +1741,7 @@
       },
       "sprint": {
         "label": "Sprint",
-        "none": "Sprint yok (backlog)"
+        "none": "Sprint yok (bekleyen işler)"
       },
       "labels": {
         "label": "Etiketler",
@@ -1900,7 +1906,7 @@
           "someone": "Bir kullanıcı",
           "aTeam": "bir ekip",
           "aSprint": "bir sprint",
-          "backlog": "Backlog",
+          "backlog": "Bekleyen işler",
           "none": "yok",
           "unknown": "görevi güncelledi",
           "created": "görevi oluşturdu",
@@ -1987,7 +1993,7 @@
         "labels": "Etiketler",
         "none": "Yok",
         "sprint": "Sprint",
-        "backlog": "Backlog",
+        "backlog": "Bekleyen işler",
         "start": "Başlangıç",
         "deadline": "Son teslim",
         "time": "Zaman takibi",
@@ -2151,7 +2157,7 @@
       "description": "{done}/{total} görev tamamlandı.",
       "noOpenTasks": "Açık görev kalmadı, sprint doğrudan tamamlanır.",
       "moveTo": "{count} açık görevi şuraya taşı",
-      "backlog": "Backlog",
+      "backlog": "Bekleyen işler",
       "hint": "Tamamlanan görevler bu sprintte kalır.",
       "cancel": "Vazgeç",
       "confirm": "Sprinti tamamla",

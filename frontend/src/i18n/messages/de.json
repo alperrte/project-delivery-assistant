@@ -1228,13 +1228,19 @@
     "backToLogin": "Zurück zur Anmeldung"
   },
   "calendarPage": {
-    "description": "Verfolgen Sie Erinnerungen und Zieltermin des ausgewählten Projekts Monat für Monat.",
+    "description": "Verfolgen Sie Erinnerungen, Ihnen zugewiesene Aufgaben und den Zieltermin des ausgewählten Projekts Monat für Monat.",
     "today": "Heute",
     "create": "Erinnerung erstellen",
     "project": "Projekt",
     "selectProject": "Projekt auswählen",
     "projectDeadline": "Zieltermin des Projekts",
-    "noRemindersForDay": "An diesem Tag gibt es keine Erinnerungen.",
+    "noItemsForDay": "An diesem Tag gibt es keine Erinnerungen oder Aufgaben.",
+    "tasks": {
+      "heading": "Ihnen zugewiesene Aufgaben",
+      "start": "Aufgabenbeginn",
+      "deadline": "Aufgabenfrist",
+      "loadError": "Aufgaben konnten nicht geladen werden."
+    },
     "noProjectTitle": "Der Kalender gehört zu einem Projekt",
     "noProjectDescription": "Erstellen Sie ein Projekt oder treten Sie einem bei, um Erinnerungen hinzuzufügen.",
     "projectNotFound": "Das ausgewählte Projekt wurde nicht gefunden. Wählen Sie oben ein anderes aus.",
@@ -1436,7 +1442,7 @@
     "expandSidebar": "Seitenleiste ausklappen",
     "previousMonth": "Vorheriger Monat",
     "nextMonth": "Nächster Monat",
-    "calendarScope": "Der Kalender zeigt die Erinnerungen und den Zieltermin des ausgewählten Projekts.",
+    "calendarScope": "Der Kalender zeigt die Erinnerungen, Beginn und Frist Ihrer zugewiesenen Aufgaben und den Zieltermin des ausgewählten Projekts.",
     "create": "Projekt erstellen",
     "updates": "Letzte Änderungen",
     "projectUpdated": "Projekt aktualisiert",
