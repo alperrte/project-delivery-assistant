@@ -141,16 +141,16 @@ test("board menu and drag moves require confirmation and cancellation preserves 
   const f = await fixture(page);
   await page.goto(`/projects/${f.slug}/tasks/board?sprint=all`);
   await page.getByRole("button", { name: `${f.task.taskKey} görevini taşı`, exact: true }).click();
-  await page.getByRole("menuitem", { name: "Devam ediyor", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Yapılıyor", exact: true }).click();
   await confirmDialog(page).getByRole("button", { name: "Vazgeç", exact: true }).click();
   expect((await api(page, "GET", `/projects/${f.projectId}/tasks/${f.task.id}`)).json).toMatchObject({ status: "BACKLOG" });
   const card = page.getByRole("link", { name: f.task.title }).locator("..");
-  await card.dragTo(page.getByRole("region", { name: /^Devam ediyor/ }));
+  await card.dragTo(page.getByRole("region", { name: /^Yapılıyor/ }));
   await expect(confirmDialog(page)).toBeVisible();
   expect((await api(page, "GET", `/projects/${f.projectId}/tasks/${f.task.id}`)).json).toMatchObject({ status: "BACKLOG" });
   await confirmDialog(page).getByRole("button", { name: "Durumu güncelle", exact: true }).click();
   await expect(confirmDialog(page)).toHaveCount(0);
-  await expect(page.getByRole("region", { name: /^Devam ediyor/ }).getByRole("link", { name: f.task.title })).toBeVisible();
+  await expect(page.getByRole("region", { name: /^Yapılıyor/ }).getByRole("link", { name: f.task.title })).toBeVisible();
 });
 
 test("completing the final row of page two returns to page one and keeps its detail open", async ({ page }) => {

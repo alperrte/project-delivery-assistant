@@ -57,7 +57,6 @@ export function PropertiesPanel(ctx: DetailContext) {
 
   const canManage = perms.manage && !archived;
   const canWork = perms.work && !archived;
-  const lockedManage = !canManage && !archived;
   const lockedWork = !canWork && !archived;
 
   const openSprints = (sprints.data ?? []).filter((sprint) => sprint.status !== "COMPLETED" || sprint.id === task.sprint?.id);
@@ -117,12 +116,12 @@ export function PropertiesPanel(ctx: DetailContext) {
               <PoolMark task={task} />
             </div>
             <div className="flex flex-wrap gap-2">
-              <LockedHint locked={lockedManage} reason="manager">
-                <Button variant="outline" size="sm" className="h-auto min-h-7 max-w-full py-1 whitespace-normal" disabled={!canManage} onClick={() => setAssigning(true)}>
+              {canManage && (
+                <Button variant="outline" size="sm" className="h-auto min-h-7 max-w-full py-1 whitespace-normal" onClick={() => setAssigning(true)}>
                   <UsersThree aria-hidden="true" />
                   {t("changeAssignees")}
                 </Button>
-              </LockedHint>
+              )}
               {ctx.poolWritable && perms.canClaim && !archived && (
                 <Button size="sm" disabled={claim.isPending} onClick={() => claim.mutate(task.id)}>
                   {claim.isPending ? <CircleNotch className="animate-spin" aria-hidden="true" /> : <HandGrabbing aria-hidden="true" />}
@@ -147,9 +146,9 @@ export function PropertiesPanel(ctx: DetailContext) {
           </div>
         </PropertyRow>
 
-        <PropertyRow label={t("priority")} htmlFor="detail-priority">
-          <LockedHint locked={lockedManage} reason="manager" className="w-full">
-            <Select value={task.priority} disabled={!canManage || patch.isPending} onValueChange={(next) => next && next !== task.priority && patch.mutate({ priority: next as TaskPriority })}>
+        <PropertyRow label={t("priority")} htmlFor={canManage ? "detail-priority" : undefined}>
+          {canManage ? (
+            <Select value={task.priority} disabled={patch.isPending} onValueChange={(next) => next && next !== task.priority && patch.mutate({ priority: next as TaskPriority })}>
               <SelectTrigger id="detail-priority" size="sm" className="w-full">
                 <SelectValue>
                   {(value: string) => (
@@ -169,13 +168,20 @@ export function PropertiesPanel(ctx: DetailContext) {
                 ))}
               </SelectContent>
             </Select>
-          </LockedHint>
+          ) : (
+            <span id="detail-priority" className="flex items-center gap-2">
+              <PriorityIndicator priority={task.priority} />
+              {tc(`priority.${task.priority}`)}
+            </span>
+          )}
         </PropertyRow>
 
         {advanced && (
           <>
-            <PropertyRow label={t("points")} htmlFor="detail-points">
-              <LockedHint locked={lockedManage} reason="manager" className="w-full">
+            <PropertyRow label={t("points")} htmlFor={canManage ? "detail-points" : undefined}>
+              {!canManage ? (
+                task.estimatePoints === null ? <span className="text-muted-foreground">{t("noPoints")}</span> : tc("points", { count: task.estimatePoints })
+              ) : (
                 <Select
                   value={task.estimatePoints === null ? NONE : String(task.estimatePoints)}
                   disabled={!advancedManage || patch.isPending}
@@ -197,7 +203,7 @@ export function PropertiesPanel(ctx: DetailContext) {
                     ))}
                   </SelectContent>
                 </Select>
-              </LockedHint>
+              )}
             </PropertyRow>
 
             <PropertyRow label={t("labels")}>
@@ -216,8 +222,10 @@ export function PropertiesPanel(ctx: DetailContext) {
               )}
             </PropertyRow>
 
-            <PropertyRow label={t("sprint")} htmlFor="detail-sprint">
-              <LockedHint locked={lockedManage} reason="manager" className="w-full">
+            <PropertyRow label={t("sprint")} htmlFor={canManage ? "detail-sprint" : undefined}>
+              {!canManage ? (
+                task.sprint ? task.sprint.name : <span className="text-muted-foreground">{t("backlog")}</span>
+              ) : (
                 <Select
                   value={task.sprint?.id ?? NONE}
                   disabled={!advancedManage || changeSprint.isPending || sprints.isPending}
@@ -241,7 +249,7 @@ export function PropertiesPanel(ctx: DetailContext) {
                     ))}
                   </SelectContent>
                 </Select>
-              </LockedHint>
+              )}
             </PropertyRow>
 
           </>

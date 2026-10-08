@@ -37,9 +37,9 @@ function patchStatus(tasks: Task[] | undefined, taskId: string, status: TaskStat
 
 function BoardSkeleton() {
   return (
-    <div className="flex gap-3 overflow-hidden" aria-hidden="true">
-      {STATUS_ORDER.slice(0, 4).map((status) => (
-        <div key={status} className="w-72 shrink-0 space-y-2 rounded-xl bg-muted/40 p-2">
+    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" aria-hidden="true">
+      {STATUS_ORDER.map((status) => (
+        <div key={status} className="min-w-0 space-y-2 rounded-xl bg-muted/40 p-2">
           <Skeleton className="h-5 w-28" />
           <Skeleton className="h-24 w-full rounded-lg" />
           <Skeleton className="h-24 w-full rounded-lg" />
@@ -191,8 +191,7 @@ function BoardView({ slug, project, projectId, userId, isManager }: ProjectGateC
       )}
 
       {tasks.data && tasks.data.length > 0 && (
-        <div className="-mx-4 overflow-x-auto px-4 pb-3 sm:-mx-8 sm:px-8" tabIndex={-1}>
-          <div className="flex min-w-max gap-3">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" data-testid="board-grid">
             {STATUS_ORDER.map((status) => {
               const column = byStatus.get(status) ?? [];
               const accepts = droppable(status);
@@ -211,7 +210,7 @@ function BoardView({ slug, project, projectId, userId, isManager }: ProjectGateC
                   }}
                   onDrop={(event) => accepts && handleDrop(event, status)}
                   className={cn(
-                    "flex min-h-48 w-72 shrink-0 flex-col rounded-xl bg-muted/40 p-2 transition-[opacity,box-shadow,background-color] duration-200 motion-reduce:transition-none",
+                    "flex min-h-48 min-w-0 flex-col rounded-xl bg-muted/40 p-2 transition-[opacity,box-shadow,background-color] duration-200 motion-reduce:transition-none",
                     drag && !accepts && drag.from !== status && "opacity-40",
                     accepts && "ring-1 ring-foreground/15",
                     overColumn === status && accepts && "bg-muted ring-2 ring-ring/60",
@@ -225,7 +224,7 @@ function BoardView({ slug, project, projectId, userId, isManager }: ProjectGateC
                   {column.length === 0 ? (
                     <p className="rounded-lg border border-dashed px-3 py-6 text-center text-xs text-muted-foreground">{accepts ? t("dropHere") : t("columnEmpty")}</p>
                   ) : (
-                    <ul className="space-y-2">
+                    <ul className="max-h-[32rem] space-y-2 overflow-y-auto pr-0.5">
                       {column.map((task) => (
                         <BoardCard
                           key={task.id}
@@ -243,7 +242,6 @@ function BoardView({ slug, project, projectId, userId, isManager }: ProjectGateC
                 </section>
               );
             })}
-          </div>
         </div>
       )}
       {confirmation && confirmedTask && <StatusConfirmation task={confirmedTask} target={confirmation.target} onClose={() => setConfirmation(null)} onConfirm={(target) => move(confirmedTask, target)} />}

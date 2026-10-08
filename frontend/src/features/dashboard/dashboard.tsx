@@ -12,6 +12,8 @@ import { projectsApi } from "@/features/projects/api";
 import { projectStatusDotClass } from "@/features/projects/status-colors";
 import { useSession } from "@/features/auth/hooks/use-session";
 import { MonthGrid } from "@/features/calendar/components/month-grid";
+import { TaskAgenda } from "@/features/calendar/components/task-agenda";
+import { useCalendarTasks } from "@/features/calendar/hooks/use-calendar-tasks";
 import { useCurrentMember } from "@/features/projects/hooks/use-current-member";
 import { useSelectedProject } from "@/features/projects/hooks/use-selected-project";
 import { MyTasksCard } from "@/features/tasks/components/my-tasks-card";
@@ -32,6 +34,8 @@ function MiniCalendar() {
   const [selected, setSelected] = useState(today);
   const reminders = useMonthReminders(project?.id, month);
   const selectedReminders = reminders.byDate.get(selected) ?? [];
+  const tasks = useCalendarTasks(project?.id, user?.id);
+  const selectedTasks = tasks.byDate.get(selected) ?? [];
   function moveMonth(delta: number) {
     const next = new Date(month.getFullYear(), month.getMonth() + delta, 1);
     setMonth(next);
@@ -44,12 +48,12 @@ function MiniCalendar() {
       <span className="text-xs font-medium capitalize" aria-live="polite">{month.toLocaleDateString(locale, { month: "long", year: "numeric" })}</span>
       <div className="flex"><Button variant="ghost" size="icon-sm" aria-label={t("previousMonth")} onClick={() => moveMonth(-1)}><CaretLeft size={14} /></Button><Button variant="ghost" size="icon-sm" aria-label={t("nextMonth")} onClick={() => moveMonth(1)}><CaretRight size={14} /></Button></div>
     </div>
-    <MonthGrid compact month={month} selected={selected} today={today} byDate={reminders.byDate} deadline={project?.targetEndDate ?? null} onSelect={setSelected} />
+    <MonthGrid compact month={month} selected={selected} today={today} byDate={reminders.byDate} tasksByDate={tasks.byDate} deadline={project?.targetEndDate ?? null} onSelect={setSelected} />
     <div className="mt-4 space-y-2 border-t pt-3" aria-live="polite">
       <p className="text-[11px] font-medium">{dateFromKey(selected).toLocaleDateString(locale, { day: "numeric", month: "long" })}</p>
-      {project && selectedReminders.length > 0
-        ? <ReminderList reminders={selectedReminders} projectId={project.id} currentUserId={user?.id} isManager={isManager} />
-        : <p className="text-xs leading-5 text-muted-foreground">{tc("noRemindersForDay")}</p>}
+      {project && selectedReminders.length > 0 && <ReminderList reminders={selectedReminders} projectId={project.id} currentUserId={user?.id} isManager={isManager} />}
+      {project && selectedTasks.length > 0 && <TaskAgenda entries={selectedTasks} slug={project.slug} compact />}
+      {!(project && (selectedReminders.length > 0 || selectedTasks.length > 0)) && <p className="text-xs leading-5 text-muted-foreground">{tc("noItemsForDay")}</p>}
       {reminders.isError && <p role="alert" className="text-xs text-destructive">{tc("loadError")}</p>}
       <Link href="/calendar" className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:underline">{tc("openCalendar")}<ArrowRight size={12} aria-hidden="true" /></Link>
       <p className="text-[10px] leading-4 text-muted-foreground">{t("calendarScope")}</p>

@@ -1204,13 +1204,19 @@
     "backToLogin": "Back to sign in"
   },
   "calendarPage": {
-    "description": "Follow the selected project's reminders and target end date month by month.",
+    "description": "Follow the selected project's reminders, your assigned tasks and target end date month by month.",
     "today": "Today",
     "create": "Create reminder",
     "project": "Project",
     "selectProject": "Select a project",
     "projectDeadline": "Project target end date",
-    "noRemindersForDay": "No reminders on this day.",
+    "noItemsForDay": "No reminders or tasks on this day.",
+    "tasks": {
+      "heading": "Tasks assigned to you",
+      "start": "Task start",
+      "deadline": "Task due",
+      "loadError": "Tasks could not be loaded."
+    },
     "noProjectTitle": "The calendar belongs to a project",
     "noProjectDescription": "Create a project or join one to start adding reminders.",
     "projectNotFound": "The selected project could not be found. Pick another one above.",
@@ -1412,7 +1418,7 @@
     "expandSidebar": "Expand sidebar",
     "previousMonth": "Previous month",
     "nextMonth": "Next month",
-    "calendarScope": "The calendar shows the selected project's reminders and target end date.",
+    "calendarScope": "The calendar shows the selected project's reminders, the start and due dates of your assigned tasks, and its target end date.",
     "create": "Create project",
     "updates": "Recent updates",
     "projectUpdated": "Project updated",

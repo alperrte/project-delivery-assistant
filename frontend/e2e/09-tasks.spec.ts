@@ -103,11 +103,11 @@ test.describe.serial("Task management", () => {
 
   test("status follows the allowed transitions, from the list menu and on the server", async () => {
     await managerPage.goto(`/projects/${slug}/tasks`);
-    await managerPage.getByRole("button", { name: "Durumu değiştir, şu an: Backlog" }).click();
+    await managerPage.getByRole("button", { name: "Durumu değiştir, şu an: Bekleyen işler" }).click();
     // BACKLOG may only go to TODO; the other columns are not offered.
-    await expect(managerPage.getByRole("menuitem", { name: "Yapılacak" })).toBeVisible();
+    await expect(managerPage.getByRole("menuitem", { name: "Sırada" })).toBeVisible();
     await expect(managerPage.getByRole("menuitem", { name: "Tamamlandı" })).toHaveCount(0);
-    await managerPage.getByRole("menuitem", { name: "Yapılacak" }).click();
+    await managerPage.getByRole("menuitem", { name: "Sırada" }).click();
     await managerPage.getByRole("dialog").getByRole("button", { name: "Durumu güncelle", exact: true }).click();
     await expect(managerPage.getByText(/durumuna alındı/)).toBeVisible();
 

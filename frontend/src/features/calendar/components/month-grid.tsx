@@ -1,18 +1,21 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { FlagBanner } from "@phosphor-icons/react";
+import { FlagBanner, ListChecks } from "@phosphor-icons/react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { dateFromKey, dateKey } from "@/features/reminders/dates";
 import { ReminderMarkers } from "@/features/reminders/components/reminder-markers";
 import type { Reminder } from "@/features/reminders/types";
+import type { CalendarTaskEntry } from "../hooks/use-calendar-tasks";
 
 type MonthGridProps = {
   month: Date;
   selected: string;
   today: string;
   byDate: Map<string, Reminder[]>;
+  /** The signed-in user's assigned tasks by the day they start or are due; omitted where tasks are not shown. */
+  tasksByDate?: Map<string, CalendarTaskEntry[]>;
   /** The selected project's target end date, drawn as a flag. */
   deadline: string | null;
   onSelect: (key: string) => void;
@@ -34,12 +37,31 @@ function DeadlineFlag({ compact }: { compact: boolean }) {
   );
 }
 
+/** Tone of a day's task marker: an open task past its deadline is destructive, a due one warns, only starts stay quiet. */
+function taskTone(entries: CalendarTaskEntry[]) {
+  const open = entries.filter(({ task }) => task.status !== "DONE");
+  if (open.some(({ task, kind }) => kind === "deadline" && task.overdue)) return "bg-destructive/15 text-destructive";
+  if (open.some(({ kind }) => kind === "deadline")) return "bg-warning/15 text-warning";
+  return "bg-muted text-muted-foreground";
+}
+
+function TaskDayMarker({ entries, compact }: { entries: CalendarTaskEntry[]; compact: boolean }) {
+  const tone = taskTone(entries);
+  if (compact) return <span aria-hidden="true" data-calendar-tasks={entries.length} className={cn("absolute bottom-1 left-1/2 size-1.5 -translate-x-1/2 rounded-full", tone, "bg-current")} />;
+  return (
+    <span aria-hidden="true" data-calendar-tasks={entries.length} className={cn("inline-flex h-5 items-center gap-1 rounded-md px-1.5 text-[11px] font-medium tabular-nums", tone)}>
+      <ListChecks size={12} />
+      {entries.length}
+    </span>
+  );
+}
+
 /**
  * A month of days. A day without reminders shows its number; a day with reminders shows the reminder's type icon in
  * the number's place (several: a few icons, or one with a "+N" count in narrow cells). Pure view: it fetches nothing
  * and owns no state. The day button's accessible name always carries the full date and every reminder.
  */
-export function MonthGrid({ month, selected, today, byDate, deadline, onSelect, compact = false }: MonthGridProps) {
+export function MonthGrid({ month, selected, today, byDate, tasksByDate, deadline, onSelect, compact = false }: MonthGridProps) {
   const t = useTranslations("reminders");
   const tc = useTranslations("calendarPage");
   const locale = useLocale();
@@ -64,6 +86,7 @@ export function MonthGrid({ month, selected, today, byDate, deadline, onSelect, 
         const key = dateKey(year, monthIndex, day);
         const reminders = byDate.get(key) ?? [];
         const hasReminders = reminders.length > 0;
+        const dayTasks = tasksByDate?.get(key) ?? [];
         const isDeadline = deadline === key;
         const isToday = key === today;
         const isSelected = key === selected;
@@ -71,6 +94,7 @@ export function MonthGrid({ month, selected, today, byDate, deadline, onSelect, 
           fullDate.format(dateFromKey(key)),
           ...reminders.map((reminder) => `${t(`types.${reminder.type}`)}: ${reminder.title}`),
           ...(isDeadline ? [tc("projectDeadline")] : []),
+          ...dayTasks.map(({ task, kind }) => `${tc(`tasks.${kind}`)}: ${task.taskKey} ${task.title}`),
         ].join(", ");
 
         return (
@@ -109,6 +133,7 @@ export function MonthGrid({ month, selected, today, byDate, deadline, onSelect, 
                 {isDeadline && <DeadlineFlag compact={compact} />}
               </span>
             )}
+            {dayTasks.length > 0 && <TaskDayMarker entries={dayTasks} compact={compact} />}
             {/* Today's number is replaced by icons here, so today is marked by a dot instead of the filled number. */}
             {isToday && hasReminders && (
               <span aria-hidden="true" className="absolute top-1 right-1 size-1.5 rounded-full bg-primary" />
