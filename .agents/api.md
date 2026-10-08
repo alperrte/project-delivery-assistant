@@ -128,3 +128,11 @@ PUT `/api/v1/users/me/profile`, authenticated active principal+CSRF, body `{"nic
 - Hata kodları: `400` geçersiz dal/yazar ya da `REPOSITORY_PRIVATE`; `404` dal/depo bulunamadı; `429` `REPOSITORY_READ_LIMIT` ya da GitHub sınırı (`Retry-After`); `503` GitHub erişilemiyor.
 - Bildirim: `type=REPOSITORY_COMMITS_PUSHED`, `resourceType=PROJECT`, `resourceId=projectId`, `repositoryCommits:{projectName,repositoryFullName,branch,commitCount,truncated,headMessage,headAuthor}`.
 - Swagger: `/swagger-ui/index.html` (`API_DOCS_ENABLED=true`), normal giriş + `GET /api/v1/auth/csrf`; `GET` uçları CSRF istemez.
+
+## GitHub depo takip modu ve bildirim anahtarı (2026-10-07)
+
+- `POST /api/v1/projects/{projectId}/repository` gövde `{repositoryUrl, trackingMode?, notifyOnCommits?}` → `201`. Varsayılan `trackingMode=BASIC`, `notifyOnCommits=true`.
+- `PATCH /api/v1/projects/{projectId}/repository` gövde `{trackingMode, notifyOnCommits}` → `200` güncel bağlantı. `REPOSITORY_MANAGE` + CSRF. `404` bağlı depo yok, `400` geçersiz mod.
+- `GET /api/v1/projects/{projectId}/repository` yanıtı `trackingMode` ve `notifyOnCommits` ile genişledi. `GET /api/v1/projects/{projectId}/home` içindeki `repository` nesnesi de `trackingMode` (bağlı değilse `null`) ve `notifyOnCommits` taşır; kenar çubuğu ve genel bakış şeridi bundan okur.
+- `BASIC` modda `GET .../repository/branches`, `.../compare` ve ana dal dışı ya da `author` süzgeçli `GET .../repository/commits` → `409` + `code=REPOSITORY_ADVANCED_REQUIRED`. Mevcut bağlantılar V60 ile `ADVANCED` olur.
+- Swagger: `/swagger-ui/index.html` (`API_DOCS_ENABLED=true`), normal giriş + `GET /api/v1/auth/csrf`; `POST`/`PATCH`/`DELETE` CSRF ister.

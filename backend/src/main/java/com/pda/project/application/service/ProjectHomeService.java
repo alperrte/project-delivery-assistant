@@ -4,6 +4,7 @@ import com.pda.project.domain.entity.Project;
 import com.pda.project.domain.entity.ProjectMembership;
 import com.pda.project.domain.enums.MembershipStatus;
 import com.pda.project.domain.enums.RepositoryProvider;
+import com.pda.project.domain.enums.RepositoryTrackingMode;
 import com.pda.project.infrastructure.repository.ProjectCriterionRepository;
 import com.pda.project.infrastructure.repository.ProjectMembershipRepository;
 import com.pda.project.infrastructure.repository.ProjectRepository;
@@ -115,9 +116,10 @@ public class ProjectHomeService {
                         unavailable = true;
                     }
                     return new RepositorySummary(true, connection.getProvider(), connection.getRepositoryOwner(),
-                            connection.getRepositoryName(), connection.getDefaultBranch(), lastCommit, unavailable);
+                            connection.getRepositoryName(), connection.getDefaultBranch(),
+                            connection.getTrackingMode(), connection.isNotifyCommits(), lastCommit, unavailable);
                 })
-                .orElseGet(() -> new RepositorySummary(false, null, null, null, null, null, false));
+                .orElseGet(() -> new RepositorySummary(false, null, null, null, null, null, false, null, false));
     }
 
     private Project activeProject(UUID projectId) {
@@ -149,6 +151,7 @@ public class ProjectHomeService {
     public record CriteriaProgress(long completed, long total) {}
 
     public record RepositorySummary(boolean connected, RepositoryProvider provider, String repositoryOwner,
-                                    String repositoryName, String defaultBranch,
-                                    GitHubRepositoryClient.CommitSummary lastCommit, boolean githubUnavailable) {}
+                                    String repositoryName, String defaultBranch, RepositoryTrackingMode trackingMode,
+                                    boolean notifyOnCommits, GitHubRepositoryClient.CommitSummary lastCommit,
+                                    boolean githubUnavailable) {}
 }

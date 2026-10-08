@@ -4,6 +4,7 @@ import com.pda.project.application.service.GitHubIntegrationException;
 import com.pda.project.application.service.InvitationConflictException;
 import com.pda.project.application.service.MembershipConflictException;
 import com.pda.project.application.service.PrivateRepositoryException;
+import com.pda.project.application.service.RepositoryAdvancedRequiredException;
 import com.pda.project.application.service.RepositoryReadLimitException;
 import com.pda.project.application.service.ProjectBannerException;
 import com.pda.project.application.service.ProjectLogoException;
@@ -155,6 +156,15 @@ public class ProjectApiErrorHandler {
                 "Only public repositories can be connected");
         body.setProperty("code", PrivateRepositoryException.CODE);
         return ResponseEntity.badRequest().header("Cache-Control", "no-store").body(body);
+    }
+
+    /** Branch-level reads need the advanced mode; the client switches the mode instead of retrying. */
+    @ExceptionHandler(RepositoryAdvancedRequiredException.class)
+    ResponseEntity<ProblemDetail> repositoryAdvancedRequired() {
+        ProblemDetail body = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,
+                "Branch details need the advanced repository mode");
+        body.setProperty("code", RepositoryAdvancedRequiredException.CODE);
+        return ResponseEntity.status(HttpStatus.CONFLICT).header("Cache-Control", "no-store").body(body);
     }
 
     private static ResponseEntity<ProblemDetail> imageProblem(String detail, String code) {

@@ -18,9 +18,13 @@ public interface ProjectRepositoryConnectionRepository extends JpaRepository<Pro
 
     void deleteByProjectId(UUID projectId);
 
-    /** Least recently scanned connections of non-archived projects first (never scanned ones lead). */
-    @Query("select c from ProjectRepositoryConnection c where not exists (select 1 from Project p "
-            + "where p.id = c.projectId and p.archivedAt is not null) order by c.lastScannedAt asc nulls first")
+    /**
+     * Least recently scanned connections of non-archived projects first (never scanned ones lead). Connections whose
+     * commit notifications are switched off are never scanned: nothing would be announced and GitHub is spared.
+     */
+    @Query("select c from ProjectRepositoryConnection c where c.notifyCommits = true and not exists (select 1 "
+            + "from Project p where p.id = c.projectId and p.archivedAt is not null) "
+            + "order by c.lastScannedAt asc nulls first")
     List<ProjectRepositoryConnection> findScanCandidates(Pageable pageable);
 
     /**

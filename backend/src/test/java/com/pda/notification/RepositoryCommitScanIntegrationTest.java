@@ -15,6 +15,7 @@ import com.pda.project.application.service.ProjectMembershipService;
 import com.pda.project.application.service.ProjectRepositoryConnectionService;
 import com.pda.project.application.service.ProjectService;
 import com.pda.project.application.service.RepositoryCommitScanService;
+import com.pda.project.domain.enums.RepositoryTrackingMode;
 import com.pda.project.infrastructure.repository.ProjectRepositoryConnectionRepository;
 import com.pda.user.ProjectRole;
 import com.pda.user.UserAccounts;
@@ -183,7 +184,7 @@ class RepositoryCommitScanIntegrationTest {
         Mockito.when(gitHub.fetchMetadata("scanowner", repo)).thenReturn(new RepositoryMetadata("main", false));
         Mockito.when(gitHub.fetchLatestCommits("scanowner", repo, "main", 1))
                 .thenThrow(new GitHubIntegrationException(Reason.UNAVAILABLE, "GitHub is currently unavailable"));
-        repository.connect(manager, project, "https://github.com/scanowner/" + repo);
+        repository.connect(manager, project, "https://github.com/scanowner/" + repo, null, null);
         assertNull(connections.findByProjectId(project).orElseThrow().getNotifiedHeadSha());
         Mockito.when(gitHub.fetchLatestCommits("scanowner", repo, "main", 20)).thenReturn(commits("sha-2", "sha-1"));
 
@@ -206,12 +207,39 @@ class RepositoryCommitScanIntegrationTest {
         assertEquals("sha-0", connections.findByProjectId(setup.project()).orElseThrow().getNotifiedHeadSha());
     }
 
+    @Test
+    void switchedOffNotificationsAreNeverScannedAndTurningThemOnAgainRebaselines() {
+        UUID manager = user();
+        Setup setup = connected(manager, "sha-0");
+        repository.updateSettings(manager, setup.project(), RepositoryTrackingMode.BASIC, false);
+        Mockito.when(gitHub.fetchLatestCommits("scanowner", setup.repo(), "main", 20))
+                .thenReturn(commits("sha-2", "sha-1", "sha-0"));
+
+        scanner.scan();
+
+        assertEquals(0, pushed(manager).size(), "switched off: nothing announced");
+        assertEquals("sha-0", connections.findByProjectId(setup.project()).orElseThrow().getNotifiedHeadSha());
+
+        // Back on: the commits that arrived meanwhile are not announced, the first scan only writes a baseline.
+        repository.updateSettings(manager, setup.project(), RepositoryTrackingMode.BASIC, true);
+        assertNull(connections.findByProjectId(setup.project()).orElseThrow().getNotifiedHeadSha());
+        scanner.scan();
+        assertEquals(0, pushed(manager).size());
+        assertEquals("sha-2", connections.findByProjectId(setup.project()).orElseThrow().getNotifiedHeadSha());
+
+        // Only a commit after that is announced.
+        Mockito.when(gitHub.fetchLatestCommits("scanowner", setup.repo(), "main", 20))
+                .thenReturn(commits("sha-3", "sha-2"));
+        scanner.scan();
+        assertEquals(1, pushed(manager).size());
+    }
+
     private Setup connected(UUID manager, String tip) {
         String repo = repoName();
         UUID project = projects.create(manager, "Scan " + UUID.randomUUID(), null, null).getId();
         Mockito.when(gitHub.fetchMetadata("scanowner", repo)).thenReturn(new RepositoryMetadata("main", false));
         Mockito.when(gitHub.fetchLatestCommits("scanowner", repo, "main", 1)).thenReturn(commits(tip));
-        repository.connect(manager, project, "https://github.com/scanowner/" + repo);
+        repository.connect(manager, project, "https://github.com/scanowner/" + repo, null, null);
         return new Setup(project, repo);
     }
 
