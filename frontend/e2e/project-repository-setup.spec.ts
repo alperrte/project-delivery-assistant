@@ -158,7 +158,7 @@ test.describe.serial("Project repository setup", () => {
     await expect(managerPage).toHaveURL(/\/tr\/projeler\/(?!yeni$)[^/]+$/, { timeout: 15_000 });
     expect(mock.posts).toHaveLength(0);
     // No repository: the sidebar has no "Depo" item.
-    await expect(managerPage.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Ekipler" })).toBeVisible();
+    await expect(managerPage.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("button", { name: "Ekipler", exact: true })).toBeVisible();
     await expect(managerPage.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Depo" })).toHaveCount(0);
     await managerPage.unrouteAll({ behavior: "ignoreErrors" });
   });
@@ -210,7 +210,7 @@ test.describe.serial("Project repository setup", () => {
     const mock = await mockRepository(managerPage);
     const nav = managerPage.getByRole("navigation", { name: "Gezinme menüsü" });
     await managerPage.goto(`/projects/${slug}?section=settings`);
-    await expect(nav.getByRole("link", { name: "Ekipler" })).toBeVisible();
+    await expect(nav.getByRole("button", { name: "Ekipler", exact: true })).toBeVisible();
     await expect(nav.getByRole("link", { name: "Depo" })).toHaveCount(0);
 
     // Connect with the defaults (Basit, notifications on).
@@ -287,7 +287,7 @@ test.describe.serial("Project repository setup", () => {
 
     // Not connected: no sidebar item, and the repository section only explains that nothing is connected.
     await memberPage.goto(`/projects/${slug}`);
-    await expect(nav.getByRole("link", { name: "Ekipler" })).toBeVisible();
+    await expect(nav.getByRole("button", { name: "Ekipler", exact: true })).toBeVisible();
     await expect(nav.getByRole("link", { name: "Depo" })).toHaveCount(0);
 
     mock.repo = { trackingMode: "BASIC", notifyOnCommits: true };

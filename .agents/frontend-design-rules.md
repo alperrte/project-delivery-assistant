@@ -282,6 +282,11 @@ My tasks uses semantic card/background/border tokens and a responsive square gri
 
 NotificationsMenu is a compatibility entry point delegating to the single NotificationCenter/session owner. Actor-scoped AbortSignal/cache cleanup and atomic team-deletion popup claims stay intact. Open own history polls15s; unread count/team claim use30s foreground cadence. Task notifications retain localized start/completion snapshots and relative timestamps, mark read and open the existing task/taskProject dialog URL. Task navigation suppresses old popup focus return; normal Escape restores the bell. Header placement/demo isolation are unchanged. Scoped merged validation: lint/type/build and34 Chromium PASS; existing historical delivery counts are not reused as merge proof.
 
+## Frontend foundation UI - 2026-10-07
+
+Account SettingsSection gains labeled own nickname input/save/cancel with dirty/busy/error associations and44px actions, existing photo/email/password kept. Backend existing alphabet/case/Unicode rules apply; all new copy TR/EN/DE. Navbar stays viewport-centered with existing128/72 reserve; touch now shares700ms idle as explicitly approved. Focus/owned menu/search/drawer prevent hide. History native disabled states expose directional localized safe-boundary/unavailable reasons.
+
+Workspace primary remains monochrome; scrollbar thumb uses existing semantic label-blue through workspace-scrollbar alias, hover palette mix and transparent track. Only document/root and actual sidebar/drawer boxes opt in; body inheritance reset stops descendant leakage. Standard thin/color + WebKit fallback, forced-colors auto; no hidden scrollbar or main scroll reparent. Screenshot native viewport thumb paint, both themes/three languages and320-1440 bounds verified; Firefox real visual test not claimed.
 ## Proje ayarları ve kalıcı silme (2026-10-07)
 
 - **Sayfa:** `PageContainer width="wide"`, `lg` ve üzerinde 7/5 ızgara: solda bölümler, sağda `ProjectPreviewPanel` (`project-preview-panel.tsx`; oluşturma sayfasıyla ortak, gerçek `ProjectCard` `preview` kipinde, `lg` altında formun altına iner). `<form>` ızgaranın kendisidir; sabit kaydet çubuğu (`data-sticky-actions`) tam genişlikte son çocuktur, düğme grubu `flex-wrap` ile 320 px'te taşmaz, `lg` altında "Önizleme" bağlantısı (`#project-preview`) gösterir.
@@ -292,6 +297,9 @@ NotificationsMenu is a compatibility entry point delegating to the single Notifi
 - **Silme:** tehlikeli bölge yalnız kurucuya görünür. `ConfirmDialog` `requireText` ile proje adının birebir yazılmasını ister (büyük/küçük harf duyarlı, onay düğmesi eşleşene kadar pasif, kapanınca sıfırlanır); metin neyin gideceğini ve geri alınamadığını söyler. Başarıda toast ve `/projects`.
 - **Kart teknoloji şeridi:** tek satır, `size-8` kare logolar, sarma yok (`flex-nowrap overflow-hidden`), kanonik ada göre tekilleştirilir, en çok 6 + `+N`; katalog dışı etiket baş harfli kare olur, ad tooltip'te ve `aria-label`'dedir.
 
+## Notification New/History center - 2026-10-07
+
+Existing nonmodal bell Popover contains New(default)/History Base UI Tabs with manual keyboard activation (arrows focus, Enter/Space select), server pages20 and per-tab loading/error/retry/empty. Individual Check with tooltip/title description and44px targets; global own mark-all header action disabled for pending/unknown/zero. Server-confirmed read reconciles both lists/count; committed refresh failure has GET-only retry. Row-removal focus goes to next/previous action or named empty section only if the user did not move focus; task navigation suppresses old-trigger restore. TR/EN/DE, existing tokens and viewport-centered navbar/reserve retained. No new palette/library or hidden mobile action.
 ## Depo sayfası (2026-10-07)
 
 - `RepositorySettings` `PageContainer width="wide"` kullanır: başlık kartı (depo adı `safeGitHubLink` ile, varsayılan dal, "ana dala commit gelince üyelere bildirim" notu, yalnız yöneticiye "Bağlantıyı kes") ve altında **Özet / Dallar** sekmeleri. Görünüm ve dal URL'dedir (`?section=repository&view=branches&branch=...`), bağlantı paylaşılabilir ve yenilemede korunur.
@@ -309,3 +317,9 @@ NotificationsMenu is a compatibility entry point delegating to the single Notifi
 - **Depo sayfası:** bağlı değilken yöneticiye "Ayarlarda bağla", üyeye yalnız bilgi; bağlıyken mod rozeti, bildirim durumu ve yöneticiye "Depo ayarları" bağlantısı. **Basit:** sekme yok, yalnız ana dalın son commit'leri (dal sayısı satırı gizli, paylaşılmış `view=branches` bağlantısı özete düşer). **Gelişmiş:** Özet / Dallar.
 - **Genel bakış şeridi** (`RepositoryStrip`, `aria-label` "Depo takibi"): tek satır, GitHub ikonu, `owner/repo · dal`, son commit (kırpılır, `safeGitHubLink`), yazar ve göreli zaman; GitHub erişilemezse `unavailable`, commit yoksa `noCommits`. Yan paneldeki "Depo" satırı ve hızlı işlem bağlı değilken yalnız yöneticiye görünür ve ayarlara götürür.
 - Metinler tr/en/de (`repository.options.*`, `repository.setting.*`, `projects.newPage.teamPrompt.*`, `projects.overview.repositoryStrip.*`); yalnız Tailwind token'ları; 390 px'te yatay taşma yoktur (E2E ile doğrulanır).
+
+## Scoped invitation/create surfaces - 2026-10-08
+
+Viewport-centered navbar and shared header reserve stay unchanged. Teams parent is a native disclosure with canonical existing `?section=teams` / invitations children; collapsed sidebar uses existing Base UI Popover. Reuse semantic primary badges, exact accessible count and bounded99+, 44px touch targets and TR/EN/DE labels. Unknown/error/disabled scope has no fake0 badge. PageHeader optional titleAdornment aligns the shared count next to existing text. Create-banner errors keep the prior valid local image; narrow German320 sticky actions may wrap, preserving sticky-bottom behavior. Global checklist boxes are not inferred from these scoped surfaces.
+
+Shared EntityGrid now declares grid-cols-1 before existing md/xl columns, bounding the implicit small-screen track. Real 320px overflow measured on populated project cards was corrected without changing card content or breakpoints.

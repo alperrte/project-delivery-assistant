@@ -7,3 +7,21 @@ export function imageValidationError(file: File, maximum: number): "invalidType"
   if (file.size > maximum) return "tooLarge";
   return null;
 }
+
+/** Optional local preview validation. Upload authorization and byte validation remain server responsibilities. */
+export async function canDecodeImage(file: File): Promise<boolean> {
+  if (typeof createImageBitmap === "function") {
+    try {
+      const bitmap = await createImageBitmap(file);
+      try { return bitmap.width > 0 && bitmap.height > 0; }
+      finally { bitmap.close(); }
+    } catch { return false; }
+  }
+  const url = URL.createObjectURL(file);
+  try {
+    const image = new Image(); image.src = url;
+    await image.decode();
+    return image.naturalWidth > 0 && image.naturalHeight > 0;
+  } catch { return false; }
+  finally { URL.revokeObjectURL(url); }
+}

@@ -324,6 +324,7 @@
         "tooLarge": "The logo can be at most 512 KB."
       },
       "banner": {
+        "invalidImage": "This image could not be read. Choose a valid PNG, JPEG or WebP image.",
         "label": "Cover image",
         "hint": "PNG, JPEG or WebP, up to 2 MB. Shown behind the card in the Projects list; without one the card stays plain.",
         "choose": "Upload image",
@@ -432,6 +433,7 @@
       "eyebrow": "Project workspace",
       "navigation": "Project menu",
       "tabs": {
+        "allTeams": "All teams",
         "overview": "Overview",
         "criteria": "Criteria",
         "members": "Members",
@@ -776,6 +778,7 @@
     "rolesUpdated": "Roles updated."
   },
   "invitations": {
+    "pendingCount": "{count, plural, one {# pending invitation} other {# pending invitations}}",
     "registeredUser": "Registered user",
     "newUser": "New PDA user",
     "firstName": "First name",
@@ -1349,7 +1352,18 @@
     "profile": "Profile",
     "nickname": "Username",
     "email": "Email",
-    "security": "Security"
+    "security": "Security",
+    "nicknameEdit": {
+      "label": "Username",
+      "hint": "3–32 letters, numbers or underscores. Case-sensitive.",
+      "save": "Save username",
+      "saving": "Saving…",
+      "cancel": "Cancel",
+      "saved": "Username updated.",
+      "taken": "This username is already in use.",
+      "invalid": "Use 3–32 letters, numbers or underscores.",
+      "failed": "Could not save username. Try again."
+    }
   },
   "changePassword": {
     "title": "Update your password",
@@ -1432,7 +1446,14 @@
       "back": "Go to previous page",
       "forward": "Go to next page",
       "label": "Page history",
-      "unavailable": "History information is unavailable in this browser; use the browser arrows."
+      "unavailable": "History information is unavailable in this browser; use the browser arrows.",
+      "reasons": {
+        "pending": "Preparing history.",
+        "unauthenticated": "Verifying the workspace session.",
+        "unavailable": "Safe workspace history cannot be verified in this browser; browser arrows remain available.",
+        "boundary": "This direction leaves the workspace.",
+        "noSafeEntry": "No safe workspace entry in this direction."
+      }
     }
   },
   "tasks": {
@@ -2676,6 +2697,20 @@
     "close": "Close calendar"
   },
   "notifications": {
+    "invitationContext": {
+      "PROJECT_INVITATION_CREATED": "You were invited to the project “{project}”.",
+      "PROJECT_INVITATION_ACCEPTED": "Your invitation to the project “{project}” was accepted.",
+      "PROJECT_INVITATION_REJECTED": "Your invitation to the project “{project}” was declined."
+    },
+    "readFailed": "The read status could not be updated. Please try again.",
+    "refreshFailed": "The read status was saved, but the notification list could not be refreshed. Please try again.",
+    "sections": "Notification sections",
+    "newLabel": "New",
+    "historyLabel": "History",
+    "newEmpty": "You have no new notifications.",
+    "historyEmpty": "You have no notification history yet.",
+    "newListLabel": "New notifications",
+    "historyListLabel": "Past notifications",
     "title": "Notifications",
     "empty": "You have no notifications yet.",
     "loading": "Loading notifications",

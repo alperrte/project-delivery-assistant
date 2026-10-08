@@ -113,7 +113,8 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
         ProjectInvitation invitation = ProjectInvitation.forRegisteredUser(projectId, targetUserId, actorId,
                 roles, message, rawToken, clock.instant().plus(INVITATION_TTL)).inTeam(teamId);
         ProjectInvitation saved = invitations.saveAndFlush(invitation);
-        events.publishEvent(new ProjectInvitationEvents.Created(saved.getId(), projectId, targetUserId, actorId));
+        events.publishEvent(new ProjectInvitationEvents.Created(saved.getId(), projectId, targetUserId, actorId,
+                project.getName()));
         sendInvitationMailSafely(target.email(), project.getName(), teamName, saved, rawToken, false);
         return new CreatedInvitation(saved, rawToken);
     }
@@ -323,9 +324,8 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
 
     private MemberSummary acceptExternal(UUID userId, ProjectInvitation invitation) {
         UUID projectId = invitation.getProjectId();
-        if (projects.findByIdAndArchivedAtIsNull(projectId).isEmpty()) {
-            throw new NoSuchElementException("Project not found");
-        }
+        Project project = projects.findByIdAndArchivedAtIsNull(projectId)
+                .orElseThrow(() -> new NoSuchElementException("Project not found"));
         requireInviterStillManages(invitation);
         if (invitation.getTeamId() != null) requireActiveTeam(projectId, invitation.getTeamId());
         if (memberships.findByProjectIdAndUserIdAndStatus(projectId, userId, MembershipStatus.ACTIVE).isPresent()) {
@@ -340,7 +340,7 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
         invitation.accept(clock.instant());
         invitations.saveAndFlush(invitation);
         events.publishEvent(new ProjectInvitationEvents.Accepted(invitation.getId(), projectId, userId,
-                invitation.getInvitedBy(), invitation.getTeamId(), saved.getId()));
+                invitation.getInvitedBy(), invitation.getTeamId(), saved.getId(), project.getName()));
         return MemberSummary.from(saved, account.nickname(), account.profilePhotoVersion());
     }
 
@@ -384,7 +384,7 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
         if (current.getTeamId() != null) next.inTeam(current.getTeamId());
         ProjectInvitation saved = invitations.saveAndFlush(next);
         if (saved.getInvitedUserId() != null) events.publishEvent(new ProjectInvitationEvents.Created(
-                saved.getId(), projectId, saved.getInvitedUserId(), actorId));
+                saved.getId(), projectId, saved.getInvitedUserId(), actorId, project.getName()));
 
         String recipientEmail = current.getInvitedUserId() == null ? current.getEmail()
                 : users.findActiveById(current.getInvitedUserId())
@@ -421,10 +421,11 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
     private void rejectOwned(UUID actorId, ProjectInvitation invitation, String message) {
         if (!actorId.equals(invitation.getInvitedUserId()))
             throw new AccessDeniedException("This invitation is not addressed to you");
+        Project project = projects.findById(invitation.getProjectId()).orElseThrow();
         invitation.reject(clock.instant(), message);
         invitations.saveAndFlush(invitation);
         events.publishEvent(new ProjectInvitationEvents.Rejected(invitation.getId(), invitation.getProjectId(),
-                actorId, invitation.getInvitedBy()));
+                actorId, invitation.getInvitedBy(), project.getName()));
     }
 
     /**
@@ -447,7 +448,7 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
             throw new AccessDeniedException("This invitation is not addressed to you");
         UUID projectId = invitation.getProjectId();
         // An archived project can no longer be joined (the external path already checks this).
-        projects.findByIdAndArchivedAtIsNull(projectId)
+        Project project = projects.findByIdAndArchivedAtIsNull(projectId)
                 .orElseThrow(() -> new NoSuchElementException("Project not found"));
         requireInviterStillManages(invitation);
         if (invitation.getTeamId() != null) requireActiveTeam(projectId, invitation.getTeamId());
@@ -466,7 +467,7 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
         invitation.accept(clock.instant());
         invitations.saveAndFlush(invitation);
         events.publishEvent(new ProjectInvitationEvents.Accepted(invitation.getId(), projectId,
-                actorId, invitation.getInvitedBy(), invitation.getTeamId(), saved.getId()));
+                actorId, invitation.getInvitedBy(), invitation.getTeamId(), saved.getId(), project.getName()));
         return MemberSummary.from(saved, account.nickname(), account.profilePhotoVersion());
     }
 

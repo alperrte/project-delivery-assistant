@@ -282,7 +282,7 @@ Swagger check path: `/swagger-ui/index.html` with `API_DOCS_ENABLED=true`; call 
 
 | Endpoint | Auth / scope | Input / safe example | Success | Important errors |
 | --- | --- | --- | --- | --- |
-| `GET /api/v1/notifications` | Authenticated, own records | `?page=0&size=20&unreadOnly=true&type=TASK_ASSIGNED`; size 1–100 | `200` paged content with type, text, read timestamps, actor/project/resource IDs and nullable task statusChange snapshot | `400` invalid filter/page, `401` unauthenticated |
+| `GET /api/v1/notifications` | Authenticated, own records | `?page=0&size=20&read=false&type=TASK_ASSIGNED; optional read=true for history; legacy unreadOnly retained`; size 1–100 | `200` paged content with type, text, read timestamps, actor/project/resource IDs and nullable task statusChange snapshot | `400` invalid filter/page, `401` unauthenticated |
 | `GET /api/v1/notifications/unread-count` | Authenticated, own records | None | `200 {"count": 5}` | `401` |
 | `PATCH /api/v1/notifications/{notificationId}/read` | Authenticated, own record + CSRF | UUID path, no body | `200` updated notification | `400` bad UUID, `401`, `403` CSRF, `404` missing or other user's record |
 | `PATCH /api/v1/notifications/read-all` | Authenticated, own records + CSRF | No body | `200 {"count": 2}` (number changed) | `401`, `403` CSRF |
@@ -301,6 +301,17 @@ Existing team DELETE and legacy archive adapters enforce active project SQUAD_MA
 Claim sets popupPresentedAt atomically on oldest unread SQUAD_DELETED; read/readAt stays independent. At-most-once grant may lose a popup when the response is lost after commit; durable own history remains. Fanout uses committed immutable recipient snapshot, replay event/recipient dedup and existing registry recovery; rollback creates no notification. Additive nullable teamDeletion snapshot carries bounded plain text. Actor-scoped frontend notification cache/AbortSignal/lifetime cleanup prevents prior-user responses/toasts surfacing after logout/login. No browser auth/private list persistence.
 
 Team memberPreview adds safe real first/last names only after project/team authorization; no email/global directory expansion. Existing manager invitation list batch adds safe inviter nickname/photo version and target photo version; target email privacy/token rules retained. Swagger `/swagger-ui/index.html` and `/v3/api-docs`, normal login/CSRF. Delete/claim have no JSON body; safe team create `{"name":"Example Team","includeCreator":true}`.
+
+
+### Own nickname profile update - 2026-10-07
+
+| Endpoint | Auth / request | Success | Expected errors |
+| --- | --- | --- | --- |
+| PUT `/api/v1/users/me/profile` |Active authenticated own principal+CSRF, nickname-only JSON `{"nickname":"Yeni_ad"}` |200 existing own AuthenticatedUser, private/no-store |400 NICKNAME_INVALID/unknown identity fields;409 NICKNAME_TAKEN;401 session;403 CSRF/foreign route/forced password |
+
+Existing Unicode letter/number/underscore3-32 and case-sensitive uk_users_nickname constraint retained; shared Unicode White_Space trim, no NFC/casefold/migration/backfill. Active own row lock and unique flush prevent concurrent duplicate; narrow constraint mapping does not expose another user. User DynamicUpdate prevents unrelated stale photo/password writes reverting nickname; actual PostgreSQL barriers verified. No email/UUID/session/refresh/provider/role fields changed or accepted from client. JWT subject remains UUID and fresh UserAccounts principal supplies nickname. Existing current/future email login/refresh/forced-password/admin/OAuth/photo tests pass.
+
+Fresh DTO session cache writes and query cancellation are same-actor/lifetime guarded; prior-user late mutation cannot overwrite next account. PDA history checks readonly actual adjacent native entry against authenticated app route policy; unavailable/public/auth/external boundaries disabled, browser controls/route authorization unchanged. No auth token/private history storage or global history rewrite. Swagger `/swagger-ui/index.html`/`/v3/api-docs`, normal login/CSRF; no credentials in examples.
 
 Swagger/OpenAPI is intended for development and testing.
 
@@ -387,6 +398,7 @@ Authorization rule of every sensitive endpoint that exists today:
 | `GET /api/v1/projects/{id}`, `/by-slug/{slug}` | `PROJECT_VIEW` in that project (else `403`) |
 | `PUT /api/v1/projects/{id}` | `PROJECT_UPDATE` |
 | `POST /api/v1/projects/{id}/archive` | `PROJECT_ARCHIVE` |
+| `DELETE /api/v1/projects/{id}` | `PROJECT_ARCHIVE` **and** the caller is the project's founder (`createdBy`); permanent delete, `204`, no body. `401` no session, `403` CSRF missing / not a member / not a Project Manager / not the founder, `404` unknown or archived project. No global `ADMIN` bypass; a second Project Manager is refused |
 | `GET /api/v1/projects/{id}/members`, `/members/{userId}` | `PROJECT_VIEW` |
 | `POST|PUT|DELETE .../members/**` (roles, remove member) | `MEMBER_MANAGE`; the last Project Manager cannot be removed |
 | `/api/v1/organizations/**` | organization owner rules (not project roles) |
@@ -669,6 +681,16 @@ Relevant inventory: POST/GET `/api/v1/projects`, PUT `/api/v1/projects/{id}`, GE
 
 No new endpoint, role, cookie/session/CSRF/CORS policy or ENV. Frontend private invitation queries are principal-scoped and cancelled/removed at sign-in/out/session boundaries. Existing invitation writes lock/expire elapsed pending target rows before fresh insert; manager reads/count/candidates use effective expiry. Resend expired invitation200 creates a fresh token/ID; DELETE expired204 retains EXPIRED, grants no membership. Existing authority checks and DB constraints remain. Full inventory/manual checks in the separate implementation completion. SMTP delivery remains disabled in the audited local environment.
 
+### Notification read/history compatibility - 2026-10-07
+
+Existing GET /api/v1/notifications adds nullable read: false only unread,true only read,omitted retains unreadOnly/all; read=true with unreadOnly=true400. Recipient predicate always principal-scoped, size1-100 and createdAt DESC,id DESC unchanged. Own PATCH/{id}/read and /read-all retain session+CSRF; no request body selects recipient, foreign ID404 and anonymous/session401 (CSRF-valid), forced-password/CSRF403. No new matcher/role/auth/storage policy or migration.
+
+Conditional own-unread read UPDATE and fresh readback preserve first committed readAt under stale JPA/bulk races. No content/snapshot/presentation deletion; popupPresentedAt remains distinct from readAt. Read-all count is changed rows; badge reconciles real unread-count. UI lifetime/AbortSignal and actor-scoped active/history/count keys block late previous-user results, preserving existing login/logout cleanup. Task-open read behavior retained; existing project hard-delete notification cleanup remains a separate lifecycle. Swagger /swagger-ui/index.html and /v3/api-docs, normal login/CSRF; safe GET ?read=true&page=0&size=20, read PATCH own QA UUID/no body.
+
+### Project invitation count/context compatibility - 2026-10-08
+
+No new matcher/auth/session/CSRF/CORS/ENV policy. Own incoming effective PENDING list/totals exclude archived projects; all-history retains rows. Manager totals retain active-project MEMBER_MANAGE authorization, distinct from recipient and notification unread counts. Existing own notification response has nullable event-time invitation projectName, plain text/bounded160 and recipient-scoped; no private project lookup or forged actor parameter. Frontend count keys include actor (and managed project); AbortSignal/cancel/remove and manager/demo visibility guard prevent stale private data presentation. Create-banner opt-in client decode rejects corrupt previews and preserves prior draft; server MIME/magic/size/authorization remain authoritative. Full API/Swagger/manual inventory belongs to separate implementation completion.
+
 ## 12. Error Handling
 
 API errors must not expose:
@@ -900,3 +922,38 @@ Convenience, frontend behavior, development speed, or debugging requirements mus
 Final read-only audit reports6 high total /1 production high. The new production finding is sharp0.35.4, GHSA-wq5f-xc86-pv6w (reviewed2026-10-06), affected<0.35.5/patched0.35.5. Upstream describes conditional librsvg memory vulnerability on glibc Linux while decoding SVG. PDA exploit/runtime reachability was not reproduced; production audit classification alone is not proof. Reviewed source: https://github.com/advisories/GHSA-wq5f-xc86-pv6w .
 
 source-map-js remains patched1.2.2. Existing ESLint/braces5 high dev debt remains. Squad modernization does not update package/lock/ENV; separate compatible sharp patch review is needed before release, no waiver. Earlier5/production0 counts are historical.
+
+### Sharp dependency remediation - 2026-10-07
+
+User-approved separate transitive patch sharp0.35.4->0.35.5 via real npm update sharp; Next16.3.6 already permits ^0.35.4, Node24.19.0 meets >=20.9.0. Lock updates only27 sharp/platform/libvips-family entries; unrelated fast-deep-equal metadata normalization reverted. Manifest/application/invitation/backend/config/migrations/ENV unchanged. One scrollbar E2E setup reuses the real shared member session after an actual full-suite login429; assertions and auth quotas unchanged.
+
+GHSA-wq5f-xc86-pv6w closed in installed graph; native runtime reports librsvg2.63.2. Benign PNG/JPEG/WebP/AVIF/SVG/invalid-image smoke6 PASS; no PDA/Linux exploit proof or production rollout claimed. Final clean npm ci PASS; full npm audit5 high/exit1 (existing ESLint/braces dev debt), production0/exit0. Previous6 high/production1 is historical; source-map-js1.2.2 retained. Remaining dev debt is separate, not a release waiver.
+
+21 targeted Chromium+5 fixture/history regressions PASS; lint/type/build and final canonical pre-push exit0:512 backend0 failure/error/skip,291 Chromium+1 expected production crash-route skip, Docker build/start/health. Final Next dev3000/backend8080/Swagger/API docs200. Separate delivery: [sharp remediation](../docs/compliation/2026-10-07-sharp-security-remediation.md).
+
+## Permanent project deletion (2026-10-07)
+
+`DELETE /api/v1/projects/{projectId}` is the only path that removes a project row. Order in `ProjectService.delete`: `PROJECT_ARCHIVE` check (`403`) -> row lock of an active project (`404`, so an archived or unknown project never reveals itself) -> founder check (`createdBy` equals the caller, else `403`) -> `ProjectDeletedEvent` -> delete + flush. The role matrix (`RolePolicy`) is unchanged and no permission was added; the founder rule follows the task-management-mode precedent. Children go through the database (`V58` `ON DELETE CASCADE`), so modules never delete each other's tables; the notification module removes the project's notifications in the same transaction through a synchronous `@EventListener`. Nobody is notified. The frontend only offers the button to the founder, the server decides. CSRF, cookie auth and the URL whitelist are unchanged apart from the new `DELETE /api/v1/projects/*` row in `SecurityBaselineConfiguration` (authenticated; the authorization above is in the service).
+
+## GitHub depo okuma ve commit bildirimleri (2026-10-07, V59)
+
+Entegrasyon salt okunurdur: clone, push, issue, PR ve webhook yoktur; yalnız **herkese açık** depolar bağlanır (`POST /projects/{id}/repository` özel depoyu `400 REPOSITORY_PRIVATE` ile reddeder, böylece sunucu token'ı tanımlıyken sunucunun erişebildiği özel depolar okunamaz).
+
+- **Yeni uçlar** (hepsi `GET`, aktif proje üyesi, çerez oturumu; `SecurityBaselineConfiguration` içindeki mevcut `GET /api/v1/projects/**` kuralı kapsar, yeni satır gerekmedi): `/projects/{id}/repository/branches`, `/projects/{id}/repository/commits?branch=&author=&page=&limit=` (mevcut uç genişledi), `/projects/{id}/repository/compare?branch=`. Üye olmayan `403`, oturumsuz `401`.
+- **Girdi doğrulama:** `branch` en çok 250 karakter ve git ref kurallarına uyar (`..`, boşluk, kontrol karakteri, `~^:?*[\` yok) → `400`; ayrıca önbellekteki dal listesinde olmalı → yoksa `404`, böylece uydurma dal adlarıyla GitHub kotası tüketilemez. `author` GitHub kullanıcı adı kalıbına (`^[A-Za-z0-9-]{1,39}$`) uymalı → `400`. Her ikisi de GitHub'a yalnız kodlanmış URI değişkeni olarak gider (SSRF yüzeyi: host sabit `api.github.com`).
+- **Okuma sınırı (§14):** kullanıcı başına dakikada 60 depo okuması (`pda.github.read-limit-per-minute`); aşılırsa `429` + `Retry-After: 60` + `code=REPOSITORY_READ_LIMIT`. GitHub yanıtları `GitHubReadCache` ile 60 sn önbelleğe alınır (`pda.github.cache-ttl`, `PT0S` önbelleği kapatır).
+- **Sunucu token'ı:** `GITHUB_API_TOKEN` isteğe bağlıdır, **varsayılan boştur**; doluysa yalnız sunucudan GitHub'a `Authorization: Bearer` olarak gider (saatlik sınır 60 → 5000). Hiçbir yanıtta, logda, hata metninde ya da `ProblemDetail` içinde yer almaz; tarayıcıya hiç verilmez. Yalnız `.env` içinde tutulur, `.env.example` boş anahtarı gösterir.
+- **GitHub hataları:** `NOT_FOUND` → `404`, `RATE_LIMITED` → `429`, `UNAVAILABLE` → `503`; sızdırılan ayrıntı yoktur.
+- **Tarama (`RepositoryCommitScanScheduler`, varsayılan 5 dk):** transaction dışında GitHub'a gider; ilerleme koşullu `UPDATE ... WHERE notified_head_sha IS NOT DISTINCT FROM :old` ile "claim" edilir, çoklu örnek ya da tekrar tarama çift bildirim üretmez. Tur büyüklüğü `pda.github.commit-scan-batch` ile sınırlıdır (`0` = otomatik: token yokken 5, token varken 50 depo); `RATE_LIMITED` turu durdurur, hata zamanlamayı öldürmez. Bildirim yalnız varsayılan dal için, tek taramadaki commit'ler tek bildirimde; alıcılar projenin aktif üyeleridir, bildirim metni yalnız depo adı/dal/sayı/son commit mesajı ve yazar adı içerir (snapshot kolonları + CHECK kısıtı).
+- **Frontend:** commit bağlantıları yalnız `https://github.com/`, avatarlar yalnız `https://avatars.githubusercontent.com/` ile açılır (`features/repository/links.ts`); diğer her şey düz metin ya da baş harf yedeğidir.
+
+## GitHub depo takip modu ve bildirim anahtarı (2026-10-07, V61)
+
+- **Yeni uç:** `PATCH /api/v1/projects/{projectId}/repository` gövde `{trackingMode: BASIC|ADVANCED, notifyOnCommits: boolean}`. `REPOSITORY_MANAGE` (tüm Proje Yöneticileri), çerez oturumu + CSRF; `SecurityBaselineConfiguration` PATCH listesine `/api/v1/projects/*/repository` eklendi (varsayılan deny-all korunur). Üye `403`, oturumsuz `401`, CSRF'siz `403`, bağlı depo yok `404`, geçersiz mod `400`. `POST` aynı alanları isteğe bağlı alır (varsayılan `BASIC` ve `true`).
+- **Mod kuralı:** `BASIC` modda `branches`, `compare`, ana dal dışı ve yazara göre `commits` istekleri `409` + `code=REPOSITORY_ADVANCED_REQUIRED` döner (GitHub'a gidilmez). Bu bir güvenlik sınırı değil, tutarlılık ve GitHub kotasını korumak içindir; ana dalın commit listesi iki modda da açıktır. Yetki kontrolü modlardan bağımsız olarak önce çalışır.
+- **Bildirim anahtarı:** `notifyOnCommits=false` olan depolar taramaya hiç alınmaz (`findScanCandidates`). Anahtar kapalıdan açığa dönerse taban çizgisi sıfırlanır (`notifiedHeadSha = null`); kapalıyken gelen commit'ler sonradan bildirilmez. Bildirim iki modda da yalnız varsayılan dal içindir.
+- **Frontend:** oluşturma ekranındaki depo adresi `GITHUB_REPOSITORY_URL` ile istemcide, asıl doğrulama sunucuda yapılır; depo bağlanamazsa proje yine oluşur ve uyarı gösterilir. Kenar çubuğundaki "Depo" öğesi ve ayarlar bölümü yalnızca arayüz kolaylığıdır, yetki sunucudadır.
+
+### Independent Next.js advisory follow-up - 2026-10-08
+
+Current npm audit6 high/exit1, omit=dev1 high/exit1 (Next16.3.6); earlier5 high/production0 is historical. Newly reviewed Next advisories: GHSA-3w37-wq28-93x7, GHSA-4jqv-mc3x-m676, GHSA-39w2-rjm5-chcv, GHSA-f87g-xv8r-7p7x, GHSA-mcj8-r9mp-w47p and GHSA-cjq9-62q9-8jv4. Reviewed entries list16.3.8 patched; npm currently proposes16.4.0. Source has no images.remotePatterns (the SSRF advisory explicitly excludes that configuration), no draftMode/use-cache usage found; this limited source review is not an exploit/reachability audit or global release waiver. Package/lock unchanged in this UX task. Separate compatible patch/compatibility/gate decision required; existing ESLint/braces dev debt remains. Primary references: https://github.com/advisories/GHSA-cjq9-62q9-8jv4 and https://github.com/advisories/GHSA-mcj8-r9mp-w47p.

@@ -1,4 +1,5 @@
 import { apiRequest, apiUrl } from "@/lib/api/client";
+import type { AuthenticatedUser } from "@/features/auth/api";
 
 /** Server-side limit; the client checks the same numbers only to save a round trip. */
 export const PROFILE_PHOTO_MAX_BYTES = 5 * 1024 * 1024;
@@ -18,6 +19,7 @@ export function profilePhotoSrc(userId: string, version: number | null | undefin
 }
 
 export const accountApi = {
+  rename: (nickname: string, signal?: AbortSignal) => apiRequest<AuthenticatedUser>("/users/me/profile", { method: "PUT", body: { nickname }, signal }),
   /** Always the signed-in user's own photo: there is no user id in the request. */
   uploadPhoto: (file: File) => {
     const body = new FormData();

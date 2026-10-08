@@ -160,7 +160,7 @@ public class SecurityBaselineConfiguration {
                             .requestMatchers(HttpMethod.POST, "/api/v1/auth/password/change").authenticated()
                             .requestMatchers(HttpMethod.GET, "/api/v1/users/me/preferences",
                                     "/api/v1/users/me/profile-photo", "/api/v1/users/*/profile-photo").authenticated()
-                            .requestMatchers(HttpMethod.PUT, "/api/v1/users/me/preferences",
+                            .requestMatchers(HttpMethod.PUT, "/api/v1/users/me/profile", "/api/v1/users/me/preferences",
                                     "/api/v1/users/me/profile-photo").authenticated()
                             .requestMatchers(HttpMethod.DELETE, "/api/v1/users/me/profile-photo").authenticated()
                             .requestMatchers(HttpMethod.GET, "/api/v1/notifications", "/api/v1/notifications/unread-count").authenticated()
@@ -243,6 +243,7 @@ public class SecurityBaselineConfiguration {
                                     "/api/v1/projects/*/logo",
                                     "/api/v1/projects/*/banner").authenticated()
                             .requestMatchers(HttpMethod.DELETE, "/api/v1/organizations/*/logo", "/api/v1/organizations/*/cover",
+                                    "/api/v1/projects/*",
                                     "/api/v1/projects/*/members/*",
                                     "/api/v1/projects/*/logo",
                                     "/api/v1/projects/*/banner",
@@ -256,6 +257,7 @@ public class SecurityBaselineConfiguration {
                             .requestMatchers(HttpMethod.DELETE, "/api/v1/projects/*/teams/*",
                                     "/api/v1/projects/*/teams/*/members/*").authenticated()
                             .requestMatchers(HttpMethod.PATCH, "/api/v1/projects/*/task-management-mode",
+                                    "/api/v1/projects/*/repository",
                                     "/api/v1/projects/*/tasks/*",
                                     "/api/v1/projects/*/reminders/*",
                                     "/api/v1/projects/*/tasks/*/status",

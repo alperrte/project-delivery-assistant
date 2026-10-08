@@ -61,6 +61,51 @@ class ProjectInvitationRepositoryTest {
     }
 
     @Test
+    void incomingPendingPagesAndTotalsUseRecipientActiveProjectAndEffectiveExpiry() {
+        UUID recipient = UUID.randomUUID(), other = UUID.randomUUID(), issuer = UUID.randomUUID();
+        Instant now = Instant.now().truncatedTo(ChronoUnit.MICROS);
+        var one = org.springframework.data.domain.PageRequest.of(0, 1);
+        assertEquals(0, invitations.findByInvitedUserIdAndStatusAndExpiresAtAfter(recipient,
+                InvitationStatus.PENDING, now, one).getTotalElements());
+        for (int n = 0; n < 101; n++) {
+            invitations.saveAndFlush(ProjectInvitation.forRegisteredUser(newProject(), recipient, issuer,
+                    Set.of(ProjectRole.TESTER), "live-" + n, now.plus(7, ChronoUnit.DAYS)));
+            if (n < 2) assertEquals(n + 1, invitations.findByInvitedUserIdAndStatusAndExpiresAtAfter(recipient,
+                    InvitationStatus.PENDING, now, one).getTotalElements());
+        }
+        UUID archivedProject = newProject();
+        Project archived = projects.findById(archivedProject).orElseThrow();
+        archived.archive(); projects.saveAndFlush(archived);
+        invitations.saveAndFlush(ProjectInvitation.forRegisteredUser(archivedProject, recipient, issuer,
+                Set.of(ProjectRole.TESTER), "archived", now.plus(7, ChronoUnit.DAYS)));
+        invitations.saveAndFlush(ProjectInvitation.forRegisteredUser(newProject(), recipient, issuer,
+                Set.of(ProjectRole.TESTER), "expired-boundary", now));
+        ProjectInvitation cancelled = ProjectInvitation.forRegisteredUser(newProject(), recipient, issuer,
+                Set.of(ProjectRole.TESTER), "cancelled", now.plus(7, ChronoUnit.DAYS));
+        cancelled.cancel(now); invitations.saveAndFlush(cancelled);
+        ProjectInvitation accepted = ProjectInvitation.forRegisteredUser(newProject(), recipient, issuer,
+                Set.of(ProjectRole.TESTER), "accepted", now.plus(7, ChronoUnit.DAYS));
+        accepted.accept(now); invitations.saveAndFlush(accepted);
+        ProjectInvitation rejected = ProjectInvitation.forRegisteredUser(newProject(), recipient, issuer,
+                Set.of(ProjectRole.TESTER), "rejected", now.plus(7, ChronoUnit.DAYS));
+        rejected.reject(now); invitations.saveAndFlush(rejected);
+        invitations.saveAndFlush(ProjectInvitation.forRegisteredUser(newProject(), other, issuer,
+                Set.of(ProjectRole.TESTER), "foreign", now.plus(7, ChronoUnit.DAYS)));
+        entityManager.clear();
+        var first = invitations.findByInvitedUserIdAndStatusAndExpiresAtAfter(recipient, InvitationStatus.PENDING, now, one);
+        assertEquals(101, first.getTotalElements()); assertEquals(101, first.getTotalPages());
+        assertEquals(1, first.getContent().size()); assertEquals(recipient, first.getContent().getFirst().getInvitedUserId());
+        var last = invitations.findByInvitedUserIdAndStatusAndExpiresAtAfter(recipient, InvitationStatus.PENDING,
+                now, org.springframework.data.domain.PageRequest.of(5, 20));
+        assertEquals(101, last.getTotalElements()); assertEquals(1, last.getContent().size());
+        assertEquals(106, invitations.findByInvitedUserId(recipient, one).getTotalElements());
+        assertEquals(1, invitations.findByProjectIdAndStatusAndExpiresAtAfter(archivedProject,
+                InvitationStatus.PENDING, now, one).getTotalElements());
+        assertEquals(InvitationStatus.PENDING, invitations.findByProjectIdAndInvitedUserIdAndStatus(archivedProject,
+                recipient, InvitationStatus.PENDING).orElseThrow().getStatus());
+    }
+
+    @Test
     void onlyOnePendingInvitationPerProjectAndUserIsAllowed() {
         // A caught constraint violation aborts the Postgres transaction for any further statement, so this
         // assertThrows must be the last database operation in the test (matches ProjectRepositoryTest's pattern).

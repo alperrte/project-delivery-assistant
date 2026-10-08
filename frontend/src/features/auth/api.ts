@@ -24,7 +24,7 @@ export const authApi = {
   }) => apiRequest("/auth/register", { method: "POST", body }),
   registerInvitation: (body: { token: string; email: string; firstName: string; lastName: string; nickname: string; password: string; confirmPassword: string }) =>
     apiRequest<AcceptedExternalInvitation>("/auth/register/invitation", { method: "POST", body }),
-  me: () => apiRequest<AuthenticatedUser>("/auth/me"),
+  me: (signal?: AbortSignal) => apiRequest<AuthenticatedUser>("/auth/me", { signal }),
   logout: () => apiRequest("/auth/logout", { method: "POST" }),
   forgotPassword: (body: { email: string }) =>
     apiRequest("/auth/password/forgot", { method: "POST", body }),

@@ -31,7 +31,8 @@ public class MyProjectInvitationController {
     @GetMapping("/me")
     @Operation(summary = "List my project invitations",
             description = "Authenticated recipient only; paginated. status=PENDING keeps only invitations that can "
-                    + "still be answered; a pending invitation past its expiry is reported as EXPIRED.")
+                    + "still be answered in active projects. Unfiltered history is retained; a pending invitation "
+                    + "past its expiry is reported as EXPIRED.")
     public PageResponse<MyInvitationResponse> mine(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
                                                    @RequestParam(defaultValue = "0") int page,
                                                    @RequestParam(defaultValue = "20") int size,

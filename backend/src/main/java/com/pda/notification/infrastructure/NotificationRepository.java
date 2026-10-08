@@ -12,11 +12,17 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface NotificationRepository extends JpaRepository<Notification, UUID> {
-    @Query("select n from Notification n where n.recipientUserId = :userId and (:unreadOnly = false or n.read = false) and (:type is null or n.type = :type)")
-    Page<Notification> list(UUID userId, boolean unreadOnly, NotificationType type, Pageable pageable);
+    @Query("select n from Notification n where n.recipientUserId = :userId and (:read is null or n.read = :read) and (:type is null or n.type = :type)")
+    Page<Notification> listByReadState(UUID userId, Boolean read, NotificationType type, Pageable pageable);
     long countByRecipientUserIdAndReadFalse(UUID userId);
     Optional<Notification> findByIdAndRecipientUserId(UUID id, UUID userId);
     @Modifying
+    @Query("update Notification n set n.read = true, n.readAt = :now where n.id = :id and n.recipientUserId = :userId and n.read = false")
+    int markRead(UUID userId, UUID id, Instant now);
+    @Modifying
     @Query("update Notification n set n.read = true, n.readAt = :now where n.recipientUserId = :userId and n.read = false")
     int markAllRead(UUID userId, Instant now);
+    @Modifying
+    @Query("delete from Notification n where n.projectId = :projectId")
+    int deleteByProjectId(UUID projectId);
 }

@@ -1,7 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
-import { readFileSync } from "node:fs";
-import { createProject, createTeam } from "./helpers";
-import { MANAGER_STORAGE, MANAGER_USER_FILE } from "./global-setup";
+import { api, createProject, createTeam } from "./helpers";
+import { MANAGER_STORAGE } from "./global-setup";
 
 /**
  * Teams page: a project starts without teams, the first team keeps its creator, cards open the detail page, the list
@@ -10,11 +9,14 @@ import { MANAGER_STORAGE, MANAGER_USER_FILE } from "./global-setup";
 test.describe.serial("Teams page (manager)", () => {
   let page: Page;
   let slug: string;
-  const manager: { nickname: string } = JSON.parse(readFileSync(MANAGER_USER_FILE, "utf-8"));
+  let manager: { nickname: string };
 
   test.beforeAll(async ({ browser }) => {
     const context = await browser.newContext({ storageState: MANAGER_STORAGE });
     page = await context.newPage();
+    await page.goto("/projects");
+    const principal=await api(page,"GET","/auth/me");expect(principal.status).toBe(200);
+    manager=principal.json as {nickname:string};
   });
 
   test.afterAll(async () => {
@@ -23,7 +25,8 @@ test.describe.serial("Teams page (manager)", () => {
 
   test("a new project has no teams and the first team form keeps its creator", async () => {
     slug = await createProject(page, `E2E Teams ${Date.now()}`);
-    await page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Ekipler" }).click();
+    await page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("button", { name: "Ekipler", exact: true }).click();
+    await page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Tüm Ekipler", exact: true }).click();
     await expect(page.getByText("Henüz ekip yok")).toBeVisible();
 
     await page.getByRole("link", { name: /^Yeni ekip$/ }).first().click();

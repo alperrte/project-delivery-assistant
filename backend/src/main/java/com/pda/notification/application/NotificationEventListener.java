@@ -2,6 +2,7 @@ package com.pda.notification.application;
 
 import com.pda.notification.domain.*;
 import com.pda.project.ProjectMemberRemovedEvent;
+import com.pda.project.ProjectRepositoryEvents;
 import com.pda.project.ProjectInvitationEvents;
 import com.pda.project.ProjectMembershipEvents;
 import com.pda.squad.SquadMembershipEvents;
@@ -15,10 +16,24 @@ import java.util.UUID;
 
 @Component
 public class NotificationEventListener {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(NotificationEventListener.class);
     private final NotificationWriter writer;
     private final TeamDeletionNotificationStore teamDeletions;
     public NotificationEventListener(NotificationWriter writer, TeamDeletionNotificationStore teamDeletions) {
         this.writer = writer; this.teamDeletions = teamDeletions;
+    }
+    /** One batched notification per recipient; a failing recipient never blocks the others. */
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void commitsPushed(ProjectRepositoryEvents.CommitsPushed e) {
+        var commits = new RepositoryCommits(e.projectName(), e.repositoryFullName(), e.branch(), e.commitCount(),
+                e.truncated(), e.headMessage(), e.headAuthor());
+        for (UUID recipient : e.recipientIds()) {
+            try {
+                writer.saveRepositoryCommits(recipient, e.projectId(), commits);
+            } catch (RuntimeException ex) {
+                log.warn("Repository commit notification failed for project {}", e.projectId(), ex);
+            }
+        }
     }
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void teamDeleted(SquadLifecycleEvents.TeamDeleted event) { teamDeletions.save(event); }
@@ -104,17 +119,17 @@ public class NotificationEventListener {
     }
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void invitationCreated(ProjectInvitationEvents.Created e) {
-        writer.save(e.invitedUserId(), e.invitedBy(), e.projectId(), ResourceType.PROJECT_INVITATION,
-                e.invitationId(), NotificationType.PROJECT_INVITATION_CREATED);
+        writer.saveInvitation(e.invitedUserId(), e.invitedBy(), e.projectId(),
+                e.invitationId(), NotificationType.PROJECT_INVITATION_CREATED, e.projectName());
     }
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void invitationAccepted(ProjectInvitationEvents.Accepted e) {
-        writer.save(e.invitedBy(), e.invitedUserId(), e.projectId(), ResourceType.PROJECT_INVITATION,
-                e.invitationId(), NotificationType.PROJECT_INVITATION_ACCEPTED);
+        writer.saveInvitation(e.invitedBy(), e.invitedUserId(), e.projectId(),
+                e.invitationId(), NotificationType.PROJECT_INVITATION_ACCEPTED, e.projectName());
     }
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void invitationRejected(ProjectInvitationEvents.Rejected e) {
-        writer.save(e.invitedBy(), e.invitedUserId(), e.projectId(), ResourceType.PROJECT_INVITATION,
-                e.invitationId(), NotificationType.PROJECT_INVITATION_REJECTED);
+        writer.saveInvitation(e.invitedBy(), e.invitedUserId(), e.projectId(),
+                e.invitationId(), NotificationType.PROJECT_INVITATION_REJECTED, e.projectName());
     }
 }

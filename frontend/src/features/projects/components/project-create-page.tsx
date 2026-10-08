@@ -364,11 +364,11 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
         </div>
 
         <div data-sticky-actions className="sticky bottom-0 z-20 -mx-4 -mb-6 mt-10 sm:-mb-8 border-t bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:-mx-8 sm:px-8">
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <Link href="/projects" className={buttonVariants({ variant: "outline" })}>
               {t("actions.cancel")}
             </Link>
-            <div className="flex items-center gap-2">
+            <div className="ml-auto flex items-center gap-2">
               <a href="#project-preview" className={buttonVariants({ variant: "ghost", className: "lg:hidden" })}>
                 <Eye size={16} data-icon="inline-start" aria-hidden="true" />
                 <span className="sr-only min-[440px]:not-sr-only">{t("preview.show")}</span>

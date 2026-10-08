@@ -32,14 +32,15 @@ public class NotificationController {
                 .orElseGet(() -> ResponseEntity.noContent().header("Cache-Control", "private, no-store").build());
     }
     @GetMapping
-    @Operation(summary = "List own notifications", description = "Authenticated user; newest first")
+    @Operation(summary = "List own notifications", description = "Authenticated user; newest first. Optional read=true for history, read=false for unread. Omitted read retains legacy unreadOnly/all behavior; read=true with unreadOnly=true is invalid.")
     public PageResponse list(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
                              @RequestParam(defaultValue = "false") boolean unreadOnly,
+                             @RequestParam(required = false) Boolean read,
                              @RequestParam(required = false) NotificationType type,
                              @RequestParam(defaultValue = "0") int page,
                              @RequestParam(defaultValue = "20") int size) {
         if (page < 0 || size < 1 || size > 100) throw new IllegalArgumentException("Invalid page");
-        Page<Notification> result = service.list(actor(principal), unreadOnly, type, page, size);
+        Page<Notification> result = service.list(actor(principal), unreadOnly, read, type, page, size);
         return new PageResponse(result.getContent().stream().map(NotificationResponse::from).toList(),
                 result.getNumber(), result.getSize(), result.getTotalElements(), result.getTotalPages());
     }
@@ -69,11 +70,14 @@ public class NotificationController {
     public record NotificationResponse(UUID id, NotificationType type, String title, String message,
                                        boolean read, Instant createdAt, Instant readAt, UUID actorUserId,
                                        UUID projectId, ResourceType resourceType, UUID resourceId,
-                                       TaskStatusChange statusChange, TeamDeletion teamDeletion, Instant popupPresentedAt) {
+                                       TaskStatusChange statusChange, TeamDeletion teamDeletion,
+                                       RepositoryCommits repositoryCommits, Instant popupPresentedAt,
+                                       InvitationContext invitationContext) {
         static NotificationResponse from(Notification n) {
             return new NotificationResponse(n.getId(), n.getType(), n.getTitle(), n.getMessage(),
                     n.isRead(), n.getCreatedAt(), n.getReadAt(), n.getActorUserId(), n.getProjectId(),
-                    n.getResourceType(), n.getResourceId(), n.getStatusChange(), n.getTeamDeletion(), n.getPopupPresentedAt());
+                    n.getResourceType(), n.getResourceId(), n.getStatusChange(), n.getTeamDeletion(),
+                    n.getRepositoryCommits(), n.getPopupPresentedAt(), n.getInvitationContext());
         }
     }
 }

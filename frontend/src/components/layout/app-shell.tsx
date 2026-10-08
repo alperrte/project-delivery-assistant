@@ -28,6 +28,9 @@ import { clearPrivateNotifications } from "@/features/notifications/query-keys";
 import { clearPrivateTeams } from "@/features/squads/cache";
 import { useApplySavedPreferences, useRestoreSessionBaseline } from "@/features/settings/session-preferences";
 
+import { useIncomingInvitationCount } from "@/features/invitations/hooks";
+import { PendingInvitationBadge } from "@/features/invitations/components/pending-invitation-badge";
+
 const NAV_LINKS = [
   { href: "/dashboard", key: "home", icon: House },
   { href: "/projects", key: "projects", icon: SquaresFour },
@@ -129,6 +132,8 @@ export function AppShellView({ children, pathname, user, collapsed = false, onLo
 }) {
   const t = useTranslations("app");
   const tw = useTranslations("workspace");
+  const incoming = useIncomingInvitationCount(!contained);
+  const ti = useTranslations("invitations");
   const [menuOpen, setMenuOpen] = useState(false);
   function renderNavigation(narrow: boolean) {
     return (
@@ -141,7 +146,7 @@ export function AppShellView({ children, pathname, user, collapsed = false, onLo
         >
           {narrow ? <Logo variant="emblem" size={28} priority={!contained} /> : <Logo variant="wordmark" compact plain size={140} priority={!contained} />}
         </Link>
-        <nav aria-label={tw("navigation")} className={cn("min-h-0 flex-1 space-y-1 overflow-y-auto py-3", narrow ? "px-2" : "px-3")}>
+        <nav data-workspace-scroll={contained ? undefined : "sidebar"} aria-label={tw("navigation")} className={cn("min-h-0 flex-1 space-y-1 overflow-y-auto py-3", narrow ? "px-2" : "px-3")}>
           {NAV_LINKS.map(link => {
             const Icon = link.icon;
             // Inside one project the selected-project group owns the highlight, so "Projeler" lights up only on
@@ -157,16 +162,18 @@ export function AppShellView({ children, pathname, user, collapsed = false, onLo
                 href={link.href}
                 onClick={() => setMenuOpen(false)}
                 title={narrow ? t(`nav.${link.key}`) : undefined}
-                aria-label={narrow ? t(`nav.${link.key}`) : undefined}
+                aria-label={t(`nav.${link.key}`)}
+                aria-description={link.key === "invitations" && incoming.isSuccess && incoming.data > 0 ? ti("pendingCount", { count: incoming.data }) : undefined}
                 aria-current={active ? "page" : undefined}
                 className={navItemClass(active, cn("flex items-center gap-3 rounded-md py-2.5 text-[13px] font-medium hover:bg-muted hover:text-foreground", narrow ? "justify-center px-0" : "px-3"))}
               >
-                <Icon size={19} weight={active ? "fill" : "regular"} aria-hidden="true" />
+                <span className="relative"><Icon size={19} weight={active ? "fill" : "regular"} aria-hidden="true" />{narrow && link.key === "invitations" && <PendingInvitationBadge compact count={!contained && incoming.isSuccess ? incoming.data : undefined} />}</span>
                 {!narrow && t(`nav.${link.key}`)}
+                {!narrow && link.key === "invitations" && <PendingInvitationBadge count={!contained && incoming.isSuccess ? incoming.data : undefined} />}
               </Link>
             );
           })}
-          <ProjectSidebarNav pathnameOverride={pathname} onNavigate={() => setMenuOpen(false)} collapsed={narrow} />
+          <ProjectSidebarNav pathnameOverride={pathname} onNavigate={() => setMenuOpen(false)} collapsed={narrow} contained={contained} />
           <div className="mt-3 border-t border-border pt-4">
             {!narrow && (
               <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">{tw("personal")}</p>
@@ -225,11 +232,11 @@ export function AppShellView({ children, pathname, user, collapsed = false, onLo
       <Dialog open={menuOpen} onOpenChange={setMenuOpen}>
         <DialogContent className="top-0 left-0 h-[100dvh] max-h-[100dvh] w-72 max-w-[85vw] translate-x-0 translate-y-0 gap-0 rounded-none p-0 sm:max-w-72">
           <DialogTitle className="sr-only">{tw("navigation")}</DialogTitle>
-          <div className="flex min-h-0 flex-col overflow-y-auto">{renderNavigation(false)}</div>
+          <div data-workspace-scroll={contained ? undefined : "drawer"} className="flex min-h-0 flex-col overflow-y-auto">{renderNavigation(false)}</div>
         </DialogContent>
       </Dialog>
       <div className="flex min-w-0 flex-1 flex-col">
-        <AppHeader contained={contained} user={user} onOpenMobileMenu={() => setMenuOpen(true)} onLogout={onLogout} />
+        <AppHeader contained={contained} user={user} mobileMenuOpen={menuOpen} onOpenMobileMenu={() => setMenuOpen(true)} onLogout={onLogout} />
         <main id={contained ? undefined : "main-content"} style={contained ? { height: "var(--demo-height)", overflowY: "auto" } : undefined} tabIndex={-1} className={cn("w-full min-w-0 flex-1 pt-(--workspace-header-reserve)", pathname === "/dashboard" ? "" : "mx-auto max-w-[1560px] px-4 pb-6 sm:px-8 sm:pb-8")}>{children}</main>
       </div>
     </div>

@@ -109,3 +109,37 @@ Notification type remains TASK_STATUS_CHANGED. GET /api/v1/notifications and PAT
 - Existing own notification list/count/read/read-all contracts remain. Additive nullable `teamDeletion={projectName,teamName,actorNickname,occurredAt}` and `popupPresentedAt`; SQUAD_DELETED/resource SQUAD.
 - Authorized team `memberPreview` adds nullable real firstName/lastName; bounded newest5 batch data, no email/global directory expansion. Manager invitation list adds nullable invitedByNickname/invitedByPhotoVersion/profilePhotoVersion from one authorized page batch; no token in list responses.
 - Swagger: `/swagger-ui/index.html`, `/v3/api-docs`; normal login/CSRF. Safe inputs: create team `{"name":"Example Team","includeCreator":true}`; delete/claim have no body.
+
+## Frontend foundation own nickname API - 2026-10-07
+
+PUT `/api/v1/users/me/profile`, authenticated active principal+CSRF, body `{"nickname":"Yeni_ad"}` only; unknown identity/role/email fields400. Returns200 existing own AuthenticatedUser/private,no-store. Invalid request400 codeNICKNAME_INVALID; exact duplicate409 NICKNAME_TAKEN. Foreign /users/{id}/profile deny-all403; session401/CSRF403 and existing forced-password restriction retained. Existing /auth/me returns fresh name; UUID/email/session/token/provider identity unchanged. Unicode White_Space trim, letters/numbers/underscore3-32 codepoints, existing case-sensitive unique constraint; no NFC/casefold/reserved list/backfill. Swagger existing `/swagger-ui/index.html` and `/v3/api-docs`, normal session/CSRF.
+## Kalıcı proje silme (2026-10-07)
+
+- `DELETE /api/v1/projects/{projectId}`: çerez oturumu + CSRF, gövde yok, `204`. Yalnız projenin kurucusu (`createdBy`, hâlâ aktif `PROJECT_MANAGER`) silebilir; eş yönetici, üye, üye olmayan ve CSRF'siz istek `403`, oturumsuz `401`, bilinmeyen veya arşivli proje `404`. Silme geri alınamaz: görevler, ekipler, davetler, sohbetler, sprintler, kriterler, hatırlatıcılar, depo bağlantısı, logo/banner ve projenin bildirimleri gider. Aynı adla yeni proje oluşturulabilir.
+- `POST /api/v1/projects/{id}/archive` backend'de durur; arayüz artık kullanmaz.
+- `PUT /api/v1/projects/{id}` tam güncellemedir: arayüz `projectGoal` alanını artık düzenlemez ama kayıtlı değeri aynen geri gönderir.
+- Swagger: `/swagger-ui/index.html` (`API_DOCS_ENABLED=true`), normal giriş + `GET /api/v1/auth/csrf`; güvenli deneme için önce kendi açtığınız bir deneme projesini silin.
+
+## Notification read/history filter - 2026-10-07
+
+GET /api/v1/notifications adds optional nullable read: false=unread, true=history, omitted retains legacy unreadOnly/all behavior. read=true with unreadOnly=true returns400; existing type/page/size and createdAt DESC,id DESC remain. Same own principal, cookie/CSRF/private no-store contracts and PATCH/read/count routes. read-all response count is changed rows, not remaining unread. Conditional own-unread UPDATE plus fresh readback preserves first committed readAt under stale individual/bulk races; content/snapshots/popupPresentedAt unchanged. No new endpoint/migration/permission.
+## GitHub depo yönetimi ve commit bildirimleri (2026-10-07)
+
+- `GET /api/v1/projects/{projectId}/repository/branches` → `{branches:[{name,isDefault,isProtected,headShortSha}],truncated}`; varsayılan dal başta, en çok 100 dal (`truncated`).
+- `GET /api/v1/projects/{projectId}/repository/commits?branch=&author=&page=&limit=` → `[{sha,shortSha,message,author,authorLogin,authorAvatarUrl,committedAt,commitUrl}]`. `branch` yoksa varsayılan dal; `limit` 1..50 (varsayılan 10), `page` 1..10; `author` GitHub kullanıcı adıdır. Eski istemci için geriye uyumludur (iki yeni alan eklendi).
+- `GET /api/v1/projects/{projectId}/repository/compare?branch=` → `{base,branch,aheadBy,behindBy,unmergedCommits[],truncated}`; `unmergedCommits` dalın ana dala girmemiş commit'leridir (en çok 100, `truncated`). Varsayılan dal için sıfır/boş.
+- Hata kodları: `400` geçersiz dal/yazar ya da `REPOSITORY_PRIVATE`; `404` dal/depo bulunamadı; `429` `REPOSITORY_READ_LIMIT` ya da GitHub sınırı (`Retry-After`); `503` GitHub erişilemiyor.
+- Bildirim: `type=REPOSITORY_COMMITS_PUSHED`, `resourceType=PROJECT`, `resourceId=projectId`, `repositoryCommits:{projectName,repositoryFullName,branch,commitCount,truncated,headMessage,headAuthor}`.
+- Swagger: `/swagger-ui/index.html` (`API_DOCS_ENABLED=true`), normal giriş + `GET /api/v1/auth/csrf`; `GET` uçları CSRF istemez.
+
+## GitHub depo takip modu ve bildirim anahtarı (2026-10-07)
+
+- `POST /api/v1/projects/{projectId}/repository` gövde `{repositoryUrl, trackingMode?, notifyOnCommits?}` → `201`. Varsayılan `trackingMode=BASIC`, `notifyOnCommits=true`.
+- `PATCH /api/v1/projects/{projectId}/repository` gövde `{trackingMode, notifyOnCommits}` → `200` güncel bağlantı. `REPOSITORY_MANAGE` + CSRF. `404` bağlı depo yok, `400` geçersiz mod.
+- `GET /api/v1/projects/{projectId}/repository` yanıtı `trackingMode` ve `notifyOnCommits` ile genişledi. `GET /api/v1/projects/{projectId}/home` içindeki `repository` nesnesi de `trackingMode` (bağlı değilse `null`) ve `notifyOnCommits` taşır; kenar çubuğu ve genel bakış şeridi bundan okur.
+- `BASIC` modda `GET .../repository/branches`, `.../compare` ve ana dal dışı ya da `author` süzgeçli `GET .../repository/commits` → `409` + `code=REPOSITORY_ADVANCED_REQUIRED`. Mevcut bağlantılar V60 ile `ADVANCED` olur.
+- Swagger: `/swagger-ui/index.html` (`API_DOCS_ENABLED=true`), normal giriş + `GET /api/v1/auth/csrf`; `POST`/`PATCH`/`DELETE` CSRF ister.
+
+## Project invitation count/context and create preview - 2026-10-08
+
+Existing own GET `/api/v1/project-invitations/me?status=PENDING&page=0&size=1` now excludes archived projects in the shared page/count predicate; omitted status retains history, including archived physical PENDING rows. Manager GET `/api/v1/projects/{id}/invitations/all?status=PENDING&page=0&size=1` remains project/active-manager scoped and uses effective expiry. No new count endpoint. Existing own NotificationResponse adds nullable `invitationContext:{projectName}` for Created/Accepted/Rejected, captured at mutation time; legacy null remains safe. Read/read-all/claim APIs and `popupPresentedAt != readAt` unchanged. Existing project POST201 and multipart banner PUT204/GET200/DELETE204 remain the persistence flow; local preview never uploads by itself. Organization invitations remain MISSING FEATURE / Pending product decision outside this scope.

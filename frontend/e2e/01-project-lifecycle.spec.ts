@@ -35,7 +35,8 @@ test.describe.serial("Project lifecycle (manager)", () => {
     expect(page.url()).toContain(slug);
 
     // A new project has no teams; the first one is created through the full-page form and lists its founder.
-    await page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Ekipler" }).click();
+    await page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("button", { name: "Ekipler", exact: true }).click();
+    await page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Tüm Ekipler", exact: true }).click();
     await expect(page.getByText("Henüz ekip yok")).toBeVisible();
     await createTeam(page, slug, "Backend");
     const row = page.getByRole("row", { name: new RegExp(manager.nickname) });
