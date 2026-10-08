@@ -254,3 +254,11 @@ Square assigned-task cards, shared same-page detail/comments, URL refresh/page c
 ## Frontend foundation scoped verification - 2026-10-07
 
 Own username form/session/cache/Unicode/duplicate/late actor response, authenticated native adjacent history boundary, desktop+actual touch700ms auto-hide/held interactions and scoped blue root/sidebar scrollbar passed combined137 backend0 failure/error/skip +47 Chromium, lint/type/build0. Normal new success uses actual backend/PostgreSQL; delayed real-response/unsupported/fault/style probes explicitly TEST-ONLY. Root/sidebar native thumb viewport screenshots inspected; text/forms/chat/menu surfaces retain native scroll styling. Global checklist boxes unchanged; full gate evidence belongs to separate final implementation completion.
+
+## Notification read/history scoped verification - 2026-10-07
+
+Own server-filtered New/History pages, individual/all read persistent row retention/count, actor late-response isolation, popup/read separation, existing task navigation and20-size requests verified on real backend/PostgreSQL. Targeted backend51 JUnit0 fail/error/skip; current lint/type/build0; combined33 Chromium and corrected visual/touch1 passed.320/390/768/1024/1440,TR/EN/DE,light/dark,motion-off/reduced,44px/read/focus/overflow screenshots inspected. Normal successes real; failure/latency/style/cache probes TEST-ONLY. Global boxes unchanged; final full gate evidence belongs to separate implementation completion.
+
+## Project invitations/create UX scoped verification - 2026-10-08
+
+Own/project-managed count separation, nested Teams disclosure/flyout, keyboard/mobile/three-language bounded badge, local banner decode/error/cleanup/previous-preview preservation, responsive sticky actions and event-time notification context verified in targeted real Chromium/API/PostgreSQL. Navbar position/reserve, account isolation, read/history/popup distinction and existing landing inert isolation retained. Global checklist boxes unchanged; Organization invitations are outside scope / Pending product decision. Canonical gate PASSED exit0; backend548/0/0/0, Chromium328+1 expected skip, lint/type/build/Docker smoke. Separate [implementation completion](../../docs/compliation/2026-10-08-project-invitations-create-ux.md); independent Next production audit follow-up is open, not a release waiver.

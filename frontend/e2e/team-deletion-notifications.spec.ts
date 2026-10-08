@@ -61,7 +61,9 @@ test("offline login gets one team-deletion popup; close, refresh and center reta
     await expect(panel.getByText(f.teamName, { exact: false })).toBeVisible();
     const row = panel.locator(`[data-notification-id="${n.id}"]`);
     await row.getByRole("button", { name: "Okundu olarak işaretle" }).click();
-    await expect(row).toContainText("Okundu");
+    await expect(row).toHaveCount(0);
+    await panel.getByRole("tab", { name: "Geçmiş", exact: true }).click();
+    await expect(panel.locator(`[data-notification-id="${n.id}"]`)).toContainText("Okundu");
     const after = (await api(f.b, "GET", "/notifications?type=SQUAD_DELETED&size=100")).json as { content: Note[] };
     expect(after.content.find(x => x.id === n.id)?.read).toBe(true);
     expect(after.content.find(x => x.id === n.id)?.popupPresentedAt).toBe(n.popupPresentedAt);

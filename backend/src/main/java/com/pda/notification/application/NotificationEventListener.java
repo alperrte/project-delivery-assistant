@@ -119,17 +119,17 @@ public class NotificationEventListener {
     }
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void invitationCreated(ProjectInvitationEvents.Created e) {
-        writer.save(e.invitedUserId(), e.invitedBy(), e.projectId(), ResourceType.PROJECT_INVITATION,
-                e.invitationId(), NotificationType.PROJECT_INVITATION_CREATED);
+        writer.saveInvitation(e.invitedUserId(), e.invitedBy(), e.projectId(),
+                e.invitationId(), NotificationType.PROJECT_INVITATION_CREATED, e.projectName());
     }
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void invitationAccepted(ProjectInvitationEvents.Accepted e) {
-        writer.save(e.invitedBy(), e.invitedUserId(), e.projectId(), ResourceType.PROJECT_INVITATION,
-                e.invitationId(), NotificationType.PROJECT_INVITATION_ACCEPTED);
+        writer.saveInvitation(e.invitedBy(), e.invitedUserId(), e.projectId(),
+                e.invitationId(), NotificationType.PROJECT_INVITATION_ACCEPTED, e.projectName());
     }
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void invitationRejected(ProjectInvitationEvents.Rejected e) {
-        writer.save(e.invitedBy(), e.invitedUserId(), e.projectId(), ResourceType.PROJECT_INVITATION,
-                e.invitationId(), NotificationType.PROJECT_INVITATION_REJECTED);
+        writer.saveInvitation(e.invitedBy(), e.invitedUserId(), e.projectId(),
+                e.invitationId(), NotificationType.PROJECT_INVITATION_REJECTED, e.projectName());
     }
 }

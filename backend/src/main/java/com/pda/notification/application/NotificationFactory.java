@@ -6,6 +6,12 @@ import java.util.UUID;
 
 @Component
 public class NotificationFactory {
+    public Notification invitation(UUID recipient, UUID actor, UUID projectId, UUID invitationId,
+                                   NotificationType type, String projectName) {
+        Notification notification = create(recipient, actor, projectId, ResourceType.PROJECT_INVITATION,
+                invitationId, type);
+        return projectName == null ? notification : notification.withInvitationContext(new InvitationContext(projectName));
+    }
     public Notification teamDeleted(UUID recipient, UUID actor, UUID projectId, UUID teamId,
                                      UUID eventId, TeamDeletion deletion) {
         return Notification.teamDeleted(recipient, actor, projectId, teamId, eventId, deletion);

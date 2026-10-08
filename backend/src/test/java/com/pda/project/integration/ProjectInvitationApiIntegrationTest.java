@@ -439,12 +439,21 @@ class ProjectInvitationApiIntegrationTest {
         assertEquals(1, archivedName.size());
         assertNull(archivedName.get(0));
 
-        // The PENDING filter keeps only what can still be answered (the archived project's invitation is still pending).
+        // Physical PENDING history remains, but archived projects are excluded from the incoming live list/count.
         mvc.perform(get("/api/v1/project-invitations/me?status=PENDING").cookie(recipient.access()))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(2))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(1))
                 .andExpect(jsonPath("$.content[?(@.id=='" + liveInvitation + "')]").exists())
+                .andExpect(jsonPath("$.content[?(@.id=='" + archivedInvitation + "')]").doesNotExist())
                 .andExpect(jsonPath("$.content[?(@.id=='" + lapsedInvitation + "')]").doesNotExist())
                 .andExpect(jsonPath("$.content[?(@.id=='" + rejectedInvitation + "')]").doesNotExist());
+        mvc.perform(get("/api/v1/project-invitations/me?status=PENDING&page=0&size=1").cookie(recipient.access()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].id").value(liveInvitation.toString()));
+        mvc.perform(get("/api/v1/project-invitations/me?status=PENDING&size=1&userId=" + recipient.id())
+                        .cookie(manager.access()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(0));
+        assertEquals("PENDING", jdbc.queryForObject("SELECT status FROM project_invitations WHERE id=?",
+                String.class, archivedInvitation));
         mvc.perform(get("/api/v1/project-invitations/me?status=ACCEPTED").cookie(recipient.access()))
                 .andExpect(status().isBadRequest());
         mvc.perform(get("/api/v1/project-invitations/me?status=PENDING")).andExpect(status().isUnauthorized());

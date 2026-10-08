@@ -1,12 +1,26 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import type { NotificationListFilter } from "./api";
 
 export const notificationKeys = {
   root: ["notifications"] as const,
   actor: (userId: string | undefined) => ["notifications", "actor", userId] as const,
   count: (userId: string | undefined) => [...notificationKeys.actor(userId), "count"] as const,
-  list: (userId: string | undefined, page: number) => [...notificationKeys.actor(userId), "list", page] as const,
+  lists: (userId: string | undefined) => [...notificationKeys.actor(userId), "list"] as const,
+  list: (userId: string | undefined, page: number, filter: NotificationListFilter = {}) =>
+    [...notificationKeys.lists(userId), filter.read ?? "all", page, filter.size ?? 20, filter.type ?? "all"] as const,
 };
+
+export async function reconcileNotificationRead(client: QueryClient, userId: string) {
+  await Promise.all([
+    client.cancelQueries({ queryKey: notificationKeys.lists(userId) }),
+    client.cancelQueries({ queryKey: notificationKeys.count(userId) }),
+  ]);
+  await Promise.all([
+    client.invalidateQueries({ queryKey: notificationKeys.lists(userId) }, { throwOnError: true }),
+    client.invalidateQueries({ queryKey: notificationKeys.count(userId) }, { throwOnError: true }),
+  ]);
+}
 
 const privateToasts = new Map<string, Set<string | number>>();
 export function trackNotificationToast(userId: string, id: string | number) {

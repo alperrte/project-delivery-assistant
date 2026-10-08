@@ -25,6 +25,9 @@ import { useSession } from "@/features/auth/hooks/use-session";
 import type { Invitation, InvitationStatus } from "../types";
 import { InvitationStatusBadge } from "./invitation-status-badge";
 
+import { usePendingInvitationCount } from "../hooks";
+import { PendingInvitationBadge } from "./pending-invitation-badge";
+
 const PAGE_SIZE = 20;
 export const INVITATION_TABS = ["PENDING", "ACCEPTED", "REJECTED", "CANCELLED", "EXPIRED"] as const satisfies readonly InvitationStatus[];
 type Tab = (typeof INVITATION_TABS)[number];
@@ -73,6 +76,7 @@ function StatusBadge({ invitation }: { invitation: Invitation }) {
 }
 
 export function InvitationsPage({ projectId }: { projectId: string }) {
+  const count = usePendingInvitationCount(projectId, true);
   const t = useTranslations("invitations");
   const te = useTranslations("errors");
   const tm = useTranslations("members");
@@ -91,6 +95,11 @@ export function InvitationsPage({ projectId }: { projectId: string }) {
     queryKey: [...invitationKeys.project(projectId,user?.id), tab, page],
     queryFn: ({signal}) => invitationsApi.list(projectId, page, PAGE_SIZE, tab,signal),
     enabled: !!user?.id,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
   });
 
   useEffect(() => {
@@ -173,6 +182,7 @@ export function InvitationsPage({ projectId }: { projectId: string }) {
     <div>
       <PageHeader
         title={t("pageTitle")}
+        titleAdornment={<PendingInvitationBadge count={count.isSuccess ? count.data : undefined} />}
         description={t("pageDescription")}
         action={
           <AddTeamMemberDialog

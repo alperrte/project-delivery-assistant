@@ -190,6 +190,8 @@ class ProjectInvitationServiceTest {
                 invitations.findById(created.invitation().getId()).orElseThrow().getStatus());
         assertEquals(Set.of("TESTER"), membershipRoles(projectId, target));
         assertEquals(1L, notificationCount(created.invitation().getId(), "PROJECT_INVITATION_ACCEPTED"));
+        assertEquals("External project", jdbc.queryForObject("SELECT invitation_project_name FROM notifications "
+                + "WHERE resource_id=? AND type='PROJECT_INVITATION_ACCEPTED'", String.class, created.invitation().getId()));
         assertThrows(NoSuchElementException.class, () -> invitationService.preview(created.rawToken()));
         assertThrows(NoSuchElementException.class, () -> invitationService.acceptExistingAccount(created.rawToken(), target));
     }
@@ -210,6 +212,8 @@ class ProjectInvitationServiceTest {
         assertThrows(AccessDeniedException.class, () -> invitationService.acceptExistingAccount(resent.rawToken(), other));
         invitationService.acceptExistingAccount(resent.rawToken(), account);
         assertEquals(Set.of("BACKEND_DEVELOPER"), membershipRoles(projectId, account));
+        assertEquals("Race project", jdbc.queryForObject("SELECT invitation_project_name FROM notifications "
+                + "WHERE resource_id=? AND type='PROJECT_INVITATION_ACCEPTED'", String.class, resent.invitation().getId()));
         assertThrows(NoSuchElementException.class, () -> invitationService.acceptExistingAccount(resent.rawToken(), account));
     }
 

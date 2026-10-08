@@ -297,6 +297,9 @@ Workspace primary remains monochrome; scrollbar thumb uses existing semantic lab
 - **Silme:** tehlikeli bölge yalnız kurucuya görünür. `ConfirmDialog` `requireText` ile proje adının birebir yazılmasını ister (büyük/küçük harf duyarlı, onay düğmesi eşleşene kadar pasif, kapanınca sıfırlanır); metin neyin gideceğini ve geri alınamadığını söyler. Başarıda toast ve `/projects`.
 - **Kart teknoloji şeridi:** tek satır, `size-8` kare logolar, sarma yok (`flex-nowrap overflow-hidden`), kanonik ada göre tekilleştirilir, en çok 6 + `+N`; katalog dışı etiket baş harfli kare olur, ad tooltip'te ve `aria-label`'dedir.
 
+## Notification New/History center - 2026-10-07
+
+Existing nonmodal bell Popover contains New(default)/History Base UI Tabs with manual keyboard activation (arrows focus, Enter/Space select), server pages20 and per-tab loading/error/retry/empty. Individual Check with tooltip/title description and44px targets; global own mark-all header action disabled for pending/unknown/zero. Server-confirmed read reconciles both lists/count; committed refresh failure has GET-only retry. Row-removal focus goes to next/previous action or named empty section only if the user did not move focus; task navigation suppresses old-trigger restore. TR/EN/DE, existing tokens and viewport-centered navbar/reserve retained. No new palette/library or hidden mobile action.
 ## Depo sayfası (2026-10-07)
 
 - `RepositorySettings` `PageContainer width="wide"` kullanır: başlık kartı (depo adı `safeGitHubLink` ile, varsayılan dal, "ana dala commit gelince üyelere bildirim" notu, yalnız yöneticiye "Bağlantıyı kes") ve altında **Özet / Dallar** sekmeleri. Görünüm ve dal URL'dedir (`?section=repository&view=branches&branch=...`), bağlantı paylaşılabilir ve yenilemede korunur.
@@ -304,3 +307,9 @@ Workspace primary remains monochrome; scrollbar thumb uses existing semantic lab
 - Rozet ve "girmiş" süzgeci yalnız karşılaştırma kesilmemişse (100 commit sınırı) gösterilir; kesildiyse not düşülür, yanlış "ana dalda" etiketi verilmez.
 - Durumlar: iskelet, boş, 429 (GitHub sınırı), 404 (dal/depo yok, "ana dala dön"), 503 (tekrar dene). GitHub'a ait hata metinleri `repository.errors.*` altındadır (genel `errors` içindeki 503 e-posta metni burada yanlış olurdu).
 - Metinler tr/en/de; yalnız Tailwind token'ları; 390 px'te yatay taşma yoktur (E2E ile doğrulanır). Bildirim merkezi yeni tipi çoğul ICU metniyle gösterir ve projenin depo sayfasına bağlanır (proje slug'ı önbellekteki proje sorgusundan; bulunamazsa bağlantı gizlenir).
+
+## Scoped invitation/create surfaces - 2026-10-08
+
+Viewport-centered navbar and shared header reserve stay unchanged. Teams parent is a native disclosure with canonical existing `?section=teams` / invitations children; collapsed sidebar uses existing Base UI Popover. Reuse semantic primary badges, exact accessible count and bounded99+, 44px touch targets and TR/EN/DE labels. Unknown/error/disabled scope has no fake0 badge. PageHeader optional titleAdornment aligns the shared count next to existing text. Create-banner errors keep the prior valid local image; narrow German320 sticky actions may wrap, preserving sticky-bottom behavior. Global checklist boxes are not inferred from these scoped surfaces.
+
+Shared EntityGrid now declares grid-cols-1 before existing md/xl columns, bounding the implicit small-screen track. Real 320px overflow measured on populated project cards was corrected without changing card content or breakpoints.

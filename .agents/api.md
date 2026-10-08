@@ -120,6 +120,9 @@ PUT `/api/v1/users/me/profile`, authenticated active principal+CSRF, body `{"nic
 - `PUT /api/v1/projects/{id}` tam güncellemedir: arayüz `projectGoal` alanını artık düzenlemez ama kayıtlı değeri aynen geri gönderir.
 - Swagger: `/swagger-ui/index.html` (`API_DOCS_ENABLED=true`), normal giriş + `GET /api/v1/auth/csrf`; güvenli deneme için önce kendi açtığınız bir deneme projesini silin.
 
+## Notification read/history filter - 2026-10-07
+
+GET /api/v1/notifications adds optional nullable read: false=unread, true=history, omitted retains legacy unreadOnly/all behavior. read=true with unreadOnly=true returns400; existing type/page/size and createdAt DESC,id DESC remain. Same own principal, cookie/CSRF/private no-store contracts and PATCH/read/count routes. read-all response count is changed rows, not remaining unread. Conditional own-unread UPDATE plus fresh readback preserves first committed readAt under stale individual/bulk races; content/snapshots/popupPresentedAt unchanged. No new endpoint/migration/permission.
 ## GitHub depo yönetimi ve commit bildirimleri (2026-10-07)
 
 - `GET /api/v1/projects/{projectId}/repository/branches` → `{branches:[{name,isDefault,isProtected,headShortSha}],truncated}`; varsayılan dal başta, en çok 100 dal (`truncated`).
@@ -136,3 +139,7 @@ PUT `/api/v1/users/me/profile`, authenticated active principal+CSRF, body `{"nic
 - `GET /api/v1/projects/{projectId}/repository` yanıtı `trackingMode` ve `notifyOnCommits` ile genişledi. `GET /api/v1/projects/{projectId}/home` içindeki `repository` nesnesi de `trackingMode` (bağlı değilse `null`) ve `notifyOnCommits` taşır; kenar çubuğu ve genel bakış şeridi bundan okur.
 - `BASIC` modda `GET .../repository/branches`, `.../compare` ve ana dal dışı ya da `author` süzgeçli `GET .../repository/commits` → `409` + `code=REPOSITORY_ADVANCED_REQUIRED`. Mevcut bağlantılar V60 ile `ADVANCED` olur.
 - Swagger: `/swagger-ui/index.html` (`API_DOCS_ENABLED=true`), normal giriş + `GET /api/v1/auth/csrf`; `POST`/`PATCH`/`DELETE` CSRF ister.
+
+## Project invitation count/context and create preview - 2026-10-08
+
+Existing own GET `/api/v1/project-invitations/me?status=PENDING&page=0&size=1` now excludes archived projects in the shared page/count predicate; omitted status retains history, including archived physical PENDING rows. Manager GET `/api/v1/projects/{id}/invitations/all?status=PENDING&page=0&size=1` remains project/active-manager scoped and uses effective expiry. No new count endpoint. Existing own NotificationResponse adds nullable `invitationContext:{projectName}` for Created/Accepted/Rejected, captured at mutation time; legacy null remains safe. Read/read-all/claim APIs and `popupPresentedAt != readAt` unchanged. Existing project POST201 and multipart banner PUT204/GET200/DELETE204 remain the persistence flow; local preview never uploads by itself. Organization invitations remain MISSING FEATURE / Pending product decision outside this scope.

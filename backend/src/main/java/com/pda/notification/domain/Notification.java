@@ -39,6 +39,7 @@ public class Notification {
     @Column(name = "repo_commits_truncated") private Boolean repoCommitsTruncated;
     @Column(name = "repo_head_message", length = 160) private String repoHeadMessage;
     @Column(name = "repo_head_author", length = 100) private String repoHeadAuthor;
+    @Column(name = "invitation_project_name", length = 160) private String invitationProjectName;
 
     protected Notification() {}
     public Notification(UUID recipientUserId, NotificationType type, String title, String message,
@@ -100,6 +101,20 @@ public class Notification {
     public RepositoryCommits getRepositoryCommits() {
         return repoCommitCount == null ? null : new RepositoryCommits(repoProjectName, repoFullName, repoBranch,
                 repoCommitCount, Boolean.TRUE.equals(repoCommitsTruncated), repoHeadMessage, repoHeadAuthor);
+    }
+
+    public Notification withInvitationContext(InvitationContext context) {
+        if (resourceType != ResourceType.PROJECT_INVITATION || projectId == null
+                || (type != NotificationType.PROJECT_INVITATION_CREATED
+                    && type != NotificationType.PROJECT_INVITATION_ACCEPTED
+                    && type != NotificationType.PROJECT_INVITATION_REJECTED))
+            throw new IllegalArgumentException("Invitation context requires an invitation notification");
+        invitationProjectName = java.util.Objects.requireNonNull(context, "context").projectName();
+        return this;
+    }
+
+    public InvitationContext getInvitationContext() {
+        return invitationProjectName == null ? null : new InvitationContext(invitationProjectName);
     }
 
     public TeamDeletion getTeamDeletion() {

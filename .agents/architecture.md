@@ -89,3 +89,11 @@ Own profile nickname PUT stays in User module; Auth still email login and UUID/s
 PDA arrows read native capabilities + index-adjacent URL and centralized allowlist of actual authenticated app layouts via localized matchPath. Current session/fetch readiness and fresh action guard required; public/auth/external/unknown target disabled. Browser navigation unchanged; no visited stack/storage/history patch/Next private state. Persisted pageshow revalidates existing session query.
 
 Navbar uses one700ms timer for desktop/touch with hover/top/focus/owned popup/search/drawer guards and full listener/RAF/observer cleanup. Actual document scroll container retained. Root/sidebar/drawer scrollbar uses scoped label-blue alias and body inheritance reset; portals/forms/chat not styled.
+
+## Notification history/read presentation - 2026-10-07
+
+The existing Notification module/API/owner handles both unread and read server pages. No parallel store/socket/broker/event lifecycle. Existing own PATCH/read/read-all persists state; read filter is additive with legacy compatibility. Frontend actor/list/read/page/size/type keys and mutation lifetime guards cancel prior-account requests, reconcile all own list scopes and count. Existing at-most-once team-deletion popup stays independent of read/history; task-open read-on-navigation behavior retained. Existing project hard-delete cleanup unchanged.
+
+## Project invitation presentation integration - 2026-10-08
+
+Public Created/Accepted/Rejected events carry nullable immutable event-time projectName; compatible constructors/old JSON retained. Notification module consumes public events through existing AFTER_COMMIT/REQUIRES_NEW writer, without importing Project entities/repositories. Recipient private count and manager project count are distinct actor-scoped query families; sidebar/heading observers share each total. Foreground30s/focus/reconnect freshness and existing mutation-prefix invalidation/abort cleanup used; no new provider/socket/count API. Organization invitation implementation is deferred. Banner create preview reuses picker/card/usePickedImage, with opt-in local decode/generation guard only for create-banner and unchanged POST-then-PUT persistence.

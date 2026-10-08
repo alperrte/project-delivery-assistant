@@ -1,22 +1,34 @@
 "use client";
-import { useId, useRef, useState, type DragEvent, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type DragEvent, type ReactNode } from "react";
 import { UploadSimple, ImageSquare } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { IMAGE_TYPES, imageValidationError } from "@/lib/media/image-validation";
+import { IMAGE_TYPES, imageValidationError, canDecodeImage } from "@/lib/media/image-validation";
 import { EntityMark } from "./entity-mark";
 import { EntityCover } from "./entity-cover";
 export type ImagePickerLabels = { label: string; choose: string; change: string; remove: string; hint: string; invalidType: string; tooLarge: string; empty: string; detail?: string };
-export function ImagePicker({ name = "", src, onChange, maximum, labels, cover = false, disabled = false, removeControl, tile = false }: {
+export function ImagePicker({ name = "", src, onChange, maximum, labels, cover = false, disabled = false, removeControl, tile = false, decodeError }: {
   name?: string; src: string | null; onChange: (file: File | null) => void; maximum: number; labels: ImagePickerLabels;
-  cover?: boolean; disabled?: boolean; removeControl?: ReactNode; tile?: boolean;
+  cover?: boolean; disabled?: boolean; removeControl?: ReactNode; tile?: boolean; decodeError?: string;
 }) {
   const id = useId(); const input = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null); const [dragging, setDragging] = useState(false);
-  function accept(file?: File) {
+  const generation = useRef(0);
+  const [checking, setChecking] = useState(false);
+  useEffect(() => () => { generation.current++; }, []);
+  async function accept(file?: File) {
     if (!file || disabled) return;
+    const ticket = ++generation.current;
+    setChecking(false);
     const invalid = imageValidationError(file, maximum);
     if (invalid) { setError(labels[invalid]); return; }
+    if (decodeError) {
+      setChecking(true);
+      const valid = await canDecodeImage(file);
+      if (generation.current !== ticket) return;
+      setChecking(false);
+      if (!valid) { setError(decodeError); return; }
+    }
     setError(null); onChange(file);
   }
   function drop(event: DragEvent) { event.preventDefault(); setDragging(false); accept(event.dataTransfer.files[0]); }
@@ -29,13 +41,13 @@ export function ImagePicker({ name = "", src, onChange, maximum, labels, cover =
       </span>
       <div className="min-w-0 flex-1 space-y-2">
         <div className="flex flex-wrap items-center gap-2">
-          <Button type="button" variant={tile ? "ghost" : "outline"} className={tile ? "h-auto whitespace-normal px-0 py-0 text-left hover:bg-transparent" : undefined} size="sm" disabled={disabled} onClick={() => input.current?.click()}>{!tile && <UploadSimple size={14} aria-hidden="true" />}{src ? labels.change : labels.choose}</Button>
-          {src && (removeControl ?? <Button type="button" variant="ghost" size="sm" disabled={disabled} onClick={() => { setError(null); onChange(null); }}>{labels.remove}</Button>)}
+          <Button type="button" variant={tile ? "ghost" : "outline"} className={cn(tile && "h-auto whitespace-normal px-0 py-0 text-left hover:bg-transparent", decodeError && "min-h-11 sm:min-h-8")} size="sm" disabled={disabled} onClick={() => input.current?.click()}>{!tile && <UploadSimple size={14} aria-hidden="true" />}{src ? labels.change : labels.choose}</Button>
+          {src && (removeControl ?? <Button type="button" variant="ghost" size="sm" className={decodeError ? "min-h-11 sm:min-h-8" : undefined} disabled={disabled} onClick={() => { generation.current++; setChecking(false); setError(null); onChange(null); }}>{labels.remove}</Button>)}
         </div>
         <p id={`${id}-hint`} className={cn("text-muted-foreground",tile ? "text-xs leading-5" : "text-sm")}>{labels.hint}</p>
         {labels.detail && <p className="text-xs leading-5 text-muted-foreground">{labels.detail}</p>}
       </div>
-      <input ref={input} id={id} type="file" accept={IMAGE_TYPES.join(",")} className="sr-only" disabled={disabled} aria-invalid={!!error} aria-describedby={`${id}-hint${error ? ` ${id}-error` : ""}`}
+      <input ref={input} id={id} type="file" accept={IMAGE_TYPES.join(",")} className="sr-only" disabled={disabled} aria-busy={checking} aria-invalid={!!error} aria-describedby={`${id}-hint${error ? ` ${id}-error` : ""}`}
         onChange={(event) => { accept(event.target.files?.[0]); event.target.value = ""; }} />
     </div>
     {error && <p id={`${id}-error`} role="alert" className="text-sm text-destructive">{error}</p>}

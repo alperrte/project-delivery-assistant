@@ -319,6 +319,7 @@
         "tooLarge": "Logo en fazla 512 KB olabilir."
       },
       "banner": {
+        "invalidImage": "Bu görsel okunamadı. Geçerli bir PNG, JPEG veya WebP görseli seçin.",
         "label": "Kapak görseli",
         "hint": "PNG, JPEG veya WebP, en fazla 2 MB. Projeler listesindeki kartın arka planı olarak görünür; yoksa kart düz kalır.",
         "choose": "Görsel yükle",
@@ -415,6 +416,7 @@
       "eyebrow": "Proje çalışma alanı",
       "navigation": "Proje menüsü",
       "tabs": {
+        "allTeams": "Tüm Ekipler",
         "overview": "Genel Bakış",
         "criteria": "Kriterler",
         "members": "Üyeler",
@@ -717,6 +719,7 @@
     "rolesUpdated": "Roller güncellendi."
   },
   "invitations": {
+    "pendingCount": "{count} bekleyen davet",
     "registeredUser": "Kayıtlı kullanıcı",
     "newUser": "Yeni PDA kullanıcısı",
     "firstName": "Ad",
@@ -2659,6 +2662,20 @@
     "close": "Takvimi kapat"
   },
   "notifications": {
+    "invitationContext": {
+      "PROJECT_INVITATION_CREATED": "“{project}” projesine davet edildiniz.",
+      "PROJECT_INVITATION_ACCEPTED": "“{project}” projesine gönderdiğiniz davet kabul edildi.",
+      "PROJECT_INVITATION_REJECTED": "“{project}” projesine gönderdiğiniz davet reddedildi."
+    },
+    "readFailed": "Okuma durumu güncellenemedi. Tekrar deneyin.",
+    "refreshFailed": "Okuma durumu kaydedildi, ancak bildirim listesi yenilenemedi. Tekrar deneyin.",
+    "sections": "Bildirim bölümleri",
+    "newLabel": "Yeni",
+    "historyLabel": "Geçmiş",
+    "newEmpty": "Yeni bildiriminiz yok.",
+    "historyEmpty": "Henüz geçmiş bildiriminiz yok.",
+    "newListLabel": "Yeni bildirimler",
+    "historyListLabel": "Geçmiş bildirimler",
     "title": "Bildirimler",
     "empty": "Henüz bildiriminiz yok.",
     "loading": "Bildirimler yükleniyor",

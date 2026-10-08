@@ -156,3 +156,9 @@ Task UI update (2026-10-06): tasks/task-model.ts also exposes allowsPool for con
 ## Frontend foundation additions - 2026-10-07
 
 Backend UserProfileController/UserProfileService/NicknameTakenException/domain NicknameRules, existing User/Repository/error handler and exact own security matcher. Frontend account nickname-field/nickname validation and identity predicates; layout authenticated-route, extended native history and single lifecycle auto-hide controller. Existing AppShell nav/drawer carry data-workspace-scroll scope markers; globals owns scoped scrollbar aliases. New real nickname/authenticated-history/navbar-auto-hide/workspace-scrollbars tests and UserProfileApiIntegrationTest. Private evidence `.local/frontend-foundation/`, never a public auth trace.
+
+Notification read/history extension (2026-10-07): existing Controller/Service/Repository own filter and conditional read; no entity/schema replacement. frontend/features/notifications/hooks/use-notification-read.ts owns shared submit/abort/current-actor guard; API/query-keys/NotificationCenter reuse existing owner. Tests: NotificationReadStateIntegrationTest; notification-history, notification-history-context, notification-history-visual specs and scoped notification-fixture/notification-db helpers.
+
+## Project invitation/create additions - 2026-10-08
+
+Notification domain: `InvitationContext`; Flyway V60 nullable snapshot. Frontend: `features/invitations/hooks.ts` distinct private count hooks/keys and shared `components/pending-invitation-badge.tsx`; `components/layout/teams-sidebar-menu.tsx` expanded disclosure/collapsed nonmodal flyout. Existing create BannerPickField/ImagePicker/image-validation implement opt-in decode without a separate preview subsystem. New real E2E: invitation-pending-contract, invitation-badges, invitation-notification-context, project-banner-lifecycle and repository-read; prepared own-QA DB helpers kept under e2e.

@@ -139,10 +139,17 @@ Existing users.nickname/uk_users_nickname reused; no schema or migration change.
 
 This differs from team deletion on purpose: a team keeps its rows (`squads.archived_at`), a project deletion is final and removes the data. Sibling `NO ACTION` keys (`tasks.sprint_id`, `tasks.pool_team_id`, `tasks.parent_task_id`, `project_invitations.team_id`, chat reply key) are unchanged. `notifications.project_id` is still not a foreign key; `ProjectDeletionCleanup` deletes those rows in the deletion transaction. Everything that deletes a `projects` row now deletes its data, so the only caller is `ProjectService.delete` (founder only). `ProjectDeleteCascadeMigrationTest` migrates to V57, fills one project through every table next to an untouched second project, migrates to V58 and proves that only the first project's rows disappear.
 
+## Notification read/history - 2026-10-07
+
+Existing notifications.is_read/read_at are the persistent source of truth; history is a server filter on the same row, not DELETE/archive/move. V31 recipient ordering/unread indices and V56/V57 snapshot/presentation constraints retained; no migration added. Own conditional read UPDATE changes only is_read/read_at where unread; refreshing cached entity prevents stale bulk/individual timestamp overwrite. Read-all remains a recipient-scoped bulk UPDATE. popup_presented_at is independent; existing V58 project permanent-delete notification cleanup remains separate.
 ## V59 — depo commit takibi (2026-10-07)
 
 `project_repository_connections`: `notified_head_sha VARCHAR(64)` (en son bildirilen/taban çizgisi commit'i) ve `last_scanned_at TIMESTAMPTZ`. Bağlanırken `notified_head_sha` o anki varsayılan dal ucuna ayarlanır, geçmiş commit'ler bildirilmez; alınamazsa boş kalır ve ilk tarama yalnız taban çizgisini yazar. `notifications`: `repo_project_name`, `repo_full_name`, `repo_branch`, `repo_commit_count`, `repo_commits_truncated`, `repo_head_message`, `repo_head_author` + `ck_notification_repository_commits_snapshot` (ya hepsi boş ya da `type='REPOSITORY_COMMITS_PUSHED'`, `resource_type='PROJECT'` ve zorunlu alanlar dolu, `repo_commit_count >= 1`) ve `ck_notification_repository_commits_required` (bu tipte `repo_commit_count` boş olamaz). Tarama sırası `ix_project_repository_connections_scan (last_scanned_at NULLS FIRST)` ile desteklenir. Önceki migration'lara dokunulmadı.
 
-## V60 — depo takip modu (2026-10-07)
+## V61 — depo takip modu (2026-10-07)
 
 `project_repository_connections`: `tracking_mode VARCHAR(20) NOT NULL DEFAULT 'ADVANCED'` + `ck_project_repository_connections_tracking_mode` (`BASIC`, `ADVANCED`) ve `notify_commits BOOLEAN NOT NULL DEFAULT TRUE`. Var olan bağlantılar bugünkü görünümlerini korumak için `ADVANCED` olur; yeni bağlantıları uygulama `BASIC` ile açar. Tarama yalnız `notify_commits = TRUE` satırları seçer. Önceki migration'lara dokunulmadı; yeni kolonlar varsayılanlı olduğundan ayrı migration testi eklenmedi (mevcut satırın `ADVANCED` geldiği API testinde doğrulanır).
+
+## Invitation notification snapshot - V60 (2026-10-08)
+
+Additive `notifications.invitation_project_name VARCHAR(160) NULL`; subset CHECK permits context only for the three project-invitation types, PROJECT_INVITATION resource and non-null project ID, with nonblank names. Older V56/V57/V59 migrations and snapshots/read/presentation columns retained; legacy rows/events stay null, no inferred-name backfill. Incoming PENDING active-project EXISTS is shared by page content and totals; archived physical PENDING remains in unfiltered history. Existing invitation/domain/media tables unchanged.

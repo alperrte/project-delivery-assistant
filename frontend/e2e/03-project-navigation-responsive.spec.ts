@@ -73,9 +73,10 @@ test("project sections use the shared sidebar on desktop and its mobile drawer",
   expect(await page.getByRole("button", { name: "Yeni kriter" }).evaluate((button) => getComputedStyle(button).cursor)).toBe("pointer");
 
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Ekipler" }).click();
+  await page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("button", { name: "Ekipler", exact: true }).click();
+  await page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Tüm Ekipler", exact: true }).click();
   await page.getByRole("link", { name: /Backend ekibini aç/ }).first().click();
-  await expect(page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Ekipler" })).toHaveAttribute("aria-current", "page");
+  await expect(page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Tüm Ekipler", exact: true })).toHaveAttribute("aria-current", "page");
   await expect(page.getByRole("row", { name: /testuser/ })).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.getByRole("listitem").filter({ hasText: "testuser" })).toBeVisible();
@@ -126,7 +127,7 @@ test("Projeler stays highlighted on the list and the create page, not inside a p
 test("language changes keep the selected project, section and sidebar target", async ({ page }) => {
   await mockResponsiveProject(page);
   await page.goto("/tr/projeler/responsive-project?section=teams");
-  await expect(page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Ekipler" })).toHaveAttribute("aria-current", "page");
+  await expect(page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Tüm Ekipler", exact: true })).toHaveAttribute("aria-current", "page");
   await page.getByRole("button", { name: "Dil" }).click();
   await page.getByRole("menuitem", { name: "English" }).click();
   await expect(page).toHaveURL(/\/en\/projects\/responsive-project\?section=teams$/);

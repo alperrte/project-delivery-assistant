@@ -16,6 +16,8 @@ import {
   taskNavActive,
   taskRouteSlug,
 } from "@/features/projects/project-sections";
+import { useSession } from "@/features/auth/hooks/use-session";
+import { TeamsSidebarMenu } from "./teams-sidebar-menu";
 import { cn } from "@/lib/utils";
 import { navItemClass } from "./nav-item";
 
@@ -23,10 +25,12 @@ export function ProjectSidebarNav({
   onNavigate,
   collapsed,
   pathnameOverride,
+  contained = false,
 }: {
   onNavigate: () => void;
   collapsed?: boolean;
   pathnameOverride?: string;
+  contained?: boolean;
 }) {
   const t = useTranslations("projects.detail");
   const tn = useTranslations("tasks.nav");
@@ -59,10 +63,12 @@ export function ProjectSidebarNav({
 
   const { isManager } = useCurrentMember(project?.id ?? "");
 
-  const { data: pendingInvitations = 0 } = usePendingInvitationCount(
+  const { data: actor } = useSession();
+  const pending = usePendingInvitationCount(
     project?.id ?? "",
-    isManager,
+    isManager && !contained,
   );
+  const pendingInvitations = isManager && !contained && pending.isSuccess ? pending.data : undefined;
 
   // Inside a task route no project section is highlighted; the task group owns the selection.
   const active = teamsRoute
@@ -79,6 +85,12 @@ export function ProjectSidebarNav({
       !("managerOnly" in item && item.managerOnly && !isManager) &&
       (!!projectPath || item.value !== "teams"),
   );
+
+  const teamsMenu = projectPath ? <TeamsSidebarMenu
+    key={`${actor?.id ?? "demo"}:${project?.id ?? slug}:${pathname}:${active}`}
+    projectPath={projectPath} active={!!routeSlug && (active === "teams" || active === "invitations")}
+    isInvitationRoute={!!routeSlug && active === "invitations"} isManager={isManager}
+    count={pendingInvitations} collapsed={collapsed} onNavigate={onNavigate} /> : null;
 
   const taskItems = TASK_NAV.filter(
     (item) => !("managerOnly" in item && item.managerOnly && !isManager) &&
@@ -106,10 +118,10 @@ export function ProjectSidebarNav({
           sections
             .filter((item) => !("parent" in item))
             .map((item) => {
+              if (item.value === "teams") return teamsMenu;
               const Icon = item.icon;
               const selected = !!routeSlug && active === item.value;
-              const showDot =
-                item.value === "teams" && pendingInvitations > 0;
+
 
               return (
                 <Link
@@ -131,14 +143,7 @@ export function ProjectSidebarNav({
                       aria-hidden="true"
                     />
 
-                    {showDot && (
-                      <span
-                        className="absolute -right-1 -top-1 size-2 rounded-full bg-primary ring-2 ring-card"
-                        aria-label={t("pendingInvitations", {
-                          count: pendingInvitations,
-                        })}
-                      />
-                    )}
+
                   </span>
                 </Link>
               );
@@ -227,7 +232,8 @@ export function ProjectSidebarNav({
         className="ml-2 space-y-0.5 border-l border-border pl-2"
         aria-label={t("navigation")}
       >
-        {sections.map((item) => {
+        {sections.filter(item => !("parent" in item)).map((item) => {
+          if (item.value === "teams") return teamsMenu;
           const Icon = item.icon;
           const selected = !!routeSlug && active === item.value;
           const child = "parent" in item;
@@ -257,17 +263,7 @@ export function ProjectSidebarNav({
 
               {t(`tabs.${item.value}`)}
 
-              {item.value === "invitations" &&
-                pendingInvitations > 0 && (
-                  <span
-                    className="ml-auto min-w-5 rounded-full bg-primary px-1.5 py-0.5 text-center text-[11px] font-semibold leading-none text-primary-foreground"
-                    aria-label={t("pendingInvitations", {
-                      count: pendingInvitations,
-                    })}
-                  >
-                    {pendingInvitations}
-                  </span>
-                )}
+
             </Link>
           ) : (
             <span
