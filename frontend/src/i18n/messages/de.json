@@ -319,6 +319,7 @@
         "tooLarge": "Das Logo darf höchstens 512 KB groß sein."
       },
       "banner": {
+        "invalidImage": "Dieses Bild konnte nicht gelesen werden. Wählen Sie ein gültiges PNG-, JPEG- oder WebP-Bild.",
         "label": "Titelbild",
         "hint": "PNG, JPEG oder WebP, höchstens 2 MB. Wird hinter der Karte in der Projektliste angezeigt; ohne Bild bleibt die Karte schlicht.",
         "choose": "Bild hochladen",
@@ -415,6 +416,7 @@
       "eyebrow": "Projektarbeitsbereich",
       "navigation": "Projektmenü",
       "tabs": {
+        "allTeams": "Alle Teams",
         "overview": "Übersicht",
         "criteria": "Kriterien",
         "members": "Mitglieder",
@@ -717,6 +719,7 @@
     "rolesUpdated": "Rollen aktualisiert."
   },
   "invitations": {
+    "pendingCount": "{count, plural, one {# ausstehende Einladung} other {# ausstehende Einladungen}}",
     "registeredUser": "Registrierter Benutzer",
     "newUser": "Neuer PDA-Benutzer",
     "firstName": "Vorname",
@@ -2659,6 +2662,11 @@
     "close": "Kalender schließen"
   },
   "notifications": {
+    "invitationContext": {
+      "PROJECT_INVITATION_CREATED": "Sie wurden zum Projekt „{project}“ eingeladen.",
+      "PROJECT_INVITATION_ACCEPTED": "Ihre Einladung zum Projekt „{project}“ wurde angenommen.",
+      "PROJECT_INVITATION_REJECTED": "Ihre Einladung zum Projekt „{project}“ wurde abgelehnt."
+    },
     "readFailed": "Der Lesestatus konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut.",
     "refreshFailed": "Der Lesestatus wurde gespeichert, aber die Benachrichtigungsliste konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut.",
     "sections": "Benachrichtigungsbereiche",

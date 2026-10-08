@@ -25,6 +25,9 @@ import type { MyInvitation } from "@/features/invitations/types";
 import { invitationKeys } from "@/features/invitations/query-keys";
 import { useSession } from "@/features/auth/hooks/use-session";
 
+import { useIncomingInvitationCount } from "@/features/invitations/hooks";
+import { PendingInvitationBadge } from "@/features/invitations/components/pending-invitation-badge";
+
 /** The inviter's photo (or initials) next to their name. */
 function Inviter({ invitation }: { invitation: MyInvitation }) {
   if (!invitation.invitedByNickname) return null;
@@ -45,6 +48,7 @@ export default function MyInvitationsPage() {
 
 /** Local preview/rejection state has the same principal boundary as the server query data. */
 function RecipientInvitations({userId}:{userId:string|undefined}) {
+  const count = useIncomingInvitationCount();
   const t = useTranslations("invitations");
   const tr = useTranslations("roles");
   const te = useTranslations("errors");
@@ -63,6 +67,9 @@ function RecipientInvitations({userId}:{userId:string|undefined}) {
     staleTime: 0,
     refetchOnMount: "always",
     refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
   });
   const refresh = () => queryClient.invalidateQueries({ queryKey: invitationKeys.mineRoot(userId) });
   const accept = useMutation({
@@ -119,7 +126,7 @@ function RecipientInvitations({userId}:{userId:string|undefined}) {
 
   return (
     <section className="space-y-6">
-      <PageHeader title={t("mineTitle")} description={t("mineDescription")} />
+      <PageHeader titleAdornment={<PendingInvitationBadge count={count.isSuccess ? count.data : undefined} />} title={t("mineTitle")} description={t("mineDescription")} />
 
       <Tabs value={filter} onValueChange={(next) => { setFilter(next as Filter); setPage(0); }}>
         <TabsList aria-label={t("mineTabsLabel")}>

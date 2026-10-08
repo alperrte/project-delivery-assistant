@@ -109,5 +109,5 @@ export function EntityStatusPill({ className, dotClassName, label }: { className
 }
 
 export function EntityGrid({ children }: { children: ReactNode }) {
-  return <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{children}</ul>;
+  return <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">{children}</ul>;
 }

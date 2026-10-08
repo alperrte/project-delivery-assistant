@@ -307,3 +307,9 @@ Existing nonmodal bell Popover contains New(default)/History Base UI Tabs with m
 - Rozet ve "girmiş" süzgeci yalnız karşılaştırma kesilmemişse (100 commit sınırı) gösterilir; kesildiyse not düşülür, yanlış "ana dalda" etiketi verilmez.
 - Durumlar: iskelet, boş, 429 (GitHub sınırı), 404 (dal/depo yok, "ana dala dön"), 503 (tekrar dene). GitHub'a ait hata metinleri `repository.errors.*` altındadır (genel `errors` içindeki 503 e-posta metni burada yanlış olurdu).
 - Metinler tr/en/de; yalnız Tailwind token'ları; 390 px'te yatay taşma yoktur (E2E ile doğrulanır). Bildirim merkezi yeni tipi çoğul ICU metniyle gösterir ve projenin depo sayfasına bağlanır (proje slug'ı önbellekteki proje sorgusundan; bulunamazsa bağlantı gizlenir).
+
+## Scoped invitation/create surfaces - 2026-10-08
+
+Viewport-centered navbar and shared header reserve stay unchanged. Teams parent is a native disclosure with canonical existing `?section=teams` / invitations children; collapsed sidebar uses existing Base UI Popover. Reuse semantic primary badges, exact accessible count and bounded99+, 44px touch targets and TR/EN/DE labels. Unknown/error/disabled scope has no fake0 badge. PageHeader optional titleAdornment aligns the shared count next to existing text. Create-banner errors keep the prior valid local image; narrow German320 sticky actions may wrap, preserving sticky-bottom behavior. Global checklist boxes are not inferred from these scoped surfaces.
+
+Shared EntityGrid now declares grid-cols-1 before existing md/xl columns, bounding the implicit small-screen track. Real 320px overflow measured on populated project cards was corrected without changing card content or breakpoints.

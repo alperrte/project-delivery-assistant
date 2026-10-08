@@ -687,6 +687,10 @@ Existing GET /api/v1/notifications adds nullable read: false only unread,true on
 
 Conditional own-unread read UPDATE and fresh readback preserve first committed readAt under stale JPA/bulk races. No content/snapshot/presentation deletion; popupPresentedAt remains distinct from readAt. Read-all count is changed rows; badge reconciles real unread-count. UI lifetime/AbortSignal and actor-scoped active/history/count keys block late previous-user results, preserving existing login/logout cleanup. Task-open read behavior retained; existing project hard-delete notification cleanup remains a separate lifecycle. Swagger /swagger-ui/index.html and /v3/api-docs, normal login/CSRF; safe GET ?read=true&page=0&size=20, read PATCH own QA UUID/no body.
 
+### Project invitation count/context compatibility - 2026-10-08
+
+No new matcher/auth/session/CSRF/CORS/ENV policy. Own incoming effective PENDING list/totals exclude archived projects; all-history retains rows. Manager totals retain active-project MEMBER_MANAGE authorization, distinct from recipient and notification unread counts. Existing own notification response has nullable event-time invitation projectName, plain text/bounded160 and recipient-scoped; no private project lookup or forged actor parameter. Frontend count keys include actor (and managed project); AbortSignal/cancel/remove and manager/demo visibility guard prevent stale private data presentation. Create-banner opt-in client decode rejects corrupt previews and preserves prior draft; server MIME/magic/size/authorization remain authoritative. Full API/Swagger/manual inventory belongs to separate implementation completion.
+
 ## 12. Error Handling
 
 API errors must not expose:
@@ -942,3 +946,7 @@ Entegrasyon salt okunurdur: clone, push, issue, PR ve webhook yoktur; yalnız **
 - **GitHub hataları:** `NOT_FOUND` → `404`, `RATE_LIMITED` → `429`, `UNAVAILABLE` → `503`; sızdırılan ayrıntı yoktur.
 - **Tarama (`RepositoryCommitScanScheduler`, varsayılan 5 dk):** transaction dışında GitHub'a gider; ilerleme koşullu `UPDATE ... WHERE notified_head_sha IS NOT DISTINCT FROM :old` ile "claim" edilir, çoklu örnek ya da tekrar tarama çift bildirim üretmez. Tur büyüklüğü `pda.github.commit-scan-batch` ile sınırlıdır (`0` = otomatik: token yokken 5, token varken 50 depo); `RATE_LIMITED` turu durdurur, hata zamanlamayı öldürmez. Bildirim yalnız varsayılan dal için, tek taramadaki commit'ler tek bildirimde; alıcılar projenin aktif üyeleridir, bildirim metni yalnız depo adı/dal/sayı/son commit mesajı ve yazar adı içerir (snapshot kolonları + CHECK kısıtı).
 - **Frontend:** commit bağlantıları yalnız `https://github.com/`, avatarlar yalnız `https://avatars.githubusercontent.com/` ile açılır (`features/repository/links.ts`); diğer her şey düz metin ya da baş harf yedeğidir.
+
+### Independent Next.js advisory follow-up - 2026-10-08
+
+Current npm audit6 high/exit1, omit=dev1 high/exit1 (Next16.3.6); earlier5 high/production0 is historical. Newly reviewed Next advisories: GHSA-3w37-wq28-93x7, GHSA-4jqv-mc3x-m676, GHSA-39w2-rjm5-chcv, GHSA-f87g-xv8r-7p7x, GHSA-mcj8-r9mp-w47p and GHSA-cjq9-62q9-8jv4. Reviewed entries list16.3.8 patched; npm currently proposes16.4.0. Source has no images.remotePatterns (the SSRF advisory explicitly excludes that configuration), no draftMode/use-cache usage found; this limited source review is not an exploit/reachability audit or global release waiver. Package/lock unchanged in this UX task. Separate compatible patch/compatibility/gate decision required; existing ESLint/braces dev debt remains. Primary references: https://github.com/advisories/GHSA-cjq9-62q9-8jv4 and https://github.com/advisories/GHSA-mcj8-r9mp-w47p.

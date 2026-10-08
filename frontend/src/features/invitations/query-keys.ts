@@ -5,6 +5,8 @@ export const invitationKeys = {
   root: ["project-invitations"] as const,
   mineRoot: (userId: string | undefined) => ["project-invitations", "actor", userId, "me"] as const,
   mine: (userId: string | undefined, filter: string, page: number) => [...invitationKeys.mineRoot(userId), filter, page] as const,
+  incomingPending: (userId: string | undefined) => [...invitationKeys.mineRoot(userId), "pending-count"] as const,
+  projectPending: (projectId: string, userId: string | undefined) => [...invitationKeys.project(projectId, userId), "pending-count"] as const,
   preview: (userId: string | undefined, id: string | null) => ["project-invitations", "actor", userId, "preview", id] as const,
   project: (projectId: string, userId: string | undefined) => ["projects", projectId, "invitations", "actor", userId] as const,
 };

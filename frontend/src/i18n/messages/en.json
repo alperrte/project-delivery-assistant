@@ -319,6 +319,7 @@
         "tooLarge": "The logo can be at most 512 KB."
       },
       "banner": {
+        "invalidImage": "This image could not be read. Choose a valid PNG, JPEG or WebP image.",
         "label": "Cover image",
         "hint": "PNG, JPEG or WebP, up to 2 MB. Shown behind the card in the Projects list; without one the card stays plain.",
         "choose": "Upload image",
@@ -415,6 +416,7 @@
       "eyebrow": "Project workspace",
       "navigation": "Project menu",
       "tabs": {
+        "allTeams": "All teams",
         "overview": "Overview",
         "criteria": "Criteria",
         "members": "Members",
@@ -717,6 +719,7 @@
     "rolesUpdated": "Roles updated."
   },
   "invitations": {
+    "pendingCount": "{count, plural, one {# pending invitation} other {# pending invitations}}",
     "registeredUser": "Registered user",
     "newUser": "New PDA user",
     "firstName": "First name",
@@ -2635,6 +2638,11 @@
     "close": "Close calendar"
   },
   "notifications": {
+    "invitationContext": {
+      "PROJECT_INVITATION_CREATED": "You were invited to the project “{project}”.",
+      "PROJECT_INVITATION_ACCEPTED": "Your invitation to the project “{project}” was accepted.",
+      "PROJECT_INVITATION_REJECTED": "Your invitation to the project “{project}” was declined."
+    },
     "readFailed": "The read status could not be updated. Please try again.",
     "refreshFailed": "The read status was saved, but the notification list could not be refreshed. Please try again.",
     "sections": "Notification sections",

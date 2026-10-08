@@ -60,7 +60,10 @@ public interface ProjectInvitationRepository extends JpaRepository<ProjectInvita
 
     Page<ProjectInvitation> findByInvitedUserId(UUID invitedUserId, Pageable pageable);
 
-    /** The recipient's invitations that can still be answered: pending and not past their expiry. */
+    /** The recipient's live pending invitations in active projects; the same predicate serves page totals. */
+    @Query("select i from ProjectInvitation i where i.invitedUserId=:invitedUserId and i.status=:status "
+            + "and i.expiresAt>:now and exists (select p.id from Project p "
+            + "where p.id=i.projectId and p.archivedAt is null)")
     Page<ProjectInvitation> findByInvitedUserIdAndStatusAndExpiresAtAfter(UUID invitedUserId, InvitationStatus status,
                                                                           Instant now, Pageable pageable);
 
