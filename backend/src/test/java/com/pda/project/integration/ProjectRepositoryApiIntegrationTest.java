@@ -43,6 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -336,6 +337,115 @@ class ProjectRepositoryApiIntegrationTest {
                 .andExpect(status().isForbidden());
     }
 
+    @Test
+    void connectDefaultsToBasicWithNotificationsOnAndTakesTheChosenOptions() throws Exception {
+        Cookie csrf = csrfCookie();
+        Account manager = account("repooptsmgr");
+        UUID defaults = createProject(manager, csrf, "Repo defaults project");
+        Mockito.when(gitHub.fetchMetadata("optowner", "defaultsrepo")).thenReturn(new RepositoryMetadata("main", false));
+        mvc.perform(post("/api/v1/projects/" + defaults + "/repository")
+                        .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"repositoryUrl\":\"https://github.com/optowner/defaultsrepo\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.trackingMode").value("BASIC"))
+                .andExpect(jsonPath("$.notifyOnCommits").value(true));
+
+        UUID chosen = createProject(manager, csrf, "Repo chosen project");
+        Mockito.when(gitHub.fetchMetadata("optowner", "chosenrepo")).thenReturn(new RepositoryMetadata("main", false));
+        mvc.perform(post("/api/v1/projects/" + chosen + "/repository")
+                        .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"repositoryUrl\":\"https://github.com/optowner/chosenrepo\","
+                                + "\"trackingMode\":\"ADVANCED\",\"notifyOnCommits\":false}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.trackingMode").value("ADVANCED"))
+                .andExpect(jsonPath("$.notifyOnCommits").value(false));
+
+        mvc.perform(post("/api/v1/projects/" + chosen + "/repository")
+                        .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"repositoryUrl\":\"https://github.com/optowner/chosenrepo\","
+                                + "\"trackingMode\":\"EXPERT\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void managerUpdatesSettingsWhileEveryoneElseIsRejected() throws Exception {
+        Cookie csrf = csrfCookie();
+        Account manager = account("repopatchmgr");
+        Account contributor = account("repopatchmember");
+        UUID projectId = connectedProject(manager, csrf, "Repo patch project", "patchowner", "patchrepo");
+        memberships.addMember(manager.id(), projectId, contributor.id(), Set.of(ProjectRole.BACKEND_DEVELOPER));
+        String path = "/api/v1/projects/" + projectId + "/repository";
+        String body = "{\"trackingMode\":\"BASIC\",\"notifyOnCommits\":false}";
+
+        mvc.perform(patch(path).cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.trackingMode").value("BASIC"))
+                .andExpect(jsonPath("$.notifyOnCommits").value(false))
+                .andExpect(jsonPath("$.repositoryName").value("patchrepo"));
+        mvc.perform(get(path).cookie(contributor.access()))
+                .andExpect(jsonPath("$.trackingMode").value("BASIC"));
+
+        mvc.perform(patch(path).cookie(csrf, contributor.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isForbidden());
+        mvc.perform(patch(path).cookie(csrf).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(patch(path).cookie(manager.access()).contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isForbidden());
+        mvc.perform(patch(path).cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"trackingMode\":\"BASIC\"}"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(patch(path).cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"trackingMode\":\"EXPERT\",\"notifyOnCommits\":true}"))
+                .andExpect(status().isBadRequest());
+
+        UUID unconnected = createProject(manager, csrf, "Repo patch none project");
+        mvc.perform(patch("/api/v1/projects/" + unconnected + "/repository").cookie(csrf, manager.access())
+                        .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void basicModeServesOnlyTheDefaultBranchCommitsAndAdvancedServesEverything() throws Exception {
+        Cookie csrf = csrfCookie();
+        Account manager = account("repomodemgr");
+        UUID projectId = connectedProject(manager, csrf, "Repo mode project", "modeowner", "moderepo");
+        String path = "/api/v1/projects/" + projectId + "/repository";
+        mvc.perform(patch(path).cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"trackingMode\":\"BASIC\",\"notifyOnCommits\":true}"))
+                .andExpect(status().isOk());
+        Mockito.when(gitHub.fetchCommits("modeowner", "moderepo", "main", null, 1, 10)).thenReturn(List.of());
+
+        mvc.perform(get(path + "/commits").cookie(manager.access())).andExpect(status().isOk());
+        mvc.perform(get(path + "/commits").param("branch", "main").cookie(manager.access()))
+                .andExpect(status().isOk());
+        for (String blocked : List.of(path + "/branches", path + "/compare", path + "/commits?branch=develop",
+                path + "/commits?author=octocat")) {
+            mvc.perform(get(blocked).cookie(manager.access()))
+                    .andExpect(status().isConflict())
+                    .andExpect(jsonPath("$.code").value("REPOSITORY_ADVANCED_REQUIRED"));
+        }
+        Mockito.verify(gitHub, Mockito.never()).fetchBranches("modeowner", "moderepo");
+
+        mvc.perform(patch(path).cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"trackingMode\":\"ADVANCED\",\"notifyOnCommits\":true}"))
+                .andExpect(status().isOk());
+        Mockito.when(gitHub.fetchBranches("modeowner", "moderepo")).thenReturn(new BranchPage(
+                List.of(new BranchSummary("main", "abc", true)), false));
+        mvc.perform(get(path + "/branches").cookie(manager.access())).andExpect(status().isOk());
+        mvc.perform(get(path + "/compare").cookie(manager.access())).andExpect(status().isOk());
+    }
+
+    /** Branch details are part of what these tests exercise, so they connect in the advanced mode. */
     private UUID connectedProject(Account manager, Cookie csrf, String name, String owner, String repository)
             throws Exception {
         UUID projectId = createProject(manager, csrf, name);
@@ -343,7 +453,8 @@ class ProjectRepositoryApiIntegrationTest {
         mvc.perform(post("/api/v1/projects/" + projectId + "/repository")
                         .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"repositoryUrl\":\"https://github.com/" + owner + "/" + repository + "\"}"))
+                        .content("{\"repositoryUrl\":\"https://github.com/" + owner + "/" + repository
+                                + "\",\"trackingMode\":\"ADVANCED\"}"))
                 .andExpect(status().isCreated());
         return projectId;
     }

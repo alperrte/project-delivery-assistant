@@ -1,6 +1,7 @@
 package com.pda.project.domain.entity;
 
 import com.pda.project.domain.enums.RepositoryProvider;
+import com.pda.project.domain.enums.RepositoryTrackingMode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -72,6 +73,14 @@ public class ProjectRepositoryConnection {
     @Column(name = "last_scanned_at")
     private Instant lastScannedAt;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tracking_mode", nullable = false, length = 20)
+    private RepositoryTrackingMode trackingMode = RepositoryTrackingMode.BASIC;
+
+    /** Whether new default-branch commits notify the project's members. */
+    @Column(name = "notify_commits", nullable = false)
+    private boolean notifyCommits = true;
+
     protected ProjectRepositoryConnection() {
         // JPA
     }
@@ -101,6 +110,18 @@ public class ProjectRepositoryConnection {
     public void trackFrom(String headSha) {
         this.notifiedHeadSha = headSha == null || headSha.isBlank() ? null : headSha.trim();
         this.lastScannedAt = Instant.now();
+    }
+
+    /**
+     * Applies the tracking options. Turning notifications back on drops the baseline, so commits that arrived while
+     * they were off are never announced afterwards: the next scan only writes a fresh baseline.
+     */
+    public void changeSettings(RepositoryTrackingMode mode, boolean notifyOnCommits) {
+        this.trackingMode = Objects.requireNonNull(mode, "trackingMode is required");
+        if (notifyOnCommits && !this.notifyCommits) {
+            this.notifiedHeadSha = null;
+        }
+        this.notifyCommits = notifyOnCommits;
     }
 
     /** GitHub moved the default branch: take the new name and wait for the next scan to set a fresh baseline. */
@@ -144,4 +165,6 @@ public class ProjectRepositoryConnection {
     public Instant getUpdatedAt() { return updatedAt; }
     public String getNotifiedHeadSha() { return notifiedHeadSha; }
     public Instant getLastScannedAt() { return lastScannedAt; }
+    public RepositoryTrackingMode getTrackingMode() { return trackingMode; }
+    public boolean isNotifyCommits() { return notifyCommits; }
 }

@@ -193,6 +193,8 @@ class ProjectHomeApiIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.repository.connected").value(true))
                 .andExpect(jsonPath("$.repository.repositoryOwner").value("alperrte"))
+                .andExpect(jsonPath("$.repository.trackingMode").value("BASIC"))
+                .andExpect(jsonPath("$.repository.notifyOnCommits").value(true))
                 .andExpect(jsonPath("$.repository.lastCommit.shortSha").value("abcdef1"))
                 .andExpect(jsonPath("$.repository.githubUnavailable").value(false));
 

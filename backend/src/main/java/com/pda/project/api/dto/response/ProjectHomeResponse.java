@@ -9,6 +9,7 @@ import com.pda.project.domain.entity.Project;
 import com.pda.project.domain.enums.ProjectPriority;
 import com.pda.project.domain.enums.ProjectStatus;
 import com.pda.project.domain.enums.RepositoryProvider;
+import com.pda.project.domain.enums.RepositoryTrackingMode;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -54,13 +55,15 @@ public record ProjectHomeResponse(
     }
 
     public record RepositorySummaryResponse(boolean connected, RepositoryProvider provider, String repositoryOwner,
-                                            String repositoryName, String defaultBranch, CommitResponse lastCommit,
-                                            boolean githubUnavailable) {
+                                            String repositoryName, String defaultBranch,
+                                            RepositoryTrackingMode trackingMode, boolean notifyOnCommits,
+                                            CommitResponse lastCommit, boolean githubUnavailable) {
         static RepositorySummaryResponse from(RepositorySummary summary) {
             CommitResponse lastCommit = summary.lastCommit() == null ? null
                     : CommitResponse.from(summary.lastCommit());
             return new RepositorySummaryResponse(summary.connected(), summary.provider(), summary.repositoryOwner(),
-                    summary.repositoryName(), summary.defaultBranch(), lastCommit, summary.githubUnavailable());
+                    summary.repositoryName(), summary.defaultBranch(), summary.trackingMode(),
+                    summary.notifyOnCommits(), lastCommit, summary.githubUnavailable());
         }
     }
 }

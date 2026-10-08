@@ -1,10 +1,20 @@
+import type { QueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/api/client";
-import type { Commit, CommitQuery, RepositoryBranches, RepositoryCompare, RepositoryConnection } from "./types";
+import type {
+  Commit,
+  CommitQuery,
+  RepositoryBranches,
+  RepositoryCompare,
+  RepositoryConnection,
+  RepositorySettings,
+} from "./types";
 
 export const repositoryApi = {
   detail: (projectId: string) => apiRequest<RepositoryConnection>(`/projects/${projectId}/repository`),
-  connect: (projectId: string, repositoryUrl: string) =>
-    apiRequest<RepositoryConnection>(`/projects/${projectId}/repository`, { method: "POST", body: { repositoryUrl } }),
+  connect: (projectId: string, body: RepositorySettings & { repositoryUrl: string }) =>
+    apiRequest<RepositoryConnection>(`/projects/${projectId}/repository`, { method: "POST", body }),
+  updateSettings: (projectId: string, body: RepositorySettings) =>
+    apiRequest<RepositoryConnection>(`/projects/${projectId}/repository`, { method: "PATCH", body }),
   disconnect: (projectId: string) => apiRequest<void>(`/projects/${projectId}/repository`, { method: "DELETE" }),
   commits: (projectId: string, { branch, author, page, limit }: CommitQuery = {}) => {
     const params = new URLSearchParams();
@@ -27,3 +37,11 @@ export const repositoryKeys = {
     ["projects", projectId, "repository", "commits", branch, author] as const,
   compare: (projectId: string, branch: string) => ["projects", projectId, "repository", "compare", branch] as const,
 };
+
+/** The repository page, the sidebar "Depo" item and the overview strip all read these; refresh them together. */
+export async function invalidateRepository(queryClient: QueryClient, projectId: string) {
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: repositoryKeys.root(projectId) }),
+    queryClient.invalidateQueries({ queryKey: ["projects", projectId, "home"] }),
+  ]);
+}

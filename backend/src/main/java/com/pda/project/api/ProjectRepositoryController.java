@@ -1,6 +1,7 @@
 package com.pda.project.api;
 
 import com.pda.project.api.dto.request.ConnectRepositoryRequest;
+import com.pda.project.api.dto.request.UpdateRepositorySettingsRequest;
 import com.pda.project.api.dto.response.CommitResponse;
 import com.pda.project.api.dto.response.RepositoryBranchesResponse;
 import com.pda.project.api.dto.response.RepositoryCompareResponse;
@@ -15,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -50,8 +52,20 @@ public class ProjectRepositoryController {
             @AuthenticationPrincipal UserAccounts.AuthenticatedUser principal, @PathVariable UUID projectId,
             @Valid @RequestBody ConnectRepositoryRequest request) {
         RepositoryConnectionResponse body = RepositoryConnectionResponse.from(
-                repository.connect(AuthenticatedActor.id(principal), projectId, request.repositoryUrl()));
+                repository.connect(AuthenticatedActor.id(principal), projectId, request.repositoryUrl(),
+                        request.trackingMode(), request.notifyOnCommits()));
         return ResponseEntity.status(HttpStatus.CREATED).body(body);
+    }
+
+    @PatchMapping
+    @Operation(summary = "Change the repository tracking mode and the commit notification switch",
+            description = "PROJECT_MANAGER only. trackingMode BASIC|ADVANCED and notifyOnCommits are both "
+                    + "required; 404 when no repository is connected. Requires CSRF.")
+    public RepositoryConnectionResponse updateSettings(
+            @AuthenticationPrincipal UserAccounts.AuthenticatedUser principal, @PathVariable UUID projectId,
+            @Valid @RequestBody UpdateRepositorySettingsRequest request) {
+        return RepositoryConnectionResponse.from(repository.updateSettings(AuthenticatedActor.id(principal),
+                projectId, request.trackingMode(), request.notifyOnCommits()));
     }
 
     @DeleteMapping

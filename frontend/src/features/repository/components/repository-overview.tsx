@@ -19,7 +19,8 @@ export function RepositoryOverview({
 }: {
   projectId: string;
   connection: RepositoryConnection;
-  onOpenBranches: () => void;
+  /** Only the advanced mode explores branches; without it the branch list is neither fetched nor offered. */
+  onOpenBranches?: () => void;
 }) {
   const t = useTranslations("repository");
 
@@ -32,6 +33,7 @@ export function RepositoryOverview({
   const branches = useQuery({
     queryKey: repositoryKeys.branches(projectId),
     queryFn: () => repositoryApi.branches(projectId),
+    enabled: !!onOpenBranches,
     retry: false,
     staleTime: 60_000,
     refetchOnWindowFocus: false,
@@ -61,7 +63,7 @@ export function RepositoryOverview({
         </div>
       </section>
 
-      {branches.data && (
+      {onOpenBranches && branches.data && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card p-3">
           <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
             <GitBranch size={16} aria-hidden="true" />

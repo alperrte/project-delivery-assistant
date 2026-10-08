@@ -3,9 +3,12 @@
 import Link from "./workspace-link";
 import { usePathname, useSearchParams } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
+import { useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChatNavItem } from "@/features/chat/components/chat-nav-item";
 import { usePendingInvitationCount } from "@/features/invitations/hooks";
 import { useCurrentMember } from "@/features/projects/hooks/use-current-member";
+import { projectsApi } from "@/features/projects/api";
 import { useSelectedProject } from "@/features/projects/hooks/use-selected-project";
 import { allowsAdvanced, allowsPool } from "@/features/tasks/task-model";
 import {
@@ -63,6 +66,24 @@ export function ProjectSidebarNav({
 
   const { isManager } = useCurrentMember(project?.id ?? "");
 
+  // Same key as the project page, so the cache is shared; "Depo" only exists once a repository is connected.
+  // The sidebar only reads the cache (disabled observer) and fills it once when it is empty: an observer that
+  // stays active would make every broad `["projects"]` invalidation refetch the whole home on unrelated pages.
+  const queryClient = useQueryClient();
+  const projectId = project?.id;
+  const { data: home } = useQuery({
+    queryKey: ["projects", projectId, "home"],
+    queryFn: () => projectsApi.home(projectId!),
+    enabled: false,
+  });
+  useEffect(() => {
+    if (!projectId) return;
+    queryClient
+      .ensureQueryData({ queryKey: ["projects", projectId, "home"], queryFn: () => projectsApi.home(projectId) })
+      .catch(() => undefined);
+  }, [projectId, queryClient]);
+  const repositoryConnected = home?.repository.connected === true;
+
   const { data: actor } = useSession();
   const pending = usePendingInvitationCount(
     project?.id ?? "",
@@ -83,6 +104,7 @@ export function ProjectSidebarNav({
     (item) =>
       !("sidebar" in item && item.sidebar === false) &&
       !("managerOnly" in item && item.managerOnly && !isManager) &&
+      (item.value !== "repository" || repositoryConnected) &&
       (!!projectPath || item.value !== "teams"),
   );
 

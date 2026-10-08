@@ -146,6 +146,10 @@ Existing notifications.is_read/read_at are the persistent source of truth; histo
 
 `project_repository_connections`: `notified_head_sha VARCHAR(64)` (en son bildirilen/taban çizgisi commit'i) ve `last_scanned_at TIMESTAMPTZ`. Bağlanırken `notified_head_sha` o anki varsayılan dal ucuna ayarlanır, geçmiş commit'ler bildirilmez; alınamazsa boş kalır ve ilk tarama yalnız taban çizgisini yazar. `notifications`: `repo_project_name`, `repo_full_name`, `repo_branch`, `repo_commit_count`, `repo_commits_truncated`, `repo_head_message`, `repo_head_author` + `ck_notification_repository_commits_snapshot` (ya hepsi boş ya da `type='REPOSITORY_COMMITS_PUSHED'`, `resource_type='PROJECT'` ve zorunlu alanlar dolu, `repo_commit_count >= 1`) ve `ck_notification_repository_commits_required` (bu tipte `repo_commit_count` boş olamaz). Tarama sırası `ix_project_repository_connections_scan (last_scanned_at NULLS FIRST)` ile desteklenir. Önceki migration'lara dokunulmadı.
 
+## V61 — depo takip modu (2026-10-07)
+
+`project_repository_connections`: `tracking_mode VARCHAR(20) NOT NULL DEFAULT 'ADVANCED'` + `ck_project_repository_connections_tracking_mode` (`BASIC`, `ADVANCED`) ve `notify_commits BOOLEAN NOT NULL DEFAULT TRUE`. Var olan bağlantılar bugünkü görünümlerini korumak için `ADVANCED` olur; yeni bağlantıları uygulama `BASIC` ile açar. Tarama yalnız `notify_commits = TRUE` satırları seçer. Önceki migration'lara dokunulmadı; yeni kolonlar varsayılanlı olduğundan ayrı migration testi eklenmedi (mevcut satırın `ADVANCED` geldiği API testinde doğrulanır).
+
 ## Invitation notification snapshot - V60 (2026-10-08)
 
 Additive `notifications.invitation_project_name VARCHAR(160) NULL`; subset CHECK permits context only for the three project-invitation types, PROJECT_INVITATION resource and non-null project ID, with nonblank names. Older V56/V57/V59 migrations and snapshots/read/presentation columns retained; legacy rows/events stay null, no inferred-name backfill. Incoming PENDING active-project EXISTS is shared by page content and totals; archived physical PENDING remains in unfiltered history. Existing invitation/domain/media tables unchanged.

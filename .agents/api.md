@@ -132,6 +132,14 @@ GET /api/v1/notifications adds optional nullable read: false=unread, true=histor
 - Bildirim: `type=REPOSITORY_COMMITS_PUSHED`, `resourceType=PROJECT`, `resourceId=projectId`, `repositoryCommits:{projectName,repositoryFullName,branch,commitCount,truncated,headMessage,headAuthor}`.
 - Swagger: `/swagger-ui/index.html` (`API_DOCS_ENABLED=true`), normal giriş + `GET /api/v1/auth/csrf`; `GET` uçları CSRF istemez.
 
+## GitHub depo takip modu ve bildirim anahtarı (2026-10-07)
+
+- `POST /api/v1/projects/{projectId}/repository` gövde `{repositoryUrl, trackingMode?, notifyOnCommits?}` → `201`. Varsayılan `trackingMode=BASIC`, `notifyOnCommits=true`.
+- `PATCH /api/v1/projects/{projectId}/repository` gövde `{trackingMode, notifyOnCommits}` → `200` güncel bağlantı. `REPOSITORY_MANAGE` + CSRF. `404` bağlı depo yok, `400` geçersiz mod.
+- `GET /api/v1/projects/{projectId}/repository` yanıtı `trackingMode` ve `notifyOnCommits` ile genişledi. `GET /api/v1/projects/{projectId}/home` içindeki `repository` nesnesi de `trackingMode` (bağlı değilse `null`) ve `notifyOnCommits` taşır; kenar çubuğu ve genel bakış şeridi bundan okur.
+- `BASIC` modda `GET .../repository/branches`, `.../compare` ve ana dal dışı ya da `author` süzgeçli `GET .../repository/commits` → `409` + `code=REPOSITORY_ADVANCED_REQUIRED`. Mevcut bağlantılar V60 ile `ADVANCED` olur.
+- Swagger: `/swagger-ui/index.html` (`API_DOCS_ENABLED=true`), normal giriş + `GET /api/v1/auth/csrf`; `POST`/`PATCH`/`DELETE` CSRF ister.
+
 ## Project invitation count/context and create preview - 2026-10-08
 
 Existing own GET `/api/v1/project-invitations/me?status=PENDING&page=0&size=1` now excludes archived projects in the shared page/count predicate; omitted status retains history, including archived physical PENDING rows. Manager GET `/api/v1/projects/{id}/invitations/all?status=PENDING&page=0&size=1` remains project/active-manager scoped and uses effective expiry. No new count endpoint. Existing own NotificationResponse adds nullable `invitationContext:{projectName}` for Created/Accepted/Rejected, captured at mutation time; legacy null remains safe. Read/read-all/claim APIs and `popupPresentedAt != readAt` unchanged. Existing project POST201 and multipart banner PUT204/GET200/DELETE204 remain the persistence flow; local preview never uploads by itself. Organization invitations remain MISSING FEATURE / Pending product decision outside this scope.

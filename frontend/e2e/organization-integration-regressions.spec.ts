@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { api, registerAndLogin } from "./helpers";
+import { api, declineTeamPrompt, registerAndLogin } from "./helpers";
 import { MANAGER_STORAGE } from "./global-setup";
 
 test("organization picker includes the 101st owned organization in create and settings", async ({ page }) => {
@@ -20,6 +20,7 @@ test("organization picker includes the 101st owned organization in create and se
     await page.locator("#main-content").getByRole("combobox").click();
     await page.getByRole("option", { name: lastName, exact: true }).click();
     await page.getByRole("button", { name: /^Projeyi oluştur$/ }).click();
+    await declineTeamPrompt(page);
     await expect(page).toHaveURL(/\/tr\/projeler\/(?!yeni$)[^/]+$/);
     const slug = new URL(page.url()).pathname.split("/").at(-1)!;
     const project = (await api(page, "GET", `/projects/by-slug/${slug}`)).json as { id: string; organizationId: string };

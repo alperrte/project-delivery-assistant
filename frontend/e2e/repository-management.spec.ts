@@ -35,6 +35,8 @@ const CONNECTION = {
   repositoryOwner: "octocat",
   repositoryName: "demo-repo",
   defaultBranch: "main",
+  trackingMode: "ADVANCED",
+  notifyOnCommits: true,
   connectedBy: "someone",
   connectedAt: iso(600),
   updatedAt: iso(600),
@@ -49,7 +51,7 @@ const BRANCHES = {
   truncated: false,
 };
 
-type Mode = { failCompare?: number; failCommits?: number };
+type Mode = { failCompare?: number; failCommits?: number; trackingMode?: "BASIC" | "ADVANCED" };
 
 /** Answers the repository GET endpoints (including the CORS preflight the cross-origin API call may trigger). */
 async function mockRepository(page: Page, mode: Mode = {}) {
@@ -57,7 +59,7 @@ async function mockRepository(page: Page, mode: Mode = {}) {
   await page.route("**/api/v1/projects/*/repository**", async (route: Route) => {
     const request = route.request();
     if (request.method() === "OPTIONS") {
-      await route.fulfill({ status: 204, headers: { ...cors, "access-control-allow-methods": "GET,POST,DELETE,OPTIONS", "access-control-allow-headers": "*" } });
+      await route.fulfill({ status: 204, headers: { ...cors, "access-control-allow-methods": "GET,POST,PATCH,DELETE,OPTIONS", "access-control-allow-headers": "*" } });
       return;
     }
     if (request.method() !== "GET") {
@@ -83,7 +85,7 @@ async function mockRepository(page: Page, mode: Mode = {}) {
       if (author) list = list.filter((item) => item.authorLogin === author);
       return json(list.slice((pageNo - 1) * limit, pageNo * limit));
     }
-    return json(CONNECTION);
+    return json({ ...CONNECTION, trackingMode: mode.trackingMode ?? "ADVANCED" });
   });
 }
 
@@ -192,16 +194,37 @@ test.describe.serial("Repository management", () => {
     await expect(managerPage.getByText("Commit number 101")).toBeVisible();
   });
 
-  test("only a project manager can disconnect the repository", async () => {
+  test("repository settings and disconnecting live in the project settings and only for a project manager", async () => {
     await mockRepository(managerPage);
     await managerPage.goto(`/projects/${slug}?section=repository`);
-    await expect(managerPage.getByRole("button", { name: "Bağlantıyı kes" })).toBeVisible();
+    await expect(managerPage.getByRole("link", { name: "Depo ayarları" })).toBeVisible();
+    await expect(managerPage.getByRole("button", { name: "Bağlantıyı kes" })).toHaveCount(0);
+
+    await managerPage.goto(`/projects/${slug}?section=settings`);
+    const section = managerPage.locator("section").filter({ has: managerPage.getByRole("heading", { name: "GitHub deposu", exact: true }) });
+    await expect(section.getByRole("button", { name: "Bağlantıyı kes" })).toBeVisible();
+    await expect(section.getByRole("radio", { name: /Gelişmiş/ })).toBeChecked();
 
     await mockRepository(memberPage);
     await memberPage.goto(`/projects/${slug}?section=repository`);
     await expect(memberPage.getByRole("heading", { name: "main dalındaki son commit'ler" })).toBeVisible();
+    await expect(memberPage.getByRole("link", { name: "Depo ayarları" })).toHaveCount(0);
     await expect(memberPage.getByRole("button", { name: "Bağlantıyı kes" })).toHaveCount(0);
     await expect(memberPage.getByRole("button", { name: "Depo bağla" })).toHaveCount(0);
+  });
+
+  test("the basic mode shows only the default branch commits, without the overview and branches tabs", async () => {
+    await managerPage.unrouteAll({ behavior: "ignoreErrors" });
+    await mockRepository(managerPage, { trackingMode: "BASIC" });
+    await managerPage.goto(`/projects/${slug}?section=repository&view=branches&branch=feature%2Flogin`);
+    await expect(managerPage.getByRole("heading", { name: "main dalındaki son commit'ler" })).toBeVisible();
+    await expect(managerPage.getByText("Commit number 101")).toBeVisible();
+    await expect(managerPage.getByText("Basit", { exact: true })).toBeVisible();
+    await expect(managerPage.getByRole("tab")).toHaveCount(0);
+    await expect(managerPage.getByRole("button", { name: "Dalları incele" })).toHaveCount(0);
+    await expect(managerPage.getByText("3 dal")).toHaveCount(0);
+    await managerPage.unrouteAll({ behavior: "ignoreErrors" });
+    await mockRepository(managerPage);
   });
 
   test("the branch view fits a 390 px wide screen", async () => {
