@@ -1,8 +1,8 @@
 import { test, expect, type Page, type Browser } from "@playwright/test";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { api, login } from "./helpers";
-import { MANAGER_STORAGE, MANAGER_USER_FILE, MEMBER_USER_FILE } from "./global-setup";
+import { AUTH_DIR, MANAGER_STORAGE, MANAGER_USER_FILE, MEMBER_USER_FILE } from "./global-setup";
 
 type User = { email: string; password: string };
 type Project = { id: string; slug: string; name: string };
@@ -10,13 +10,18 @@ type Note = { id: string; resourceId: string; read: boolean; popupPresentedAt: s
 const member = () => JSON.parse(readFileSync(MEMBER_USER_FILE, "utf8")) as User;
 const manager = () => JSON.parse(readFileSync(MANAGER_USER_FILE, "utf8")) as User;
 
-async function setup(browser: Browser) {
+async function setup(browser: Browser, logsOut = false) {
   const ac = await browser.newContext({ storageState: MANAGER_STORAGE });
-  const bc = await browser.newContext();
-  const a = await ac.newPage(), b = await bc.newPage();
-  await a.goto("/tr/projeler");
-  await login(b, member().email, member().password);
-  const user = (await api(b, "GET", "/auth/me")).json as { id: string };
+  const a = await ac.newPage(); await a.goto("/tr/projeler");
+  const owner=(await api(a,"GET","/auth/me")).json as {id:string};
+  const reusable=path.join(AUTH_DIR,`notification-setup-${owner.id}.json`);
+  const bc=await browser.newContext(!logsOut && existsSync(reusable)?{storageState:reusable}:{});
+  const b=await bc.newPage();
+  if(logsOut || !existsSync(reusable))await login(b,member().email,member().password);
+  else {await b.goto("/tr/projeler");await expect(b.locator("#main-content")).toBeVisible();}
+  const identity=await api(b,"GET","/auth/me");expect(identity.status).toBe(200);
+  const user=identity.json as {id:string;email:string};expect(user.email).toBe(member().email);
+  if(!logsOut)await bc.storageState({path:reusable});
   const response = await api(a, "POST", "/projects", { name: `Notification QA ${Date.now()}`, projectType: "WEB" });
   expect(response.status).toBe(201); const p = response.json as Project;
   const backup = (await api(a, "POST", `/projects/${p.id}/teams`, { name: "Notification backup", includeCreator: true })).json as { id: string };
@@ -43,7 +48,7 @@ async function logout(page: Page) {
 const popup = (page: Page) => page.locator('[data-sonner-toast][data-type="info"]').filter({ hasText: "Ekip silindi" });
 
 test("offline login gets one team-deletion popup; close, refresh and center retain durable history and unread state", async ({ browser }) => {
-  test.setTimeout(90_000); const f = await setup(browser);
+  test.setTimeout(90_000); const f = await setup(browser,true);
   try {
     await logout(f.b);
     expect((await api(f.a, "DELETE", `/projects/${f.p.id}/teams/${f.team.id}`)).status).toBe(204);
@@ -90,7 +95,7 @@ test("foreground polling delivers to only one of two user contexts without steal
 });
 
 test("same-document recipient logout and another-account login never shows the previous private notification", async ({ browser }) => {
-  const f = await setup(browser); let release!: () => void;
+  const f = await setup(browser,true); let release!: () => void;
   const delayed = new Promise<void>(resolve => { release = resolve; });
   try {
     expect((await api(f.a, "DELETE", `/projects/${f.p.id}/teams/${f.team.id}`)).status).toBe(204);

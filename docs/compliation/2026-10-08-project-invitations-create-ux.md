@@ -131,3 +131,7 @@ Safe create example: `{"teamId":"<QA-team-uuid>","userId":"<QA-user-uuid>","role
 3. Before save choose/replace/remove banner, then corrupt file: prior valid preview preserved, visible localized error; successful save loads real card, upload failure leaves created project with warning.
 4. Invite named project, rename, open notifications/read/history: old context retains name; future event uses new name, legacy generic remains; popup alone does not read.
 5. Review final completion/plan and separate Next dependency follow-up. Commit/push/staging left to user.
+
+## Dependency follow-up update - 2026-10-08
+
+The Next16.3.6 production finding above is the historical pre-patch state. User-approved separate official Next/eslint16.3.8 patch is now verified: production audit0/exit0, full audit5 dev high from braces (user-approved upstream follow-up), clean ci/lint/type/build/targeted/full canonical PASS. Original UX gate/source numbers remain historical; see [separate Next security completion](2026-10-08-next-security-remediation.md).
