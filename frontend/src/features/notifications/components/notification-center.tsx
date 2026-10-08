@@ -22,11 +22,11 @@ import { useTaskFormat } from "@/features/tasks/format";
 import { projectsApi } from "@/features/projects/api";
 
 /** Deep link into the repository page; the slug comes from the project (cached), hidden while unknown or inaccessible. */
-function RepositoryLink({ projectId, label, onOpen }: { projectId: string; label: string; onOpen: () => void }) {
+function RepositoryLink({ projectId, label, onOpen }: { projectId: string; label: string; onOpen: () => boolean }) {
   const project = useQuery({ queryKey: ["projects", "detail", projectId], queryFn: () => projectsApi.detail(projectId), retry: false, staleTime: 60_000 });
   if (!project.data?.slug) return null;
   return <Link href={`/projects/${encodeURIComponent(project.data.slug)}?section=repository`}
-    className="mt-2 inline-flex min-h-11 items-center text-sm font-medium underline underline-offset-4" onClick={onOpen}>{label}</Link>;
+    className="mt-2 inline-flex min-h-11 items-center text-sm font-medium underline underline-offset-4" onClick={event => { if (!onOpen()) event.preventDefault(); }}>{label}</Link>;
 }
 
 export function NotificationCenter({ expectedUserId, disabled = false }: { expectedUserId?: string; disabled?: boolean } = {}) {
@@ -109,6 +109,9 @@ export function NotificationCenter({ expectedUserId, disabled = false }: { expec
     return t.has(`types.${n.type}`) ? t(`types.${n.type}`) : n.title;
   }
   function body(n: Notification) {
+    if (n.invitationContext && ["PROJECT_INVITATION_CREATED", "PROJECT_INVITATION_ACCEPTED", "PROJECT_INVITATION_REJECTED"].includes(n.type)) {
+      return t(`invitationContext.${n.type}`, { project: n.invitationContext.projectName });
+    }
     if (n.teamDeletion) return t("teamDeletedBody", { project: n.teamDeletion.projectName, team: n.teamDeletion.teamName,
       actor: n.teamDeletion.actorNickname ?? t("projectManager") });
     if (n.statusChange && (n.statusChange.newStatus === "IN_PROGRESS" || n.statusChange.newStatus === "DONE")) {
@@ -177,10 +180,11 @@ ${c.headAuthor ? t("repositoryCommitsHeadBy", { message: c.headMessage, author: 
                       }}>{t("openTask")}</Link>}
                     {n.repositoryCommits && n.projectId && !!userId && <RepositoryLink projectId={n.projectId} label={t("openRepository")}
                       onOpen={() => {
-                        if (!owner?.current()) return;
+                        if (!owner?.current()) return false;
+                        if (!n.read && !read.execute({ kind: "read", id: n.id })) return false;
                         navigatingTask.current = true;
-                        if (!n.read) read.mutate(n.id);
                         owner.setOpen(false);
+                        return true;
                       }} />}
                   </div>
                   {!n.read && <Tooltip><TooltipTrigger render={<Button variant="ghost" size="icon" className="min-h-11 min-w-11 shrink-0" aria-label={t("markRead")} aria-describedby={`notification-title-${n.id}`} data-notification-read-id={n.id} disabled={read.isPending} onClick={event => executeRead({ kind: "read", id: n.id }, event.currentTarget)}><Check size={16} aria-hidden="true" /></Button>} /><TooltipContent>{t("markRead")}</TooltipContent></Tooltip>}

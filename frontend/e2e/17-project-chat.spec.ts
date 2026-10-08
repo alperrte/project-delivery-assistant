@@ -275,6 +275,10 @@ test.describe.serial("Project chat", () => {
       "/dashboard", "/projects", "/organizations", "/settings",
     ]) {
       const target = localizeHref(href, "tr");
+      if(href.includes("section=teams")) {
+        const teams=managerPage.getByRole("navigation",{name:"Gezinme menüsü"}).getByRole("button",{name:"Ekipler",exact:true});
+        if(await teams.getAttribute("aria-expanded")!=="true")await teams.click();
+      }
       await managerPage.locator(`.app-shell a[href="${target}"]`).first().click();
       await expect(managerPage).toHaveURL(new RegExp(target.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "$"));
       await expect(barOf(managerPage)).toBeVisible();
@@ -347,6 +351,8 @@ test.describe.serial("Project chat", () => {
     await expect(managerPage).toHaveURL(/\/tr\/takvim$/);
     await managerPage.getByTestId("chat-minimize").click();
     await managerPage.getByTestId("chat-close").click();
+    const teamsDisclosure=managerPage.getByRole("navigation",{name:"Gezinme menüsü"}).getByRole("button",{name:"Ekipler",exact:true});
+    if(await teamsDisclosure.getAttribute("aria-expanded")!=="true")await teamsDisclosure.click();
     await managerPage.locator(`nav a[href="${localizeHref(`/projects/${slug}?section=teams`, "tr")}"]`).first().click();
     await expect(barOf(managerPage)).toHaveCount(0);
     await openPanel(managerPage);
@@ -657,6 +663,10 @@ test.describe.serial("Project chat", () => {
         await composerOf(page).fill(`draft ${locale}`);
         await page.getByTestId("chat-minimize").click();
         for (const href of ["/calendar", "/tasks", `/projects/${slug}?section=teams`]) {
+          if(href.includes("section=teams")) {
+            const teams=page.locator("aside").getByRole("button",{name:/^(Ekipler|Teams)$/});
+            if(await teams.getAttribute("aria-expanded")!=="true")await teams.click();
+          }
           await page.locator(`.app-shell a[href="${localizeHref(href, locale)}"]`).first().click();
           await expect(barOf(page)).toBeVisible();
         }

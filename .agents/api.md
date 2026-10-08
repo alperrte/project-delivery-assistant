@@ -131,3 +131,7 @@ GET /api/v1/notifications adds optional nullable read: false=unread, true=histor
 - Hata kodları: `400` geçersiz dal/yazar ya da `REPOSITORY_PRIVATE`; `404` dal/depo bulunamadı; `429` `REPOSITORY_READ_LIMIT` ya da GitHub sınırı (`Retry-After`); `503` GitHub erişilemiyor.
 - Bildirim: `type=REPOSITORY_COMMITS_PUSHED`, `resourceType=PROJECT`, `resourceId=projectId`, `repositoryCommits:{projectName,repositoryFullName,branch,commitCount,truncated,headMessage,headAuthor}`.
 - Swagger: `/swagger-ui/index.html` (`API_DOCS_ENABLED=true`), normal giriş + `GET /api/v1/auth/csrf`; `GET` uçları CSRF istemez.
+
+## Project invitation count/context and create preview - 2026-10-08
+
+Existing own GET `/api/v1/project-invitations/me?status=PENDING&page=0&size=1` now excludes archived projects in the shared page/count predicate; omitted status retains history, including archived physical PENDING rows. Manager GET `/api/v1/projects/{id}/invitations/all?status=PENDING&page=0&size=1` remains project/active-manager scoped and uses effective expiry. No new count endpoint. Existing own NotificationResponse adds nullable `invitationContext:{projectName}` for Created/Accepted/Rejected, captured at mutation time; legacy null remains safe. Read/read-all/claim APIs and `popupPresentedAt != readAt` unchanged. Existing project POST201 and multipart banner PUT204/GET200/DELETE204 remain the persistence flow; local preview never uploads by itself. Organization invitations remain MISSING FEATURE / Pending product decision outside this scope.

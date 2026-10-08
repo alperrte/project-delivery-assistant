@@ -28,6 +28,9 @@ import { clearPrivateNotifications } from "@/features/notifications/query-keys";
 import { clearPrivateTeams } from "@/features/squads/cache";
 import { useApplySavedPreferences, useRestoreSessionBaseline } from "@/features/settings/session-preferences";
 
+import { useIncomingInvitationCount } from "@/features/invitations/hooks";
+import { PendingInvitationBadge } from "@/features/invitations/components/pending-invitation-badge";
+
 const NAV_LINKS = [
   { href: "/dashboard", key: "home", icon: House },
   { href: "/projects", key: "projects", icon: SquaresFour },
@@ -129,6 +132,8 @@ export function AppShellView({ children, pathname, user, collapsed = false, onLo
 }) {
   const t = useTranslations("app");
   const tw = useTranslations("workspace");
+  const incoming = useIncomingInvitationCount(!contained);
+  const ti = useTranslations("invitations");
   const [menuOpen, setMenuOpen] = useState(false);
   function renderNavigation(narrow: boolean) {
     return (
@@ -157,16 +162,18 @@ export function AppShellView({ children, pathname, user, collapsed = false, onLo
                 href={link.href}
                 onClick={() => setMenuOpen(false)}
                 title={narrow ? t(`nav.${link.key}`) : undefined}
-                aria-label={narrow ? t(`nav.${link.key}`) : undefined}
+                aria-label={t(`nav.${link.key}`)}
+                aria-description={link.key === "invitations" && incoming.isSuccess && incoming.data > 0 ? ti("pendingCount", { count: incoming.data }) : undefined}
                 aria-current={active ? "page" : undefined}
                 className={navItemClass(active, cn("flex items-center gap-3 rounded-md py-2.5 text-[13px] font-medium hover:bg-muted hover:text-foreground", narrow ? "justify-center px-0" : "px-3"))}
               >
-                <Icon size={19} weight={active ? "fill" : "regular"} aria-hidden="true" />
+                <span className="relative"><Icon size={19} weight={active ? "fill" : "regular"} aria-hidden="true" />{narrow && link.key === "invitations" && <PendingInvitationBadge compact count={!contained && incoming.isSuccess ? incoming.data : undefined} />}</span>
                 {!narrow && t(`nav.${link.key}`)}
+                {!narrow && link.key === "invitations" && <PendingInvitationBadge count={!contained && incoming.isSuccess ? incoming.data : undefined} />}
               </Link>
             );
           })}
-          <ProjectSidebarNav pathnameOverride={pathname} onNavigate={() => setMenuOpen(false)} collapsed={narrow} />
+          <ProjectSidebarNav pathnameOverride={pathname} onNavigate={() => setMenuOpen(false)} collapsed={narrow} contained={contained} />
           <div className="mt-3 border-t border-border pt-4">
             {!narrow && (
               <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">{tw("personal")}</p>

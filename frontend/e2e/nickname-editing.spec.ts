@@ -83,6 +83,8 @@ test("real nickname save updates session and warm team/chat identity without res
     await expect(page.locator("header").getByRole("button", { name: new RegExp(wanted) })).toBeAttached();
     await expect(page.getByTestId("chat-compact")).toBeVisible(); await expect(page.getByTestId("chat-composer")).toHaveValue("persistent nickname draft");
     expect(await page.evaluate(() => (window as unknown as { nicknameDocument: number }).nicknameDocument)).toBe(17);
+    const teamsDisclosure=page.getByRole("navigation",{name:"Gezinme menüsü"}).getByRole("button",{name:"Ekipler",exact:true});
+    if(await teamsDisclosure.getAttribute("aria-expanded")!=="true")await teamsDisclosure.click();
     await page.locator(`.app-shell a[href="/tr/projeler/${project.slug}?section=teams"]`).first().click();
     await expect(page.locator("article").filter({ hasText: "Nickname team" })).toContainText(wanted);
     expect(await page.evaluate(() => (window as unknown as { nicknameDocument: number }).nicknameDocument)).toBe(17);

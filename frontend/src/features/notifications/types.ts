@@ -22,5 +22,6 @@ export type Notification = {
     headMessage: string | null;
     headAuthor: string | null;
   } | null;
+  invitationContext?: { projectName: string } | null;
   popupPresentedAt?: string | null;
 };

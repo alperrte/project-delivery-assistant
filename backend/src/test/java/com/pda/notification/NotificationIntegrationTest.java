@@ -65,6 +65,7 @@ class NotificationIntegrationTest {
     @Autowired TransactionTemplate transaction;
     @Autowired com.pda.notification.infrastructure.NotificationRepository notificationRows;
     @Autowired MockMvc mvc;
+    @Autowired tools.jackson.databind.ObjectMapper mapper;
 
     @Test void teamDeletionSnapshotRoundTripsThroughIndependentJpaTransactions() {
         UUID recipient = user(), actor = user(), event = UUID.randomUUID();
@@ -176,15 +177,76 @@ class NotificationIntegrationTest {
         UUID project = projects.create(manager, "Invitation notification " + UUID.randomUUID(), null, null).getId();
         UUID team = squads.create(manager, project, "Invitation team", null, null, true).getId();
         var first = invitations.inviteRegisteredUser(manager, project, recipient, Set.of(ProjectRole.TESTER), null, team);
+        var original = notifications.list(recipient, true, NotificationType.PROJECT_INVITATION_CREATED, 0, 20)
+                .getContent().getFirst();
+        String originalName = projects.detail(manager, project).getName();
+        assertEquals(originalName, original.getInvitationContext().projectName());
+        projects.update(manager, project, "Renamed invitation project", null,
+                com.pda.project.domain.enums.ProjectPriority.MEDIUM, null, null, null, null, null, null);
+        assertEquals(originalName, notificationRows.findById(original.getId()).orElseThrow().getInvitationContext().projectName());
         assertEquals(1, notifications.list(recipient, true, NotificationType.PROJECT_INVITATION_CREATED, 0, 20)
                 .getTotalElements());
         invitations.rejectMine(recipient, first.invitation().getId(), "Unavailable");
         assertEquals(1, notifications.list(manager, true, NotificationType.PROJECT_INVITATION_REJECTED, 0, 20)
                 .getTotalElements());
+        assertEquals("Renamed invitation project", notifications.list(manager, true,
+                NotificationType.PROJECT_INVITATION_REJECTED, 0, 20).getContent().getFirst().getInvitationContext().projectName());
         var second = invitations.inviteRegisteredUser(manager, project, recipient, Set.of(ProjectRole.TESTER), null, team);
-        invitations.acceptMine(recipient, second.invitation().getId());
+        var renewed = invitations.resend(manager, project, second.invitation().getId());
+        assertEquals("Renamed invitation project", notifications.list(recipient, true,
+                NotificationType.PROJECT_INVITATION_CREATED, 0, 20).getContent().stream()
+                .filter(n -> n.getResourceId().equals(renewed.invitation().getId())).findFirst().orElseThrow()
+                .getInvitationContext().projectName());
+        invitations.acceptMine(recipient, renewed.invitation().getId());
         assertEquals(1, notifications.list(manager, true, NotificationType.PROJECT_INVITATION_ACCEPTED, 0, 20)
                 .getTotalElements());
+        var accepted = notifications.list(manager, true, NotificationType.PROJECT_INVITATION_ACCEPTED, 0, 20)
+                .getContent().getFirst();
+        assertEquals("Renamed invitation project", accepted.getInvitationContext().projectName());
+        assertEquals(accepted.getInvitationContext(), notifications.markRead(manager, accepted.getId()).getInvitationContext());
+        assertNull(accepted.getPopupPresentedAt());
+    }
+
+    @Test void legacyInvitationJsonAndConstructorsKeepNullContextAndRollbackProducesNoNotice() {
+        UUID manager = user(), recipient = user(), project = UUID.randomUUID(), invitation = UUID.randomUUID();
+        String json = "{\"invitationId\":\"" + invitation + "\",\"projectId\":\"" + project
+                + "\",\"invitedUserId\":\"" + recipient + "\",\"invitedBy\":\"" + manager + "\"}";
+        assertNull(mapper.readValue(json, com.pda.project.ProjectInvitationEvents.Created.class).projectName());
+        assertNull(mapper.readValue(json, com.pda.project.ProjectInvitationEvents.Accepted.class).projectName());
+        assertNull(mapper.readValue(json, com.pda.project.ProjectInvitationEvents.Rejected.class).projectName());
+        assertNull(new com.pda.project.ProjectInvitationEvents.Created(invitation, project, recipient, manager).projectName());
+        assertNull(new com.pda.project.ProjectInvitationEvents.Accepted(invitation, project, recipient, manager, null, null).projectName());
+        assertNull(new com.pda.project.ProjectInvitationEvents.Rejected(invitation, project, recipient, manager).projectName());
+        transaction.executeWithoutResult(status -> {
+            events.publishEvent(new com.pda.project.ProjectInvitationEvents.Created(invitation, project, recipient, manager, "Rollback name"));
+            status.setRollbackOnly();
+        });
+        assertEquals(0, notifications.unreadCount(recipient));
+        transaction.executeWithoutResult(status -> events.publishEvent(
+                new com.pda.project.ProjectInvitationEvents.Created(invitation, project, recipient, manager)));
+        assertNull(notifications.list(recipient, true, NotificationType.PROJECT_INVITATION_CREATED, 0, 20)
+                .getContent().getFirst().getInvitationContext());
+    }
+
+    @Test void invitationContextIsOwnedAndRetainedByReadApi() throws Exception {
+        Account manager = account(), recipient = account(), other = account();
+        UUID project = projects.create(manager.id(), "Named <project> \"QA\"", null, null).getId();
+        UUID team = squads.create(manager.id(), project, "Context team", null, null, true).getId();
+        var invitation = invitations.inviteRegisteredUser(manager.id(), project, recipient.id(), Set.of(ProjectRole.TESTER), null, team);
+        String response = mvc.perform(get("/api/v1/notifications?type=PROJECT_INVITATION_CREATED").cookie(recipient.access()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.content[0].invitationContext.projectName").value("Named <project> \"QA\""))
+                .andExpect(jsonPath("$.content[0].resourceId").value(invitation.invitation().getId().toString()))
+                .andReturn().getResponse().getContentAsString();
+        String id = JsonPath.read(response,"$.content[0].id");
+        Cookie csrf = csrf();
+        mvc.perform(patch("/api/v1/notifications/"+id+"/read").cookie(csrf,recipient.access()).header("X-XSRF-TOKEN",csrf.getValue()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.invitationContext.projectName").value("Named <project> \"QA\""))
+                .andExpect(jsonPath("$.read").value(true)).andExpect(jsonPath("$.popupPresentedAt").doesNotExist());
+        mvc.perform(get("/api/v1/notifications?read=true&type=PROJECT_INVITATION_CREATED").cookie(recipient.access()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].invitationContext.projectName").value("Named <project> \"QA\""));
+        mvc.perform(get("/api/v1/notifications?type=PROJECT_INVITATION_CREATED").cookie(other.access()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(0));
     }
 
     private static TaskCommand command(String title, TaskPriority priority, Instant deadlineAt) {

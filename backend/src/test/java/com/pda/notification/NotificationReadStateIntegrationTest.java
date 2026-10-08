@@ -158,7 +158,8 @@ class NotificationReadStateIntegrationTest {
     @Test void readAndPopupPresentationAreIndependentAndKeepDeletionSnapshots() {
         UUID user = user(), project = UUID.randomUUID(), actor = UUID.randomUUID();
         // Notification scalar references are event snapshots; no project/team grants are fabricated.
-        var snapshot = new TeamDeletion("Deleted project snapshot", "Deleted team snapshot", "Actor", Instant.now());
+        var snapshot = new TeamDeletion("Deleted project snapshot", "Deleted team snapshot", "Actor",
+                Instant.now().truncatedTo(java.time.temporal.ChronoUnit.MICROS));
         UUID id = tx.execute(status -> rows.saveAndFlush(Notification.teamDeleted(user, actor, project,
                 UUID.randomUUID(), UUID.randomUUID(), snapshot)).getId());
         var claimed = service.claimTeamDeletion(user).orElseThrow();
