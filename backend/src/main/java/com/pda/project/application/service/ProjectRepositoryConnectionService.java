@@ -5,6 +5,7 @@ import com.pda.project.application.service.GitHubRepositoryUrlParser.ParsedRepos
 import com.pda.project.domain.entity.ProjectMembership;
 import com.pda.project.domain.entity.ProjectRepositoryConnection;
 import com.pda.project.domain.enums.MembershipStatus;
+import com.pda.project.domain.enums.RepositoryTrackingMode;
 import com.pda.project.infrastructure.repository.ProjectMembershipRepository;
 import com.pda.project.infrastructure.repository.ProjectRepository;
 import com.pda.project.infrastructure.repository.ProjectRepositoryConnectionRepository;
@@ -50,9 +51,13 @@ public class ProjectRepositoryConnectionService {
         this.readLimiter = readLimiter;
     }
 
+    /** {@code trackingMode} defaults to BASIC and {@code notifyOnCommits} to true when null. */
     @Transactional
-    public ProjectRepositoryConnection connect(UUID actorId, UUID projectId, String repositoryUrl) {
+    public ProjectRepositoryConnection connect(UUID actorId, UUID projectId, String repositoryUrl,
+                                               RepositoryTrackingMode trackingMode, Boolean notifyOnCommits) {
         requireRepositoryManager(actorId, projectId);
+        RepositoryTrackingMode mode = trackingMode == null ? RepositoryTrackingMode.BASIC : trackingMode;
+        boolean notify = notifyOnCommits == null || notifyOnCommits;
         ParsedRepository parsed = GitHubRepositoryUrlParser.parse(repositoryUrl);
         GitHubRepositoryClient.RepositoryMetadata metadata = gitHub.fetchMetadata(parsed.owner(), parsed.repository());
         if (metadata.isPrivate()) {
@@ -64,15 +69,28 @@ public class ProjectRepositoryConnectionService {
         return connections.findByProjectId(projectId)
                 .map(existing -> {
                     existing.update(parsed.owner(), parsed.repository(), parsed.canonicalUrl(), defaultBranch);
+                    existing.changeSettings(mode, notify);
                     existing.trackFrom(baseline);
                     return connections.save(existing);
                 })
                 .orElseGet(() -> {
                     ProjectRepositoryConnection created = ProjectRepositoryConnection.connect(projectId,
                             parsed.owner(), parsed.repository(), parsed.canonicalUrl(), defaultBranch, actorId);
+                    created.changeSettings(mode, notify);
                     created.trackFrom(baseline);
                     return connections.saveAndFlush(created);
                 });
+    }
+
+    /** Changes the tracking mode and the notification switch of the existing connection. */
+    @Transactional
+    public ProjectRepositoryConnection updateSettings(UUID actorId, UUID projectId, RepositoryTrackingMode mode,
+                                                      boolean notifyOnCommits) {
+        requireRepositoryManager(actorId, projectId);
+        ProjectRepositoryConnection connection = connections.findByProjectId(projectId)
+                .orElseThrow(() -> new NoSuchElementException("No repository connected"));
+        connection.changeSettings(mode, notifyOnCommits);
+        return connections.save(connection);
     }
 
     /** A failing GitHub call here only leaves the baseline empty; the first scan then writes it. */
@@ -109,6 +127,10 @@ public class ProjectRepositoryConnectionService {
     public List<CommitSummary> commits(UUID actorId, UUID projectId, String branch, String author, Integer page,
                                        Integer limit) {
         ProjectRepositoryConnection connection = readableConnection(actorId, projectId);
+        if (connection.getTrackingMode() == RepositoryTrackingMode.BASIC
+                && (isOtherBranch(connection, branch) || (author != null && !author.isBlank()))) {
+            throw new RepositoryAdvancedRequiredException();
+        }
         String resolvedBranch = resolveBranch(connection, branch);
         String resolvedAuthor = RepositoryReadInput.author(author);
         int resolvedPage = page == null ? 1 : page;
@@ -126,6 +148,7 @@ public class ProjectRepositoryConnectionService {
     /** The repository's branches, default branch first, then alphabetically. */
     public BranchList branches(UUID actorId, UUID projectId) {
         ProjectRepositoryConnection connection = readableConnection(actorId, projectId);
+        requireAdvanced(connection);
         GitHubRepositoryClient.BranchPage page = branchPage(connection);
         List<BranchView> views = page.branches().stream()
                 .map(branch -> new BranchView(branch.name(), branch.name().equals(connection.getDefaultBranch()),
@@ -140,6 +163,7 @@ public class ProjectRepositoryConnectionService {
     /** What {@code branch} still has to merge into the default branch (empty for the default branch itself). */
     public CompareResult compare(UUID actorId, UUID projectId, String branch) {
         ProjectRepositoryConnection connection = readableConnection(actorId, projectId);
+        requireAdvanced(connection);
         String base = connection.getDefaultBranch();
         String head = resolveBranch(connection, branch);
         if (head.equals(base)) {
@@ -152,6 +176,16 @@ public class ProjectRepositoryConnectionService {
                 () -> gitHub.compare(owner, name, base, head));
         return new CompareResult(base, head, comparison.aheadBy(), comparison.behindBy(),
                 comparison.aheadCommits(), comparison.truncated());
+    }
+
+    private static boolean isOtherBranch(ProjectRepositoryConnection connection, String requested) {
+        return requested != null && !requested.isBlank() && !requested.equals(connection.getDefaultBranch());
+    }
+
+    private static void requireAdvanced(ProjectRepositoryConnection connection) {
+        if (connection.getTrackingMode() != RepositoryTrackingMode.ADVANCED) {
+            throw new RepositoryAdvancedRequiredException();
+        }
     }
 
     private GitHubRepositoryClient.BranchPage branchPage(ProjectRepositoryConnection connection) {
