@@ -25,7 +25,9 @@ final class JwtCookieAuthenticationFilter extends OncePerRequestFilter {
 
     private static final Set<String> ALLOWED_WHILE_PASSWORD_CHANGE_PENDING = Set.of(
             "/api/v1/auth/me", "/api/v1/auth/password/change", "/api/v1/auth/logout",
-            "/api/v1/auth/refresh", "/api/v1/auth/csrf");
+            "/api/v1/auth/refresh", "/api/v1/auth/csrf",
+            // Anonymous endpoints that ignore the session; a pending password change must not break them.
+            "/api/v1/analytics/events", "/api/v1/contact");
 
     private final JwtTokens tokens;
     private final AuthCookies cookies;

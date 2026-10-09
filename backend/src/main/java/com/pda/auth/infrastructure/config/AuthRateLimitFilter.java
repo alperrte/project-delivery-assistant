@@ -21,17 +21,25 @@ final class AuthRateLimitFilter extends OncePerRequestFilter {
     private static final String PASSWORD_RESET_PATH = "/api/v1/auth/password/reset";
     private static final String REFRESH_PATH = "/api/v1/auth/refresh";
     private static final String LOGIN_PATH = "/api/v1/auth/login";
+    static final String ANALYTICS_PATH = "/api/v1/analytics/events";
+    static final String CONTACT_PATH = "/api/v1/contact";
     private static final long WINDOW_MILLIS = Duration.ofMinutes(10).toMillis();
     // Production defaults. They can be raised for automated test environments only (see configured(...)).
     static final int DEFAULT_SENSITIVE_REQUESTS = 5;
     static final int DEFAULT_REFRESH_REQUESTS = 30;
     // Every login request counts, successful ones too, so 5 locked out ordinary users.
     static final int DEFAULT_LOGIN_REQUESTS = 30;
+    // Anonymous visit events (one page view per navigation, one heartbeat about every 15 seconds per open tab).
+    static final int DEFAULT_ANALYTICS_REQUESTS = 600;
+    // The public contact form relays mail, so it gets the strictest limit.
+    static final int DEFAULT_CONTACT_REQUESTS = 5;
     private static final int MAX_IPS = 10_000;
 
     private final int maxRequests;
     private final int maxRefreshRequests;
     private final int maxLoginRequests;
+    private final int maxAnalyticsRequests;
+    private final int maxContactRequests;
     private final Map<String, ArrayDeque<Long>> attempts = new HashMap<>();
     private long requests;
 
@@ -40,12 +48,20 @@ final class AuthRateLimitFilter extends OncePerRequestFilter {
     }
 
     AuthRateLimitFilter(int maxRequests, int maxLoginRequests, int maxRefreshRequests) {
-        if (maxRequests < 1 || maxLoginRequests < 1 || maxRefreshRequests < 1) {
-            throw new IllegalStateException("Auth rate limits must be at least 1");
+        this(maxRequests, maxLoginRequests, maxRefreshRequests, DEFAULT_ANALYTICS_REQUESTS, DEFAULT_CONTACT_REQUESTS);
+    }
+
+    AuthRateLimitFilter(int maxRequests, int maxLoginRequests, int maxRefreshRequests, int maxAnalyticsRequests,
+                        int maxContactRequests) {
+        if (maxRequests < 1 || maxLoginRequests < 1 || maxRefreshRequests < 1 || maxAnalyticsRequests < 1
+                || maxContactRequests < 1) {
+            throw new IllegalStateException("Rate limits must be at least 1");
         }
         this.maxRequests = maxRequests;
         this.maxLoginRequests = maxLoginRequests;
         this.maxRefreshRequests = maxRefreshRequests;
+        this.maxAnalyticsRequests = maxAnalyticsRequests;
+        this.maxContactRequests = maxContactRequests;
     }
 
     /**
@@ -53,17 +69,21 @@ final class AuthRateLimitFilter extends OncePerRequestFilter {
      * invitation preview, password change/forgot/reset), {@code auth.rate-limit.login-max-requests} and
      * {@code auth.rate-limit.refresh-max-requests} (refresh and OAuth). Without them the production defaults apply;
      * a raised value is meant for automated tests that sign many throw-away users up from one address, and is
-     * announced in the log so it cannot go unnoticed.
+     * announced in the log so it cannot go unnoticed. The public anonymous endpoints have their own limits:
+     * {@code analytics.rate-limit.max-requests} (visit events) and {@code contact.rate-limit.max-requests} (contact form).
      */
     static AuthRateLimitFilter configured(Environment environment) {
         int sensitive = environment.getProperty("auth.rate-limit.sensitive-max-requests", Integer.class, DEFAULT_SENSITIVE_REQUESTS);
         int login = environment.getProperty("auth.rate-limit.login-max-requests", Integer.class, DEFAULT_LOGIN_REQUESTS);
         int refresh = environment.getProperty("auth.rate-limit.refresh-max-requests", Integer.class, DEFAULT_REFRESH_REQUESTS);
-        AuthRateLimitFilter filter = new AuthRateLimitFilter(sensitive, login, refresh);
-        if (sensitive != DEFAULT_SENSITIVE_REQUESTS || login != DEFAULT_LOGIN_REQUESTS || refresh != DEFAULT_REFRESH_REQUESTS) {
+        int analytics = environment.getProperty("analytics.rate-limit.max-requests", Integer.class, DEFAULT_ANALYTICS_REQUESTS);
+        int contact = environment.getProperty("contact.rate-limit.max-requests", Integer.class, DEFAULT_CONTACT_REQUESTS);
+        AuthRateLimitFilter filter = new AuthRateLimitFilter(sensitive, login, refresh, analytics, contact);
+        if (sensitive != DEFAULT_SENSITIVE_REQUESTS || login != DEFAULT_LOGIN_REQUESTS || refresh != DEFAULT_REFRESH_REQUESTS
+                || analytics != DEFAULT_ANALYTICS_REQUESTS || contact != DEFAULT_CONTACT_REQUESTS) {
             LoggerFactory.getLogger(AuthRateLimitFilter.class).warn(
-                    "Auth rate limits differ from the production defaults (sensitive={}, login={}, refresh={}): for test environments only",
-                    sensitive, login, refresh);
+                    "Rate limits differ from the production defaults (sensitive={}, login={}, refresh={}, analytics={}, contact={}): for test environments only",
+                    sensitive, login, refresh, analytics, contact);
         }
         return filter;
     }
@@ -80,7 +100,8 @@ final class AuthRateLimitFilter extends OncePerRequestFilter {
         return !"/api/v1/auth/register".equals(path) && !"/api/v1/auth/register/invitation".equals(path)
                 && !"/api/v1/project-invitations/external/preview".equals(path) && !LOGIN_PATH.equals(path)
                 && !REFRESH_PATH.equals(path) && !PASSWORD_CHANGE_PATH.equals(path)
-                && !PASSWORD_FORGOT_PATH.equals(path) && !PASSWORD_RESET_PATH.equals(path);
+                && !PASSWORD_FORGOT_PATH.equals(path) && !PASSWORD_RESET_PATH.equals(path)
+                && !ANALYTICS_PATH.equals(path) && !CONTACT_PATH.equals(path);
     }
 
     private static String routeOf(String path) {
@@ -101,14 +122,17 @@ final class AuthRateLimitFilter extends OncePerRequestFilter {
         // would let one unauthenticated client fill the table and lock everybody else out.
         String key = routeOf(path) + ":" + request.getRemoteAddr();
         int limit = REFRESH_PATH.equals(path) || isOAuthRedirect(path) ? maxRefreshRequests
-                : LOGIN_PATH.equals(path) ? maxLoginRequests : maxRequests;
+                : LOGIN_PATH.equals(path) ? maxLoginRequests
+                : ANALYTICS_PATH.equals(path) ? maxAnalyticsRequests
+                : CONTACT_PATH.equals(path) ? maxContactRequests : maxRequests;
         if (!allow(key, limit, System.currentTimeMillis())) {
             response.setStatus(429);
             response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
             response.setHeader("Cache-Control", "no-store");
             response.setHeader("Retry-After", "600");
             response.getWriter().write("{\"type\":\"about:blank\",\"title\":\"Too Many Requests\",\"status\":429,"
-                    + "\"detail\":\"Authentication rate limit exceeded\"}");
+                    + "\"detail\":\"" + (ANALYTICS_PATH.equals(path) || CONTACT_PATH.equals(path)
+                    ? "Rate limit exceeded" : "Authentication rate limit exceeded") + "\",\"code\":\"RATE_LIMITED\"}");
             return;
         }
         chain.doFilter(request, response);
