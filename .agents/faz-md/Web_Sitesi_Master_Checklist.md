@@ -165,16 +165,16 @@
 
 ### OpenGraph ve bağlantı önizlemeleri
 
-- [ ] og:title
-- [ ] og:description
-- [ ] og:image
-- [ ] og:url, og:type, og:site_name
-- [ ] og:locale ve dil varyantları
-- [ ] X / Twitter Card metadata
-- [ ] Mutlak HTTPS görsel adresi
-- [ ] Görsel ölçüsü ve biçimi
-- [ ] Canlı paylaşım testi
-- [ ] Özel veriyi paylaşmama
+- [X] og:title
+- [X] og:description
+- [X] og:image
+- [X] og:url, og:type, og:site_name
+- [X] og:locale ve dil varyantları
+- [X] X / Twitter Card metadata
+- [X] Mutlak HTTPS görsel adresi
+- [X] Görsel ölçüsü ve biçimi
+- [X] Canlı paylaşım testi
+- [X] Özel veriyi paylaşmama
 
 ## 5. Formlar, doğrulama ve geri bildirim
 

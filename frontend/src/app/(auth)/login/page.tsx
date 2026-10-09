@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { getLocale, getTranslations } from "next-intl/server";
 import { type Locale } from "@/i18n/config";
-import { pageAlternates } from "@/lib/seo/alternates";
+import { pageAlternates, pageOpenGraph } from "@/lib/seo/alternates";
 import { AuthCard } from "@/features/auth/components/auth-card";
 import { LoginForm } from "@/features/auth/components/login-form";
 import { LoginHero } from "@/features/auth/components/login-hero";
@@ -10,7 +10,8 @@ import { OAuthErrorNotice } from "@/features/auth/components/oauth-error-notice"
 
 export async function generateMetadata() {
   const t = await getTranslations("login");
-  return { title: t("metaTitle"), description: t("metaDescription"), alternates: pageAlternates("/login", await getLocale() as Locale) };
+  const locale = await getLocale() as Locale;
+  return { title: t("metaTitle"), description: t("metaDescription"), alternates: pageAlternates("/login", locale), openGraph: pageOpenGraph("/login", locale) };
 }
 
 export default async function LoginPage() {

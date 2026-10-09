@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
 import { type Locale } from "@/i18n/config";
 import { Breadcrumb } from "@/components/common/breadcrumb";
-import { pageAlternates } from "@/lib/seo/alternates";
+import { pageAlternates, pageOpenGraph } from "@/lib/seo/alternates";
 import { PageJsonLd } from "@/lib/seo/json-ld";
 import { ContactForm } from "./contact-form";
 
@@ -13,6 +13,7 @@ export async function contactMetadata(): Promise<Metadata> {
     title: t("title"),
     description: t("description"),
     alternates: pageAlternates("/contact", locale),
+    openGraph: pageOpenGraph("/contact", locale),
   };
 }
 

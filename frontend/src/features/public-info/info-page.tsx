@@ -7,7 +7,7 @@ import { PageContents } from "./page-contents";
 import { CONTACT_HREF, type InfoPage } from "./site-info";
 import { type Locale } from "@/i18n/config";
 import { Breadcrumb } from "@/components/common/breadcrumb";
-import { pageAlternates } from "@/lib/seo/alternates";
+import { pageAlternates, pageOpenGraph } from "@/lib/seo/alternates";
 import { FaqJsonLd, PageJsonLd } from "@/lib/seo/json-ld";
 import { ManageCookiePreferencesButton } from "@/features/consent/manage-cookie-preferences-button";
 
@@ -24,6 +24,7 @@ export async function infoMetadata(page: InfoPage): Promise<Metadata> {
   return {
     title: t("title"), description: t("description"),
     alternates: pageAlternates(route, locale),
+    openGraph: pageOpenGraph(route, locale),
     ...(isLegalPage(page) ? { robots: { index: false, follow: true } } : {}),
   };
 }
