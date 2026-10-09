@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -22,6 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Calls only {@code api.github.com} with URLs this class builds itself from already-validated owner/repository
@@ -37,6 +41,10 @@ public class GitHubRestRepositoryClient implements GitHubRepositoryClient {
     private static final int TIMEOUT_MILLIS = 5000;
     static final int BRANCH_PAGE_SIZE = 100;
     static final int COMPARE_PAGE_SIZE = 100;
+
+    /** The {@code rel} parameter of one Link entry: quoted ({@code rel="next"}) or bare ({@code rel=next}). */
+    private static final Pattern LINK_REL = Pattern.compile(
+            ";\\s*rel\\s*=\\s*(?:\"([^\"]*)\"|([^\\s;,]+))", Pattern.CASE_INSENSITIVE);
 
     private final RestClient http;
 
@@ -93,17 +101,47 @@ public class GitHubRestRepositoryClient implements GitHubRepositoryClient {
     }
 
     @Override
-    public List<CommitSummary> fetchCommits(String owner, String repository, String branch, String author, int page,
-                                            int perPage) {
-        return call("GitHub repository or branch not found", "commits", () -> toCommits(author == null || author.isBlank()
-                ? http.get()
-                        .uri("/repos/{owner}/{repo}/commits?sha={branch}&per_page={perPage}&page={page}", owner,
-                                repository, branch, perPage, page)
-                        .retrieve().body(new ParameterizedTypeReference<List<Map<String, Object>>>() {})
-                : http.get()
-                        .uri("/repos/{owner}/{repo}/commits?sha={branch}&author={author}&per_page={perPage}&page={page}",
-                                owner, repository, branch, author, perPage, page)
-                        .retrieve().body(new ParameterizedTypeReference<List<Map<String, Object>>>() {})));
+    public CommitPage fetchCommits(String owner, String repository, String branch, String author, int page,
+                                   int perPage) {
+        return call("GitHub repository or branch not found", "commits", () -> {
+            ResponseEntity<List<Map<String, Object>>> response = author == null || author.isBlank()
+                    ? http.get()
+                            .uri("/repos/{owner}/{repo}/commits?sha={branch}&per_page={perPage}&page={page}", owner,
+                                    repository, branch, perPage, page)
+                            .retrieve().toEntity(new ParameterizedTypeReference<List<Map<String, Object>>>() {})
+                    : http.get()
+                            .uri("/repos/{owner}/{repo}/commits?sha={branch}&author={author}&per_page={perPage}&page={page}",
+                                    owner, repository, branch, author, perPage, page)
+                            .retrieve().toEntity(new ParameterizedTypeReference<List<Map<String, Object>>>() {});
+            return new CommitPage(toCommits(response.getBody()),
+                    hasNextPage(response.getHeaders().get(HttpHeaders.LINK)));
+        });
+    }
+
+    /**
+     * True when any {@code Link} header value carries an entry whose {@code rel} includes {@code next}, e.g.
+     * {@code <https://api.github.com/...&page=3>; rel="next", <...>; rel="last"}. A missing or malformed header
+     * simply means "no next page".
+     */
+    static boolean hasNextPage(List<String> linkHeaderValues) {
+        if (linkHeaderValues == null) {
+            return false;
+        }
+        for (String value : linkHeaderValues) {
+            if (value == null) {
+                continue;
+            }
+            Matcher matcher = LINK_REL.matcher(value);
+            while (matcher.find()) {
+                String rel = matcher.group(1) != null ? matcher.group(1) : matcher.group(2);
+                for (String token : rel.trim().split("\\s+")) {
+                    if (token.equalsIgnoreCase("next")) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     @Override

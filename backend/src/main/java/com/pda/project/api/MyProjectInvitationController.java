@@ -2,6 +2,7 @@ package com.pda.project.api;
 
 import com.pda.project.api.dto.response.MemberResponse;
 import com.pda.project.api.dto.response.PageResponse;
+import com.pda.project.application.service.ProjectBannerService;
 import com.pda.project.application.service.ProjectInvitationService;
 import com.pda.project.application.service.ProjectLogoService;
 import com.pda.project.application.service.InvitationSummary;
@@ -63,6 +64,19 @@ public class MyProjectInvitationController {
                 .header("X-Content-Type-Options", "nosniff")
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"logo\"")
                 .header(HttpHeaders.CACHE_CONTROL, "private, no-store").body(logo.data());
+    }
+
+    @GetMapping("/{invitationId}/banner")
+    @Operation(summary = "Preview the project banner of my invitation",
+            description = "Recipient only, while the invitation is pending in a live project; no project membership granted; "
+                    + "404 when there is no banner")
+    public ResponseEntity<byte[]> previewBanner(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
+                                                @PathVariable UUID invitationId) {
+        ProjectBannerService.StoredBanner banner = invitations.previewBannerMine(AuthenticatedActor.id(principal), invitationId);
+        return ResponseEntity.ok().contentType(MediaType.parseMediaType(banner.contentType()))
+                .header("X-Content-Type-Options", "nosniff")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"banner\"")
+                .header(HttpHeaders.CACHE_CONTROL, "private, no-store").body(banner.data());
     }
 
     @PostMapping("/{invitationId}/accept")

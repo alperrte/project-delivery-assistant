@@ -120,11 +120,11 @@ public class ProjectRepositoryConnectionService {
 
     /**
      * One page of a branch's commits (the default branch when {@code branch} is blank), optionally by one GitHub
-     * author. Never fails the caller if GitHub itself fails; that distinction is carried by
+     * author; {@code hasNext} is forced to false on the last allowed page. Never fails the caller if GitHub itself fails; that distinction is carried by
      * {@link GitHubIntegrationException}. Not transactional on purpose: no database connection is held while GitHub
      * is called.
      */
-    public List<CommitSummary> commits(UUID actorId, UUID projectId, String branch, String author, Integer page,
+    public GitHubRepositoryClient.CommitPage commits(UUID actorId, UUID projectId, String branch, String author, Integer page,
                                        Integer limit) {
         ProjectRepositoryConnection connection = readableConnection(actorId, projectId);
         if (connection.getTrackingMode() == RepositoryTrackingMode.BASIC
@@ -140,9 +140,12 @@ public class ProjectRepositoryConnectionService {
         int perPage = limit == null ? DEFAULT_COMMIT_LIMIT : Math.max(1, Math.min(limit, MAX_COMMIT_LIMIT));
         String owner = connection.getRepositoryOwner();
         String name = connection.getRepositoryName();
-        return cache.get("commits:" + owner + "/" + name + ":" + resolvedBranch + ":" + resolvedAuthor + ":"
-                + resolvedPage + ":" + perPage,
+        GitHubRepositoryClient.CommitPage commitPage = cache.get("commits:" + owner + "/" + name + ":"
+                + resolvedBranch + ":" + resolvedAuthor + ":" + resolvedPage + ":" + perPage,
                 () -> gitHub.fetchCommits(owner, name, resolvedBranch, resolvedAuthor, resolvedPage, perPage));
+        // The API refuses pages beyond MAX_COMMIT_PAGE, so never advertise one.
+        return resolvedPage >= MAX_COMMIT_PAGE && commitPage.hasNext()
+                ? new GitHubRepositoryClient.CommitPage(commitPage.commits(), false) : commitPage;
     }
 
     /** The repository's branches, default branch first, then alphabetically. */

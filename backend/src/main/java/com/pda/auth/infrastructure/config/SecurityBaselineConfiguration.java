@@ -142,7 +142,8 @@ public class SecurityBaselineConfiguration {
                     authorize.requestMatchers(HttpMethod.GET, "/actuator/health", "/api/v1/auth/csrf").permitAll()
                             .requestMatchers(HttpMethod.GET, "/api/v1/project-invitations/me",
                                     "/api/v1/project-invitations/*/preview",
-                                    "/api/v1/project-invitations/*/logo").authenticated()
+                                    "/api/v1/project-invitations/*/logo",
+                                    "/api/v1/project-invitations/*/banner").authenticated()
                             // Anonymous, consent-gated visit events and the public contact form (CSRF, rate limit and body
                             // limit apply; neither reads an identity from the request).
                             .requestMatchers(HttpMethod.POST, "/api/v1/analytics/events", "/api/v1/contact").permitAll()
@@ -292,7 +293,9 @@ public class SecurityBaselineConfiguration {
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Content-Type", "X-XSRF-TOKEN"));
         // The browser client reads how long the access token stays valid to renew the session before it runs out.
-        configuration.setExposedHeaders(List.of(JwtCookieAuthenticationFilter.ACCESS_EXPIRES_IN_HEADER));
+        // The commit history reads X-Has-Next-Page to decide whether to offer a following page.
+        configuration.setExposedHeaders(List.of(JwtCookieAuthenticationFilter.ACCESS_EXPIRES_IN_HEADER,
+                "X-Has-Next-Page"));
         configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/v1/auth/**", configuration);

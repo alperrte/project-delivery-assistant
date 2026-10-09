@@ -112,7 +112,10 @@ test.describe.serial("Project banner", () => {
     await expect(card.locator(BANNER_IMG)).toBeVisible();
   });
 
-  test("an invited person sees no banner in the invitation preview, and the old banner address is gone", async () => {
+  // 2026-10-10: the invitation-scoped banner route exists on purpose (invitee, own PENDING invitation, live project).
+  // This project has no banner, so the preview shows none and the route answers 404; the with-banner case is covered
+  // where the frontend renders it (invitation preview banner).
+  test("an invited person sees no banner when the project has none, and the invitation banner route answers 404", async () => {
     const other = `E2E Banner Invite ${Date.now()}`;
     const otherSlug = await createProject(managerPage, other);
     const otherId = ((await api(managerPage, "GET", `/projects/by-slug/${otherSlug}`)).json as { id: string }).id;
@@ -134,7 +137,9 @@ test.describe.serial("Project banner", () => {
     const dialog = memberPage.getByRole("dialog");
     await expect(dialog).toContainText(other);
     await expect(dialog.locator("img")).toHaveCount(0);
-    expect((await api(memberPage, "GET", `/project-invitations/${invitationId}/banner`)).status).toBe(403);
+    expect((await api(memberPage, "GET", `/project-invitations/${invitationId}/banner`)).status).toBe(404);
+    // The member-only banner route still refuses someone who is only invited.
+    expect((await api(memberPage, "GET", `/projects/${otherId}/banner`)).status).toBe(403);
   });
 
   test("the manager removes the banner after confirming, and the card loses it", async () => {

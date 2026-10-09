@@ -1,6 +1,7 @@
 package com.pda.project.application.service;
 
 import com.pda.project.domain.entity.Project;
+import com.pda.project.domain.entity.ProjectBanner;
 import com.pda.project.ProjectInvitationEvents;
 import com.pda.project.ProjectInvitationOnboarding;
 import com.pda.project.ProjectTeamDirectory;
@@ -14,6 +15,7 @@ import com.pda.project.domain.enums.ProjectType;
 import com.pda.user.ProjectPermission;
 import com.pda.user.ProjectRole;
 import com.pda.user.RolePolicy;
+import com.pda.project.infrastructure.repository.ProjectBannerRepository;
 import com.pda.project.infrastructure.repository.ProjectInvitationRepository;
 import com.pda.project.infrastructure.repository.ProjectLogoRepository;
 import com.pda.project.infrastructure.repository.ProjectMembershipRepository;
@@ -64,6 +66,7 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
     private final ProjectMembershipRepository memberships;
     private final ProjectInvitationRepository invitations;
     private final ProjectLogoRepository logos;
+    private final ProjectBannerRepository banners;
     private final UserAccounts users;
     private final ObjectProvider<ProjectInvitationMailPort> mailProvider;
     private final Clock clock;
@@ -74,7 +77,7 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
 
     public ProjectInvitationService(ProjectRepository projects, ProjectMembershipRepository memberships,
                                     ProjectInvitationRepository invitations, ProjectLogoRepository logos,
-                                    UserAccounts users,
+                                    ProjectBannerRepository banners, UserAccounts users,
                                     ObjectProvider<ProjectInvitationMailPort> mailProvider, Clock clock,
                                     @Value("${FRONTEND_URL}") String frontendUrl,
                                     ApplicationEventPublisher events, ProjectTeamDirectory teams) {
@@ -82,6 +85,7 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
         this.memberships = memberships;
         this.invitations = invitations;
         this.logos = logos;
+        this.banners = banners;
         this.users = users;
         this.mailProvider = mailProvider;
         this.clock = clock;
@@ -253,16 +257,18 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
     public record InvitationProjectPreview(UUID projectId, String slug, String name, String tagline, String description,
                                            String projectGoal, ProjectStatus status, ProjectType projectType,
                                            String techStack, long memberCount, Instant updatedAt,
-                                           Long logoVersion) {}
+                                           Long logoVersion, Long bannerVersion) {}
 
     @Transactional(readOnly = true)
     public InvitationProjectPreview previewMine(UUID actorId, UUID invitationId) {
         Project project = invitedProject(actorId, invitationId);
         Instant logoUpdatedAt = project.getLogoUpdatedAt();
+        Instant bannerUpdatedAt = project.getBannerUpdatedAt();
         return new InvitationProjectPreview(project.getId(), project.getSlug(), project.getName(), project.getTagline(),
                 project.getDescription(), project.getProjectGoal(), project.getStatus(), project.getProjectType(),
                 project.getTechStack(), memberships.countByProjectIdAndStatus(project.getId(), MembershipStatus.ACTIVE),
-                project.getUpdatedAt(), logoUpdatedAt == null ? null : logoUpdatedAt.toEpochMilli());
+                project.getUpdatedAt(), logoUpdatedAt == null ? null : logoUpdatedAt.toEpochMilli(),
+                bannerUpdatedAt == null ? null : bannerUpdatedAt.toEpochMilli());
     }
 
     @Transactional(readOnly = true)
@@ -271,6 +277,15 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
         ProjectLogo logo = logos.findById(project.getId())
                 .orElseThrow(() -> new NoSuchElementException("Project logo not found"));
         return new ProjectLogoService.StoredLogo(logo.getContentType(), logo.getData());
+    }
+
+    /** Same rule as the logo: only the invited account, only while its own invitation is pending, live project. */
+    @Transactional(readOnly = true)
+    public ProjectBannerService.StoredBanner previewBannerMine(UUID actorId, UUID invitationId) {
+        Project project = invitedProject(actorId, invitationId);
+        ProjectBanner banner = banners.findById(project.getId())
+                .orElseThrow(() -> new NoSuchElementException("Project banner not found"));
+        return new ProjectBannerService.StoredBanner(banner.getContentType(), banner.getData());
     }
 
     private Project invitedProject(UUID actorId, UUID invitationId) {
