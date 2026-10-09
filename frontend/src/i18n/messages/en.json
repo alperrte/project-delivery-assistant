@@ -2390,7 +2390,9 @@
     "reminderEdit": "Edit reminder",
     "invitations": "Invitations",
     "invitation": "Invitation",
-    "changePassword": "Change password"
+    "changePassword": "Change password",
+    "adminUsers": "Users · Administration",
+    "adminAnalytics": "Analytics · Administration"
   },
   "siteFooter": {
     "description": "Manage projects, teams and delivery together.",

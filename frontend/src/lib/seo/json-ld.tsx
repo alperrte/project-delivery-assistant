@@ -17,7 +17,7 @@ export function JsonLd({ data }: { data: unknown }) {
 }
 
 /** A public information page: its type, its place in the site and the path back to the home page. */
-export async function PageJsonLd({ route, type = "WebPage", name, description }: { route: PageRoute; type?: "WebPage" | "AboutPage"; name: string; description: string }) {
+export async function PageJsonLd({ route, type = "WebPage", name, description }: { route: PageRoute; type?: "WebPage" | "AboutPage" | "ContactPage"; name: string; description: string }) {
   const locale = await getLocale() as Locale;
   const t = await getTranslations("landing");
   const url = `${SITE_URL}${buildPath(route, {}, locale)}`;

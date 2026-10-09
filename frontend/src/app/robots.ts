@@ -4,7 +4,7 @@ import { buildPath, type PageRoute } from "@/i18n/routing";
 
 /** Public content is crawlable. Workspace, API and preview paths stay excluded. */
 export default function robots(): MetadataRoute.Robots {
-  const privateRoutes: PageRoute[] = ["/dashboard", "/projects", "/organizations", "/account", "/settings", "/calendar", "/tasks", "/invitations", "/admin", "/change-password", "/forgot-password", "/errors/[code]", "/dev/error-test"];
+  const privateRoutes: PageRoute[] = ["/dashboard", "/projects", "/organizations", "/account", "/settings", "/calendar", "/tasks", "/invitations", "/admin", "/change-password", "/errors/[code]", "/dev/error-test"];
   const disallow = ["/api/", "/_next/", ...locales.flatMap((locale) => privateRoutes.map((route) =>
     route === "/errors/[code]" ? buildPath(route, { code: "placeholder" }, locale).replace("placeholder", "") : buildPath(route, {}, locale)))];
   return {

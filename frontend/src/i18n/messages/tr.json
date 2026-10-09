@@ -2414,7 +2414,9 @@
     "reminderEdit": "Anımsatıcıyı düzenle",
     "invitations": "Davetler",
     "invitation": "Davet",
-    "changePassword": "Şifre değiştir"
+    "changePassword": "Şifre değiştir",
+    "adminUsers": "Kullanıcılar · Yönetim",
+    "adminAnalytics": "Analitik · Yönetim"
   },
   "siteFooter": {
     "description": "Projeleri, ekipleri ve teslim sürecini birlikte yönetin.",

@@ -59,7 +59,7 @@ test("banner replace/remove/reselect and late decode/unmount release local resou
   await expect(preview).toHaveAttribute("src", latest!);
   await page.getByRole("button", { name: "Kaldır", exact: true }).click(); await expect(preview).toHaveCount(0);
   await choose("latest.png"); await expect(preview).toBeVisible(); const last = await preview.getAttribute("src");
-  await page.getByRole("link", { name: "Projeler", exact: true }).click();
+  await page.locator('.app-shell a[href="/tr/projeler"]').first().click();
   await expect(page).toHaveURL(/\/tr\/projeler$/);
   await expect.poll(() => page.evaluate(url => (window as unknown as { bannerProbe: { revoked: string[] } }).bannerProbe.revoked.includes(url!), last)).toBe(true);
   expect(calls).toEqual([]);
