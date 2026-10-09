@@ -8,6 +8,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { route: "/", priority: 1 },
     { route: "/login", priority: 0.7 },
     { route: "/register", priority: 0.8 },
+    { route: "/about", priority: 0.5 },
     { route: "/faq", priority: 0.6 },
     { route: "/accessibility", priority: 0.4 },
     { route: "/license", priority: 0.3 },

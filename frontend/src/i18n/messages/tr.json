@@ -2351,6 +2351,7 @@
   "siteFooter": {
     "description": "Projeleri, ekipleri ve teslim sürecini birlikte yönetin.",
     "information": "Bilgi ve destek",
+    "about": "Hakkımızda",
     "faq": "Sıkça Sorulan Sorular",
     "kvkk": "KVKK",
     "privacy": "Gizlilik Politikası",
@@ -2376,6 +2377,38 @@
       "references": "Resmî kaynaklar",
       "noticeReference": "KVKK: Aydınlatma yükümlülüğü",
       "cookieReference": "KVKK: Çerez uygulamaları rehberi"
+    },
+    "about": {
+      "title": "Hakkımızda",
+      "description": "PDA'yı geliştiren Alper Temiz ve Hamza Taşbay'ın hikâyesi, hedefleri ve iletişim bilgileri.",
+      "lead": "Merhaba! Biz Doğuş Üniversitesi Yazılım Mühendisliği 4. sınıf öğrencileri Alper Temiz ve Hamza Taşbay.",
+      "role": "Full Stack Developer",
+      "journey": {
+        "title": "Yolculuğumuz",
+        "paragraphs": [
+          "İki arkadaş olarak çıktığımız bu yola, sektördeki büyük eksiklerden birini kapatmak için başladık: ücretsiz bir proje yönetim platformu. Birçok araçta önemli özellikler ücretli planların arkasında kalıyor ya da ücretli aboneliklere bağımlı olmak gerekiyor. Biz bunun yerine herkesin ücret ödemeden kullanabileceği bir alternatif geliştirmek istedik."
+        ]
+      },
+      "pda": {
+        "title": "PDA nedir?",
+        "paragraphs": [
+          "PDA'yı açık kaynak olarak geliştiriyoruz. Öğrenciler ve küçük yazılım şirketleri isterlerse süreci tamamen kendi bilgisayarlarında veya sunucularında ayağa kaldırıp kendileri yönetebilir. Amacımız, siz değerli arkadaşlarımızın yüksek ücretlerle karşılaşmadan da güzel işler başarabilmesi."
+        ]
+      },
+      "goal": {
+        "title": "Hedefimiz",
+        "paragraphs": [
+          "En büyük hedefimiz, geliştirilip bir kenara bırakılan projelerden biri olmamak. Siz değerli kullanıcılarımızın ve dostlarımızın desteğiyle PDA'yı bir üst seviyeye taşımak istiyoruz.",
+          "Ücretli aboneliklere bağımlı kalmak yerine açık kaynak projelerle sektöre yön vermek, yalnızca ücretli özelliklerin öne çıktığı bir anlayış yerine ücretsiz ve sektörde birliktelik hedefleyen bir anlayışı savunmak istiyoruz."
+        ]
+      },
+      "team": {
+        "title": "Bize ulaşın",
+        "intro": "Bize bireysel olarak ulaşmak veya soru sormak isterseniz:",
+        "linkedin": "LinkedIn profili",
+        "cv": "Özgeçmiş (CV)",
+        "photoAlt": "{name} fotoğrafı"
+      }
     },
     "faq": {
       "title": "Sıkça Sorulan Sorular",

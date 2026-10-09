@@ -115,9 +115,9 @@
 @media (max-width: 767px) {
   .header { padding: .75rem 1rem; min-height: 76px; gap: .25rem .5rem; flex-wrap: wrap; }
   .logo { width: 70px; }
-  .controls { gap: .35rem; }
+  .controls { gap: .35rem; flex-wrap: wrap; justify-content: flex-end; min-width: 0; }
   .headerLogin { font-size: .75rem; padding-inline: .75rem; }
-  .headerLink { font-size: .75rem; padding-inline: .125rem; }
+  .headerLink { font-size: .75rem; padding-inline: .125rem; white-space: nowrap; }
   .headerLogin svg { display: none; }
   .welcome { min-height: calc(100svh - 76px); padding: 3rem 1.25rem 1.25rem; }
   .welcome h1 { font-size: clamp(2.5rem, 9vw, 4rem); letter-spacing: -.055em; overflow-wrap: anywhere; }
