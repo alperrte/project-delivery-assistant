@@ -8,12 +8,14 @@
 - [X] Site / marka adı
 - [X] Hakkımızda bağlantısı
 - [X] Sıkça Sorulan Sorular (SSS)
+### HAMZA
 - [ ] KVKK Aydınlatma Metni
 - [ ] Gizlilik Politikası
 - [ ] Kullanım Koşulları
 - [ ] Çerez Politikası ve tercih bağlantısı
 - [ ] Erişilebilirlik Bildirimi
 - [ ] İletişim adresi ve destek bağlantısı
+### HAMZA
 - [X] Geliştirici / ekip profilleri
 - [Eklenmeyecek] Sosyal medya bağlantıları
 - [X] Kaynak kod bağlantısı
@@ -22,18 +24,18 @@
 - [X] Footer erişilebilirliği
 
 ### İletişim ve destek sayfası
-
+### HAMZA
 - [ ] İletişim formu
 - [ ] E-posta gönderim altyapısı
 - [ ] Spam ve bot koruması
 - [ ] Gönderim sonucu bildirimi
 - [ ] Tekrarlanan gönderim koruması
 - [ ] Veri işleme bilgilendirmesi
-
+### HAMZA
 ## 2. Hukuki uyum, KVKK ve çerezler
 
 ### Kişisel verilerin korunması
-
+### HAMZA
 - [ ] KVKK aydınlatma metni
 - [ ] Gizlilik politikası
 - [ ] Kullanım koşulları
@@ -47,9 +49,9 @@
 - [ ] Yurt dışına veri aktarımı
 - [ ] VERBİS değerlendirmesi
 - [ ] Veri ihlali hazırlığı
-
+### HAMZA
 ### Çerez kullanımı ve seçimler
-
+### HAMZA
 - [ ] Çerez envanteri
 - [ ] Çerez politikası
 - [ ] Çerez onay katmanı
@@ -57,7 +59,7 @@
 - [ ] Seçimi geri alma
 - [ ] Çerez kategorileri
 - [ ] Yanıltıcı onay tasarımından kaçınma
-
+### HAMZA
 ### Hizmet türüne göre diğer yükümlülükler
 
 - [Eklenmeyecek] Ticari işletme bilgileri
@@ -65,7 +67,9 @@
 - [Eklenmeyecek] Mesafeli satış / ön bilgilendirme
 - [Eklenmeyecek] İade, cayma ve iptal
 - [Eklenmeyecek] Ticari elektronik ileti
+### HAMZA
 - [ ] GDPR ve yurt dışı yükümlülükleri
+### HAMZA
 - [X] Telif ve lisans kullanımı
 
 ## 3. Erişilebilirlik: herkes için kullanılabilir site
@@ -286,7 +290,7 @@
 ## 9. Admin paneli, analitik ve izleme
 
 ### Admin paneli (koşullu)
-
+### HAMZA
 - [ ] Kullanıcı yönetimi
 - [ ] Rol ve izin yönetimi
 - [ ] Sistem ayarları
@@ -305,7 +309,7 @@
 - [ ] Hata oranları
 - [ ] Gizlilik odaklı ölçümleme
 - [ ] Analitik için hukuki değerlendirme
-
+### HAMZA
 ## 10. Performans ve teknik kalite
 
 ### Hız ve teknik verimlilik
