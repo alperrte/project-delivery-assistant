@@ -2399,8 +2399,24 @@
               "answer": "PDA (Project Delivery Assistant) is developed for students and teams that want to manage project delivery in a shared workspace. You can track project information, success criteria, teams, tasks and calendar items."
             },
             {
+              "question": "What features does PDA have?",
+              "answer": "PDA includes project creation, members and project roles, teams, success criteria, tasks (list, board and task pool), sprints, labels, a calendar with reminders, in-app notifications, messaging with project members, and linking a public GitHub repository to browse it. You can group projects under organizations if you like. PDA is under active development, so features may change over time."
+            },
+            {
               "question": "Do I need to install an application?",
               "answer": "PDA is a web application. You can access the hosted service in a current browser. Its responsive interface also adapts to phones and tablets."
+            },
+            {
+              "question": "Is PDA free?",
+              "answer": "PDA is developed as free, open-source software. Our aim is that core features never sit behind a paid plan. If you run it on your own server, the server and hosting costs are yours."
+            },
+            {
+              "question": "Can I run PDA on my own computer or server?",
+              "answer": "Yes. PDA is open source and can run on your own infrastructure. The backend and database start with Docker, and the interface runs with Node.js. The steps are in the README file in the GitHub repository. On your own installation, storing and backing up the data is your responsibility."
+            },
+            {
+              "question": "Which license is PDA released under?",
+              "answer": "Apache License 2.0. It allows you to use, modify and distribute the software, and sets conditions such as keeping the copyright and license notices. You can find a summary and the full text on the License page."
             },
             {
               "question": "How do I create an account?",
@@ -2421,6 +2437,10 @@
               "answer": "After signing in, use the create project action in Projects. Fill in the name, type and required fields; you can also add technology, description and logo details. You become the first project manager of the project you create."
             },
             {
+              "question": "What is an organization, and do I have to use one?",
+              "answer": "An organization is a group that keeps related projects together, for example for a club or a delivery team. It is optional; you can also keep projects independent. Only the owner can edit an organization. An archived organization no longer accepts new projects, and archiving cannot be undone."
+            },
+            {
               "question": "How do project membership and team membership differ?",
               "answer": "Project membership controls access and project roles. Teams organise work within a project. Joining a team does not itself grant manager permissions; actions are checked against project roles."
             },
@@ -2439,6 +2459,10 @@
             {
               "question": "Are success criteria the same as tasks?",
               "answer": "Success criteria are a checklist of delivery goals. Tasks track work, assignments and statuses. Completing a criterion does not automatically complete tasks; the two areas are separate."
+            },
+            {
+              "question": "What are sprints, the board and the task pool for?",
+              "answer": "A sprint splits work into time boxes and shows progress on a burndown chart. The board lets you drag tasks between status columns; you can only drop them on allowed transitions. The task pool lists tasks nobody has been assigned yet; a task you take on is assigned to you."
             },
             {
               "question": "Does the GitHub connection change my code?",
@@ -2475,6 +2499,10 @@
             {
               "question": "How can I report a bug or accessibility barrier?",
               "answer": "Email pdassistant.info@gmail.com with the page address, expected behaviour and reproduction steps. General development suggestions can also be shared in the GitHub repository. Do not post personal data, passwords, verification codes or vulnerability details in public issues."
+            },
+            {
+              "question": "Can I contribute to the project?",
+              "answer": "Yes, contributions are welcome. You can open an issue, suggest a feature or submit a change in the GitHub repository. If you would like to reach us directly, our contact details are on the About us page."
             }
           ]
         }

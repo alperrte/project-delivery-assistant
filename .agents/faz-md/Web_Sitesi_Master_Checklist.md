@@ -6,8 +6,8 @@
 
 - [X] Telif hakkı ve yıl
 - [X] Site / marka adı
-- [ ] Hakkımızda bağlantısı
-- [ ] Sıkça Sorulan Sorular (SSS)
+- [X] Hakkımızda bağlantısı
+- [X] Sıkça Sorulan Sorular (SSS)
 - [ ] KVKK Aydınlatma Metni
 - [ ] Gizlilik Politikası
 - [ ] Kullanım Koşulları
