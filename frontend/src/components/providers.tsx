@@ -48,6 +48,9 @@ export function Providers({ children }: { children: ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: { retry: false, refetchOnWindowFocus: false, staleTime: 30_000 },
+          // Without this a save sent while the browser is offline is paused, not failed: the button stays disabled with no
+          // message and the request fires by itself when the connection returns. Failing right away shows the network error.
+          mutations: { networkMode: "always" },
         },
       }),
   );
