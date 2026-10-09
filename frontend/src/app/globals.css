@@ -678,3 +678,8 @@ html[data-motion="off"] .auth-neon-band {
 html[data-motion="off"] .logo-current {
   display: none;
 }
+
+/* Room below the page while the cookie banner is shown; the banner sets the variable itself, so nothing stays under it. */
+body {
+  padding-bottom: var(--cookie-banner-offset, 0px);
+}

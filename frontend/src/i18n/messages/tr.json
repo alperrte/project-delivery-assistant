@@ -120,7 +120,14 @@
     "PROJECT_TASK_MODE_NOT_CONFIGURED": "İlk görev oluşturulmadan önce projeyi kuran kişinin bu tercihi belirlemesi gerekiyor.",
     "CHAT_REPLY_NOT_FOUND": "Yanıtlanan mesaj bu konuşmada bulunamadı.",
     "CHAT_REACTION_INVALID": "Bu tepki desteklenmiyor.",
-    "CHAT_REACTION_RATE_LIMITED": "Çok sık tepki bıraktınız. Biraz bekleyip tekrar deneyin."
+    "CHAT_REACTION_RATE_LIMITED": "Çok sık tepki bıraktınız. Biraz bekleyip tekrar deneyin.",
+    "CONTACT_INVALID": "Formdaki bilgiler geçerli değil. Alanları kontrol edip tekrar deneyin.",
+    "CONTACT_DUPLICATE": "Bu mesajı az önce gönderdiniz. Bir dakika sonra tekrar deneyebilirsiniz.",
+    "CONTACT_UNAVAILABLE": "İletişim formu şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.",
+    "CONTACT_DELIVERY_FAILED": "Mesajınız gönderilemedi. Lütfen biraz sonra tekrar deneyin.",
+    "ADMIN_SELF_DENIED": "Kendi hesabınızı sonlandıramazsınız.",
+    "ADMIN_LAST_ADMIN": "Son aktif yönetici sonlandırılamaz.",
+    "USER_NOT_FOUND": "Kullanıcı bulunamadı."
   },
   "app": {
     "nav": {
@@ -674,7 +681,10 @@
     "defaultBranch": "Varsayılan dal: {branch}",
     "publicOnly": "Yalnızca herkese açık depolar bağlanabilir. Bağlantı salt okunurdur.",
     "notifyNote": "{branch} dalına yeni commit geldiğinde proje üyelerine bildirim gönderilir (birkaç dakika gecikmeyle).",
-    "mode": { "BASIC": "Basit", "ADVANCED": "Gelişmiş" },
+    "mode": {
+      "BASIC": "Basit",
+      "ADVANCED": "Gelişmiş"
+    },
     "notifyOff": "Yeni commit bildirimleri kapalı.",
     "manageSettings": "Depo ayarları",
     "goToSettings": "Ayarlarda bağla",
@@ -682,13 +692,22 @@
     "options": {
       "modeLabel": "Takip modu",
       "help": "Basit ve Gelişmiş mod farkını göster",
-      "mode": { "BASIC": "Basit", "ADVANCED": "Gelişmiş" },
-      "modeSummary": { "BASIC": "Depo bağlanır, ana dala giren son commit'ler izlenir.", "ADVANCED": "Dalları takip edin; merge edilen veya edilmeyen tüm commit'leri ve kimin attığını görün." },
+      "mode": {
+        "BASIC": "Basit",
+        "ADVANCED": "Gelişmiş"
+      },
+      "modeSummary": {
+        "BASIC": "Depo bağlanır, ana dala giren son commit'ler izlenir.",
+        "ADVANCED": "Dalları takip edin; merge edilen veya edilmeyen tüm commit'leri ve kimin attığını görün."
+      },
       "notifyLabel": "Yeni commit'lerde üyelere bildirim gönder",
       "notifyHint": "İki modda da bildirim yalnız ana dala gelen commit'ler içindir.",
       "helpTitle": "Basit ve Gelişmiş mod",
       "helpDescription": "Modu istediğiniz zaman proje ayarlarından değiştirebilirsiniz.",
-      "modeDetail": { "BASIC": "Depo bağlanır ve ana dala merge edilen son commit'ler izlenir. Depo sayfasında yalnız ana dalın commit listesi gösterilir.", "ADVANCED": "Dalları takip edebilir, dal bazında merge edilen veya edilmeyen tüm commit'leri ve her commit'i kimin attığını görebilirsiniz. Depo sayfasında Özet ve Dallar görünümleri açılır." },
+      "modeDetail": {
+        "BASIC": "Depo bağlanır ve ana dala merge edilen son commit'ler izlenir. Depo sayfasında yalnız ana dalın commit listesi gösterilir.",
+        "ADVANCED": "Dalları takip edebilir, dal bazında merge edilen veya edilmeyen tüm commit'leri ve her commit'i kimin attığını görebilirsiniz. Depo sayfasında Özet ve Dallar görünümleri açılır."
+      },
       "helpNotify": "Yeni commit bildirimi iki modda da yalnız ana dal içindir; anahtarla kapatabilirsiniz.",
       "close": "Kapat"
     },
@@ -710,7 +729,11 @@
       "disconnectConfirmDescription": "Depo sayfası ve genel bakıştaki depo takibi kaldırılır. GitHub'daki depo etkilenmez.",
       "cancel": "Vazgeç"
     },
-    "views": { "label": "Depo görünümü", "overview": "Özet", "branches": "Dallar" },
+    "views": {
+      "label": "Depo görünümü",
+      "overview": "Özet",
+      "branches": "Dallar"
+    },
     "overview": {
       "latestTitle": "{branch} dalındaki son commit'ler",
       "branchCount": "{count, plural, other {# dal}}",
@@ -748,7 +771,11 @@
       "commitsTitle": "Commit'ler",
       "commitsByAuthor": "{author} commit'leri",
       "filterLabel": "Birleşme durumuna göre süz",
-      "filter": { "all": "Tümü", "unmerged": "Ana dala girmemiş", "merged": "Ana dala girmiş" },
+      "filter": {
+        "all": "Tümü",
+        "unmerged": "Ana dala girmemiş",
+        "merged": "Ana dala girmiş"
+      },
       "empty": "Bu dalda commit yok.",
       "emptyAuthor": "Bu yazarın bu dalda commit'i yok.",
       "emptyFiltered": "Bu süzgece uyan commit yok.",
@@ -2404,7 +2431,9 @@
     "contactDescription": "Sorularınız, önerileriniz ve geri bildirimleriniz için.",
     "copyright": "© {year} PDA · Project Delivery Assistant",
     "version": "Sürüm {version}",
-    "source": "Kaynak kod"
+    "source": "Kaynak kod",
+    "cookies": "Çerez Politikası",
+    "manageCookies": "Çerez tercihlerini yönet"
   },
   "publicPages": {
     "common": {
@@ -2413,7 +2442,8 @@
       "updated": "Son güncelleme: {date}",
       "contents": "Bu sayfada",
       "contactTitle": "Bize ulaşın",
-      "contactText": "Sorunuz, veri talebiniz veya erişilebilirlik geri bildiriminiz için e-posta yazabilirsiniz. Şifrenizi, doğrulama kodunuzu ve davet bağlantınızdaki gizli bilgileri paylaşmayın.",
+      "contactAction": "İletişim formunu aç",
+      "contactText": "Sorunuz, veri talebiniz veya erişilebilirlik geri bildiriminiz için iletişim formunu kullanabilirsiniz. Şifrenizi, doğrulama kodunuzu ve davet bağlantınızdaki gizli bilgileri paylaşmayın.",
       "reviewTitle": "Yayın öncesi inceleme",
       "reviewNotice": "Bu metin mevcut PDA işlevlerine göre hazırlanmış bir bilgilendirme taslağıdır. Veri sorumlusunun kimliği, hosting ve e-posta sağlayıcıları, veri konumları ve saklama süreleri yayın öncesinde kesinleştirilmelidir. Metin açık rıza talebi değildir ve tek başına tamamlanmış bir KVKK uyum süreci anlamına gelmez.",
       "references": "Resmî kaynaklar",
@@ -2564,7 +2594,7 @@
             },
             {
               "question": "Bir hata veya erişilebilirlik sorunu nasıl bildirebilirim?",
-              "answer": "pdassistant.info@gmail.com adresine sayfa adresini, beklenen davranışı ve sorunun nasıl tekrarlandığını yazın. Genel geliştirme önerilerini GitHub deposunda da paylaşabilirsiniz. Herkese açık hata kayıtlarına kişisel veri, şifre, doğrulama kodu veya güvenlik açığının ayrıntılarını eklemeyin."
+              "answer": "İletişim sayfasındaki form üzerinden sayfa adresini, beklenen davranışı ve sorunun nasıl tekrarlandığını yazın. Genel geliştirme önerilerini GitHub deposunda da paylaşabilirsiniz. Herkese açık hata kayıtlarına kişisel veri, şifre, doğrulama kodu veya güvenlik açığının ayrıntılarını eklemeyin."
             },
             {
               "question": "Projeye katkı verebilir miyim?",
@@ -2583,7 +2613,7 @@
           "title": "Kapsam ve iletişim",
           "paragraphs": [
             "Bu politika PDA web uygulamasının hesap, proje, ekip, görev ve takvim işlevlerini kapsar. Harici GitHub veya Google sayfalarına geçtiğinizde ilgili hizmetin kendi gizlilik koşulları uygulanır.",
-            "PDA geliştiricileri README'de Alper Temiz ve Hamza Taşbay olarak listelenir. Hizmetin veri sorumlusu kimliği yayın öncesinde ayrıca belirlenecektir; geliştirme ekibinin adı tek başına bu kimliği belirlemez. İletişim adresi pdassistant.info@gmail.com olarak belirlenmiştir."
+            "PDA geliştiricileri README'de Alper Temiz ve Hamza Taşbay olarak listelenir. Hizmetin veri sorumlusu kimliği yayın öncesinde ayrıca belirlenecektir; geliştirme ekibinin adı tek başına bu kimliği belirlemez. İletişim için İletişim sayfasındaki form kullanılır."
           ]
         },
         {
@@ -2620,14 +2650,16 @@
           "id": "browser-storage",
           "title": "Çerezler ve tarayıcı tercihleri",
           "paragraphs": [
-            "Mevcut uygulama kodunda reklam veya ziyaretçi analitiği takip aracı bulunmaz. Oturum ve güvenlik çerezleri uygulamanın çalışması için kullanılır; bu sayfa yeni bir çerez onay mekanizması eklemez."
+            "PDA reklam çerezi veya üçüncü taraf takip aracı kullanmaz. Oturum ve güvenlik çerezleri uygulamanın çalışması için zorunludur. Ziyaret analitiği yalnız sizin açık seçiminizle çalışır ve varsayılan olarak kapalıdır; ayrıntılar ve tercihleriniz için Çerez Politikası sayfasına bakın."
           ],
           "items": [
             "PDA_ACCESS, PDA_REFRESH ve PDA_SESSION: giriş ve oturum akışı. Süreleri hizmetin oturum yapılandırmasına bağlıdır; çıkışta temizlenirler.",
             "XSRF-TOKEN: işlem isteklerini sahte isteklerden korumak için kullanılan güvenlik çerezi.",
             "NEXT_LOCALE: seçtiğiniz dili hatırlayan, bir yıl süreli dil çerezi.",
             "Yerel tarayıcı depolaması: tema, menü/ekip görünümü ve isterseniz hatırlanan e-posta. Tarayıcı verileri temizlenene veya ilgili tercih değiştirilene kadar kalabilir.",
-            "Oturum depolaması: kullanıcıya özgü son seçilen proje bilgisi. Tarayıcı oturumu boyunca tutulur."
+            "Oturum depolaması: kullanıcıya özgü son seçilen proje bilgisi. Tarayıcı oturumu boyunca tutulur.",
+            "Çerez tercihi: pda:cookie-consent anahtarı kararınızı bu tarayıcıda saklar.",
+            "Analitik (isteğe bağlı, varsayılan kapalı): izin verirseniz anonim ziyaretçi ve oturum kimliğiyle sayfa türü, ziyaret kaynağı ve etkin kullanım süresi ölçülür; hesabınızla ilişkilendirilmez. İzni geri çektiğinizde yeni ölçüm durur ve bu kimlikler silinir."
           ]
         },
         {
@@ -2657,7 +2689,7 @@
           "title": "Veri sorumlusu ve kapsam",
           "paragraphs": [
             "Bu sayfa hesap açma, giriş, proje/ekip çalışmaları, davet ve destek iletişimi sırasında kullanılan verileri açıklayan yayın öncesi taslaktır. Hizmetin veri sorumlusu gerçek kişi veya tüzel kişi olarak henüz teyit edilmemiştir; bu nedenle tamamlanmış bir aydınlatma metni olarak sunulmaz.",
-            "PDA proje ekibiyle iletişim için pdassistant.info@gmail.com adresi belirlenmiştir. Veri sorumlusunun kimliği ve uygun başvuru kanalları kesinleştirilince metin güncellenecektir."
+            "PDA proje ekibiyle iletişim için İletişim sayfasındaki form kullanılır. Veri sorumlusunun kimliği ve uygun başvuru kanalları kesinleştirilince metin güncellenecektir."
           ]
         },
         {
@@ -2717,7 +2749,7 @@
           "id": "requests",
           "title": "Başvuru ve iletişim",
           "paragraphs": [
-            "Sorularınız ve veri talepleriniz için pdassistant.info@gmail.com adresine ulaşabilirsiniz. Talebinizin konusunu, hesabınızla ilişkili e-posta adresini ve istediğiniz işlemi belirtin; şifre, doğrulama kodu veya davet belirteci göndermeyin.",
+            "Sorularınız ve veri talepleriniz için İletişim sayfasındaki formu kullanabilirsiniz. Talebinizin konusunu, hesabınızla ilişkili e-posta adresini ve istediğiniz işlemi belirtin; şifre, doğrulama kodu veya davet belirteci göndermeyin.",
             "Bu genel iletişim adresi, mevzuattaki başvuru usullerinin tümünü tek başına karşılıyor sayılmaz. Veri sorumlusu ve resmi başvuru kanalları yayın öncesinde kesinleştirilecektir. Kimlik doğrulaması gerekli olduğunda talebinizle orantılı bilgi istenmelidir."
           ]
         }
@@ -2763,7 +2795,7 @@
           "id": "feedback",
           "title": "Bir engel bildirin",
           "paragraphs": [
-            "Bir sayfayı veya işlemi kullanamıyorsanız pdassistant.info@gmail.com adresine yazın. Sayfa adresini, yapmak istediğiniz işlemi, tarayıcı/cihazınızı ve varsa kullandığınız yardımcı teknolojiyi belirtin.",
+            "Bir sayfayı veya işlemi kullanamıyorsanız İletişim sayfasındaki formla bize yazın. Sayfa adresini, yapmak istediğiniz işlemi, tarayıcı/cihazınızı ve varsa kullandığınız yardımcı teknolojiyi belirtin.",
             "Ekran görüntüsü paylaşıyorsanız kişisel verileri ve gizli bilgileri kapatın. Bildirimde bulunmak için tıbbi durumunuzu açıklamanız gerekmez."
           ]
         }
@@ -2815,6 +2847,105 @@
           "paragraphs": [
             "Yazılım \"olduğu gibi\" sunulur; açık ya da örtülü hiçbir garanti veya şart verilmez. Katkı sahipleri, kullanımdan doğan zararlardan sorumlu tutulamaz.",
             "Lisans, PDA adı ve logosu üzerinde hak vermez. Yazılımın bir patenti ihlal ettiğini ileri sürerek dava açan kişi için, katkı sahiplerinin verdiği patent lisansı sona erer."
+          ]
+        }
+      ]
+    },
+    "cookies": {
+      "title": "Çerez Politikası",
+      "description": "PDA'nın hangi çerezleri ve tarayıcı depolamasını neden kullandığını, analitiğin varsayılan olarak kapalı olduğunu ve tercihinizi nasıl değiştireceğinizi açıklıyoruz.",
+      "manageTitle": "Tercihlerinizi yönetin",
+      "manageText": "Analitik tercihinizi istediğiniz zaman açabilir veya kapatabilirsiniz. Kapattığınızda yeni ölçüm gönderilmez ve bu tarayıcıdaki analitik tanımlayıcıları silinir.",
+      "sections": [
+        {
+          "id": "what",
+          "title": "Çerez nedir?",
+          "paragraphs": [
+            "Çerezler, bir web sitesinin tarayıcınızda sakladığı küçük kayıtlardır. Bu sayfada \"çerez\" ifadesi, aynı amaçla kullanılan tarayıcı yerel depolamasını (localStorage) ve oturum depolamasını (sessionStorage) da kapsar.",
+            "PDA reklam çerezi, kullanıcı profili çıkarma, üçüncü taraf takip aracı veya tarayıcı parmak izi yöntemi kullanmaz."
+          ]
+        },
+        {
+          "id": "categories",
+          "title": "Kategoriler",
+          "paragraphs": [
+            "PDA iki onay kategorisi kullanır. Zorunlu kategori her zaman açıktır ve kapatılamaz. Analitik kategori yalnız sizin açık seçiminizle çalışır ve varsayılan olarak kapalıdır."
+          ],
+          "items": [
+            "Zorunlu: giriş, oturum güvenliği, sahte istek koruması, dil seçimi ve bu tercihin kaydı.",
+            "Analitik: sayfa türü, ziyaret kaynağı ve etkin kullanım süresinin anonim ölçümü."
+          ]
+        },
+        {
+          "id": "necessary",
+          "title": "Zorunlu çerezler ve depolama",
+          "paragraphs": [
+            "Aşağıdaki kayıtlar hizmetin çalışması için gereklidir ve analitik tercihinizden bağımsız kullanılır. Hepsini PDA (birinci taraf) yönetir. Süreler hizmetin yapılandırmasına bağlıdır; verilenler varsayılan değerlerdir. Tarayıcı ayarlarınızdan engellerseniz giriş ve oturum işlevleri çalışmaz."
+          ],
+          "items": [
+            "PDA_ACCESS: kısa ömürlü erişim belirteci. HttpOnly; yalnız /api yoluna gönderilir. Varsayılan süre 15 dakikadır.",
+            "PDA_REFRESH: oturumu yenileyen belirteç. HttpOnly; yalnız /api/v1/auth yoluna gönderilir. Varsayılan süre 7 gündür; çıkışta silinir.",
+            "PDA_SESSION: belirteç taşımayan, bir oturum olup olmadığını gösteren işaret. HttpOnly; yenileme belirteciyle aynı süre; çıkışta silinir.",
+            "XSRF-TOKEN: sahte istek (CSRF) koruması. İşlem isteklerine eklenmek üzere sayfa tarafından okunur; tarayıcı oturumu boyunca tutulur.",
+            "JSESSIONID: yalnız Google veya GitHub ile giriş akışı sırasında kullanılır. HttpOnly; yaklaşık 30 dakikalık kısa ömürlüdür.",
+            "NEXT_LOCALE: seçtiğiniz dil; bir yıl.",
+            "pda:cookie-consent (localStorage): bu çerez tercihinizin kaydı (sürüm, analitik izni, tarih); siz silene kadar.",
+            "pda:last-session-refresh (localStorage): sekmelerin oturumu aynı anda yenilemesini önleyen zaman damgası."
+          ]
+        },
+        {
+          "id": "preferences",
+          "title": "Görünüm ve kullanım tercihleri",
+          "paragraphs": [
+            "Aşağıdaki kayıtlar yalnız sizin yaptığınız ayarları bu tarayıcıda hatırlar. Ziyaretinizi ölçmez ve analitik olarak sunucuya gönderilmez. Bu kayıtların hukuki kategorisi yayın öncesi hukuki incelemede teyit edilmelidir."
+          ],
+          "items": [
+            "theme: açık, koyu veya sistem teması.",
+            "pda:motion ve pda:theme-transition: animasyon tercihleri.",
+            "pda:sidebar-collapsed: kenar çubuğunun daraltılması.",
+            "pda.teams.view: ekipler sayfasındaki görünüm.",
+            "pda:task-mode-help:v1:<kullanıcı kimliği>: görev türü yardımını gizleme tercihi.",
+            "pda.rememberedEmail: yalnız giriş ekranında \"Beni hatırla\"yı siz seçerseniz e-posta adresiniz.",
+            "pda:last-project:<kullanıcı kimliği> ve pda:session-baseline (sessionStorage): oturum boyunca son seçilen proje ile oturum başındaki dil ve tema; sekme kapanınca silinir."
+          ]
+        },
+        {
+          "id": "analytics",
+          "title": "Analitik (varsayılan olarak kapalı)",
+          "paragraphs": [
+            "Analitik, siz \"Tümünü kabul et\" demeden veya tercih penceresinde Analitik'i açmadan hiçbir veri toplamaz ve hiçbir tanımlayıcı oluşturmaz. Karar vermediğiniz sürece de kapalıdır. Açtığınızda ölçüm PDA'nın kendi sunucusunda tutulur; üçüncü taraf analitik aracı yoktur.",
+            "Ad, e-posta, mesaj içeriği, belirteç, şifre, hesap kimliği veya tarayıcı parmak izi toplanmaz. Giriş yapmış olsanız da ölçüm hesabınızla ilişkilendirilmez.",
+            "Analitik verilerinin saklama süresi henüz belirlenmemiştir (HUKUKİ İÇERİK GEREKLİ); bu süre ve silme esasları yayın öncesinde kesinleştirilecektir.",
+            "Hesap sayısı, aktif ve sonlandırılmış hesap sayısı ve gönderilen iletişim formu sayısı gibi işletme sayıları analitik izninize bağlı değildir; bunlar hizmetin kendi kayıtlarından hesaplanır."
+          ],
+          "items": [
+            "Ziyaret edilen sayfanın türü (örneğin \"proje sayfası\"); proje adı, kullanıcı kimliği veya adres sorgusu kaydedilmez.",
+            "Ziyaretin kaynağı: doğrudan giriş, arama motoru, başka bir site (yalnız alan adı) veya kampanya bağlantısı (utm_source, utm_medium, utm_campaign).",
+            "Sitede etkin geçirilen süre; sekme arka plandayken veya pencere odak dışındayken sayılmaz.",
+            "Rastgele üretilmiş anonim ziyaretçi ve oturum kimliği: pda:analytics-visitor ve pda:analytics-session (localStorage). Oturum kimliği 30 dakika hareketsizlikten sonra yenilenir. İzni geri çektiğinizde ikisi de silinir."
+          ]
+        },
+        {
+          "id": "manage",
+          "title": "Tercihi değiştirme ve geri çekme",
+          "paragraphs": [
+            "Sayfa altındaki \"Çerez tercihlerini yönet\" bağlantısıyla veya bu sayfadaki düğmeyle tercih penceresini istediğiniz zaman açabilirsiniz. Analitiği kapattığınızda yeni ölçüm hemen durur ve bu tarayıcıdaki analitik tanımlayıcıları silinir. Daha önce toplanmış toplulaştırılmış verilerin silinmesi için ayrı bir otomatik süreç yoktur; bu konu yayın öncesinde belirlenecektir.",
+            "Tercih bu tarayıcıya aittir ve hesabınıza bağlı değildir: başka bir tarayıcıda veya cihazda ayrıca seçim yapmanız gerekir. Çerez uygulaması anlamlı biçimde değiştiğinde onay sürümü yükseltilir ve tercihiniz yeniden sorulur."
+          ]
+        },
+        {
+          "id": "third-parties",
+          "title": "Üçüncü taraflar",
+          "paragraphs": [
+            "PDA'da reklam veya üçüncü taraf analitik çerezi yoktur. Google veya GitHub ile giriş yaptığınızda tarayıcınız ilgili sağlayıcının sayfasına yönlendirilir ve o hizmetin kendi çerez ve gizlilik koşulları geçerli olur. Doğrulama, davet ve iletişim e-postaları sunucudan gönderilir ve tarayıcınıza çerez bırakmaz."
+          ]
+        },
+        {
+          "id": "legal",
+          "title": "İletişim ve hukuki bilgiler",
+          "paragraphs": [
+            "Çerezler hakkındaki sorularınızı İletişim sayfasındaki form üzerinden iletebilirsiniz.",
+            "Veri sorumlusunun unvanı ve adresi, VERBİS kaydı, hukuki dayanak metni ve saklama süreleri henüz belirlenmediği için bu alanlar HUKUKİ İÇERİK GEREKLİ olarak işaretlidir ve uydurulmamıştır."
           ]
         }
       ]
@@ -2978,5 +3109,212 @@
     "repositoryCommitsBodyMore": "{repo} deposunun {branch} dalına {count, plural, other {# veya daha fazla yeni commit}} geldi.",
     "repositoryCommitsHead": "Son commit: {message}",
     "repositoryCommitsHeadBy": "Son commit: {message} ({author})"
+  },
+  "admin": {
+    "nav": {
+      "label": "Yönetim",
+      "section": "Yönetim bölümleri",
+      "users": "Kullanıcılar",
+      "analytics": "Analitik"
+    },
+    "checking": "Yetki denetleniyor…",
+    "users": {
+      "title": "Kullanıcılar",
+      "description": "Platformdaki hesapları görüntüleyin; üyeliği sonlandırın veya yeniden etkinleştirin. Hesaplar silinmez.",
+      "search": "Kullanıcı ara",
+      "searchPlaceholder": "E-posta veya kullanıcı adı",
+      "status": "Durum",
+      "statusAll": "Tümü",
+      "statuses": {
+        "ACTIVE": "Aktif",
+        "DISABLED": "Sonlandırıldı",
+        "PENDING_VERIFICATION": "Doğrulama bekliyor"
+      },
+      "columns": {
+        "user": "Kullanıcı",
+        "email": "E-posta",
+        "status": "Durum",
+        "role": "Rol",
+        "created": "Kayıt tarihi",
+        "actions": "İşlemler"
+      },
+      "roles": {
+        "ADMIN": "Yönetici",
+        "USER": "Kullanıcı"
+      },
+      "you": "Siz",
+      "tableLabel": "Kullanıcı listesi",
+      "empty": {
+        "title": "Kullanıcı bulunamadı",
+        "description": "Aramanızı veya durum filtresini değiştirin."
+      },
+      "error": "Kullanıcılar yüklenemedi.",
+      "retry": "Yeniden dene",
+      "terminate": {
+        "action": "Üyeliği sonlandır",
+        "title": "{name} üyeliğini sonlandır",
+        "description": "Bu hesap hemen devre dışı kalır: tüm açık oturumları kapanır, giriş yapamaz ve sohbet bağlantıları kesilir. Hesap ile projeler, görevler ve geçmiş kayıtları silinmez. Bu işlem geri alınabilir: bir yönetici hesabı \"Yeniden etkinleştir\" ile tekrar açabilir.",
+        "confirmLabel": "Onaylamak için kullanıcı adını aynen yazın: {name}",
+        "confirm": "Üyeliği sonlandır",
+        "cancel": "Vazgeç",
+        "done": "{name} üyeliği sonlandırıldı."
+      },
+      "reactivate": {
+        "action": "Yeniden etkinleştir",
+        "title": "{name} hesabını yeniden etkinleştir",
+        "description": "Hesap yeniden giriş yapabilir. Önceki oturumlar geri gelmez; kullanıcının tekrar giriş yapması gerekir.",
+        "confirm": "Yeniden etkinleştir",
+        "cancel": "Vazgeç",
+        "done": "{name} yeniden etkinleştirildi."
+      }
+    },
+    "analytics": {
+      "title": "Analitik",
+      "description": "Ziyaret, kayıt, hesap ve iletişim sayılarına genel bakış. Trafik yalnız çerez izni veren ziyaretçilerin anonim verisinden gelir; kayıt, hesap ve iletişim sayıları hizmetin kendi kayıtlarındandır.",
+      "loading": "Analitik yükleniyor",
+      "error": "Analitik verileri yüklenemedi.",
+      "retry": "Yeniden dene",
+      "range": {
+        "label": "Tarih aralığı",
+        "days7": "Son 7 gün",
+        "days30": "Son 30 gün",
+        "days90": "Son 90 gün",
+        "custom": "Özel",
+        "from": "Başlangıç",
+        "to": "Bitiş",
+        "invalid": "Başlangıç tarihi bitişten sonra olamaz ve aralık en fazla 366 gün olabilir.",
+        "zone": "Saat dilimi: {zone}",
+        "shown": "{from} – {to} · {days} gün"
+      },
+      "sections": {
+        "overview": "Genel bakış",
+        "traffic": "Trafik",
+        "registrations": "Kayıtlar",
+        "users": "Kullanıcılar",
+        "contact": "İletişim talepleri"
+      },
+      "cards": {
+        "visits": "Ziyaret",
+        "sessions": "Tekil oturum",
+        "engagement": "Ortalama etkileşim",
+        "registrations": "Kayıt",
+        "activeAccounts": "Aktif hesap",
+        "contactRequests": "İletişim talebi",
+        "fromConsented": "Çerez izni verenlerden",
+        "fromRecords": "Hizmet kayıtlarından"
+      },
+      "traffic": {
+        "visitsChart": "Günlük ziyaret (sayfa görüntüleme)",
+        "visitsLabel": "Ziyaret",
+        "visitors": "Tekil ziyaretçi",
+        "sources": "Trafik kaynakları",
+        "sourceNames": {
+          "DIRECT": "Doğrudan",
+          "SEARCH": "Arama motoru",
+          "REFERRAL": "Başka site",
+          "CAMPAIGN": "Kampanya bağlantısı"
+        },
+        "sourceNote": "Doğrudan: yönlendiren site ve kampanya parametresi olmayan girişler. Paylaşılan bağlantı yalnız güvenilir kampanya (UTM) parametresi varsa ayrılır.",
+        "topReferrers": "En çok yönlendiren siteler",
+        "noReferrers": "Bu aralıkta yönlendiren site yok.",
+        "campaigns": "Kampanyalar (UTM)",
+        "noCampaigns": "Bu aralıkta kampanya bağlantısıyla gelen ziyaret yok.",
+        "campaign": "Kampanya",
+        "source": "Kaynak",
+        "medium": "Ortam",
+        "sessions": "Oturum",
+        "domain": "Alan adı",
+        "empty": "Bu aralıkta çerez izni vermiş ziyaretçiden veri yok."
+      },
+      "registrations": {
+        "chart": "Günlük kayıt",
+        "label": "Kayıt",
+        "total": "Aralıktaki kayıt"
+      },
+      "users": {
+        "total": "Toplam hesap",
+        "active": "Aktif hesap",
+        "terminated": "Sonlandırılmış hesap",
+        "pending": "Doğrulama bekleyen",
+        "admins": "Yönetici",
+        "note": "Aktif hesap, çevrimiçi kullanıcı demek değildir; durumu aktif olan hesapların sayısıdır."
+      },
+      "contact": {
+        "chart": "Günlük iletişim talebi",
+        "label": "Talep",
+        "inRange": "Aralıktaki talep",
+        "total": "Toplam gönderilen",
+        "note": "Yalnız başarıyla iletilen mesajlar sayılır; mesaj içeriği burada gösterilmez."
+      },
+      "chart": {
+        "summary": "{label}: toplam {total}",
+        "date": "Tarih",
+        "empty": "Bu aralıkta veri yok."
+      },
+      "duration": {
+        "zero": "0 sn"
+      }
+    }
+  },
+  "consent": {
+    "banner": {
+      "label": "Çerez tercihleri",
+      "title": "Çerez tercihleriniz",
+      "description": "PDA, oturumunuzu sürdürmek için zorunlu çerezleri ve tarayıcı depolamasını kullanır. İsterseniz sitenin nasıl kullanıldığını anonim olarak ölçen analitiğe de izin verebilirsiniz. Analitik varsayılan olarak kapalıdır ve tercihinizi istediğiniz zaman değiştirebilirsiniz.",
+      "policy": "Çerez Politikası",
+      "rejectAll": "Tümünü reddet",
+      "manage": "Tercihleri yönet",
+      "acceptAll": "Tümünü kabul et"
+    },
+    "dialog": {
+      "title": "Çerez tercihleri",
+      "description": "Hangi kategorilere izin vereceğinizi seçin. Seçiminiz yalnız bu tarayıcıda saklanır ve hesabınızdan bağımsızdır.",
+      "policy": "Çerez Politikası",
+      "necessary": {
+        "title": "Zorunlu",
+        "badge": "Her zaman açık",
+        "description": "Giriş, oturum güvenliği, sahte istek koruması, dil seçimi ve bu tercih kaydı için gereklidir. Bunlar olmadan PDA çalışmaz; bu nedenle kapatılamaz."
+      },
+      "analytics": {
+        "title": "Analitik",
+        "description": "Ziyaret edilen sayfa türünü, ziyaretin geldiği kaynağı ve sitede etkin geçirilen süreyi anonim olarak ölçer. Hesabınızla ilişkilendirilmez; ad, e-posta veya içerik toplamaz. Varsayılan olarak kapalıdır."
+      },
+      "rejectAll": "Tümünü reddet",
+      "acceptAll": "Tümünü kabul et",
+      "save": "Tercihleri kaydet"
+    }
+  },
+  "contact": {
+    "title": "İletişim",
+    "description": "Sorularınız, önerileriniz veya geri bildirimleriniz için PDA ekibine yazın. Giriş yapmanız gerekmez.",
+    "form": {
+      "label": "İletişim formu",
+      "firstName": "Ad",
+      "lastName": "Soyad",
+      "email": "E-posta",
+      "message": "Mesaj",
+      "messageHint": "En az 10, en fazla 5000 karakter.",
+      "counter": "{count} / 5000",
+      "submit": "Gönder",
+      "submitting": "Gönderiliyor…"
+    },
+    "validation": {
+      "required": "Bu alan zorunlu.",
+      "email": "Geçerli bir e-posta adresi girin.",
+      "emailMax": "E-posta adresi en fazla 254 karakter olabilir.",
+      "nameMax": "En fazla 80 karakter olabilir.",
+      "messageMin": "Mesaj en az 10 karakter olmalı.",
+      "messageMax": "Mesaj en fazla 5000 karakter olabilir."
+    },
+    "success": {
+      "title": "Mesajınız gönderildi.",
+      "text": "Teşekkürler. Yanıt vermemiz gerekirse formda yazdığınız e-posta adresinden size ulaşırız.",
+      "again": "Yeni mesaj yaz"
+    },
+    "notice": {
+      "title": "Göndermeden önce",
+      "text": "Mesajınız e-posta olarak PDA ekibine iletilir ve sitede saklanmaz. Şifrenizi, doğrulama kodunuzu veya davet bağlantınızdaki gizli bilgileri yazmayın.",
+      "privacy": "Gizlilik Politikası"
+    }
   }
 }

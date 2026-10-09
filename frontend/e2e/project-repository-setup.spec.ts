@@ -155,7 +155,7 @@ test.describe.serial("Project repository setup", () => {
     const dialog = managerPage.getByRole("dialog").filter({ hasText: "Henüz bir proje ekibiniz yok. Şimdi ekip oluşturmak ister misiniz?" });
     await expect(dialog).toBeVisible();
     await dialog.getByRole("button", { name: "Hayır", exact: true }).click();
-    await expect(managerPage).toHaveURL(/\/tr\/projeler\/(?!yeni$)[^/]+$/, { timeout: 15_000 });
+    await expect(managerPage).toHaveURL(/\/tr\/projeler\/[^/]+\/genel-bakis$/, { timeout: 15_000 });
     expect(mock.posts).toHaveLength(0);
     // No repository: the sidebar has no "Depo" item.
     await expect(managerPage.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("button", { name: "Ekipler", exact: true })).toBeVisible();

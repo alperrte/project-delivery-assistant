@@ -18,6 +18,7 @@ import { sessionQueryKey } from "../hooks/use-session";
 import { clearPrivateInvitations } from "@/features/invitations/query-keys";
 import { clearPrivateNotifications } from "@/features/notifications/query-keys";
 import { clearPrivateTeams } from "@/features/squads/cache";
+import { clearPrivateAdmin } from "@/features/admin/query-keys";
 import { matchPath } from "@/i18n/routing";
 import { authCtaClass } from "./auth-card";
 import { useShake } from "./use-shake";
@@ -81,6 +82,7 @@ export function LoginForm({ children }: { children?: ReactNode }) {
       clearPrivateInvitations(queryClient);
       clearPrivateNotifications(queryClient);
       clearPrivateTeams(queryClient);
+      clearPrivateAdmin(queryClient);
       queryClient.setQueryData(sessionQueryKey, me);
       const invitation = new URLSearchParams(window.location.hash.slice(1)).get("invitation");
       const requested = new URLSearchParams(window.location.search).get("next");

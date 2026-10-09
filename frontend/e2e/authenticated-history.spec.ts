@@ -13,7 +13,7 @@ test("history policy covers actual protected layouts and fails closed at adjacen
   }
   const sectionRoutes = ["overview", "criteria", "teams", "team-invitations", "repository", "edit"].map(section => `/projects/[slug]/${section}`); // each project section has its own public URL but renders from the one project page
   expect(new Set(AUTHENTICATED_ROUTES)).toEqual(new Set([...pages(root), ...sectionRoutes]));
-  for (const url of ["/tr/genel-bakis", "/en/projects/a/tasks", "/de/konto", "/tr/projeler/a/ekipler/t", "/tasks"]) expect(authenticatedRoute(url)).toBe(true);
+  for (const url of ["/tr/genel-bakis", "/en/projects/a/tasks", "/de/konto", "/tr/projeler/a/ekipler/t", "/tasks", "/tr/projeler/a/ekipler", "/en/projects/a/repository", "/de/projekte/a/bearbeiten"]) expect(authenticatedRoute(url)).toBe(true);
   for (const url of ["/", "/tr", "/tr/giris", "/en/register", "/de/anmelden", "/change-password", "/api/v1/auth/logout", "/logout", "/faq", "/projects-logout", "/unknown"]) expect(authenticatedRoute(url)).toBe(false);
   const native = { canGoBack: true, canGoForward: true, currentEntry: { index: 1 }, entries: () => [{ index: 0, url: "https://pda.test/tr/giris" }, { index: 1, url: "https://pda.test/tr/projeler" }, { index: 2, url: "https://pda.test/de/konto?tab=profile#field" }] };
   const snapshot = authenticatedHistorySnapshot(native, "https://pda.test/tr/projeler", true);
