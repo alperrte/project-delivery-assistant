@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Avatar } from "@/components/ui/avatar";
 import { profilePhotoSrc } from "@/features/account/api";
 import { Textarea } from "@/components/ui/textarea";
+import { useTouchPrimaryInput } from "@/hooks/use-touch-primary-input";
 import { cn } from "@/lib/utils";
 import { useProjectMembers } from "../../hooks";
 import { activeMention, insertMention } from "../../mentions";
@@ -18,9 +19,11 @@ type MentionTextareaProps = {
   onChange: (text: string) => void;
   /** Called with the person a suggestion resolved to, so the caller can encode `@nickname` as a token on save. */
   onPick: (person: PersonRef) => void;
-  /** Ctrl or Cmd + Enter. */
+  /** Enter (Ctrl/Cmd+Enter inserts a line break instead; on touch devices Enter is a line break too). */
   onSubmit?: () => void;
   id?: string;
+  /** Id of the element that explains the keyboard contract. */
+  describedBy?: string;
   label: string;
   placeholder?: string;
   maxLength?: number;
@@ -33,7 +36,7 @@ type MentionTextareaProps = {
  * A textarea that suggests project members while typing `@`. The list is a combobox listbox driven from the
  * keyboard (arrows, Enter or Tab to pick, Escape to dismiss); the text keeps `@nickname`, the caller encodes it.
  */
-export function MentionTextarea({ projectId, value, onChange, onPick, onSubmit, id, label, placeholder, maxLength, rows = 3, autoFocus, disabled }: MentionTextareaProps) {
+export function MentionTextarea({ projectId, value, onChange, onPick, onSubmit, id, describedBy, label, placeholder, maxLength, rows = 3, autoFocus, disabled }: MentionTextareaProps) {
   const t = useTranslations("tasks.detail.activity.composer");
   const listId = useId();
   const field = useRef<HTMLTextAreaElement>(null);
@@ -41,6 +44,7 @@ export function MentionTextarea({ projectId, value, onChange, onPick, onSubmit, 
   const [index, setIndex] = useState(0);
   const [dismissed, setDismissed] = useState<number | null>(null);
   const members = useProjectMembers(projectId);
+  const touchPrimary = useTouchPrimaryInput();
   // Where the caret goes once the picked mention is in the text. Applied only while the text is still exactly what
   // the pick produced: if the person kept typing meanwhile, the caret is already where they are typing.
   const restore = useRef<{ text: string; caret: number } | null>(null);
@@ -84,7 +88,21 @@ export function MentionTextarea({ projectId, value, onChange, onPick, onSubmit, 
     restore.current = next;
   }
 
+  /** Ctrl/Cmd+Enter: browsers insert nothing for it, so put the line break at the caret ourselves. */
+  function insertNewline(element: HTMLTextAreaElement) {
+    const start = element.selectionStart;
+    const end = element.selectionEnd;
+    const next = element.value.slice(0, start) + "\n" + element.value.slice(end);
+    if (maxLength !== undefined && next.length > maxLength) return;
+    restore.current = { text: next, caret: start + 1 };
+    onChange(next);
+    setCaret(start + 1);
+    setIndex(0);
+  }
+
   function onKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    // An input method is composing: Enter commits the composition, and the arrows/Tab belong to its candidate list.
+    if (event.nativeEvent.isComposing || event.keyCode === 229) return;
     if (open) {
       if (event.key === "ArrowDown") {
         event.preventDefault();
@@ -108,10 +126,16 @@ export function MentionTextarea({ projectId, value, onChange, onPick, onSubmit, 
         return;
       }
     }
-    if (event.key === "Enter" && (event.ctrlKey || event.metaKey) && onSubmit) {
+    if (event.key !== "Enter" || !onSubmit || event.shiftKey || event.altKey) return; // Shift+Enter stays native.
+    if (event.ctrlKey || event.metaKey) {
       event.preventDefault();
-      onSubmit();
+      insertNewline(event.currentTarget);
+      return;
     }
+    // Touch devices keep Enter as a native new line and send with the button.
+    if (touchPrimary) return;
+    event.preventDefault();
+    if (!event.repeat) onSubmit();
   }
 
   return (
@@ -126,6 +150,7 @@ export function MentionTextarea({ projectId, value, onChange, onPick, onSubmit, 
         autoFocus={autoFocus}
         placeholder={placeholder}
         aria-label={label}
+        aria-describedby={describedBy}
         role="combobox"
         aria-autocomplete="list"
         aria-expanded={open}

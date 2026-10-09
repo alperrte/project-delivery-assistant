@@ -12,12 +12,14 @@ import { toast } from "sonner";
 import { PageContainer } from "@/components/common/page-container";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import { TimePicker } from "@/components/ui/time-picker";
 import { useCurrentMember } from "@/features/projects/hooks/use-current-member";
 import { useSelectedProject } from "@/features/projects/hooks/use-selected-project";
 import { errorKey } from "@/lib/api/error-message";
@@ -35,7 +37,7 @@ function Field({ id, label, error, className, children }: { id: string; label: s
     <div className={cn("space-y-1.5", className)}>
       <Label htmlFor={id}>{label}</Label>
       {children}
-      {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+      {error && <p id={`${id}-error`} role="alert" className="text-sm text-destructive">{error}</p>}
     </div>
   );
 }
@@ -234,10 +236,41 @@ export function ReminderFormPage({ reminderId, initialDate }: { reminderId?: str
         </Field>
 
         <Field id="reminder-date" label={tf("date")} error={errors.date && tv(errors.date.message!)}>
-          <Input id="reminder-date" type="date" min={editing ? undefined : today} aria-invalid={!!errors.date} {...register("date")} />
+          <Controller
+            control={control}
+            name="date"
+            render={({ field }) => (
+              <DatePicker
+                id="reminder-date"
+                label={tf("date")}
+                value={field.value}
+                ref={field.ref}
+                onBlur={field.onBlur}
+                onChange={field.onChange}
+                invalid={!!errors.date}
+                describedBy={errors.date ? "reminder-date-error" : undefined}
+                min={editing ? undefined : today}
+              />
+            )}
+          />
         </Field>
         <Field id="reminder-time" label={tf("time")} error={errors.time && tv(errors.time.message!)}>
-          <Input id="reminder-time" type="time" aria-invalid={!!errors.time} {...register("time")} />
+          <Controller
+            control={control}
+            name="time"
+            render={({ field }) => (
+              <TimePicker
+                id="reminder-time"
+                label={tf("time")}
+                value={field.value ?? ""}
+                ref={field.ref}
+                onBlur={field.onBlur}
+                onChange={field.onChange}
+                invalid={!!errors.time}
+                describedBy={errors.time ? "reminder-time-error" : undefined}
+              />
+            )}
+          />
         </Field>
 
         <div className="flex flex-wrap justify-end gap-2 border-t pt-5 sm:col-span-2 lg:col-span-3">

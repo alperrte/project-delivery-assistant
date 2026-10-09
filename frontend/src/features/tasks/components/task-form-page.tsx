@@ -15,6 +15,7 @@ import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
+import { TimePicker } from "@/components/ui/time-picker";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -375,7 +376,14 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
                           setValue("deadlineDate", next, { shouldDirty: true, shouldValidate: true });
                         }} />
                     )} />
-                    {advanced && <Input type="time" aria-label={t("deadline.time")} className="h-10 w-28 shrink-0" {...register("deadlineTime")} />}
+                    {advanced && (
+                      <div className="w-32 shrink-0">
+                        <Controller control={control} name="deadlineTime" render={({ field }) => (
+                          <TimePicker id="task-deadline-time" label={t("deadline.time")} value={field.value} ref={field.ref} onBlur={field.onBlur}
+                            invalid={!!errors.deadlineTime} describedBy={`${ids}-deadline-note`} onChange={next => setValue("deadlineTime", next, { shouldDirty: true })} />
+                        )} />
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

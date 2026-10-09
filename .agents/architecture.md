@@ -98,6 +98,10 @@ The existing Notification module/API/owner handles both unread and read server p
 
 Public Created/Accepted/Rejected events carry nullable immutable event-time projectName; compatible constructors/old JSON retained. Notification module consumes public events through existing AFTER_COMMIT/REQUIRES_NEW writer, without importing Project entities/repositories. Recipient private count and manager project count are distinct actor-scoped query families; sidebar/heading observers share each total. Foreground30s/focus/reconnect freshness and existing mutation-prefix invalidation/abort cleanup used; no new provider/socket/count API. Organization invitation implementation is deferred. Banner create preview reuses picker/card/usePickedImage, with opt-in local decode/generation guard only for create-banner and unchanged POST-then-PUT persistence.
 
+## Ortak tarih/saat ve form standardı (2026-10-09)
+
+Uygulamadaki bütün tarih/saat girdileri ortak `DatePicker`/`TimePicker` bileşenlerini kullanır; native date/time girdisi kalmadı. Backend sözleşmeleri değişmedi: hatırlatıcı `LocalDate`+`LocalTime`, sprint/çalışma kaydı `LocalDate`, görev deadline'ı istemcide `deadline.ts` ile Instant. Proje/organizasyon oluşturma formları inline hataya ek olarak erişilebilir bir doğrulama özeti ve ortak yapışkan eylem çubuğu kullanır; görev yorumunda masaüstü Enter gönderir. Backend, şema, yetki, ENV veya bağımlılık değişikliği yoktur.
+
 ## Frontend/main canonical route integration ? 2026-10-09
 
 Public routing retains both consent/contact/admin routes and main About/License plus named home/create/project sections. Named project section URLs resolve through matchPath to the existing physical `/projects/[slug]` page with a section value; authenticated history recognizes that protected physical page without expanding server authorization. PublicInfoPage retains PageContents, pageAlternates, JSON-LD/full Apache text, cookie draft/noindex/preferences and support form links together. Backend module/auth/schema contracts are unchanged. Verified merge preparation: `docs/compliation/2026-10-09-auth-frontend-main-conflict-resolution.md`; commit remains user-owned.

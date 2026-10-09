@@ -27,6 +27,15 @@
     "hidePassword": "Hide password",
     "breadcrumb": "Breadcrumb"
   },
+  "forms": {
+    "summary": {
+      "projectTitle": "The project could not be created.",
+      "organizationCreateTitle": "The organization could not be created.",
+      "organizationEditTitle": "Changes could not be saved.",
+      "description": "Please check the missing or invalid fields.",
+      "sectionsLabel": "Sections to fix:"
+    }
+  },
   "errors": {
     "network": "Could not reach the server. Check your connection and try again.",
     "generic": "Something went wrong. Please try again.",
@@ -1895,7 +1904,8 @@
         "composer": {
           "label": "Comment",
           "placeholder": "Write a comment. Type @ to mention someone.",
-          "hint": "Press Ctrl+Enter to send",
+          "hint": "Enter to send · Ctrl+Enter for a new line",
+          "hintTouch": "Use the Send button to send",
           "submit": "Comment",
           "suggestions": "Member suggestions"
         },
@@ -2988,7 +2998,16 @@
     "year": "Year",
     "today": "Today",
     "clear": "Clear",
-    "close": "Close calendar"
+    "close": "Close calendar",
+    "outOfRange": "Unavailable date"
+  },
+  "timePicker": {
+    "placeholder": "Select a time",
+    "hour": "Hour",
+    "minute": "Minute",
+    "now": "Now",
+    "clear": "Clear",
+    "close": "Close"
   },
   "notifications": {
     "invitationContext": {

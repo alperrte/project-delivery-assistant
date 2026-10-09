@@ -169,6 +169,15 @@ Backend: `com.pda.analytics` (public `AnalyticsReporting`; `api` ingest controll
 
 Frontend: `features/consent/` (contract, store, banner, dialog, provider, manage button), `features/analytics/` (identifiers, route template, transport, tracker), `features/contact/` (api, schema, form, page), `features/admin/` (api, query keys, guard, users page, analytics page, charts), routes `(public)/cookies`, `(public)/contact`, `(app)/admin/{users,analytics}`. E2E: `consent-state.ts` (default visitor who already decided), `db.ts`, `mailpit.ts`, `cookie-consent`, `analytics-collection`, `contact-form`, `contact-delivery`, `admin-users`, `admin-analytics`, `privacy-regression` specs. Root: `docker-compose.e2e.yml` (Mailpit + relaxed limits), `PDA_COOKIE_ANALYTICS_ADMIN_CONTACT_PLAN.md` (plan and progress).
 
+## Ortak seçiciler ve form kabuğu (2026-10-09)
+
+- `frontend/src/components/ui/time-picker.tsx`: `DatePicker` ile aynı dilde ortak saat seçici; `date-picker.tsx` opsiyonel `min`/`max` alır.
+- `frontend/src/components/common/form-error-summary.tsx` (`FormErrorSummary`, `focusFormSection`) ve `sticky-form-actions.tsx` (`StickyFormActions`): tam sayfa formların doğrulama özeti ve yapışkan eylem çubuğu.
+- `frontend/src/components/common/entity-card.tsx` artık ortak `EntityCardSkeleton` da içerir; `features/organizations/components/organization-card.tsx` `EntityCard` kabuğunu kullanır.
+- `frontend/src/hooks/use-touch-primary-input.ts`: dokunmatik birincil giriş algılayan SSR-güvenli hook (görev yorumu Enter davranışı).
+- E2E: `e2e/time-picker.spec.ts`, `create-validation-summary.spec.ts`, `organization-card-dimensions.spec.ts`, `task-comment-keyboard.spec.ts`; `e2e/helpers.ts` `chooseTime()`.
+- Çok fazlı plan ve ilerleme: kökte `PDA_UI_WORKFLOW_STATE_NOTIFICATION_REFINEMENTS_PLAN.md`.
+
 ## Frontend/main public-page integration ? 2026-10-09
 
 Public routes now include `(public)/about` and `(public)/license` beside cookies/contact. `features/public-info/` retains about-page, apache-license, page-contents and shared info-page/site-info; `lib/seo/` provides JSON-LD/alternates and `app/llms.txt` the discovery text. Contributor CV/team media stays under source-controlled public asset paths. Existing consent/analytics/contact/admin feature directories are preserved. QA global-setup owns shared ignored `.auth` state renewal/cleanup; no production auth provider added. Details: conflict-resolution completion.

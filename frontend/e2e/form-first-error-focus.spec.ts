@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { MANAGER_STORAGE } from "./global-setup";
-import { api, chooseDate, createProject } from "./helpers";
+import { api, chooseDate, chooseTime, createProject } from "./helpers";
 import tr from "../src/i18n/messages/tr.json";
 
 test.use({ storageState: MANAGER_STORAGE });
@@ -129,7 +129,7 @@ test.describe.serial("İlk hataya yönlendirme: giriş gerektiren formlar", () =
     // The explanation only shows until the person suppresses it, so it may or may not appear.
     if (await switchDialog.isVisible().catch(() => false)) await switchDialog.getByRole("button", { name: "Geçiş yap", exact: true }).click();
     await expect(page.getByRole("dialog")).toHaveCount(0);
-    await page.getByLabel(tr.tasks.form.deadline.time, { exact: true }).fill("10:30");
+    await chooseTime(page, "task-deadline-time", "10:30");
     await page.locator('form button[type="submit"]').click();
     await expect(alertWith(page, tr.validation.timeNeedsDate)).toBeVisible();
     await expect(page.locator("#task-deadline-date")).toBeFocused();
@@ -148,7 +148,10 @@ test.describe.serial("İlk hataya yönlendirme: giriş gerektiren formlar", () =
     await expect(minutes).toHaveAttribute("aria-invalid", "true");
 
     await dialog.getByLabel(tr.tasks.detail.time.dialog.hours, { exact: true }).fill("1");
-    await dialog.locator("#worklog-date").fill("");
+    // The date is a picker now: open it and use its Clear button to remove the date.
+    await dialog.locator("#worklog-date").click();
+    await page.locator("#worklog-date-calendar").getByRole("button", { name: "Temizle" }).click();
+    await expect(page.locator("#worklog-date-calendar")).toHaveCount(0);
     await dialog.locator('button[type="submit"]').click();
     await expect(alertWith(page, tr.validation.required)).toBeVisible();
     await expect(dialog.locator("#worklog-date")).toBeFocused();

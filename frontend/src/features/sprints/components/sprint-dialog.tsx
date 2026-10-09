@@ -1,11 +1,12 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useForm, useWatch } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { CircleNotch } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,6 +37,8 @@ function SprintForm({ projectId, sprint, onOpenChange }: Omit<SprintDialogProps,
     register,
     handleSubmit,
     control,
+    trigger,
+    getValues,
     formState: { errors },
   } = useForm<SprintFormValues>({
     resolver: zodResolver(sprintFormSchema),
@@ -62,6 +65,7 @@ function SprintForm({ projectId, sprint, onOpenChange }: Omit<SprintDialogProps,
   );
 
   const goalLength = useWatch({ control, name: "goal" }).length;
+  const startDate = useWatch({ control, name: "startDate" });
 
   return (
     <form onSubmit={handleSubmit((values) => save.mutate(values))} noValidate className="space-y-4">
@@ -100,18 +104,56 @@ function SprintForm({ projectId, sprint, onOpenChange }: Omit<SprintDialogProps,
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label htmlFor="sprint-start">{t("startDate")}</Label>
-          <Input id="sprint-start" type="date" aria-invalid={!!errors.startDate} {...register("startDate")} />
+          <Controller
+            control={control}
+            name="startDate"
+            render={({ field }) => (
+              <DatePicker
+                id="sprint-start"
+                label={t("startDate")}
+                value={field.value}
+                ref={field.ref}
+                onBlur={field.onBlur}
+                onChange={(next) => {
+                  field.onChange(next);
+                  if (errors.startDate) void trigger("startDate");
+                  if (getValues("endDate")) void trigger("endDate");
+                }}
+                invalid={!!errors.startDate}
+                describedBy={errors.startDate ? "sprint-start-error" : undefined}
+              />
+            )}
+          />
           {errors.startDate && (
-            <p role="alert" className="text-sm text-destructive">
+            <p id="sprint-start-error" role="alert" className="text-sm text-destructive">
               {tv(errors.startDate.message!)}
             </p>
           )}
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="sprint-end">{t("endDate")}</Label>
-          <Input id="sprint-end" type="date" aria-invalid={!!errors.endDate} {...register("endDate")} />
+          <Controller
+            control={control}
+            name="endDate"
+            render={({ field }) => (
+              <DatePicker
+                id="sprint-end"
+                label={t("endDate")}
+                value={field.value}
+                ref={field.ref}
+                onBlur={field.onBlur}
+                onChange={(next) => {
+                  field.onChange(next);
+                  if (errors.endDate) void trigger("endDate");
+                }}
+                invalid={!!errors.endDate}
+                describedBy={errors.endDate ? "sprint-end-error" : undefined}
+                min={startDate || undefined}
+              />
+            )}
+          />
           {errors.endDate && (
-            <p role="alert" className="text-sm text-destructive">
+            <p id="sprint-end-error" role="alert" className="text-sm text-destructive">
               {tv(errors.endDate.message!)}
             </p>
           )}

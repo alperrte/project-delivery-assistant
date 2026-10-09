@@ -33,7 +33,7 @@ for (const mode of ["SIMPLE", "ADVANCED"] as const) {
       await page.locator("#task-deadline-date").click();
       await expect(page.locator(`[data-date="${expected.date}"]`)).toBeFocused();
       await page.keyboard.press("Escape");
-      if (mode === "ADVANCED") await expect(page.getByLabel("Son tarih saati", { exact: true })).toHaveValue("23:59");
+      if (mode === "ADVANCED") await expect(page.locator("#task-deadline-time")).toContainText("23:59");
     }
     await quick.getByRole("button", { name: "Temizle", exact: true }).click();
     await expect(page.locator("#task-deadline-date")).toContainText("Tarih seçin");

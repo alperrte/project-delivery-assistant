@@ -32,7 +32,8 @@ test("real invitation project snapshot stays localized, plain text and persisten
   expect((await api(b,"GET",`/projects/${id}`)).status).toBe(403);
   const renamed = `Renamed QA ${Date.now()}`;
   expect((await api(a,"PUT",`/projects/${id}`,{...project,name:renamed})).status).toBe(200);
-  const lookups:string[]=[];b.on("request",r=>{if(new URL(r.url()).pathname.startsWith("/api/v1/") && /\/projects\/[^/?]+(?:\/home)?$/.test(new URL(r.url()).pathname))lookups.push(r.url());});
+  // Only lookups of the invited (still private) project count; the sidebar legitimately reads the recipient's own selected project's /home.
+  const lookups:string[]=[];b.on("request",r=>{const p=new URL(r.url()).pathname;if(p.startsWith("/api/v1/") && new RegExp(`/projects/${id}(?:/home)?$`).test(p))lookups.push(r.url());});
   for(const locale of ["tr","en","de"] as const) for(const width of [320,1440]) {
    await b.setViewportSize({width,height:900}); await b.goto(localizeHref("/projects",locale)); await b.mouse.move(20,2);
    const strings=({tr,en,de})[locale].notifications;
@@ -46,7 +47,8 @@ test("real invitation project snapshot stays localized, plain text and persisten
    await b.keyboard.press("Escape");
   }
   expect(lookups).toEqual([]);
-  await b.goto("/projects"); await b.mouse.move(20,2); await b.getByRole("button",{name:"Bildirimler",exact:true}).click();
+  // The locale loop leaves NEXT_LOCALE=de; unprefixed URLs follow that cookie, so return to the Turkish URL explicitly.
+  await b.goto(localizeHref("/projects","tr")); await b.mouse.move(20,2); await b.getByRole("button",{name:"Bildirimler",exact:true}).click();
   const row=b.locator(`[data-notification-id="${created.id}"]`);
   const read=b.waitForResponse(r=>r.url().endsWith(`/notifications/${created.id}/read`)&&r.request().method()==="PATCH");
   await row.getByRole("button",{name:"Okundu olarak işaretle",exact:true}).click(); expect((await read).status()).toBe(200);
@@ -69,7 +71,7 @@ test("real invitation project snapshot stays localized, plain text and persisten
   }
   const manager=(await api(a,"GET","/auth/me")).json as {id:string};
   clearQaInvitationContext(manager.id,accepted.id);
-  await a.goto("/projects");await a.mouse.move(20,2);await a.getByRole("button",{name:"Bildirimler",exact:true}).click();
+  await a.goto(localizeHref("/projects","tr"));await a.mouse.move(20,2);await a.getByRole("button",{name:"Bildirimler",exact:true}).click();
   await expect(a.locator(`[data-notification-id="${accepted.id}"]`)).toContainText(tr.notifications.bodies.PROJECT_INVITATION_ACCEPTED);
   expect((await notes(a)).find(n=>n.id===accepted.id)?.invitationContext).toBeNull();
  } finally {if(id)await api(a,"POST",`/projects/${id}/archive`);if(bootstrapId)await api(a,"POST",`/projects/${bootstrapId}/archive`);await ac.close();await bc.close();}
