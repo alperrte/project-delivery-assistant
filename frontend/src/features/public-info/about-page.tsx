@@ -4,6 +4,7 @@ import { EnvelopeSimple, FilePdf, LinkedinLogo } from "@phosphor-icons/react/ssr
 import { GitHubIcon } from "@/components/common/brand-icons";
 import { PageContents } from "./page-contents";
 import { CONTRIBUTORS } from "./site-info";
+import { PageJsonLd } from "@/lib/seo/json-ld";
 
 const STORY = ["journey", "pda", "goal"] as const;
 
@@ -19,6 +20,7 @@ export async function AboutPage() {
 
   return (
     <article>
+      <PageJsonLd route="/about" type="AboutPage" name={t("title")} description={t("description")} />
       <header className="max-w-3xl">
         <p className="text-sm font-medium text-muted-foreground">PDA · Project Delivery Assistant</p>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">{t("title")}</h1>

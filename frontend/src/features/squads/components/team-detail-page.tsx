@@ -28,6 +28,7 @@ import type { TeamMember } from "../types";
 import { AddTeamMemberDialog } from "./add-team-member-dialog";
 import { DeleteTeamButton } from "./delete-team-button";
 import { TeamMembersTable } from "./team-members-table";
+import { PageTitle } from "@/components/common/page-title";
 
 const PAGE_SIZE = 20;
 const SORTS = ["joined_desc", "joined_asc", "name"] as const;
@@ -224,7 +225,7 @@ export function TeamDetailPage({ slug, teamId }: { slug: string; teamId: string 
             <ProjectMark key={projectLogoSrc(projectData) ?? "none"} name={projectData.name} src={projectLogoSrc(projectData)} />
           </span>
           <div className="min-w-0 space-y-1.5">
-            <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">{teamData.name}</h1>
+            <PageTitle className="font-heading text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">{teamData.name}</PageTitle>
             <p className="max-w-2xl text-sm leading-6 text-muted-foreground">{teamData.description || t("noDescription")}</p>
             <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
               <span className="font-medium text-foreground">{t("meta.members", { count: total })}</span>
