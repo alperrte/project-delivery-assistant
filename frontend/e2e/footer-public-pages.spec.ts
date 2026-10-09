@@ -21,7 +21,7 @@ for (const [locale, faqTitle] of [
       await expect(page.locator("footer")).toHaveCount(1);
       if (path === "/faq") {
         await expect(page.locator("h1")).toHaveText(faqTitle);
-        await expect(page.locator("details")).toHaveCount(16);
+        await expect(page.locator("details")).toHaveCount(23);
         for (const answer of await page.locator("details p").all()) {
           expect((await answer.textContent())?.trim().length).toBeGreaterThan(30);
         }

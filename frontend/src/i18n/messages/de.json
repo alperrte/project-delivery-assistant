@@ -2423,8 +2423,24 @@
               "answer": "PDA (Project Delivery Assistant) wird für Studierende und Teams entwickelt, die ihre Projektumsetzung in einem gemeinsamen Arbeitsbereich organisieren möchten. Projektinformationen, Erfolgskriterien, Teams, Aufgaben und Kalendereinträge helfen bei der Übersicht."
             },
             {
+              "question": "Welche Funktionen hat PDA?",
+              "answer": "PDA bietet das Anlegen von Projekten, Mitglieder und Projektrollen, Teams, Erfolgskriterien, Aufgaben (Liste, Board und Aufgabenpool), Sprints, Labels, einen Kalender mit Erinnerungen, Benachrichtigungen in der App, Nachrichten an Projektmitglieder sowie die Verknüpfung eines öffentlichen GitHub-Repositorys zur Ansicht. Projekte lassen sich bei Bedarf in Organisationen gruppieren. PDA befindet sich in aktiver Entwicklung, daher können sich Funktionen im Laufe der Zeit ändern."
+            },
+            {
               "question": "Muss ich eine Anwendung installieren?",
               "answer": "PDA ist eine Webanwendung. Den gehosteten Dienst können Sie mit einem aktuellen Browser nutzen. Die Oberfläche passt sich auch Smartphones und Tablets an."
+            },
+            {
+              "question": "Ist PDA kostenlos?",
+              "answer": "PDA wird als kostenlose Open-Source-Software entwickelt. Unser Ziel ist, dass grundlegende Funktionen nicht hinter einem kostenpflichtigen Tarif verschwinden. Wenn Sie PDA auf Ihrem eigenen Server betreiben, tragen Sie die Server- und Hostingkosten selbst."
+            },
+            {
+              "question": "Kann ich PDA auf meinem eigenen Computer oder Server betreiben?",
+              "answer": "Ja. PDA ist Open Source und läuft auf Ihrer eigenen Infrastruktur. Backend und Datenbank starten mit Docker, die Oberfläche läuft mit Node.js. Die Schritte stehen in der README-Datei im GitHub-Repository. Bei einer eigenen Installation sind Sie selbst für Speicherung und Sicherung der Daten verantwortlich."
+            },
+            {
+              "question": "Unter welcher Lizenz wird PDA veröffentlicht?",
+              "answer": "Unter der Apache License 2.0. Sie erlaubt, die Software zu nutzen, zu verändern und weiterzugeben, und knüpft daran Bedingungen wie das Beibehalten der Urheberrechts- und Lizenzhinweise. Eine Zusammenfassung und den vollständigen Text finden Sie auf der Seite Lizenz."
             },
             {
               "question": "Wie erstelle ich ein Konto?",
@@ -2445,6 +2461,10 @@
               "answer": "Nutzen Sie nach der Anmeldung die Aktion zum Erstellen eines Projekts unter Projekte. Tragen Sie Name, Typ und die Pflichtangaben ein; Technologie, Beschreibung und Logo können ergänzt werden. Sie werden der erste Projektmanager des erstellten Projekts."
             },
             {
+              "question": "Was ist eine Organisation, und muss ich sie nutzen?",
+              "answer": "Eine Organisation ist eine Gruppe, die zusammengehörige Projekte bündelt, zum Beispiel für einen Verein oder ein Lieferteam. Sie ist optional; Projekte können auch eigenständig bleiben. Nur die Inhaberin oder der Inhaber kann eine Organisation bearbeiten. Eine archivierte Organisation nimmt keine neuen Projekte mehr auf, und das Archivieren lässt sich nicht rückgängig machen."
+            },
+            {
               "question": "Was unterscheidet Projekt- und Teammitgliedschaft?",
               "answer": "Die Projektmitgliedschaft bestimmt Zugriff und Projektrollen. Teams organisieren die Arbeit innerhalb eines Projekts. Eine Teammitgliedschaft allein gibt keine Verwaltungsrechte; Aktionen werden anhand der Projektrollen geprüft."
             },
@@ -2463,6 +2483,10 @@
             {
               "question": "Sind Erfolgskriterien und Aufgaben dasselbe?",
               "answer": "Erfolgskriterien bilden eine Checkliste für Projektziele. Aufgaben erfassen Arbeit, Zuweisungen und Status. Ein abgeschlossenes Kriterium schließt Aufgaben nicht automatisch ab; beide Bereiche bleiben getrennt."
+            },
+            {
+              "question": "Wofür sind Sprints, das Board und der Aufgabenpool?",
+              "answer": "Ein Sprint teilt die Arbeit in Zeitabschnitte und zeigt den Fortschritt in einem Burndown-Diagramm. Auf dem Board ziehen Sie Aufgaben zwischen den Statusspalten; abgelegt werden kann nur bei erlaubten Übergängen. Der Aufgabenpool listet Aufgaben auf, die noch niemandem zugewiesen sind; eine übernommene Aufgabe wird Ihnen zugewiesen."
             },
             {
               "question": "Ändert die GitHub-Verbindung meinen Code?",
@@ -2499,6 +2523,10 @@
             {
               "question": "Wie melde ich einen Fehler oder eine Barriere?",
               "answer": "Schreiben Sie an pdassistant.info@gmail.com mit Seitenadresse, erwartetem Verhalten und Schritten zur Wiederholung. Allgemeine Entwicklungsvorschläge können auch im GitHub-Repository geteilt werden. Veröffentlichen Sie keine personenbezogenen Daten, Passwörter, Bestätigungscodes oder Details zu Sicherheitslücken in öffentlichen Issues."
+            },
+            {
+              "question": "Kann ich zum Projekt beitragen?",
+              "answer": "Ja, Beiträge sind willkommen. Im GitHub-Repository können Sie ein Issue eröffnen, eine Funktion vorschlagen oder eine Änderung einreichen. Wenn Sie uns direkt erreichen möchten, finden Sie unsere Kontaktdaten auf der Seite Über uns."
             }
           ]
         }

@@ -2423,8 +2423,24 @@
               "answer": "PDA (Project Delivery Assistant), proje teslim sürecini ortak bir çalışma alanında yönetmek isteyen öğrenciler ve ekipler için geliştirilir. Proje bilgileri, başarı kriterleri, ekipler, görevler ve takvim üzerinden işlerinizi takip edebilirsiniz."
             },
             {
+              "question": "PDA'da hangi özellikler var?",
+              "answer": "Proje oluşturma, üyeler ve proje rolleri, ekipler, başarı kriterleri, görevler (liste, pano ve görev havuzu), sprintler, etiketler, takvim ve hatırlatıcılar, uygulama içi bildirimler, proje üyeleriyle mesajlaşma ve herkese açık bir GitHub deposunu bağlayıp inceleme bulunur. İsterseniz projeleri organizasyonlar altında gruplayabilirsiniz. PDA aktif geliştirme aşamasındadır; özellikler zamanla değişebilir."
+            },
+            {
               "question": "PDA'yı kullanmak için bilgisayarıma uygulama kurmalı mıyım?",
               "answer": "PDA bir web uygulamasıdır. Yayındaki hizmete güncel bir tarayıcıyla erişebilirsiniz. Telefonda ve tablette de ekran boyutuna uyum sağlayan arayüzü kullanabilirsiniz."
+            },
+            {
+              "question": "PDA ücretsiz mi?",
+              "answer": "PDA ücretsiz ve açık kaynak olarak geliştiriliyor. Amacımız, temel özelliklerin ücretli bir planın arkasında kalmaması. Kendi sunucunuzda çalıştırırsanız sunucu ve barındırma masrafı size aittir."
+            },
+            {
+              "question": "PDA'yı kendi bilgisayarımda veya sunucumda çalıştırabilir miyim?",
+              "answer": "Evet, PDA açık kaynaktır ve kendi altyapınızda çalıştırabilirsiniz. Backend ve veritabanı Docker ile, arayüz ise Node.js ile ayağa kalkar. Adımlar GitHub deposundaki README dosyasında anlatılıyor. Kendi kurulumunuzda verilerin saklanması ve yedeklenmesi sizin sorumluluğunuzdadır."
+            },
+            {
+              "question": "PDA hangi lisansla yayınlanıyor?",
+              "answer": "Apache License 2.0. Bu lisans yazılımı kullanmanıza, değiştirmenize ve dağıtmanıza izin verir; telif ve lisans bildirimlerini korumak gibi koşullar getirir. Özetini ve lisansın tam metnini Lisans sayfasında bulabilirsiniz."
             },
             {
               "question": "Nasıl hesap oluşturabilirim?",
@@ -2445,6 +2461,10 @@
               "answer": "Giriş yaptıktan sonra Projeler bölümündeki proje oluşturma düğmesini kullanın. Proje adı, türü ve gerekli alanları doldurun; teknoloji, açıklama ve logo gibi bilgileri de ekleyebilirsiniz. Oluşturduğunuz projede ilk proje yöneticisi siz olursunuz."
             },
             {
+              "question": "Organizasyon nedir, kullanmak zorunlu mu?",
+              "answer": "Organizasyon, ilişkili projeleri bir arada tutan bir gruptur; örneğin bir kulüp veya teslimat ekibi için. Zorunlu değildir, projeleri bağımsız da tutabilirsiniz. Organizasyonu yalnızca sahibi düzenleyebilir. Arşivlenen organizasyon yeni proje kabul etmez ve arşivleme geri alınamaz."
+            },
+            {
               "question": "Proje üyeliği ile ekip üyeliği arasındaki fark nedir?",
               "answer": "Proje üyeliği erişiminizi ve proje rollerinizi belirler. Ekipler, projenin içindeki çalışma gruplarıdır. Bir ekipte yer almak tek başına yönetici yetkisi vermez; işlemler proje rollerine göre denetlenir."
             },
@@ -2463,6 +2483,10 @@
             {
               "question": "Başarı kriterleri ve görevler aynı şey mi?",
               "answer": "Başarı kriterleri projenin teslim hedefleri için bir kontrol listesidir. Görevler yapılacak işleri, atamaları ve durumları takip eder. Bir kriteri tamamlamak görevlerin tamamlandığı anlamına gelmez; iki alan ayrı tutulur."
+            },
+            {
+              "question": "Sprint, pano ve görev havuzu ne işe yarar?",
+              "answer": "Sprint, çalışmayı zaman kutularına böler ve ilerlemeyi yanma grafiğiyle gösterir. Pano, görevleri durum sütunları arasında sürükleyerek taşımanızı sağlar; yalnızca izin verilen geçişlere bırakabilirsiniz. Görev havuzu henüz kimseye atanmamış görevleri listeler; üstlendiğiniz görev size atanır."
             },
             {
               "question": "GitHub bağlantısı kodumu değiştirir mi?",
@@ -2499,6 +2523,10 @@
             {
               "question": "Bir hata veya erişilebilirlik sorunu nasıl bildirebilirim?",
               "answer": "pdassistant.info@gmail.com adresine sayfa adresini, beklenen davranışı ve sorunun nasıl tekrarlandığını yazın. Genel geliştirme önerilerini GitHub deposunda da paylaşabilirsiniz. Herkese açık hata kayıtlarına kişisel veri, şifre, doğrulama kodu veya güvenlik açığının ayrıntılarını eklemeyin."
+            },
+            {
+              "question": "Projeye katkı verebilir miyim?",
+              "answer": "Evet, katkıya açığız. GitHub deposunda sorun açabilir, özellik önerebilir veya değişiklik gönderebilirsiniz. Bize doğrudan ulaşmak isterseniz Hakkımızda sayfasında iletişim bilgilerimiz var."
             }
           ]
         }
