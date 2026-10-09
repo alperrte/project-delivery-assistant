@@ -20,7 +20,7 @@ export const projectPriorities = ["LOW", "MEDIUM", "HIGH", "CRITICAL"] as const;
 
 export const projectSettingsSchema = z
   .object({
-    name: z.string().min(1, "required").max(160, "maxLength"),
+    name: z.string().trim().min(1, "required").max(160, "maxLength"),
     description: z.string().max(2000, "maxLength").optional(),
     priority: z.enum(projectPriorities),
     status: z.enum(projectStatuses),

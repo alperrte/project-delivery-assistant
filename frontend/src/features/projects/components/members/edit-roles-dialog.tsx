@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useId, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CircleNotch } from "@phosphor-icons/react";
@@ -30,6 +30,8 @@ export function EditRolesDialog({
   const t = useTranslations("members");
   const tr = useTranslations("roles");
   const te = useTranslations("errors");
+  const tv = useTranslations("validation");
+  const errorId = useId();
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<Set<ProjectRole>>(new Set(member.roles));
   const queryClient = useQueryClient();
@@ -68,7 +70,7 @@ export function EditRolesDialog({
           <DialogTitle>{t("editRolesTitle")}</DialogTitle>
         </DialogHeader>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div role="group" aria-label={t("editRolesTitle")} aria-describedby={selected.size === 0 ? errorId : undefined} className="grid grid-cols-2 gap-2">
           {PROJECT_ROLES.map((role) => (
             <label key={role} className="flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-sm">
               <input type="checkbox" checked={selected.has(role)} onChange={() => toggle(role)} className="size-3.5" />
@@ -76,6 +78,7 @@ export function EditRolesDialog({
             </label>
           ))}
         </div>
+        {selected.size === 0 && <p id={errorId} role="alert" className="text-sm text-destructive">{tv("rolesRequired")}</p>}
 
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>
