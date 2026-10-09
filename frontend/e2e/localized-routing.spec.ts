@@ -21,6 +21,19 @@ test("old and mismatched URLs have one canonical destination and retain query pa
   expect(mismatch.headers().location).toBe("/tr/projeler/example/ekipler/yeni-ekip?section=teams");
 });
 
+test("redirects that depend on the language cookie are not cacheable", async ({ request }) => {
+  for (const [path, cookie, destination] of [["/", "en", "/en/home"], ["/about", "tr", "/tr/hakkimizda"], ["/about", "de", "/de/ueber-uns"]]) {
+    const response = await request.get(path, { maxRedirects: 0, headers: { Cookie: `NEXT_LOCALE=${cookie}` } });
+    expect(response.status(), path).toBe(308);
+    expect(response.headers().location, path).toBe(destination);
+    expect(response.headers()["cache-control"], path).toBe("no-store");
+  }
+  // A prefixed URL never reads the cookie, so its redirect may be cached.
+  const prefixed = await request.get("/tr/about", { maxRedirects: 0, headers: { Cookie: "NEXT_LOCALE=en" } });
+  expect(prefixed.status()).toBe(308);
+  expect(prefixed.headers()["cache-control"]).toBeUndefined();
+});
+
 test("the home page has a named URL per language and every other form redirects to it", async ({ request }) => {
   for (const [path, cookie, destination] of [
     ["/", "tr", "/tr/ana-sayfa"], ["/", "en", "/en/home"], ["/", "de", "/de/startseite"],
@@ -119,6 +132,24 @@ test("public information pages declare their type and breadcrumb", async ({ requ
   }
 });
 
+test("public information pages show the same breadcrumb they declare as structured data", async ({ page }) => {
+  for (const [path, label, home, homeHref] of [
+    ["/tr/hakkimizda", "Konum", "Ana sayfa", "/tr/ana-sayfa"], ["/en/faq", "Breadcrumb", "Home", "/en/home"], ["/de/datenschutz", "Brotkrumen", "Startseite", "/de/startseite"],
+    ["/en/license", "Breadcrumb", "Home", "/en/home"], ["/tr/erisilebilirlik", "Konum", "Ana sayfa", "/tr/ana-sayfa"],
+  ]) {
+    await page.goto(path);
+    const trail = page.getByRole("navigation", { name: label, exact: true });
+    await expect(trail.getByRole("listitem"), path).toHaveCount(2);
+    await expect(trail.getByRole("link", { name: home }), path).toHaveAttribute("href", homeHref);
+    const current = trail.locator("[aria-current=page]");
+    await expect(current, path).toHaveText((await page.locator("h1").innerText()).trim());
+    const ld = JSON.parse((await page.locator('script[type="application/ld+json"]').allInnerTexts()).find(text => text.includes("BreadcrumbList"))!);
+    const names = ld["@graph"][1].itemListElement.map((item: { name: string }) => item.name);
+    expect(names, path).toEqual([home, (await current.innerText()).trim()]);
+    await expect(page.locator("h1"), path).toHaveCount(1);
+  }
+});
+
 test("the FAQ page lists every visible question as structured data", async ({ page }) => {
   for (const path of ["/tr/sss", "/en/faq", "/de/faq"]) {
     await page.goto(path);
@@ -166,6 +197,45 @@ test("protected localized deep links go to the same-language login", async ({ re
   const destination = new URL(response.headers().location, "http://localhost");
   expect(destination.pathname).toBe("/de/anmelden");
   expect(destination.searchParams.get("next")).toBe("/de/projekte/pda-backend/aufgaben/board?page=2");
+});
+
+test("every protected page sends a visitor without a session to the login of the same language; public pages stay open", async ({ request }) => {
+  const protectedPages: Record<string, string[]> = {
+    tr: ["/tr/genel-bakis", "/tr/projeler", "/tr/projeler/yeni-proje", "/tr/projeler/x/ekipler", "/tr/projeler/x/duzenle", "/tr/projeler/x/gorevler/pano", "/tr/organizasyonlar", "/tr/organizasyonlar/yeni-organizasyon", "/tr/ayarlar", "/tr/hesap", "/tr/gorevlerim", "/tr/takvim", "/tr/takvim/yeni-animsatici", "/tr/davetler", "/tr/sifre-degistir"],
+    en: ["/en/dashboard", "/en/projects", "/en/projects/new-project", "/en/projects/x/teams", "/en/projects/x/edit", "/en/projects/x/tasks/board", "/en/organizations", "/en/settings", "/en/account", "/en/my-tasks", "/en/calendar", "/en/invitations", "/en/change-password"],
+    de: ["/de/uebersicht", "/de/projekte", "/de/projekte/x/teams", "/de/organisationen", "/de/einstellungen", "/de/konto", "/de/meine-aufgaben", "/de/kalender", "/de/einladungen", "/de/passwort-aendern"],
+  };
+  const login = { tr: "/tr/giris", en: "/en/login", de: "/de/anmelden" };
+  for (const [locale, paths] of Object.entries(protectedPages)) {
+    for (const path of paths) {
+      const response = await request.get(path, { maxRedirects: 0 });
+      expect(response.status(), path).toBe(307);
+      const destination = new URL(response.headers().location, "http://localhost");
+      expect(destination.pathname, path).toBe(login[locale as keyof typeof login]);
+      expect(destination.searchParams.get("next"), path).toBe(path);
+    }
+  }
+  for (const path of ["/tr/giris", "/tr/kayit", "/tr/sifremi-unuttum", "/en/faq", "/de/ueber-uns", "/tr/lisans"]) {
+    expect((await request.get(path, { maxRedirects: 0 })).status(), path).toBe(200);
+  }
+});
+
+test("uppercase addresses redirect to the lowercase canonical URL and keep the query", async ({ request }) => {
+  for (const [from, to] of [
+    ["/tr/Hakkimizda", "/tr/hakkimizda"],
+    ["/TR/hakkimizda", "/tr/hakkimizda"],
+    ["/En/About?x=1", "/en/about?x=1"],
+    ["/DE/Datenschutz", "/de/datenschutz"],
+    ["/TR/Giris", "/tr/giris"],
+    ["/tr/projeler/Yeni-Proje", "/tr/projeler/yeni-proje"],
+  ]) {
+    const response = await request.get(from, { maxRedirects: 0 });
+    expect(response.status(), from).toBe(308);
+    expect(new URL(response.headers().location, "http://localhost").pathname + new URL(response.headers().location, "http://localhost").search, from).toBe(to);
+  }
+  // A prefixed uppercase URL does not depend on the language cookie, so it may be cached.
+  const prefixed = await request.get("/TR/hakkimizda", { maxRedirects: 0 });
+  expect(prefixed.headers()["cache-control"]).toBeUndefined();
 });
 
 test("unknown localized pages remain 404", async ({ request }) => {

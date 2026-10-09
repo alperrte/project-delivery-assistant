@@ -10,6 +10,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CircleNotch, Eye, Lock } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/common/page-header";
+import { BreadcrumbLabel } from "@/components/layout/breadcrumb-labels";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -18,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { useSession } from "@/features/auth/hooks/use-session";
+import { PageFailure } from "@/features/errors/page-failure";
 import type { UserRef } from "@/features/projects/types";
 import { errorKey } from "@/lib/api/error-message";
 import { squadsApi } from "../api";
@@ -165,7 +167,8 @@ export function TeamFormPage({ slug, teamId }: { slug: string; teamId?: string }
   const parentOptions = (teams.data ?? []).filter((item) => !blocked.has(item.id));
   const parentName = parentId ? teams.data?.find((item) => item.id === parentId)?.name : null;
 
-  if (project.isPending || member.isPending || (!!projectId && teams.isPending)) {
+  // The member and team queries stay disabled (and so "pending") while the project is missing, e.g. refused with 403.
+  if (project.isPending || (!!projectData && member.isPending) || (!!projectId && teams.isPending)) {
     return (
       <div className="space-y-5">
         <Skeleton className="h-16 w-full rounded-2xl" />
@@ -174,7 +177,7 @@ export function TeamFormPage({ slug, teamId }: { slug: string; teamId?: string }
     );
   }
   const failure = project.error ?? member.error ?? teams.error;
-  if (failure) return <p role="alert" className="text-sm text-destructive">{te(errorKey(failure))}</p>;
+  if (failure) return <PageFailure error={failure} onRetry={() => { void (project.error ? project.refetch() : member.error ? member.refetch() : teams.refetch()); }} />;
   if (!projectData) return null;
   if (!isManager || (editing && !team)) {
     return (
@@ -192,6 +195,7 @@ export function TeamFormPage({ slug, teamId }: { slug: string; teamId?: string }
 
   return (
     <div>
+      {editing && team && <BreadcrumbLabel kind="team" label={team.name} />}
       <PageHeader title={t(editing ? "editTitle" : "title")} description={t(editing ? "editDescription" : "description")} />
 
       <form onSubmit={handleSubmit((form) => mutation.mutate(form))} noValidate>

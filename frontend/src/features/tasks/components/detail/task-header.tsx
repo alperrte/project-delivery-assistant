@@ -6,7 +6,7 @@ import { useRouter } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { buildPath } from "@/i18n/routing";
 import type { Locale } from "@/i18n/config";
-import { Archive, CaretRight, CircleNotch, DotsThree, Eye, EyeSlash, LinkSimple, PencilSimple } from "@phosphor-icons/react";
+import { Archive, CircleNotch, DotsThree, Eye, EyeSlash, LinkSimple, PencilSimple } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -17,10 +17,9 @@ import { TaskModeBadge } from "../task-mode-picker";
 import { BlockedMark, PoolMark, PriorityBadge, StatusBadge } from "../task-badges";
 import type { DetailContext } from "./detail-section";
 import { PageTitle } from "@/components/common/page-title";
+import { BreadcrumbLabel } from "@/components/layout/breadcrumb-labels";
 
-type HeaderProps = DetailContext & { projectName: string };
-
-export function TaskHeader({ task, slug, projectId, perms, projectName, advancedWritable }: HeaderProps) {
+export function TaskHeader({ task, slug, projectId, perms, advancedWritable }: DetailContext) {
   const t = useTranslations("tasks.detail");
   const locale = useLocale() as Locale;
   const router = useRouter();
@@ -51,25 +50,7 @@ export function TaskHeader({ task, slug, projectId, perms, projectName, advanced
 
   return (
     <header className="mb-6 space-y-4">
-      <nav aria-label={t("breadcrumb")} className="flex min-w-0 flex-wrap items-center gap-1 text-xs text-muted-foreground">
-        <Link href={`/projects/${slug}`} className="max-w-48 truncate rounded-sm hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none">
-          {projectName}
-        </Link>
-        <CaretRight size={10} aria-hidden="true" />
-        <Link href={`/projects/${slug}/tasks`} className="rounded-sm hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none">
-          {t("tasks")}
-        </Link>
-        {task.parent && (
-          <>
-            <CaretRight size={10} aria-hidden="true" />
-            <Link href={`/projects/${slug}/tasks/${task.parent.id}`} title={task.parent.title} className="rounded-sm tabular-nums hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none">
-              {task.parent.key}
-            </Link>
-          </>
-        )}
-        <CaretRight size={10} aria-hidden="true" />
-        <span aria-current="page" className="font-medium tabular-nums text-foreground">{task.taskKey}</span>
-      </nav>
+      <BreadcrumbLabel kind="task" label={task.taskKey} parent={task.parent ? { label: task.parent.key, href: `/projects/${slug}/tasks/${task.parent.id}`, title: task.parent.title } : undefined} />
 
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0 flex-1 space-y-3">

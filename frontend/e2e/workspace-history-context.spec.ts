@@ -9,8 +9,8 @@ test("native PDA traversal isolates projects and canceled traversal keeps fullsc
  const first=await createProject(page,`History A ${Date.now()}`),a=((await api(page,"GET",`/projects/by-slug/${first}`)).json as {id:string}).id;
  const second=await createProject(page,`History B ${Date.now()}`),b=((await api(page,"GET",`/projects/by-slug/${second}`)).json as {id:string}).id;
  try{
-  await push(page,`/tr/projeler/${first}`);await page.getByTestId("chat-nav-item").click();await expect(page.getByTestId("chat-composer")).toBeEnabled();await page.getByTestId("chat-composer").fill("private A draft");await page.getByTestId("chat-minimize").click();
-  await push(page,`/tr/projeler/${second}`);await expect(page.getByTestId("chat-bar")).toHaveCount(0);await page.getByTestId("chat-nav-item").click();await expect(page.getByTestId("chat-composer")).toHaveValue("");
+  await push(page,`/tr/projeler/${first}/genel-bakis`);await page.getByTestId("chat-nav-item").click();await expect(page.getByTestId("chat-composer")).toBeEnabled();await page.getByTestId("chat-composer").fill("private A draft");await page.getByTestId("chat-minimize").click();
+  await push(page,`/tr/projeler/${second}/genel-bakis`);await expect(page.getByTestId("chat-bar")).toHaveCount(0);await page.getByTestId("chat-nav-item").click();await expect(page.getByTestId("chat-composer")).toHaveValue("");
   await arrow(page,"back");await expect(page).toHaveURL(new RegExp(`/tr/projeler/${first}/genel-bakis$`));await expect(page.getByTestId("chat-panel")).toHaveCount(0);await page.getByTestId("chat-nav-item").click();await expect(page.getByTestId("chat-composer")).toHaveValue("");
   // TEST-ONLY cancellation at the native browser boundary; production does not intercept navigation.
   await page.evaluate(()=>{const n=(window as unknown as {navigation:EventTarget}).navigation;const cancel=(e:Event)=>e.preventDefault();Object.assign(window,{__cancelQaTraversal:cancel});n.addEventListener("navigate",cancel);});

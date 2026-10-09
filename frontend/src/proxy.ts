@@ -37,7 +37,11 @@ export function proxy(request: NextRequest) {
     const target = request.nextUrl.clone();
     target.pathname = canonicalPath;
     target.search = normalized.search;
-    return NextResponse.redirect(target, 308);
+    const redirect = NextResponse.redirect(target, 308);
+    // An unprefixed URL resolves through the NEXT_LOCALE cookie, so its target differs per visitor:
+    // a cached 308 would pin one language to that URL. Prefixed URLs do not depend on the cookie.
+    if (!isLocale(pathname.split("/")[1].toLowerCase())) redirect.headers.set("Cache-Control", "no-store");
+    return redirect;
   }
 
   const authenticated = request.cookies.has("PDA_SESSION");

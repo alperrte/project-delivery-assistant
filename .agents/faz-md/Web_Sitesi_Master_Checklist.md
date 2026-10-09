@@ -130,34 +130,34 @@
 
 - [X] SEO / GEO yaklaşımı
 - [X] Benzersiz sayfa başlığı
-- [ ] Meta description
-- [ ] robots.txt
-- [ ] sitemap.xml
-- [ ] Canonical URL
-- [ ] noindex / nofollow kararı
-- [ ] hreflang
-- [ ] Structured data / JSON-LD
-- [ ] FAQ yapılandırılmış verisi
+- [X] Meta description
+- [X] robots.txt
+- [X] sitemap.xml
+- [X] Canonical URL
+- [X] noindex / nofollow kararı
+- [X] hreflang
+- [X] Structured data / JSON-LD
+- [X] FAQ yapılandırılmış verisi
 - [ ] Google Search Console
-- [ ] llms.txt
-- [ ] İç bağlantı kalitesi
-- [ ] Özel sayfa gizliliği
+- [X] llms.txt
+- [X] İç bağlantı kalitesi
+- [X] Özel sayfa gizliliği
 
 ### URL, slug, routing ve breadcrumb
 
-- [ ] Okunabilir URL
-- [ ] Slug standardı
-- [ ] Slug benzersizliği
-- [ ] Türkçe karakter kuralı
-- [ ] Kalıcı yönlendirme (301/308)
-- [ ] Geçici yönlendirme (302/307)
-- [ ] Trailing slash ve harf standardı
-- [ ] Query parametreleri
-- [ ] 404 ve 410 kuralları
-- [ ] Yetki kontrollü özel rotalar
-- [ ] Back / forward davranışı
-- [ ] Dil değişiminde eşdeğer rota
-- [ ] Breadcrumb
+- [X] Okunabilir URL
+- [X] Slug standardı
+- [X] Slug benzersizliği
+- [X] Türkçe karakter kuralı
+- [X] Kalıcı yönlendirme (301/308)
+- [X] Geçici yönlendirme (302/307)
+- [X] Trailing slash ve harf standardı
+- [X] Query parametreleri
+- [X] 404 ve 410 kuralları
+- [X] Yetki kontrollü özel rotalar
+- [X] Back / forward davranışı
+- [X] Dil değişiminde eşdeğer rota
+- [X] Breadcrumb
 
 ### OpenGraph ve bağlantı önizlemeleri
 

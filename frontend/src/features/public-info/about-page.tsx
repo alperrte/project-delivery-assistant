@@ -5,6 +5,7 @@ import { GitHubIcon } from "@/components/common/brand-icons";
 import { PageContents } from "./page-contents";
 import { CONTRIBUTORS } from "./site-info";
 import { PageJsonLd } from "@/lib/seo/json-ld";
+import { Breadcrumb } from "@/components/common/breadcrumb";
 
 const STORY = ["journey", "pda", "goal"] as const;
 
@@ -16,10 +17,13 @@ const shortUrl = (url: string) => decodeURIComponent(url.replace(/^https:\/\/(ww
 export async function AboutPage() {
   const t = await getTranslations("publicPages.about");
   const common = await getTranslations("publicPages.common");
+  const app = await getTranslations("common");
+  const landing = await getTranslations("landing");
   const contents = [...STORY.map(key => ({ id: key, title: t(key + ".title") })), { id: "team", title: t("team.title") }];
 
   return (
     <article>
+      <Breadcrumb label={app("breadcrumb")} items={[{ label: landing("homeTitle"), href: "/" }, { label: t("title") }]} className="mb-6" />
       <PageJsonLd route="/about" type="AboutPage" name={t("title")} description={t("description")} />
       <header className="max-w-3xl">
         <p className="text-sm font-medium text-muted-foreground">PDA · Project Delivery Assistant</p>

@@ -51,8 +51,7 @@ test("unknown native capability stays visibly disabled with an honest explanatio
 
 test("PDA and browser traversal preserve native entries and close only fullscreen logical navigation",async({page})=>{
  const slug=await createProject(page,`History chat ${Date.now()}`),pid=((await api(page,"GET",`/projects/by-slug/${slug}`)).json as {id:string}).id;
- const root=localizeHref(`/projects/${slug}`,"tr");
- const criteria=localizeHref(`/projects/${slug}/criteria`,"tr");
+ const root=localizeHref(`/projects/${slug}`,"tr"),criteria=localizeHref(`/projects/${slug}/criteria`,"tr");
  try{
   await link(page,`/projects/${slug}/tasks`);const tasks=page.url();await link(page,"/calendar");const calendar=page.url();
   await arrow(page,"back");await expect(page).toHaveURL(tasks);await arrow(page,"back");await expect(page).toHaveURL(new RegExp(root+"$"));
