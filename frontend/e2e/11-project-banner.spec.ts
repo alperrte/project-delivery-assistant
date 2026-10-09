@@ -75,7 +75,7 @@ test.describe.serial("Project banner", () => {
     await openProjectListPage(managerPage, slug);
     const card = managerPage.locator("article").filter({ has: managerPage.locator(`a[href="/tr/projeler/${slug}"]`) });
     await card.getByRole("link", { name: `${projectName} ayarlarını düzenle` }).click();
-    await expect(managerPage).toHaveURL(/section=settings/);
+    await expect(managerPage).toHaveURL(/\/duzenle$/);
     await expect(managerPage.getByRole("heading", { level: 1, name: "Proje ayarları" })).toBeVisible();
 
     await openProjectListPage(memberPage, slug);

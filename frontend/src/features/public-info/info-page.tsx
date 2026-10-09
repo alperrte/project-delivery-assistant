@@ -75,8 +75,8 @@ export async function PublicInfoPage({ page }: { page: InfoPage }) {
             <section id="full-text" aria-labelledby="full-text-title" className="mb-10 scroll-mt-6">
               <h2 id="full-text-title" className="mb-4 text-xl font-semibold">{t("fullTextTitle")}</h2>
               <p className="mb-4 text-base leading-7 text-muted-foreground">{t("fullTextNote")}</p>
-              {/* Scrollable region: focusable so keyboard users can scroll it; the legal text stays in its original English. */}
-              <pre lang="en" tabIndex={0} aria-label={t("fullTextTitle")} className="max-h-[70vh] overflow-auto rounded-lg border border-border bg-muted p-4 font-mono text-xs leading-5 outline-hidden focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring">{APACHE_LICENSE_TEXT}</pre>
+              {/* Scrollable box: focusable so keyboard users can scroll it; role="group" is what lets a `pre` carry the aria-label (the surrounding section is already the landmark). The legal text stays in its original English. */}
+              <pre lang="en" tabIndex={0} role="group" aria-label={t("fullTextTitle")} className="max-h-[70vh] overflow-auto rounded-lg border border-border bg-muted p-4 font-mono text-xs leading-5 outline-hidden focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring">{APACHE_LICENSE_TEXT}</pre>
             </section>
           )}
           {(page === "kvkk" || page === "privacy") && (

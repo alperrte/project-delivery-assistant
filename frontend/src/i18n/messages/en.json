@@ -1128,6 +1128,7 @@
     "emailPlaceholder": "example@gmail.com",
     "passwordPlaceholder": "Enter your password",
     "metaTitle": "Sign in",
+    "metaDescription": "Sign in to your PDA account and pick up your projects, tasks and team where you left off.",
     "rememberMe": "Remember me",
     "hero": {
       "title": "Plan. Manage. Deliver.",
@@ -1140,6 +1141,7 @@
     }
   },
   "register": {
+    "metaDescription": "Create a PDA account, set up your project, invite your team and deliver the work together.",
     "title": "Create your account",
     "subtitle": "Get started with a few details.",
     "email": "Email",
@@ -1180,6 +1182,8 @@
     "url": "Enter a valid http/https address."
   },
   "forgotPassword": {
+    "metaTitle": "Forgot password",
+    "metaDescription": "Forgot your PDA password? Set a new one with the code we send to your email address.",
     "title": "Forgot your password?",
     "subtitle": "Enter your email address and, if you have an account, we'll send you a code.",
     "email": "Email",
@@ -2323,6 +2327,42 @@
       "open": "Open message actions",
       "label": "Message actions"
     }
+  },
+  "pageTitles": {
+    "dashboard": "Dashboard",
+    "projects": "Projects",
+    "projectNew": "New project",
+    "projectOverview": "Overview",
+    "projectCriteria": "Criteria",
+    "projectTeams": "All teams",
+    "projectInvitations": "Team invitations",
+    "projectRepository": "Repository",
+    "projectEdit": "Edit project",
+    "teamNew": "New team",
+    "team": "Team",
+    "teamEdit": "Edit team",
+    "tasks": "Tasks",
+    "taskNew": "New task",
+    "board": "Board",
+    "pool": "Task pool",
+    "task": "Task",
+    "taskEdit": "Edit task",
+    "sprints": "Sprints",
+    "sprint": "Sprint",
+    "labels": "Labels",
+    "organizations": "Organizations",
+    "organizationNew": "New organization",
+    "organization": "Organization",
+    "organizationEdit": "Edit organization",
+    "settings": "Settings",
+    "account": "Account",
+    "myTasks": "My tasks",
+    "calendar": "Calendar",
+    "reminderNew": "New reminder",
+    "reminderEdit": "Edit reminder",
+    "invitations": "Invitations",
+    "invitation": "Invitation",
+    "changePassword": "Change password"
   },
   "siteFooter": {
     "description": "Manage projects, teams and delivery together.",

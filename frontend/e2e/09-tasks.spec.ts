@@ -90,7 +90,7 @@ test.describe.serial("Task management", () => {
     // The live preview card follows what is typed.
     await expect(managerPage.getByRole("complementary", { name: "Önizleme" }).getByText(formTitle)).toBeVisible();
     await managerPage.getByRole("button", { name: /^Görevi oluştur$/ }).click();
-    await expect(managerPage).toHaveURL(new RegExp(`/tr/projeler/${slug}/gorevler/(?!yeni$)[^/]+$`), { timeout: 15_000 });
+    await expect(managerPage).toHaveURL(new RegExp(`/tr/projeler/${slug}/gorevler/(?!yeni-gorev$)[^/]+$`), { timeout: 15_000 });
     await expect(managerPage.getByRole("heading", { name: formTitle })).toBeVisible();
 
     const created = await api(managerPage, "GET", `/projects/${projectId}/tasks?q=${encodeURIComponent("3-D Secure")}`);

@@ -26,13 +26,13 @@ test.describe.serial("Organizations", () => {
     await managerPage.goto("/organizations");
     await managerPage.getByRole("link", { name: "Yeni organizasyon" }).click();
 
-    await expect(managerPage).toHaveURL(/\/tr\/organizasyonlar\/yeni$/);
+    await expect(managerPage).toHaveURL(/\/tr\/organizasyonlar\/yeni-organizasyon$/);
     await expect(managerPage.getByRole("dialog")).toHaveCount(0);
     await expect(managerPage.getByRole("heading", { level: 1, name: "Yeni organizasyon" })).toBeVisible();
 
     await managerPage.getByRole("button", { name: /^Organizasyonu oluştur$/ }).click();
     await expect(managerPage.getByRole("alert").first()).toBeVisible();
-    await expect(managerPage).toHaveURL(/\/tr\/organizasyonlar\/yeni$/);
+    await expect(managerPage).toHaveURL(/\/tr\/organizasyonlar\/yeni-organizasyon$/);
   });
 
   test("the form shows a live preview card that follows what is typed, without a link to open", async () => {

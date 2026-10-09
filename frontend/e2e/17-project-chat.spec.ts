@@ -287,7 +287,7 @@ test.describe.serial("Project chat", () => {
     }
     await managerPage.locator('.app-shell a[href="/tr/organizasyonlar"]').first().click();
     await managerPage.getByRole("link", { name: "Yeni organizasyon", exact: true }).click();
-    await expect(managerPage).toHaveURL(/\/tr\/organizasyonlar\/yeni$/);
+    await expect(managerPage).toHaveURL(/\/tr\/organizasyonlar\/yeni-organizasyon$/);
     const originalViewport = managerPage.viewportSize()!;
     for (const width of [320, 390, 1280]) {
       await managerPage.setViewportSize({ width, height: 900 });

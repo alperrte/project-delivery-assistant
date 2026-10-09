@@ -171,6 +171,6 @@ test.describe.serial("Invitation, roles, squad, and denial checks", () => {
     await expect(managerPage.getByRole("row", { name: new RegExp(member.nickname) })).toHaveCount(0);
 
     await managerPage.getByRole("navigation", { name: "Konum" }).getByRole("link", { name: "Ekipler" }).click();
-    await expect(managerPage).toHaveURL(`/tr/projeler/${slug}?section=teams`);
+    await expect(managerPage).toHaveURL(`/tr/projeler/${slug}/ekipler`);
   });
 });

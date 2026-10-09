@@ -82,7 +82,7 @@ test("today, clear, quick deadlines and advanced time keep their existing payloa
   const payload = (await request).postDataJSON();
   expect(payload.startDate).toBeNull();
   expect(new Date(payload.deadlineAt).toISOString()).toBe("2032-12-10T11:30:00.000Z");
-  await expect(page).toHaveURL(/gorevler\/(?!yeni$)[^/]+$/);
+  await expect(page).toHaveURL(/gorevler\/(?!yeni-gorev$)[^/]+$/);
 });
 
 test("custom month and year menus support selection, keyboard and nested Escape", async ({ page }) => {

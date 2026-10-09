@@ -279,6 +279,6 @@ test.describe.serial("Repository management", () => {
     await expect(panel).toContainText("Son commit: Fix login redirect (Alice Dev)");
 
     await panel.getByRole("link", { name: "Depoyu aç" }).click();
-    await expect(managerPage).toHaveURL(new RegExp(`/projeler/${slug}\\?section=repository|/projects/${slug}\\?section=repository`));
+    await expect(managerPage).toHaveURL(new RegExp(`/projeler/${slug}/depo|/projects/${slug}/repository`));
   });
 });

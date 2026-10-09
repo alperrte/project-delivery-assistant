@@ -30,7 +30,7 @@ test.describe.serial("Teams page (manager)", () => {
     await expect(page.getByText("Henüz ekip yok")).toBeVisible();
 
     await page.getByRole("link", { name: /^Yeni ekip$/ }).first().click();
-    await expect(page).toHaveURL(`/tr/projeler/${slug}/ekipler/yeni`);
+    await expect(page).toHaveURL(`/tr/projeler/${slug}/ekipler/yeni-ekip`);
 
     const includeCreator = page.getByRole("checkbox", { name: /Beni de bu ekibe ekle/ });
     await expect(includeCreator).toBeChecked();
@@ -46,7 +46,7 @@ test.describe.serial("Teams page (manager)", () => {
   test("a whole team card opens the detail page and the list switches to the chart", async () => {
     await createTeam(page, slug, "Frontend");
     await page.getByRole("navigation", { name: "Konum" }).getByRole("link", { name: "Ekipler" }).click();
-    await expect(page).toHaveURL(`/tr/projeler/${slug}?section=teams`);
+    await expect(page).toHaveURL(`/tr/projeler/${slug}/ekipler`);
 
     await page.getByRole("tab", { name: "Şema" }).click();
     await expect(page).toHaveURL(/view=chart/);

@@ -63,11 +63,11 @@ test("PDA and browser traversal preserve native entries and close only fullscree
   await page.getByTestId("chat-composer").fill("quoted original");await page.getByTestId("chat-composer").press("Enter");const message=page.getByTestId("chat-message").filter({hasText:"quoted original"});await expect(message).toHaveCount(1);await chooseMessageAction(message,"reply");await page.getByTestId("chat-composer").fill("reply draft");
   await page.getByTestId("chat-minimize").click();await page.getByTestId("chat-bar-expand").click();await expect(page.getByTestId("chat-compact")).toBeVisible();await arrow(page,"forward");await expect(page).toHaveURL(calendar);await expect(page.getByTestId("chat-composer")).toHaveValue("reply draft");await expect(page.getByTestId("chat-reply-context")).toBeVisible();
   await page.getByTestId("chat-minimize").click();await arrow(page,"back");await expect(page).toHaveURL(tasks);await expect(page.getByTestId("chat-bar")).toBeVisible();await page.getByTestId("chat-bar-expand").click();await expect(page.getByTestId("chat-composer")).toHaveValue("reply draft");
-  await page.getByTestId("chat-fullscreen").click();await route(page,root+"?section=criteria");await expect(page.getByTestId("chat-panel")).toHaveCount(0);
-  await page.getByTestId("chat-nav-item").click();await route(page,root+"?section=criteria&filter=qa#history");await expect(page.getByTestId("chat-panel")).toBeVisible();
+  await page.getByTestId("chat-fullscreen").click();await route(page,root+"/kriterler");await expect(page.getByTestId("chat-panel")).toHaveCount(0);
+  await page.getByTestId("chat-nav-item").click();await route(page,root+"/kriterler?filter=qa#history");await expect(page.getByTestId("chat-panel")).toBeVisible();
   const index=await page.evaluate(()=>(window as unknown as {navigation:{currentEntry:{index:number}}}).navigation.currentEntry.index);
-  await route(page,root+"?section=criteria&filter=replaced#history",true);expect(await page.evaluate(()=>(window as unknown as {navigation:{currentEntry:{index:number}}}).navigation.currentEntry.index)).toBe(index);
-  await arrow(page,"back");await expect(page).toHaveURL(root+"?section=criteria");await expect(page.getByTestId("chat-panel")).toBeVisible();await arrow(page,"back");await expect(page).toHaveURL(tasks);await expect(page.getByTestId("chat-panel")).toHaveCount(0);
+  await route(page,root+"/kriterler?filter=replaced#history",true);expect(await page.evaluate(()=>(window as unknown as {navigation:{currentEntry:{index:number}}}).navigation.currentEntry.index)).toBe(index);
+  await arrow(page,"back");await expect(page).toHaveURL(root+"/kriterler");await expect(page.getByTestId("chat-panel")).toBeVisible();await arrow(page,"back");await expect(page).toHaveURL(tasks);await expect(page.getByTestId("chat-panel")).toHaveCount(0);
   await link(page,"/calendar");await expect(page.getByTestId("workspace-forward")).toBeDisabled();
  }finally{await api(page,"POST",`/projects/${pid}/archive`);}
 });

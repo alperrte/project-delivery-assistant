@@ -45,7 +45,7 @@ test("confirmed UI deletion dispatches once, keeps DB history and redirects anot
     await expect(confirm).toBeDisabled(); await expect.poll(() => requests).toBe(1); release();
     await expect(dialog).toBeHidden(); await expect(f.a.getByRole("heading", { name: f.name, exact: true })).toHaveCount(0);
     expect(await f.a.evaluate(() => (window as unknown as { deleteDocumentMarker: number }).deleteDocumentMarker)).toBe(99);
-    await f.b.bringToFront(); await expect(f.b).toHaveURL(new RegExp(`/tr/projeler/${f.p.slug}\\?section=teams`), { timeout: 45_000 });
+    await f.b.bringToFront(); await expect(f.b).toHaveURL(new RegExp(`/tr/projeler/${f.p.slug}/ekipler`), { timeout: 45_000 });
     const state = teamDeletionInDatabase(f.team.id, f.user!.id); expect(state.deleted).toBe(true); expect(state.memberRows).toBe(2); expect(state.notifications).toBe(1);
     expect(teamDeletionInDatabase(f.team.id, f.actor.id).notifications).toBe(0);
     const live = (await api(f.a, "GET", `/projects/${f.p.id}/teams`)).json as { content: { id: string }[] };
@@ -83,7 +83,7 @@ test("direct stale detail of a deleted team replaces to the living list; non-man
     expect((await api(f.b, "DELETE", `/projects/${f.p.id}/teams/${f.team.id}`)).status).toBe(403);
     expect((await api(f.a, "DELETE", `/projects/${f.p.id}/teams/${f.team.id}`)).status).toBe(204);
     await f.b.goto(`/tr/projeler/${f.p.slug}/ekipler/${f.team.id}`);
-    await expect(f.b).toHaveURL(new RegExp(`/tr/projeler/${f.p.slug}\\?section=teams`));
+    await expect(f.b).toHaveURL(new RegExp(`/tr/projeler/${f.p.slug}/ekipler`));
     await expect(f.b.getByRole("heading", { name: "Ekipler", exact: true })).toBeVisible();
   } finally { await api(f.a, "POST", `/projects/${f.p.id}/archive`); await f.ac.close(); await f.bc.close(); }
 });

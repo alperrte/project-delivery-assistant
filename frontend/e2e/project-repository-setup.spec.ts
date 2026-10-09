@@ -188,7 +188,7 @@ test.describe.serial("Project repository setup", () => {
 
     // Evet opens the full-page team form of the new project.
     await dialog.getByRole("button", { name: "Evet", exact: true }).click();
-    await expect(managerPage).toHaveURL(/\/projeler\/[^/]+\/ekipler\/yeni$/, { timeout: 15_000 });
+    await expect(managerPage).toHaveURL(/\/projeler\/[^/]+\/ekipler\/yeni-ekip$/, { timeout: 15_000 });
     await managerPage.unrouteAll({ behavior: "ignoreErrors" });
   });
 

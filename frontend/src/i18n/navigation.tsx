@@ -2,12 +2,12 @@
 
 import { useMemo, type ComponentProps } from "react";
 import NextLink from "next/link";
-import { usePathname as useNextPathname, useRouter as useNextRouter } from "next/navigation";
+import {
+  ReadonlyURLSearchParams, usePathname as useNextPathname, useRouter as useNextRouter, useSearchParams as useNextSearchParams,
+} from "next/navigation";
 import { useLocale } from "next-intl";
 import { type Locale } from "./config";
 import { localizeHref, matchPath } from "./routing";
-
-export { useSearchParams } from "next/navigation";
 
 /** One page-link boundary; API URLs and external links are left untouched. */
 export default function Link({ href, ...props }: ComponentProps<typeof NextLink>) {
@@ -19,6 +19,19 @@ export default function Link({ href, ...props }: ComponentProps<typeof NextLink>
 export function usePathname() {
   const pathname = useNextPathname();
   return matchPath(pathname)?.internalPath ?? pathname;
+}
+
+/** A project section's public URL has no `?section=`; the components that read it still get it, as before. */
+export function useSearchParams() {
+  const pathname = useNextPathname();
+  const search = useNextSearchParams();
+  return useMemo(() => {
+    const section = matchPath(pathname)?.section;
+    if (!section) return search;
+    const params = new URLSearchParams(search.toString());
+    params.set("section", section);
+    return new ReadonlyURLSearchParams(params);
+  }, [pathname, search]);
 }
 
 export function useRouter() {

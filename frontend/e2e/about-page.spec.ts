@@ -85,7 +85,7 @@ test("public pages keep the landing navbar and the logo returns to the landing p
   }
   await page.goto("/about");
   await page.locator("header").getByRole("link", { name: "PDA · Project Delivery Assistant" }).click();
-  await expect(page).toHaveURL(/\/tr$/);
+  await expect(page).toHaveURL(/\/tr\/ana-sayfa$/);
   await expect(page.locator("#landing-heading")).toBeVisible();
   await page.goBack();
   await page.locator("header nav").getByRole("link", { name: "Kayıt ol" }).click();

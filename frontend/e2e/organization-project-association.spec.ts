@@ -107,7 +107,7 @@ test("warm old/new organization lists refresh after move/remove/assign/rename/cr
   }
   await page.locator('.app-shell a[href="/tr/projeler"]').first().click();
   for(let index=0;index<targetPage;index++){await page.getByRole("button",{name:"Sonraki",exact:true}).click();await expect(page.locator('button[aria-current="page"]')).toHaveText(String(index+2));}
-  await page.locator(`#main-content a[href="/tr/projeler/${p.slug}?section=settings"]`).click();await expect(page.locator("#settings-name")).toBeVisible();
+  await page.locator(`#main-content a[href="/tr/projeler/${p.slug}/duzenle"]`).click();await expect(page.locator("#settings-name")).toBeVisible();
  }
  async function save(){const [r]=await Promise.all([page.waitForResponse(r=>r.request().method()==="PUT"&&r.url().endsWith(`/projects/${p.id}`)),page.locator('form button[type="submit"]').click()]);expect(r.status()).toBe(200);}
  try {

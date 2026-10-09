@@ -61,7 +61,7 @@ test.describe("Yeni proje sayfası", () => {
 
     await page.locator("#project-name").fill("Türsüz proje");
     await page.getByRole("button", { name: /^Projeyi oluştur$/ }).click();
-    await expect(page).toHaveURL(/\/tr\/projeler\/yeni$/);
+    await expect(page).toHaveURL(/\/tr\/projeler\/yeni-proje$/);
     await expect(page.getByRole("alert").filter({ hasText: "Bu alan zorunlu." })).toBeVisible();
   });
 
