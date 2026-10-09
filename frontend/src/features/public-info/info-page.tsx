@@ -2,9 +2,12 @@ import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
 import { CaretDown } from "@phosphor-icons/react/ssr";
 import Link from "@/i18n/navigation";
+import { APACHE_LICENSE_TEXT } from "./apache-license";
+import { PageContents } from "./page-contents";
 import { CONTACT_HREF, type InfoPage } from "./site-info";
-import { buildPath } from "@/i18n/routing";
-import { locales, type Locale } from "@/i18n/config";
+import { type Locale } from "@/i18n/config";
+import { pageAlternates } from "@/lib/seo/alternates";
+import { FaqJsonLd, PageJsonLd } from "@/lib/seo/json-ld";
 import { ManageCookiePreferencesButton } from "@/features/consent/manage-cookie-preferences-button";
 
 type Section = { id: string; title: string; paragraphs: string[]; items?: string[] };
@@ -19,7 +22,7 @@ export async function infoMetadata(page: InfoPage): Promise<Metadata> {
   const route = `/${page}` as const;
   return {
     title: t("title"), description: t("description"),
-    alternates: { canonical: buildPath(route, {}, locale), languages: Object.fromEntries(locales.map((language) => [language, buildPath(route, {}, language)])) },
+    alternates: pageAlternates(route, locale),
     ...(isLegalPage(page) ? { robots: { index: false, follow: true } } : {}),
   };
 }
@@ -30,16 +33,19 @@ export async function PublicInfoPage({ page }: { page: InfoPage }) {
   const locale = await getLocale();
   const sections: Section[] = page === "faq" ? [] : t.raw("sections");
   const groups: FaqGroup[] = page === "faq" ? t.raw("groups") : [];
-  const contents = page === "faq" ? groups : sections;
+  const isLicense = page === "license";
+  const contents = page === "faq" ? groups : isLicense ? [...sections, { id: "full-text", title: t("fullTextTitle") }] : sections;
   const date = new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Istanbul" }).format(new Date("2026-10-09T12:00:00+03:00"));
 
   return (
     <article>
+      <PageJsonLd route={`/${page}`} type={page === "about" ? "AboutPage" : "WebPage"} name={t("title")} description={t("description")} />
+      {page === "faq" && <FaqJsonLd questions={groups.flatMap((group) => group.questions)} />}
       <header className="max-w-3xl">
         <p className="text-sm font-medium text-muted-foreground">PDA · Project Delivery Assistant</p>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">{t("title")}</h1>
         <p className="mt-4 text-base leading-7 text-muted-foreground">{t("description")}</p>
-        <p className="mt-4 text-sm text-muted-foreground">{common("updated", { date })}</p>
+        {!isLicense && <p className="mt-4 text-sm text-muted-foreground">{common("updated", { date })}</p>}
       </header>
       {isLegalPage(page) && (
         <aside aria-label={common("reviewTitle")} className="mt-8 rounded-lg border border-border bg-muted p-5">
@@ -48,12 +54,7 @@ export async function PublicInfoPage({ page }: { page: InfoPage }) {
         </aside>
       )}
       <div className="mt-10 grid gap-10 lg:grid-cols-[14rem_minmax(0,1fr)] lg:gap-16">
-        <nav aria-label={common("contents")} className="lg:sticky lg:top-6 lg:self-start">
-          <h2 className="text-sm font-semibold">{common("contents")}</h2>
-          <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1 lg:block lg:space-y-1">
-            {contents.map(({ id, title }) => <li key={id}><a href={"#" + id} className="inline-flex min-h-11 items-center rounded-sm text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring">{title}</a></li>)}
-          </ul>
-        </nav>
+        <PageContents label={common("contents")} items={contents} />
         <div className="min-w-0">
           {page === "faq" ? groups.map(group => (
             <section key={group.id} id={group.id} aria-labelledby={group.id + "-title"} className="mb-10 scroll-mt-6">
@@ -61,7 +62,7 @@ export async function PublicInfoPage({ page }: { page: InfoPage }) {
               <div className="divide-y divide-border border-y border-border">
                 {group.questions.map(({ question, answer }, index) => (
                   <details key={question} className="group">
-                    <summary aria-controls={group.id + "-answer-" + index} className="flex list-none items-start justify-between gap-4 py-5 text-base font-medium outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring [&::-webkit-details-marker]:hidden">
+                    <summary aria-controls={group.id + "-answer-" + index} className="flex list-none items-start justify-between gap-4 py-5 text-base font-medium outline-hidden focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring [&::-webkit-details-marker]:hidden">
                       {question}<CaretDown size={18} aria-hidden="true" className="mt-1 shrink-0 transition-transform group-open:rotate-180" />
                     </summary>
                     <p id={group.id + "-answer-" + index} className="pb-5 pr-6 text-base leading-7 text-muted-foreground">{answer}</p>
@@ -78,6 +79,14 @@ export async function PublicInfoPage({ page }: { page: InfoPage }) {
               </div>
             </section>
           ))}
+          {isLicense && (
+            <section id="full-text" aria-labelledby="full-text-title" className="mb-10 scroll-mt-6">
+              <h2 id="full-text-title" className="mb-4 text-xl font-semibold">{t("fullTextTitle")}</h2>
+              <p className="mb-4 text-base leading-7 text-muted-foreground">{t("fullTextNote")}</p>
+              {/* Scrollable box: focusable so keyboard users can scroll it; role="group" is what lets a `pre` carry the aria-label (the surrounding section is already the landmark). The legal text stays in its original English. */}
+              <pre lang="en" tabIndex={0} role="group" aria-label={t("fullTextTitle")} className="max-h-[70vh] overflow-auto rounded-lg border border-border bg-muted p-4 font-mono text-xs leading-5 outline-hidden focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring">{APACHE_LICENSE_TEXT}</pre>
+            </section>
+          )}
           {page === "cookies" && (
             <div className="mb-10 border-t border-border pt-6">
               <h2 className="text-lg font-semibold">{t("manageTitle")}</h2>

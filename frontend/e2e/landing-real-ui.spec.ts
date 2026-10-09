@@ -77,7 +77,8 @@ for (const theme of ["light", "dark"]) {
       await scrollStory(page, progress);
       await expect(page.locator("#product")).toHaveAttribute("data-chapter", stage);
       const demo = `[data-pda-demo-stage="${stage}"] .workspace-preview`;
-      await expect(page.locator(demo + " h1")).toBeVisible();
+      // The demo title is an h2 so the landing page keeps a single h1; the real screen uses h1.
+      await expect(page.locator(demo + " h2").first()).toBeVisible();
       const dimensions = await page.locator(`[data-pda-viewport="${stage}"] > div`).evaluate(element => ({ width: element.clientWidth, height: Math.round(element.clientHeight) }));
       await real.setViewportSize(dimensions);
       await real.goto(route);
@@ -86,9 +87,10 @@ for (const theme of ["light", "dark"]) {
       await expect(real.locator(".app-shell header").first()).toHaveCSS("opacity", "1");
       await real.evaluate(() => document.fonts.ready);
       await page.evaluate(() => document.fonts.ready);
-      for (const selector of ["> aside", "header", "header input", "header button", "nav a[aria-current=page]", "h1"]) {
+      for (const selector of ["> aside", "header", "header input", "header button", "nav a[aria-current=page]"]) {
         expect(await uiMetrics(page, demo, selector), stage + " " + selector).toEqual(await uiMetrics(real, ".app-shell", selector));
       }
+      expect(await uiMetrics(page, demo, "h2"), stage + " title").toEqual(await uiMetrics(real, ".app-shell", "h1"));
       if (stage === "team") {
         for (const selector of ["table", "tbody tr", "tbody td", "tbody td span"])
           expect(await uiMetrics(page, demo, selector)).toEqual(await uiMetrics(real, ".app-shell", selector));
@@ -153,7 +155,7 @@ for (const width of [1440, 1920]) {
   test("larger existing navbar logo preserves alignment: " + width, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     await page.goto("/");
-    const brand = page.locator('header > a[href="/tr"]').first();
+    const brand = page.locator('header > a[href="/tr/ana-sayfa"]').first();
     await expect(brand).toHaveCSS("width", "110px");
     await expect(page.locator("body > div header").first()).toHaveCSS("min-height", "88px");
     await expect(brand.locator("span:visible")).toHaveCSS("max-width", "110px");
@@ -175,7 +177,7 @@ test("demo cannot take focus, intercept shortcuts, or submit a backend mutation"
   await expect(page.locator('[data-pda-demo-stage="project"] form button[type=submit]')).not.toBeDisabled();
   await page.waitForTimeout(300);
   expect(requests).toEqual([]);
-  await expect(page).toHaveURL("/tr");
+  await expect(page).toHaveURL("/tr/ana-sayfa");
   expect(await page.locator(".app-shell").count()).toBe(0);
   await expect(page.locator("#landing-main")).toBeVisible();
 });

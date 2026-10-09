@@ -19,7 +19,7 @@ test.describe.serial("Project settings logo", () => {
   let projectId: string;
   let version: number;
   const name = `E2E Logo Settings ${Date.now()}`;
-  const card = () => page.locator("article").filter({ has: page.locator(`a[href="/tr/projeler/${slug}"]`) });
+  const card = () => page.locator("article").filter({ has: page.locator(`a[href="/tr/projeler/${slug}/genel-bakis"]`) });
   test.beforeAll(async ({ browser }) => { page = await (await browser.newContext({ storageState: MANAGER_STORAGE })).newPage(); });
   test.afterAll(async () => { await page.context().close(); });
 

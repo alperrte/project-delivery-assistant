@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { defaultLocale, isLocale, LOCALE_COOKIE, type Locale } from "./i18n/config";
-import { buildPath, matchPath } from "./i18n/routing";
+import { buildPath, matchPath, normalizeProjectSection } from "./i18n/routing";
 
 /**
  * Edge-level defense-in-depth for route access. This never replaces backend
@@ -30,9 +30,13 @@ export function proxy(request: NextRequest) {
   const preferred: Locale = isLocale(stored) ? stored : defaultLocale;
   const page = matchPath(pathname, preferred);
   if (!page) return NextResponse.next();
-  if (pathname !== page.canonicalPath) {
+  // Old forms (unprefixed, other language, `?section=`) all have one canonical destination.
+  const normalized = normalizeProjectSection(page.route, request.nextUrl.search);
+  const canonicalPath = normalized.route === page.route ? page.canonicalPath : buildPath(normalized.route, page.params, page.locale);
+  if (pathname !== canonicalPath || normalized.search !== request.nextUrl.search) {
     const target = request.nextUrl.clone();
-    target.pathname = page.canonicalPath;
+    target.pathname = canonicalPath;
+    target.search = normalized.search;
     return NextResponse.redirect(target, 308);
   }
 
@@ -46,6 +50,7 @@ export function proxy(request: NextRequest) {
 
   const destination = request.nextUrl.clone();
   destination.pathname = page.internalPath;
+  if (page.section) destination.searchParams.set("section", page.section);
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-pda-locale", page.locale);
   const response = NextResponse.rewrite(destination, { request: { headers: requestHeaders } });

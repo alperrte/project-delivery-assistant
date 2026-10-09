@@ -4,6 +4,8 @@ import { Exo_2, Inter, JetBrains_Mono } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale } from "next-intl/server";
 import { Providers } from "@/components/providers";
+import type { Locale } from "@/i18n/config";
+import { OG_IMAGE, openGraphLocale } from "@/lib/seo/alternates";
 import "./globals.css";
 
 // Load fonts when their text is rendered instead of preloading every family/subset on every route.
@@ -30,20 +32,23 @@ const jetbrainsMono = JetBrains_Mono({
   preload: false,
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
-  title: {
-    default: "PDA · Project Delivery Assistant",
-    template: "%s · PDA",
-  },
-  description: "Öğrenciler ve küçük ekipler için self-hosted proje teslim asistanı.",
-  icons: { icon: "/icon.png" },
-  openGraph: {
-    type: "website",
-    siteName: "PDA · Project Delivery Assistant",
-    images: [{ url: "/images/branding/pda-full.png" }],
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
+    title: {
+      default: "PDA · Project Delivery Assistant",
+      template: "%s · PDA",
+    },
+    description: "Öğrenciler ve küçük ekipler için self-hosted proje teslim asistanı.",
+    icons: { icon: "/icon.png" },
+    openGraph: {
+      type: "website",
+      siteName: "PDA · Project Delivery Assistant",
+      images: [OG_IMAGE],
+      ...openGraphLocale(await getLocale() as Locale),
+    },
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: [

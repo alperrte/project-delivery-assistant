@@ -680,7 +680,10 @@
     "defaultBranch": "Standard-Branch: {branch}",
     "publicOnly": "Nur öffentliche Repositories können verbunden werden. Die Verbindung ist schreibgeschützt.",
     "notifyNote": "Projektmitglieder werden benachrichtigt, wenn neue Commits im Branch {branch} eintreffen (nach wenigen Minuten).",
-    "mode": { "BASIC": "Einfach", "ADVANCED": "Erweitert" },
+    "mode": {
+      "BASIC": "Einfach",
+      "ADVANCED": "Erweitert"
+    },
     "notifyOff": "Benachrichtigungen für neue Commits sind aus.",
     "manageSettings": "Repository-Einstellungen",
     "goToSettings": "In den Einstellungen verbinden",
@@ -688,13 +691,22 @@
     "options": {
       "modeLabel": "Tracking-Modus",
       "help": "Unterschied zwischen Einfach und Erweitert anzeigen",
-      "mode": { "BASIC": "Einfach", "ADVANCED": "Erweitert" },
-      "modeSummary": { "BASIC": "Das Repository wird verbunden und die neuesten in den Standard-Branch gemergten Commits werden verfolgt.", "ADVANCED": "Branches verfolgen; alle gemergten oder ungemergten Commits und deren Autoren sehen." },
+      "mode": {
+        "BASIC": "Einfach",
+        "ADVANCED": "Erweitert"
+      },
+      "modeSummary": {
+        "BASIC": "Das Repository wird verbunden und die neuesten in den Standard-Branch gemergten Commits werden verfolgt.",
+        "ADVANCED": "Branches verfolgen; alle gemergten oder ungemergten Commits und deren Autoren sehen."
+      },
       "notifyLabel": "Mitglieder über neue Commits benachrichtigen",
       "notifyHint": "In beiden Modi betrifft die Benachrichtigung nur Commits im Standard-Branch.",
       "helpTitle": "Einfacher und erweiterter Modus",
       "helpDescription": "Sie können den Modus jederzeit in den Projekteinstellungen ändern.",
-      "modeDetail": { "BASIC": "Das Repository wird verbunden und die neuesten in den Standard-Branch gemergten Commits werden verfolgt. Die Repository-Seite zeigt nur die Commit-Liste des Standard-Branches.", "ADVANCED": "Sie können Branches verfolgen und pro Branch alle gemergten oder ungemergten Commits samt Autor sehen. Die Repository-Seite öffnet die Ansichten Übersicht und Branches." },
+      "modeDetail": {
+        "BASIC": "Das Repository wird verbunden und die neuesten in den Standard-Branch gemergten Commits werden verfolgt. Die Repository-Seite zeigt nur die Commit-Liste des Standard-Branches.",
+        "ADVANCED": "Sie können Branches verfolgen und pro Branch alle gemergten oder ungemergten Commits samt Autor sehen. Die Repository-Seite öffnet die Ansichten Übersicht und Branches."
+      },
       "helpNotify": "Benachrichtigungen über neue Commits gelten in beiden Modi nur für den Standard-Branch; Sie können sie mit dem Schalter ausschalten.",
       "close": "Schließen"
     },
@@ -716,7 +728,11 @@
       "disconnectConfirmDescription": "Die Repository-Seite und die Repository-Zeile in der Übersicht werden entfernt. Das Repository auf GitHub bleibt unberührt.",
       "cancel": "Abbrechen"
     },
-    "views": { "label": "Repository-Ansicht", "overview": "Übersicht", "branches": "Branches" },
+    "views": {
+      "label": "Repository-Ansicht",
+      "overview": "Übersicht",
+      "branches": "Branches"
+    },
     "overview": {
       "latestTitle": "Neueste Commits auf {branch}",
       "branchCount": "{count, plural, one {# Branch} other {# Branches}}",
@@ -754,7 +770,11 @@
       "commitsTitle": "Commits",
       "commitsByAuthor": "Commits von {author}",
       "filterLabel": "Nach Merge-Status filtern",
-      "filter": { "all": "Alle", "unmerged": "Nicht im Hauptbranch", "merged": "Im Hauptbranch" },
+      "filter": {
+        "all": "Alle",
+        "unmerged": "Nicht im Hauptbranch",
+        "merged": "Im Hauptbranch"
+      },
       "empty": "Keine Commits in diesem Branch.",
       "emptyAuthor": "Diese Person hat keine Commits in diesem Branch.",
       "emptyFiltered": "Keine Commits entsprechen diesem Filter.",
@@ -1159,6 +1179,7 @@
     "emailPlaceholder": "beispiel@gmail.com",
     "passwordPlaceholder": "Passwort eingeben",
     "metaTitle": "Anmelden",
+    "metaDescription": "Melden Sie sich bei Ihrem PDA-Konto an und machen Sie mit Ihren Projekten, Aufgaben und Ihrem Team dort weiter, wo Sie aufgehört haben.",
     "rememberMe": "Angemeldet bleiben",
     "hero": {
       "title": "Planen. Steuern. Liefern.",
@@ -1171,6 +1192,7 @@
     }
   },
   "register": {
+    "metaDescription": "Erstellen Sie ein PDA-Konto, richten Sie Ihr Projekt ein, laden Sie Ihr Team ein und liefern Sie gemeinsam.",
     "title": "Konto erstellen",
     "subtitle": "Starten Sie mit wenigen Angaben.",
     "email": "E-Mail",
@@ -1211,6 +1233,8 @@
     "url": "Geben Sie eine gültige HTTP/HTTPS-Adresse ein."
   },
   "forgotPassword": {
+    "metaTitle": "Passwort vergessen",
+    "metaDescription": "Passwort vergessen? Legen Sie mit dem Code, den wir an Ihre E-Mail-Adresse senden, ein neues Passwort fest.",
     "title": "Passwort vergessen?",
     "subtitle": "Geben Sie Ihre E-Mail-Adresse ein. Falls Sie ein Konto haben, senden wir Ihnen einen Code.",
     "email": "E-Mail",
@@ -2355,6 +2379,736 @@
       "label": "Nachrichtenaktionen"
     }
   },
+  "pageTitles": {
+    "dashboard": "Übersicht",
+    "projects": "Projekte",
+    "projectNew": "Neues Projekt",
+    "projectOverview": "Übersicht",
+    "projectCriteria": "Kriterien",
+    "projectTeams": "Alle Teams",
+    "projectInvitations": "Team-Einladungen",
+    "projectRepository": "Repository",
+    "projectEdit": "Projekt bearbeiten",
+    "teamNew": "Neues Team",
+    "team": "Team",
+    "teamEdit": "Team bearbeiten",
+    "tasks": "Aufgaben",
+    "taskNew": "Neue Aufgabe",
+    "board": "Board",
+    "pool": "Pool",
+    "task": "Aufgabe",
+    "taskEdit": "Aufgabe bearbeiten",
+    "sprints": "Sprints",
+    "sprint": "Sprint",
+    "labels": "Labels",
+    "organizations": "Organisationen",
+    "organizationNew": "Neue Organisation",
+    "organization": "Organisation",
+    "organizationEdit": "Organisation bearbeiten",
+    "settings": "Einstellungen",
+    "account": "Konto",
+    "myTasks": "Meine Aufgaben",
+    "calendar": "Kalender",
+    "reminderNew": "Neue Erinnerung",
+    "reminderEdit": "Erinnerung bearbeiten",
+    "invitations": "Einladungen",
+    "invitation": "Einladung",
+    "changePassword": "Passwort ändern"
+  },
+  "siteFooter": {
+    "description": "Projekte, Teams und die Umsetzung gemeinsam organisieren.",
+    "information": "Information und Hilfe",
+    "about": "Über uns",
+    "faq": "Häufige Fragen",
+    "kvkk": "KVKK",
+    "privacy": "Datenschutzerklärung",
+    "accessibility": "Barrierefreiheit",
+    "license": "Lizenz",
+    "team": "Entwickler",
+    "githubProfile": "GitHub-Profil von {name}",
+    "contact": "Kontakt",
+    "contactDescription": "Für Fragen, Vorschläge und Rückmeldungen.",
+    "copyright": "© {year} PDA · Project Delivery Assistant",
+    "version": "Version {version}",
+    "source": "Quellcode",
+    "cookies": "Cookie-Richtlinie",
+    "manageCookies": "Cookie-Einstellungen verwalten"
+  },
+  "publicPages": {
+    "common": {
+      "skip": "Zum Inhalt springen",
+      "login": "Anmelden",
+      "updated": "Zuletzt aktualisiert: {date}",
+      "contents": "Auf dieser Seite",
+      "contactTitle": "Kontakt aufnehmen",
+      "contactAction": "Kontaktformular öffnen",
+      "contactText": "Nutzen Sie das Kontaktformular bei Fragen, Datenanfragen oder Barrieren. Teilen Sie keine Passwörter, Bestätigungscodes oder geheimen Einladungsinformationen.",
+      "reviewTitle": "Prüfung vor Veröffentlichung",
+      "reviewNotice": "Dieser Informationsentwurf beschreibt die aktuellen PDA-Funktionen. Die Identität des Verantwortlichen, Hosting- und E-Mail-Anbieter, Datenstandorte und Speicherfristen müssen vor dem Start bestätigt werden. Der Text fordert keine Einwilligung an und bedeutet keine abgeschlossene KVKK-Konformitätsprüfung.",
+      "references": "Offizielle Quellen",
+      "noticeReference": "KVKK: Informationspflicht",
+      "cookieReference": "KVKK: Leitfaden zur Cookie-Nutzung"
+    },
+    "about": {
+      "title": "Über uns",
+      "description": "Die Geschichte, die Ziele und die Kontaktdaten von Alper Temiz und Hamza Taşbay, den Entwicklern von PDA.",
+      "lead": "Hallo! Wir sind Alper Temiz und Hamza Taşbay, Studierende im vierten Studienjahr Software Engineering an der Doğuş-Universität.",
+      "role": "Full Stack Developer",
+      "journey": {
+        "title": "Unser Weg",
+        "paragraphs": [
+          "Als zwei Freunde haben wir uns auf diesen Weg gemacht, um eine der großen Lücken der Branche zu schließen: eine kostenlose Plattform für Projektmanagement. Bei vielen Werkzeugen stecken wichtige Funktionen hinter kostenpflichtigen Tarifen, oder man ist auf kostenpflichtige Abonnements angewiesen. Wir wollten eine Alternative entwickeln, die jeder ohne Gebühren nutzen kann."
+        ]
+      },
+      "pda": {
+        "title": "Was ist PDA?",
+        "paragraphs": [
+          "Wir entwickeln PDA als Open Source. Studierende und kleine Softwareunternehmen können es auf Wunsch vollständig auf eigenen Rechnern oder Servern aufsetzen und selbst betreiben. Unser Ziel ist, dass Sie, liebe Freunde, auch ohne hohe Kosten Großes erreichen können."
+        ]
+      },
+      "goal": {
+        "title": "Unser Ziel",
+        "paragraphs": [
+          "Unser größtes Ziel ist es, nicht zu einem der Projekte zu werden, die entwickelt und dann beiseitegelegt werden. Mit der Unterstützung unserer geschätzten Nutzerinnen, Nutzer und Freunde wollen wir PDA auf die nächste Stufe bringen.",
+          "Statt von kostenpflichtigen Abonnements abhängig zu sein, wollen wir die Branche mit Open-Source-Projekten voranbringen und statt eines Ansatzes, bei dem nur kostenpflichtige Funktionen im Vordergrund stehen, für einen kostenlosen Ansatz eintreten, der auf Zusammenhalt in der Branche zielt."
+        ]
+      },
+      "team": {
+        "title": "Kontakt",
+        "intro": "Wenn Sie uns persönlich erreichen oder Fragen stellen möchten:",
+        "linkedin": "LinkedIn-Profil",
+        "cv": "Lebenslauf (CV)",
+        "photoAlt": "Foto von {name}"
+      }
+    },
+    "faq": {
+      "title": "Häufige Fragen",
+      "description": "Antworten zum Einstieg in PDA, zu Konten, Projekten, Teams, Datenschutz und Hilfe.",
+      "groups": [
+        {
+          "id": "getting-started",
+          "title": "PDA und erste Schritte",
+          "questions": [
+            {
+              "question": "Was ist PDA und für wen ist es gedacht?",
+              "answer": "PDA (Project Delivery Assistant) wird für Studierende und Teams entwickelt, die ihre Projektumsetzung in einem gemeinsamen Arbeitsbereich organisieren möchten. Projektinformationen, Erfolgskriterien, Teams, Aufgaben und Kalendereinträge helfen bei der Übersicht."
+            },
+            {
+              "question": "Welche Funktionen hat PDA?",
+              "answer": "PDA bietet das Anlegen von Projekten, Mitglieder und Projektrollen, Teams, Erfolgskriterien, Aufgaben (Liste, Board und Aufgabenpool), Sprints, Labels, einen Kalender mit Erinnerungen, Benachrichtigungen in der App, Nachrichten an Projektmitglieder sowie die Verknüpfung eines öffentlichen GitHub-Repositorys zur Ansicht. Projekte lassen sich bei Bedarf in Organisationen gruppieren. PDA befindet sich in aktiver Entwicklung, daher können sich Funktionen im Laufe der Zeit ändern."
+            },
+            {
+              "question": "Muss ich eine Anwendung installieren?",
+              "answer": "PDA ist eine Webanwendung. Den gehosteten Dienst können Sie mit einem aktuellen Browser nutzen. Die Oberfläche passt sich auch Smartphones und Tablets an."
+            },
+            {
+              "question": "Ist PDA kostenlos?",
+              "answer": "PDA wird als kostenlose Open-Source-Software entwickelt. Unser Ziel ist, dass grundlegende Funktionen nicht hinter einem kostenpflichtigen Tarif verschwinden. Wenn Sie PDA auf Ihrem eigenen Server betreiben, tragen Sie die Server- und Hostingkosten selbst."
+            },
+            {
+              "question": "Kann ich PDA auf meinem eigenen Computer oder Server betreiben?",
+              "answer": "Ja. PDA ist Open Source und läuft auf Ihrer eigenen Infrastruktur. Backend und Datenbank starten mit Docker, die Oberfläche läuft mit Node.js. Die Schritte stehen in der README-Datei im GitHub-Repository. Bei einer eigenen Installation sind Sie selbst für Speicherung und Sicherung der Daten verantwortlich."
+            },
+            {
+              "question": "Unter welcher Lizenz wird PDA veröffentlicht?",
+              "answer": "Unter der Apache License 2.0. Sie erlaubt, die Software zu nutzen, zu verändern und weiterzugeben, und knüpft daran Bedingungen wie das Beibehalten der Urheberrechts- und Lizenzhinweise. Eine Zusammenfassung und den vollständigen Text finden Sie auf der Seite Lizenz."
+            },
+            {
+              "question": "Wie erstelle ich ein Konto?",
+              "answer": "Öffnen Sie den Registrierungslink auf der Anmeldeseite und geben Sie E-Mail, Benutzername und Passwort ein. Nach der Registrierung versucht die Anwendung, Sie anzumelden. Falls dies fehlschlägt, gelangen Sie zur Anmeldeseite."
+            },
+            {
+              "question": "Kann ich mich mit Google oder GitHub anmelden?",
+              "answer": "Google oder GitHub können genutzt werden, wenn der jeweilige Anbieter im Dienst aktiviert ist. Ein bestehendes Konto mit derselben E-Mail wird nicht automatisch zusammengeführt; zum Verknüpfen kann zuerst eine Anmeldung im bestehenden Konto erforderlich sein."
+            }
+          ]
+        },
+        {
+          "id": "projects-teams",
+          "title": "Projekte und Teams",
+          "questions": [
+            {
+              "question": "Wie erstelle ich mein erstes Projekt?",
+              "answer": "Nutzen Sie nach der Anmeldung die Aktion zum Erstellen eines Projekts unter Projekte. Tragen Sie Name, Typ und die Pflichtangaben ein; Technologie, Beschreibung und Logo können ergänzt werden. Sie werden der erste Projektmanager des erstellten Projekts."
+            },
+            {
+              "question": "Was ist eine Organisation, und muss ich sie nutzen?",
+              "answer": "Eine Organisation ist eine Gruppe, die zusammengehörige Projekte bündelt, zum Beispiel für einen Verein oder ein Lieferteam. Sie ist optional; Projekte können auch eigenständig bleiben. Nur die Inhaberin oder der Inhaber kann eine Organisation bearbeiten. Eine archivierte Organisation nimmt keine neuen Projekte mehr auf, und das Archivieren lässt sich nicht rückgängig machen."
+            },
+            {
+              "question": "Was unterscheidet Projekt- und Teammitgliedschaft?",
+              "answer": "Die Projektmitgliedschaft bestimmt Zugriff und Projektrollen. Teams organisieren die Arbeit innerhalb eines Projekts. Eine Teammitgliedschaft allein gibt keine Verwaltungsrechte; Aktionen werden anhand der Projektrollen geprüft."
+            },
+            {
+              "question": "Wie lade ich Teammitglieder ein?",
+              "answer": "Erstellen Sie im Bereich Teams des Projekts ein Team und nutzen Sie die Mitglieder- oder Einladungsaktion. Projektmanager können einen Benutzer oder eine E-Mail-Adresse einladen. Jede Einladung gehört zu einem Team und muss vom Empfänger angenommen werden."
+            },
+            {
+              "question": "Wo kann ich Einladungen annehmen oder ablehnen?",
+              "answer": "Registrierte Benutzer sehen eingehende Einladungen unter Einladungen. Externe Einladungslinks können zur Registrierung oder Anmeldung führen. Antworten Sie mit dem vorgesehenen Konto; bei abgelaufenen oder stornierten Einladungen bitten Sie den Projektmanager um eine neue Einladung."
+            },
+            {
+              "question": "Kann jeder meine Projekte sehen?",
+              "answer": "Ein Konto erlaubt keinen Zugriff auf fremde Projekte. Projektdaten werden nach aktiver Mitgliedschaft und Berechtigungen angezeigt. Einige Angaben, etwa E-Mail und Benutzername, sind für zusammenarbeitende Mitglieder sichtbar. Ein öffentliches GitHub-Repository kann bereits auf GitHub öffentlich sein."
+            },
+            {
+              "question": "Sind Erfolgskriterien und Aufgaben dasselbe?",
+              "answer": "Erfolgskriterien bilden eine Checkliste für Projektziele. Aufgaben erfassen Arbeit, Zuweisungen und Status. Ein abgeschlossenes Kriterium schließt Aufgaben nicht automatisch ab; beide Bereiche bleiben getrennt."
+            },
+            {
+              "question": "Wofür sind Sprints, das Board und der Aufgabenpool?",
+              "answer": "Ein Sprint teilt die Arbeit in Zeitabschnitte und zeigt den Fortschritt in einem Burndown-Diagramm. Auf dem Board ziehen Sie Aufgaben zwischen den Statusspalten; abgelegt werden kann nur bei erlaubten Übergängen. Der Aufgabenpool listet Aufgaben auf, die noch niemandem zugewiesen sind; eine übernommene Aufgabe wird Ihnen zugewiesen."
+            },
+            {
+              "question": "Ändert die GitHub-Verbindung meinen Code?",
+              "answer": "Die aktuelle Repository-Verbindung liest ein öffentliches GitHub-Repository und zeigt aktuelle Commits an. Sie erstellt keine Commits oder Pull Requests. Private Repositories gehören nicht zum Umfang dieser Verbindung."
+            }
+          ]
+        },
+        {
+          "id": "account-security",
+          "title": "Konto und Datenschutz",
+          "questions": [
+            {
+              "question": "Was mache ich, wenn ich mein Passwort vergessen habe?",
+              "answer": "Nutzen Sie den Link zur Passwortwiederherstellung auf der Anmeldeseite. Der E-Mail-Versand hängt von der Konfiguration des Dienstes ab; prüfen Sie Posteingang und Spamordner. Für Google- oder GitHub-Passwörter verwenden Sie die Wiederherstellung des jeweiligen Anbieters."
+            },
+            {
+              "question": "Was speichert die Option Angemeldet bleiben?",
+              "answer": "Diese Option merkt sich nur Ihre E-Mail-Adresse in diesem Browser. Sie speichert kein Passwort und verlängert die Sitzung nicht. Vermeiden Sie sie auf gemeinsam genutzten Geräten; deaktivieren Sie sie bei einer späteren Anmeldung, um die gespeicherte E-Mail zu entfernen."
+            },
+            {
+              "question": "Wie kann ich meine Daten prüfen oder eine Löschung beantragen?",
+              "answer": "Die KVKK- und Datenschutzseiten erläutern die Datenverarbeitung. Senden Sie Konto- oder Datenanfragen an die Kontaktadresse. Die aktuelle Kontoseite bietet keine automatische Kontolöschung; Umfang und Identitätsprüfung müssen gesondert geprüft werden."
+            }
+          ]
+        },
+        {
+          "id": "support",
+          "title": "Hilfe und Beiträge",
+          "questions": [
+            {
+              "question": "Welche Sprachen unterstützt PDA?",
+              "answer": "Die Oberfläche bietet Türkisch, Englisch und Deutsch. Sprache und helles/dunkles Design können über die Bedienelemente oben geändert werden."
+            },
+            {
+              "question": "Wie melde ich einen Fehler oder eine Barriere?",
+              "answer": "Nutzen Sie das Formular auf der Kontaktseite mit Seitenadresse, erwartetem Verhalten und Schritten zur Wiederholung. Allgemeine Entwicklungsvorschläge können auch im GitHub-Repository geteilt werden. Veröffentlichen Sie keine personenbezogenen Daten, Passwörter, Bestätigungscodes oder Details zu Sicherheitslücken in öffentlichen Issues."
+            },
+            {
+              "question": "Kann ich zum Projekt beitragen?",
+              "answer": "Ja, Beiträge sind willkommen. Im GitHub-Repository können Sie ein Issue eröffnen, eine Funktion vorschlagen oder eine Änderung einreichen. Wenn Sie uns direkt erreichen möchten, finden Sie unsere Kontaktdaten auf der Seite Über uns."
+            }
+          ]
+        }
+      ]
+    },
+    "privacy": {
+      "title": "Datenschutzerklärung",
+      "description": "Welche Informationen PDA verwendet, was Projektmitglieder sehen und welche Einstellungen im Browser gespeichert werden.",
+      "sections": [
+        {
+          "id": "scope",
+          "title": "Umfang und Kontakt",
+          "paragraphs": [
+            "Diese Erklärung umfasst die Konto-, Projekt-, Team-, Aufgaben- und Kalenderfunktionen von PDA. Auf externen Google- oder GitHub-Seiten gelten die jeweiligen Datenschutzbedingungen.",
+            "Die README nennt Alper Temiz und Hamza Taşbay als Entwickler. Die Identität des datenschutzrechtlich Verantwortlichen ist vor dem Start gesondert festzulegen; Entwicklernamen allein bestimmen diese Rolle nicht. Als Kontaktweg dient das Formular auf der Kontaktseite."
+          ]
+        },
+        {
+          "id": "data",
+          "title": "Verwendete Informationen",
+          "paragraphs": [
+            "Konto- und Arbeitsbereichsdaten werden entsprechend den genutzten Funktionen gespeichert. Passwörter werden nicht im Klartext gespeichert; lokale Kontopasswörter werden durch nicht umkehrbare Hashwerte geschützt."
+          ],
+          "items": [
+            "Konto: E-Mail, Benutzername, Kontostatus, Registrierungszeiten und gegebenenfalls Identität beim externen Anmeldeanbieter.",
+            "Projekt und Team: Projektangaben, Mitgliedschaften, Rollen, Einladungen, Antworten und hochgeladene Projektlogos.",
+            "Arbeitsinhalte: Aufgaben, Kommentare, Anhänge, Zeiteinträge, Erfolgskriterien und Erinnerungen bei Nutzung dieser Funktionen.",
+            "Sitzung: Zeitangaben, Browser-/Geräteinformationen und sichere Anmeldedatensätze. IP-Adressen dienen der Begrenzung von Anfragen.",
+            "Kontakt: Ihre Nachricht und die E-Mail-Adresse für eine Antwort."
+          ]
+        },
+        {
+          "id": "purposes",
+          "title": "Zwecke der Verwendung",
+          "paragraphs": [
+            "Kontodaten ermöglichen Anmeldung und Kontoschutz; Projekt-, Team- und Aufgabendaten ermöglichen den gemeinsamen Arbeitsbereich. Einladungen und Benachrichtigungen erreichen ihre Empfänger. Sitzungs- und Anfrageprüfungen sollen unbefugten Zugriff und Missbrauch reduzieren.",
+            "Tragen Sie keine sensiblen personenbezogenen Daten, Passwörter oder unnötigen Angaben über andere Personen in Beschreibungen, Kommentare oder Dateien ein."
+          ]
+        },
+        {
+          "id": "visibility",
+          "title": "Wer kann Informationen sehen?",
+          "paragraphs": [
+            "Arbeitsinhalte sind durch Projektmitgliedschaft und Rollenberechtigungen begrenzt. Berechtigte Projektmitglieder können Ihre E-Mail und Ihren Benutzernamen in Teamlisten sehen. Empfänger sehen die Vorschau ihrer eigenen Einladung.",
+            "Bei Google-/GitHub-Anmeldung erfolgt die Authentifizierung mit dem gewählten Anbieter. Die Repository-Verbindung liest öffentliche GitHub-Informationen. Hosting-, Datenbank- und E-Mail-Anbieter sowie Datenstandorte müssen vor dem Start festgelegt werden; dieser Entwurf garantiert weder einen bestimmten Speicherort noch das Ausbleiben von Übermittlungen."
+          ]
+        },
+        {
+          "id": "browser-storage",
+          "title": "Cookies und Browsereinstellungen",
+          "paragraphs": [
+            "PDA verwendet keine Werbe-Cookies oder Tracker von Drittanbietern. Sitzungs- und Sicherheitscookies sind für den Betrieb der Anwendung erforderlich. Die Besuchsanalyse läuft nur mit Ihrer ausdrücklichen Auswahl und ist standardmäßig ausgeschaltet; Einzelheiten und Ihre Einstellungen finden Sie auf der Seite Cookie-Richtlinie."
+          ],
+          "items": [
+            "PDA_ACCESS, PDA_REFRESH und PDA_SESSION: Anmeldung und Sitzungsablauf. Die Laufzeit hängt von der Sitzungskonfiguration ab; beim Abmelden werden sie gelöscht.",
+            "XSRF-TOKEN: Sicherheitscookie zum Schutz von Aktionsanfragen gegen gefälschte Anfragen.",
+            "NEXT_LOCALE: Sprachcookie mit einer Laufzeit von einem Jahr.",
+            "Lokaler Browserspeicher: Design, Menü-/Teamansicht und optional gespeicherte E-Mail. Angaben können bis zum Löschen der Browserdaten oder Ändern der Einstellung bleiben.",
+            "Sitzungsspeicher: zuletzt gewähltes Projekt des Benutzers für die Browsersitzung.",
+            "Cookie-Auswahl: Der Schlüssel pda:cookie-consent speichert Ihre Entscheidung in diesem Browser.",
+            "Analyse (optional, standardmäßig ausgeschaltet): Wenn Sie sie erlauben, werden Seitenart, Besuchsquelle und aktiv verbrachte Zeit mit einer anonymen Besucher- und Sitzungs-ID gemessen; sie wird nicht mit Ihrem Konto verknüpft. Wenn Sie die Einwilligung widerrufen, enden neue Messungen und diese IDs werden gelöscht."
+          ]
+        },
+        {
+          "id": "retention",
+          "title": "Speicherung und Datenanfragen",
+          "paragraphs": [
+            "Aktive Konto- und Projektdatensätze liegen für die Dienstfunktionen in der Datenbank. Eine abgelaufene Sitzung bedeutet nicht die automatische Löschung aller historischen Datensätze.",
+            "Speicher-, Sicherungs- und Löschfristen je Datenkategorie müssen vor dem Start bestimmt werden. Eine automatische Kontolöschungsseite gibt es derzeit nicht. Anfragen zu Auskunft, Berichtigung oder Löschung können an die Kontaktadresse gehen; Kontoinhaberschaft und Rechte anderer Personen sind dabei zu prüfen."
+          ]
+        },
+        {
+          "id": "security",
+          "title": "Sicherheit und Änderungen",
+          "paragraphs": [
+            "PDA hält Sitzungstokens in HttpOnly-Cookies, verwendet Passwort-Hashwerte und prüft Projektberechtigungen auf dem Server. Dies garantiert keine absolute Sicherheit. Melden Sie sich auf gemeinsam genutzten Geräten ab.",
+            "Diese Erklärung und ihr Aktualisierungsdatum sind bei Änderungen der Funktionen oder Verarbeitung zu prüfen. KVKK-Rechte und Verarbeitungsvoraussetzungen erläutert die gesonderte KVKK-Seite."
+          ]
+        }
+      ]
+    },
+    "kvkk": {
+      "title": "KVKK-Information",
+      "description": "Informationen vor dem Start zu PDA-Datenflüssen und Betroffenenrechten nach dem türkischen Gesetz Nr. 6698.",
+      "sections": [
+        {
+          "id": "controller",
+          "title": "Verantwortlicher und Umfang",
+          "paragraphs": [
+            "Dieser Entwurf beschreibt Daten bei Registrierung, Anmeldung, Projekt-/Teamarbeit, Einladungen und Unterstützung. Die verantwortliche natürliche oder juristische Person wurde noch nicht bestätigt; daher wird der Text nicht als abgeschlossene Datenschutzinformation dargestellt.",
+            "Für den Kontakt mit dem Projektteam ist das Formular auf der Kontaktseite vorgesehen. Die Identität des Verantwortlichen und geeignete Antragswege sind vor der endgültigen Fassung festzulegen."
+          ]
+        },
+        {
+          "id": "collection",
+          "title": "Wie werden Daten erhoben?",
+          "paragraphs": [
+            "Die elektronische Erhebung erfolgt über Registrierungs-/Anmeldeformulare, eingegebene Projekt- und Aufgabeninhalte, Einladungen von Projektmanagern, den gewählten Anmeldeanbieter und Supportnachrichten.",
+            "Dabei können E-Mail, Benutzername, Mitgliedschafts-/Rollenangaben, Projekt- und Aufgabeninhalte, Einladungsantworten, Sitzungszeiten und Browserinformationen verarbeitet werden. Eine Einladung kann auch entstehen, wenn ein Projektmanager Ihre E-Mail eingibt."
+          ]
+        },
+        {
+          "id": "basis",
+          "title": "Zwecke und Rechtsgrundlagen",
+          "paragraphs": [
+            "Vor dem Start ist für jeden Vorgang eine gültige Verarbeitungsvoraussetzung festzustellen. Die folgenden Zuordnungen sind ein Prüfraster für vorhandene Funktionen; es wird nicht angenommen, dass alle Vorgänge automatisch dieselbe Rechtsgrundlage haben."
+          ],
+          "items": [
+            "Konto und Arbeitsbereich: Registrierung, Authentifizierung, Mitgliedschaften und Aufgabenverwaltung. Die Erforderlichkeit für Begründung oder Erfüllung des Dienstverhältnisses ist nach Art. 5 Abs. 2(c) zu prüfen.",
+            "Konto- und Systemsicherheit: Sitzungen, Berechtigungsprüfungen und Anfragebegrenzung. Berechtigtes Interesse nach Art. 5 Abs. 2(f) erfordert Erforderlichkeit und eine Abwägung der Betroffenenrechte.",
+            "Datenanfragen und gesetzliche Pflichten: Art. 5 Abs. 2(ç) und 5 Abs. 2(e) sind je nach Pflicht oder Recht zu prüfen.",
+            "Erfordert eine zusätzliche Verarbeitung ausdrückliche Einwilligung, sind Zweck und Umfang gesondert zu erläutern und die Einwilligung separat einzuholen. Das Lesen dieser Seite ist keine Einwilligung."
+          ]
+        },
+        {
+          "id": "recipients",
+          "title": "Empfänger und Übermittlungen",
+          "paragraphs": [
+            "Projektinhalte und Mitgliedschaftsangaben werden berechtigten Mitgliedern zur Zusammenarbeit angezeigt; Einladungsvorschauen gehen an die jeweiligen Empfänger. Bei Google-/GitHub-Anmeldung verarbeitet der gewählte Anbieter Authentifizierungsdaten. Öffentliche Repository-Verbindungen senden Anfragen an GitHub.",
+            "Hosting-, Datenbank- und E-Mail-Anbieter, Datenstandorte und Bedingungen grenzüberschreitender Übermittlungen müssen vor dem Start bestimmt werden. Ohne Kenntnis tatsächlicher Übermittlungen und der Rechtsmechanismen bietet dieser Entwurf keine entsprechende Zusicherung."
+          ]
+        },
+        {
+          "id": "storage",
+          "title": "Speicherung und Löschung",
+          "paragraphs": [
+            "Daten unterstützen Konto-, Projekt- und Sicherheitsfunktionen. Fristen sind je Kategorie, Zweck und gesetzlicher Anforderung festzulegen; Lösch- und Sicherungspläne für den Produktivbetrieb wurden noch nicht bestätigt.",
+            "Entfallen Verarbeitungsvoraussetzungen, ist die Löschung, Vernichtung oder Anonymisierung zu prüfen. Eine Kontolöschung entfernt nicht automatisch Projektdatensätze anderer Benutzer oder rechtlich aufzubewahrende Informationen."
+          ]
+        },
+        {
+          "id": "rights",
+          "title": "Ihre gesetzlichen Rechte",
+          "paragraphs": [
+            "Sie können Ihre Rechte nach Art. 11 durch einen Antrag an den Verantwortlichen ausüben."
+          ],
+          "items": [
+            "Erfahren, ob personenbezogene Daten verarbeitet werden, und Informationen dazu erhalten.",
+            "Zweck und zweckgemäße Verwendung erfahren.",
+            "Empfänger in der Türkei oder im Ausland kennen.",
+            "Berichtigung unvollständiger oder falscher Daten verlangen.",
+            "Unter den gesetzlichen Voraussetzungen Löschung oder Vernichtung sowie Information der Empfänger über Berichtigung/Löschung verlangen.",
+            "Einem nachteiligen Ergebnis ausschließlich automatisierter Analyse widersprechen.",
+            "Ersatz eines Schadens durch rechtswidrige Verarbeitung verlangen."
+          ]
+        },
+        {
+          "id": "requests",
+          "title": "Anfragen und Kontakt",
+          "paragraphs": [
+            "Senden Sie Fragen oder Datenanfragen über das Formular auf der Kontaktseite. Nennen Sie Thema, Konto-E-Mail und gewünschte Maßnahme; senden Sie keine Passwörter, Bestätigungscodes oder Einladungstokens.",
+            "Diese allgemeine Kontaktadresse erfüllt nicht automatisch alle gesetzlich vorgeschriebenen Antragswege. Verantwortlicher und offizielle Kanäle müssen vor dem Start festgelegt werden. Angaben zur Identitätsprüfung sollen dem Antrag angemessen sein."
+          ]
+        }
+      ]
+    },
+    "accessibility": {
+      "title": "Barrierefreiheit",
+      "description": "PDA-Ansatz zur Barrierefreiheit, verfügbare Bedienelemente und Meldung von Hindernissen.",
+      "sections": [
+        {
+          "id": "approach",
+          "title": "Unser Ansatz",
+          "paragraphs": [
+            "PDA soll auf unterschiedlichen Bildschirmgrößen und für unterschiedliche Bedürfnisse zugänglich sein. Barrierefreiheit muss mit der Weiterentwicklung erneut geprüft werden.",
+            "Eine unabhängige, umfassende WCAG-Konformitätsprüfung wurde noch nicht durchgeführt. Diese Seite ist kein Zertifikat und keine Erklärung, dass alle Ansichten fehlerfrei funktionieren."
+          ]
+        },
+        {
+          "id": "keyboard",
+          "title": "Tastaturbedienung",
+          "paragraphs": [
+            "Wechseln Sie mit Tab und Shift+Tab zwischen Links und Bedienelementen. Aktivieren Sie fokussierte Links oder Schaltflächen mit Enter. Der Sprunglink am Seitenanfang führt zum Hauptinhalt.",
+            "FAQ-Antworten können mit Enter oder Leertaste geöffnet und geschlossen werden. Nutzen Sie die vorhandene Tastaturbedienung für Menüs und Dialoge; unterstützte Fenster lassen sich mit Escape schließen."
+          ]
+        },
+        {
+          "id": "preferences",
+          "title": "Darstellung und Lesen",
+          "paragraphs": [
+            "Oben befinden sich Sprach- und Designkontrollen. Wählen Sie helles, dunkles oder Systemdesign sowie türkische, englische oder deutsche Texte.",
+            "Browserzoom ist nutzbar. Die Einstellung für reduzierte Bewegung verringert Animationen. Auf schmalen Bildschirmen werden Inhalte und Footerlinks untereinander angeordnet."
+          ]
+        },
+        {
+          "id": "screen-readers",
+          "title": "Struktur und Hilfsmittel",
+          "paragraphs": [
+            "Informationsseiten verwenden semantische Überschriften, Hauptinhalt und Navigation. GitHub-Links im Footer haben zugängliche Namen mit dem Namen der Person; dekorative Symbole werden vor Screenreadern verborgen.",
+            "Weitere Anwendungsseiten müssen noch mit verschiedenen Screenreadern und Browsern geprüft werden. Ihre Meldungen helfen, Hindernisse zu beheben."
+          ]
+        },
+        {
+          "id": "feedback",
+          "title": "Ein Hindernis melden",
+          "paragraphs": [
+            "Wenn Sie eine Seite oder Aktion nicht nutzen können, nutzen Sie das Formular auf der Kontaktseite mit Seitenadresse, gewünschter Aktion, Browser/Gerät und gegebenenfalls verwendetem Hilfsmittel.",
+            "Entfernen Sie personenbezogene oder geheime Informationen aus Screenshots. Medizinische Angaben sind für eine Meldung nicht erforderlich."
+          ]
+        }
+      ]
+    },
+    "license": {
+      "title": "Lizenz",
+      "description": "Der Quellcode von PDA steht unter der Apache License 2.0: eine kurze Zusammenfassung und der vollständige Lizenztext.",
+      "fullTextTitle": "Vollständiger Lizenztext (Englisch)",
+      "fullTextNote": "Rechtlich verbindlich ist das englische Original unten. Die Zusammenfassung oben dient nur der Information, ist keine Rechtsberatung und keine offizielle Übersetzung.",
+      "sections": [
+        {
+          "id": "about",
+          "title": "Was ist die Apache License 2.0?",
+          "paragraphs": [
+            "PDA ist Open Source. Der Quellcode steht unter der Apache License 2.0, einer freizügigen Lizenz, mit der Sie den Code nutzen, untersuchen, ändern und weitergeben dürfen.",
+            "Diese Seite enthält eine kurze Zusammenfassung und den vollständigen Lizenztext. Derselbe Text liegt in der Datei LICENSE im Hauptverzeichnis des Repositorys."
+          ]
+        },
+        {
+          "id": "permissions",
+          "title": "Was Sie tun dürfen",
+          "paragraphs": [
+            "Nach der Lizenz dürfen Sie:"
+          ],
+          "items": [
+            "die Software für jeden Zweck nutzen, auch kommerziell;",
+            "den Quellcode kopieren und ändern;",
+            "das Original oder Ihre geänderte Fassung weitergeben, für Ihre Änderungen auch unter eigenen Bedingungen, sofern die folgenden Bedingungen erfüllt sind;",
+            "sich auf die Patentlizenz stützen, die jede beitragende Person für ihre Beiträge erteilt."
+          ]
+        },
+        {
+          "id": "conditions",
+          "title": "Bedingungen",
+          "paragraphs": [
+            "Wenn Sie die Software oder eine geänderte Fassung weitergeben, müssen Sie:"
+          ],
+          "items": [
+            "jeder empfangenden Person eine Kopie der Lizenz mitgeben;",
+            "die Urheberrechts-, Patent-, Marken- und Zuschreibungshinweise des Originalquellcodes beibehalten;",
+            "in geänderten Dateien deutlich angeben, dass Sie sie geändert haben;",
+            "den Inhalt der NOTICE-Datei, falls das Projekt eine hat, in Ihrer Weitergabe beibehalten."
+          ]
+        },
+        {
+          "id": "limits",
+          "title": "Grenzen und Haftung",
+          "paragraphs": [
+            "Die Software wird „wie besehen“ bereitgestellt, ohne Gewährleistung oder Bedingungen jeder Art. Beitragende haften nicht für Schäden, die aus der Nutzung entstehen.",
+            "Die Lizenz gewährt keine Rechte am Namen oder Logo von PDA. Die Patentlizenz einer beitragenden Person endet für alle, die mit der Behauptung klagen, die Software verletze ein Patent."
+          ]
+        }
+      ]
+    },
+    "cookies": {
+      "title": "Cookie-Richtlinie",
+      "description": "Welche Cookies und welchen Browser-Speicher PDA warum verwendet, dass die Analyse standardmäßig ausgeschaltet ist und wie Sie Ihre Auswahl ändern.",
+      "manageTitle": "Einstellungen verwalten",
+      "manageText": "Sie können die Analyse jederzeit ein- oder ausschalten. Wenn Sie sie ausschalten, werden keine neuen Messungen gesendet und die Analyse-Kennungen in diesem Browser gelöscht.",
+      "sections": [
+        {
+          "id": "what",
+          "title": "Was sind Cookies?",
+          "paragraphs": [
+            "Cookies sind kleine Einträge, die eine Website in Ihrem Browser speichert. Auf dieser Seite umfasst \"Cookie\" auch den lokalen Browser-Speicher (localStorage) und den Sitzungsspeicher (sessionStorage), die für denselben Zweck dienen.",
+            "PDA verwendet keine Werbe-Cookies, kein Nutzerprofiling, keine Tracker Dritter und kein Browser-Fingerprinting."
+          ]
+        },
+        {
+          "id": "categories",
+          "title": "Kategorien",
+          "paragraphs": [
+            "PDA verwendet zwei Einwilligungskategorien. Notwendig ist immer aktiv und lässt sich nicht ausschalten. Die Analyse funktioniert nur mit Ihrer ausdrücklichen Auswahl und ist standardmäßig ausgeschaltet."
+          ],
+          "items": [
+            "Notwendig: Anmeldung, Sitzungssicherheit, Schutz vor gefälschten Anfragen, Sprachauswahl und die Speicherung dieser Auswahl.",
+            "Analyse: anonyme Messung von Seitenart, Besuchsquelle und aktiv verbrachter Zeit."
+          ]
+        },
+        {
+          "id": "necessary",
+          "title": "Notwendige Cookies und Speicher",
+          "paragraphs": [
+            "Die folgenden Einträge sind für den Betrieb des Dienstes erforderlich und werden unabhängig von Ihrer Analyse-Auswahl verwendet. Alle werden von PDA (First Party) verwaltet. Die Laufzeiten hängen von der Konfiguration des Dienstes ab; angegeben sind die Standardwerte. Wenn Sie sie im Browser blockieren, funktionieren Anmeldung und Sitzung nicht."
+          ],
+          "items": [
+            "PDA_ACCESS: kurzlebiges Zugriffstoken. HttpOnly; wird nur an den Pfad /api gesendet. Standardlaufzeit 15 Minuten.",
+            "PDA_REFRESH: Token zur Erneuerung der Sitzung. HttpOnly; wird nur an den Pfad /api/v1/auth gesendet. Standardlaufzeit 7 Tage; wird beim Abmelden entfernt.",
+            "PDA_SESSION: Markierung ohne Token, die anzeigt, ob eine Sitzung besteht. HttpOnly; gleiche Laufzeit wie das Erneuerungstoken; wird beim Abmelden entfernt.",
+            "XSRF-TOKEN: Schutz vor gefälschten Anfragen (CSRF). Wird von der Seite gelesen und an Aktionsanfragen angehängt; bleibt für die Browsersitzung.",
+            "JSESSIONID: wird nur während der Anmeldung über Google oder GitHub verwendet. HttpOnly; kurzlebig, etwa 30 Minuten.",
+            "NEXT_LOCALE: Ihre gewählte Sprache; ein Jahr.",
+            "pda:cookie-consent (localStorage): die Speicherung dieser Cookie-Auswahl (Version, Analyse-Erlaubnis, Datum); bis Sie sie löschen.",
+            "pda:last-session-refresh (localStorage): ein Zeitstempel, der verhindert, dass Tabs die Sitzung gleichzeitig erneuern."
+          ]
+        },
+        {
+          "id": "preferences",
+          "title": "Darstellungs- und Nutzungseinstellungen",
+          "paragraphs": [
+            "Die folgenden Einträge merken sich nur Einstellungen, die Sie in diesem Browser vorgenommen haben. Sie messen Ihren Besuch nicht und werden nicht als Analyse an den Server gesendet. Die rechtliche Kategorie dieser Einträge muss in der rechtlichen Prüfung vor dem Start bestätigt werden."
+          ],
+          "items": [
+            "theme: helles, dunkles oder System-Design.",
+            "pda:motion und pda:theme-transition: Animationseinstellungen.",
+            "pda:sidebar-collapsed: ob die Seitenleiste eingeklappt ist.",
+            "pda.teams.view: die Ansicht auf der Teams-Seite.",
+            "pda:task-mode-help:v1:<Benutzer-ID>: die Einstellung, die Hilfe zur Aufgabenart auszublenden.",
+            "pda.rememberedEmail: Ihre E-Mail-Adresse, nur wenn Sie auf dem Anmeldebildschirm \"Angemeldet bleiben\" wählen.",
+            "pda:last-project:<Benutzer-ID> und pda:session-baseline (sessionStorage): das zuletzt gewählte Projekt sowie Sprache und Design zu Beginn der Sitzung; wird beim Schließen des Tabs entfernt."
+          ]
+        },
+        {
+          "id": "analytics",
+          "title": "Analyse (standardmäßig ausgeschaltet)",
+          "paragraphs": [
+            "Die Analyse erhebt keine Daten und erzeugt keine Kennung, bis Sie \"Alle akzeptieren\" wählen oder die Analyse im Einstellungsfenster einschalten. Solange Sie nicht entschieden haben, bleibt sie ausgeschaltet. Wenn sie aktiv ist, werden die Messungen auf dem eigenen Server von PDA gespeichert; es gibt kein Analysewerkzeug eines Drittanbieters.",
+            "Name, E-Mail, Nachrichteninhalt, Token, Passwort, Konto-ID oder Browser-Fingerabdruck werden nicht erfasst. Auch wenn Sie angemeldet sind, werden die Messungen nicht mit Ihrem Konto verknüpft.",
+            "Die Speicherdauer der Analysedaten ist noch nicht festgelegt (RECHTLICHER INHALT ERFORDERLICH); diese Dauer und die Löschregeln werden vor dem Start festgelegt.",
+            "Betriebskennzahlen wie die Zahl der Konten, aktiven und beendeten Konten und gesendeten Kontaktformulare hängen nicht von Ihrer Analyse-Auswahl ab; sie werden aus den eigenen Datensätzen des Dienstes berechnet."
+          ],
+          "items": [
+            "Die Art der besuchten Seite (zum Beispiel \"Projektseite\"); Projektnamen, Benutzer-IDs und Adressabfragen werden nicht gespeichert.",
+            "Die Quelle des Besuchs: direkt, Suchmaschine, eine andere Website (nur Domainname) oder ein Kampagnenlink (utm_source, utm_medium, utm_campaign).",
+            "Aktiv auf der Seite verbrachte Zeit; Zeit mit Tab im Hintergrund oder ohne Fensterfokus zählt nicht.",
+            "Eine zufällig erzeugte anonyme Besucher- und Sitzungs-ID: pda:analytics-visitor und pda:analytics-session (localStorage). Die Sitzungs-ID wird nach 30 Minuten Inaktivität erneuert. Beide werden gelöscht, wenn Sie die Einwilligung widerrufen."
+          ]
+        },
+        {
+          "id": "manage",
+          "title": "Auswahl ändern und widerrufen",
+          "paragraphs": [
+            "Öffnen Sie das Einstellungsfenster jederzeit über den Link \"Cookie-Einstellungen verwalten\" am Seitenende oder die Schaltfläche auf dieser Seite. Wenn Sie die Analyse ausschalten, enden neue Messungen sofort und die Analyse-Kennungen in diesem Browser werden gelöscht. Für das Löschen früher erhobener, aggregierter Daten gibt es keinen separaten automatischen Vorgang; dies wird vor dem Start festgelegt.",
+            "Ihre Auswahl gehört zu diesem Browser und ist nicht an Ihr Konto gebunden: In einem anderen Browser oder auf einem anderen Gerät treffen Sie eine eigene Auswahl. Ändert sich die Cookie-Praxis wesentlich, wird die Einwilligungsversion erhöht und Sie werden erneut gefragt."
+          ]
+        },
+        {
+          "id": "third-parties",
+          "title": "Dritte",
+          "paragraphs": [
+            "PDA enthält keine Werbe- oder Analyse-Cookies von Drittanbietern. Wenn Sie sich mit Google oder GitHub anmelden, leitet Ihr Browser auf die Seite des Anbieters weiter und dessen eigene Cookie- und Datenschutzbedingungen gelten. E-Mails zu Bestätigung, Einladung und Kontakt werden vom Server gesendet und setzen keine Cookies in Ihrem Browser."
+          ]
+        },
+        {
+          "id": "legal",
+          "title": "Kontakt und rechtliche Angaben",
+          "paragraphs": [
+            "Fragen zu Cookies können Sie über das Formular auf der Kontaktseite senden.",
+            "Firmenname und Anschrift des Verantwortlichen, VERBİS-Eintrag, Text zur Rechtsgrundlage und Speicherfristen sind noch nicht festgelegt; diese Angaben sind daher als RECHTLICHER INHALT ERFORDERLICH markiert und nicht erfunden."
+          ]
+        }
+      ]
+    }
+  },
+  "taskModels": {
+    "type": "Aufgabentyp",
+    "all": "Alle Aufgaben",
+    "mode": {
+      "SIMPLE": "Einfache Aufgabe",
+      "ADVANCED": "Erweiterte Aufgabe"
+    },
+    "policy": {
+      "SIMPLE": "Nur einfach",
+      "ADVANCED": "Nur erweitert",
+      "BOTH": "Beide"
+    },
+    "policyDescription": {
+      "SIMPLE": "Schnell erstellen mit grundlegenden Feldern.",
+      "ADVANCED": "Sprints, Labels und alle erweiterten Werkzeuge.",
+      "BOTH": "Für jede Aufgabe einfach oder erweitert wählen."
+    },
+    "setupTitle": "Wie möchten Sie Aufgaben in diesem Projekt erstellen?",
+    "settingTitle": "Aufgabenerstellung",
+    "settingDescription": "Verwenden Sie einfache Aufgaben, erweiterte Aufgaben oder beide.",
+    "preserve": "Bestehende Aufgaben und Daten bleiben bei einer Änderung erhalten. Bei „Nur einfach“ sind erweiterte Felder bestehender Aufgaben schreibgeschützt.",
+    "ownerOnly": "Nur der Projektgründer kann diese Einstellung ändern.",
+    "waitOwner": "Der Projektgründer muss vor der ersten Aufgabe eine Einstellung auswählen.",
+    "changeLater": "Sie können diese Einstellung jederzeit in den Projekteinstellungen ändern.",
+    "save": "Einstellung speichern",
+    "start": "Speichern und Aufgabe erstellen",
+    "saved": "Einstellung gespeichert.",
+    "help": "Unterschiede zwischen einfachen und erweiterten Aufgaben",
+    "helpTitle": "Welchen Aufgabentyp soll ich wählen?",
+    "helpDescription": "Wählen Sie den passenden Typ. Gemeinsame Entwurfsfelder bleiben beim Wechsel erhalten.",
+    "simpleFeatures": "Titel, Beschreibung, Priorität, Start- und Enddatum, Zuweisung an Personen oder den Aufgabenpool und Statusverfolgung.",
+    "advancedFeatures": "Alle einfachen Felder sowie übergeordnete und Unteraufgaben, Sprints, Labels, Punkte- und Zeitschätzung, Checklisten, Beziehungen, Blockierung, Anhänge, Zeiteinträge und Beobachter.",
+    "comments": "Kommentare und Erwähnungen sind für beide Aufgabentypen verfügbar.",
+    "dontShow": "Diese Erklärung beim Wechsel nicht mehr automatisch anzeigen",
+    "cancel": "Abbrechen",
+    "continue": "Typ wechseln",
+    "close": "Verstanden",
+    "readOnly": "Erweiterte Aufgabenerstellung ist deaktiviert. Bestehende Daten bleiben erhalten. Grundlegende Felder, Status und Kommentare sind bearbeitbar; erweiterte Felder sind schreibgeschützt.",
+    "conversion": "Aufgabentyp ändern",
+    "conversionBlocked": "Eine Aufgabe mit erweiterten Daten kann nicht einfach werden. Entfernen Sie diese Daten zuerst in den jeweiligen Abschnitten; nichts wird automatisch gelöscht.",
+    "simplePlanning": "Priorität, Start- und Enddatum festlegen.",
+    "simpleAssignment": "Aufgabe Projektmitgliedern oder dem Aufgabenpool zuweisen.",
+    "simpleDeadline": "Neue Aufgaben verwenden das Tagesende. Die Uhrzeit bestehender Aufgaben bleibt erhalten.",
+    "leaveTitle": "Ungespeicherte Änderungen",
+    "leaveDescription": "Beim Verlassen dieser Seite geht der Entwurf verloren.",
+    "leave": "Entwurf verwerfen und verlassen",
+    "stay": "Weiter bearbeiten",
+    "clearPool": "Pool-Zuordnung entfernen",
+    "clearPoolDescription": "Entfernt das Pool-Angebot sowie Pool-Team und Übernahmeinformationen. Zugewiesene Personen bleiben erhalten."
+  },
+  "datePicker": {
+    "placeholder": "Datum auswählen",
+    "previousMonth": "Vorheriger Monat",
+    "nextMonth": "Nächster Monat",
+    "month": "Monat",
+    "year": "Jahr",
+    "today": "Heute",
+    "clear": "Löschen",
+    "close": "Kalender schließen"
+  },
+  "notifications": {
+    "invitationContext": {
+      "PROJECT_INVITATION_CREATED": "Sie wurden zum Projekt „{project}“ eingeladen.",
+      "PROJECT_INVITATION_ACCEPTED": "Ihre Einladung zum Projekt „{project}“ wurde angenommen.",
+      "PROJECT_INVITATION_REJECTED": "Ihre Einladung zum Projekt „{project}“ wurde abgelehnt."
+    },
+    "readFailed": "Der Lesestatus konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut.",
+    "refreshFailed": "Der Lesestatus wurde gespeichert, aber die Benachrichtigungsliste konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut.",
+    "sections": "Benachrichtigungsbereiche",
+    "newLabel": "Neu",
+    "historyLabel": "Verlauf",
+    "newEmpty": "Sie haben keine neuen Benachrichtigungen.",
+    "historyEmpty": "Sie haben noch keine gelesenen Benachrichtigungen.",
+    "newListLabel": "Neue Benachrichtigungen",
+    "historyListLabel": "Gelesene Benachrichtigungen",
+    "title": "Benachrichtigungen",
+    "empty": "Sie haben noch keine Benachrichtigungen.",
+    "loading": "Benachrichtigungen werden geladen",
+    "retry": "Erneut versuchen",
+    "read": "Gelesen",
+    "unread": "Ungelesen",
+    "markRead": "Als gelesen markieren",
+    "readAll": "Alle als gelesen markieren",
+    "listLabel": "Benachrichtigungsverlauf",
+    "previous": "Vorherige Seite",
+    "next": "Nächste Seite",
+    "page": "Seite {page} von {total}",
+    "unreadCount": "{count} ungelesene Benachrichtigungen",
+    "openCenter": "Benachrichtigungen öffnen",
+    "teamDeleted": "Team gelöscht",
+    "teamDeletedBody": "Ihr Team \"{team}\" im Projekt \"{project}\" wurde von {actor} gelöscht. Die Meldung bleibt im Benachrichtigungsverlauf erhalten.",
+    "projectManager": "der Projektleitung",
+    "someone": "Jemand",
+    "taskStarted": "Aufgabe begonnen",
+    "taskCompleted": "Aufgabe abgeschlossen",
+    "taskStatusBody": "{actor} hat den Status von {task} von {previous} zu {current} geändert.",
+    "unavailable": "Der Benachrichtigungsdienst ist derzeit nicht verfügbar. Bitte versuchen Sie es erneut.",
+    "countUnavailable": "Die Anzahl ungelesener Benachrichtigungen ist derzeit nicht verfügbar.",
+    "types": {
+      "TASK_ASSIGNED": "Aufgabe zugewiesen",
+      "TASK_UNASSIGNED": "Aufgabenzuweisung entfernt",
+      "TASK_STATUS_CHANGED": "Aufgabenstatus geändert",
+      "TASK_PRIORITY_CHANGED": "Aufgabenpriorität geändert",
+      "TASK_DUE_DATE_CHANGED": "Aufgabenfrist geändert",
+      "TASK_BLOCKED": "Aufgabe blockiert",
+      "PROJECT_MEMBER_ADDED": "Zum Projekt hinzugefügt",
+      "PROJECT_MEMBER_REMOVED": "Aus dem Projekt entfernt",
+      "PROJECT_ROLE_CHANGED": "Projektrollen geändert",
+      "SQUAD_MEMBER_ADDED": "Zum Team hinzugefügt",
+      "SQUAD_MEMBER_REMOVED": "Aus dem Team entfernt",
+      "SQUAD_DELETED": "Team gelöscht",
+      "PROJECT_INVITATION_CREATED": "Projekteinladung",
+      "PROJECT_INVITATION_ACCEPTED": "Einladung angenommen",
+      "PROJECT_INVITATION_REJECTED": "Einladung abgelehnt",
+      "TASK_DEADLINE_SOON": "Aufgabenfrist nähert sich",
+      "TASK_OVERDUE": "Aufgabe überfällig",
+      "TASK_CLAIMED": "Aufgabe übernommen",
+      "TASK_RELEASED": "Aufgabe zurück im Pool",
+      "TASK_MENTIONED": "Sie wurden erwähnt",
+      "TASK_COMMENTED": "Neuer Aufgabenkommentar",
+      "REPOSITORY_COMMITS_PUSHED": "Neue Commits gepusht"
+    },
+    "close": "Benachrichtigung schließen",
+    "bodies": {
+      "TASK_ASSIGNED": "Ihnen wurde eine Aufgabe zugewiesen.",
+      "TASK_UNASSIGNED": "Ihre Zuweisung zu einer Aufgabe wurde entfernt.",
+      "TASK_STATUS_CHANGED": "Der Status einer von Ihnen verfolgten Aufgabe wurde geändert.",
+      "TASK_PRIORITY_CHANGED": "Die Priorität einer von Ihnen verfolgten Aufgabe wurde geändert.",
+      "TASK_DUE_DATE_CHANGED": "Die Frist einer von Ihnen verfolgten Aufgabe wurde geändert.",
+      "TASK_BLOCKED": "Eine von Ihnen verfolgte Aufgabe wurde blockiert.",
+      "PROJECT_MEMBER_ADDED": "Sie wurden zu einem Projekt hinzugefügt.",
+      "PROJECT_MEMBER_REMOVED": "Sie wurden aus einem Projekt entfernt.",
+      "PROJECT_ROLE_CHANGED": "Ihre Projektrollen wurden geändert.",
+      "SQUAD_MEMBER_ADDED": "Sie wurden zu einem Team hinzugefügt.",
+      "SQUAD_MEMBER_REMOVED": "Sie wurden aus einem Team entfernt.",
+      "SQUAD_DELETED": "Ein Team, dem Sie angehörten, wurde gelöscht.",
+      "PROJECT_INVITATION_CREATED": "Sie wurden zu einem Projekt eingeladen.",
+      "PROJECT_INVITATION_ACCEPTED": "Eine von Ihnen gesendete Einladung wurde angenommen.",
+      "PROJECT_INVITATION_REJECTED": "Eine von Ihnen gesendete Einladung wurde abgelehnt.",
+      "TASK_DEADLINE_SOON": "Eine Ihnen zugewiesene oder von Ihnen verfolgte Aufgabe ist innerhalb von 24 Stunden fällig.",
+      "TASK_OVERDUE": "Die Frist einer Ihnen zugewiesenen oder von Ihnen verfolgten Aufgabe ist abgelaufen.",
+      "TASK_CLAIMED": "Eine von Ihnen verfolgte Aufgabe wurde aus dem Pool übernommen.",
+      "TASK_RELEASED": "Eine von Ihnen verfolgte Aufgabe wurde in den Pool zurückgegeben.",
+      "TASK_MENTIONED": "Sie wurden in einem Aufgabenkommentar erwähnt.",
+      "TASK_COMMENTED": "Eine von Ihnen verfolgte Aufgabe erhielt einen Kommentar.",
+      "REPOSITORY_COMMITS_PUSHED": "Neue Commits gepusht"
+    },
+    "label": "Benachrichtigungen, {count} ungelesen",
+    "update": "Neue Aktualisierung",
+    "started": "{actor} hat {key}: {title} begonnen.",
+    "completed": "{actor} hat {key}: {title} abgeschlossen.",
+    "statusChanged": "{actor} hat {key}: {title} auf „{status}“ gesetzt.",
+    "openTask": "Aufgabe öffnen",
+    "openRepository": "Repository öffnen",
+    "repositoryCommitsBody": "{count, plural, one {# neuer Commit} other {# neue Commits}} in {branch} von {repo}.",
+    "repositoryCommitsBodyMore": "{count, plural, one {# oder mehr neue Commits} other {# oder mehr neue Commits}} in {branch} von {repo}.",
+    "repositoryCommitsHead": "Zuletzt: {message}",
+    "repositoryCommitsHeadBy": "Zuletzt: {message} ({author})"
+  },
   "admin": {
     "nav": {
       "label": "Verwaltung",
@@ -2561,586 +3315,5 @@
       "text": "Ihre Nachricht wird per E-Mail an das PDA-Team zugestellt und nicht auf der Seite gespeichert. Schreiben Sie weder Ihr Passwort noch Bestätigungscodes oder die geheimen Teile eines Einladungslinks.",
       "privacy": "Datenschutzerklärung"
     }
-  },
-  "siteFooter": {
-    "description": "Projekte, Teams und die Umsetzung gemeinsam organisieren.",
-    "information": "Information und Hilfe",
-    "faq": "Häufige Fragen",
-    "kvkk": "KVKK",
-    "privacy": "Datenschutzerklärung",
-    "cookies": "Cookie-Richtlinie",
-    "manageCookies": "Cookie-Einstellungen verwalten",
-    "accessibility": "Barrierefreiheit",
-    "team": "Entwickler",
-    "githubProfile": "GitHub-Profil von {name}",
-    "contact": "Kontakt",
-    "contactDescription": "Für Fragen, Vorschläge und Rückmeldungen.",
-    "copyright": "© {year} PDA · Project Delivery Assistant",
-    "source": "Quellcode"
-  },
-  "publicPages": {
-    "common": {
-      "skip": "Zum Inhalt springen",
-      "login": "Anmelden",
-      "updated": "Zuletzt aktualisiert: {date}",
-      "contents": "Auf dieser Seite",
-      "contactTitle": "Kontakt aufnehmen",
-      "contactAction": "Kontaktformular öffnen",
-      "contactText": "Nutzen Sie das Kontaktformular bei Fragen, Datenanfragen oder Barrieren. Teilen Sie keine Passwörter, Bestätigungscodes oder geheimen Einladungsinformationen.",
-      "reviewTitle": "Prüfung vor Veröffentlichung",
-      "reviewNotice": "Dieser Informationsentwurf beschreibt die aktuellen PDA-Funktionen. Die Identität des Verantwortlichen, Hosting- und E-Mail-Anbieter, Datenstandorte und Speicherfristen müssen vor dem Start bestätigt werden. Der Text fordert keine Einwilligung an und bedeutet keine abgeschlossene KVKK-Konformitätsprüfung.",
-      "references": "Offizielle Quellen",
-      "noticeReference": "KVKK: Informationspflicht",
-      "cookieReference": "KVKK: Leitfaden zur Cookie-Nutzung"
-    },
-    "faq": {
-      "title": "Häufige Fragen",
-      "description": "Antworten zum Einstieg in PDA, zu Konten, Projekten, Teams, Datenschutz und Hilfe.",
-      "groups": [
-        {
-          "id": "getting-started",
-          "title": "PDA und erste Schritte",
-          "questions": [
-            {
-              "question": "Was ist PDA und für wen ist es gedacht?",
-              "answer": "PDA (Project Delivery Assistant) wird für Studierende und Teams entwickelt, die ihre Projektumsetzung in einem gemeinsamen Arbeitsbereich organisieren möchten. Projektinformationen, Erfolgskriterien, Teams, Aufgaben und Kalendereinträge helfen bei der Übersicht."
-            },
-            {
-              "question": "Muss ich eine Anwendung installieren?",
-              "answer": "PDA ist eine Webanwendung. Den gehosteten Dienst können Sie mit einem aktuellen Browser nutzen. Die Oberfläche passt sich auch Smartphones und Tablets an."
-            },
-            {
-              "question": "Wie erstelle ich ein Konto?",
-              "answer": "Öffnen Sie den Registrierungslink auf der Anmeldeseite und geben Sie E-Mail, Benutzername und Passwort ein. Nach der Registrierung versucht die Anwendung, Sie anzumelden. Falls dies fehlschlägt, gelangen Sie zur Anmeldeseite."
-            },
-            {
-              "question": "Kann ich mich mit Google oder GitHub anmelden?",
-              "answer": "Google oder GitHub können genutzt werden, wenn der jeweilige Anbieter im Dienst aktiviert ist. Ein bestehendes Konto mit derselben E-Mail wird nicht automatisch zusammengeführt; zum Verknüpfen kann zuerst eine Anmeldung im bestehenden Konto erforderlich sein."
-            }
-          ]
-        },
-        {
-          "id": "projects-teams",
-          "title": "Projekte und Teams",
-          "questions": [
-            {
-              "question": "Wie erstelle ich mein erstes Projekt?",
-              "answer": "Nutzen Sie nach der Anmeldung die Aktion zum Erstellen eines Projekts unter Projekte. Tragen Sie Name, Typ und die Pflichtangaben ein; Technologie, Beschreibung und Logo können ergänzt werden. Sie werden der erste Projektmanager des erstellten Projekts."
-            },
-            {
-              "question": "Was unterscheidet Projekt- und Teammitgliedschaft?",
-              "answer": "Die Projektmitgliedschaft bestimmt Zugriff und Projektrollen. Teams organisieren die Arbeit innerhalb eines Projekts. Eine Teammitgliedschaft allein gibt keine Verwaltungsrechte; Aktionen werden anhand der Projektrollen geprüft."
-            },
-            {
-              "question": "Wie lade ich Teammitglieder ein?",
-              "answer": "Erstellen Sie im Bereich Teams des Projekts ein Team und nutzen Sie die Mitglieder- oder Einladungsaktion. Projektmanager können einen Benutzer oder eine E-Mail-Adresse einladen. Jede Einladung gehört zu einem Team und muss vom Empfänger angenommen werden."
-            },
-            {
-              "question": "Wo kann ich Einladungen annehmen oder ablehnen?",
-              "answer": "Registrierte Benutzer sehen eingehende Einladungen unter Einladungen. Externe Einladungslinks können zur Registrierung oder Anmeldung führen. Antworten Sie mit dem vorgesehenen Konto; bei abgelaufenen oder stornierten Einladungen bitten Sie den Projektmanager um eine neue Einladung."
-            },
-            {
-              "question": "Kann jeder meine Projekte sehen?",
-              "answer": "Ein Konto erlaubt keinen Zugriff auf fremde Projekte. Projektdaten werden nach aktiver Mitgliedschaft und Berechtigungen angezeigt. Einige Angaben, etwa E-Mail und Benutzername, sind für zusammenarbeitende Mitglieder sichtbar. Ein öffentliches GitHub-Repository kann bereits auf GitHub öffentlich sein."
-            },
-            {
-              "question": "Sind Erfolgskriterien und Aufgaben dasselbe?",
-              "answer": "Erfolgskriterien bilden eine Checkliste für Projektziele. Aufgaben erfassen Arbeit, Zuweisungen und Status. Ein abgeschlossenes Kriterium schließt Aufgaben nicht automatisch ab; beide Bereiche bleiben getrennt."
-            },
-            {
-              "question": "Ändert die GitHub-Verbindung meinen Code?",
-              "answer": "Die aktuelle Repository-Verbindung liest ein öffentliches GitHub-Repository und zeigt aktuelle Commits an. Sie erstellt keine Commits oder Pull Requests. Private Repositories gehören nicht zum Umfang dieser Verbindung."
-            }
-          ]
-        },
-        {
-          "id": "account-security",
-          "title": "Konto und Datenschutz",
-          "questions": [
-            {
-              "question": "Was mache ich, wenn ich mein Passwort vergessen habe?",
-              "answer": "Nutzen Sie den Link zur Passwortwiederherstellung auf der Anmeldeseite. Der E-Mail-Versand hängt von der Konfiguration des Dienstes ab; prüfen Sie Posteingang und Spamordner. Für Google- oder GitHub-Passwörter verwenden Sie die Wiederherstellung des jeweiligen Anbieters."
-            },
-            {
-              "question": "Was speichert die Option Angemeldet bleiben?",
-              "answer": "Diese Option merkt sich nur Ihre E-Mail-Adresse in diesem Browser. Sie speichert kein Passwort und verlängert die Sitzung nicht. Vermeiden Sie sie auf gemeinsam genutzten Geräten; deaktivieren Sie sie bei einer späteren Anmeldung, um die gespeicherte E-Mail zu entfernen."
-            },
-            {
-              "question": "Wie kann ich meine Daten prüfen oder eine Löschung beantragen?",
-              "answer": "Die KVKK- und Datenschutzseiten erläutern die Datenverarbeitung. Senden Sie Konto- oder Datenanfragen an die Kontaktadresse. Die aktuelle Kontoseite bietet keine automatische Kontolöschung; Umfang und Identitätsprüfung müssen gesondert geprüft werden."
-            }
-          ]
-        },
-        {
-          "id": "support",
-          "title": "Hilfe und Beiträge",
-          "questions": [
-            {
-              "question": "Welche Sprachen unterstützt PDA?",
-              "answer": "Die Oberfläche bietet Türkisch, Englisch und Deutsch. Sprache und helles/dunkles Design können über die Bedienelemente oben geändert werden."
-            },
-            {
-              "question": "Wie melde ich einen Fehler oder eine Barriere?",
-              "answer": "Nutzen Sie das Formular auf der Kontaktseite mit Seitenadresse, erwartetem Verhalten und Schritten zur Wiederholung. Allgemeine Entwicklungsvorschläge können auch im GitHub-Repository geteilt werden. Veröffentlichen Sie keine personenbezogenen Daten, Passwörter, Bestätigungscodes oder Details zu Sicherheitslücken in öffentlichen Issues."
-            }
-          ]
-        }
-      ]
-    },
-    "privacy": {
-      "title": "Datenschutzerklärung",
-      "description": "Welche Informationen PDA verwendet, was Projektmitglieder sehen und welche Einstellungen im Browser gespeichert werden.",
-      "sections": [
-        {
-          "id": "scope",
-          "title": "Umfang und Kontakt",
-          "paragraphs": [
-            "Diese Erklärung umfasst die Konto-, Projekt-, Team-, Aufgaben- und Kalenderfunktionen von PDA. Auf externen Google- oder GitHub-Seiten gelten die jeweiligen Datenschutzbedingungen.",
-            "Die README nennt Alper Temiz und Hamza Taşbay als Entwickler. Die Identität des datenschutzrechtlich Verantwortlichen ist vor dem Start gesondert festzulegen; Entwicklernamen allein bestimmen diese Rolle nicht. Als Kontaktweg dient das Formular auf der Kontaktseite."
-          ]
-        },
-        {
-          "id": "data",
-          "title": "Verwendete Informationen",
-          "paragraphs": [
-            "Konto- und Arbeitsbereichsdaten werden entsprechend den genutzten Funktionen gespeichert. Passwörter werden nicht im Klartext gespeichert; lokale Kontopasswörter werden durch nicht umkehrbare Hashwerte geschützt."
-          ],
-          "items": [
-            "Konto: E-Mail, Benutzername, Kontostatus, Registrierungszeiten und gegebenenfalls Identität beim externen Anmeldeanbieter.",
-            "Projekt und Team: Projektangaben, Mitgliedschaften, Rollen, Einladungen, Antworten und hochgeladene Projektlogos.",
-            "Arbeitsinhalte: Aufgaben, Kommentare, Anhänge, Zeiteinträge, Erfolgskriterien und Erinnerungen bei Nutzung dieser Funktionen.",
-            "Sitzung: Zeitangaben, Browser-/Geräteinformationen und sichere Anmeldedatensätze. IP-Adressen dienen der Begrenzung von Anfragen.",
-            "Kontakt: Ihre Nachricht und die E-Mail-Adresse für eine Antwort."
-          ]
-        },
-        {
-          "id": "purposes",
-          "title": "Zwecke der Verwendung",
-          "paragraphs": [
-            "Kontodaten ermöglichen Anmeldung und Kontoschutz; Projekt-, Team- und Aufgabendaten ermöglichen den gemeinsamen Arbeitsbereich. Einladungen und Benachrichtigungen erreichen ihre Empfänger. Sitzungs- und Anfrageprüfungen sollen unbefugten Zugriff und Missbrauch reduzieren.",
-            "Tragen Sie keine sensiblen personenbezogenen Daten, Passwörter oder unnötigen Angaben über andere Personen in Beschreibungen, Kommentare oder Dateien ein."
-          ]
-        },
-        {
-          "id": "visibility",
-          "title": "Wer kann Informationen sehen?",
-          "paragraphs": [
-            "Arbeitsinhalte sind durch Projektmitgliedschaft und Rollenberechtigungen begrenzt. Berechtigte Projektmitglieder können Ihre E-Mail und Ihren Benutzernamen in Teamlisten sehen. Empfänger sehen die Vorschau ihrer eigenen Einladung.",
-            "Bei Google-/GitHub-Anmeldung erfolgt die Authentifizierung mit dem gewählten Anbieter. Die Repository-Verbindung liest öffentliche GitHub-Informationen. Hosting-, Datenbank- und E-Mail-Anbieter sowie Datenstandorte müssen vor dem Start festgelegt werden; dieser Entwurf garantiert weder einen bestimmten Speicherort noch das Ausbleiben von Übermittlungen."
-          ]
-        },
-        {
-          "id": "browser-storage",
-          "title": "Cookies und Browsereinstellungen",
-          "paragraphs": [
-            "PDA verwendet keine Werbe-Cookies oder Tracker von Drittanbietern. Sitzungs- und Sicherheitscookies sind für den Betrieb der Anwendung erforderlich. Die Besuchsanalyse läuft nur mit Ihrer ausdrücklichen Auswahl und ist standardmäßig ausgeschaltet; Einzelheiten und Ihre Einstellungen finden Sie auf der Seite Cookie-Richtlinie."
-          ],
-          "items": [
-            "PDA_ACCESS, PDA_REFRESH und PDA_SESSION: Anmeldung und Sitzungsablauf. Die Laufzeit hängt von der Sitzungskonfiguration ab; beim Abmelden werden sie gelöscht.",
-            "XSRF-TOKEN: Sicherheitscookie zum Schutz von Aktionsanfragen gegen gefälschte Anfragen.",
-            "NEXT_LOCALE: Sprachcookie mit einer Laufzeit von einem Jahr.",
-            "Lokaler Browserspeicher: Design, Menü-/Teamansicht und optional gespeicherte E-Mail. Angaben können bis zum Löschen der Browserdaten oder Ändern der Einstellung bleiben.",
-            "Sitzungsspeicher: zuletzt gewähltes Projekt des Benutzers für die Browsersitzung.",
-            "Cookie-Auswahl: Der Schlüssel pda:cookie-consent speichert Ihre Entscheidung in diesem Browser.",
-            "Analyse (optional, standardmäßig ausgeschaltet): Wenn Sie sie erlauben, werden Seitenart, Besuchsquelle und aktiv verbrachte Zeit mit einer anonymen Besucher- und Sitzungs-ID gemessen; sie wird nicht mit Ihrem Konto verknüpft. Wenn Sie die Einwilligung widerrufen, enden neue Messungen und diese IDs werden gelöscht."
-          ]
-        },
-        {
-          "id": "retention",
-          "title": "Speicherung und Datenanfragen",
-          "paragraphs": [
-            "Aktive Konto- und Projektdatensätze liegen für die Dienstfunktionen in der Datenbank. Eine abgelaufene Sitzung bedeutet nicht die automatische Löschung aller historischen Datensätze.",
-            "Speicher-, Sicherungs- und Löschfristen je Datenkategorie müssen vor dem Start bestimmt werden. Eine automatische Kontolöschungsseite gibt es derzeit nicht. Anfragen zu Auskunft, Berichtigung oder Löschung können an die Kontaktadresse gehen; Kontoinhaberschaft und Rechte anderer Personen sind dabei zu prüfen."
-          ]
-        },
-        {
-          "id": "security",
-          "title": "Sicherheit und Änderungen",
-          "paragraphs": [
-            "PDA hält Sitzungstokens in HttpOnly-Cookies, verwendet Passwort-Hashwerte und prüft Projektberechtigungen auf dem Server. Dies garantiert keine absolute Sicherheit. Melden Sie sich auf gemeinsam genutzten Geräten ab.",
-            "Diese Erklärung und ihr Aktualisierungsdatum sind bei Änderungen der Funktionen oder Verarbeitung zu prüfen. KVKK-Rechte und Verarbeitungsvoraussetzungen erläutert die gesonderte KVKK-Seite."
-          ]
-        }
-      ]
-    },
-    "cookies": {
-      "title": "Cookie-Richtlinie",
-      "description": "Welche Cookies und welchen Browser-Speicher PDA warum verwendet, dass die Analyse standardmäßig ausgeschaltet ist und wie Sie Ihre Auswahl ändern.",
-      "manageTitle": "Einstellungen verwalten",
-      "manageText": "Sie können die Analyse jederzeit ein- oder ausschalten. Wenn Sie sie ausschalten, werden keine neuen Messungen gesendet und die Analyse-Kennungen in diesem Browser gelöscht.",
-      "sections": [
-        {
-          "id": "what",
-          "title": "Was sind Cookies?",
-          "paragraphs": [
-            "Cookies sind kleine Einträge, die eine Website in Ihrem Browser speichert. Auf dieser Seite umfasst \"Cookie\" auch den lokalen Browser-Speicher (localStorage) und den Sitzungsspeicher (sessionStorage), die für denselben Zweck dienen.",
-            "PDA verwendet keine Werbe-Cookies, kein Nutzerprofiling, keine Tracker Dritter und kein Browser-Fingerprinting."
-          ]
-        },
-        {
-          "id": "categories",
-          "title": "Kategorien",
-          "paragraphs": [
-            "PDA verwendet zwei Einwilligungskategorien. Notwendig ist immer aktiv und lässt sich nicht ausschalten. Die Analyse funktioniert nur mit Ihrer ausdrücklichen Auswahl und ist standardmäßig ausgeschaltet."
-          ],
-          "items": [
-            "Notwendig: Anmeldung, Sitzungssicherheit, Schutz vor gefälschten Anfragen, Sprachauswahl und die Speicherung dieser Auswahl.",
-            "Analyse: anonyme Messung von Seitenart, Besuchsquelle und aktiv verbrachter Zeit."
-          ]
-        },
-        {
-          "id": "necessary",
-          "title": "Notwendige Cookies und Speicher",
-          "paragraphs": [
-            "Die folgenden Einträge sind für den Betrieb des Dienstes erforderlich und werden unabhängig von Ihrer Analyse-Auswahl verwendet. Alle werden von PDA (First Party) verwaltet. Die Laufzeiten hängen von der Konfiguration des Dienstes ab; angegeben sind die Standardwerte. Wenn Sie sie im Browser blockieren, funktionieren Anmeldung und Sitzung nicht."
-          ],
-          "items": [
-            "PDA_ACCESS: kurzlebiges Zugriffstoken. HttpOnly; wird nur an den Pfad /api gesendet. Standardlaufzeit 15 Minuten.",
-            "PDA_REFRESH: Token zur Erneuerung der Sitzung. HttpOnly; wird nur an den Pfad /api/v1/auth gesendet. Standardlaufzeit 7 Tage; wird beim Abmelden entfernt.",
-            "PDA_SESSION: Markierung ohne Token, die anzeigt, ob eine Sitzung besteht. HttpOnly; gleiche Laufzeit wie das Erneuerungstoken; wird beim Abmelden entfernt.",
-            "XSRF-TOKEN: Schutz vor gefälschten Anfragen (CSRF). Wird von der Seite gelesen und an Aktionsanfragen angehängt; bleibt für die Browsersitzung.",
-            "JSESSIONID: wird nur während der Anmeldung über Google oder GitHub verwendet. HttpOnly; kurzlebig, etwa 30 Minuten.",
-            "NEXT_LOCALE: Ihre gewählte Sprache; ein Jahr.",
-            "pda:cookie-consent (localStorage): die Speicherung dieser Cookie-Auswahl (Version, Analyse-Erlaubnis, Datum); bis Sie sie löschen.",
-            "pda:last-session-refresh (localStorage): ein Zeitstempel, der verhindert, dass Tabs die Sitzung gleichzeitig erneuern."
-          ]
-        },
-        {
-          "id": "preferences",
-          "title": "Darstellungs- und Nutzungseinstellungen",
-          "paragraphs": [
-            "Die folgenden Einträge merken sich nur Einstellungen, die Sie in diesem Browser vorgenommen haben. Sie messen Ihren Besuch nicht und werden nicht als Analyse an den Server gesendet. Die rechtliche Kategorie dieser Einträge muss in der rechtlichen Prüfung vor dem Start bestätigt werden."
-          ],
-          "items": [
-            "theme: helles, dunkles oder System-Design.",
-            "pda:motion und pda:theme-transition: Animationseinstellungen.",
-            "pda:sidebar-collapsed: ob die Seitenleiste eingeklappt ist.",
-            "pda.teams.view: die Ansicht auf der Teams-Seite.",
-            "pda:task-mode-help:v1:<Benutzer-ID>: die Einstellung, die Hilfe zur Aufgabenart auszublenden.",
-            "pda.rememberedEmail: Ihre E-Mail-Adresse, nur wenn Sie auf dem Anmeldebildschirm \"Angemeldet bleiben\" wählen.",
-            "pda:last-project:<Benutzer-ID> und pda:session-baseline (sessionStorage): das zuletzt gewählte Projekt sowie Sprache und Design zu Beginn der Sitzung; wird beim Schließen des Tabs entfernt."
-          ]
-        },
-        {
-          "id": "analytics",
-          "title": "Analyse (standardmäßig ausgeschaltet)",
-          "paragraphs": [
-            "Die Analyse erhebt keine Daten und erzeugt keine Kennung, bis Sie \"Alle akzeptieren\" wählen oder die Analyse im Einstellungsfenster einschalten. Solange Sie nicht entschieden haben, bleibt sie ausgeschaltet. Wenn sie aktiv ist, werden die Messungen auf dem eigenen Server von PDA gespeichert; es gibt kein Analysewerkzeug eines Drittanbieters.",
-            "Name, E-Mail, Nachrichteninhalt, Token, Passwort, Konto-ID oder Browser-Fingerabdruck werden nicht erfasst. Auch wenn Sie angemeldet sind, werden die Messungen nicht mit Ihrem Konto verknüpft.",
-            "Die Speicherdauer der Analysedaten ist noch nicht festgelegt (RECHTLICHER INHALT ERFORDERLICH); diese Dauer und die Löschregeln werden vor dem Start festgelegt.",
-            "Betriebskennzahlen wie die Zahl der Konten, aktiven und beendeten Konten und gesendeten Kontaktformulare hängen nicht von Ihrer Analyse-Auswahl ab; sie werden aus den eigenen Datensätzen des Dienstes berechnet."
-          ],
-          "items": [
-            "Die Art der besuchten Seite (zum Beispiel \"Projektseite\"); Projektnamen, Benutzer-IDs und Adressabfragen werden nicht gespeichert.",
-            "Die Quelle des Besuchs: direkt, Suchmaschine, eine andere Website (nur Domainname) oder ein Kampagnenlink (utm_source, utm_medium, utm_campaign).",
-            "Aktiv auf der Seite verbrachte Zeit; Zeit mit Tab im Hintergrund oder ohne Fensterfokus zählt nicht.",
-            "Eine zufällig erzeugte anonyme Besucher- und Sitzungs-ID: pda:analytics-visitor und pda:analytics-session (localStorage). Die Sitzungs-ID wird nach 30 Minuten Inaktivität erneuert. Beide werden gelöscht, wenn Sie die Einwilligung widerrufen."
-          ]
-        },
-        {
-          "id": "manage",
-          "title": "Auswahl ändern und widerrufen",
-          "paragraphs": [
-            "Öffnen Sie das Einstellungsfenster jederzeit über den Link \"Cookie-Einstellungen verwalten\" am Seitenende oder die Schaltfläche auf dieser Seite. Wenn Sie die Analyse ausschalten, enden neue Messungen sofort und die Analyse-Kennungen in diesem Browser werden gelöscht. Für das Löschen früher erhobener, aggregierter Daten gibt es keinen separaten automatischen Vorgang; dies wird vor dem Start festgelegt.",
-            "Ihre Auswahl gehört zu diesem Browser und ist nicht an Ihr Konto gebunden: In einem anderen Browser oder auf einem anderen Gerät treffen Sie eine eigene Auswahl. Ändert sich die Cookie-Praxis wesentlich, wird die Einwilligungsversion erhöht und Sie werden erneut gefragt."
-          ]
-        },
-        {
-          "id": "third-parties",
-          "title": "Dritte",
-          "paragraphs": [
-            "PDA enthält keine Werbe- oder Analyse-Cookies von Drittanbietern. Wenn Sie sich mit Google oder GitHub anmelden, leitet Ihr Browser auf die Seite des Anbieters weiter und dessen eigene Cookie- und Datenschutzbedingungen gelten. E-Mails zu Bestätigung, Einladung und Kontakt werden vom Server gesendet und setzen keine Cookies in Ihrem Browser."
-          ]
-        },
-        {
-          "id": "legal",
-          "title": "Kontakt und rechtliche Angaben",
-          "paragraphs": [
-            "Fragen zu Cookies können Sie über das Formular auf der Kontaktseite senden.",
-            "Firmenname und Anschrift des Verantwortlichen, VERBİS-Eintrag, Text zur Rechtsgrundlage und Speicherfristen sind noch nicht festgelegt; diese Angaben sind daher als RECHTLICHER INHALT ERFORDERLICH markiert und nicht erfunden."
-          ]
-        }
-      ]
-    },
-    "kvkk": {
-      "title": "KVKK-Information",
-      "description": "Informationen vor dem Start zu PDA-Datenflüssen und Betroffenenrechten nach dem türkischen Gesetz Nr. 6698.",
-      "sections": [
-        {
-          "id": "controller",
-          "title": "Verantwortlicher und Umfang",
-          "paragraphs": [
-            "Dieser Entwurf beschreibt Daten bei Registrierung, Anmeldung, Projekt-/Teamarbeit, Einladungen und Unterstützung. Die verantwortliche natürliche oder juristische Person wurde noch nicht bestätigt; daher wird der Text nicht als abgeschlossene Datenschutzinformation dargestellt.",
-            "Für den Kontakt mit dem Projektteam ist das Formular auf der Kontaktseite vorgesehen. Die Identität des Verantwortlichen und geeignete Antragswege sind vor der endgültigen Fassung festzulegen."
-          ]
-        },
-        {
-          "id": "collection",
-          "title": "Wie werden Daten erhoben?",
-          "paragraphs": [
-            "Die elektronische Erhebung erfolgt über Registrierungs-/Anmeldeformulare, eingegebene Projekt- und Aufgabeninhalte, Einladungen von Projektmanagern, den gewählten Anmeldeanbieter und Supportnachrichten.",
-            "Dabei können E-Mail, Benutzername, Mitgliedschafts-/Rollenangaben, Projekt- und Aufgabeninhalte, Einladungsantworten, Sitzungszeiten und Browserinformationen verarbeitet werden. Eine Einladung kann auch entstehen, wenn ein Projektmanager Ihre E-Mail eingibt."
-          ]
-        },
-        {
-          "id": "basis",
-          "title": "Zwecke und Rechtsgrundlagen",
-          "paragraphs": [
-            "Vor dem Start ist für jeden Vorgang eine gültige Verarbeitungsvoraussetzung festzustellen. Die folgenden Zuordnungen sind ein Prüfraster für vorhandene Funktionen; es wird nicht angenommen, dass alle Vorgänge automatisch dieselbe Rechtsgrundlage haben."
-          ],
-          "items": [
-            "Konto und Arbeitsbereich: Registrierung, Authentifizierung, Mitgliedschaften und Aufgabenverwaltung. Die Erforderlichkeit für Begründung oder Erfüllung des Dienstverhältnisses ist nach Art. 5 Abs. 2(c) zu prüfen.",
-            "Konto- und Systemsicherheit: Sitzungen, Berechtigungsprüfungen und Anfragebegrenzung. Berechtigtes Interesse nach Art. 5 Abs. 2(f) erfordert Erforderlichkeit und eine Abwägung der Betroffenenrechte.",
-            "Datenanfragen und gesetzliche Pflichten: Art. 5 Abs. 2(ç) und 5 Abs. 2(e) sind je nach Pflicht oder Recht zu prüfen.",
-            "Erfordert eine zusätzliche Verarbeitung ausdrückliche Einwilligung, sind Zweck und Umfang gesondert zu erläutern und die Einwilligung separat einzuholen. Das Lesen dieser Seite ist keine Einwilligung."
-          ]
-        },
-        {
-          "id": "recipients",
-          "title": "Empfänger und Übermittlungen",
-          "paragraphs": [
-            "Projektinhalte und Mitgliedschaftsangaben werden berechtigten Mitgliedern zur Zusammenarbeit angezeigt; Einladungsvorschauen gehen an die jeweiligen Empfänger. Bei Google-/GitHub-Anmeldung verarbeitet der gewählte Anbieter Authentifizierungsdaten. Öffentliche Repository-Verbindungen senden Anfragen an GitHub.",
-            "Hosting-, Datenbank- und E-Mail-Anbieter, Datenstandorte und Bedingungen grenzüberschreitender Übermittlungen müssen vor dem Start bestimmt werden. Ohne Kenntnis tatsächlicher Übermittlungen und der Rechtsmechanismen bietet dieser Entwurf keine entsprechende Zusicherung."
-          ]
-        },
-        {
-          "id": "storage",
-          "title": "Speicherung und Löschung",
-          "paragraphs": [
-            "Daten unterstützen Konto-, Projekt- und Sicherheitsfunktionen. Fristen sind je Kategorie, Zweck und gesetzlicher Anforderung festzulegen; Lösch- und Sicherungspläne für den Produktivbetrieb wurden noch nicht bestätigt.",
-            "Entfallen Verarbeitungsvoraussetzungen, ist die Löschung, Vernichtung oder Anonymisierung zu prüfen. Eine Kontolöschung entfernt nicht automatisch Projektdatensätze anderer Benutzer oder rechtlich aufzubewahrende Informationen."
-          ]
-        },
-        {
-          "id": "rights",
-          "title": "Ihre gesetzlichen Rechte",
-          "paragraphs": [
-            "Sie können Ihre Rechte nach Art. 11 durch einen Antrag an den Verantwortlichen ausüben."
-          ],
-          "items": [
-            "Erfahren, ob personenbezogene Daten verarbeitet werden, und Informationen dazu erhalten.",
-            "Zweck und zweckgemäße Verwendung erfahren.",
-            "Empfänger in der Türkei oder im Ausland kennen.",
-            "Berichtigung unvollständiger oder falscher Daten verlangen.",
-            "Unter den gesetzlichen Voraussetzungen Löschung oder Vernichtung sowie Information der Empfänger über Berichtigung/Löschung verlangen.",
-            "Einem nachteiligen Ergebnis ausschließlich automatisierter Analyse widersprechen.",
-            "Ersatz eines Schadens durch rechtswidrige Verarbeitung verlangen."
-          ]
-        },
-        {
-          "id": "requests",
-          "title": "Anfragen und Kontakt",
-          "paragraphs": [
-            "Senden Sie Fragen oder Datenanfragen über das Formular auf der Kontaktseite. Nennen Sie Thema, Konto-E-Mail und gewünschte Maßnahme; senden Sie keine Passwörter, Bestätigungscodes oder Einladungstokens.",
-            "Diese allgemeine Kontaktadresse erfüllt nicht automatisch alle gesetzlich vorgeschriebenen Antragswege. Verantwortlicher und offizielle Kanäle müssen vor dem Start festgelegt werden. Angaben zur Identitätsprüfung sollen dem Antrag angemessen sein."
-          ]
-        }
-      ]
-    },
-    "accessibility": {
-      "title": "Barrierefreiheit",
-      "description": "PDA-Ansatz zur Barrierefreiheit, verfügbare Bedienelemente und Meldung von Hindernissen.",
-      "sections": [
-        {
-          "id": "approach",
-          "title": "Unser Ansatz",
-          "paragraphs": [
-            "PDA soll auf unterschiedlichen Bildschirmgrößen und für unterschiedliche Bedürfnisse zugänglich sein. Barrierefreiheit muss mit der Weiterentwicklung erneut geprüft werden.",
-            "Eine unabhängige, umfassende WCAG-Konformitätsprüfung wurde noch nicht durchgeführt. Diese Seite ist kein Zertifikat und keine Erklärung, dass alle Ansichten fehlerfrei funktionieren."
-          ]
-        },
-        {
-          "id": "keyboard",
-          "title": "Tastaturbedienung",
-          "paragraphs": [
-            "Wechseln Sie mit Tab und Shift+Tab zwischen Links und Bedienelementen. Aktivieren Sie fokussierte Links oder Schaltflächen mit Enter. Der Sprunglink am Seitenanfang führt zum Hauptinhalt.",
-            "FAQ-Antworten können mit Enter oder Leertaste geöffnet und geschlossen werden. Nutzen Sie die vorhandene Tastaturbedienung für Menüs und Dialoge; unterstützte Fenster lassen sich mit Escape schließen."
-          ]
-        },
-        {
-          "id": "preferences",
-          "title": "Darstellung und Lesen",
-          "paragraphs": [
-            "Oben befinden sich Sprach- und Designkontrollen. Wählen Sie helles, dunkles oder Systemdesign sowie türkische, englische oder deutsche Texte.",
-            "Browserzoom ist nutzbar. Die Einstellung für reduzierte Bewegung verringert Animationen. Auf schmalen Bildschirmen werden Inhalte und Footerlinks untereinander angeordnet."
-          ]
-        },
-        {
-          "id": "screen-readers",
-          "title": "Struktur und Hilfsmittel",
-          "paragraphs": [
-            "Informationsseiten verwenden semantische Überschriften, Hauptinhalt und Navigation. GitHub-Links im Footer haben zugängliche Namen mit dem Namen der Person; dekorative Symbole werden vor Screenreadern verborgen.",
-            "Weitere Anwendungsseiten müssen noch mit verschiedenen Screenreadern und Browsern geprüft werden. Ihre Meldungen helfen, Hindernisse zu beheben."
-          ]
-        },
-        {
-          "id": "feedback",
-          "title": "Ein Hindernis melden",
-          "paragraphs": [
-            "Wenn Sie eine Seite oder Aktion nicht nutzen können, nutzen Sie das Formular auf der Kontaktseite mit Seitenadresse, gewünschter Aktion, Browser/Gerät und gegebenenfalls verwendetem Hilfsmittel.",
-            "Entfernen Sie personenbezogene oder geheime Informationen aus Screenshots. Medizinische Angaben sind für eine Meldung nicht erforderlich."
-          ]
-        }
-      ]
-    }
-  },
-  "taskModels": {
-    "type": "Aufgabentyp",
-    "all": "Alle Aufgaben",
-    "mode": {
-      "SIMPLE": "Einfache Aufgabe",
-      "ADVANCED": "Erweiterte Aufgabe"
-    },
-    "policy": {
-      "SIMPLE": "Nur einfach",
-      "ADVANCED": "Nur erweitert",
-      "BOTH": "Beide"
-    },
-    "policyDescription": {
-      "SIMPLE": "Schnell erstellen mit grundlegenden Feldern.",
-      "ADVANCED": "Sprints, Labels und alle erweiterten Werkzeuge.",
-      "BOTH": "Für jede Aufgabe einfach oder erweitert wählen."
-    },
-    "setupTitle": "Wie möchten Sie Aufgaben in diesem Projekt erstellen?",
-    "settingTitle": "Aufgabenerstellung",
-    "settingDescription": "Verwenden Sie einfache Aufgaben, erweiterte Aufgaben oder beide.",
-    "preserve": "Bestehende Aufgaben und Daten bleiben bei einer Änderung erhalten. Bei „Nur einfach“ sind erweiterte Felder bestehender Aufgaben schreibgeschützt.",
-    "ownerOnly": "Nur der Projektgründer kann diese Einstellung ändern.",
-    "waitOwner": "Der Projektgründer muss vor der ersten Aufgabe eine Einstellung auswählen.",
-    "changeLater": "Sie können diese Einstellung jederzeit in den Projekteinstellungen ändern.",
-    "save": "Einstellung speichern",
-    "start": "Speichern und Aufgabe erstellen",
-    "saved": "Einstellung gespeichert.",
-    "help": "Unterschiede zwischen einfachen und erweiterten Aufgaben",
-    "helpTitle": "Welchen Aufgabentyp soll ich wählen?",
-    "helpDescription": "Wählen Sie den passenden Typ. Gemeinsame Entwurfsfelder bleiben beim Wechsel erhalten.",
-    "simpleFeatures": "Titel, Beschreibung, Priorität, Start- und Enddatum, Zuweisung an Personen oder den Aufgabenpool und Statusverfolgung.",
-    "advancedFeatures": "Alle einfachen Felder sowie übergeordnete und Unteraufgaben, Sprints, Labels, Punkte- und Zeitschätzung, Checklisten, Beziehungen, Blockierung, Anhänge, Zeiteinträge und Beobachter.",
-    "comments": "Kommentare und Erwähnungen sind für beide Aufgabentypen verfügbar.",
-    "dontShow": "Diese Erklärung beim Wechsel nicht mehr automatisch anzeigen",
-    "cancel": "Abbrechen",
-    "continue": "Typ wechseln",
-    "close": "Verstanden",
-    "readOnly": "Erweiterte Aufgabenerstellung ist deaktiviert. Bestehende Daten bleiben erhalten. Grundlegende Felder, Status und Kommentare sind bearbeitbar; erweiterte Felder sind schreibgeschützt.",
-    "conversion": "Aufgabentyp ändern",
-    "conversionBlocked": "Eine Aufgabe mit erweiterten Daten kann nicht einfach werden. Entfernen Sie diese Daten zuerst in den jeweiligen Abschnitten; nichts wird automatisch gelöscht.",
-    "simplePlanning": "Priorität, Start- und Enddatum festlegen.",
-    "simpleAssignment": "Aufgabe Projektmitgliedern oder dem Aufgabenpool zuweisen.",
-    "simpleDeadline": "Neue Aufgaben verwenden das Tagesende. Die Uhrzeit bestehender Aufgaben bleibt erhalten.",
-    "leaveTitle": "Ungespeicherte Änderungen",
-    "leaveDescription": "Beim Verlassen dieser Seite geht der Entwurf verloren.",
-    "leave": "Entwurf verwerfen und verlassen",
-    "stay": "Weiter bearbeiten",
-    "clearPool": "Pool-Zuordnung entfernen",
-    "clearPoolDescription": "Entfernt das Pool-Angebot sowie Pool-Team und Übernahmeinformationen. Zugewiesene Personen bleiben erhalten."
-  },
-  "datePicker": {
-    "placeholder": "Datum auswählen",
-    "previousMonth": "Vorheriger Monat",
-    "nextMonth": "Nächster Monat",
-    "month": "Monat",
-    "year": "Jahr",
-    "today": "Heute",
-    "clear": "Löschen",
-    "close": "Kalender schließen"
-  },
-  "notifications": {
-    "invitationContext": {
-      "PROJECT_INVITATION_CREATED": "Sie wurden zum Projekt „{project}“ eingeladen.",
-      "PROJECT_INVITATION_ACCEPTED": "Ihre Einladung zum Projekt „{project}“ wurde angenommen.",
-      "PROJECT_INVITATION_REJECTED": "Ihre Einladung zum Projekt „{project}“ wurde abgelehnt."
-    },
-    "readFailed": "Der Lesestatus konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut.",
-    "refreshFailed": "Der Lesestatus wurde gespeichert, aber die Benachrichtigungsliste konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut.",
-    "sections": "Benachrichtigungsbereiche",
-    "newLabel": "Neu",
-    "historyLabel": "Verlauf",
-    "newEmpty": "Sie haben keine neuen Benachrichtigungen.",
-    "historyEmpty": "Sie haben noch keine gelesenen Benachrichtigungen.",
-    "newListLabel": "Neue Benachrichtigungen",
-    "historyListLabel": "Gelesene Benachrichtigungen",
-    "title": "Benachrichtigungen",
-    "empty": "Sie haben noch keine Benachrichtigungen.",
-    "loading": "Benachrichtigungen werden geladen",
-    "retry": "Erneut versuchen",
-    "read": "Gelesen",
-    "unread": "Ungelesen",
-    "markRead": "Als gelesen markieren",
-    "readAll": "Alle als gelesen markieren",
-    "listLabel": "Benachrichtigungsverlauf",
-    "previous": "Vorherige Seite",
-    "next": "Nächste Seite",
-    "page": "Seite {page} von {total}",
-    "unreadCount": "{count} ungelesene Benachrichtigungen",
-    "openCenter": "Benachrichtigungen öffnen",
-    "teamDeleted": "Team gelöscht",
-    "teamDeletedBody": "Ihr Team \"{team}\" im Projekt \"{project}\" wurde von {actor} gelöscht. Die Meldung bleibt im Benachrichtigungsverlauf erhalten.",
-    "projectManager": "der Projektleitung",
-    "someone": "Jemand",
-    "taskStarted": "Aufgabe begonnen",
-    "taskCompleted": "Aufgabe abgeschlossen",
-    "taskStatusBody": "{actor} hat den Status von {task} von {previous} zu {current} geändert.",
-    "unavailable": "Der Benachrichtigungsdienst ist derzeit nicht verfügbar. Bitte versuchen Sie es erneut.",
-    "countUnavailable": "Die Anzahl ungelesener Benachrichtigungen ist derzeit nicht verfügbar.",
-    "types": {
-      "TASK_ASSIGNED": "Aufgabe zugewiesen",
-      "TASK_UNASSIGNED": "Aufgabenzuweisung entfernt",
-      "TASK_STATUS_CHANGED": "Aufgabenstatus geändert",
-      "TASK_PRIORITY_CHANGED": "Aufgabenpriorität geändert",
-      "TASK_DUE_DATE_CHANGED": "Aufgabenfrist geändert",
-      "TASK_BLOCKED": "Aufgabe blockiert",
-      "PROJECT_MEMBER_ADDED": "Zum Projekt hinzugefügt",
-      "PROJECT_MEMBER_REMOVED": "Aus dem Projekt entfernt",
-      "PROJECT_ROLE_CHANGED": "Projektrollen geändert",
-      "SQUAD_MEMBER_ADDED": "Zum Team hinzugefügt",
-      "SQUAD_MEMBER_REMOVED": "Aus dem Team entfernt",
-      "SQUAD_DELETED": "Team gelöscht",
-      "PROJECT_INVITATION_CREATED": "Projekteinladung",
-      "PROJECT_INVITATION_ACCEPTED": "Einladung angenommen",
-      "PROJECT_INVITATION_REJECTED": "Einladung abgelehnt",
-      "TASK_DEADLINE_SOON": "Aufgabenfrist nähert sich",
-      "TASK_OVERDUE": "Aufgabe überfällig",
-      "TASK_CLAIMED": "Aufgabe übernommen",
-      "TASK_RELEASED": "Aufgabe zurück im Pool",
-      "TASK_MENTIONED": "Sie wurden erwähnt",
-      "TASK_COMMENTED": "Neuer Aufgabenkommentar",
-      "REPOSITORY_COMMITS_PUSHED": "Neue Commits gepusht"
-    },
-    "close": "Benachrichtigung schließen",
-    "bodies": {
-      "TASK_ASSIGNED": "Ihnen wurde eine Aufgabe zugewiesen.",
-      "TASK_UNASSIGNED": "Ihre Zuweisung zu einer Aufgabe wurde entfernt.",
-      "TASK_STATUS_CHANGED": "Der Status einer von Ihnen verfolgten Aufgabe wurde geändert.",
-      "TASK_PRIORITY_CHANGED": "Die Priorität einer von Ihnen verfolgten Aufgabe wurde geändert.",
-      "TASK_DUE_DATE_CHANGED": "Die Frist einer von Ihnen verfolgten Aufgabe wurde geändert.",
-      "TASK_BLOCKED": "Eine von Ihnen verfolgte Aufgabe wurde blockiert.",
-      "PROJECT_MEMBER_ADDED": "Sie wurden zu einem Projekt hinzugefügt.",
-      "PROJECT_MEMBER_REMOVED": "Sie wurden aus einem Projekt entfernt.",
-      "PROJECT_ROLE_CHANGED": "Ihre Projektrollen wurden geändert.",
-      "SQUAD_MEMBER_ADDED": "Sie wurden zu einem Team hinzugefügt.",
-      "SQUAD_MEMBER_REMOVED": "Sie wurden aus einem Team entfernt.",
-      "SQUAD_DELETED": "Ein Team, dem Sie angehörten, wurde gelöscht.",
-      "PROJECT_INVITATION_CREATED": "Sie wurden zu einem Projekt eingeladen.",
-      "PROJECT_INVITATION_ACCEPTED": "Eine von Ihnen gesendete Einladung wurde angenommen.",
-      "PROJECT_INVITATION_REJECTED": "Eine von Ihnen gesendete Einladung wurde abgelehnt.",
-      "TASK_DEADLINE_SOON": "Eine Ihnen zugewiesene oder von Ihnen verfolgte Aufgabe ist innerhalb von 24 Stunden fällig.",
-      "TASK_OVERDUE": "Die Frist einer Ihnen zugewiesenen oder von Ihnen verfolgten Aufgabe ist abgelaufen.",
-      "TASK_CLAIMED": "Eine von Ihnen verfolgte Aufgabe wurde aus dem Pool übernommen.",
-      "TASK_RELEASED": "Eine von Ihnen verfolgte Aufgabe wurde in den Pool zurückgegeben.",
-      "TASK_MENTIONED": "Sie wurden in einem Aufgabenkommentar erwähnt.",
-      "TASK_COMMENTED": "Eine von Ihnen verfolgte Aufgabe erhielt einen Kommentar.",
-      "REPOSITORY_COMMITS_PUSHED": "Neue Commits gepusht"
-    },
-    "label": "Benachrichtigungen, {count} ungelesen",
-    "update": "Neue Aktualisierung",
-    "started": "{actor} hat {key}: {title} begonnen.",
-    "completed": "{actor} hat {key}: {title} abgeschlossen.",
-    "statusChanged": "{actor} hat {key}: {title} auf „{status}“ gesetzt.",
-    "openTask": "Aufgabe öffnen",
-    "openRepository": "Repository öffnen",
-    "repositoryCommitsBody": "{count, plural, one {# neuer Commit} other {# neue Commits}} in {branch} von {repo}.",
-    "repositoryCommitsBodyMore": "{count, plural, one {# oder mehr neue Commits} other {# oder mehr neue Commits}} in {branch} von {repo}.",
-    "repositoryCommitsHead": "Zuletzt: {message}",
-    "repositoryCommitsHeadBy": "Zuletzt: {message} ({author})"
   }
 }

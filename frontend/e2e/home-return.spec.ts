@@ -57,7 +57,7 @@ for (const scenario of [
     await installProbe(page, false, scenario.dark);
     await page.goto("/tr/giris");
     await page.getByRole("link", { name: scenario.logo ? "PDA · Ana sayfa" : "Ana sayfaya dön", exact: true }).click();
-    await expect(page).toHaveURL(/\/tr$/);
+    await expect(page).toHaveURL(/\/tr\/ana-sayfa$/);
     await expect(page.locator("#landing-heading")).toBeVisible();
     await expect.poll(async () => (await readProbe(page)).animations.some(entry => entry.state === "finished")).toBe(true);
     const probe = await readProbe(page);

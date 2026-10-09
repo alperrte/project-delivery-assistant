@@ -1,11 +1,13 @@
 {
   "metaTitle": "From idea to delivery, together in one place",
+  "homeTitle": "Home",
   "metaDescription": "PDA: open-source project and task management. Create a project, build your team and deliver together. Run it on your own infrastructure.",
   "skip": "Skip to content",
   "navigation": "Homepage navigation",
   "product": "Explore the experience",
   "openSource": "Open source",
   "login": "Sign in",
+  "register": "Sign up",
   "welcome": "Welcome to PDA.",
   "headlineFirst": "Start with your idea.",
   "headlineSecond": "Bring your team together. Finish together.",

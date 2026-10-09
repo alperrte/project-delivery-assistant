@@ -7,9 +7,12 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const css = fs.readFileSync(path.join(root, "src/app/globals.css"), "utf8");
 const names = ["background", "foreground", "muted-foreground", "primary", "primary-foreground", "border", "ring"];
 function tokens(selector) {
-  const start = css.indexOf(selector + " {");
-  if (start < 0) throw new Error("Missing palette: " + selector);
-  const block = css.slice(start, css.indexOf("}", start));
+  const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  // Layout-only :root blocks may precede the actual palette.
+  const blocks = [...css.matchAll(new RegExp("(?:^|\\n)\\s*" + escaped + "\\s*\\{([^}]*)\\}", "g"))];
+  const block = blocks.map(match => match[1]).find(value => names.every(name =>
+    new RegExp("--" + name + ":\\s*([^;]+);").test(value)));
+  if (!block) throw new Error("Missing complete palette: " + selector);
   return names.map(name => {
     const value = block.match(new RegExp("--" + name + ":\\s*([^;]+);"))?.[1];
     if (!value) throw new Error("Missing token: " + name);

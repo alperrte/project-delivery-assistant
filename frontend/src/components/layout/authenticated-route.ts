@@ -14,5 +14,7 @@ export const AUTHENTICATED_ROUTES = [
 const privateRoutes = new Set<PageRoute>(AUTHENTICATED_ROUTES);
 export function authenticatedRoute(pathname: string) {
   const match = matchPath(pathname);
-  return !!match && privateRoutes.has(match.route);
+  // Named project sections rewrite to the same protected physical page.
+  const route = match?.section ? matchPath(match.internalPath)?.route : match?.route;
+  return !!route && privateRoutes.has(route);
 }

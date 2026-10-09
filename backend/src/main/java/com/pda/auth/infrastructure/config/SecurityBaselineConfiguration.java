@@ -96,6 +96,7 @@ public class SecurityBaselineConfiguration {
                 // A 401 must not remember the request in an HttpSession: every anonymous probe would otherwise
                 // allocate a server-side session (JSESSIONID) that lives for 30 minutes. OAuth keeps its own session use.
                 .requestCache(cache -> cache.requestCache(new NullRequestCache()))
+                .addFilterBefore(new PublicBodyLimitFilter(), CsrfFilter.class)
                 .addFilterBefore(AuthRateLimitFilter.configured(environment), CsrfFilter.class)
                 .addFilterBefore(new ProjectInvitationRateLimitFilter(), CsrfFilter.class)
                 .addFilterBefore(new JwtCookieAuthenticationFilter(tokens, cookies, users, sessions, clock),
@@ -142,6 +143,9 @@ public class SecurityBaselineConfiguration {
                             .requestMatchers(HttpMethod.GET, "/api/v1/project-invitations/me",
                                     "/api/v1/project-invitations/*/preview",
                                     "/api/v1/project-invitations/*/logo").authenticated()
+                            // Anonymous, consent-gated visit events and the public contact form (CSRF, rate limit and body
+                            // limit apply; neither reads an identity from the request).
+                            .requestMatchers(HttpMethod.POST, "/api/v1/analytics/events", "/api/v1/contact").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/project-invitations/external/preview").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/project-invitations/external/accept").authenticated()
                             .requestMatchers(HttpMethod.POST, "/api/v1/project-invitations/*/accept",
@@ -293,6 +297,8 @@ public class SecurityBaselineConfiguration {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/v1/auth/**", configuration);
         source.registerCorsConfiguration("/api/v1/admin/**", configuration);
+        source.registerCorsConfiguration("/api/v1/analytics/**", configuration);
+        source.registerCorsConfiguration("/api/v1/contact", configuration);
         source.registerCorsConfiguration("/api/v1/projects", configuration);
         source.registerCorsConfiguration("/api/v1/projects/**", configuration);
         source.registerCorsConfiguration("/api/v1/tasks/**", configuration);

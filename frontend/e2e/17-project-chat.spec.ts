@@ -288,7 +288,7 @@ test.describe.serial("Project chat", () => {
     }
     await managerPage.locator('.app-shell a[href="/tr/organizasyonlar"]').first().click();
     await managerPage.getByRole("link", { name: "Yeni organizasyon", exact: true }).click();
-    await expect(managerPage).toHaveURL(/\/tr\/organizasyonlar\/yeni$/);
+    await expect(managerPage).toHaveURL(/\/tr\/organizasyonlar\/yeni-organizasyon$/);
     const originalViewport = managerPage.viewportSize()!;
     for (const width of [320, 390, 1280]) {
       await managerPage.setViewportSize({ width, height: 900 });
@@ -385,7 +385,7 @@ test.describe.serial("Project chat", () => {
     // Opening the other project through the app router (a client-side navigation, like a click on its card; the
     // list is paged, so the card of a project created minutes ago is not always on the first page).
     await managerPage.evaluate((target) => (window as unknown as { next: { router: { push: (href: string) => void } } }).next.router.push(target), `/projects/${slug2}`);
-    await expect(managerPage).toHaveURL(new RegExp(`/tr/projeler/${slug2}$`));
+    await expect(managerPage).toHaveURL(new RegExp(`/tr/projeler/${slug2}/genel-bakis$`));
     await expect(barOf(managerPage)).toHaveCount(0);
     await expect.poll(() => socketStats.closed).toBeGreaterThan(closedBeforeSwitch);
     await openPanel(managerPage);
@@ -638,7 +638,7 @@ test.describe.serial("Project chat", () => {
       await page.getByRole("button", { name: /^Giriş yap$/ }).click();
       await expect(page.locator("#main-content")).toBeVisible();
       await page.evaluate((target) => (window as unknown as { next: { router: { push: (href: string) => void } } }).next.router.push(target), `/projects/${slug}`);
-      await expect(page).toHaveURL(new RegExp(`/tr/projeler/${slug}$`));
+      await expect(page).toHaveURL(new RegExp(`/tr/projeler/${slug}/genel-bakis$`));
       await expect(barOf(page)).toHaveCount(0);
       await openPanel(page);
       await expect(page.getByTestId("chat-active-name")).toHaveText(projectName);

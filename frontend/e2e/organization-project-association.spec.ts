@@ -107,26 +107,26 @@ test("warm old/new organization lists refresh after move/remove/assign/rename/cr
   }
   await page.locator('.app-shell a[href="/tr/projeler"]').first().click();
   for(let index=0;index<targetPage;index++){await page.getByRole("button",{name:"Sonraki",exact:true}).click();await expect(page.locator('button[aria-current="page"]')).toHaveText(String(index+2));}
-  await page.locator(`#main-content a[href="/tr/projeler/${p.slug}?section=settings"]`).click();await expect(page.locator("#settings-name")).toBeVisible();
+  await page.locator(`#main-content a[href="/tr/projeler/${p.slug}/duzenle"]`).click();await expect(page.locator("#settings-name")).toBeVisible();
  }
  async function save(){const [r]=await Promise.all([page.waitForResponse(r=>r.request().method()==="PUT"&&r.url().endsWith(`/projects/${p.id}`)),page.locator('form button[type="submit"]').click()]);expect(r.status()).toBe(200);}
  try {
-  await orgPage(b);await orgPage(a);await expect(page.locator(`#main-content a[href="/tr/projeler/${p.slug}"]`)).toBeVisible();
+  await orgPage(b);await orgPage(a);await expect(page.locator(`#main-content a[href="/tr/projeler/${p.slug}/genel-bakis"]`)).toBeVisible();
   let previous: {id:string;name:string}|null=a;
   for(const target of [b,null,a]){
    const affected=new Set([previous?.id,target?.id]);
    await settings();await page.locator("#settings-organization").click();await page.getByRole("option",{name:target?.name??"Organizasyon yok",exact:true}).click();await save();
    expect(projectOrganizationInDatabase(p.id)).toBe(target?.id??null);
-   for(const org of [a,b]){const before=requests.length;await orgPage(org);if(affected.has(org.id))await expect.poll(()=>requests.length).toBeGreaterThan(before);const row=page.locator(`#main-content a[href="/tr/projeler/${p.slug}"]`);if(target?.id===org.id)await expect(row).toBeVisible();else await expect(row).toHaveCount(0);}
+   for(const org of [a,b]){const before=requests.length;await orgPage(org);if(affected.has(org.id))await expect.poll(()=>requests.length).toBeGreaterThan(before);const row=page.locator(`#main-content a[href="/tr/projeler/${p.slug}/genel-bakis"]`);if(target?.id===org.id)await expect(row).toBeVisible();else await expect(row).toHaveCount(0);}
    previous=target;
   }
   await settings();await page.locator("#settings-name").fill(prefix+" renamed");await save();await orgPage(a);await expect(page.locator("#main-content").getByRole("link",{name:prefix+" renamed",exact:true})).toBeVisible();
   await page.locator('.app-shell a[href="/tr/projeler"]').first().click();await page.getByRole("link",{name:"Yeni proje",exact:true}).click();
   await page.locator("#project-name").fill(prefix+" P2");await page.getByRole("radio",{name:/^Web/}).click();await page.locator("#main-content").getByRole("combobox").click();await page.getByRole("option",{name:a.name,exact:true}).click();
   const [response]=await Promise.all([page.waitForResponse(r=>r.request().method()==="POST"&&new URL(r.url()).pathname==="/api/v1/projects"),page.getByRole("button",{name:/^Projeyi oluştur$/}).focus().then(()=>page.keyboard.press("Enter"))]);await declineTeamPrompt(page);const second=await response.json();created.push(second);expect(projectOrganizationInDatabase(second.id)).toBe(a.id);
-  await orgPage(a);await expect(page.locator(`#main-content a[href="/tr/projeler/${second.slug}"]`)).toBeVisible();
+  await orgPage(a);await expect(page.locator(`#main-content a[href="/tr/projeler/${second.slug}/genel-bakis"]`)).toBeVisible();
   await settings();await page.getByRole("button",{name:"Projeyi sil",exact:true}).click();await page.getByRole("dialog").getByLabel(/Onaylamak için proje adını yazın/).fill(prefix+" renamed");await page.getByRole("dialog").getByRole("button",{name:"Bu projeyi sil",exact:true}).click();
-  await expect(page).toHaveURL(/\/tr\/projeler$/);await orgPage(a);await expect(page.locator(`#main-content a[href="/tr/projeler/${p.slug}"]`)).toHaveCount(0);await expect(page.locator(`#main-content a[href="/tr/projeler/${second.slug}"]`)).toBeVisible();
+  await expect(page).toHaveURL(/\/tr\/projeler$/);await orgPage(a);await expect(page.locator(`#main-content a[href="/tr/projeler/${p.slug}/genel-bakis"]`)).toHaveCount(0);await expect(page.locator(`#main-content a[href="/tr/projeler/${second.slug}/genel-bakis"]`)).toBeVisible();
  }finally{for(const p of created)await api(page,"POST",`/projects/${p.id}/archive`);for(const org of [a,b])await api(page,"POST",`/organizations/${org.id}/archive`);}
 });
 

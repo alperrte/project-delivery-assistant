@@ -7,6 +7,8 @@
 .header { display: flex; align-items: center; gap: 2rem; max-width: 1440px; min-height: 88px; margin: auto; padding: 1.25rem 4rem; }
 .logo { display: flex; align-items: center; width: 110px; min-height: 44px; flex-shrink: 0; }
 .headerLogin { gap: .5rem; height: 44px; min-height: 44px; padding-inline: 1.125rem; border-radius: 999px; font-size: .8125rem; font-weight: 600; }
+.headerLink { display: inline-flex; align-items: center; min-height: 44px; padding-inline: .25rem; border-radius: .375rem; font-size: .8125rem; font-weight: 600; text-underline-offset: 4px; }
+.headerLink:hover { text-decoration: underline; }
 .controls { display: flex; align-items: center; margin-left: auto; gap: 1rem; }
 .eyebrow { font-size: .75rem; font-weight: 500; letter-spacing: .07em; color: var(--muted-foreground); }
 .welcome { min-height: calc(100svh - 88px); max-width: 1440px; margin: auto; padding: 5rem 4rem 1.75rem; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
@@ -111,10 +113,11 @@
   .final { padding-inline: 2rem; }
 }
 @media (max-width: 767px) {
-  .header { padding: .75rem 1.25rem; min-height: 76px; gap: .75rem; }
+  .header { padding: .75rem 1rem; min-height: 76px; gap: .25rem .5rem; flex-wrap: wrap; }
   .logo { width: 70px; }
-  .controls { gap: .35rem; }
+  .controls { gap: .35rem; flex-wrap: wrap; justify-content: flex-end; min-width: 0; }
   .headerLogin { font-size: .75rem; padding-inline: .75rem; }
+  .headerLink { font-size: .75rem; padding-inline: .125rem; white-space: nowrap; }
   .headerLogin svg { display: none; }
   .welcome { min-height: calc(100svh - 76px); padding: 3rem 1.25rem 1.25rem; }
   .welcome h1 { font-size: clamp(2.5rem, 9vw, 4rem); letter-spacing: -.055em; overflow-wrap: anywhere; }

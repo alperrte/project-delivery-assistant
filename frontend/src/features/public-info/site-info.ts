@@ -1,17 +1,36 @@
-/** The public contact form. Every "contact" link in the application goes here; no e-mail address is shown. */
+/** The public contact form. Application support links go here; contributor profile contacts remain separate. */
 export const CONTACT_HREF = "/contact";
+export const CONTACT_EMAIL = "pdassistant.info@gmail.com";
 export const REPOSITORY_URL = "https://github.com/alperrte/project-delivery-assistant";
+/** Release shown in the footer. Keep in sync with the git tag and the package versions when a release is cut. */
+export const APP_VERSION = "1.0";
 export const CONTRIBUTORS = [
-  { name: "Alper Temiz", github: "https://github.com/alperrte" },
-  { name: "Hamza Taşbay", github: "https://github.com/HmzT270" },
+  {
+    name: "Alper Temiz",
+    github: "https://github.com/alperrte",
+    linkedin: "https://www.linkedin.com/in/alpertemizz/",
+    email: "alpertemiz15@gmail.com",
+    cv: "/cv/alper-temiz-cv.pdf",
+    photo: "/images/team/alper-temiz.webp",
+  },
+  {
+    name: "Hamza Taşbay",
+    github: "https://github.com/HmzT270",
+    linkedin: "https://www.linkedin.com/in/hamza-ta%C5%9Fbay-3b7b94304/",
+    email: "tasbayh@gmail.com",
+    cv: "/cv/hamza-tasbay-cv.pdf",
+    photo: "/images/team/hamza-tasbay.webp",
+  },
 ] as const;
 
 export const INFO_LINKS = [
+  { key: "about", href: "/about" },
   { key: "faq", href: "/faq" },
   { key: "kvkk", href: "/kvkk" },
   { key: "privacy", href: "/privacy" },
   { key: "cookies", href: "/cookies" },
   { key: "accessibility", href: "/accessibility" },
+  { key: "license", href: "/license" },
 ] as const;
 
 export type InfoPage = (typeof INFO_LINKS)[number]["key"];

@@ -1,7 +1,7 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Locator, type Page } from "@playwright/test";
 import { buildPath } from "../src/i18n/routing";
 
-const infoPaths = ["/faq", "/kvkk", "/privacy", "/cookies", "/accessibility"] as const;
+const infoPaths = ["/about", "/faq", "/kvkk", "/privacy", "/cookies", "/accessibility", "/license"] as const;
 
 for (const [locale, faqTitle] of [
   ["tr", "Sıkça Sorulan Sorular"],
@@ -21,12 +21,12 @@ for (const [locale, faqTitle] of [
       await expect(page.locator("footer")).toHaveCount(1);
       if (path === "/faq") {
         await expect(page.locator("h1")).toHaveText(faqTitle);
-        await expect(page.locator("details")).toHaveCount(16);
+        await expect(page.locator("details")).toHaveCount(23);
         for (const answer of await page.locator("details p").all()) {
           expect((await answer.textContent())?.trim().length).toBeGreaterThan(30);
         }
       } else {
-        expect(await page.locator("article section").count()).toBeGreaterThanOrEqual(5);
+        expect(await page.locator("article section").count()).toBeGreaterThanOrEqual(path === "/about" ? 4 : 5);
         if (path === "/kvkk" || path === "/privacy" || path === "/cookies") {
           await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", "noindex, follow");
         }
@@ -47,7 +47,7 @@ for (const width of [320, 390, 768, 1440]) {
         await expect(page.locator("footer")).toHaveCount(1);
         await page.locator("footer").scrollIntoViewIfNeeded();
         await expect(page.locator('footer a[href="/tr/iletisim"]')).toBeVisible();
-        await expect(page.locator('a[href^="mailto:"]')).toHaveCount(0);
+        await expect(page.locator('footer a[href^="mailto:"]')).toHaveCount(0);
         expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
         const outOfBounds = await page.locator("footer a").evaluateAll(links => links.some(link => {
           const rect = link.getBoundingClientRect();
@@ -65,12 +65,64 @@ test("footer links open the correct information and contributor targets", async 
   await expect(footer.getByRole("link", { name: "Alper Temiz GitHub profili" })).toHaveAttribute("href", "https://github.com/alperrte");
   await expect(footer.getByRole("link", { name: "Hamza Taşbay GitHub profili" })).toHaveAttribute("href", "https://github.com/HmzT270");
   await expect(footer.locator('a[href="/tr/iletisim"]')).toBeVisible();
-  await expect(page.locator('a[href^="mailto:"]')).toHaveCount(0);
+  await expect(footer.locator('a[href^="mailto:"]')).toHaveCount(0);
   for (const path of infoPaths) {
     await footer.locator('a[href="' + buildPath(path, {}, "tr") + '"]').click();
     await expect(page).toHaveURL(new RegExp(buildPath(path, {}, "tr") + "$"));
     await expect(page.locator("h1")).toBeVisible();
   }
+});
+
+for (const [locale, label] of [["tr", "Sürüm 1.0"], ["en", "Version 1.0"], ["de", "Version 1.0"]] as const) {
+  test(`footer shows the release version on every page type: ${locale}`, async ({ page, context }) => {
+    await context.addCookies([{ name: "NEXT_LOCALE", value: locale, url: "http://localhost:3000" }]);
+    for (const path of ["/login", "/register", "/about", "/"]) {
+      await page.goto(path);
+      const copyright = page.locator("footer p").first();
+      await expect(copyright).toContainText("v1.0");
+      await expect(copyright.locator(".sr-only")).toHaveText(", " + label);
+    }
+  });
+}
+
+/** Tab-style focus: move away and back so the browser treats it as keyboard focus (:focus-visible). */
+async function focusByKeyboard(page: Page, target: Locator) {
+  await target.focus();
+  await page.keyboard.press("Shift+Tab");
+  await page.keyboard.press("Tab");
+  await expect(target).toBeFocused();
+}
+
+async function expectVisibleRing(page: Page) {
+  const ring = await page.evaluate(() => {
+    const style = getComputedStyle(document.activeElement!);
+    return { style: style.outlineStyle, width: parseFloat(style.outlineWidth) };
+  });
+  expect(ring.style).not.toBe("none");
+  expect(ring.width).toBeGreaterThan(0);
+}
+
+test("every footer link, the header logo and the FAQ and license controls show a focus ring for keyboard users", async ({ page }) => {
+  for (const path of ["/login", "/about", "/faq", "/license"]) {
+    await page.goto(path);
+    const links = page.locator("footer a");
+    for (let index = 0; index < await links.count(); index++) {
+      await focusByKeyboard(page, links.nth(index));
+      await expectVisibleRing(page);
+    }
+  }
+  await page.goto("/about");
+  await focusByKeyboard(page, page.locator("header").getByRole("link", { name: "PDA · Project Delivery Assistant" }));
+  await expectVisibleRing(page);
+  await page.goto("/about");
+  await focusByKeyboard(page, page.locator("#team a").first());
+  await expectVisibleRing(page);
+  await page.goto("/faq");
+  await focusByKeyboard(page, page.locator("summary").first());
+  await expectVisibleRing(page);
+  await page.goto("/license");
+  await focusByKeyboard(page, page.locator("pre"));
+  await expectVisibleRing(page);
 });
 
 test("FAQ opens with keyboard and skip link focuses the main content", async ({ page }) => {
@@ -113,7 +165,7 @@ test("authenticated app shell has no footer and information links work from the 
     await expect(menu.locator('a[href="' + buildPath(path, {}, "tr") + '"]')).toBeVisible();
   }
   await expect(menu.locator('a[href="/tr/iletisim"]')).toBeVisible();
-  await expect(page.locator('a[href^="mailto:"]')).toHaveCount(0);
+  await expect(menu.locator('a[href^="mailto:"]')).toHaveCount(0);
   // The cookie policy is listed with the other policies and the preferences can be reopened from the same group.
   await expect(menu.getByRole("menuitem", { name: "Çerez tercihlerini yönet" })).toBeVisible();
   await menu.getByRole("menuitem", { name: "Çerez tercihlerini yönet" }).click();

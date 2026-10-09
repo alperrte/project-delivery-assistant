@@ -30,7 +30,7 @@ for (const [locale, heading] of [["tr", "Fikrinle başla."], ["en", "Start with 
     await expect(page).toHaveTitle(/PDA/);
     await expect(page.locator('meta[name="description"]')).toHaveAttribute("content", /.+/);
     const canonical = await page.locator('link[rel="canonical"]').getAttribute("href");
-    expect(new URL(canonical!).pathname).toBe(`/${locale}`);
+    expect(new URL(canonical!).pathname).toBe(`/${locale}/${{ tr: "ana-sayfa", en: "home", de: "startseite" }[locale]}`);
     expect(new URL(canonical!).search).toBe("");
     await expect(page.locator("#open-source")).toContainText("docker compose up --build -d");
     await expect(page.locator("#open-source")).toContainText("npm ci");

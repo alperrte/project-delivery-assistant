@@ -103,13 +103,13 @@ test.describe.serial("Invitation, roles, squad, and denial checks", () => {
     await expect(managerPage.getByText("Roller güncellendi.")).toBeVisible();
 
     await openProjectListPage(memberPage, slug);
-    await expect(memberPage.getByRole("article").filter({ has: memberPage.locator(`a[href="/tr/projeler/${slug}"]`) })).toBeVisible();
+    await expect(memberPage.getByRole("article").filter({ has: memberPage.locator(`a[href="/tr/projeler/${slug}/genel-bakis"]`) })).toBeVisible();
   });
 
   test("non-manager cannot change project settings (UI hidden and API denies)", async () => {
     // The list tells a member nothing to edit: no pencil on the project's card.
     await openProjectListPage(memberPage, slug);
-    const card = memberPage.getByRole("article").filter({ has: memberPage.locator(`a[href="/tr/projeler/${slug}"]`) });
+    const card = memberPage.getByRole("article").filter({ has: memberPage.locator(`a[href="/tr/projeler/${slug}/genel-bakis"]`) });
     await expect(card).toBeVisible();
     await expect(card.getByRole("link", { name: /ayarlarını düzenle/ })).toHaveCount(0);
 
@@ -171,6 +171,6 @@ test.describe.serial("Invitation, roles, squad, and denial checks", () => {
     await expect(managerPage.getByRole("row", { name: new RegExp(member.nickname) })).toHaveCount(0);
 
     await managerPage.getByRole("navigation", { name: "Konum" }).getByRole("link", { name: "Ekipler" }).click();
-    await expect(managerPage).toHaveURL(`/tr/projeler/${slug}?section=teams`);
+    await expect(managerPage).toHaveURL(`/tr/projeler/${slug}/ekipler`);
   });
 });

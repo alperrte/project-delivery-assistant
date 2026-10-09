@@ -1,5 +1,8 @@
 import { PageContainer } from "@/components/common/page-container";
 import { AcceptInvitationView } from "@/features/invitations/components/accept-invitation-view";
+import { pageTitle } from "@/lib/seo/page-title";
+
+export const generateMetadata = () => pageTitle("invitation");
 
 export default async function InvitationResponsePage({
   params,

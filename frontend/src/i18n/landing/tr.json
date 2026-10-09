@@ -1,11 +1,13 @@
 {
   "metaTitle": "Fikirden teslimata, ekibinle aynı yerde",
+  "homeTitle": "Ana sayfa",
   "metaDescription": "PDA: açık kaynak proje ve görev yönetimi. Projeni oluştur, ekibini kur ve işi birlikte teslim et. Kendi ortamında çalıştır.",
   "skip": "İçeriğe geç",
   "navigation": "Ana sayfa gezinmesi",
   "product": "Deneyimi keşfet",
   "openSource": "Açık kaynak",
   "login": "Giriş yap",
+  "register": "Kayıt ol",
   "welcome": "PDA’ya hoş geldiniz.",
   "headlineFirst": "Fikrinle başla.",
   "headlineSecond": "Ekibini topla. Birlikte tamamla.",
