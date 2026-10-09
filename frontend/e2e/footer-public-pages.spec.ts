@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Locator, type Page } from "@playwright/test";
 import { buildPath } from "../src/i18n/routing";
 
 const infoPaths = ["/about", "/faq", "/kvkk", "/privacy", "/accessibility", "/license"] as const;
@@ -69,6 +69,58 @@ test("footer links open the correct information and contributor targets", async 
     await expect(page).toHaveURL(new RegExp(buildPath(path, {}, "tr") + "$"));
     await expect(page.locator("h1")).toBeVisible();
   }
+});
+
+for (const [locale, label] of [["tr", "Sürüm 1.0"], ["en", "Version 1.0"], ["de", "Version 1.0"]] as const) {
+  test(`footer shows the release version on every page type: ${locale}`, async ({ page, context }) => {
+    await context.addCookies([{ name: "NEXT_LOCALE", value: locale, url: "http://localhost:3000" }]);
+    for (const path of ["/login", "/register", "/about", "/"]) {
+      await page.goto(path);
+      const copyright = page.locator("footer p").first();
+      await expect(copyright).toContainText("v1.0");
+      await expect(copyright.locator(".sr-only")).toHaveText(", " + label);
+    }
+  });
+}
+
+/** Tab-style focus: move away and back so the browser treats it as keyboard focus (:focus-visible). */
+async function focusByKeyboard(page: Page, target: Locator) {
+  await target.focus();
+  await page.keyboard.press("Shift+Tab");
+  await page.keyboard.press("Tab");
+  await expect(target).toBeFocused();
+}
+
+async function expectVisibleRing(page: Page) {
+  const ring = await page.evaluate(() => {
+    const style = getComputedStyle(document.activeElement!);
+    return { style: style.outlineStyle, width: parseFloat(style.outlineWidth) };
+  });
+  expect(ring.style).not.toBe("none");
+  expect(ring.width).toBeGreaterThan(0);
+}
+
+test("every footer link, the header logo and the FAQ and license controls show a focus ring for keyboard users", async ({ page }) => {
+  for (const path of ["/login", "/about", "/faq", "/license"]) {
+    await page.goto(path);
+    const links = page.locator("footer a");
+    for (let index = 0; index < await links.count(); index++) {
+      await focusByKeyboard(page, links.nth(index));
+      await expectVisibleRing(page);
+    }
+  }
+  await page.goto("/about");
+  await focusByKeyboard(page, page.locator("header").getByRole("link", { name: "PDA · Project Delivery Assistant" }));
+  await expectVisibleRing(page);
+  await page.goto("/about");
+  await focusByKeyboard(page, page.locator("#team a").first());
+  await expectVisibleRing(page);
+  await page.goto("/faq");
+  await focusByKeyboard(page, page.locator("summary").first());
+  await expectVisibleRing(page);
+  await page.goto("/license");
+  await focusByKeyboard(page, page.locator("pre"));
+  await expectVisibleRing(page);
 });
 
 test("FAQ opens with keyboard and skip link focuses the main content", async ({ page }) => {

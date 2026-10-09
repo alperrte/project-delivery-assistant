@@ -35,7 +35,7 @@ export default function GlobalError({ retry }: { error: Error & { digest?: strin
     <html lang={locale} className={dark ? "dark" : undefined}>
       <head><title>500 · PDA</title><meta name="robots" content="noindex, nofollow" /></head>
       <body className="min-h-[100dvh] bg-background text-foreground" style={{ fontFamily: "system-ui, sans-serif" }}>
-        <header className="mx-auto w-full max-w-6xl px-6 py-6 sm:px-10"><a href="/login" className="inline-flex min-h-11 items-center rounded-md text-lg font-semibold outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring">PDA · Project Delivery Assistant</a></header>
+        <header className="mx-auto w-full max-w-6xl px-6 py-6 sm:px-10"><a href="/login" className="inline-flex min-h-11 items-center rounded-md text-lg font-semibold outline-hidden focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring">PDA · Project Delivery Assistant</a></header>
         <main className="flex min-h-[75dvh] items-center px-6 sm:px-10"><ErrorContent code="500" copy={copy} onRetry={retry} /></main>
       </body>
     </html>

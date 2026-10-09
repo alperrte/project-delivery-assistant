@@ -7,7 +7,7 @@ import { CONTRIBUTORS } from "./site-info";
 
 const STORY = ["journey", "pda", "goal"] as const;
 
-const linkClass = "inline-flex min-h-11 w-full items-center gap-3 break-all rounded-md py-2 text-sm underline-offset-4 outline-none hover:text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring";
+const linkClass = "inline-flex min-h-11 w-full items-center gap-3 break-all rounded-md py-2 text-sm underline-offset-4 outline-hidden hover:text-primary hover:underline focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring";
 
 /** Link text without the scheme, the "www." and a trailing slash; percent-escapes are shown as the letters they stand for. */
 const shortUrl = (url: string) => decodeURIComponent(url.replace(/^https:\/\/(www\.)?/, "").replace(/\/$/, ""));

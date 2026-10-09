@@ -2362,6 +2362,7 @@
     "contact": "Kontakt",
     "contactDescription": "Für Fragen, Vorschläge und Rückmeldungen.",
     "copyright": "© {year} PDA · Project Delivery Assistant",
+    "version": "Version {version}",
     "source": "Quellcode"
   },
   "publicPages": {

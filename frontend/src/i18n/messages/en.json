@@ -2338,6 +2338,7 @@
     "contact": "Contact",
     "contactDescription": "For questions, suggestions and feedback.",
     "copyright": "© {year} PDA · Project Delivery Assistant",
+    "version": "Version {version}",
     "source": "Source code"
   },
   "publicPages": {

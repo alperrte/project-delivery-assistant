@@ -2362,6 +2362,7 @@
     "contact": "İletişim",
     "contactDescription": "Sorularınız, önerileriniz ve geri bildirimleriniz için.",
     "copyright": "© {year} PDA · Project Delivery Assistant",
+    "version": "Sürüm {version}",
     "source": "Kaynak kod"
   },
   "publicPages": {
