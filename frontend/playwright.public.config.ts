@@ -4,7 +4,7 @@ import { REJECTED_STATE } from "./e2e/consent-state";
 // Public information and footer checks do not need backend accounts.
 export default defineConfig({
   testDir: "./e2e",
-  testMatch: ["cookie-consent.spec.ts", "contact-form.spec.ts", "form-first-error-focus-public.spec.ts", "footer-public-pages.spec.ts", "license-page.spec.ts", "about-page.spec.ts", "error-pages.spec.ts", "landing-page.spec.ts", "landing-real-ui.spec.ts", "localized-routing.spec.ts", "a11y-public.spec.ts"],
+  testMatch: ["cookie-consent.spec.ts", "contact-form.spec.ts", "form-first-error-focus-public.spec.ts", "form-loading-state-public.spec.ts", "form-submit-results-public.spec.ts", "footer-public-pages.spec.ts", "license-page.spec.ts", "about-page.spec.ts", "error-pages.spec.ts", "landing-page.spec.ts", "landing-real-ui.spec.ts", "localized-routing.spec.ts", "a11y-public.spec.ts"],
   timeout: 60_000,
   fullyParallel: false,
   workers: 1,

@@ -194,14 +194,14 @@
 
 ### Formun gönderilmesi ve sonuçlar
 
-- [ ] Loading state
-- [ ] Çift gönderim önleme
-- [ ] Success state
-- [ ] Error state
-- [ ] Bağlantı kesintisi davranışı
-- [ ] Silme / kritik eylem onayı
-- [ ] Undo / geri alma
-- [ ] Hata ve sonuç testleri
+- [X] Loading state
+- [X] Çift gönderim önleme
+- [X] Success state
+- [X] Error state
+- [X] Bağlantı kesintisi davranışı
+- [X] Silme / kritik eylem onayı
+- [Eklenmeyecek] Undo / geri alma
+- [X] Hata ve sonuç testleri
 
 ## 6. UI/UX, responsive tasarım ve ekran durumları
 

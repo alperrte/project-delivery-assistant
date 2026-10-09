@@ -43,7 +43,7 @@ export function CriterionFormDialog({
     register,
     handleSubmit,
     reset,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<CriterionFormValues>({
     resolver: zodResolver(criterionFormSchema),
     mode: "onBlur",
@@ -94,8 +94,8 @@ export function CriterionFormDialog({
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               {t("cancel")}
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting && <CircleNotch size={16} className="animate-spin" />}
+            <Button type="submit" disabled={mutation.isPending}>
+              {mutation.isPending && <CircleNotch size={16} className="animate-spin" aria-hidden="true" />}
               {criterion ? t("save") : t("create")}
             </Button>
           </DialogFooter>
