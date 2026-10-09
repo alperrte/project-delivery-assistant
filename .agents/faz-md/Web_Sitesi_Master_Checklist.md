@@ -4,8 +4,8 @@
 
 ### Footer içeriği
 
-- [ ] Telif hakkı ve yıl
-- [ ] Site / marka adı
+- [X] Telif hakkı ve yıl
+- [X] Site / marka adı
 - [ ] Hakkımızda bağlantısı
 - [ ] Sıkça Sorulan Sorular (SSS)
 - [ ] KVKK Aydınlatma Metni
@@ -17,7 +17,7 @@
 - [ ] Geliştirici / ekip profilleri
 - [ ] Sosyal medya bağlantıları
 - [ ] Kaynak kod bağlantısı
-- [ ] Açık kaynak lisansı
+- [X] Açık kaynak lisansı
 - [ ] Sürüm bilgisi
 - [ ] Footer erişilebilirliği
 

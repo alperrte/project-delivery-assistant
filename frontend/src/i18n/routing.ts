@@ -41,6 +41,7 @@ export const PAGE_ROUTES = [
   "/kvkk",
   "/accessibility",
   "/license",
+  "/about",
   "/errors/[code]",
   "/dev/error-test",
 ] as const;
@@ -57,7 +58,7 @@ const SEGMENTS: Record<Locale, Record<string, string>> = {
     settings: "ayarlar", account: "hesap", calendar: "takvim", reminders: "animsaticilar",
     invitations: "davetler", login: "giris", register: "kayit",
     "change-password": "sifre-degistir", "forgot-password": "sifremi-unuttum",
-    faq: "sss", privacy: "gizlilik", accessibility: "erisilebilirlik", license: "lisans",
+    faq: "sss", privacy: "gizlilik", accessibility: "erisilebilirlik", license: "lisans", about: "hakkimizda",
     errors: "hatalar", "error-test": "hata-testi",
   },
   de: {
@@ -67,7 +68,7 @@ const SEGMENTS: Record<Locale, Record<string, string>> = {
     settings: "einstellungen", account: "konto", calendar: "kalender", reminders: "erinnerungen",
     invitations: "einladungen", login: "anmelden", register: "registrieren",
     "change-password": "passwort-aendern", "forgot-password": "passwort-vergessen",
-    faq: "faq", privacy: "datenschutz", accessibility: "barrierefreiheit", license: "lizenz",
+    faq: "faq", privacy: "datenschutz", accessibility: "barrierefreiheit", license: "lizenz", about: "ueber-uns",
     errors: "fehler", "error-test": "fehlertest",
   },
 };

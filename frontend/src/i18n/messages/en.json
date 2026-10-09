@@ -2327,6 +2327,7 @@
   "siteFooter": {
     "description": "Manage projects, teams and delivery together.",
     "information": "Information and support",
+    "about": "About us",
     "faq": "Frequently Asked Questions",
     "kvkk": "KVKK",
     "privacy": "Privacy Policy",
@@ -2352,6 +2353,38 @@
       "references": "Official references",
       "noticeReference": "KVKK: Duty to inform",
       "cookieReference": "KVKK: Cookie practices guide"
+    },
+    "about": {
+      "title": "About us",
+      "description": "The story, goals and contact details of Alper Temiz and Hamza Taşbay, the developers of PDA.",
+      "lead": "Hello! We are Alper Temiz and Hamza Taşbay, fourth-year Software Engineering students at Doğuş University.",
+      "role": "Full Stack Developer",
+      "journey": {
+        "title": "Our journey",
+        "paragraphs": [
+          "We set out on this road as two friends to close one of the industry's big gaps: a free project management platform. In many tools, important features sit behind paid plans, or you have to depend on paid subscriptions. We wanted to build an alternative that anyone can use without paying."
+        ]
+      },
+      "pda": {
+        "title": "What is PDA?",
+        "paragraphs": [
+          "We develop PDA as open source. Students and small software companies can, if they wish, set up the whole thing on their own computers or servers and run it themselves. Our aim is for you, our dear friends, to achieve great things without facing high fees."
+        ]
+      },
+      "goal": {
+        "title": "Our goal",
+        "paragraphs": [
+          "Our biggest goal is not to become one of those projects that are built and then set aside. With the support of you, our dear users and friends, we want to take PDA to the next level.",
+          "Rather than depending on paid subscriptions, we want to lead the industry through open source projects, and instead of an approach where only paid features stand out, we stand for a free one that aims at togetherness across the industry."
+        ]
+      },
+      "team": {
+        "title": "Get in touch",
+        "intro": "If you would like to reach us personally or ask questions:",
+        "linkedin": "LinkedIn profile",
+        "cv": "Résumé (CV)",
+        "photoAlt": "Photo of {name}"
+      }
     },
     "faq": {
       "title": "Frequently Asked Questions",

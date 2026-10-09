@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
 import { CaretDown } from "@phosphor-icons/react/ssr";
 import { APACHE_LICENSE_TEXT } from "./apache-license";
+import { PageContents } from "./page-contents";
 import { CONTACT_EMAIL, type InfoPage } from "./site-info";
 import { buildPath } from "@/i18n/routing";
 import { locales, type Locale } from "@/i18n/config";
@@ -45,12 +46,7 @@ export async function PublicInfoPage({ page }: { page: InfoPage }) {
         </aside>
       )}
       <div className="mt-10 grid gap-10 lg:grid-cols-[14rem_minmax(0,1fr)] lg:gap-16">
-        <nav aria-label={common("contents")} className="lg:sticky lg:top-6 lg:self-start">
-          <h2 className="text-sm font-semibold">{common("contents")}</h2>
-          <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1 lg:block lg:space-y-1">
-            {contents.map(({ id, title }) => <li key={id}><a href={"#" + id} className="inline-flex min-h-11 items-center rounded-sm text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring">{title}</a></li>)}
-          </ul>
-        </nav>
+        <PageContents label={common("contents")} items={contents} />
         <div className="min-w-0">
           {page === "faq" ? groups.map(group => (
             <section key={group.id} id={group.id} aria-labelledby={group.id + "-title"} className="mb-10 scroll-mt-6">

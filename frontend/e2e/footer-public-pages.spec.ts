@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { buildPath } from "../src/i18n/routing";
 
-const infoPaths = ["/faq", "/kvkk", "/privacy", "/accessibility", "/license"] as const;
+const infoPaths = ["/about", "/faq", "/kvkk", "/privacy", "/accessibility", "/license"] as const;
 
 for (const [locale, faqTitle] of [
   ["tr", "Sıkça Sorulan Sorular"],
@@ -26,7 +26,7 @@ for (const [locale, faqTitle] of [
           expect((await answer.textContent())?.trim().length).toBeGreaterThan(30);
         }
       } else {
-        expect(await page.locator("article section").count()).toBeGreaterThanOrEqual(5);
+        expect(await page.locator("article section").count()).toBeGreaterThanOrEqual(path === "/about" ? 4 : 5);
         if (path === "/kvkk" || path === "/privacy") {
           await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", "noindex, follow");
         }

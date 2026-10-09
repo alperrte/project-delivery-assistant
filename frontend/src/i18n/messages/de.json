@@ -2351,6 +2351,7 @@
   "siteFooter": {
     "description": "Projekte, Teams und die Umsetzung gemeinsam organisieren.",
     "information": "Information und Hilfe",
+    "about": "Über uns",
     "faq": "Häufige Fragen",
     "kvkk": "KVKK",
     "privacy": "Datenschutzerklärung",
@@ -2376,6 +2377,38 @@
       "references": "Offizielle Quellen",
       "noticeReference": "KVKK: Informationspflicht",
       "cookieReference": "KVKK: Leitfaden zur Cookie-Nutzung"
+    },
+    "about": {
+      "title": "Über uns",
+      "description": "Die Geschichte, die Ziele und die Kontaktdaten von Alper Temiz und Hamza Taşbay, den Entwicklern von PDA.",
+      "lead": "Hallo! Wir sind Alper Temiz und Hamza Taşbay, Studierende im vierten Studienjahr Software Engineering an der Doğuş-Universität.",
+      "role": "Full Stack Developer",
+      "journey": {
+        "title": "Unser Weg",
+        "paragraphs": [
+          "Als zwei Freunde haben wir uns auf diesen Weg gemacht, um eine der großen Lücken der Branche zu schließen: eine kostenlose Plattform für Projektmanagement. Bei vielen Werkzeugen stecken wichtige Funktionen hinter kostenpflichtigen Tarifen, oder man ist auf kostenpflichtige Abonnements angewiesen. Wir wollten eine Alternative entwickeln, die jeder ohne Gebühren nutzen kann."
+        ]
+      },
+      "pda": {
+        "title": "Was ist PDA?",
+        "paragraphs": [
+          "Wir entwickeln PDA als Open Source. Studierende und kleine Softwareunternehmen können es auf Wunsch vollständig auf eigenen Rechnern oder Servern aufsetzen und selbst betreiben. Unser Ziel ist, dass Sie, liebe Freunde, auch ohne hohe Kosten Großes erreichen können."
+        ]
+      },
+      "goal": {
+        "title": "Unser Ziel",
+        "paragraphs": [
+          "Unser größtes Ziel ist es, nicht zu einem der Projekte zu werden, die entwickelt und dann beiseitegelegt werden. Mit der Unterstützung unserer geschätzten Nutzerinnen, Nutzer und Freunde wollen wir PDA auf die nächste Stufe bringen.",
+          "Statt von kostenpflichtigen Abonnements abhängig zu sein, wollen wir die Branche mit Open-Source-Projekten voranbringen und statt eines Ansatzes, bei dem nur kostenpflichtige Funktionen im Vordergrund stehen, für einen kostenlosen Ansatz eintreten, der auf Zusammenhalt in der Branche zielt."
+        ]
+      },
+      "team": {
+        "title": "Kontakt",
+        "intro": "Wenn Sie uns persönlich erreichen oder Fragen stellen möchten:",
+        "linkedin": "LinkedIn-Profil",
+        "cv": "Lebenslauf (CV)",
+        "photoAlt": "Foto von {name}"
+      }
     },
     "faq": {
       "title": "Häufige Fragen",
