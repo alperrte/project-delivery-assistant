@@ -24,7 +24,8 @@
       "showing": "{from}-{to} arası gösteriliyor"
     },
     "showPassword": "Şifreyi göster",
-    "hidePassword": "Şifreyi gizle"
+    "hidePassword": "Şifreyi gizle",
+    "breadcrumb": "Konum"
   },
   "errors": {
     "network": "Sunucuya ulaşılamadı. Bağlantınızı kontrol edip tekrar deneyin.",

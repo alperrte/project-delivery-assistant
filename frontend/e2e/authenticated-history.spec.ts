@@ -11,7 +11,8 @@ test("history policy covers actual protected layouts and fails closed at adjacen
   function pages(directory: string): string[] {
     return readdirSync(directory, { withFileTypes: true }).flatMap(item => item.isDirectory() ? pages(path.join(directory, item.name)) : item.name === "page.tsx" ? ["/" + path.relative(root, directory).split(path.sep).join("/")] : []);
   }
-  expect(new Set(AUTHENTICATED_ROUTES)).toEqual(new Set(pages(root)));
+  const sectionRoutes = ["overview", "criteria", "teams", "team-invitations", "repository", "edit"].map(section => `/projects/[slug]/${section}`); // each project section has its own public URL but renders from the one project page
+  expect(new Set(AUTHENTICATED_ROUTES)).toEqual(new Set([...pages(root), ...sectionRoutes]));
   for (const url of ["/tr/genel-bakis", "/en/projects/a/tasks", "/de/konto", "/tr/projeler/a/ekipler/t", "/tasks"]) expect(authenticatedRoute(url)).toBe(true);
   for (const url of ["/", "/tr", "/tr/giris", "/en/register", "/de/anmelden", "/change-password", "/api/v1/auth/logout", "/logout", "/faq", "/projects-logout", "/unknown"]) expect(authenticatedRoute(url)).toBe(false);
   const native = { canGoBack: true, canGoForward: true, currentEntry: { index: 1 }, entries: () => [{ index: 0, url: "https://pda.test/tr/giris" }, { index: 1, url: "https://pda.test/tr/projeler" }, { index: 2, url: "https://pda.test/de/konto?tab=profile#field" }] };
@@ -35,6 +36,6 @@ test("real public-login-workspace boundary disables PDA back while private navig
     await expect(page.getByTestId("workspace-back")).toBeDisabled(); await page.mouse.move(2, 2); await page.getByTestId("workspace-forward").click(); await expect(page).toHaveURL(/\/tr\/projeler$/);
     const project = (await api(page, "POST", "/projects", { name: `Authenticated history QA ${Date.now()}`, projectType: "WEB" })).json as { id: string; slug: string }; projectId = project.id;
     await page.goto(`/projects/${project.slug}`); await expect(page.getByTestId("workspace-back")).toBeEnabled();
-    await page.goBack(); await expect(page.getByTestId("workspace-forward")).toBeEnabled(); await page.mouse.move(2, 2); await page.getByTestId("workspace-forward").click(); await expect(page).toHaveURL(new RegExp(`/tr/projeler/${project.slug}$`));
+    await page.goBack(); await expect(page.getByTestId("workspace-forward")).toBeEnabled(); await page.mouse.move(2, 2); await page.getByTestId("workspace-forward").click(); await expect(page).toHaveURL(new RegExp(`/tr/projeler/${project.slug}/genel-bakis$`));
   } finally { if (projectId) await api(page, "POST", `/projects/${projectId}/archive`); await context.close(); }
 });

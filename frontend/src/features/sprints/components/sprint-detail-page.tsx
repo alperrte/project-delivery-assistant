@@ -26,6 +26,7 @@ import type { Sprint, SprintSummary } from "../types";
 import { BurndownChart, type BurndownUnit } from "./burndown-chart";
 import { SprintActions } from "./sprint-actions";
 import { SprintStatusBadge } from "./sprint-status-badge";
+import { BreadcrumbLabel } from "@/components/layout/breadcrumb-labels";
 
 function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
@@ -196,6 +197,7 @@ function SprintDetailBody({ slug, project, projectId, isManager, userId, sprintI
 
   return (
     <article aria-label={data.name} className="space-y-6">
+      <BreadcrumbLabel kind="sprint" label={data.name} />
       {!allowsAdvanced(project.taskManagementMode) && <AdvancedReadOnlyNotice />}
       <div className="space-y-4">
         <Link href={`/projects/${slug}/sprints`} className="inline-flex items-center gap-1.5 rounded-sm text-sm text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50">

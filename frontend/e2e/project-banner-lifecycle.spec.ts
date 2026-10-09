@@ -82,7 +82,7 @@ test("real create and banner upload persist bytes and version before the warm pr
   id = ((await api(page, "GET", `/projects/by-slug/${slug}`)).json as { id: string }).id;
   expect(bannerInDatabase(id)).toEqual({ rows: 1, bytes: png.length, version: true });
   await openProjectListPage(page, slug);
-  await expect(page.getByRole("article").filter({ has: page.locator(`a[href="/tr/projeler/${slug}"]`) }).locator('img[src*="/banner?v="]')).toBeVisible();
+  await expect(page.getByRole("article").filter({ has: page.locator(`a[href="/tr/projeler/${slug}/genel-bakis"]`) }).locator('img[src*="/banner?v="]')).toBeVisible();
  } finally { if (id) await api(page, "POST", `/projects/${id}/archive`); }
 });
 

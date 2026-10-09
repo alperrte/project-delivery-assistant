@@ -29,6 +29,7 @@ import { AddTeamMemberDialog } from "./add-team-member-dialog";
 import { DeleteTeamButton } from "./delete-team-button";
 import { TeamMembersTable } from "./team-members-table";
 import { PageTitle } from "@/components/common/page-title";
+import { BreadcrumbLabel } from "@/components/layout/breadcrumb-labels";
 
 const PAGE_SIZE = 20;
 const SORTS = ["joined_desc", "joined_asc", "name"] as const;
@@ -208,13 +209,7 @@ export function TeamDetailPage({ slug, teamId }: { slug: string; teamId: string 
 
   return (
     <div className="min-w-0 space-y-6">
-      <nav aria-label={t("breadcrumb")} className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
-        <Link href={`/projects/${slug}`} className="hover:text-foreground hover:underline">{projectData.name}</Link>
-        <span aria-hidden="true">/</span>
-        <Link href={backHref} className="hover:text-foreground hover:underline">{t("teams")}</Link>
-        <span aria-hidden="true">/</span>
-        <span aria-current="page" className="truncate font-medium text-foreground">{teamData.name}</span>
-      </nav>
+      <BreadcrumbLabel kind="team" label={teamData.name} />
 
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex min-w-0 items-start gap-4">

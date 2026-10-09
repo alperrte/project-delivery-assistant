@@ -62,7 +62,7 @@ export function TaskDetailBody({ slug, project, projectId, isManager, userId, ta
         <p className="pr-8 text-xs break-words text-muted-foreground">{project.name} · {data.taskKey}</p>
         <h2 className="pr-8 text-2xl font-semibold break-words">{data.title}</h2>
         <div className="flex flex-wrap items-center gap-2"><StatusBadge status={data.status} /><TaskModeBadge mode={data.creationMode} /><PriorityBadge priority={data.priority} /><TaskProgressAction task={data} canChange={ctx.perms.work} /></div>
-      </header> : <TaskHeader {...ctx} projectName={project.name} />}
+      </header> : <TaskHeader {...ctx} />}
 
       {data.archivedAt && (
         <p role="status" className="mb-6 flex items-center gap-2 rounded-xl border bg-muted px-4 py-3 text-sm text-muted-foreground">

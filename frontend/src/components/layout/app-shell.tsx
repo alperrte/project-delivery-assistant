@@ -7,6 +7,8 @@ import { useTranslations } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
 import { Buildings, SquaresFour, House, GearSix, CalendarBlank, SidebarSimple, EnvelopeSimple } from "@phosphor-icons/react";
 import { AppHeader } from "./app-header";
+import { AppBreadcrumb } from "./app-breadcrumb";
+import { BreadcrumbLabelsProvider } from "./breadcrumb-labels";
 import { NotificationOwner } from "@/features/notifications/notification-owner";
 import { ProjectSidebarNav } from "./project-sidebar-nav";
 import { TasksNavLink } from "./tasks-nav-link";
@@ -117,7 +119,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     );
   }
 
-  return <NotificationOwner key={user?.id ?? "none"} userId={user?.id}><ChatProvider><AppShellView pathname={pathname} user={user} collapsed={collapsed} onLogout={handleLogout} onToggleCollapsed={toggleCollapsed}>{children}</AppShellView><ChatRoot /></ChatProvider></NotificationOwner>;
+  return <NotificationOwner key={user?.id ?? "none"} userId={user?.id}><ChatProvider><AppShellView pathname={pathname} user={user} collapsed={collapsed} onLogout={handleLogout} onToggleCollapsed={toggleCollapsed}><BreadcrumbLabelsProvider><AppBreadcrumb />{children}</BreadcrumbLabelsProvider></AppShellView><ChatRoot /></ChatProvider></NotificationOwner>;
 }
 
 /** Shared workspace presentation; authentication and API state stay in AppShell. */

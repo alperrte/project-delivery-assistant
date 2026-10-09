@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { PageContainer } from "@/components/common/page-container";
 import { PageHeader } from "@/components/common/page-header";
+import { BreadcrumbLabel } from "@/components/layout/breadcrumb-labels";
 import { ImagePicker } from "@/components/common/image-picker";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -103,6 +104,7 @@ function OrganizationEditor({ initial }: { initial?: Organization }) {
  const labels = (kind: "logo" | "cover") => ({ label: tp(kind), choose: tp(kind === "logo" ? "uploadLogo" : "uploadCover"), change: tp("change"), remove: tp("remove"), hint: tp(kind === "logo" ? "logoHint" : "coverHint"), invalidType: tp("invalidType"), tooLarge: tp("tooLarge"), empty: tp("empty"), detail: tp(kind === "logo" ? "logoFallbackHint" : "coverPlacementHint") });
  return <PageContainer width="wide">
   <Link href={backHref} className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground"><ArrowLeft size={16} aria-hidden="true" />{editing ? tf("backToOrganization") : t("backToOrganizations")}</Link>
+  {initial && <BreadcrumbLabel kind="organization" label={initial.name} />}
   <PageHeader title={editing ? tf("editTitle") : tf("createTitle")} description={editing ? tf("editDescription") : tf("createDescription")} />
   {failures.length > 0 && saved && <section role="alert" className="mb-6 space-y-3 rounded-lg border border-warning/40 bg-warning/10 p-4 text-sm">
    <p>{tp("partial")}</p><ul className="list-inside list-disc">{failures.map(kind => <li key={kind}>{tp(kind === "logo" ? "failedLogo" : kind === "cover" ? "failedCover" : "failedRefresh")}</li>)}</ul>

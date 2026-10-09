@@ -51,7 +51,7 @@ test("unknown native capability stays visibly disabled with an honest explanatio
 
 test("PDA and browser traversal preserve native entries and close only fullscreen logical navigation",async({page})=>{
  const slug=await createProject(page,`History chat ${Date.now()}`),pid=((await api(page,"GET",`/projects/by-slug/${slug}`)).json as {id:string}).id;
- const root=localizeHref(`/projects/${slug}`,"tr");
+ const root=localizeHref(`/projects/${slug}`,"tr"),criteria=localizeHref(`/projects/${slug}/criteria`,"tr");
  try{
   await link(page,`/projects/${slug}/tasks`);const tasks=page.url();await link(page,"/calendar");const calendar=page.url();
   await arrow(page,"back");await expect(page).toHaveURL(tasks);await arrow(page,"back");await expect(page).toHaveURL(new RegExp(root+"$"));
@@ -63,11 +63,11 @@ test("PDA and browser traversal preserve native entries and close only fullscree
   await page.getByTestId("chat-composer").fill("quoted original");await page.getByTestId("chat-composer").press("Enter");const message=page.getByTestId("chat-message").filter({hasText:"quoted original"});await expect(message).toHaveCount(1);await chooseMessageAction(message,"reply");await page.getByTestId("chat-composer").fill("reply draft");
   await page.getByTestId("chat-minimize").click();await page.getByTestId("chat-bar-expand").click();await expect(page.getByTestId("chat-compact")).toBeVisible();await arrow(page,"forward");await expect(page).toHaveURL(calendar);await expect(page.getByTestId("chat-composer")).toHaveValue("reply draft");await expect(page.getByTestId("chat-reply-context")).toBeVisible();
   await page.getByTestId("chat-minimize").click();await arrow(page,"back");await expect(page).toHaveURL(tasks);await expect(page.getByTestId("chat-bar")).toBeVisible();await page.getByTestId("chat-bar-expand").click();await expect(page.getByTestId("chat-composer")).toHaveValue("reply draft");
-  await page.getByTestId("chat-fullscreen").click();await route(page,root+"/kriterler");await expect(page.getByTestId("chat-panel")).toHaveCount(0);
-  await page.getByTestId("chat-nav-item").click();await route(page,root+"/kriterler?filter=qa#history");await expect(page.getByTestId("chat-panel")).toBeVisible();
+  await page.getByTestId("chat-fullscreen").click();await route(page,criteria);await expect(page.getByTestId("chat-panel")).toHaveCount(0);
+  await page.getByTestId("chat-nav-item").click();await route(page,criteria+"?filter=qa#history");await expect(page.getByTestId("chat-panel")).toBeVisible();
   const index=await page.evaluate(()=>(window as unknown as {navigation:{currentEntry:{index:number}}}).navigation.currentEntry.index);
-  await route(page,root+"/kriterler?filter=replaced#history",true);expect(await page.evaluate(()=>(window as unknown as {navigation:{currentEntry:{index:number}}}).navigation.currentEntry.index)).toBe(index);
-  await arrow(page,"back");await expect(page).toHaveURL(root+"/kriterler");await expect(page.getByTestId("chat-panel")).toBeVisible();await arrow(page,"back");await expect(page).toHaveURL(tasks);await expect(page.getByTestId("chat-panel")).toHaveCount(0);
+  await route(page,criteria+"?filter=replaced#history",true);expect(await page.evaluate(()=>(window as unknown as {navigation:{currentEntry:{index:number}}}).navigation.currentEntry.index)).toBe(index);
+  await arrow(page,"back");await expect(page).toHaveURL(criteria);await expect(page.getByTestId("chat-panel")).toBeVisible();await arrow(page,"back");await expect(page).toHaveURL(tasks);await expect(page.getByTestId("chat-panel")).toHaveCount(0);
   await link(page,"/calendar");await expect(page.getByTestId("workspace-forward")).toBeDisabled();
  }finally{await api(page,"POST",`/projects/${pid}/archive`);}
 });

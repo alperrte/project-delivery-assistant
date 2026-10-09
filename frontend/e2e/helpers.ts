@@ -69,7 +69,7 @@ export async function createOrganization(page: Page, name: string) {
   await page.locator("#org-name").fill(name);
   await page.getByRole("button", { name: /^Organizasyonu oluştur$/ }).click();
   // Creating opens the new organization's own page.
-  await expect(page).toHaveURL(/\/tr\/organizasyonlar\/(?!yeni$)[^/]+$/, { timeout: 10_000 });
+  await expect(page).toHaveURL(/\/tr\/organizasyonlar\/(?!yeni-organizasyon$)[^/]+$/, { timeout: 10_000 });
 }
 
 /** Creates a project and returns its slug, parsed from the post-create redirect URL. */
@@ -99,9 +99,9 @@ export async function createProject(
   await page.getByRole("button", { name: /^Projeyi oluştur$/ }).click();
   await declineTeamPrompt(page);
   // The create page itself is `/projects/new`, so the new project is the first detail URL that is not "new".
-  await expect(page).toHaveURL(/\/tr\/projeler\/(?!yeni$)[^/]+$/, { timeout: 15_000 });
+  await expect(page).toHaveURL(/\/tr\/projeler\/(?!yeni-proje$)[^/]+(?:\/genel-bakis)?$/, { timeout: 15_000 });
   const url = new URL(page.url());
-  const slug = url.pathname.split("/").pop()!;
+  const slug = url.pathname.split("/")[3];
   // Unrelated tests use an explicitly configured fixture; onboarding tests leave the policy unset.
   if (opts.taskMode !== null) {
     const project = (await api(page, "GET", `/projects/by-slug/${slug}`)).json as { id: string };
@@ -147,7 +147,7 @@ export async function createTeam(page: Page, slug: string, name: string): Promis
   await page.goto(`/projects/${slug}/teams/new`);
   await page.locator("#team-name").fill(name);
   await page.getByRole("button", { name: /^Ekibi oluştur$/ }).click();
-  await expect(page).toHaveURL(new RegExp(`/tr/projeler/${slug}/ekipler/(?!yeni$)[^/]+$`), { timeout: 15_000 });
+  await expect(page).toHaveURL(new RegExp(`/tr/projeler/${slug}/ekipler/(?!yeni-ekip$)[^/]+$`), { timeout: 15_000 });
   return new URL(page.url()).pathname.split("/").pop()!;
 }
 

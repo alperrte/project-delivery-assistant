@@ -19,6 +19,7 @@ import { useSession } from "@/features/auth/hooks/use-session";
 import { ProjectRow } from "@/features/projects/components/project-card";
 import { organizationKeys, invalidateOrganizationQueries } from "../queries";
 import { organizationsApi, organizationImageSource } from "../api";
+import { BreadcrumbLabel } from "@/components/layout/breadcrumb-labels";
 
 export function OrganizationDetail({ organizationId }: { organizationId: string }) {
   const t = useTranslations("organizations");
@@ -55,6 +56,7 @@ export function OrganizationDetail({ organizationId }: { organizationId: string 
 
   return (
     <div>
+      <BreadcrumbLabel kind="organization" label={org.name} />
       <Link href="/organizations" className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground">
         <ArrowLeft size={16} aria-hidden="true" />{t("backToOrganizations")}
       </Link>

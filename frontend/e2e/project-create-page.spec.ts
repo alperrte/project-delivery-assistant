@@ -86,7 +86,7 @@ test.describe("Yeni proje sayfası", () => {
 
     const slug = new URL(page.url()).pathname.split("/").pop()!;
     await openProjectListPage(page, slug);
-    const card = page.getByRole("article").filter({ has: page.locator(`a[href="/tr/projeler/${slug}"]`) });
+    const card = page.getByRole("article").filter({ has: page.locator(`a[href="/tr/projeler/${slug}/genel-bakis"]`) });
     await expect(card).toBeVisible();
     await expect(card.locator('img[src*="/logo?v="]')).toBeVisible();
     await expect(card.getByText("1 üye")).toBeVisible();
@@ -115,7 +115,7 @@ test.describe("Yeni proje sayfası", () => {
 
     const slug = new URL(page.url()).pathname.split("/").pop()!;
     await openProjectListPage(page, slug);
-    const card = page.getByRole("article").filter({ has: page.locator(`a[href="/tr/projeler/${slug}"]`) });
+    const card = page.getByRole("article").filter({ has: page.locator(`a[href="/tr/projeler/${slug}/genel-bakis"]`) });
     await expect(card.locator('img[src*="/banner?v="]')).toBeVisible();
   });
 

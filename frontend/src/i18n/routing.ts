@@ -192,7 +192,9 @@ export type ResolvedPage = {
 
 /** Accepts canonical localized, old unprefixed, and mismatched localized bookmarks. */
 export function matchPath(pathname: string, preferredLocale: Locale = defaultLocale): ResolvedPage | null {
-  const path = cleanPath(pathname);
+  // Every public address is lowercase (segments, slugs and ids alike), so `/TR/Hakkimizda` is the same page and
+  // is redirected to its lowercase canonical form instead of being a 404.
+  const path = cleanPath(pathname).toLowerCase();
   const parts = partsOf(path);
   const prefix = parts[0];
   const prefixed = isLocale(prefix);

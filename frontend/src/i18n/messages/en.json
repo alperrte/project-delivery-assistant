@@ -24,7 +24,8 @@
       "showing": "Showing {from}-{to}"
     },
     "showPassword": "Show password",
-    "hidePassword": "Hide password"
+    "hidePassword": "Hide password",
+    "breadcrumb": "Breadcrumb"
   },
   "errors": {
     "network": "Could not reach the server. Check your connection and try again.",

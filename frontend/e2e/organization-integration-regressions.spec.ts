@@ -56,7 +56,7 @@ test("organization rename refreshes a previously opened Project Home through cli
     await page.locator('button[type="submit"]').click();
     await expect(page.getByRole("heading", { level: 1, name: `${name} renamed`, exact: true })).toBeVisible();
     const home = page.waitForResponse(response => new URL(response.url()).pathname === `/api/v1/projects/${project.id}/home` && response.status() === 200);
-    await page.locator(`.app-shell a[href="/tr/projeler/${project.slug}"]`).first().click();
+    await page.locator(`.app-shell a[href="/tr/projeler/${project.slug}/genel-bakis"]`).first().click();
     expect((await (await home).json()).organization.name).toBe(`${name} renamed`);
     await expect(page.locator("#main-content").getByRole("link", { name: `${name} renamed`, exact: true })).toBeVisible();
   } finally {

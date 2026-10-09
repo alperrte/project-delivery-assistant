@@ -5,6 +5,7 @@ import { APACHE_LICENSE_TEXT } from "./apache-license";
 import { PageContents } from "./page-contents";
 import { CONTACT_EMAIL, type InfoPage } from "./site-info";
 import { type Locale } from "@/i18n/config";
+import { Breadcrumb } from "@/components/common/breadcrumb";
 import { pageAlternates } from "@/lib/seo/alternates";
 import { FaqJsonLd, PageJsonLd } from "@/lib/seo/json-ld";
 
@@ -25,6 +26,8 @@ export async function infoMetadata(page: InfoPage): Promise<Metadata> {
 export async function PublicInfoPage({ page }: { page: InfoPage }) {
   const t = await getTranslations("publicPages." + page);
   const common = await getTranslations("publicPages.common");
+  const app = await getTranslations("common");
+  const landing = await getTranslations("landing");
   const locale = await getLocale();
   const sections: Section[] = page === "faq" ? [] : t.raw("sections");
   const groups: FaqGroup[] = page === "faq" ? t.raw("groups") : [];
@@ -34,6 +37,7 @@ export async function PublicInfoPage({ page }: { page: InfoPage }) {
 
   return (
     <article>
+      <Breadcrumb label={app("breadcrumb")} items={[{ label: landing("homeTitle"), href: "/" }, { label: t("title") }]} className="mb-6" />
       <PageJsonLd route={`/${page}`} type={page === "about" ? "AboutPage" : "WebPage"} name={t("title")} description={t("description")} />
       {page === "faq" && <FaqJsonLd questions={groups.flatMap((group) => group.questions)} />}
       <header className="max-w-3xl">

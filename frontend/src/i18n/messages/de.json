@@ -24,7 +24,8 @@
       "showing": "{from}-{to} werden angezeigt"
     },
     "showPassword": "Passwort anzeigen",
-    "hidePassword": "Passwort verbergen"
+    "hidePassword": "Passwort verbergen",
+    "breadcrumb": "Brotkrumen"
   },
   "errors": {
     "network": "Der Server ist nicht erreichbar. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",

@@ -10,6 +10,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CircleNotch, Eye } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/common/page-header";
+import { BreadcrumbLabel } from "@/components/layout/breadcrumb-labels";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -196,6 +197,7 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
 
   return (
     <div>
+      {editing && task && <BreadcrumbLabel kind="task" label={task.taskKey} />}
       <PageHeader title={t(editing ? "editTitle" : "title")} description={t(editing ? "editDescription" : "description")} />
 
       <TaskModePicker value={mode} policy={project.taskManagementMode} userId={userId} onChange={(next) => setValue("creationMode", next, { shouldDirty: true, shouldValidate: true })} />
