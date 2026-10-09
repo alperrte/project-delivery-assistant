@@ -72,3 +72,9 @@ Backend profilleri `application-dev.yml`, `application-test.yml`, `application-p
 | Backup/restore | TBD |
 
 Seçim ölçütleri: ücretsiz veya düşük maliyet, Spring Boot + Docker uyumu, HTTPS ve güvenli secret yönetimi, PostgreSQL bağlantı güvenilirliği, mail stratejisiyle uyum ve açık kaynak kullanıcılar için tekrarlanabilir kurulum.
+
+## E2E stack with a mail sink, and new settings (2026-10-09)
+
+`docker-compose.e2e.yml` is an override for LOCAL browser tests only: `docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d --build`. It adds Mailpit (`axllent/mailpit:v1.31.4`, UI/API on `127.0.0.1:8025`, SMTP only on the compose network), points the backend at it (`MAIL_ENABLED=true`, `SMTP_HOST=mailpit`, `SMTP_PORT=1025`, `SMTP_AUTH=false`, `SMTP_STARTTLS=false`, `MAIL_FROM=pda-e2e@example.test`) and raises the per-address rate limits. No test mail can reach a real mailbox. Never use it for a deployment.
+
+New optional settings (defaults are the production values; names only in `.env.example`): `CONTACT_RECIPIENT` (fixed contact inbox, default `pdassistant@gmail.com`), `ANALYTICS_RATE_LIMIT_MAX_REQUESTS` (600), `CONTACT_RATE_LIMIT_MAX_REQUESTS` (5). Contact mail uses the existing `MAIL_*`/`SMTP_*` settings; without `MAIL_ENABLED=true` the contact form answers `503 CONTACT_UNAVAILABLE`. Behind a reverse proxy set `TRUSTED_PROXY_CIDRS`, otherwise all visitors share one rate-limit bucket.

@@ -1,12 +1,17 @@
 import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
 import { CaretDown } from "@phosphor-icons/react/ssr";
-import { CONTACT_EMAIL, type InfoPage } from "./site-info";
+import Link from "@/i18n/navigation";
+import { CONTACT_HREF, type InfoPage } from "./site-info";
 import { buildPath } from "@/i18n/routing";
 import { locales, type Locale } from "@/i18n/config";
+import { ManageCookiePreferencesButton } from "@/features/consent/manage-cookie-preferences-button";
 
 type Section = { id: string; title: string; paragraphs: string[]; items?: string[] };
 type FaqGroup = { id: string; title: string; questions: { question: string; answer: string }[] };
+
+/** Policy pages that are drafts until the legal details are confirmed: they carry the review notice and the official references. */
+const isLegalPage = (page: InfoPage) => page === "kvkk" || page === "privacy" || page === "cookies";
 
 export async function infoMetadata(page: InfoPage): Promise<Metadata> {
   const t = await getTranslations("publicPages." + page);
@@ -15,7 +20,7 @@ export async function infoMetadata(page: InfoPage): Promise<Metadata> {
   return {
     title: t("title"), description: t("description"),
     alternates: { canonical: buildPath(route, {}, locale), languages: Object.fromEntries(locales.map((language) => [language, buildPath(route, {}, language)])) },
-    ...(page === "kvkk" || page === "privacy" ? { robots: { index: false, follow: true } } : {}),
+    ...(isLegalPage(page) ? { robots: { index: false, follow: true } } : {}),
   };
 }
 
@@ -26,7 +31,7 @@ export async function PublicInfoPage({ page }: { page: InfoPage }) {
   const sections: Section[] = page === "faq" ? [] : t.raw("sections");
   const groups: FaqGroup[] = page === "faq" ? t.raw("groups") : [];
   const contents = page === "faq" ? groups : sections;
-  const date = new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Istanbul" }).format(new Date("2026-10-02T12:00:00+03:00"));
+  const date = new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Istanbul" }).format(new Date("2026-10-09T12:00:00+03:00"));
 
   return (
     <article>
@@ -36,7 +41,7 @@ export async function PublicInfoPage({ page }: { page: InfoPage }) {
         <p className="mt-4 text-base leading-7 text-muted-foreground">{t("description")}</p>
         <p className="mt-4 text-sm text-muted-foreground">{common("updated", { date })}</p>
       </header>
-      {(page === "kvkk" || page === "privacy") && (
+      {isLegalPage(page) && (
         <aside aria-label={common("reviewTitle")} className="mt-8 rounded-lg border border-border bg-muted p-5">
           <h2 className="text-base font-semibold">{common("reviewTitle")}</h2>
           <p className="mt-2 max-w-3xl text-sm leading-6">{common("reviewNotice")}</p>
@@ -73,7 +78,14 @@ export async function PublicInfoPage({ page }: { page: InfoPage }) {
               </div>
             </section>
           ))}
-          {(page === "kvkk" || page === "privacy") && (
+          {page === "cookies" && (
+            <div className="mb-10 border-t border-border pt-6">
+              <h2 className="text-lg font-semibold">{t("manageTitle")}</h2>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">{t("manageText")}</p>
+              <div className="mt-4"><ManageCookiePreferencesButton /></div>
+            </div>
+          )}
+          {isLegalPage(page) && (
             <nav aria-label={common("references")} className="mb-8 border-t border-border pt-6">
               <h2 className="text-lg font-semibold">{common("references")}</h2>
               <ul className="mt-2 space-y-2 text-sm">
@@ -85,7 +97,7 @@ export async function PublicInfoPage({ page }: { page: InfoPage }) {
           <aside className="border-t border-border pt-6">
             <h2 className="text-lg font-semibold">{common("contactTitle")}</h2>
             <p className="mt-2 text-base leading-7 text-muted-foreground">{common("contactText")}</p>
-            <a href={"mailto:" + CONTACT_EMAIL} className="mt-2 inline-flex min-h-11 items-center break-all rounded-md font-medium text-primary underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring">{CONTACT_EMAIL}</a>
+            <Link href={CONTACT_HREF} className="mt-2 inline-flex min-h-11 items-center rounded-md font-medium text-primary underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring">{common("contactAction")}</Link>
           </aside>
         </div>
       </div>

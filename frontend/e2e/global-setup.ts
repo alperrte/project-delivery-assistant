@@ -1,6 +1,7 @@
 import { chromium } from "@playwright/test";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { REJECTED_STATE } from "./consent-state";
 import { login, registerUser, uniqueUser } from "./helpers";
 
 export const AUTH_DIR = path.join(__dirname, ".auth");
@@ -28,6 +29,7 @@ export default async function globalSetup() {
     const context = await browser.newContext({
       locale: "tr-TR",
       baseURL: process.env.E2E_BASE_URL ?? "http://localhost:3000",
+      storageState: REJECTED_STATE,
     });
     if (reuse) await login(await context.newPage(), user.email, user.password);
     else await registerUser(await context.newPage(), user);

@@ -9,6 +9,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { route: "/login", priority: 0.7 },
     { route: "/register", priority: 0.8 },
     { route: "/faq", priority: 0.6 },
+    { route: "/contact", priority: 0.5 },
     { route: "/accessibility", priority: 0.4 },
   ];
   return pages.flatMap(({ route, priority }) => locales.map((locale) => ({

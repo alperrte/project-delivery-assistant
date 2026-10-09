@@ -82,7 +82,7 @@ Bu checklist uygulanırken:
 - [ ] **Çerez Politikası** — Çerez onay banner'ından ayrı olarak kullanılan çerezlerin türlerini ve amaçlarını açıklar.
 - [ ] **Hakkımızda Sayfası** — Projenin, ürünün veya kurumun kim olduğunu ve ne sunduğunu açıklar.
 - [ ] **Kullanım Koşulları** — Kullanıcı ile platform arasındaki kullanım kurallarını ve sorumlulukları tanımlar.
-- [ ] **İletişim / Destek Kanalı** — Kullanıcının problem, KVKK talebi veya genel iletişim için ulaşabileceği açık ve çalışan bir kanal sağlar.
+- [x] **İletişim / Destek Kanalı** — Kullanıcının problem, KVKK talebi veya genel iletişim için ulaşabileceği açık ve çalışan bir kanal sağlar. (2026-10-09: herkese açık iletişim formu `/iletisim`; yerel gerçek SMTP yolu Mailpit ile kanıtlandı, üretimde `MAIL_ENABLED`/`SMTP_*` yapılandırması gerekir; görünür e-posta adresi yok.)
 
 # B — CTA / UX / UI State
 

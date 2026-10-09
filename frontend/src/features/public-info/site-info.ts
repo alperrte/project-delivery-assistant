@@ -1,4 +1,5 @@
-export const CONTACT_EMAIL = "pda-info@gmail.com";
+/** The public contact form. Every "contact" link in the application goes here; no e-mail address is shown. */
+export const CONTACT_HREF = "/contact";
 export const REPOSITORY_URL = "https://github.com/alperrte/project-delivery-assistant";
 export const CONTRIBUTORS = [
   { name: "Alper Temiz", github: "https://github.com/alperrte" },
@@ -9,6 +10,7 @@ export const INFO_LINKS = [
   { key: "faq", href: "/faq" },
   { key: "kvkk", href: "/kvkk" },
   { key: "privacy", href: "/privacy" },
+  { key: "cookies", href: "/cookies" },
   { key: "accessibility", href: "/accessibility" },
 ] as const;
 

@@ -49,7 +49,7 @@ async function main() {
   assert.match(html, /data-error-code="500"/);
   assert.match(html, /Bir şeyler yolunda gitmedi/);
   assert.match(html, /noindex, nofollow/);
-  assert.match(html, /mailto:pda-info@gmail.com/);
+  assert.match(html, /href="\/contact"/);
   assert.doesNotMatch(html, /INTERNAL_DIAGNOSTIC_MUST_NOT_LEAK/);
   console.log("Global error document: passed (no app providers, no raw diagnostics).");
 }

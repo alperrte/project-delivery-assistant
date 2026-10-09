@@ -271,7 +271,8 @@ test.describe.serial("Project chat", () => {
     // All links are real client-side navigation, including global pages without a project slug.
     for (const href of [
       "/calendar", "/tasks", `/projects/${slug}?section=criteria`, `/projects/${slug}?section=teams`,
-      `/projects/${slug}?section=repository`, `/projects/${slug}`, `/projects/${slug}/tasks/board`,
+      // "Depo" is only listed once a repository is connected, which this project never does.
+      `/projects/${slug}`, `/projects/${slug}/tasks/board`,
       `/projects/${slug}/tasks/pool`, `/projects/${slug}/sprints`, `/projects/${slug}/labels`,
       "/dashboard", "/projects", "/organizations", "/settings",
     ]) {

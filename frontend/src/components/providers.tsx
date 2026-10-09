@@ -8,6 +8,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeTransitionOverlay } from "@/components/layout/theme-transition";
 import { applyMotionPreference, useMotionPreference } from "@/lib/preferences/motion";
+import { ConsentProvider } from "@/features/consent/consent-provider";
+import { AnalyticsTracker } from "@/features/analytics/tracker";
 
 /**
  * next-themes injects its no-FOUC script via React.createElement("script", ...),
@@ -54,7 +56,7 @@ export function Providers({ children }: { children: ReactNode }) {
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       <QueryClientProvider client={queryClient}>
         <MotionPreference>
-          <TooltipProvider delay={150}>{children}</TooltipProvider>
+          <TooltipProvider delay={150}><ConsentProvider>{children}</ConsentProvider><AnalyticsTracker /></TooltipProvider>
           <Toaster position="top-center" />
           <ThemeTransitionOverlay />
         </MotionPreference>
