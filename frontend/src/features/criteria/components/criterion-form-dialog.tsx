@@ -43,7 +43,7 @@ export function CriterionFormDialog({
     register,
     handleSubmit,
     reset,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<CriterionFormValues>({
     resolver: zodResolver(criterionFormSchema),
     mode: "onBlur",
@@ -81,8 +81,8 @@ export function CriterionFormDialog({
 
           <div className="space-y-1.5">
             <Label htmlFor="criterion-title">{t("titleLabel")}</Label>
-            <Input id="criterion-title" aria-invalid={!!errors.title} {...register("title")} />
-            {errors.title && <p className="text-sm text-destructive">{tv(errors.title.message!)}</p>}
+            <Input id="criterion-title" aria-invalid={!!errors.title} aria-describedby={errors.title ? "criterion-title-error" : undefined} {...register("title")} />
+            {errors.title && <p id="criterion-title-error" role="alert" className="text-sm text-destructive">{tv(errors.title.message!)}</p>}
           </div>
 
           <div className="space-y-1.5">
@@ -94,8 +94,8 @@ export function CriterionFormDialog({
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               {t("cancel")}
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting && <CircleNotch size={16} className="animate-spin" />}
+            <Button type="submit" disabled={mutation.isPending}>
+              {mutation.isPending && <CircleNotch size={16} className="animate-spin" aria-hidden="true" />}
               {criterion ? t("save") : t("create")}
             </Button>
           </DialogFooter>

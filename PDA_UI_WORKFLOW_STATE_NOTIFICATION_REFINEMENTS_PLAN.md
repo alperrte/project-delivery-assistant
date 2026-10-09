@@ -189,12 +189,13 @@ Yok.
 
 ### Checklist
 
-- [x] 3.1 `FormErrorSummary` + `focusFormSection` (bölüm listesi, ilk geçersiz alana scroll+focus, başarısız submit'te panel odak alır; yazarken odak çalmaz).
+- [x] 3.1 `FormErrorSummary` + `focusFormSection` (bölüm listesi, ilk geçersiz alana scroll+focus; panel odak çalmaz, yazarken odak taşınmaz).
 - [x] 3.2 `StickyFormActions` (mevcut footer sınıfları, safe-area; Project/Org create'e uygulandı).
 - [x] 3.3 Project create: `handleSubmit(onValid, onInvalid)`, repo URL kontrolü iki yolda, `shouldFocusError: false`, TypePicker `[role=radio]` hedefi.
-- [x] 3.4 Organization form: aynı summary; partial-upload banner ve busy guard korunur (setFocus yerine özet paneli odak alır — iki formda tek davranış).
+- [x] 3.4 Organization form: aynı summary; partial-upload banner ve busy guard korunur (odak ilk hatalı alana gider, özet role=alert ile duyurulur — iki formda tek davranış).
 - [x] 3.5 TR/EN/DE `forms.summary.*` (DE `Sie` diliyle).
 - [x] 3.6 E2E T1 `create-validation-summary.spec.ts` 9/9 (Project boş, Project geçersiz repo, Org boş + geçersiz website; 320/390/1440 × light/dark).
+- [x] 3.7 Merge sonrası: odak ilk hatalı alana (Alper'in ekip standardı), özet role=alert ile duyurulur
 
 ### Definition of Done
 
@@ -312,7 +313,7 @@ Task 1–5 DoD.
 
 - [x] 6.1 `npm run lint`, `npx tsc --noEmit`, `npm run build` (pre-push içinde temiz).
 - [x] 6.2 Phase 1 hedefli + etkilenen Playwright (ara koşu hataları giderildi: `organization-card-dimensions` sayfalama, `invitation-notification-context` mevcut spec hatası; ayrıntı completion kaydında).
-- [x] 6.3 `.\pre-push\pre-push.cmd` PASS — backend 649/0/0/0, Chromium 595 + 1 beklenen skip, Docker build/start/health.
+- [x] 6.3 `.\pre-push\pre-push.cmd` PASS (merge öncesi) — backend 649/0/0/0, Chromium 595 + 1 beklenen skip, Docker build/start/health. Alper'in 3 commit'iyle merge sonrası: 709/712; 2 aralıklı hata (`a11y-public` ERR_CONNECTION_REFUSED, `team-member-preview` oturum 401). Kullanıcı kararıyla istisna kaydedildi (completion kaydı §3).
 - [x] 6.4 Docs (`frontend-design-rules.md`, `folder-structure.md`, `architecture.md`, web checklist scoped notu) + `docs/compliation/2026-10-10-general-features-ui-refinements.md`.
 
 ### Definition of Done (Branch completion)

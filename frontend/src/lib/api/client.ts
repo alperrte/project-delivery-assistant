@@ -46,7 +46,10 @@ function readCookie(name: string): string | undefined {
 
 async function ensureCsrf(force = false): Promise<{ headerName: string; token: string }> {
   if (force || !csrf || !readCookie("XSRF-TOKEN")) {
-    const res = await fetch(`${API_URL}/auth/csrf`, { credentials: "include" });
+    // A lost connection is reported as a network error, the same as for the request itself.
+    const res = await fetch(`${API_URL}/auth/csrf`, { credentials: "include" }).catch(() => {
+      throw new ApiError(0);
+    });
     if (!res.ok) throw new ApiError(res.status);
     csrf = (await res.json()) as { headerName: string };
   }

@@ -208,7 +208,7 @@ export function ReminderFormPage({ reminderId, initialDate }: { reminderId?: str
             name="type"
             render={({ field }) => (
               <Select value={field.value ?? null} onValueChange={field.onChange}>
-                <SelectTrigger id="reminder-type" className="w-full" aria-invalid={!!errors.type}>
+                <SelectTrigger id="reminder-type" ref={field.ref} className="w-full" aria-invalid={!!errors.type}>
                   <SelectValue>
                     {(value: ReminderType | null) =>
                       value ? (

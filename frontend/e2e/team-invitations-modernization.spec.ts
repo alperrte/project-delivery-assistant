@@ -95,3 +95,80 @@ test("real server pagination clamps after cancelling the last invitation on page
     expect((await api(page, "GET", `/projects/${project.id}/invitations/all?status=PENDING`)).json).toMatchObject({ totalElements: 20, totalPages: 1 });
   } finally { await api(page, "POST", `/projects/${project.id}/archive`); await context.close(); }
 });
+
+test("e-posta ile davette geçersiz adres alanın yanında hata verir ve gönderilemez", async ({ browser }) => {
+  const context = await browser.newContext({ storageState: MANAGER_STORAGE }), page = await context.newPage();
+  page.setDefaultTimeout(15_000);
+  await page.goto("/tr/projeler");
+  const project = (await api(page, "POST", "/projects", { name: `Invitation Email QA ${Date.now()}`, projectType: "WEB" })).json as { id: string; slug: string };
+  try {
+    await api(page, "POST", `/projects/${project.id}/teams`, { name: "Email check team", includeCreator: true });
+    await page.goto(`/projects/${project.slug}?section=invitations`);
+    await page.getByRole("button", { name: tr.invitations.invite, exact: true }).click();
+    const dialog = page.getByRole("dialog", { name: tr.squads.addMember.title, exact: true });
+    await dialog.getByRole("combobox", { name: tr.squads.addMember.team, exact: true }).click();
+    await page.getByRole("option", { name: "Email check team", exact: true }).click();
+    await dialog.getByRole("tab", { name: tr.squads.addMember.modeEmail, exact: true }).click();
+    await dialog.getByLabel(tr.invitations.firstName, { exact: true }).fill("Ayşe");
+    await dialog.getByLabel(tr.invitations.lastName, { exact: true }).fill("Kaya");
+    await dialog.getByRole("checkbox", { name: tr.roles[PROJECT_ROLES[0]], exact: true }).check();
+    const field = dialog.getByLabel(tr.invitations.email, { exact: true });
+    const send = dialog.getByRole("button", { name: tr.invitations.send, exact: true });
+
+    await field.fill("ayse@");
+    await field.blur();
+    await expect(dialog.getByRole("alert").filter({ hasText: tr.validation.email })).toBeVisible();
+    await expect(field).toHaveAttribute("aria-invalid", "true");
+    await expect(send).toBeDisabled();
+
+    await field.fill("ayse@example.test");
+    await expect(dialog.getByRole("alert").filter({ hasText: tr.validation.email })).toHaveCount(0);
+    await expect(send).toBeEnabled();
+
+    // Required fields explain themselves instead of leaving the button silently disabled.
+    const first = dialog.getByLabel(tr.invitations.firstName, { exact: true });
+    await first.fill("");
+    await first.blur();
+    await expect(dialog.getByRole("alert").filter({ hasText: tr.validation.required })).toBeVisible();
+    await expect(first).toHaveAttribute("aria-invalid", "true");
+    await expect(send).toBeDisabled();
+    await first.fill("Ayşe");
+    await expect(dialog.getByRole("alert").filter({ hasText: tr.validation.required })).toHaveCount(0);
+
+    await dialog.getByRole("checkbox", { name: tr.roles[PROJECT_ROLES[0]], exact: true }).uncheck();
+    await expect(dialog.getByRole("alert").filter({ hasText: tr.validation.rolesRequired })).toBeVisible();
+    await expect(send).toBeDisabled();
+    await dialog.getByRole("checkbox", { name: tr.roles[PROJECT_ROLES[0]], exact: true }).check();
+    await expect(dialog.getByRole("alert").filter({ hasText: tr.validation.rolesRequired })).toHaveCount(0);
+    await expect(send).toBeEnabled();
+  } finally {
+    expect((await api(page, "DELETE", `/projects/${project.id}`)).status).toBe(204);
+    await context.close();
+  }
+});
+
+test("rol düzenleme penceresinde hiç rol kalmayınca neden kaydedilemediği yazılır", async ({ browser }) => {
+  const context = await browser.newContext({ storageState: MANAGER_STORAGE }), page = await context.newPage();
+  page.setDefaultTimeout(15_000);
+  await page.goto("/tr/projeler");
+  const project = (await api(page, "POST", "/projects", { name: `Edit Roles QA ${Date.now()}`, projectType: "WEB" })).json as { id: string; slug: string };
+  try {
+    const team = (await api(page, "POST", `/projects/${project.id}/teams`, { name: "Roles check team", includeCreator: true })).json as { id: string };
+    const me = (await api(page, "GET", "/auth/me")).json as { nickname: string };
+    await page.goto(`/projects/${project.slug}/teams/${team.id}`);
+    await page.getByRole("button", { name: /^Ekibi düzenle$/ }).click();
+    await page.getByRole("row", { name: new RegExp(me.nickname) }).getByRole("button", { name: /kişisinin rollerini düzenle/ }).click();
+    const dialog = page.getByRole("dialog", { name: tr.members.editRolesTitle, exact: true });
+    const save = dialog.getByRole("button", { name: tr.members.save, exact: true });
+    const boxes = dialog.getByRole("checkbox");
+    for (let i = 0; i < await boxes.count(); i++) if (await boxes.nth(i).isChecked()) await boxes.nth(i).uncheck();
+    await expect(dialog.getByRole("alert").filter({ hasText: tr.validation.rolesRequired })).toBeVisible();
+    await expect(save).toBeDisabled();
+    await boxes.first().check();
+    await expect(dialog.getByRole("alert")).toHaveCount(0);
+    await expect(save).toBeEnabled();
+  } finally {
+    expect((await api(page, "DELETE", `/projects/${project.id}`)).status).toBe(204);
+    await context.close();
+  }
+});

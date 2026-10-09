@@ -165,43 +165,43 @@
 
 ### OpenGraph ve bağlantı önizlemeleri
 
-- [ ] og:title
-- [ ] og:description
-- [ ] og:image
-- [ ] og:url, og:type, og:site_name
-- [ ] og:locale ve dil varyantları
-- [ ] X / Twitter Card metadata
-- [ ] Mutlak HTTPS görsel adresi
-- [ ] Görsel ölçüsü ve biçimi
-- [ ] Canlı paylaşım testi
-- [ ] Özel veriyi paylaşmama
+- [X] og:title
+- [X] og:description
+- [X] og:image
+- [X] og:url, og:type, og:site_name
+- [X] og:locale ve dil varyantları
+- [X] X / Twitter Card metadata
+- [X] Mutlak HTTPS görsel adresi
+- [X] Görsel ölçüsü ve biçimi
+- [X] Canlı paylaşım testi
+- [X] Özel veriyi paylaşmama
 
 ## 5. Formlar, doğrulama ve geri bildirim
 
 ### Form alanlarının doğrulanması
 
-- [ ] Zorunlu alan kontrolü
-- [ ] Boşluk-only içerik kontrolü
-- [ ] E-posta / telefon / URL formatı
-- [ ] Minimum ve maksimum uzunluk
-- [ ] Veri tipi ve mantık kontrolü
-- [ ] Alan yanındaki hata
-- [ ] Erişilebilir hata anonsu
-- [ ] Hatanın yalnız renkle ifade edilmemesi
-- [ ] İlk hataya yönlendirme
-- [ ] Form verisini koruma
-- [ ] Frontend ve backend doğrulaması
+- [X] Zorunlu alan kontrolü
+- [X] Boşluk-only içerik kontrolü
+- [X] E-posta / telefon / URL formatı
+- [X] Minimum ve maksimum uzunluk
+- [X] Veri tipi ve mantık kontrolü
+- [X] Alan yanındaki hata
+- [X] Erişilebilir hata anonsu
+- [X] Hatanın yalnız renkle ifade edilmemesi
+- [X] İlk hataya yönlendirme
+- [X] Form verisini koruma
+- [X] Frontend ve backend doğrulaması
 
 ### Formun gönderilmesi ve sonuçlar
 
-- [ ] Loading state
-- [ ] Çift gönderim önleme
-- [ ] Success state
-- [ ] Error state
-- [ ] Bağlantı kesintisi davranışı
-- [ ] Silme / kritik eylem onayı
-- [ ] Undo / geri alma
-- [ ] Hata ve sonuç testleri
+- [X] Loading state
+- [X] Çift gönderim önleme
+- [X] Success state
+- [X] Error state
+- [X] Bağlantı kesintisi davranışı
+- [X] Silme / kritik eylem onayı
+- [Eklenmeyecek] Undo / geri alma
+- [X] Hata ve sonuç testleri
 
 ## 6. UI/UX, responsive tasarım ve ekran durumları
 

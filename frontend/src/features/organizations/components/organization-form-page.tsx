@@ -62,10 +62,10 @@ function OrganizationEditor({ initial }: { initial?: Organization }) {
  const editing = !!initial; const [saved, setSaved] = useState(initial);
  const [signature, setSignature] = useState(initial ? JSON.stringify(formValues(initial)) : null);
  const [failures, setFailures] = useState<string[]>([]);
- const submitted = useRef(false); const busy = useRef(false); const [failedSubmits, setFailedSubmits] = useState(0);
+ const submitted = useRef(false); const busy = useRef(false);
  const logo = useMediaDraft(saved ? organizationImageSource(saved, "logo") : null);
  const cover = useMediaDraft(saved ? organizationImageSource(saved, "cover") : null);
- const { register, handleSubmit, control, reset, formState: { errors, isDirty } } = useForm<OrganizationFormValues>({ resolver: zodResolver(organizationFormSchema), shouldFocusError: false, defaultValues: formValues(initial) });
+ const { register, handleSubmit, control, reset, formState: { errors, isDirty, submitCount } } = useForm<OrganizationFormValues>({ resolver: zodResolver(organizationFormSchema), shouldFocusError: false, defaultValues: formValues(initial) });
  const values = useWatch({ control });
  const dirty = isDirty || ((!logo.applied) && (!!logo.file || logo.removed)) || ((!cover.applied) && (!!cover.file || cover.removed));
  useEffect(() => {
@@ -107,6 +107,12 @@ function OrganizationEditor({ initial }: { initial?: Organization }) {
   ["details", tp("detailsTitle"), !!errors.notes],
  ];
  const summarySections: FormErrorSection[] = failedSections.filter(([, , failed]) => failed).map(([key, label]) => ({ id: key, label, focus: () => focusFormSection(`org-${key}`) }));
+ // react-hook-form bumps `submitCount` together with the final errors state, so `aria-invalid` is rendered when this runs and the
+ // first failed section (page order) focuses its first invalid field. Valid submits have no failed sections; typing never changes it.
+ useEffect(() => {
+  summarySections[0]?.focus();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, [submitCount]);
  const backHref = editing ? `/organizations/${initial!.id}` : "/organizations";
  const draft: OrganizationCardData = { id: saved?.id ?? "preview", name: values.name ?? "", description: values.description ?? null, status: saved?.status ?? "ACTIVE", updatedAt: saved?.updatedAt ?? "", website: values.website ?? null, location: values.location ?? null };
  const labels = (kind: "logo" | "cover") => ({ label: tp(kind), choose: tp(kind === "logo" ? "uploadLogo" : "uploadCover"), change: tp("change"), remove: tp("remove"), hint: tp(kind === "logo" ? "logoHint" : "coverHint"), invalidType: tp("invalidType"), tooLarge: tp("tooLarge"), empty: tp("empty"), detail: tp(kind === "logo" ? "logoFallbackHint" : "coverPlacementHint") });
@@ -120,9 +126,7 @@ function OrganizationEditor({ initial }: { initial?: Organization }) {
   </section>}
   <form noValidate aria-busy={saving} onSubmit={(event) => {
    if (busy.current) { event.preventDefault(); return; } busy.current = true;
-   void handleSubmit(async (form) => { try { await mutation.mutateAsync(form); } catch { /* onError reports it. */ } },
-    () => setFailedSubmits((count) => count + 1)
-   )(event).finally(() => { busy.current = false; });
+   void handleSubmit(async (form) => { try { await mutation.mutateAsync(form); } catch { /* onError reports it. */ } })(event).finally(() => { busy.current = false; });
   }}>
    <div className="grid items-start gap-5 lg:grid-cols-12">
     <fieldset disabled={saving} className="min-w-0 space-y-4 rounded-xl border bg-surface-2/60 p-4 sm:p-5 lg:col-span-7">
@@ -159,7 +163,7 @@ function OrganizationEditor({ initial }: { initial?: Organization }) {
      <section className="flex items-start gap-4 rounded-xl border border-label-blue/15 bg-label-blue/5 p-4"><span aria-hidden="true" className="grid size-9 shrink-0 place-items-center rounded-lg bg-label-amber/10 text-label-amber"><Lightbulb size={22}/></span><div><h2 className="text-sm font-semibold text-label-blue">{tp("helpTitle")}</h2><p className="mt-2 text-xs leading-5 text-muted-foreground">{tp("helpDescription")}</p></div></section>
     </div></aside>
    </div>
-   <FormErrorSummary id="org-form-summary" title={editing ? tfs("organizationEditTitle") : tfs("organizationCreateTitle")} description={tfs("description")} sectionsLabel={tfs("sectionsLabel")} sections={summarySections} focusKey={failedSubmits} />
+   <FormErrorSummary key={submitCount} id="org-form-summary" title={editing ? tfs("organizationEditTitle") : tfs("organizationCreateTitle")} description={tfs("description")} sectionsLabel={tfs("sectionsLabel")} sections={summarySections} />
    <StickyFormActions className={summarySections.length > 0 ? "mt-4" : undefined}>
     <div className="flex items-center justify-between gap-2"><Link href={backHref} className={buttonVariants({ variant: "outline" })}>{tf("cancel")}</Link><div className="flex min-w-0 flex-1 items-center justify-end gap-2">
      <a href="#organization-preview" className={buttonVariants({ variant: "ghost", className: "lg:hidden" })}><Eye size={16} aria-hidden="true" /><span className="sr-only min-[440px]:not-sr-only">{tf("preview.show")}</span></a>

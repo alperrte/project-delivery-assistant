@@ -88,10 +88,10 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
     handleSubmit,
     control,
     setValue,
-    formState: { errors, isDirty },
+    formState: { errors, isDirty, submitCount },
   } = useForm<CreateProjectValues>({
     resolver: zodResolver(createProjectSchema),
-    // The validation summary takes focus after a failed submit; its entries then focus the fields.
+    // Focus moves to the first invalid field in page order after a failed submit (see the effect below).
     shouldFocusError: false,
     defaultValues: { name: "", tagline: "", techStack: [], description: "" },
     values: presentationValues,
@@ -100,7 +100,6 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
   const values = useWatch({ control });
   const [repositoryUrl, setRepositoryUrl] = useState("");
   const [repositoryUrlInvalid, setRepositoryUrlInvalid] = useState(false);
-  const [failedSubmits, setFailedSubmits] = useState(0);
   const [repositorySettings, setRepositorySettings] = useState<RepositorySettings>(DEFAULT_REPOSITORY_SETTINGS);
   const [teamPromptSlug, setTeamPromptSlug] = useState<string | null>(null);
   const dirty = isDirty || logoFile !== null || bannerFile !== null || repositoryUrl.trim() !== "";
@@ -221,6 +220,14 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
     .filter((key) => failedSections[key])
     .map((key) => ({ id: key, label: t(`sections.${key}.title`), focus: () => focusFormSection(sectionHeadingIds[key]) }));
 
+  // react-hook-form bumps `submitCount` together with the final errors state, so by the time this effect runs `aria-invalid` is
+  // rendered and the first failed section (page order) can focus its first invalid field. A valid submit has no failed sections,
+  // and typing between submits never changes `submitCount`, so focus is never moved at other times.
+  useEffect(() => {
+    summarySections[0]?.focus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [submitCount]);
+
   return (
     <div>
       <PageHeader title={t("title")} description={t("description")} />
@@ -228,13 +235,11 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
       <form
         onSubmit={handleSubmit(
           (form) => {
-            if (checkRepositoryUrl()) setFailedSubmits((count) => count + 1);
-            else mutation.mutate(form);
+            if (!checkRepositoryUrl()) mutation.mutate(form);
           },
           () => {
             // The repository URL lives outside react-hook-form, so it is checked on this path too and both errors show together.
             checkRepositoryUrl();
-            setFailedSubmits((count) => count + 1);
           },
         )}
         noValidate
@@ -292,7 +297,7 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
                 control={control}
                 name="projectType"
                 render={({ field }) => (
-                  <TypePicker value={field.value} onChange={field.onChange} labelledBy={typeLabelId} invalid={!!errors.projectType} />
+                  <TypePicker id={`${ids}-type-picker`} value={field.value} onChange={field.onChange} labelledBy={typeLabelId} invalid={!!errors.projectType} />
                 )}
               />
               {errors.projectType && (
@@ -403,12 +408,12 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
         </div>
 
         <FormErrorSummary
+          key={submitCount}
           id={summaryId}
           title={tfs("projectTitle")}
           description={tfs("description")}
           sectionsLabel={tfs("sectionsLabel")}
           sections={summarySections}
-          focusKey={failedSubmits}
         />
 
         <StickyFormActions className={summarySections.length > 0 ? "mt-4" : undefined}>

@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CircleNotch, Plus } from "@phosphor-icons/react";
 import { toast } from "sonner";
+import { z } from "zod";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -50,6 +51,7 @@ export function AddTeamMemberDialog({
   const t = useTranslations("squads.addMember");
   const ti = useTranslations("invitations");
   const te = useTranslations("errors");
+  const tv = useTranslations("validation");
   const queryClient = useQueryClient();
   const ids = useId();
 
@@ -63,6 +65,10 @@ export function AddTeamMemberDialog({
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [emailTouched, setEmailTouched] = useState(false);
+  const [firstTouched, setFirstTouched] = useState(false);
+  const [lastTouched, setLastTouched] = useState(false);
+  const [rolesTouched, setRolesTouched] = useState(false);
 
   const activeTeam = teamId ?? chosenTeam;
   const search = useDebounced(query.trim());
@@ -88,6 +94,10 @@ export function AddTeamMemberDialog({
     setFirstName("");
     setLastName("");
     setEmail("");
+    setEmailTouched(false);
+    setFirstTouched(false);
+    setLastTouched(false);
+    setRolesTouched(false);
   }
 
   async function refresh() {
@@ -127,8 +137,14 @@ export function AddTeamMemberDialog({
   });
 
   const busy = addToTeam.isPending || invite.isPending;
+  const emailValid = z.email().safeParse(email.trim()).success;
+  const emailError = emailTouched && !!email.trim() && !emailValid;
+  const emailMissing = emailTouched && !email.trim();
+  const firstMissing = firstTouched && !firstName.trim();
+  const lastMissing = lastTouched && !lastName.trim();
+  const rolesMissing = roles.length === 0 && (rolesTouched || (mode === "email" && (emailTouched || firstTouched || lastTouched)));
   const inviteReady =
-    !!activeTeam && roles.length > 0 && (mode === "email" ? !!email.trim() && !!firstName.trim() && !!lastName.trim() : !!target);
+    !!activeTeam && roles.length > 0 && (mode === "email" ? emailValid && !!firstName.trim() && !!lastName.trim() : !!target);
 
   const defaultTrigger = (
     <Button>
@@ -249,23 +265,51 @@ export function AddTeamMemberDialog({
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor={`${ids}-first`}>{ti("firstName")}</Label>
-                <Input id={`${ids}-first`} maxLength={100} value={firstName} onChange={(event) => setFirstName(event.target.value)} />
+                <Input
+                  id={`${ids}-first`}
+                  maxLength={100}
+                  value={firstName}
+                  aria-invalid={firstMissing}
+                  aria-describedby={firstMissing ? `${ids}-first-error` : undefined}
+                  onChange={(event) => setFirstName(event.target.value)}
+                  onBlur={() => setFirstTouched(true)}
+                />
+                {firstMissing && <p id={`${ids}-first-error`} role="alert" className="text-sm text-destructive">{tv("required")}</p>}
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor={`${ids}-last`}>{ti("lastName")}</Label>
-                <Input id={`${ids}-last`} maxLength={100} value={lastName} onChange={(event) => setLastName(event.target.value)} />
+                <Input
+                  id={`${ids}-last`}
+                  maxLength={100}
+                  value={lastName}
+                  aria-invalid={lastMissing}
+                  aria-describedby={lastMissing ? `${ids}-last-error` : undefined}
+                  onChange={(event) => setLastName(event.target.value)}
+                  onBlur={() => setLastTouched(true)}
+                />
+                {lastMissing && <p id={`${ids}-last-error`} role="alert" className="text-sm text-destructive">{tv("required")}</p>}
               </div>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor={`${ids}-email`}>{ti("email")}</Label>
-              <Input id={`${ids}-email`} type="email" maxLength={320} value={email} onChange={(event) => setEmail(event.target.value)} />
+              <Input
+                id={`${ids}-email`}
+                type="email"
+                maxLength={320}
+                value={email}
+                aria-invalid={emailError || emailMissing}
+                aria-describedby={emailError || emailMissing ? `${ids}-email-error` : undefined}
+                onChange={(event) => setEmail(event.target.value)}
+                onBlur={() => setEmailTouched(true)}
+              />
+              {(emailError || emailMissing) && <p id={`${ids}-email-error`} role="alert" className="text-sm text-destructive">{tv(emailMissing ? "required" : "email")}</p>}
             </div>
           </div>
         )}
 
         {(mode === "email" || target) && (
           <div className="space-y-4">
-            <RolePicker value={roles} onChange={setRoles} />
+            <RolePicker value={roles} onChange={(next) => { setRoles(next); setRolesTouched(true); }} showError={rolesMissing} />
             <MessageField value={message} onChange={setMessage} />
           </div>
         )}

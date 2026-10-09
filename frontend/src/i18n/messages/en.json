@@ -1199,6 +1199,7 @@
     "confirmPasswordPlaceholder": "Repeat your password"
   },
   "validation": {
+    "rolesRequired": "Select at least one role.",
     "required": "This field is required.",
     "email": "Enter a valid email address.",
     "nickname": "3-32 characters; letters, digits and underscore only.",

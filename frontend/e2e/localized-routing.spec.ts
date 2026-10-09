@@ -178,6 +178,32 @@ test("public pages declare x-default, the page language and a 1200x630 share ima
   expect(await (await request.get("/sitemap.xml")).text()).toContain('hreflang="x-default"');
 });
 
+test("every public page carries a complete share card: title, description, own url, site name, type, image and Twitter tags", async ({ page }) => {
+  const paths = ["/tr/ana-sayfa", "/en/home", "/de/startseite", "/tr/giris", "/en/register", "/de/passwort-vergessen", "/tr/hakkimizda", "/en/faq", "/de/kontakt", "/tr/cerez-politikasi", "/en/license", "/de/barrierefreiheit", "/en/privacy", "/tr/kvkk"];
+  for (const path of paths) {
+    await page.goto(path);
+    const content = (selector: string) => page.locator(selector).first().getAttribute("content");
+    const origin = new URL(page.url()).origin;
+    // The home page shares its marketing headline; the tab title there is just "Home".
+    const isHome = ["/tr/ana-sayfa", "/en/home", "/de/startseite"].includes(path);
+    const title = isHome ? await content('meta[property="og:title"]') : await page.title();
+
+    expect(await content('meta[property="og:url"]'), path).toBe(`${origin}${path}`);
+    expect((await content('meta[property="og:title"]'))?.length, path).toBeGreaterThan(5);
+    expect(await content('meta[property="og:title"]'), path).toBe(title);
+    expect((await content('meta[property="og:description"]'))?.length, path).toBeGreaterThan(20);
+    expect(await content('meta[property="og:type"]'), path).toBe("website");
+    expect(await content('meta[property="og:site_name"]'), path).toBe("PDA · Project Delivery Assistant");
+    expect(await content('meta[property="og:image"]'), path).toBe(`${origin}/images/branding/og-image.png`);
+    expect(await content('meta[property="og:image:type"]'), path).toBe("image/png");
+    expect((await content('meta[property="og:image:alt"]'))?.length, path).toBeGreaterThan(3);
+
+    expect(await content('meta[name="twitter:card"]'), path).toBe("summary_large_image");
+    expect(await content('meta[name="twitter:title"]'), path).toBe(title);
+    expect(await content('meta[name="twitter:image"]'), path).toBe(`${origin}/images/branding/og-image.png`);
+  }
+});
+
 test("the home page has one h1; the product demo uses h2 for its screen titles", async ({ page }) => {
   await page.goto("/tr/ana-sayfa");
   await expect(page.locator("h1")).toHaveCount(1);

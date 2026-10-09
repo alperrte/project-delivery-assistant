@@ -23,7 +23,9 @@ test.describe("Validation summary on create forms", () => {
     await expect(summary.getByRole("button", { name: "Kimlik" })).toBeVisible();
     await expect(summary.getByRole("button", { name: "Proje türü" })).toBeVisible();
     await expect(summary.getByRole("button")).toHaveCount(2);
-    await expect(summary).toBeFocused();
+    // The summary is announced (role alert) but never takes focus: the first invalid field in page order does.
+    await expect(summary).not.toBeFocused();
+    await expect(page.locator("#project-name")).toBeFocused();
     await expect(submitProject(page)).toHaveAttribute("aria-describedby", /.+/);
 
     // Entries scroll to and focus the first invalid control of their section.
@@ -32,7 +34,7 @@ test.describe("Validation summary on create forms", () => {
     await summary.getByRole("button", { name: "Kimlik" }).click();
     await expect(page.locator("#project-name")).toBeFocused();
 
-    // Typing between submits does not pull focus back to the summary; fixed sections drop out of the list.
+    // Typing between submits does not pull focus anywhere else; fixed sections drop out of the list.
     await page.locator("#project-name").fill("Özet doğrulama projesi");
     await expect(page.locator("#project-name")).toBeFocused();
     await expect(summary.getByRole("button")).toHaveCount(1);
@@ -57,6 +59,8 @@ test.describe("Validation summary on create forms", () => {
     await expect(summary.getByRole("button")).toHaveCount(1);
     await expect(page.getByRole("alert").filter({ hasText: "GitHub depo URL" })).toBeVisible();
     await expect(page).toHaveURL(/\/tr\/projeler\/yeni-proje$/);
+    // The repository URL is the only invalid field, so it takes focus after the failed submit.
+    await expect(page.locator("#project-repository-url")).toBeFocused();
 
     await summary.getByRole("button", { name: "GitHub deposu" }).click();
     await expect(page.locator("#project-repository-url")).toBeFocused();
@@ -78,13 +82,16 @@ test.describe("Validation summary on create forms", () => {
     await expect(summary).toBeVisible();
     await expect(summary.getByRole("button", { name: "Genel Bilgiler" })).toBeVisible();
     await expect(summary.getByRole("button")).toHaveCount(1);
-    await expect(summary).toBeFocused();
+    await expect(summary).not.toBeFocused();
+    await expect(page.locator("#org-name")).toBeFocused();
     await expect(page.locator("#org-name")).toHaveAttribute("aria-invalid", "true");
 
     // A second failing section (contact) joins the list; entries are in page order.
     await page.locator("#org-website").fill("not a url");
     await submitOrganization(page).click();
     await expect(summary.getByRole("button")).toHaveText(["Genel Bilgiler", "İletişim ve Bağlantılar"]);
+    // Both sections fail: the first one in page order (the empty name) gets the focus.
+    await expect(page.locator("#org-name")).toBeFocused();
     await summary.getByRole("button", { name: "İletişim ve Bağlantılar" }).click();
     await expect(page.locator("#org-website")).toBeFocused();
     await summary.getByRole("button", { name: "Genel Bilgiler" }).click();
@@ -106,6 +113,8 @@ test.describe("Validation summary on create forms", () => {
         await submitProject(page).click();
         const summary = page.getByRole("alert").filter({ hasText: "Proje oluşturulamadı." });
         await expect(summary).toBeVisible();
+        // Focus went to the first invalid field, so the summary below may be off-screen until the person scrolls to it.
+        await summary.scrollIntoViewIfNeeded();
         await expect(summary).toBeInViewport();
         const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
         expect(overflow).toBeLessThanOrEqual(0);

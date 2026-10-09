@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
 import { AuthCard, authCtaClass } from "@/features/auth/components/auth-card";
 import { FormField } from "@/components/common/form-field";
+import { CircleNotch } from "@phosphor-icons/react";
 import { SubmitButton } from "@/components/common/submit-button";
 import { authApi } from "@/features/auth/api";
 import { registerSchema } from "@/features/auth/schemas";
@@ -101,7 +102,7 @@ export function ExternalInvitationRegistration() {
             <p>{preview.roles.map((role) => tr(role)).join(", ")}</p>
             {preview.message && <p className="text-muted-foreground">{preview.message}</p>}
           </div>
-          {signedIn ? <button type="button" disabled={busy} onClick={acceptExisting} className={authCtaClass + " w-full"}>{t("externalAccept")}</button>
+          {signedIn ? <button type="button" disabled={busy} aria-busy={busy} onClick={acceptExisting} className={authCtaClass + " w-full inline-flex items-center justify-center gap-2"}>{busy && <CircleNotch size={16} className="animate-spin" aria-hidden="true" />}{t("externalAccept")}</button>
             : <><form onSubmit={register} className="space-y-4">
                 <FormField label={ta("nickname")} value={nickname} onChange={(event) => setNickname(event.target.value)} autoComplete="username" />
                 <FormField label={ta("password")} value={password} onChange={(event) => setPassword(event.target.value)} password autoComplete="new-password" />

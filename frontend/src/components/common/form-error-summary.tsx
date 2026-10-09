@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import { WarningCircle } from "@phosphor-icons/react";
 
 export type FormErrorSection = {
@@ -33,9 +32,10 @@ export function focusFormSection(headingId: string) {
 
 /**
  * Accessible validation summary for full-page forms. Lists the sections that still contain errors; each entry moves focus
- * to that section's first invalid field. The panel itself takes focus once per failed submit (`focusKey` increments),
- * never while the user is typing between submits. Render it near the submit area and point the submit button's
- * `aria-describedby` at `id` while it is visible.
+ * to that section's first invalid field. The panel never takes focus itself: after a failed submit the form moves focus to
+ * the first invalid field (team standard), and the panel is announced through `role="alert"`. Callers remount it per
+ * failed submit (`key={submitCount}`) so screen readers announce it again on every attempt. Render it near the submit
+ * area and point the submit button's `aria-describedby` at `id` while it is visible.
  */
 export function FormErrorSummary({
   id,
@@ -43,38 +43,21 @@ export function FormErrorSummary({
   description,
   sectionsLabel,
   sections,
-  focusKey = 0,
 }: {
   id: string;
   title: string;
   description?: string;
   sectionsLabel: string;
   sections: FormErrorSection[];
-  focusKey?: number;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const handled = useRef(0);
-  const visible = sections.length > 0;
-
-  useEffect(() => {
-    if (!visible || focusKey === 0 || handled.current === focusKey) return;
-    handled.current = focusKey;
-    const node = ref.current;
-    if (!node) return;
-    node.focus({ preventScroll: true });
-    node.scrollIntoView({ block: "center", behavior: scrollBehavior() });
-  }, [visible, focusKey]);
-
-  if (!visible) return null;
+  if (sections.length === 0) return null;
 
   return (
     <div
-      ref={ref}
       id={id}
       role="alert"
-      tabIndex={-1}
       aria-labelledby={`${id}-title`}
-      className="mt-8 scroll-mb-24 rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+      className="mt-8 scroll-mb-24 rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm"
     >
       <div className="flex items-start gap-3">
         <WarningCircle size={20} weight="fill" aria-hidden="true" className="mt-0.5 shrink-0 text-destructive" />

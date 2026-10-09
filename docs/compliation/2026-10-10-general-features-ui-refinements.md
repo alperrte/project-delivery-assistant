@@ -17,7 +17,8 @@
 - Doğrulama özeti:
   - [form-error-summary.tsx](../../frontend/src/components/common/form-error-summary.tsx) (`FormErrorSummary`, `focusFormSection`) ve [sticky-form-actions.tsx](../../frontend/src/components/common/sticky-form-actions.tsx).
   - Uygulandığı yerler: [project-create-page.tsx](../../frontend/src/features/projects/components/project-create-page.tsx) ve [organization-form-page.tsx](../../frontend/src/features/organizations/components/organization-form-page.tsx).
-  - Inline hatalar korunur. Panel `role="alert"`; başarısız gönderimde odak alır; bölüm bağlantısı ilk geçersiz alana gider.
+  - Inline hatalar korunur. Panel `role="alert"`; başarısız gönderimde odak sayfa sırasındaki ilk geçersiz alana gider, panel odak çalmaz ve her başarısız gönderimde yeniden mount edilerek (`key={submitCount}`) tekrar duyurulur; bölüm bağlantısı o bölümün ilk geçersiz alanına odaklar.
+  - Merge with origin/general-features (Alper'in form standardı): `origin/general-features` başarısız gönderimde ilk hatalı alana odak standardını getirdi (`form-first-error-focus*.spec.ts`). Karar: odak ilk hatalı alanda; özet görünür kalır, `role=alert` ile duyurulur, bağlantıları çalışır ama odağı çalmaz (`focusKey` kaldırıldı). Alper'in `form-first-error-focus.spec.ts` testi seçici migrasyonuna uyarlandı: görev son saat `chooseTime(task-deadline-time)`, çalışma kaydı tarihi silme picker'ın Temizle düğmesiyle; iddialar (odak hedefi, hata metni) aynı kaldı. `create-validation-summary.spec.ts` özet odağı yerine ilk hatalı alan odağını doğrular.
 - Organizasyon kartı:
   - [organization-card.tsx](../../frontend/src/features/organizations/components/organization-card.tsx) artık ortak `EntityCard` kabuğunu kullanıyor.
   - Ortak `EntityCardSkeleton`: [entity-card.tsx](../../frontend/src/components/common/entity-card.tsx).
@@ -53,11 +54,18 @@
   | `09-tasks` + `my-task-cards` | 18/18 |
   | `task-comment-keyboard` + tüm `team-*` | 19/19 |
 
-- `.\pre-push\pre-push.cmd`: **PDA PRE-PUSH CHECK PASSED**.
+- Merge öncesi ağaç (yalnız bu fazın değişiklikleri): `.\pre-push\pre-push.cmd` **PDA PRE-PUSH CHECK PASSED**.
   - Backend `mvnw clean verify`: 649 test, 0 failure, 0 error, 0 skip.
   - ESLint, `tsc --noEmit` ve `next build` temiz.
   - Playwright Chromium: 595 geçti + 1 skip (beklenen production crash-route skip'i).
   - Docker build/start/health: geçti.
+- `origin/general-features` (Alper'in 3 commit'i) ile merge edilmiş son ağaç: `.\pre-push\pre-push.cmd` **FAILED — 709/712**.
+  - Backend 649/0/0/0, ESLint, `tsc` ve build temiz; Playwright 709 geçti, 1 skip, 2 başarısız.
+  - `a11y-public › axe tr dark desktop › /license`: `page.goto` doğrudan `net::ERR_CONNECTION_REFUSED` aldı. Pre-push'un başlattığı `next start` sunucusu bağlantıyı reddetti; sayfa koduna ulaşılmadı.
+  - `team-member-preview`: paylaşılan üyenin kayıtlı `notification-setup` oturumu 401 aldı. 4 tam koşunun 3'ünde, merge öncesinde de görüldü. Tek başına ve tüm `team-*` spec'leriyle birlikte her seferinde geçiyor (27/27). Muhtemel mekanizma: `team-deletion-notifications` aynı kayıtlı oturumu iki tarayıcı bağlamında paylaşıyor; uzun koşuda token yenilemesi çakışınca backend refresh-token yeniden kullanımını algılayıp oturumu iptal ediyor.
+  - Diff auth, oturum, team ya da public sayfa koduna dokunmuyor. Değişikliklerimiz olmadan aynı tam koşu çalıştırılmadığı için bu kesin kanıt değil.
+  - **Kullanıcı kararı (2026-10-10):** bu iki aralıklı hata nedeniyle PASSED şartı bu teslim için bilinçli olarak atlandı; push kullanıcı onayıyla yapıldı.
+- Merge sırasında düzeltilen mevcut spec hatası: `destructive-actions` proje silme testi. Yerelleştirilmiş `/duzenle` adresi `/\/edit/` regex'iyle hiç eşleşmediği için bekleme anında geçiyor, geciktirilmiş DELETE ile yarışıyordu. Artık `/projeler`'e yönlendirme ve 404 bekleniyor; dosyanın tamamı geçti.
 - Ara koşuda görülen ve giderilen hatalar:
   - `organization-card-dimensions`: spec sayfalama hatası; düzeltildi.
   - `invitation-notification-context`: mevcut spec hatası; düzeltildi.
@@ -74,7 +82,8 @@ Yeni veya değişen endpoint yok. Backend, şema, ENV, yetki ve bağımlılık d
 
 - `team-form-page`, `task-form-page` ve `settings-page` hâlâ kendi sticky footer kopyalarını taşıyor. Kapsam dışı bırakıldı; sonraki tam sayfa formlar `StickyFormActions` kullanacak.
 - `06-calendar-page.spec.ts` tek başına koşunca başarısız oluyor (yeni yöneticinin projesi olmuyor). Tam pakette geçiyor; mevcut bir sıra bağımlılığı.
-- `team-member-preview` uzun koşuda kayıtlı oturum 401'i gösterdi (aralıklı).
+- **Takip (test altyapısı):** `team-member-preview` uzun koşularda kayıtlı oturum 401'i veriyor (4 tam koşunun 3'ünde). `team-deletion-notifications`'ın oturumu iki bağlamda paylaşması düzeltilmeli. Ayrıca pre-push'un `next start` sunucusu ara sıra `ERR_CONNECTION_REFUSED` veriyor. İkisi çözülene kadar tam pre-push aralıklı FAILED verebilir.
+- **Ortam tuzağı:** pre-push'un son adımı backend'i `docker-compose.e2e.yml` olmadan yeniden başlatıyor. Sonraki E2E koşusundan önce `docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d` gerekli; yoksa admin, analytics ve iletişim testleri toplu düşer.
 - Kapak görseli olan organizasyon kartı için ayrı ölçüm yapılmadı (aynı banner slotu).
 - Sonraki fazlar: `PDA_UI_WORKFLOW_STATE_NOTIFICATION_REFINEMENTS_PLAN.md` Phase 2–6.
 
