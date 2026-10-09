@@ -12,8 +12,8 @@ Kullanıcı kararı (2026-10-10): staging (`git add`), branch değiştirme ve `g
 
 - [x] Phase 0 — Global read-only preflight/audit
 - [x] Phase 1 — `general-features` (2026-10-10, pre-push PASSED)
-- [ ] Transition Gate 1 — user commit/push confirmation
-- [ ] Phase 2 — `project-service-backend` (conditional → AKTİF: Talep 3 + 9 backend prerequisite kanıtlandı)
+- [x] Transition Gate 1 — user commit/push confirmation (2026-10-10)
+- [x] Phase 2 — `project-service-backend` (Talep 3 + 9 backend prerequisite; 2026-10-10)
 - [ ] Transition Gate 2 — user commit/push confirmation
 - [ ] Phase 3 — `project-service-frontend`
 - [ ] Transition Gate 3 — user commit/push confirmation
@@ -331,9 +331,9 @@ STOP → `BRANCH COMPLETE — general-features`
 
 ## Transition Gate 1
 
-- [ ] Kullanıcı `general-features` commit'ini doğruladı.
-- [ ] Kullanıcı push'u doğruladı.
-- [ ] `project-service-backend` Phase 1 commitlerini içeriyor (`git merge-base --is-ancestor`).
+- [x] Kullanıcı `general-features` commit'ini doğruladı (`74f2a73` + merge `ba2d4df`).
+- [x] Kullanıcı push'u doğruladı; main'e PR #126 (`7d4924c`) ile merge edildi.
+- [x] `project-service-backend` Phase 1 commitlerini içeriyor: `git pull --ff-only origin main` → HEAD `7d4924c`, `merge-base --is-ancestor ba2d4df HEAD` = true, ortak bileşen dosyaları mevcut.
 
 ---
 
@@ -368,15 +368,15 @@ Transition Gate 1.
 
 ### Checklist
 
-- [ ] 7.1 Link header parse + unit test.
-- [ ] 7.2 Service/controller/cache; page 10 sınırında hasNext=false; gövde aynı liste.
-- [ ] 7.3 Integration test (Link var/yok, sınır, BASIC/ADVANCED, non-member 403).
-- [ ] 7.4 SECURITY.md GitHub notu.
+- [x] 7.1 Link header parse (`GitHubRestRepositoryClient.hasNextPage`) + unit test (`GitHubRestRepositoryClientTest`, 2 yeni metot).
+- [x] 7.2 `GitHubRepositoryClient.CommitPage(commits, hasNext)`; cache tüm sayfayı tutar; servis page 10'da hasNext=false; controller gövde aynı + `X-Has-Next-Page`; CORS exposed headers'a eklendi (mevcut `X-Access-Token-Expires-In` korunur).
+- [x] 7.3 Integration test (`ProjectRepositoryApiIntegrationTest`, 4 yeni metot): header true/false, sayfa 9/10/11, BASIC 409, non-member 403, anonim 401, CORS expose.
+- [x] 7.4 SECURITY.md GitHub bölümüne sayfalama başlığı + CORS expose notu eklendi.
 
 ### Definition of Done
 
-- [ ] Yeni + mevcut repository testleri geçer.
-- [ ] Liste sözleşmesi geriye uyumlu.
+- [x] Yeni + mevcut repository testleri geçer; tam `mvnw clean verify` 655/0/0/0.
+- [x] Liste sözleşmesi geriye uyumlu (gövde değişmedi).
 
 ## Task 8 — Davete özel banner endpoint
 
@@ -407,17 +407,17 @@ Transition Gate 1.
 
 ### Checklist
 
-- [ ] 8.1 DTO `bannerVersion`.
-- [ ] 8.2 Service + controller.
-- [ ] 8.3 Matcher + SECURITY.md.
-- [ ] 8.4 Integration testleri.
+- [x] 8.1 `InvitationProjectPreview` additive nullable `bannerVersion`.
+- [x] 8.2 `previewBannerMine` (logo ile aynı `invitedProject`: yalnız kendi PENDING daveti, canlı proje; `ProjectBannerService.read` değişmedi) + `GET /api/v1/project-invitations/{id}/banner`.
+- [x] 8.3 Tek GET matcher (mevcut davet GET grubuna) + SECURITY.md davet tablosu.
+- [x] 8.4 `ProjectInvitationApiIntegrationTest` 2 yeni metot (200/404/401/403, PENDING-only, arşiv ve hard-delete).
 
 ### Definition of Done
 
-- [ ] `mvnw clean verify` PASS.
-- [ ] Project Service security/lifecycle regresyonu yok.
-- [ ] pre-push PASS.
-- [ ] Commit/push/staging yapılmadı.
+- [x] `mvnw clean verify` PASS (657/0/0/0).
+- [x] Project Service security/lifecycle regresyonu yok (`ProjectBannerIntegrationTest`, `ModularityTest` dahil).
+- [x] pre-push: 708/712. `11-project-banner` eski sözleşme testi güncellendi ve geçti; aralıklı `team-member-preview` 401'i için kullanıcı kararıyla istisna kaydedildi (completion §3). 19/19 tekrar.
+- [x] Commit/push yapılmadı (staging kullanıcı kararıyla ajan tarafından yapıldı).
 
 STOP → `BRANCH COMPLETE — project-service-backend`
 

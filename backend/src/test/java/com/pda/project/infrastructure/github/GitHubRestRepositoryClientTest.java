@@ -4,6 +4,7 @@ import com.pda.project.application.service.GitHubIntegrationException;
 import com.pda.project.application.service.GitHubIntegrationException.Reason;
 import com.pda.project.application.service.GitHubRepositoryClient.BranchComparison;
 import com.pda.project.application.service.GitHubRepositoryClient.BranchPage;
+import com.pda.project.application.service.GitHubRepositoryClient.CommitPage;
 import com.pda.project.application.service.GitHubRepositoryClient.CommitSummary;
 import com.pda.project.application.service.GitHubRepositoryClient.RepositoryMetadata;
 import org.junit.jupiter.api.BeforeEach;
@@ -185,11 +186,13 @@ class GitHubRestRepositoryClientTest {
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withSuccess(body, MediaType.APPLICATION_JSON));
 
-        List<CommitSummary> commits = client.fetchCommits("owner", "repo", "feature/login", "octocat", 2, 5);
+        CommitPage page = client.fetchCommits("owner", "repo", "feature/login", "octocat", 2, 5);
+        List<CommitSummary> commits = page.commits();
 
         assertEquals(1, commits.size());
         assertEquals("abcdef1234567890", commits.get(0).sha());
         assertEquals("octocat", commits.get(0).authorLogin());
+        assertFalse(page.hasNext());
     }
 
     @Test
@@ -197,7 +200,54 @@ class GitHubRestRepositoryClientTest {
         server.expect(requestTo("https://api.github.com/repos/owner/repo/commits?sha=main&per_page=10&page=1"))
                 .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
 
-        assertTrue(client.fetchCommits("owner", "repo", "main", null, 1, 10).isEmpty());
+        CommitPage page = client.fetchCommits("owner", "repo", "main", null, 1, 10);
+
+        assertTrue(page.commits().isEmpty());
+        assertFalse(page.hasNext());
+    }
+
+    @Test
+    void fetchCommitsReportsAFollowingPageFromTheLinkHeader() {
+        server.expect(requestTo("https://api.github.com/repos/owner/repo/commits?sha=main&per_page=10&page=1"))
+                .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON).header("Link",
+                        "<https://api.github.com/repositories/1/commits?per_page=10&page=2>; rel=\"next\", "
+                                + "<https://api.github.com/repositories/1/commits?per_page=10&page=9>; rel=\"last\""));
+        server.expect(requestTo("https://api.github.com/repos/owner/repo/commits?sha=main&author=octocat"
+                        + "&per_page=10&page=9"))
+                .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON).header("Link",
+                        "<https://api.github.com/repositories/1/commits?per_page=10&page=8>; rel=\"prev\", "
+                                + "<https://api.github.com/repositories/1/commits?per_page=10&page=1>; rel=\"first\""));
+
+        assertTrue(client.fetchCommits("owner", "repo", "main", null, 1, 10).hasNext());
+        assertFalse(client.fetchCommits("owner", "repo", "main", "octocat", 9, 10).hasNext());
+    }
+
+    @Test
+    void linkHeaderParsingFindsTheNextRelationOnly() {
+        String prev = "<https://api.github.com/r?page=1>; rel=\"prev\"";
+        String first = "<https://api.github.com/r?page=1>; rel=\"first\"";
+        String last = "<https://api.github.com/r?page=9>; rel=\"last\"";
+        String next = "<https://api.github.com/r?page=3>; rel=\"next\"";
+
+        assertTrue(GitHubRestRepositoryClient.hasNextPage(List.of(next)));
+        assertTrue(GitHubRestRepositoryClient.hasNextPage(List.of(prev + ", " + next + ", " + last)));
+        assertTrue(GitHubRestRepositoryClient.hasNextPage(List.of(next + ", " + last)));
+        assertTrue(GitHubRestRepositoryClient.hasNextPage(List.of(prev, next)));
+        assertTrue(GitHubRestRepositoryClient.hasNextPage(List.of("<https://api.github.com/r?page=3>; REL=\"NEXT\"")));
+        assertTrue(GitHubRestRepositoryClient.hasNextPage(List.of("<https://api.github.com/r?page=3>; rel=next")));
+        assertTrue(GitHubRestRepositoryClient.hasNextPage(
+                List.of("<https://api.github.com/r?page=3>; rel=\"prev next\"")));
+
+        assertFalse(GitHubRestRepositoryClient.hasNextPage(List.of(prev + ", " + first)));
+        assertFalse(GitHubRestRepositoryClient.hasNextPage(List.of(prev, last)));
+        assertFalse(GitHubRestRepositoryClient.hasNextPage(null));
+        assertFalse(GitHubRestRepositoryClient.hasNextPage(List.of()));
+        assertFalse(GitHubRestRepositoryClient.hasNextPage(List.of("")));
+        assertFalse(GitHubRestRepositoryClient.hasNextPage(List.of("garbage")));
+        assertFalse(GitHubRestRepositoryClient.hasNextPage(List.of("<https://api.github.com/r?page=3>")));
+        assertFalse(GitHubRestRepositoryClient.hasNextPage(List.of("<https://api.github.com/r?page=3>; rel=\"")));
+        assertFalse(GitHubRestRepositoryClient.hasNextPage(List.of("<https://api.github.com/r?rel=next>; rel=\"last\"")));
+        assertFalse(GitHubRestRepositoryClient.hasNextPage(List.of("<https://api.github.com/r>; rel=\"nextpage\"")));
     }
 
     @Test

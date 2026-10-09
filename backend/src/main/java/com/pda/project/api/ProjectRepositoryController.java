@@ -6,6 +6,7 @@ import com.pda.project.api.dto.response.CommitResponse;
 import com.pda.project.api.dto.response.RepositoryBranchesResponse;
 import com.pda.project.api.dto.response.RepositoryCompareResponse;
 import com.pda.project.api.dto.response.RepositoryConnectionResponse;
+import com.pda.project.application.service.GitHubRepositoryClient;
 import com.pda.project.application.service.ProjectRepositoryConnectionService;
 import com.pda.user.UserAccounts;
 import io.swagger.v3.oas.annotations.Operation;
@@ -30,6 +31,9 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/projects/{projectId}/repository")
 public class ProjectRepositoryController {
+
+    /** Listed in the CORS exposed headers (SecurityBaselineConfiguration) so the browser client can read it. */
+    public static final String HAS_NEXT_PAGE_HEADER = "X-Has-Next-Page";
 
     private final ProjectRepositoryConnectionService repository;
 
@@ -82,15 +86,20 @@ public class ProjectRepositoryController {
     @Operation(summary = "List commits of a branch of the connected repository (default branch when omitted)",
             description = "Project members only. Read-only. branch must be an existing branch, author a GitHub "
                     + "login, page 1..10, limit 1..50 (default 10). A GitHub failure never fails the whole request "
-                    + "beyond this endpoint; 429 when the per-user read limit or GitHub's limit is reached.")
-    public List<CommitResponse> commits(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
+                    + "beyond this endpoint; 429 when the per-user read limit or GitHub's limit is reached. The "
+                    + "response header X-Has-Next-Page (true|false) says whether a following page exists (always "
+                    + "false on page 10); the body is the commit list only.")
+    public ResponseEntity<List<CommitResponse>> commits(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
                                        @PathVariable UUID projectId,
                                        @RequestParam(required = false) String branch,
                                        @RequestParam(required = false) String author,
                                        @RequestParam(required = false) Integer page,
                                        @RequestParam(required = false) Integer limit) {
-        return repository.commits(AuthenticatedActor.id(principal), projectId, branch, author, page, limit).stream()
-                .map(CommitResponse::from).toList();
+        GitHubRepositoryClient.CommitPage commitPage = repository.commits(AuthenticatedActor.id(principal),
+                projectId, branch, author, page, limit);
+        return ResponseEntity.ok()
+                .header(HAS_NEXT_PAGE_HEADER, String.valueOf(commitPage.hasNext()))
+                .body(commitPage.commits().stream().map(CommitResponse::from).toList());
     }
 
     @GetMapping("/branches")

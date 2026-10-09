@@ -19,10 +19,11 @@ public interface GitHubRepositoryClient {
 
     /**
      * One page of a branch's commits, newest first; {@code author} (a GitHub login) is optional.
+     * {@link CommitPage#hasNext()} says whether GitHub reports a further page (its {@code Link rel="next"}).
      *
      * @throws GitHubIntegrationException if the repository/branch is missing, rate-limited, or unreachable.
      */
-    List<CommitSummary> fetchCommits(String owner, String repository, String branch, String author, int page,
+    CommitPage fetchCommits(String owner, String repository, String branch, String author, int page,
                                      int perPage);
 
     /** Up to 100 branches; {@link BranchPage#truncated()} says more exist. */
@@ -35,6 +36,13 @@ public interface GitHubRepositoryClient {
 
     record CommitSummary(String sha, String shortSha, String message, String author, String authorLogin,
                          String authorAvatarUrl, Instant committedAt, String commitUrl) {}
+
+    /** One page of commits plus whether GitHub has a following page. */
+    record CommitPage(List<CommitSummary> commits, boolean hasNext) {
+        public CommitPage {
+            commits = commits == null ? List.of() : List.copyOf(commits);
+        }
+    }
 
     record BranchSummary(String name, String headSha, boolean isProtected) {}
 

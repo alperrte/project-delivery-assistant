@@ -407,6 +407,94 @@ class ProjectInvitationApiIntegrationTest {
     }
 
     @Test
+    void theInvitedAccountSeesTheRealProjectBannerWithoutBecomingAMember() throws Exception {
+        Cookie csrf = csrfCookie();
+        Account manager = account("bannermanager");
+        Account recipient = account("bannerrecipient");
+        Account outsider = account("banneroutsider");
+        Account member = account("bannermember");
+        UUID projectId = createProject(manager, csrf, "Invitation banner project");
+        UUID invitationId = invite(manager, csrf, projectId, "\"userId\":\"" + recipient.id() + "\"");
+        memberships.addMember(manager.id(), projectId, member.id(), Set.of(ProjectRole.TESTER));
+        String previewPath = "/api/v1/project-invitations/" + invitationId + "/preview";
+        String bannerPath = "/api/v1/project-invitations/" + invitationId + "/banner";
+
+        // No banner yet: the preview carries no version and the image route is not found.
+        mvc.perform(get(previewPath).cookie(recipient.access()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.bannerVersion").doesNotExist());
+        mvc.perform(get(bannerPath).cookie(recipient.access())).andExpect(status().isNotFound());
+
+        byte[] png = TestImages.png(3, 2);
+        mvc.perform(multipart(HttpMethod.PUT, "/api/v1/projects/" + projectId + "/banner")
+                        .file(new MockMultipartFile("file", "banner.png", "image/png", png))
+                        .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isNoContent());
+        mvc.perform(get(previewPath).cookie(recipient.access()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.bannerVersion").isNumber());
+        byte[] previewBanner = mvc.perform(get(bannerPath).cookie(recipient.access()))
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, "image/png"))
+                .andExpect(header().string("X-Content-Type-Options", "nosniff"))
+                .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"banner\""))
+                .andExpect(header().string(HttpHeaders.CACHE_CONTROL, "private, no-store"))
+                .andReturn().getResponse().getContentAsByteArray();
+        assertArrayEquals(png, previewBanner);
+
+        // The invitee is still not a member: the member-only routes stay closed.
+        mvc.perform(get("/api/v1/projects/" + projectId + "/banner").cookie(recipient.access()))
+                .andExpect(status().isForbidden());
+        // Anyone but the invited account (a stranger, or a real member of the project) gets 404; anonymous gets 401.
+        mvc.perform(get(bannerPath).cookie(outsider.access())).andExpect(status().isNotFound());
+        mvc.perform(get(bannerPath).cookie(member.access())).andExpect(status().isNotFound());
+        mvc.perform(get(bannerPath)).andExpect(status().isUnauthorized());
+        // Only GET is open on the route (deny-by-default).
+        mvc.perform(post(bannerPath).cookie(csrf, recipient.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isForbidden());
+        mvc.perform(delete(bannerPath).cookie(csrf, recipient.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isForbidden());
+        mvc.perform(multipart(HttpMethod.PUT, bannerPath)
+                        .file(new MockMultipartFile("file", "banner.png", "image/png", png))
+                        .cookie(csrf, recipient.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isForbidden());
+
+        // An archived project is reported like a missing one.
+        jdbc.update("UPDATE projects SET archived_at = now() WHERE id = ?", projectId);
+        mvc.perform(get(bannerPath).cookie(recipient.access())).andExpect(status().isNotFound());
+        mvc.perform(get(previewPath).cookie(recipient.access())).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void theInvitationBannerIsNotFoundOnceTheInvitationIsAnsweredOrTheProjectIsDeleted() throws Exception {
+        Cookie csrf = csrfCookie();
+        Account manager = account("bannerendmanager");
+        Account recipient = account("bannerendrecipient");
+        UUID answered = createProject(manager, csrf, "Banner ends when answered");
+        UUID deleted = createProject(manager, csrf, "Banner ends when deleted");
+        byte[] png = TestImages.png(2, 2);
+        for (UUID projectId : new UUID[] {answered, deleted}) {
+            mvc.perform(multipart(HttpMethod.PUT, "/api/v1/projects/" + projectId + "/banner")
+                            .file(new MockMultipartFile("file", "banner.png", "image/png", png))
+                            .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                    .andExpect(status().isNoContent());
+        }
+        UUID answeredInvitation = invite(manager, csrf, answered, "\"userId\":\"" + recipient.id() + "\"");
+        UUID deletedInvitation = invite(manager, csrf, deleted, "\"userId\":\"" + recipient.id() + "\"");
+        mvc.perform(get("/api/v1/project-invitations/" + answeredInvitation + "/banner").cookie(recipient.access()))
+                .andExpect(status().isOk());
+        mvc.perform(post("/api/v1/project-invitations/" + answeredInvitation + "/reject")
+                        .cookie(csrf, recipient.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isNoContent());
+        mvc.perform(get("/api/v1/project-invitations/" + answeredInvitation + "/banner").cookie(recipient.access()))
+                .andExpect(status().isNotFound());
+
+        mvc.perform(get("/api/v1/project-invitations/" + deletedInvitation + "/banner").cookie(recipient.access()))
+                .andExpect(status().isOk());
+        jdbc.update("DELETE FROM projects WHERE id = ?", deleted);
+        mvc.perform(get("/api/v1/project-invitations/" + deletedInvitation + "/banner").cookie(recipient.access()))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void myInvitationsListFiltersPendingReportsLapsedAsExpiredAndHidesArchivedProjectNames() throws Exception {
         Cookie csrf = csrfCookie();
         Account manager = account("mylistmanager");

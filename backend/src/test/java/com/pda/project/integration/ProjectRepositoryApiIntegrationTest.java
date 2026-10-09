@@ -8,6 +8,7 @@ import com.pda.project.application.service.GitHubRepositoryClient;
 import com.pda.project.application.service.GitHubRepositoryClient.BranchComparison;
 import com.pda.project.application.service.GitHubRepositoryClient.BranchPage;
 import com.pda.project.application.service.GitHubRepositoryClient.BranchSummary;
+import com.pda.project.application.service.GitHubRepositoryClient.CommitPage;
 import com.pda.project.application.service.GitHubRepositoryClient.CommitSummary;
 import com.pda.project.application.service.GitHubRepositoryClient.RepositoryMetadata;
 import com.pda.project.application.service.ProjectMembershipService;
@@ -123,8 +124,8 @@ class ProjectRepositoryApiIntegrationTest {
                 connections.findByProjectId(projectId).orElseThrow().getNotifiedHeadSha());
 
         Mockito.when(gitHub.fetchCommits("alperrte", "project-delivery-assistant", "main", null, 1, 10))
-                .thenReturn(List.of(new CommitSummary("abcdef1234567890", "abcdef1", "Fix bug", "Alper", "alperrte",
-                        null, Instant.parse("2026-09-27T10:00:00Z"), "https://github.com/a/b/commit/abcdef1")));
+                .thenReturn(new CommitPage(List.of(new CommitSummary("abcdef1234567890", "abcdef1", "Fix bug", "Alper", "alperrte",
+                        null, Instant.parse("2026-09-27T10:00:00Z"), "https://github.com/a/b/commit/abcdef1")), false));
         mvc.perform(get("/api/v1/projects/" + projectId + "/repository/commits").cookie(contributor.access()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].sha").value("abcdef1234567890"))
@@ -192,7 +193,7 @@ class ProjectRepositoryApiIntegrationTest {
         Mockito.verify(gitHub, Mockito.never()).compare("branchowner", "branchrepo", "main", "main");
 
         Mockito.when(gitHub.fetchCommits("branchowner", "branchrepo", "feature/login", "octocat", 2, 5))
-                .thenReturn(List.of(commit("c3", "Filtered")));
+                .thenReturn(new CommitPage(List.of(commit("c3", "Filtered")), false));
         mvc.perform(get("/api/v1/projects/" + projectId + "/repository/commits")
                         .param("branch", "feature/login").param("author", "octocat")
                         .param("page", "2").param("limit", "5").cookie(contributor.access()))
@@ -261,7 +262,8 @@ class ProjectRepositoryApiIntegrationTest {
         Cookie csrf = csrfCookie();
         Account manager = account("repolimitmgr");
         UUID projectId = connectedProject(manager, csrf, "Repo limit project", "limitowner", "limitrepo");
-        Mockito.when(gitHub.fetchCommits("limitowner", "limitrepo", "main", null, 1, 10)).thenReturn(List.of());
+        Mockito.when(gitHub.fetchCommits("limitowner", "limitrepo", "main", null, 1, 10))
+                .thenReturn(new CommitPage(List.of(), false));
 
         for (int i = 0; i < READ_LIMIT; i++) {
             mvc.perform(get("/api/v1/projects/" + projectId + "/repository/commits").cookie(manager.access()))
@@ -422,7 +424,8 @@ class ProjectRepositoryApiIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"trackingMode\":\"BASIC\",\"notifyOnCommits\":true}"))
                 .andExpect(status().isOk());
-        Mockito.when(gitHub.fetchCommits("modeowner", "moderepo", "main", null, 1, 10)).thenReturn(List.of());
+        Mockito.when(gitHub.fetchCommits("modeowner", "moderepo", "main", null, 1, 10))
+                .thenReturn(new CommitPage(List.of(), false));
 
         mvc.perform(get(path + "/commits").cookie(manager.access())).andExpect(status().isOk());
         mvc.perform(get(path + "/commits").param("branch", "main").cookie(manager.access()))
@@ -443,6 +446,115 @@ class ProjectRepositoryApiIntegrationTest {
                 List.of(new BranchSummary("main", "abc", true)), false));
         mvc.perform(get(path + "/branches").cookie(manager.access())).andExpect(status().isOk());
         mvc.perform(get(path + "/compare").cookie(manager.access())).andExpect(status().isOk());
+    }
+
+    @Test
+    void commitsPageReportsWhetherAFollowingPageExistsInTheHeaderWithoutChangingTheBody() throws Exception {
+        Cookie csrf = csrfCookie();
+        Account manager = account("repopagemgr");
+        Account contributor = account("repopagemember");
+        UUID projectId = connectedProject(manager, csrf, "Repo paging project", "pageowner", "pagerepo");
+        memberships.addMember(manager.id(), projectId, contributor.id(), Set.of(ProjectRole.BACKEND_DEVELOPER));
+        String commits = "/api/v1/projects/" + projectId + "/repository/commits";
+
+        Mockito.when(gitHub.fetchCommits("pageowner", "pagerepo", "main", null, 1, 10))
+                .thenReturn(new CommitPage(List.of(commit("p1", "First")), true));
+        mvc.perform(get(commits).cookie(contributor.access()))
+                .andExpect(status().isOk())
+                .andExpect(header().string("X-Has-Next-Page", "true"))
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].sha").value("p1"))
+                .andExpect(jsonPath("$[0].message").value("First"));
+
+        Mockito.when(gitHub.fetchCommits("pageowner", "pagerepo", "main", null, 3, 5))
+                .thenReturn(new CommitPage(List.of(commit("p3", "Last")), false));
+        mvc.perform(get(commits).param("page", "3").param("limit", "5").cookie(contributor.access()))
+                .andExpect(status().isOk())
+                .andExpect(header().string("X-Has-Next-Page", "false"))
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].sha").value("p3"));
+
+        Mockito.when(gitHub.fetchCommits("pageowner", "pagerepo", "main", null, 2, 10))
+                .thenReturn(new CommitPage(List.of(), false));
+        mvc.perform(get(commits).param("page", "2").cookie(contributor.access()))
+                .andExpect(status().isOk())
+                .andExpect(header().string("X-Has-Next-Page", "false"))
+                .andExpect(jsonPath("$").isEmpty());
+    }
+
+    @Test
+    void lastAllowedCommitPageNeverAdvertisesAFollowingPageEvenWhenGitHubHasMore() throws Exception {
+        Cookie csrf = csrfCookie();
+        Account manager = account("repopagecapmgr");
+        UUID projectId = connectedProject(manager, csrf, "Repo paging cap project", "capowner", "caprepo");
+        String commits = "/api/v1/projects/" + projectId + "/repository/commits";
+
+        Mockito.when(gitHub.fetchCommits("capowner", "caprepo", "main", null, 9, 10))
+                .thenReturn(new CommitPage(List.of(commit("p9", "Ninth")), true));
+        Mockito.when(gitHub.fetchCommits("capowner", "caprepo", "main", null, 10, 10))
+                .thenReturn(new CommitPage(List.of(commit("p10", "Tenth")), true));
+
+        mvc.perform(get(commits).param("page", "9").cookie(manager.access()))
+                .andExpect(status().isOk())
+                .andExpect(header().string("X-Has-Next-Page", "true"));
+        mvc.perform(get(commits).param("page", "10").cookie(manager.access()))
+                .andExpect(status().isOk())
+                .andExpect(header().string("X-Has-Next-Page", "false"))
+                .andExpect(jsonPath("$[0].sha").value("p10"));
+        mvc.perform(get(commits).param("page", "11").cookie(manager.access()))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void pagingHeaderKeepsTheTrackingModeAndAccessRules() throws Exception {
+        Cookie csrf = csrfCookie();
+        Account manager = account("repopagerulemgr");
+        Account outsider = account("repopageoutsider");
+        UUID projectId = connectedProject(manager, csrf, "Repo paging rules project", "ruleowner", "rulerepo");
+        String path = "/api/v1/projects/" + projectId + "/repository";
+        mvc.perform(patch(path).cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"trackingMode\":\"BASIC\",\"notifyOnCommits\":true}"))
+                .andExpect(status().isOk());
+        Mockito.when(gitHub.fetchCommits("ruleowner", "rulerepo", "main", null, 2, 10))
+                .thenReturn(new CommitPage(List.of(commit("r2", "Second page")), true));
+
+        // The default branch stays paged in BASIC mode; other branches and authors are still refused.
+        mvc.perform(get(path + "/commits").param("page", "2").cookie(manager.access()))
+                .andExpect(status().isOk())
+                .andExpect(header().string("X-Has-Next-Page", "true"));
+        for (String blocked : List.of(path + "/commits?branch=develop&page=2", path + "/commits?author=octocat&page=2")) {
+            mvc.perform(get(blocked).cookie(manager.access()))
+                    .andExpect(status().isConflict())
+                    .andExpect(header().doesNotExist("X-Has-Next-Page"))
+                    .andExpect(jsonPath("$.code").value("REPOSITORY_ADVANCED_REQUIRED"));
+        }
+        mvc.perform(get(path + "/commits").param("page", "2").cookie(outsider.access()))
+                .andExpect(status().isForbidden())
+                .andExpect(header().doesNotExist("X-Has-Next-Page"));
+        mvc.perform(get(path + "/commits").param("page", "2"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(header().doesNotExist("X-Has-Next-Page"));
+    }
+
+    @Test
+    void corsExposesTheHasNextPageHeaderToTheFrontendOrigin() throws Exception {
+        Cookie csrf = csrfCookie();
+        Account manager = account("repocorsmgr");
+        UUID projectId = connectedProject(manager, csrf, "Repo cors project", "corsowner", "corsrepo");
+        Mockito.when(gitHub.fetchCommits("corsowner", "corsrepo", "main", null, 1, 10))
+                .thenReturn(new CommitPage(List.of(commit("c1", "Cors")), true));
+
+        mvc.perform(get("/api/v1/projects/" + projectId + "/repository/commits").cookie(manager.access())
+                        .header("Origin", "http://localhost:3000"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:3000"))
+                .andExpect(header().string("Access-Control-Expose-Headers",
+                        org.hamcrest.Matchers.containsString("X-Has-Next-Page")))
+                .andExpect(header().string("Access-Control-Expose-Headers",
+                        org.hamcrest.Matchers.containsString("X-Access-Token-Expires-In")))
+                .andExpect(header().string("X-Has-Next-Page", "true"));
     }
 
     /** Branch details are part of what these tests exercise, so they connect in the advanced mode. */

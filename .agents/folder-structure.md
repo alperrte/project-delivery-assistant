@@ -169,6 +169,12 @@ Backend: `com.pda.analytics` (public `AnalyticsReporting`; `api` ingest controll
 
 Frontend: `features/consent/` (contract, store, banner, dialog, provider, manage button), `features/analytics/` (identifiers, route template, transport, tracker), `features/contact/` (api, schema, form, page), `features/admin/` (api, query keys, guard, users page, analytics page, charts), routes `(public)/cookies`, `(public)/contact`, `(app)/admin/{users,analytics}`. E2E: `consent-state.ts` (default visitor who already decided), `db.ts`, `mailpit.ts`, `cookie-consent`, `analytics-collection`, `contact-form`, `contact-delivery`, `admin-users`, `admin-analytics`, `privacy-regression` specs. Root: `docker-compose.e2e.yml` (Mailpit + relaxed limits), `PDA_COOKIE_ANALYTICS_ADMIN_CONTACT_PLAN.md` (plan and progress).
 
+## Commit sayfalama ve davet banner'ı — backend (2026-10-10)
+
+- `project/application/service/GitHubRepositoryClient.java`: `CommitPage` kaydı; `project/infrastructure/github/GitHubRestRepositoryClient.java`: `Link` ayrıştırma (`hasNextPage`); `project/api/ProjectRepositoryController.java`: `X-Has-Next-Page` (`HAS_NEXT_PAGE_HEADER`).
+- `project/api/MyProjectInvitationController.java`: `GET /project-invitations/{id}/banner`; `project/application/service/ProjectInvitationService.java`: `previewBannerMine`, preview `bannerVersion`.
+- Testler: `project/infrastructure/github/GitHubRestRepositoryClientTest`, `project/integration/ProjectRepositoryApiIntegrationTest`, `ProjectInvitationApiIntegrationTest`.
+
 ## Ortak seçiciler ve form kabuğu (2026-10-09)
 
 - `frontend/src/components/ui/time-picker.tsx`: `DatePicker` ile aynı dilde ortak saat seçici; `date-picker.tsx` opsiyonel `min`/`max` alır.
