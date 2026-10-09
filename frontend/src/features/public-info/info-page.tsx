@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
 import { CaretDown } from "@phosphor-icons/react/ssr";
+import { APACHE_LICENSE_TEXT } from "./apache-license";
 import { CONTACT_EMAIL, type InfoPage } from "./site-info";
 import { buildPath } from "@/i18n/routing";
 import { locales, type Locale } from "@/i18n/config";
@@ -25,7 +26,8 @@ export async function PublicInfoPage({ page }: { page: InfoPage }) {
   const locale = await getLocale();
   const sections: Section[] = page === "faq" ? [] : t.raw("sections");
   const groups: FaqGroup[] = page === "faq" ? t.raw("groups") : [];
-  const contents = page === "faq" ? groups : sections;
+  const isLicense = page === "license";
+  const contents = page === "faq" ? groups : isLicense ? [...sections, { id: "full-text", title: t("fullTextTitle") }] : sections;
   const date = new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Istanbul" }).format(new Date("2026-10-02T12:00:00+03:00"));
 
   return (
@@ -34,7 +36,7 @@ export async function PublicInfoPage({ page }: { page: InfoPage }) {
         <p className="text-sm font-medium text-muted-foreground">PDA · Project Delivery Assistant</p>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">{t("title")}</h1>
         <p className="mt-4 text-base leading-7 text-muted-foreground">{t("description")}</p>
-        <p className="mt-4 text-sm text-muted-foreground">{common("updated", { date })}</p>
+        {!isLicense && <p className="mt-4 text-sm text-muted-foreground">{common("updated", { date })}</p>}
       </header>
       {(page === "kvkk" || page === "privacy") && (
         <aside aria-label={common("reviewTitle")} className="mt-8 rounded-lg border border-border bg-muted p-5">
@@ -73,6 +75,14 @@ export async function PublicInfoPage({ page }: { page: InfoPage }) {
               </div>
             </section>
           ))}
+          {isLicense && (
+            <section id="full-text" aria-labelledby="full-text-title" className="mb-10 scroll-mt-6">
+              <h2 id="full-text-title" className="mb-4 text-xl font-semibold">{t("fullTextTitle")}</h2>
+              <p className="mb-4 text-base leading-7 text-muted-foreground">{t("fullTextNote")}</p>
+              {/* Scrollable region: focusable so keyboard users can scroll it; the legal text stays in its original English. */}
+              <pre lang="en" tabIndex={0} aria-label={t("fullTextTitle")} className="max-h-[70vh] overflow-auto rounded-lg border border-border bg-muted p-4 font-mono text-xs leading-5 outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring">{APACHE_LICENSE_TEXT}</pre>
+            </section>
+          )}
           {(page === "kvkk" || page === "privacy") && (
             <nav aria-label={common("references")} className="mb-8 border-t border-border pt-6">
               <h2 className="text-lg font-semibold">{common("references")}</h2>

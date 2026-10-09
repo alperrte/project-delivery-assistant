@@ -44,7 +44,7 @@ export function SiteFooter({ tone = "default" }: { tone?: "default" | "auth" }) 
             <EnvelopeSimple size={17} aria-hidden="true" className="shrink-0" /><span className="break-all">{CONTACT_EMAIL}</span>
           </a>
           <a href={REPOSITORY_URL} className={linkClass}>
-            <GitHubIcon className="size-4 shrink-0" />{t("source")}<ArrowUpRight size={14} aria-hidden="true" /><span className="text-xs">Apache 2.0</span>
+            <GitHubIcon className="size-4 shrink-0" />{t("source")}<ArrowUpRight size={14} aria-hidden="true" />
           </a>
         </div>
       </div>

@@ -2331,6 +2331,7 @@
     "kvkk": "KVKK",
     "privacy": "Privacy Policy",
     "accessibility": "Accessibility",
+    "license": "License",
     "team": "Developers",
     "githubProfile": "{name}'s GitHub profile",
     "contact": "Contact",
@@ -2440,7 +2441,7 @@
             },
             {
               "question": "How can I report a bug or accessibility barrier?",
-              "answer": "Email pda-info@gmail.com with the page address, expected behaviour and reproduction steps. General development suggestions can also be shared in the GitHub repository. Do not post personal data, passwords, verification codes or vulnerability details in public issues."
+              "answer": "Email pdassistant.info@gmail.com with the page address, expected behaviour and reproduction steps. General development suggestions can also be shared in the GitHub repository. Do not post personal data, passwords, verification codes or vulnerability details in public issues."
             }
           ]
         }
@@ -2455,7 +2456,7 @@
           "title": "Scope and contact",
           "paragraphs": [
             "This policy covers PDA's account, project, team, task and calendar features. When you visit external Google or GitHub pages, those services' own privacy terms apply.",
-            "The README lists Alper Temiz and Hamza Taşbay as developers. The service's data controller must be identified separately before launch; developer names alone do not establish that identity. The designated contact email is pda-info@gmail.com."
+            "The README lists Alper Temiz and Hamza Taşbay as developers. The service's data controller must be identified separately before launch; developer names alone do not establish that identity. The designated contact email is pdassistant.info@gmail.com."
           ]
         },
         {
@@ -2529,7 +2530,7 @@
           "title": "Data controller and scope",
           "paragraphs": [
             "This pre-launch draft describes data used for registration, sign-in, project/team work, invitations and support. The natural or legal person acting as data controller has not yet been confirmed, so this is not presented as a completed privacy notice.",
-            "The designated contact with the project team is pda-info@gmail.com. The controller identity and appropriate application channels must be confirmed before this text is finalised."
+            "The designated contact with the project team is pdassistant.info@gmail.com. The controller identity and appropriate application channels must be confirmed before this text is finalised."
           ]
         },
         {
@@ -2589,7 +2590,7 @@
           "id": "requests",
           "title": "Requests and contact",
           "paragraphs": [
-            "Email pda-info@gmail.com with questions or data requests. State the request topic, the email associated with your account and the action you seek. Do not send passwords, verification codes or invitation tokens.",
+            "Email pdassistant.info@gmail.com with questions or data requests. State the request topic, the email associated with your account and the action you seek. Do not send passwords, verification codes or invitation tokens.",
             "This general contact address should not be assumed to satisfy every legally prescribed application method. The controller and official channels must be confirmed before launch. Any information needed to verify identity should be proportionate to the request."
           ]
         }
@@ -2635,8 +2636,58 @@
           "id": "feedback",
           "title": "Report a barrier",
           "paragraphs": [
-            "If you cannot use a page or complete an action, email pda-info@gmail.com with the page address, intended action, browser/device and any assistive technology used.",
+            "If you cannot use a page or complete an action, email pdassistant.info@gmail.com with the page address, intended action, browser/device and any assistive technology used.",
             "Remove personal or secret information from screenshots. You do not need to disclose medical details to report a barrier."
+          ]
+        }
+      ]
+    },
+    "license": {
+      "title": "License",
+      "description": "PDA's source code is released under the Apache License 2.0: a short summary and the full license text.",
+      "fullTextTitle": "Full license text (English)",
+      "fullTextNote": "The English original below is the legally binding text. The summary above is for information only, is not legal advice, and is not an official translation.",
+      "sections": [
+        {
+          "id": "about",
+          "title": "What is the Apache License 2.0?",
+          "paragraphs": [
+            "PDA is open source. Its source code is released under the Apache License 2.0, a permissive license that lets you use, study, change and share the code.",
+            "This page gives a short summary and the complete license text. The same text is in the LICENSE file at the root of the repository."
+          ]
+        },
+        {
+          "id": "permissions",
+          "title": "What you may do",
+          "paragraphs": [
+            "Under the license you may:"
+          ],
+          "items": [
+            "use the software for any purpose, including commercial use;",
+            "copy and modify the source code;",
+            "distribute the original or your modified version, including under your own terms for your changes, provided the conditions below are met;",
+            "rely on the patent license that each contributor grants for their contributions."
+          ]
+        },
+        {
+          "id": "conditions",
+          "title": "Conditions",
+          "paragraphs": [
+            "If you share the software or a modified version, you must:"
+          ],
+          "items": [
+            "give every recipient a copy of the license;",
+            "keep the copyright, patent, trademark and attribution notices of the original source;",
+            "state clearly in modified files that you changed them;",
+            "keep the contents of the NOTICE file, if the project has one, in your distribution."
+          ]
+        },
+        {
+          "id": "limits",
+          "title": "Limits and liability",
+          "paragraphs": [
+            "The software is provided \"as is\", without warranties or conditions of any kind. Contributors are not liable for damages arising from its use.",
+            "The license does not grant rights to the PDA name or logo. A contributor's patent license ends for anyone who sues claiming that the software infringes a patent."
           ]
         }
       ]

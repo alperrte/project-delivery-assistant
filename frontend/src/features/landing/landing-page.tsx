@@ -43,7 +43,8 @@ export function LandingPage() {
         <nav aria-label={t("navigation")} className={styles.controls}>
           <LocaleSwitcher hideLabelOnMobile triggerClassName="min-h-11" />
           <ThemeToggle />
-          <Link href="/login" className={cn(buttonVariants(), "auth-cta hover:brightness-110", styles.headerLogin)}>{t("login")}<ArrowUpRight size={15} aria-hidden="true" /></Link>
+          <Link href="/login" className={styles.headerLink}>{t("login")}</Link>
+          <Link href="/register" className={cn(buttonVariants(), "auth-cta hover:brightness-110", styles.headerLogin)}>{t("register")}<ArrowUpRight size={15} aria-hidden="true" /></Link>
         </nav>
       </header>
       <main id="landing-main" tabIndex={-1}>
