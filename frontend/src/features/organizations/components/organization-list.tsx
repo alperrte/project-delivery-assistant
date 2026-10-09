@@ -7,10 +7,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Plus } from "@phosphor-icons/react";
 import { PageHeader } from "@/components/common/page-header";
 import { EmptyState } from "@/components/common/empty-state";
-import { EntityGrid } from "@/components/common/entity-card";
+import { EntityCardSkeleton, EntityGrid } from "@/components/common/entity-card";
 import { PaginationBar } from "@/components/common/pagination-bar";
 import { buttonVariants } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { errorKey } from "@/lib/api/error-message";
 import { organizationKeys } from "../queries";
 import { organizationsApi } from "../api";
@@ -41,7 +40,7 @@ export function OrganizationList() {
 
       {isLoading && (
         <EntityGrid>
-          {[0, 1, 2].map((key) => <li key={key}><Skeleton className="h-72 w-full rounded-xl" /></li>)}
+          {Array.from({ length: 6 }, (_, key) => <li key={key} className="flex"><EntityCardSkeleton /></li>)}
         </EntityGrid>
       )}
 

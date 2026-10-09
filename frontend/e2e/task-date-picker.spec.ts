@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { api, chooseDate as choose, createProject } from "./helpers";
+import { api, chooseDate as choose, chooseTime, createProject } from "./helpers";
 import { MANAGER_STORAGE } from "./global-setup";
 
 test.use({ storageState: MANAGER_STORAGE, timezoneId: "Europe/Istanbul" });
@@ -70,13 +70,14 @@ test("today, clear, quick deadlines and advanced time keep their existing payloa
   await page.locator("#task-start-calendar").getByRole("button", { name: "Temizle" }).click();
   await expect(page.locator("#task-start")).toContainText("Tarih seçin");
   await page.getByRole("group", { name: "Hızlı son tarih seçimi" }).getByRole("button", { name: /^Yarın/ }).click();
-  const time = page.getByLabel("Son tarih saati", { exact: true });
-  await time.fill("14:30");
+  const time = page.locator("#task-deadline-time");
+  await chooseTime(page, "task-deadline-time", "14:30");
+  await expect(time).toContainText("14:30");
   await page.locator("#task-deadline-date").click();
   await page.locator("#task-deadline-date-calendar").getByRole("button", { name: "Temizle" }).click();
-  await expect(time).toHaveValue("");
+  await expect(time).toContainText("Saat seçin");
   await choose(page, "task-deadline-date", "2032-12-10");
-  await time.fill("14:30");
+  await chooseTime(page, "task-deadline-time", "14:30");
   const request = page.waitForRequest(r => r.method() === "POST" && r.url().endsWith(`/projects/${project.id}/tasks`));
   await page.getByRole("button", { name: "Görevi oluştur", exact: true }).click();
   const payload = (await request).postDataJSON();

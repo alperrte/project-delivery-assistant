@@ -27,6 +27,15 @@
     "hidePassword": "Passwort verbergen",
     "breadcrumb": "Brotkrumen"
   },
+  "forms": {
+    "summary": {
+      "projectTitle": "Das Projekt konnte nicht erstellt werden.",
+      "organizationCreateTitle": "Die Organisation konnte nicht erstellt werden.",
+      "organizationEditTitle": "Änderungen konnten nicht gespeichert werden.",
+      "description": "Bitte prüfen Sie die fehlenden oder ungültigen Felder.",
+      "sectionsLabel": "Zu prüfende Abschnitte:"
+    }
+  },
   "errors": {
     "network": "Der Server ist nicht erreichbar. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
     "generic": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
@@ -1918,7 +1927,8 @@
         "composer": {
           "label": "Kommentar",
           "placeholder": "Kommentar schreiben. Mit @ erwähnen Sie jemanden.",
-          "hint": "Zum Senden Strg+Enter drücken",
+          "hint": "Mit Enter senden · Strg+Enter für eine neue Zeile",
+          "hintTouch": "Zum Senden die Schaltfläche „Senden“ verwenden",
           "submit": "Kommentieren",
           "suggestions": "Mitgliedervorschläge"
         },
@@ -3011,7 +3021,16 @@
     "year": "Jahr",
     "today": "Heute",
     "clear": "Löschen",
-    "close": "Kalender schließen"
+    "close": "Kalender schließen",
+    "outOfRange": "Nicht wählbares Datum"
+  },
+  "timePicker": {
+    "placeholder": "Uhrzeit wählen",
+    "hour": "Stunde",
+    "minute": "Minute",
+    "now": "Jetzt",
+    "clear": "Leeren",
+    "close": "Schließen"
   },
   "notifications": {
     "invitationContext": {

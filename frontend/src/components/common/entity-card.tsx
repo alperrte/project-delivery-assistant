@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import Link from "@/i18n/navigation";
 import { ArrowRight } from "@phosphor-icons/react";
 import { buttonVariants } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 export type EntityTone = "neutral" | "success" | "warning" | "danger";
@@ -110,4 +111,19 @@ export function EntityStatusPill({ className, dotClassName, label }: { className
 
 export function EntityGrid({ children }: { children: ReactNode }) {
   return <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">{children}</ul>;
+}
+
+/** Loading placeholder with the EntityCard footprint (header band + sections + footer); shared by every card grid. */
+export function EntityCardSkeleton() {
+  return (
+    <div className="w-full rounded-xl border bg-card p-2" aria-hidden="true">
+      <Skeleton className="h-36 w-full rounded-lg" />
+      <div className="space-y-4 px-2 pt-4 pb-2">
+        <Skeleton className="h-8 w-3/4" />
+        <Skeleton className="h-8 w-1/2" />
+        <Skeleton className="h-5 w-2/3" />
+        <Skeleton className="h-9 w-full" />
+      </div>
+    </div>
+  );
 }
