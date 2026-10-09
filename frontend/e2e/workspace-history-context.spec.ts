@@ -1,9 +1,10 @@
 import {test,expect,type Page} from "@playwright/test";
 import {api,createProject} from "./helpers";
 import {MANAGER_STORAGE} from "./global-setup";
+import {localizeHref} from "../src/i18n/routing";
 test.use({storageState:MANAGER_STORAGE});
 async function arrow(page:Page,direction:"back"|"forward") {await page.mouse.move(1,200);await page.mouse.move(1,1);await page.getByTestId(`workspace-${direction}`).click();}
-async function push(page:Page,href:string){await page.evaluate(h=>(window as unknown as {next:{router:{push:(href:string)=>void}}}).next.router.push(h),href);await expect(page).toHaveURL(new RegExp(href+"$"));}
+async function push(page:Page,href:string){const canonical=localizeHref(href,"tr");await page.evaluate(h=>(window as unknown as {next:{router:{push:(href:string)=>void}}}).next.router.push(h),canonical);await expect(page).toHaveURL(new RegExp(canonical+"$"));}
 test("native PDA traversal isolates projects and canceled traversal keeps fullscreen open",async({page})=>{
  const first=await createProject(page,`History A ${Date.now()}`),a=((await api(page,"GET",`/projects/by-slug/${first}`)).json as {id:string}).id;
  const second=await createProject(page,`History B ${Date.now()}`),b=((await api(page,"GET",`/projects/by-slug/${second}`)).json as {id:string}).id;

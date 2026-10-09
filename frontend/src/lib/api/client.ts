@@ -74,7 +74,7 @@ async function toApiError(res: Response): Promise<ApiError> {
   return new ApiError(res.status, body.code, fields, body);
 }
 
-async function send(path: string, init: RequestInit, method: string): Promise<Response> {
+async function send(path: string, init: RequestInit, method: string, guard?: () => boolean): Promise<Response> {
   const headers = new Headers(init.headers);
   // FormData must keep the browser-generated multipart boundary, so only JSON bodies get a Content-Type.
   if (init.body && !(init.body instanceof FormData)) headers.set("Content-Type", "application/json");
@@ -82,6 +82,9 @@ async function send(path: string, init: RequestInit, method: string): Promise<Re
     const { headerName, token } = await ensureCsrf();
     headers.set(headerName, token);
   }
+  // Checked last, right before the request leaves: the CSRF fetch above is asynchronous, and a caller whose permission
+  // can be withdrawn meanwhile (analytics consent) must still be able to stop.
+  if (guard && !guard()) throw new ApiError(0, "request_not_allowed");
   try {
     const res = await fetch(`${API_URL}${path}`, { ...init, method, headers, credentials: "include" });
     const header = res.headers.get(ACCESS_EXPIRES_IN_HEADER);
@@ -151,32 +154,41 @@ export async function renewAccessSession(): Promise<boolean> {
   return true;
 }
 
-const NO_REFRESH = ["/auth/login", "/auth/register", "/auth/register/invitation", "/auth/refresh", "/auth/logout"];
+// Public endpoints never need a session, so a 401 there must not start a renewal or end the session.
+const NO_REFRESH = ["/auth/login", "/auth/register", "/auth/register/invitation", "/auth/refresh", "/auth/logout", "/analytics/events", "/contact"];
 
 export async function apiRequest<T = void>(
   path: string,
-  options: { method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE"; body?: unknown; signal?: AbortSignal } = {},
+  options: {
+    method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+    body?: unknown;
+    signal?: AbortSignal;
+    /** Lets the request finish while the page unloads (analytics flush on pagehide). */
+    keepalive?: boolean;
+    /** Asked immediately before the request is sent; returning false cancels it with an `ApiError` (status 0). */
+    guard?: () => boolean;
+  } = {},
 ): Promise<T> {
   const method = options.method ?? "GET";
   const init: RequestInit =
     options.body === undefined
-      ? { signal: options.signal }
-      : { signal: options.signal, body: options.body instanceof FormData ? options.body : JSON.stringify(options.body) };
+      ? { signal: options.signal, keepalive: options.keepalive }
+      : { signal: options.signal, keepalive: options.keepalive, body: options.body instanceof FormData ? options.body : JSON.stringify(options.body) };
 
-  let res = await send(path, init, method);
+  let res = await send(path, init, method, options.guard);
 
   if (res.status === 403 && method !== "GET") {
     const err = await toApiError(res.clone());
     if (!err.code) {
       // Most likely a stale CSRF token; fetch a new one and retry once.
       await ensureCsrf(true);
-      res = await send(path, init, method);
+      res = await send(path, init, method, options.guard);
     }
   }
 
   if (res.status === 401 && !NO_REFRESH.includes(path)) {
     if (await refreshSession()) {
-      res = await send(path, init, method);
+      res = await send(path, init, method, options.guard);
     }
     // Still unauthenticated after a renewal attempt: the session is really over (refresh cookie expired or
     // revoked). Tell the app so it can send the user to the login page instead of showing an unrelated error.

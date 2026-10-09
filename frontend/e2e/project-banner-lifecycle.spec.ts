@@ -3,7 +3,7 @@ import { localizeHref } from "../src/i18n/routing";
 import tr from "../src/i18n/messages/tr.json";
 import en from "../src/i18n/messages/en.json";
 import de from "../src/i18n/messages/de.json";
-import { api, openProjectListPage } from "./helpers";
+import { createdProjectSlug, api, declineTeamPrompt, openProjectListPage } from "./helpers";
 import { bannerInDatabase } from "./project-banner-db";
 import { MANAGER_STORAGE } from "./global-setup";
 
@@ -77,8 +77,9 @@ test("real create and banner upload persist bytes and version before the warm pr
   const uploaded = page.waitForResponse(response => /\/projects\/[^/]+\/banner$/.test(new URL(response.url()).pathname) && response.request().method() === "PUT");
   await page.getByRole("button", { name: /^Projeyi oluştur$/ }).click();
   expect((await uploaded).status()).toBe(204);
-  await expect(page).toHaveURL(/\/tr\/projeler\/(?!yeni$)[^/]+$/);
-  const slug = new URL(page.url()).pathname.split("/").pop()!;
+  await declineTeamPrompt(page);
+  await expect(page).toHaveURL(/\/tr\/projeler\/[^/]+\/genel-bakis$/);
+  const slug = await createdProjectSlug(page);
   id = ((await api(page, "GET", `/projects/by-slug/${slug}`)).json as { id: string }).id;
   expect(bannerInDatabase(id)).toEqual({ rows: 1, bytes: png.length, version: true });
   await openProjectListPage(page, slug);
@@ -104,9 +105,10 @@ test("injected create/upload failures preserve the draft or the genuinely create
   await page.unroute("**/api/v1/projects");
   await page.route("**/api/v1/projects/*/banner", route => route.request().method() === "PUT" ? route.abort("failed") : route.continue());
   await page.getByRole("button", { name: /^Projeyi oluştur$/ }).click();
-  await expect(page).toHaveURL(/\/tr\/projeler\/(?!yeni$)[^/]+$/);
+  await declineTeamPrompt(page);
+  await expect(page).toHaveURL(/\/tr\/projeler\/[^/]+\/genel-bakis$/);
   await expect(page.locator('[data-sonner-toast][data-type="warning"]')).toBeVisible();
-  const slug = new URL(page.url()).pathname.split("/").pop()!;
+  const slug = await createdProjectSlug(page);
   const detail = await api(page, "GET", `/projects/by-slug/${slug}`); expect(detail.status).toBe(200);
   id = (detail.json as { id: string }).id;
   expect(bannerInDatabase(id)).toEqual({ rows: 0, bytes: 0, version: false });

@@ -120,7 +120,14 @@
     "PROJECT_TASK_MODE_NOT_CONFIGURED": "Der Projektgründer muss vor der ersten Aufgabe eine Einstellung auswählen.",
     "CHAT_REPLY_NOT_FOUND": "Die zitierte Nachricht wurde in diesem Gespräch nicht gefunden.",
     "CHAT_REACTION_INVALID": "Diese Reaktion wird nicht unterstützt.",
-    "CHAT_REACTION_RATE_LIMITED": "Zu viele Reaktionen. Bitte kurz warten und erneut versuchen."
+    "CHAT_REACTION_RATE_LIMITED": "Zu viele Reaktionen. Bitte kurz warten und erneut versuchen.",
+    "CONTACT_INVALID": "Die Angaben im Formular sind ungültig. Prüfen Sie die Felder und versuchen Sie es erneut.",
+    "CONTACT_DUPLICATE": "Sie haben diese Nachricht soeben gesendet. In einer Minute können Sie es erneut versuchen.",
+    "CONTACT_UNAVAILABLE": "Das Kontaktformular ist derzeit nicht verfügbar. Bitte später erneut versuchen.",
+    "CONTACT_DELIVERY_FAILED": "Ihre Nachricht konnte nicht gesendet werden. Bitte gleich noch einmal versuchen.",
+    "ADMIN_SELF_DENIED": "Sie können Ihre eigene Mitgliedschaft nicht beenden.",
+    "ADMIN_LAST_ADMIN": "Der letzte aktive Administrator kann nicht beendet werden.",
+    "USER_NOT_FOUND": "Benutzer nicht gefunden."
   },
   "app": {
     "nav": {
@@ -674,7 +681,10 @@
     "defaultBranch": "Standard-Branch: {branch}",
     "publicOnly": "Nur öffentliche Repositories können verbunden werden. Die Verbindung ist schreibgeschützt.",
     "notifyNote": "Projektmitglieder werden benachrichtigt, wenn neue Commits im Branch {branch} eintreffen (nach wenigen Minuten).",
-    "mode": { "BASIC": "Einfach", "ADVANCED": "Erweitert" },
+    "mode": {
+      "BASIC": "Einfach",
+      "ADVANCED": "Erweitert"
+    },
     "notifyOff": "Benachrichtigungen für neue Commits sind aus.",
     "manageSettings": "Repository-Einstellungen",
     "goToSettings": "In den Einstellungen verbinden",
@@ -682,13 +692,22 @@
     "options": {
       "modeLabel": "Tracking-Modus",
       "help": "Unterschied zwischen Einfach und Erweitert anzeigen",
-      "mode": { "BASIC": "Einfach", "ADVANCED": "Erweitert" },
-      "modeSummary": { "BASIC": "Das Repository wird verbunden und die neuesten in den Standard-Branch gemergten Commits werden verfolgt.", "ADVANCED": "Branches verfolgen; alle gemergten oder ungemergten Commits und deren Autoren sehen." },
+      "mode": {
+        "BASIC": "Einfach",
+        "ADVANCED": "Erweitert"
+      },
+      "modeSummary": {
+        "BASIC": "Das Repository wird verbunden und die neuesten in den Standard-Branch gemergten Commits werden verfolgt.",
+        "ADVANCED": "Branches verfolgen; alle gemergten oder ungemergten Commits und deren Autoren sehen."
+      },
       "notifyLabel": "Mitglieder über neue Commits benachrichtigen",
       "notifyHint": "In beiden Modi betrifft die Benachrichtigung nur Commits im Standard-Branch.",
       "helpTitle": "Einfacher und erweiterter Modus",
       "helpDescription": "Sie können den Modus jederzeit in den Projekteinstellungen ändern.",
-      "modeDetail": { "BASIC": "Das Repository wird verbunden und die neuesten in den Standard-Branch gemergten Commits werden verfolgt. Die Repository-Seite zeigt nur die Commit-Liste des Standard-Branches.", "ADVANCED": "Sie können Branches verfolgen und pro Branch alle gemergten oder ungemergten Commits samt Autor sehen. Die Repository-Seite öffnet die Ansichten Übersicht und Branches." },
+      "modeDetail": {
+        "BASIC": "Das Repository wird verbunden und die neuesten in den Standard-Branch gemergten Commits werden verfolgt. Die Repository-Seite zeigt nur die Commit-Liste des Standard-Branches.",
+        "ADVANCED": "Sie können Branches verfolgen und pro Branch alle gemergten oder ungemergten Commits samt Autor sehen. Die Repository-Seite öffnet die Ansichten Übersicht und Branches."
+      },
       "helpNotify": "Benachrichtigungen über neue Commits gelten in beiden Modi nur für den Standard-Branch; Sie können sie mit dem Schalter ausschalten.",
       "close": "Schließen"
     },
@@ -710,7 +729,11 @@
       "disconnectConfirmDescription": "Die Repository-Seite und die Repository-Zeile in der Übersicht werden entfernt. Das Repository auf GitHub bleibt unberührt.",
       "cancel": "Abbrechen"
     },
-    "views": { "label": "Repository-Ansicht", "overview": "Übersicht", "branches": "Branches" },
+    "views": {
+      "label": "Repository-Ansicht",
+      "overview": "Übersicht",
+      "branches": "Branches"
+    },
     "overview": {
       "latestTitle": "Neueste Commits auf {branch}",
       "branchCount": "{count, plural, one {# Branch} other {# Branches}}",
@@ -748,7 +771,11 @@
       "commitsTitle": "Commits",
       "commitsByAuthor": "Commits von {author}",
       "filterLabel": "Nach Merge-Status filtern",
-      "filter": { "all": "Alle", "unmerged": "Nicht im Hauptbranch", "merged": "Im Hauptbranch" },
+      "filter": {
+        "all": "Alle",
+        "unmerged": "Nicht im Hauptbranch",
+        "merged": "Im Hauptbranch"
+      },
       "empty": "Keine Commits in diesem Branch.",
       "emptyAuthor": "Diese Person hat keine Commits in diesem Branch.",
       "emptyFiltered": "Keine Commits entsprechen diesem Filter.",
@@ -2404,7 +2431,9 @@
     "contactDescription": "Für Fragen, Vorschläge und Rückmeldungen.",
     "copyright": "© {year} PDA · Project Delivery Assistant",
     "version": "Version {version}",
-    "source": "Quellcode"
+    "source": "Quellcode",
+    "cookies": "Cookie-Richtlinie",
+    "manageCookies": "Cookie-Einstellungen verwalten"
   },
   "publicPages": {
     "common": {
@@ -2413,7 +2442,8 @@
       "updated": "Zuletzt aktualisiert: {date}",
       "contents": "Auf dieser Seite",
       "contactTitle": "Kontakt aufnehmen",
-      "contactText": "Schreiben Sie uns bei Fragen, Datenanfragen oder Barrieren. Teilen Sie keine Passwörter, Bestätigungscodes oder geheimen Einladungsinformationen.",
+      "contactAction": "Kontaktformular öffnen",
+      "contactText": "Nutzen Sie das Kontaktformular bei Fragen, Datenanfragen oder Barrieren. Teilen Sie keine Passwörter, Bestätigungscodes oder geheimen Einladungsinformationen.",
       "reviewTitle": "Prüfung vor Veröffentlichung",
       "reviewNotice": "Dieser Informationsentwurf beschreibt die aktuellen PDA-Funktionen. Die Identität des Verantwortlichen, Hosting- und E-Mail-Anbieter, Datenstandorte und Speicherfristen müssen vor dem Start bestätigt werden. Der Text fordert keine Einwilligung an und bedeutet keine abgeschlossene KVKK-Konformitätsprüfung.",
       "references": "Offizielle Quellen",
@@ -2564,7 +2594,7 @@
             },
             {
               "question": "Wie melde ich einen Fehler oder eine Barriere?",
-              "answer": "Schreiben Sie an pdassistant.info@gmail.com mit Seitenadresse, erwartetem Verhalten und Schritten zur Wiederholung. Allgemeine Entwicklungsvorschläge können auch im GitHub-Repository geteilt werden. Veröffentlichen Sie keine personenbezogenen Daten, Passwörter, Bestätigungscodes oder Details zu Sicherheitslücken in öffentlichen Issues."
+              "answer": "Nutzen Sie das Formular auf der Kontaktseite mit Seitenadresse, erwartetem Verhalten und Schritten zur Wiederholung. Allgemeine Entwicklungsvorschläge können auch im GitHub-Repository geteilt werden. Veröffentlichen Sie keine personenbezogenen Daten, Passwörter, Bestätigungscodes oder Details zu Sicherheitslücken in öffentlichen Issues."
             },
             {
               "question": "Kann ich zum Projekt beitragen?",
@@ -2583,7 +2613,7 @@
           "title": "Umfang und Kontakt",
           "paragraphs": [
             "Diese Erklärung umfasst die Konto-, Projekt-, Team-, Aufgaben- und Kalenderfunktionen von PDA. Auf externen Google- oder GitHub-Seiten gelten die jeweiligen Datenschutzbedingungen.",
-            "Die README nennt Alper Temiz und Hamza Taşbay als Entwickler. Die Identität des datenschutzrechtlich Verantwortlichen ist vor dem Start gesondert festzulegen; Entwicklernamen allein bestimmen diese Rolle nicht. Als Kontaktadresse ist pdassistant.info@gmail.com vorgesehen."
+            "Die README nennt Alper Temiz und Hamza Taşbay als Entwickler. Die Identität des datenschutzrechtlich Verantwortlichen ist vor dem Start gesondert festzulegen; Entwicklernamen allein bestimmen diese Rolle nicht. Als Kontaktweg dient das Formular auf der Kontaktseite."
           ]
         },
         {
@@ -2620,14 +2650,16 @@
           "id": "browser-storage",
           "title": "Cookies und Browsereinstellungen",
           "paragraphs": [
-            "Der aktuelle Anwendungscode enthält keine Werbe- oder Besucheranalyse-Tracker. Sitzungs- und Sicherheitscookies unterstützen die Anwendung; diese Seite fügt keine Cookie-Einwilligungsfunktion hinzu."
+            "PDA verwendet keine Werbe-Cookies oder Tracker von Drittanbietern. Sitzungs- und Sicherheitscookies sind für den Betrieb der Anwendung erforderlich. Die Besuchsanalyse läuft nur mit Ihrer ausdrücklichen Auswahl und ist standardmäßig ausgeschaltet; Einzelheiten und Ihre Einstellungen finden Sie auf der Seite Cookie-Richtlinie."
           ],
           "items": [
             "PDA_ACCESS, PDA_REFRESH und PDA_SESSION: Anmeldung und Sitzungsablauf. Die Laufzeit hängt von der Sitzungskonfiguration ab; beim Abmelden werden sie gelöscht.",
             "XSRF-TOKEN: Sicherheitscookie zum Schutz von Aktionsanfragen gegen gefälschte Anfragen.",
             "NEXT_LOCALE: Sprachcookie mit einer Laufzeit von einem Jahr.",
             "Lokaler Browserspeicher: Design, Menü-/Teamansicht und optional gespeicherte E-Mail. Angaben können bis zum Löschen der Browserdaten oder Ändern der Einstellung bleiben.",
-            "Sitzungsspeicher: zuletzt gewähltes Projekt des Benutzers für die Browsersitzung."
+            "Sitzungsspeicher: zuletzt gewähltes Projekt des Benutzers für die Browsersitzung.",
+            "Cookie-Auswahl: Der Schlüssel pda:cookie-consent speichert Ihre Entscheidung in diesem Browser.",
+            "Analyse (optional, standardmäßig ausgeschaltet): Wenn Sie sie erlauben, werden Seitenart, Besuchsquelle und aktiv verbrachte Zeit mit einer anonymen Besucher- und Sitzungs-ID gemessen; sie wird nicht mit Ihrem Konto verknüpft. Wenn Sie die Einwilligung widerrufen, enden neue Messungen und diese IDs werden gelöscht."
           ]
         },
         {
@@ -2657,7 +2689,7 @@
           "title": "Verantwortlicher und Umfang",
           "paragraphs": [
             "Dieser Entwurf beschreibt Daten bei Registrierung, Anmeldung, Projekt-/Teamarbeit, Einladungen und Unterstützung. Die verantwortliche natürliche oder juristische Person wurde noch nicht bestätigt; daher wird der Text nicht als abgeschlossene Datenschutzinformation dargestellt.",
-            "Für den Kontakt mit dem Projektteam ist pdassistant.info@gmail.com vorgesehen. Die Identität des Verantwortlichen und geeignete Antragswege sind vor der endgültigen Fassung festzulegen."
+            "Für den Kontakt mit dem Projektteam ist das Formular auf der Kontaktseite vorgesehen. Die Identität des Verantwortlichen und geeignete Antragswege sind vor der endgültigen Fassung festzulegen."
           ]
         },
         {
@@ -2717,7 +2749,7 @@
           "id": "requests",
           "title": "Anfragen und Kontakt",
           "paragraphs": [
-            "Senden Sie Fragen oder Datenanfragen an pdassistant.info@gmail.com. Nennen Sie Thema, Konto-E-Mail und gewünschte Maßnahme; senden Sie keine Passwörter, Bestätigungscodes oder Einladungstokens.",
+            "Senden Sie Fragen oder Datenanfragen über das Formular auf der Kontaktseite. Nennen Sie Thema, Konto-E-Mail und gewünschte Maßnahme; senden Sie keine Passwörter, Bestätigungscodes oder Einladungstokens.",
             "Diese allgemeine Kontaktadresse erfüllt nicht automatisch alle gesetzlich vorgeschriebenen Antragswege. Verantwortlicher und offizielle Kanäle müssen vor dem Start festgelegt werden. Angaben zur Identitätsprüfung sollen dem Antrag angemessen sein."
           ]
         }
@@ -2763,7 +2795,7 @@
           "id": "feedback",
           "title": "Ein Hindernis melden",
           "paragraphs": [
-            "Wenn Sie eine Seite oder Aktion nicht nutzen können, schreiben Sie an pdassistant.info@gmail.com mit Seitenadresse, gewünschter Aktion, Browser/Gerät und gegebenenfalls verwendetem Hilfsmittel.",
+            "Wenn Sie eine Seite oder Aktion nicht nutzen können, nutzen Sie das Formular auf der Kontaktseite mit Seitenadresse, gewünschter Aktion, Browser/Gerät und gegebenenfalls verwendetem Hilfsmittel.",
             "Entfernen Sie personenbezogene oder geheime Informationen aus Screenshots. Medizinische Angaben sind für eine Meldung nicht erforderlich."
           ]
         }
@@ -2815,6 +2847,105 @@
           "paragraphs": [
             "Die Software wird „wie besehen“ bereitgestellt, ohne Gewährleistung oder Bedingungen jeder Art. Beitragende haften nicht für Schäden, die aus der Nutzung entstehen.",
             "Die Lizenz gewährt keine Rechte am Namen oder Logo von PDA. Die Patentlizenz einer beitragenden Person endet für alle, die mit der Behauptung klagen, die Software verletze ein Patent."
+          ]
+        }
+      ]
+    },
+    "cookies": {
+      "title": "Cookie-Richtlinie",
+      "description": "Welche Cookies und welchen Browser-Speicher PDA warum verwendet, dass die Analyse standardmäßig ausgeschaltet ist und wie Sie Ihre Auswahl ändern.",
+      "manageTitle": "Einstellungen verwalten",
+      "manageText": "Sie können die Analyse jederzeit ein- oder ausschalten. Wenn Sie sie ausschalten, werden keine neuen Messungen gesendet und die Analyse-Kennungen in diesem Browser gelöscht.",
+      "sections": [
+        {
+          "id": "what",
+          "title": "Was sind Cookies?",
+          "paragraphs": [
+            "Cookies sind kleine Einträge, die eine Website in Ihrem Browser speichert. Auf dieser Seite umfasst \"Cookie\" auch den lokalen Browser-Speicher (localStorage) und den Sitzungsspeicher (sessionStorage), die für denselben Zweck dienen.",
+            "PDA verwendet keine Werbe-Cookies, kein Nutzerprofiling, keine Tracker Dritter und kein Browser-Fingerprinting."
+          ]
+        },
+        {
+          "id": "categories",
+          "title": "Kategorien",
+          "paragraphs": [
+            "PDA verwendet zwei Einwilligungskategorien. Notwendig ist immer aktiv und lässt sich nicht ausschalten. Die Analyse funktioniert nur mit Ihrer ausdrücklichen Auswahl und ist standardmäßig ausgeschaltet."
+          ],
+          "items": [
+            "Notwendig: Anmeldung, Sitzungssicherheit, Schutz vor gefälschten Anfragen, Sprachauswahl und die Speicherung dieser Auswahl.",
+            "Analyse: anonyme Messung von Seitenart, Besuchsquelle und aktiv verbrachter Zeit."
+          ]
+        },
+        {
+          "id": "necessary",
+          "title": "Notwendige Cookies und Speicher",
+          "paragraphs": [
+            "Die folgenden Einträge sind für den Betrieb des Dienstes erforderlich und werden unabhängig von Ihrer Analyse-Auswahl verwendet. Alle werden von PDA (First Party) verwaltet. Die Laufzeiten hängen von der Konfiguration des Dienstes ab; angegeben sind die Standardwerte. Wenn Sie sie im Browser blockieren, funktionieren Anmeldung und Sitzung nicht."
+          ],
+          "items": [
+            "PDA_ACCESS: kurzlebiges Zugriffstoken. HttpOnly; wird nur an den Pfad /api gesendet. Standardlaufzeit 15 Minuten.",
+            "PDA_REFRESH: Token zur Erneuerung der Sitzung. HttpOnly; wird nur an den Pfad /api/v1/auth gesendet. Standardlaufzeit 7 Tage; wird beim Abmelden entfernt.",
+            "PDA_SESSION: Markierung ohne Token, die anzeigt, ob eine Sitzung besteht. HttpOnly; gleiche Laufzeit wie das Erneuerungstoken; wird beim Abmelden entfernt.",
+            "XSRF-TOKEN: Schutz vor gefälschten Anfragen (CSRF). Wird von der Seite gelesen und an Aktionsanfragen angehängt; bleibt für die Browsersitzung.",
+            "JSESSIONID: wird nur während der Anmeldung über Google oder GitHub verwendet. HttpOnly; kurzlebig, etwa 30 Minuten.",
+            "NEXT_LOCALE: Ihre gewählte Sprache; ein Jahr.",
+            "pda:cookie-consent (localStorage): die Speicherung dieser Cookie-Auswahl (Version, Analyse-Erlaubnis, Datum); bis Sie sie löschen.",
+            "pda:last-session-refresh (localStorage): ein Zeitstempel, der verhindert, dass Tabs die Sitzung gleichzeitig erneuern."
+          ]
+        },
+        {
+          "id": "preferences",
+          "title": "Darstellungs- und Nutzungseinstellungen",
+          "paragraphs": [
+            "Die folgenden Einträge merken sich nur Einstellungen, die Sie in diesem Browser vorgenommen haben. Sie messen Ihren Besuch nicht und werden nicht als Analyse an den Server gesendet. Die rechtliche Kategorie dieser Einträge muss in der rechtlichen Prüfung vor dem Start bestätigt werden."
+          ],
+          "items": [
+            "theme: helles, dunkles oder System-Design.",
+            "pda:motion und pda:theme-transition: Animationseinstellungen.",
+            "pda:sidebar-collapsed: ob die Seitenleiste eingeklappt ist.",
+            "pda.teams.view: die Ansicht auf der Teams-Seite.",
+            "pda:task-mode-help:v1:<Benutzer-ID>: die Einstellung, die Hilfe zur Aufgabenart auszublenden.",
+            "pda.rememberedEmail: Ihre E-Mail-Adresse, nur wenn Sie auf dem Anmeldebildschirm \"Angemeldet bleiben\" wählen.",
+            "pda:last-project:<Benutzer-ID> und pda:session-baseline (sessionStorage): das zuletzt gewählte Projekt sowie Sprache und Design zu Beginn der Sitzung; wird beim Schließen des Tabs entfernt."
+          ]
+        },
+        {
+          "id": "analytics",
+          "title": "Analyse (standardmäßig ausgeschaltet)",
+          "paragraphs": [
+            "Die Analyse erhebt keine Daten und erzeugt keine Kennung, bis Sie \"Alle akzeptieren\" wählen oder die Analyse im Einstellungsfenster einschalten. Solange Sie nicht entschieden haben, bleibt sie ausgeschaltet. Wenn sie aktiv ist, werden die Messungen auf dem eigenen Server von PDA gespeichert; es gibt kein Analysewerkzeug eines Drittanbieters.",
+            "Name, E-Mail, Nachrichteninhalt, Token, Passwort, Konto-ID oder Browser-Fingerabdruck werden nicht erfasst. Auch wenn Sie angemeldet sind, werden die Messungen nicht mit Ihrem Konto verknüpft.",
+            "Die Speicherdauer der Analysedaten ist noch nicht festgelegt (RECHTLICHER INHALT ERFORDERLICH); diese Dauer und die Löschregeln werden vor dem Start festgelegt.",
+            "Betriebskennzahlen wie die Zahl der Konten, aktiven und beendeten Konten und gesendeten Kontaktformulare hängen nicht von Ihrer Analyse-Auswahl ab; sie werden aus den eigenen Datensätzen des Dienstes berechnet."
+          ],
+          "items": [
+            "Die Art der besuchten Seite (zum Beispiel \"Projektseite\"); Projektnamen, Benutzer-IDs und Adressabfragen werden nicht gespeichert.",
+            "Die Quelle des Besuchs: direkt, Suchmaschine, eine andere Website (nur Domainname) oder ein Kampagnenlink (utm_source, utm_medium, utm_campaign).",
+            "Aktiv auf der Seite verbrachte Zeit; Zeit mit Tab im Hintergrund oder ohne Fensterfokus zählt nicht.",
+            "Eine zufällig erzeugte anonyme Besucher- und Sitzungs-ID: pda:analytics-visitor und pda:analytics-session (localStorage). Die Sitzungs-ID wird nach 30 Minuten Inaktivität erneuert. Beide werden gelöscht, wenn Sie die Einwilligung widerrufen."
+          ]
+        },
+        {
+          "id": "manage",
+          "title": "Auswahl ändern und widerrufen",
+          "paragraphs": [
+            "Öffnen Sie das Einstellungsfenster jederzeit über den Link \"Cookie-Einstellungen verwalten\" am Seitenende oder die Schaltfläche auf dieser Seite. Wenn Sie die Analyse ausschalten, enden neue Messungen sofort und die Analyse-Kennungen in diesem Browser werden gelöscht. Für das Löschen früher erhobener, aggregierter Daten gibt es keinen separaten automatischen Vorgang; dies wird vor dem Start festgelegt.",
+            "Ihre Auswahl gehört zu diesem Browser und ist nicht an Ihr Konto gebunden: In einem anderen Browser oder auf einem anderen Gerät treffen Sie eine eigene Auswahl. Ändert sich die Cookie-Praxis wesentlich, wird die Einwilligungsversion erhöht und Sie werden erneut gefragt."
+          ]
+        },
+        {
+          "id": "third-parties",
+          "title": "Dritte",
+          "paragraphs": [
+            "PDA enthält keine Werbe- oder Analyse-Cookies von Drittanbietern. Wenn Sie sich mit Google oder GitHub anmelden, leitet Ihr Browser auf die Seite des Anbieters weiter und dessen eigene Cookie- und Datenschutzbedingungen gelten. E-Mails zu Bestätigung, Einladung und Kontakt werden vom Server gesendet und setzen keine Cookies in Ihrem Browser."
+          ]
+        },
+        {
+          "id": "legal",
+          "title": "Kontakt und rechtliche Angaben",
+          "paragraphs": [
+            "Fragen zu Cookies können Sie über das Formular auf der Kontaktseite senden.",
+            "Firmenname und Anschrift des Verantwortlichen, VERBİS-Eintrag, Text zur Rechtsgrundlage und Speicherfristen sind noch nicht festgelegt; diese Angaben sind daher als RECHTLICHER INHALT ERFORDERLICH markiert und nicht erfunden."
           ]
         }
       ]
@@ -2978,5 +3109,212 @@
     "repositoryCommitsBodyMore": "{count, plural, one {# oder mehr neue Commits} other {# oder mehr neue Commits}} in {branch} von {repo}.",
     "repositoryCommitsHead": "Zuletzt: {message}",
     "repositoryCommitsHeadBy": "Zuletzt: {message} ({author})"
+  },
+  "admin": {
+    "nav": {
+      "label": "Verwaltung",
+      "section": "Verwaltungsbereiche",
+      "users": "Benutzer",
+      "analytics": "Analyse"
+    },
+    "checking": "Berechtigung wird geprüft…",
+    "users": {
+      "title": "Benutzer",
+      "description": "Konten der Plattform ansehen; Mitgliedschaft beenden oder wieder aktivieren. Konten werden nie gelöscht.",
+      "search": "Benutzer suchen",
+      "searchPlaceholder": "E-Mail oder Benutzername",
+      "status": "Status",
+      "statusAll": "Alle",
+      "statuses": {
+        "ACTIVE": "Aktiv",
+        "DISABLED": "Beendet",
+        "PENDING_VERIFICATION": "Bestätigung ausstehend"
+      },
+      "columns": {
+        "user": "Benutzer",
+        "email": "E-Mail",
+        "status": "Status",
+        "role": "Rolle",
+        "created": "Registriert",
+        "actions": "Aktionen"
+      },
+      "roles": {
+        "ADMIN": "Administrator",
+        "USER": "Benutzer"
+      },
+      "you": "Sie",
+      "tableLabel": "Benutzerliste",
+      "empty": {
+        "title": "Keine Benutzer gefunden",
+        "description": "Ändern Sie die Suche oder den Statusfilter."
+      },
+      "error": "Benutzer konnten nicht geladen werden.",
+      "retry": "Erneut versuchen",
+      "terminate": {
+        "action": "Mitgliedschaft beenden",
+        "title": "Mitgliedschaft von {name} beenden",
+        "description": "Dieses Konto wird sofort deaktiviert: alle offenen Sitzungen enden, eine Anmeldung ist nicht mehr möglich und Chat-Verbindungen werden geschlossen. Konto, Projekte, Aufgaben und Verlauf werden nicht gelöscht. Das ist umkehrbar: Ein Administrator kann das Konto mit \"Wieder aktivieren\" erneut öffnen.",
+        "confirmLabel": "Zur Bestätigung den Benutzernamen genau eingeben: {name}",
+        "confirm": "Mitgliedschaft beenden",
+        "cancel": "Abbrechen",
+        "done": "Die Mitgliedschaft von {name} wurde beendet."
+      },
+      "reactivate": {
+        "action": "Wieder aktivieren",
+        "title": "Konto von {name} wieder aktivieren",
+        "description": "Das Konto kann sich wieder anmelden. Frühere Sitzungen kehren nicht zurück; die Person muss sich erneut anmelden.",
+        "confirm": "Wieder aktivieren",
+        "cancel": "Abbrechen",
+        "done": "{name} wurde wieder aktiviert."
+      }
+    },
+    "analytics": {
+      "title": "Analyse",
+      "description": "Überblick über Besuche, Registrierungen, Konten und Kontaktanfragen. Der Verkehr stammt nur aus den anonymen Daten von Besuchern, die Cookies erlaubt haben; Registrierungen, Konten und Kontaktanfragen stammen aus den eigenen Datensätzen des Dienstes.",
+      "loading": "Analyse wird geladen",
+      "error": "Die Analyse konnte nicht geladen werden.",
+      "retry": "Erneut versuchen",
+      "range": {
+        "label": "Zeitraum",
+        "days7": "Letzte 7 Tage",
+        "days30": "Letzte 30 Tage",
+        "days90": "Letzte 90 Tage",
+        "custom": "Benutzerdefiniert",
+        "from": "Von",
+        "to": "Bis",
+        "invalid": "Das Startdatum darf nicht nach dem Enddatum liegen und der Zeitraum darf höchstens 366 Tage umfassen.",
+        "zone": "Zeitzone: {zone}",
+        "shown": "{from} – {to} · {days} Tage"
+      },
+      "sections": {
+        "overview": "Überblick",
+        "traffic": "Verkehr",
+        "registrations": "Registrierungen",
+        "users": "Benutzer",
+        "contact": "Kontaktanfragen"
+      },
+      "cards": {
+        "visits": "Besuche",
+        "sessions": "Eindeutige Sitzungen",
+        "engagement": "Durchschnittliche Interaktion",
+        "registrations": "Registrierungen",
+        "activeAccounts": "Aktive Konten",
+        "contactRequests": "Kontaktanfragen",
+        "fromConsented": "Von Besuchern mit Cookie-Erlaubnis",
+        "fromRecords": "Aus den Datensätzen des Dienstes"
+      },
+      "traffic": {
+        "visitsChart": "Tägliche Besuche (Seitenaufrufe)",
+        "visitsLabel": "Besuche",
+        "visitors": "Eindeutige Besucher",
+        "sources": "Verkehrsquellen",
+        "sourceNames": {
+          "DIRECT": "Direkt",
+          "SEARCH": "Suchmaschine",
+          "REFERRAL": "Andere Website",
+          "CAMPAIGN": "Kampagnenlink"
+        },
+        "sourceNote": "Direkt: Zugriffe ohne verweisende Website und ohne Kampagnenparameter. Ein geteilter Link wird nur unterschieden, wenn ein verlässlicher Kampagnenparameter (UTM) vorhanden ist.",
+        "topReferrers": "Wichtigste verweisende Websites",
+        "noReferrers": "In diesem Zeitraum keine verweisenden Websites.",
+        "campaigns": "Kampagnen (UTM)",
+        "noCampaigns": "In diesem Zeitraum keine Besuche über Kampagnenlinks.",
+        "campaign": "Kampagne",
+        "source": "Quelle",
+        "medium": "Medium",
+        "sessions": "Sitzungen",
+        "domain": "Domain",
+        "empty": "In diesem Zeitraum liegen keine Daten von Besuchern mit Cookie-Erlaubnis vor."
+      },
+      "registrations": {
+        "chart": "Tägliche Registrierungen",
+        "label": "Registrierungen",
+        "total": "Registrierungen im Zeitraum"
+      },
+      "users": {
+        "total": "Konten insgesamt",
+        "active": "Aktive Konten",
+        "terminated": "Beendete Konten",
+        "pending": "Bestätigung ausstehend",
+        "admins": "Administratoren",
+        "note": "Ein aktives Konto bedeutet keinen Online-Benutzer; es ist die Zahl der Konten mit aktivem Status."
+      },
+      "contact": {
+        "chart": "Tägliche Kontaktanfragen",
+        "label": "Anfragen",
+        "inRange": "Anfragen im Zeitraum",
+        "total": "Insgesamt gesendet",
+        "note": "Gezählt werden nur erfolgreich zugestellte Nachrichten; der Nachrichteninhalt wird hier nicht angezeigt."
+      },
+      "chart": {
+        "summary": "{label}: insgesamt {total}",
+        "date": "Datum",
+        "empty": "Keine Daten in diesem Zeitraum."
+      },
+      "duration": {
+        "zero": "0 Sek."
+      }
+    }
+  },
+  "consent": {
+    "banner": {
+      "label": "Cookie-Einstellungen",
+      "title": "Ihre Cookie-Auswahl",
+      "description": "PDA verwendet notwendige Cookies und Browser-Speicher, damit Sie angemeldet bleiben. Optional können Sie eine Analyse erlauben, die die Nutzung der Seite anonym misst. Die Analyse ist standardmäßig ausgeschaltet; Sie können Ihre Auswahl jederzeit ändern.",
+      "policy": "Cookie-Richtlinie",
+      "rejectAll": "Alle ablehnen",
+      "manage": "Einstellungen verwalten",
+      "acceptAll": "Alle akzeptieren"
+    },
+    "dialog": {
+      "title": "Cookie-Einstellungen",
+      "description": "Wählen Sie, welche Kategorien Sie erlauben. Ihre Auswahl wird nur in diesem Browser gespeichert und ist unabhängig von Ihrem Konto.",
+      "policy": "Cookie-Richtlinie",
+      "necessary": {
+        "title": "Notwendig",
+        "badge": "Immer aktiv",
+        "description": "Erforderlich für Anmeldung, Sitzungssicherheit, Schutz vor gefälschten Anfragen, Ihre Sprache und die Speicherung dieser Auswahl. Ohne sie funktioniert PDA nicht, daher lassen sie sich nicht ausschalten."
+      },
+      "analytics": {
+        "title": "Analyse",
+        "description": "Misst anonym die Art der besuchten Seite, die Herkunft des Besuchs und die aktiv auf der Seite verbrachte Zeit. Sie wird nicht mit Ihrem Konto verknüpft und erfasst weder Namen, E-Mail noch Inhalte. Standardmäßig ausgeschaltet."
+      },
+      "rejectAll": "Alle ablehnen",
+      "acceptAll": "Alle akzeptieren",
+      "save": "Auswahl speichern"
+    }
+  },
+  "contact": {
+    "title": "Kontakt",
+    "description": "Schreiben Sie dem PDA-Team bei Fragen, Vorschlägen oder Rückmeldungen. Eine Anmeldung ist nicht nötig.",
+    "form": {
+      "label": "Kontaktformular",
+      "firstName": "Vorname",
+      "lastName": "Nachname",
+      "email": "E-Mail",
+      "message": "Nachricht",
+      "messageHint": "Mindestens 10 und höchstens 5000 Zeichen.",
+      "counter": "{count} / 5000",
+      "submit": "Senden",
+      "submitting": "Wird gesendet…"
+    },
+    "validation": {
+      "required": "Dieses Feld ist erforderlich.",
+      "email": "Geben Sie eine gültige E-Mail-Adresse ein.",
+      "emailMax": "Die E-Mail-Adresse darf höchstens 254 Zeichen lang sein.",
+      "nameMax": "Höchstens 80 Zeichen.",
+      "messageMin": "Die Nachricht muss mindestens 10 Zeichen lang sein.",
+      "messageMax": "Die Nachricht darf höchstens 5000 Zeichen lang sein."
+    },
+    "success": {
+      "title": "Ihre Nachricht wurde gesendet.",
+      "text": "Danke. Falls wir antworten müssen, erreichen wir Sie unter der angegebenen E-Mail-Adresse.",
+      "again": "Weitere Nachricht schreiben"
+    },
+    "notice": {
+      "title": "Bevor Sie senden",
+      "text": "Ihre Nachricht wird per E-Mail an das PDA-Team zugestellt und nicht auf der Seite gespeichert. Schreiben Sie weder Ihr Passwort noch Bestätigungscodes oder die geheimen Teile eines Einladungslinks.",
+      "privacy": "Datenschutzerklärung"
+    }
   }
 }

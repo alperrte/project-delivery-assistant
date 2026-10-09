@@ -120,7 +120,14 @@
     "PROJECT_TASK_MODE_NOT_CONFIGURED": "The project founder must choose a preference before the first task can be created.",
     "CHAT_REPLY_NOT_FOUND": "The quoted message was not found in this conversation.",
     "CHAT_REACTION_INVALID": "This reaction is not supported.",
-    "CHAT_REACTION_RATE_LIMITED": "Too many reaction attempts. Please wait and try again."
+    "CHAT_REACTION_RATE_LIMITED": "Too many reaction attempts. Please wait and try again.",
+    "CONTACT_INVALID": "The information in the form is not valid. Check the fields and try again.",
+    "CONTACT_DUPLICATE": "You just sent this message. You can try again in a minute.",
+    "CONTACT_UNAVAILABLE": "The contact form is unavailable right now. Please try again later.",
+    "CONTACT_DELIVERY_FAILED": "Your message could not be sent. Please try again shortly.",
+    "ADMIN_SELF_DENIED": "You cannot end your own membership.",
+    "ADMIN_LAST_ADMIN": "The last active administrator cannot be ended.",
+    "USER_NOT_FOUND": "User not found."
   },
   "app": {
     "nav": {
@@ -674,7 +681,10 @@
     "defaultBranch": "Default branch: {branch}",
     "publicOnly": "Only public repositories can be connected. The connection is read-only.",
     "notifyNote": "Project members are notified when new commits reach the {branch} branch (within a few minutes).",
-    "mode": { "BASIC": "Basic", "ADVANCED": "Advanced" },
+    "mode": {
+      "BASIC": "Basic",
+      "ADVANCED": "Advanced"
+    },
     "notifyOff": "New-commit notifications are off.",
     "manageSettings": "Repository settings",
     "goToSettings": "Connect in settings",
@@ -682,13 +692,22 @@
     "options": {
       "modeLabel": "Tracking mode",
       "help": "Show the difference between Basic and Advanced",
-      "mode": { "BASIC": "Basic", "ADVANCED": "Advanced" },
-      "modeSummary": { "BASIC": "The repository is connected and the latest commits merged into the default branch are tracked.", "ADVANCED": "Follow branches; see all merged or unmerged commits and who pushed them." },
+      "mode": {
+        "BASIC": "Basic",
+        "ADVANCED": "Advanced"
+      },
+      "modeSummary": {
+        "BASIC": "The repository is connected and the latest commits merged into the default branch are tracked.",
+        "ADVANCED": "Follow branches; see all merged or unmerged commits and who pushed them."
+      },
       "notifyLabel": "Notify members about new commits",
       "notifyHint": "In both modes, notifications only cover commits that reach the default branch.",
       "helpTitle": "Basic and Advanced mode",
       "helpDescription": "You can change the mode any time from the project settings.",
-      "modeDetail": { "BASIC": "The repository is connected and the latest commits merged into the default branch are tracked. The repository page shows only the default branch's commit list.", "ADVANCED": "Follow branches, and see every merged or unmerged commit per branch and who pushed each one. The repository page opens the Overview and Branches views." },
+      "modeDetail": {
+        "BASIC": "The repository is connected and the latest commits merged into the default branch are tracked. The repository page shows only the default branch's commit list.",
+        "ADVANCED": "Follow branches, and see every merged or unmerged commit per branch and who pushed each one. The repository page opens the Overview and Branches views."
+      },
       "helpNotify": "New-commit notifications cover the default branch only in both modes; you can turn them off with the switch.",
       "close": "Close"
     },
@@ -710,7 +729,11 @@
       "disconnectConfirmDescription": "The repository page and the repository strip on the overview are removed. The repository on GitHub is not affected.",
       "cancel": "Cancel"
     },
-    "views": { "label": "Repository view", "overview": "Overview", "branches": "Branches" },
+    "views": {
+      "label": "Repository view",
+      "overview": "Overview",
+      "branches": "Branches"
+    },
     "overview": {
       "latestTitle": "Latest commits on {branch}",
       "branchCount": "{count, plural, one {# branch} other {# branches}}",
@@ -748,7 +771,11 @@
       "commitsTitle": "Commits",
       "commitsByAuthor": "Commits by {author}",
       "filterLabel": "Filter by merge state",
-      "filter": { "all": "All", "unmerged": "Not on main", "merged": "On main" },
+      "filter": {
+        "all": "All",
+        "unmerged": "Not on main",
+        "merged": "On main"
+      },
       "empty": "No commits on this branch.",
       "emptyAuthor": "This author has no commits on this branch.",
       "emptyFiltered": "No commits match this filter.",
@@ -2380,7 +2407,9 @@
     "contactDescription": "For questions, suggestions and feedback.",
     "copyright": "© {year} PDA · Project Delivery Assistant",
     "version": "Version {version}",
-    "source": "Source code"
+    "source": "Source code",
+    "cookies": "Cookie Policy",
+    "manageCookies": "Manage cookie preferences"
   },
   "publicPages": {
     "common": {
@@ -2389,7 +2418,8 @@
       "updated": "Last updated: {date}",
       "contents": "On this page",
       "contactTitle": "Contact us",
-      "contactText": "Email us with questions, data requests or accessibility feedback. Do not share your password, verification code or secret invitation details.",
+      "contactAction": "Open the contact form",
+      "contactText": "Use the contact form for questions, data requests or accessibility feedback. Do not share your password, verification code or secret invitation details.",
       "reviewTitle": "Review before launch",
       "reviewNotice": "This information draft describes the current PDA features. The data controller's identity, hosting and email providers, data locations and retention periods must be confirmed before launch. This text does not request consent or represent a completed KVKK compliance process.",
       "references": "Official references",
@@ -2540,7 +2570,7 @@
             },
             {
               "question": "How can I report a bug or accessibility barrier?",
-              "answer": "Email pdassistant.info@gmail.com with the page address, expected behaviour and reproduction steps. General development suggestions can also be shared in the GitHub repository. Do not post personal data, passwords, verification codes or vulnerability details in public issues."
+              "answer": "Use the form on the Contact page to send the page address, expected behaviour and reproduction steps. General development suggestions can also be shared in the GitHub repository. Do not post personal data, passwords, verification codes or vulnerability details in public issues."
             },
             {
               "question": "Can I contribute to the project?",
@@ -2559,7 +2589,7 @@
           "title": "Scope and contact",
           "paragraphs": [
             "This policy covers PDA's account, project, team, task and calendar features. When you visit external Google or GitHub pages, those services' own privacy terms apply.",
-            "The README lists Alper Temiz and Hamza Taşbay as developers. The service's data controller must be identified separately before launch; developer names alone do not establish that identity. The designated contact email is pdassistant.info@gmail.com."
+            "The README lists Alper Temiz and Hamza Taşbay as developers. The service's data controller must be identified separately before launch; developer names alone do not establish that identity. The form on the Contact page is the way to reach the team."
           ]
         },
         {
@@ -2596,14 +2626,16 @@
           "id": "browser-storage",
           "title": "Cookies and browser preferences",
           "paragraphs": [
-            "The current application code contains no advertising or visitor analytics tracker. Session and security cookies support application operation; this page does not add a cookie consent mechanism."
+            "PDA uses no advertising cookies or third-party trackers. Session and security cookies are required for the application to work. Visit analytics runs only with your explicit choice and is off by default; see the Cookie Policy page for details and your preferences."
           ],
           "items": [
             "PDA_ACCESS, PDA_REFRESH and PDA_SESSION: sign-in and session flow. Their durations depend on session configuration; they are cleared on sign-out.",
             "XSRF-TOKEN: security cookie used to protect action requests against forged requests.",
             "NEXT_LOCALE: a one-year cookie remembering your selected language.",
             "Local browser storage: theme, menu/team view and an optional remembered email. They may remain until browser data is cleared or the relevant preference is changed.",
-            "Session storage: the last selected project for the user, kept for the browser session."
+            "Session storage: the last selected project for the user, kept for the browser session.",
+            "Cookie choice: the pda:cookie-consent key stores your decision in this browser.",
+            "Analytics (optional, off by default): if you allow it, page type, visit source and actively spent time are measured with an anonymous visitor and session ID; it is not linked to your account. When you withdraw consent, new measurements stop and these IDs are deleted."
           ]
         },
         {
@@ -2633,7 +2665,7 @@
           "title": "Data controller and scope",
           "paragraphs": [
             "This pre-launch draft describes data used for registration, sign-in, project/team work, invitations and support. The natural or legal person acting as data controller has not yet been confirmed, so this is not presented as a completed privacy notice.",
-            "The designated contact with the project team is pdassistant.info@gmail.com. The controller identity and appropriate application channels must be confirmed before this text is finalised."
+            "The form on the Contact page is the designated way to reach the project team. The controller identity and appropriate application channels must be confirmed before this text is finalised."
           ]
         },
         {
@@ -2693,7 +2725,7 @@
           "id": "requests",
           "title": "Requests and contact",
           "paragraphs": [
-            "Email pdassistant.info@gmail.com with questions or data requests. State the request topic, the email associated with your account and the action you seek. Do not send passwords, verification codes or invitation tokens.",
+            "Use the form on the Contact page for questions or data requests. State the request topic, the email associated with your account and the action you seek. Do not send passwords, verification codes or invitation tokens.",
             "This general contact address should not be assumed to satisfy every legally prescribed application method. The controller and official channels must be confirmed before launch. Any information needed to verify identity should be proportionate to the request."
           ]
         }
@@ -2739,7 +2771,7 @@
           "id": "feedback",
           "title": "Report a barrier",
           "paragraphs": [
-            "If you cannot use a page or complete an action, email pdassistant.info@gmail.com with the page address, intended action, browser/device and any assistive technology used.",
+            "If you cannot use a page or complete an action, use the form on the Contact page to send the page address, intended action, browser/device and any assistive technology used.",
             "Remove personal or secret information from screenshots. You do not need to disclose medical details to report a barrier."
           ]
         }
@@ -2791,6 +2823,105 @@
           "paragraphs": [
             "The software is provided \"as is\", without warranties or conditions of any kind. Contributors are not liable for damages arising from its use.",
             "The license does not grant rights to the PDA name or logo. A contributor's patent license ends for anyone who sues claiming that the software infringes a patent."
+          ]
+        }
+      ]
+    },
+    "cookies": {
+      "title": "Cookie Policy",
+      "description": "Which cookies and browser storage PDA uses and why, that analytics is off by default, and how to change your choice.",
+      "manageTitle": "Manage your preferences",
+      "manageText": "You can switch analytics on or off at any time. When you switch it off, no new measurements are sent and the analytics identifiers in this browser are deleted.",
+      "sections": [
+        {
+          "id": "what",
+          "title": "What are cookies?",
+          "paragraphs": [
+            "Cookies are small records a website stores in your browser. On this page \"cookie\" also covers browser local storage (localStorage) and session storage (sessionStorage) used for the same purposes.",
+            "PDA uses no advertising cookies, no user profiling, no third-party trackers and no browser fingerprinting."
+          ]
+        },
+        {
+          "id": "categories",
+          "title": "Categories",
+          "paragraphs": [
+            "PDA uses two consent categories. Necessary is always on and cannot be switched off. Analytics works only with your explicit choice and is off by default."
+          ],
+          "items": [
+            "Necessary: sign-in, session security, protection against forged requests, language selection and the record of this choice.",
+            "Analytics: anonymous measurement of page type, visit source and actively spent time."
+          ]
+        },
+        {
+          "id": "necessary",
+          "title": "Necessary cookies and storage",
+          "paragraphs": [
+            "The records below are required for the service to work and are used regardless of your analytics choice. All of them are managed by PDA (first party). Durations depend on the service configuration; those given are the defaults. If you block them in your browser, sign-in and session features stop working."
+          ],
+          "items": [
+            "PDA_ACCESS: short-lived access token. HttpOnly; sent only to the /api path. Default duration 15 minutes.",
+            "PDA_REFRESH: token that renews the session. HttpOnly; sent only to the /api/v1/auth path. Default duration 7 days; removed on sign-out.",
+            "PDA_SESSION: a marker that carries no token and shows whether a session exists. HttpOnly; same duration as the refresh token; removed on sign-out.",
+            "XSRF-TOKEN: forged-request (CSRF) protection. Read by the page to attach to action requests; kept for the browser session.",
+            "JSESSIONID: used only during the Google or GitHub sign-in flow. HttpOnly; short-lived, about 30 minutes.",
+            "NEXT_LOCALE: your selected language; one year.",
+            "pda:cookie-consent (localStorage): the record of this cookie choice (version, analytics permission, date); until you delete it.",
+            "pda:last-session-refresh (localStorage): a timestamp that stops tabs from renewing the session at the same time."
+          ]
+        },
+        {
+          "id": "preferences",
+          "title": "Appearance and usage preferences",
+          "paragraphs": [
+            "The records below only remember settings you made in this browser. They do not measure your visit and are not sent to the server as analytics. The legal category of these records must be confirmed in the pre-launch legal review."
+          ],
+          "items": [
+            "theme: light, dark or system theme.",
+            "pda:motion and pda:theme-transition: animation preferences.",
+            "pda:sidebar-collapsed: whether the sidebar is collapsed.",
+            "pda.teams.view: the view on the teams page.",
+            "pda:task-mode-help:v1:<user id>: the preference to hide the task type help.",
+            "pda.rememberedEmail: your email address, only if you choose \"Remember me\" on the sign-in screen.",
+            "pda:last-project:<user id> and pda:session-baseline (sessionStorage): the last selected project and the language and theme at the start of the session; removed when the tab closes."
+          ]
+        },
+        {
+          "id": "analytics",
+          "title": "Analytics (off by default)",
+          "paragraphs": [
+            "Analytics collects no data and creates no identifier until you select \"Accept all\" or switch Analytics on in the preferences window. It stays off while you have not decided. When on, measurements are kept on PDA's own server; there is no third-party analytics tool.",
+            "No name, email, message content, token, password, account ID or browser fingerprint is collected. Even if you are signed in, measurements are not linked to your account.",
+            "The retention period for analytics data has not been decided yet (LEGAL CONTENT REQUIRED); this period and the deletion rules will be fixed before launch.",
+            "Business figures such as the number of accounts, active and terminated accounts and submitted contact forms do not depend on your analytics choice; they are calculated from the service's own records."
+          ],
+          "items": [
+            "The type of page visited (for example \"project page\"); project names, user IDs and address queries are not recorded.",
+            "The source of the visit: direct, search engine, another site (domain name only) or a campaign link (utm_source, utm_medium, utm_campaign).",
+            "Time actively spent on the site; time while the tab is in the background or the window is unfocused does not count.",
+            "A randomly generated anonymous visitor and session ID: pda:analytics-visitor and pda:analytics-session (localStorage). The session ID is renewed after 30 minutes of inactivity. Both are deleted when you withdraw consent."
+          ]
+        },
+        {
+          "id": "manage",
+          "title": "Changing and withdrawing your choice",
+          "paragraphs": [
+            "Open the preferences window at any time with the \"Manage cookie preferences\" link at the bottom of the page or the button on this page. When you switch analytics off, new measurements stop immediately and the analytics identifiers in this browser are deleted. There is no separate automatic process for deleting aggregated data collected earlier; this will be decided before launch.",
+            "Your choice belongs to this browser and is not tied to your account: you make a separate choice in another browser or on another device. When the cookie practice changes significantly, the consent version is raised and you are asked again."
+          ]
+        },
+        {
+          "id": "third-parties",
+          "title": "Third parties",
+          "paragraphs": [
+            "PDA has no advertising or third-party analytics cookies. When you sign in with Google or GitHub, your browser is redirected to that provider's page and the provider's own cookie and privacy terms apply. Verification, invitation and contact emails are sent from the server and do not set cookies in your browser."
+          ]
+        },
+        {
+          "id": "legal",
+          "title": "Contact and legal information",
+          "paragraphs": [
+            "You can send questions about cookies through the form on the Contact page.",
+            "The controller's company name and address, VERBİS registration, legal basis text and retention periods have not been decided yet, so these fields are marked LEGAL CONTENT REQUIRED and have not been invented."
           ]
         }
       ]
@@ -2954,5 +3085,212 @@
     "repositoryCommitsBodyMore": "{count, plural, one {# or more new commits} other {# or more new commits}} reached {branch} in {repo}.",
     "repositoryCommitsHead": "Latest: {message}",
     "repositoryCommitsHeadBy": "Latest: {message} ({author})"
+  },
+  "admin": {
+    "nav": {
+      "label": "Administration",
+      "section": "Administration sections",
+      "users": "Users",
+      "analytics": "Analytics"
+    },
+    "checking": "Checking permission…",
+    "users": {
+      "title": "Users",
+      "description": "View the accounts on the platform; end a membership or re-activate it. Accounts are never deleted.",
+      "search": "Search users",
+      "searchPlaceholder": "Email or username",
+      "status": "Status",
+      "statusAll": "All",
+      "statuses": {
+        "ACTIVE": "Active",
+        "DISABLED": "Terminated",
+        "PENDING_VERIFICATION": "Pending verification"
+      },
+      "columns": {
+        "user": "User",
+        "email": "Email",
+        "status": "Status",
+        "role": "Role",
+        "created": "Registered",
+        "actions": "Actions"
+      },
+      "roles": {
+        "ADMIN": "Administrator",
+        "USER": "User"
+      },
+      "you": "You",
+      "tableLabel": "User list",
+      "empty": {
+        "title": "No users found",
+        "description": "Change your search or the status filter."
+      },
+      "error": "Users could not be loaded.",
+      "retry": "Try again",
+      "terminate": {
+        "action": "End membership",
+        "title": "End the membership of {name}",
+        "description": "This account is disabled immediately: all open sessions end, it cannot sign in and its chat connections are closed. The account and its projects, tasks and history are not deleted. This is reversible: an administrator can open the account again with \"Re-activate\".",
+        "confirmLabel": "To confirm, type the username exactly: {name}",
+        "confirm": "End membership",
+        "cancel": "Cancel",
+        "done": "The membership of {name} was ended."
+      },
+      "reactivate": {
+        "action": "Re-activate",
+        "title": "Re-activate the account of {name}",
+        "description": "The account can sign in again. Earlier sessions do not come back; the user has to sign in again.",
+        "confirm": "Re-activate",
+        "cancel": "Cancel",
+        "done": "{name} was re-activated."
+      }
+    },
+    "analytics": {
+      "title": "Analytics",
+      "description": "An overview of visits, registrations, accounts and contact requests. Traffic comes only from the anonymous data of visitors who allowed cookies; registrations, accounts and contact requests come from the service's own records.",
+      "loading": "Loading analytics",
+      "error": "Analytics could not be loaded.",
+      "retry": "Try again",
+      "range": {
+        "label": "Date range",
+        "days7": "Last 7 days",
+        "days30": "Last 30 days",
+        "days90": "Last 90 days",
+        "custom": "Custom",
+        "from": "From",
+        "to": "To",
+        "invalid": "The start date cannot be after the end date and the range can be at most 366 days.",
+        "zone": "Time zone: {zone}",
+        "shown": "{from} – {to} · {days} days"
+      },
+      "sections": {
+        "overview": "Overview",
+        "traffic": "Traffic",
+        "registrations": "Registrations",
+        "users": "Users",
+        "contact": "Contact requests"
+      },
+      "cards": {
+        "visits": "Visits",
+        "sessions": "Unique sessions",
+        "engagement": "Average engagement",
+        "registrations": "Registrations",
+        "activeAccounts": "Active accounts",
+        "contactRequests": "Contact requests",
+        "fromConsented": "From visitors who allowed cookies",
+        "fromRecords": "From the service records"
+      },
+      "traffic": {
+        "visitsChart": "Daily visits (page views)",
+        "visitsLabel": "Visits",
+        "visitors": "Unique visitors",
+        "sources": "Traffic sources",
+        "sourceNames": {
+          "DIRECT": "Direct",
+          "SEARCH": "Search engine",
+          "REFERRAL": "Other site",
+          "CAMPAIGN": "Campaign link"
+        },
+        "sourceNote": "Direct: entries with no referring site and no campaign parameter. A shared link is only told apart when a reliable campaign (UTM) parameter is present.",
+        "topReferrers": "Top referring sites",
+        "noReferrers": "No referring sites in this range.",
+        "campaigns": "Campaigns (UTM)",
+        "noCampaigns": "No visits through campaign links in this range.",
+        "campaign": "Campaign",
+        "source": "Source",
+        "medium": "Medium",
+        "sessions": "Sessions",
+        "domain": "Domain",
+        "empty": "No data from visitors who allowed cookies in this range."
+      },
+      "registrations": {
+        "chart": "Daily registrations",
+        "label": "Registrations",
+        "total": "Registrations in range"
+      },
+      "users": {
+        "total": "Total accounts",
+        "active": "Active accounts",
+        "terminated": "Terminated accounts",
+        "pending": "Pending verification",
+        "admins": "Administrators",
+        "note": "An active account does not mean an online user; it is the number of accounts whose status is active."
+      },
+      "contact": {
+        "chart": "Daily contact requests",
+        "label": "Requests",
+        "inRange": "Requests in range",
+        "total": "Total sent",
+        "note": "Only successfully delivered messages are counted; message content is not shown here."
+      },
+      "chart": {
+        "summary": "{label}: total {total}",
+        "date": "Date",
+        "empty": "No data in this range."
+      },
+      "duration": {
+        "zero": "0 sec"
+      }
+    }
+  },
+  "consent": {
+    "banner": {
+      "label": "Cookie preferences",
+      "title": "Your cookie choices",
+      "description": "PDA uses necessary cookies and browser storage to keep you signed in. You can also allow analytics, which measures how the site is used without identifying you. Analytics is off by default and you can change your choice at any time.",
+      "policy": "Cookie Policy",
+      "rejectAll": "Reject all",
+      "manage": "Manage preferences",
+      "acceptAll": "Accept all"
+    },
+    "dialog": {
+      "title": "Cookie preferences",
+      "description": "Choose which categories to allow. Your choice is stored only in this browser and does not depend on your account.",
+      "policy": "Cookie Policy",
+      "necessary": {
+        "title": "Necessary",
+        "badge": "Always on",
+        "description": "Required for sign-in, session security, protection against forged requests, your language and the record of this choice. PDA does not work without them, so they cannot be switched off."
+      },
+      "analytics": {
+        "title": "Analytics",
+        "description": "Measures the type of page visited, where the visit came from and the time actively spent on the site, anonymously. It is not linked to your account and collects no name, email or content. Off by default."
+      },
+      "rejectAll": "Reject all",
+      "acceptAll": "Accept all",
+      "save": "Save preferences"
+    }
+  },
+  "contact": {
+    "title": "Contact",
+    "description": "Write to the PDA team with questions, suggestions or feedback. You do not need to sign in.",
+    "form": {
+      "label": "Contact form",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "email": "Email",
+      "message": "Message",
+      "messageHint": "At least 10 and at most 5000 characters.",
+      "counter": "{count} / 5000",
+      "submit": "Send",
+      "submitting": "Sending…"
+    },
+    "validation": {
+      "required": "This field is required.",
+      "email": "Enter a valid email address.",
+      "emailMax": "The email address can be at most 254 characters.",
+      "nameMax": "It can be at most 80 characters.",
+      "messageMin": "The message must be at least 10 characters.",
+      "messageMax": "The message can be at most 5000 characters."
+    },
+    "success": {
+      "title": "Your message has been sent.",
+      "text": "Thank you. If we need to reply, we will reach you at the email address you entered.",
+      "again": "Write another message"
+    },
+    "notice": {
+      "title": "Before you send",
+      "text": "Your message is delivered to the PDA team by email and is not kept on the site. Do not write your password, verification code or the secret parts of an invitation link.",
+      "privacy": "Privacy Policy"
+    }
   }
 }

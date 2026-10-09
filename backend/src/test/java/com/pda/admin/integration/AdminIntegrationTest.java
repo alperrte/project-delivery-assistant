@@ -332,6 +332,87 @@ class AdminIntegrationTest {
                 .andExpect(jsonPath("$.items[0].description").doesNotExist());
     }
 
+    @Test
+    @Order(10)
+    void listFiltersOnTheServerAndProblemBodiesCarryStableCodes() throws Exception {
+        Cookie csrf = csrfCookie();
+        Cookie admin = login(ADMIN_EMAIL, NEW_PASSWORD, csrf)[0];
+        String stem = "qz" + UUID.randomUUID().toString().replace("-", "").substring(0, 8);
+        User wanted = users.saveAndFlush(User.registerLocalActive(stem + "@example.test", stem + "nick",
+                "Member-Password-1", encoder));
+        User other = newUser("USER");
+
+        // Search: case-insensitive substring of nickname or email, answered with a server page.
+        mvc.perform(get("/api/v1/admin/users?search=" + stem.toUpperCase()).cookie(admin)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.items[0].id").value(wanted.getId().toString()))
+                .andExpect(jsonPath("$.items[0].passwordHash").doesNotExist());
+        mvc.perform(get("/api/v1/admin/users?search=" + stem + "NICK").cookie(admin)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1));
+        // Wildcards are literal characters, never patterns.
+        mvc.perform(get("/api/v1/admin/users?search=%25").cookie(admin)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(0));
+        mvc.perform(get("/api/v1/admin/users?search=" + "x".repeat(101)).cookie(admin)).andExpect(status().isBadRequest());
+
+        // Status filter, combined with search and paging.
+        mvc.perform(get("/api/v1/admin/users?status=DISABLED&search=" + stem).cookie(admin)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(0));
+        mvc.perform(post("/api/v1/admin/users/" + wanted.getId() + "/disable").cookie(csrf, admin)
+                .header("X-XSRF-TOKEN", csrf.getValue())).andExpect(status().isOk());
+        mvc.perform(get("/api/v1/admin/users?status=DISABLED&search=" + stem).cookie(admin)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.items[0].accountStatus").value("DISABLED"));
+        mvc.perform(get("/api/v1/admin/users?status=ACTIVE&search=" + stem).cookie(admin)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(0));
+        mvc.perform(get("/api/v1/admin/users?status=ACTIVE&size=1&page=0").cookie(admin)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.size").value(1)).andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.items[0].accountStatus").value("ACTIVE"));
+        mvc.perform(get("/api/v1/admin/users?status=TERMINATED").cookie(admin)).andExpect(status().isBadRequest());
+        mvc.perform(get("/api/v1/admin/users?status=DELETED").cookie(admin)).andExpect(status().isBadRequest());
+
+        // Disabling is reversible, never a delete, and keeps the row.
+        assertTrue(users.findById(wanted.getId()).isPresent());
+        mvc.perform(post("/api/v1/admin/users/" + wanted.getId() + "/enable").cookie(csrf, admin)
+                .header("X-XSRF-TOKEN", csrf.getValue())).andExpect(status().isOk());
+        mvc.perform(get("/api/v1/admin/users?status=ACTIVE&search=" + stem).cookie(admin)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1));
+
+        // Stable problem codes.
+        UUID adminId = users.findByEmail(ADMIN_EMAIL).orElseThrow().getId();
+        mvc.perform(post("/api/v1/admin/users/" + adminId + "/disable").cookie(csrf, admin)
+                        .header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("ADMIN_SELF_DENIED"));
+        mvc.perform(post("/api/v1/admin/users/" + UUID.randomUUID() + "/disable").cookie(csrf, admin)
+                        .header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("USER_NOT_FOUND"));
+        mvc.perform(get("/api/v1/admin/users/" + UUID.randomUUID()).cookie(admin)).andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("USER_NOT_FOUND"));
+
+        // A normal account, with or without the new parameters, gets nothing; so does an anonymous caller.
+        Cookie member = login(other.getEmail(), "Member-Password-1", csrf)[0];
+        mvc.perform(get("/api/v1/admin/users?search=" + stem + "&status=ACTIVE").cookie(member))
+                .andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/admin/users?search=" + stem)).andExpect(status().isUnauthorized());
+        mvc.perform(post("/api/v1/admin/users/" + wanted.getId() + "/disable").cookie(csrf, member)
+                .header("X-XSRF-TOKEN", csrf.getValue())).andExpect(status().isForbidden());
+        assertEquals("ACTIVE", users.findById(wanted.getId()).orElseThrow().getAccountStatus().name());
+    }
+
+    @Test
+    @Order(11)
+    void registrationReportCountsAccountsByDayInTheRequestedZoneFromTheUserTable() {
+        java.time.Instant now = java.time.Instant.now();
+        var report = administration.registrations(now.minus(java.time.Duration.ofDays(2)),
+                now.plus(java.time.Duration.ofDays(1)), java.time.ZoneId.of("Europe/Istanbul"));
+        assertEquals(users.count(), report.inRange());
+        assertEquals(report.inRange(), report.daily().stream().mapToLong(com.pda.user.UserAdministration.DailyCount::count).sum());
+        // Outside the range nothing is counted.
+        var empty = administration.registrations(now.plus(java.time.Duration.ofDays(2)),
+                now.plus(java.time.Duration.ofDays(3)), java.time.ZoneId.of("UTC"));
+        assertEquals(0, empty.inRange());
+        assertTrue(empty.daily().isEmpty());
+    }
+
     private static final java.util.concurrent.atomic.AtomicInteger IPS = new java.util.concurrent.atomic.AtomicInteger();
 
     /** POST to a rate-limited path from a fresh client address so tests do not exhaust each other's budget. */

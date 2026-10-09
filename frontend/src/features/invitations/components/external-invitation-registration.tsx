@@ -18,6 +18,7 @@ import { useInvitationToken } from "../hooks/use-invitation-token";
 import { clearPrivateInvitations } from "../query-keys";
 import { clearPrivateNotifications } from "@/features/notifications/query-keys";
 import { clearPrivateTeams } from "@/features/squads/cache";
+import { clearPrivateAdmin } from "@/features/admin/query-keys";
 import {isInvalidInvitationToken,isPreviewServerFailure} from "../external-preview-error";
 
 export function ExternalInvitationRegistration() {
@@ -82,6 +83,7 @@ export function ExternalInvitationRegistration() {
       clearPrivateInvitations(queryClient);
       clearPrivateNotifications(queryClient);
       clearPrivateTeams(queryClient);
+      clearPrivateAdmin(queryClient);
       queryClient.setQueryData(sessionQueryKey, me);
       router.replace(`/projects/${accepted.projectSlug}`);
     } catch (cause) { setError(te(errorKey(cause))); setBusy(false); }

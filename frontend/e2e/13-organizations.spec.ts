@@ -56,7 +56,7 @@ test.describe.serial("Organizations", () => {
     await managerPage.getByRole("button", { name: /^Organizasyonu oluştur$/ }).click();
 
     await expect(managerPage.getByText("Organizasyon oluşturuldu.")).toBeVisible();
-    await expect(managerPage).toHaveURL(/\/tr\/organizasyonlar\/(?!yeni$)[^/]+$/);
+    await expect(managerPage).toHaveURL(/\/tr\/organizasyonlar\/(?!yeni-organizasyon$)[^/]+$/);
     await expect(managerPage.getByRole("heading", { level: 1, name })).toBeVisible();
     organizationUrl = new URL(managerPage.url()).pathname;
   });

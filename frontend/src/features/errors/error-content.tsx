@@ -3,7 +3,7 @@
 import { useId } from "react";
 import { ArrowClockwise, ArrowRight, EnvelopeSimple, FileMagnifyingGlass, LockKey, Plugs, WarningOctagon } from "@phosphor-icons/react";
 import { buttonVariants } from "@/components/ui/button";
-import { CONTACT_EMAIL } from "@/features/public-info/site-info";
+import { CONTACT_HREF } from "@/features/public-info/site-info";
 import { cn } from "@/lib/utils";
 import type { ErrorCode, ErrorCopy } from "./types";
 
@@ -48,7 +48,7 @@ export function ErrorContent({ code, copy, onRetry }: { code: ErrorCode; copy: E
             {retryable ? copy.common.home : copy.common.login}
           </a>
         </div>
-        <a href={"mailto:" + CONTACT_EMAIL} className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-md text-sm text-muted-foreground underline-offset-4 outline-hidden hover:text-foreground hover:underline focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring">
+        <a href={CONTACT_HREF} className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-md text-sm text-muted-foreground underline-offset-4 outline-hidden hover:text-foreground hover:underline focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring">
           <EnvelopeSimple size={17} aria-hidden="true" />{copy.common.contact}
         </a>
       </div>

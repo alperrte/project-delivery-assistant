@@ -143,3 +143,15 @@ GET /api/v1/notifications adds optional nullable read: false=unread, true=histor
 ## Project invitation count/context and create preview - 2026-10-08
 
 Existing own GET `/api/v1/project-invitations/me?status=PENDING&page=0&size=1` now excludes archived projects in the shared page/count predicate; omitted status retains history, including archived physical PENDING rows. Manager GET `/api/v1/projects/{id}/invitations/all?status=PENDING&page=0&size=1` remains project/active-manager scoped and uses effective expiry. No new count endpoint. Existing own NotificationResponse adds nullable `invitationContext:{projectName}` for Created/Accepted/Rejected, captured at mutation time; legacy null remains safe. Read/read-all/claim APIs and `popupPresentedAt != readAt` unchanged. Existing project POST201 and multipart banner PUT204/GET200/DELETE204 remain the persistence flow; local preview never uploads by itself. Organization invitations remain MISSING FEATURE / Pending product decision outside this scope.
+
+## Cookie consent, analytics, contact and admin analytics API - 2026-10-09
+
+| Endpoint | Auth | Input | Success | Errors |
+| --- | --- | --- | --- | --- |
+| `POST /api/v1/analytics/events` | Public + CSRF; 600 / 10 min / address; body <= 2 KB | `{type: PAGE_VIEW or ENGAGEMENT, visitorId, sessionId (UUIDs), path (route template), referrerHost?, utmSource?, utmMedium?, utmCampaign?, engagedSeconds? (0..600, ENGAGEMENT), consentVersion}` | `204` | `400 ANALYTICS_INVALID`, `404 ANALYTICS_SESSION_UNKNOWN`, `403` CSRF, `411`/`413`, `429` |
+| `POST /api/v1/contact` | Public + CSRF; 5 / 10 min / address; body <= 16 KB | `{firstName (<=80), lastName (<=80), email (ASCII address <=254), message (10..5000)}`; other properties ignored | `200 {"status":"SENT"}` after the mail server accepted the message | `400 CONTACT_INVALID` (+ `invalidFields`), `409 CONTACT_DUPLICATE`, `503 CONTACT_UNAVAILABLE`, `503 CONTACT_DELIVERY_FAILED`, `413`, `429` |
+| `GET /api/v1/admin/users?page&size&search&status` | ADMIN (`USER_MANAGE`) | `search` <= 100 chars (email/nickname substring, case-insensitive); `status` ACTIVE, DISABLED or PENDING_VERIFICATION | `200` page | `400` unknown status / long search, `401`, `403` |
+| `POST /api/v1/admin/users/{id}/disable` / `enable` | ADMIN + CSRF | none | `200` | `404 USER_NOT_FOUND`, `409 ADMIN_SELF_DENIED`, `409 ADMIN_LAST_ADMIN` |
+| `GET /api/v1/admin/analytics?from&to&zone` | ADMIN (`SYSTEM_VIEW`) | ISO dates (inclusive, default last 30 days, at most 366 days), IANA `zone` (default UTC) | `200 {range, traffic{visits, uniqueSessions, uniqueVisitors, averageEngagedSeconds, daily[], sources[], topReferrers[], topCampaigns[]}, registrations{inRange, daily[]}, accounts{total, active, terminated, pendingVerification, admins}, contactRequests{inRange, total, daily[]}}` | `400` bad zone/range, `401`, `403` |
+
+Swagger check path (`API_DOCS_ENABLED=true`): `GET /api/v1/auth/csrf`, then call the two public POSTs with the returned token header; log in as an administrator for the admin calls. Local mail can be read in Mailpit (`http://localhost:8025`) when the stack is started with `docker-compose.e2e.yml`.

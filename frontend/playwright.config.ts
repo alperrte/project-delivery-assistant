@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { REJECTED_STATE } from "./e2e/consent-state";
 
 export default defineConfig({
   testDir: "./e2e",
@@ -12,6 +13,8 @@ export default defineConfig({
   use: {
     baseURL: process.env.E2E_BASE_URL ?? "http://localhost:3000",
     locale: "tr-TR",
+    // Not about the banner: start as a visitor who already decided (analytics off).
+    storageState: REJECTED_STATE,
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
   },

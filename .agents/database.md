@@ -153,3 +153,11 @@ Existing notifications.is_read/read_at are the persistent source of truth; histo
 ## Invitation notification snapshot - V60 (2026-10-08)
 
 Additive `notifications.invitation_project_name VARCHAR(160) NULL`; subset CHECK permits context only for the three project-invitation types, PROJECT_INVITATION resource and non-null project ID, with nonblank names. Older V56/V57/V59 migrations and snapshots/read/presentation columns retained; legacy rows/events stay null, no inferred-name backfill. Incoming PENDING active-project EXISTS is shared by page content and totals; archived physical PENDING remains in unfiltered history. Existing invitation/domain/media tables unchanged.
+
+## V62 - anonymous analytics (2026-10-09)
+
+`analytics_sessions` (`id` UUID chosen in the browser, `visitor_id`, `started_at`, `last_seen_at`, `engaged_seconds` 0..21600, `page_views`, `entry_path`, `source_type` DIRECT/SEARCH/REFERRAL/CAMPAIGN, `referrer_domain`, `utm_source`/`utm_medium`/`utm_campaign`, `consent_version`) and `analytics_page_views` (`id`, `session_id` FK with `ON DELETE CASCADE`, `path` route template, `occurred_at`). Indexes on `started_at`, `occurred_at` and `session_id`. There is deliberately no user, address, user-agent or query column. Retention and deletion are NOT implemented: a product/legal decision is pending.
+
+## V63 - contact requests (2026-10-09)
+
+`contact_requests` (`id`, `created_at`, `delivery_status` SENT/FAILED) with an index on `created_at`. No name, e-mail or message is stored; only SENT rows are counted in the admin dashboard.

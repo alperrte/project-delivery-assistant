@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminUserController {
 
     private static final int MAX_PAGE_SIZE = 100;
+    private static final int MAX_SEARCH_LENGTH = 100;
 
     private final UserAdministration administration;
     private final UserSessions sessions;
@@ -42,15 +43,22 @@ public class AdminUserController {
     }
 
     @GetMapping
-    @Operation(summary = "List users", description = "ADMIN only. Paged, newest first; size is clamped to 1..100.")
+    @Operation(summary = "List users",
+            description = "ADMIN only. Paged on the server, newest first; size is clamped to 1..100. Optional `search` "
+                    + "(email or nickname, case-insensitive substring, at most 100 characters) and `status` "
+                    + "(PENDING_VERIFICATION, ACTIVE or DISABLED).")
     @ApiResponse(responseCode = "200", description = "One page of users")
     @ApiResponse(responseCode = "401", description = "Missing or invalid access cookie")
     @ApiResponse(responseCode = "403", description = "Caller is not an administrator")
     public ResponseEntity<UserAdministration.UserPage> list(
             @AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
-            @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String search, @RequestParam(required = false) String status) {
         authorization.require(principal, PlatformPermission.USER_MANAGE);
-        return noStore(administration.list(Math.max(page, 0), Math.min(Math.max(size, 1), MAX_PAGE_SIZE)));
+        if (search != null && search.length() > MAX_SEARCH_LENGTH) {
+            throw new IllegalArgumentException("search is too long");
+        }
+        return noStore(administration.list(Math.max(page, 0), Math.min(Math.max(size, 1), MAX_PAGE_SIZE), search, status));
     }
 
     @GetMapping("/{userId}")
@@ -131,8 +139,8 @@ public class AdminUserController {
         return switch (outcome) {
             case CHANGED, UNCHANGED -> ResponseEntity.ok().header("Cache-Control", "no-store").build();
             case NOT_FOUND -> notFound();
-            case SELF_DENIED -> conflict("Administrators cannot disable their own account");
-            case LAST_ADMIN -> conflict("The last active administrator cannot be disabled");
+            case SELF_DENIED -> conflict("Administrators cannot disable their own account", "ADMIN_SELF_DENIED");
+            case LAST_ADMIN -> conflict("The last active administrator cannot be disabled", "ADMIN_LAST_ADMIN");
         };
     }
 
@@ -141,16 +149,17 @@ public class AdminUserController {
     }
 
     private static ResponseEntity<Object> notFound() {
-        return problem(HttpStatus.NOT_FOUND, "User not found");
+        return problem(HttpStatus.NOT_FOUND, "User not found", "USER_NOT_FOUND");
     }
 
-    private static ResponseEntity<Object> conflict(String detail) {
-        return problem(HttpStatus.CONFLICT, detail);
+    private static ResponseEntity<Object> conflict(String detail, String code) {
+        return problem(HttpStatus.CONFLICT, detail, code);
     }
 
-    private static ResponseEntity<Object> problem(HttpStatus status, String detail) {
-        return ResponseEntity.status(status).header("Cache-Control", "no-store")
-                .body(ProblemDetail.forStatusAndDetail(status, detail));
+    private static ResponseEntity<Object> problem(HttpStatus status, String detail, String code) {
+        ProblemDetail body = ProblemDetail.forStatusAndDetail(status, detail);
+        body.setProperty("code", code);
+        return ResponseEntity.status(status).header("Cache-Control", "no-store").body(body);
     }
 
     public record RevokedResponse(int revoked) {}
