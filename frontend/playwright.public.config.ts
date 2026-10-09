@@ -3,7 +3,7 @@ import { defineConfig, devices } from "@playwright/test";
 // Public information and footer checks do not need backend accounts.
 export default defineConfig({
   testDir: "./e2e",
-  testMatch: ["footer-public-pages.spec.ts", "error-pages.spec.ts", "landing-page.spec.ts", "landing-real-ui.spec.ts", "localized-routing.spec.ts"],
+  testMatch: ["footer-public-pages.spec.ts", "license-page.spec.ts", "error-pages.spec.ts", "landing-page.spec.ts", "landing-real-ui.spec.ts", "localized-routing.spec.ts"],
   timeout: 60_000,
   fullyParallel: false,
   workers: 1,

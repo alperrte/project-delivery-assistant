@@ -10,6 +10,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { route: "/register", priority: 0.8 },
     { route: "/faq", priority: 0.6 },
     { route: "/accessibility", priority: 0.4 },
+    { route: "/license", priority: 0.3 },
   ];
   return pages.flatMap(({ route, priority }) => locales.map((locale) => ({
     url: `${base}${buildPath(route, {}, locale)}`,

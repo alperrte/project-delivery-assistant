@@ -30,7 +30,7 @@ for (const [locale, title] of [["tr", "Bu sayfayı bulamadık."], ["en", "We cou
       await expect(page.locator("h1")).toHaveCount(1);
       await expect(page.locator("footer")).toHaveCount(0);
       await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", "noindex, nofollow");
-      await expect(page.locator('a[href="mailto:pda-info@gmail.com"]')).toBeVisible();
+      await expect(page.locator('a[href="mailto:pdassistant.info@gmail.com"]')).toBeVisible();
       if (code === "404") await expect(page.locator("h1")).toHaveText(title);
     }
     expect(errors).toEqual([]);
@@ -128,6 +128,6 @@ for (const [locale, title] of [["tr", "Kısa bir ara veriyoruz."], ["en", "We ar
     await expect(page.locator("html")).toHaveAttribute("lang", locale);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
     expect(external).toEqual([]);
-    await expect(page.locator('a[href="mailto:pda-info@gmail.com"]')).toBeVisible();
+    await expect(page.locator('a[href="mailto:pdassistant.info@gmail.com"]')).toBeVisible();
   });
 }

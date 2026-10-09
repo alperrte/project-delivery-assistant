@@ -2355,6 +2355,7 @@
     "kvkk": "KVKK",
     "privacy": "Gizlilik Politikası",
     "accessibility": "Erişilebilirlik",
+    "license": "Lisans",
     "team": "Geliştiriciler",
     "githubProfile": "{name} GitHub profili",
     "contact": "İletişim",
@@ -2464,7 +2465,7 @@
             },
             {
               "question": "Bir hata veya erişilebilirlik sorunu nasıl bildirebilirim?",
-              "answer": "pda-info@gmail.com adresine sayfa adresini, beklenen davranışı ve sorunun nasıl tekrarlandığını yazın. Genel geliştirme önerilerini GitHub deposunda da paylaşabilirsiniz. Herkese açık hata kayıtlarına kişisel veri, şifre, doğrulama kodu veya güvenlik açığının ayrıntılarını eklemeyin."
+              "answer": "pdassistant.info@gmail.com adresine sayfa adresini, beklenen davranışı ve sorunun nasıl tekrarlandığını yazın. Genel geliştirme önerilerini GitHub deposunda da paylaşabilirsiniz. Herkese açık hata kayıtlarına kişisel veri, şifre, doğrulama kodu veya güvenlik açığının ayrıntılarını eklemeyin."
             }
           ]
         }
@@ -2479,7 +2480,7 @@
           "title": "Kapsam ve iletişim",
           "paragraphs": [
             "Bu politika PDA web uygulamasının hesap, proje, ekip, görev ve takvim işlevlerini kapsar. Harici GitHub veya Google sayfalarına geçtiğinizde ilgili hizmetin kendi gizlilik koşulları uygulanır.",
-            "PDA geliştiricileri README'de Alper Temiz ve Hamza Taşbay olarak listelenir. Hizmetin veri sorumlusu kimliği yayın öncesinde ayrıca belirlenecektir; geliştirme ekibinin adı tek başına bu kimliği belirlemez. İletişim adresi pda-info@gmail.com olarak belirlenmiştir."
+            "PDA geliştiricileri README'de Alper Temiz ve Hamza Taşbay olarak listelenir. Hizmetin veri sorumlusu kimliği yayın öncesinde ayrıca belirlenecektir; geliştirme ekibinin adı tek başına bu kimliği belirlemez. İletişim adresi pdassistant.info@gmail.com olarak belirlenmiştir."
           ]
         },
         {
@@ -2553,7 +2554,7 @@
           "title": "Veri sorumlusu ve kapsam",
           "paragraphs": [
             "Bu sayfa hesap açma, giriş, proje/ekip çalışmaları, davet ve destek iletişimi sırasında kullanılan verileri açıklayan yayın öncesi taslaktır. Hizmetin veri sorumlusu gerçek kişi veya tüzel kişi olarak henüz teyit edilmemiştir; bu nedenle tamamlanmış bir aydınlatma metni olarak sunulmaz.",
-            "PDA proje ekibiyle iletişim için pda-info@gmail.com adresi belirlenmiştir. Veri sorumlusunun kimliği ve uygun başvuru kanalları kesinleştirilince metin güncellenecektir."
+            "PDA proje ekibiyle iletişim için pdassistant.info@gmail.com adresi belirlenmiştir. Veri sorumlusunun kimliği ve uygun başvuru kanalları kesinleştirilince metin güncellenecektir."
           ]
         },
         {
@@ -2613,7 +2614,7 @@
           "id": "requests",
           "title": "Başvuru ve iletişim",
           "paragraphs": [
-            "Sorularınız ve veri talepleriniz için pda-info@gmail.com adresine ulaşabilirsiniz. Talebinizin konusunu, hesabınızla ilişkili e-posta adresini ve istediğiniz işlemi belirtin; şifre, doğrulama kodu veya davet belirteci göndermeyin.",
+            "Sorularınız ve veri talepleriniz için pdassistant.info@gmail.com adresine ulaşabilirsiniz. Talebinizin konusunu, hesabınızla ilişkili e-posta adresini ve istediğiniz işlemi belirtin; şifre, doğrulama kodu veya davet belirteci göndermeyin.",
             "Bu genel iletişim adresi, mevzuattaki başvuru usullerinin tümünü tek başına karşılıyor sayılmaz. Veri sorumlusu ve resmi başvuru kanalları yayın öncesinde kesinleştirilecektir. Kimlik doğrulaması gerekli olduğunda talebinizle orantılı bilgi istenmelidir."
           ]
         }
@@ -2659,8 +2660,58 @@
           "id": "feedback",
           "title": "Bir engel bildirin",
           "paragraphs": [
-            "Bir sayfayı veya işlemi kullanamıyorsanız pda-info@gmail.com adresine yazın. Sayfa adresini, yapmak istediğiniz işlemi, tarayıcı/cihazınızı ve varsa kullandığınız yardımcı teknolojiyi belirtin.",
+            "Bir sayfayı veya işlemi kullanamıyorsanız pdassistant.info@gmail.com adresine yazın. Sayfa adresini, yapmak istediğiniz işlemi, tarayıcı/cihazınızı ve varsa kullandığınız yardımcı teknolojiyi belirtin.",
             "Ekran görüntüsü paylaşıyorsanız kişisel verileri ve gizli bilgileri kapatın. Bildirimde bulunmak için tıbbi durumunuzu açıklamanız gerekmez."
+          ]
+        }
+      ]
+    },
+    "license": {
+      "title": "Lisans",
+      "description": "PDA kaynak kodunun Apache License 2.0 ile sunulduğu bilgisi, kısa bir özet ve lisansın tam metni.",
+      "fullTextTitle": "Lisansın tam metni (İngilizce)",
+      "fullTextNote": "Hukuken bağlayıcı olan, aşağıdaki İngilizce orijinal metindir. Yukarıdaki özet yalnızca bilgilendirme amaçlıdır; hukuki danışmanlık ya da resmî çeviri değildir.",
+      "sections": [
+        {
+          "id": "about",
+          "title": "Apache License 2.0 nedir?",
+          "paragraphs": [
+            "PDA açık kaynaklıdır. Kaynak kodu, kodu kullanmanıza, incelemenize, değiştirmenize ve paylaşmanıza izin veren esnek bir lisans olan Apache License 2.0 ile yayımlanır.",
+            "Bu sayfada kısa bir özet ve lisansın tam metni yer alır. Aynı metin deponun ana dizinindeki LICENSE dosyasında da bulunur."
+          ]
+        },
+        {
+          "id": "permissions",
+          "title": "Neler yapabilirsiniz?",
+          "paragraphs": [
+            "Lisans uyarınca şunları yapabilirsiniz:"
+          ],
+          "items": [
+            "Yazılımı ticari kullanım dâhil her amaçla kullanmak,",
+            "Kaynak kodu kopyalamak ve değiştirmek,",
+            "Aşağıdaki şartlara uymak koşuluyla özgün hâlini ya da değiştirdiğiniz sürümü dağıtmak; kendi değişiklikleriniz için ayrı şartlar da koyabilirsiniz,",
+            "Her katkı sahibinin kendi katkıları için verdiği patent lisansından yararlanmak."
+          ]
+        },
+        {
+          "id": "conditions",
+          "title": "Şartlar",
+          "paragraphs": [
+            "Yazılımı ya da değiştirilmiş bir sürümünü paylaşırsanız şunları yapmanız gerekir:"
+          ],
+          "items": [
+            "Alan herkese lisansın bir kopyasını vermek,",
+            "Özgün kaynaktaki telif hakkı, patent, ticari marka ve atıf bildirimlerini korumak,",
+            "Değiştirdiğiniz dosyalarda değiştirdiğinizi açıkça belirtmek,",
+            "Projede NOTICE dosyası varsa içeriğini dağıttığınız pakette korumak."
+          ]
+        },
+        {
+          "id": "limits",
+          "title": "Sınırlar ve sorumluluk",
+          "paragraphs": [
+            "Yazılım \"olduğu gibi\" sunulur; açık ya da örtülü hiçbir garanti veya şart verilmez. Katkı sahipleri, kullanımdan doğan zararlardan sorumlu tutulamaz.",
+            "Lisans, PDA adı ve logosu üzerinde hak vermez. Yazılımın bir patenti ihlal ettiğini ileri sürerek dava açan kişi için, katkı sahiplerinin verdiği patent lisansı sona erer."
           ]
         }
       ]

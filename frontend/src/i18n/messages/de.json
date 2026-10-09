@@ -2355,6 +2355,7 @@
     "kvkk": "KVKK",
     "privacy": "Datenschutzerklärung",
     "accessibility": "Barrierefreiheit",
+    "license": "Lizenz",
     "team": "Entwickler",
     "githubProfile": "GitHub-Profil von {name}",
     "contact": "Kontakt",
@@ -2464,7 +2465,7 @@
             },
             {
               "question": "Wie melde ich einen Fehler oder eine Barriere?",
-              "answer": "Schreiben Sie an pda-info@gmail.com mit Seitenadresse, erwartetem Verhalten und Schritten zur Wiederholung. Allgemeine Entwicklungsvorschläge können auch im GitHub-Repository geteilt werden. Veröffentlichen Sie keine personenbezogenen Daten, Passwörter, Bestätigungscodes oder Details zu Sicherheitslücken in öffentlichen Issues."
+              "answer": "Schreiben Sie an pdassistant.info@gmail.com mit Seitenadresse, erwartetem Verhalten und Schritten zur Wiederholung. Allgemeine Entwicklungsvorschläge können auch im GitHub-Repository geteilt werden. Veröffentlichen Sie keine personenbezogenen Daten, Passwörter, Bestätigungscodes oder Details zu Sicherheitslücken in öffentlichen Issues."
             }
           ]
         }
@@ -2479,7 +2480,7 @@
           "title": "Umfang und Kontakt",
           "paragraphs": [
             "Diese Erklärung umfasst die Konto-, Projekt-, Team-, Aufgaben- und Kalenderfunktionen von PDA. Auf externen Google- oder GitHub-Seiten gelten die jeweiligen Datenschutzbedingungen.",
-            "Die README nennt Alper Temiz und Hamza Taşbay als Entwickler. Die Identität des datenschutzrechtlich Verantwortlichen ist vor dem Start gesondert festzulegen; Entwicklernamen allein bestimmen diese Rolle nicht. Als Kontaktadresse ist pda-info@gmail.com vorgesehen."
+            "Die README nennt Alper Temiz und Hamza Taşbay als Entwickler. Die Identität des datenschutzrechtlich Verantwortlichen ist vor dem Start gesondert festzulegen; Entwicklernamen allein bestimmen diese Rolle nicht. Als Kontaktadresse ist pdassistant.info@gmail.com vorgesehen."
           ]
         },
         {
@@ -2553,7 +2554,7 @@
           "title": "Verantwortlicher und Umfang",
           "paragraphs": [
             "Dieser Entwurf beschreibt Daten bei Registrierung, Anmeldung, Projekt-/Teamarbeit, Einladungen und Unterstützung. Die verantwortliche natürliche oder juristische Person wurde noch nicht bestätigt; daher wird der Text nicht als abgeschlossene Datenschutzinformation dargestellt.",
-            "Für den Kontakt mit dem Projektteam ist pda-info@gmail.com vorgesehen. Die Identität des Verantwortlichen und geeignete Antragswege sind vor der endgültigen Fassung festzulegen."
+            "Für den Kontakt mit dem Projektteam ist pdassistant.info@gmail.com vorgesehen. Die Identität des Verantwortlichen und geeignete Antragswege sind vor der endgültigen Fassung festzulegen."
           ]
         },
         {
@@ -2613,7 +2614,7 @@
           "id": "requests",
           "title": "Anfragen und Kontakt",
           "paragraphs": [
-            "Senden Sie Fragen oder Datenanfragen an pda-info@gmail.com. Nennen Sie Thema, Konto-E-Mail und gewünschte Maßnahme; senden Sie keine Passwörter, Bestätigungscodes oder Einladungstokens.",
+            "Senden Sie Fragen oder Datenanfragen an pdassistant.info@gmail.com. Nennen Sie Thema, Konto-E-Mail und gewünschte Maßnahme; senden Sie keine Passwörter, Bestätigungscodes oder Einladungstokens.",
             "Diese allgemeine Kontaktadresse erfüllt nicht automatisch alle gesetzlich vorgeschriebenen Antragswege. Verantwortlicher und offizielle Kanäle müssen vor dem Start festgelegt werden. Angaben zur Identitätsprüfung sollen dem Antrag angemessen sein."
           ]
         }
@@ -2659,8 +2660,58 @@
           "id": "feedback",
           "title": "Ein Hindernis melden",
           "paragraphs": [
-            "Wenn Sie eine Seite oder Aktion nicht nutzen können, schreiben Sie an pda-info@gmail.com mit Seitenadresse, gewünschter Aktion, Browser/Gerät und gegebenenfalls verwendetem Hilfsmittel.",
+            "Wenn Sie eine Seite oder Aktion nicht nutzen können, schreiben Sie an pdassistant.info@gmail.com mit Seitenadresse, gewünschter Aktion, Browser/Gerät und gegebenenfalls verwendetem Hilfsmittel.",
             "Entfernen Sie personenbezogene oder geheime Informationen aus Screenshots. Medizinische Angaben sind für eine Meldung nicht erforderlich."
+          ]
+        }
+      ]
+    },
+    "license": {
+      "title": "Lizenz",
+      "description": "Der Quellcode von PDA steht unter der Apache License 2.0: eine kurze Zusammenfassung und der vollständige Lizenztext.",
+      "fullTextTitle": "Vollständiger Lizenztext (Englisch)",
+      "fullTextNote": "Rechtlich verbindlich ist das englische Original unten. Die Zusammenfassung oben dient nur der Information, ist keine Rechtsberatung und keine offizielle Übersetzung.",
+      "sections": [
+        {
+          "id": "about",
+          "title": "Was ist die Apache License 2.0?",
+          "paragraphs": [
+            "PDA ist Open Source. Der Quellcode steht unter der Apache License 2.0, einer freizügigen Lizenz, mit der Sie den Code nutzen, untersuchen, ändern und weitergeben dürfen.",
+            "Diese Seite enthält eine kurze Zusammenfassung und den vollständigen Lizenztext. Derselbe Text liegt in der Datei LICENSE im Hauptverzeichnis des Repositorys."
+          ]
+        },
+        {
+          "id": "permissions",
+          "title": "Was Sie tun dürfen",
+          "paragraphs": [
+            "Nach der Lizenz dürfen Sie:"
+          ],
+          "items": [
+            "die Software für jeden Zweck nutzen, auch kommerziell;",
+            "den Quellcode kopieren und ändern;",
+            "das Original oder Ihre geänderte Fassung weitergeben, für Ihre Änderungen auch unter eigenen Bedingungen, sofern die folgenden Bedingungen erfüllt sind;",
+            "sich auf die Patentlizenz stützen, die jede beitragende Person für ihre Beiträge erteilt."
+          ]
+        },
+        {
+          "id": "conditions",
+          "title": "Bedingungen",
+          "paragraphs": [
+            "Wenn Sie die Software oder eine geänderte Fassung weitergeben, müssen Sie:"
+          ],
+          "items": [
+            "jeder empfangenden Person eine Kopie der Lizenz mitgeben;",
+            "die Urheberrechts-, Patent-, Marken- und Zuschreibungshinweise des Originalquellcodes beibehalten;",
+            "in geänderten Dateien deutlich angeben, dass Sie sie geändert haben;",
+            "den Inhalt der NOTICE-Datei, falls das Projekt eine hat, in Ihrer Weitergabe beibehalten."
+          ]
+        },
+        {
+          "id": "limits",
+          "title": "Grenzen und Haftung",
+          "paragraphs": [
+            "Die Software wird „wie besehen“ bereitgestellt, ohne Gewährleistung oder Bedingungen jeder Art. Beitragende haften nicht für Schäden, die aus der Nutzung entstehen.",
+            "Die Lizenz gewährt keine Rechte am Namen oder Logo von PDA. Die Patentlizenz einer beitragenden Person endet für alle, die mit der Behauptung klagen, die Software verletze ein Patent."
           ]
         }
       ]

@@ -44,7 +44,9 @@ const NEON_FILTER_ID = "pda-scene-neon";
 export async function AuthShell({ children }: { children: ReactNode }) {
   const t = await getTranslations("brand");
   return (
-    <div className="relative isolate flex min-h-[100dvh] flex-col bg-(--background) text-(--auth-ink)">
+    // A page that renders `data-auth-fixed` locks to the viewport, but only on screens tall enough to hold it:
+    // on shorter ones the page keeps scrolling so nothing is cut off (zoom and small laptops stay usable).
+    <div className="relative isolate flex min-h-[100dvh] flex-col bg-(--background) text-(--auth-ink) [@media(min-height:970px)]:has-[[data-auth-fixed]]:h-dvh [@media(min-height:970px)]:has-[[data-auth-fixed]]:overflow-hidden">
       <NeonFilter />
       <div aria-hidden className="auth-enter-scene pointer-events-none fixed inset-0 -z-10 overflow-hidden">
         {SCENES.map(({ src, shift, theme }) => (

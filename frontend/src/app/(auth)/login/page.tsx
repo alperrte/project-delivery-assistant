@@ -19,7 +19,7 @@ export async function generateMetadata() {
 export default async function LoginPage() {
   const t = await getTranslations("login");
   return (
-    <>
+    <div data-auth-fixed className="contents">
       <LoginHero />
       <AuthCard title={t("title")} subtitle={t("subtitle")} headingLevel={2}>
         <Suspense>
@@ -29,6 +29,6 @@ export default async function LoginPage() {
           <OAuthButtons divider="or" />
         </LoginForm>
       </AuthCard>
-    </>
+    </div>
   );
 }

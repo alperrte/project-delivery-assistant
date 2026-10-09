@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { buildPath } from "../src/i18n/routing";
 
-const infoPaths = ["/faq", "/kvkk", "/privacy", "/accessibility"] as const;
+const infoPaths = ["/faq", "/kvkk", "/privacy", "/accessibility", "/license"] as const;
 
 for (const [locale, faqTitle] of [
   ["tr", "Sıkça Sorulan Sorular"],
@@ -46,7 +46,7 @@ for (const width of [320, 390, 768, 1440]) {
         await page.goto(path);
         await expect(page.locator("footer")).toHaveCount(1);
         await page.locator("footer").scrollIntoViewIfNeeded();
-        await expect(page.locator('footer a[href="mailto:pda-info@gmail.com"]')).toBeVisible();
+        await expect(page.locator('footer a[href="mailto:pdassistant.info@gmail.com"]')).toBeVisible();
         expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
         const outOfBounds = await page.locator("footer a").evaluateAll(links => links.some(link => {
           const rect = link.getBoundingClientRect();
@@ -63,7 +63,7 @@ test("footer links open the correct information and contributor targets", async 
   const footer = page.locator("footer");
   await expect(footer.getByRole("link", { name: "Alper Temiz GitHub profili" })).toHaveAttribute("href", "https://github.com/alperrte");
   await expect(footer.getByRole("link", { name: "Hamza Taşbay GitHub profili" })).toHaveAttribute("href", "https://github.com/HmzT270");
-  await expect(footer.locator('a[href="mailto:pda-info@gmail.com"]')).toBeVisible();
+  await expect(footer.locator('a[href="mailto:pdassistant.info@gmail.com"]')).toBeVisible();
   for (const path of infoPaths) {
     await footer.locator('a[href="' + buildPath(path, {}, "tr") + '"]').click();
     await expect(page).toHaveURL(new RegExp(buildPath(path, {}, "tr") + "$"));
@@ -110,7 +110,7 @@ test("authenticated app shell has no footer and information links work from the 
   for (const path of infoPaths) {
     await expect(menu.locator('a[href="' + buildPath(path, {}, "tr") + '"]')).toBeVisible();
   }
-  await expect(menu.locator('a[href="mailto:pda-info@gmail.com"]')).toBeVisible();
+  await expect(menu.locator('a[href="mailto:pdassistant.info@gmail.com"]')).toBeVisible();
   await menu.locator('a[href="/tr/gizlilik"]').click();
   await expect(page).toHaveURL(/\/tr\/gizlilik$/);
   await expect(page.locator("h1")).toHaveText("Gizlilik Politikası");
