@@ -271,7 +271,8 @@ test.describe.serial("Project chat", () => {
     // All links are real client-side navigation, including global pages without a project slug.
     for (const href of [
       "/calendar", "/tasks", `/projects/${slug}?section=criteria`, `/projects/${slug}?section=teams`,
-      `/projects/${slug}?section=repository`, `/projects/${slug}`, `/projects/${slug}/tasks/board`,
+      // "Depo" is only listed once a repository is connected, which this project never does.
+      `/projects/${slug}`, `/projects/${slug}/tasks/board`,
       `/projects/${slug}/tasks/pool`, `/projects/${slug}/sprints`, `/projects/${slug}/labels`,
       "/dashboard", "/projects", "/organizations", "/settings",
     ]) {
@@ -384,7 +385,7 @@ test.describe.serial("Project chat", () => {
     // Opening the other project through the app router (a client-side navigation, like a click on its card; the
     // list is paged, so the card of a project created minutes ago is not always on the first page).
     await managerPage.evaluate((target) => (window as unknown as { next: { router: { push: (href: string) => void } } }).next.router.push(target), `/projects/${slug2}`);
-    await expect(managerPage).toHaveURL(new RegExp(`/tr/projeler/${slug2}$`));
+    await expect(managerPage).toHaveURL(new RegExp(`/tr/projeler/${slug2}/genel-bakis$`));
     await expect(barOf(managerPage)).toHaveCount(0);
     await expect.poll(() => socketStats.closed).toBeGreaterThan(closedBeforeSwitch);
     await openPanel(managerPage);
@@ -637,7 +638,7 @@ test.describe.serial("Project chat", () => {
       await page.getByRole("button", { name: /^Giriş yap$/ }).click();
       await expect(page.locator("#main-content")).toBeVisible();
       await page.evaluate((target) => (window as unknown as { next: { router: { push: (href: string) => void } } }).next.router.push(target), `/projects/${slug}`);
-      await expect(page).toHaveURL(new RegExp(`/tr/projeler/${slug}$`));
+      await expect(page).toHaveURL(new RegExp(`/tr/projeler/${slug}/genel-bakis$`));
       await expect(barOf(page)).toHaveCount(0);
       await openPanel(page);
       await expect(page.getByTestId("chat-active-name")).toHaveText(projectName);

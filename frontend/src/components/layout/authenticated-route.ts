@@ -9,9 +9,12 @@ export const AUTHENTICATED_ROUTES = [
   "/organizations", "/organizations/new", "/organizations/[organizationId]", "/organizations/[organizationId]/edit",
   "/settings", "/account", "/tasks", "/calendar", "/calendar/new", "/calendar/reminders/[reminderId]/edit",
   "/invitations", "/invitations/[projectId]/[invitationId]",
+  "/admin", "/admin/users", "/admin/analytics",
 ] as const satisfies readonly PageRoute[];
 const privateRoutes = new Set<PageRoute>(AUTHENTICATED_ROUTES);
 export function authenticatedRoute(pathname: string) {
   const match = matchPath(pathname);
-  return !!match && privateRoutes.has(match.route);
+  // Named project sections rewrite to the same protected physical page.
+  const route = match?.section ? matchPath(match.internalPath)?.route : match?.route;
+  return !!route && privateRoutes.has(route);
 }

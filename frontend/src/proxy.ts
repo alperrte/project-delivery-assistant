@@ -22,7 +22,7 @@ import { buildPath, matchPath, normalizeProjectSection } from "./i18n/routing";
  * session still has `mustChangePassword` pending (only the real `/auth/me`
  * response can) — that redirect stays owned by `AppShell`/the login form.
  */
-const PROTECTED_PATHS = ["/dashboard", "/projects", "/organizations", "/settings", "/account", "/calendar", "/invitations", "/change-password", "/tasks"];
+const PROTECTED_PATHS = ["/dashboard", "/projects", "/organizations", "/settings", "/account", "/calendar", "/invitations", "/change-password", "/tasks", "/admin"];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;

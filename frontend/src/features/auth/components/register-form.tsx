@@ -18,6 +18,7 @@ import { sessionQueryKey } from "../hooks/use-session";
 import { clearPrivateInvitations } from "@/features/invitations/query-keys";
 import { clearPrivateNotifications } from "@/features/notifications/query-keys";
 import { clearPrivateTeams } from "@/features/squads/cache";
+import { clearPrivateAdmin } from "@/features/admin/query-keys";
 import { authCtaClass } from "./auth-card";
 import { useShake } from "./use-shake";
 
@@ -63,6 +64,7 @@ export function RegisterForm() {
       clearPrivateInvitations(queryClient);
       clearPrivateNotifications(queryClient);
       clearPrivateTeams(queryClient);
+      clearPrivateAdmin(queryClient);
       queryClient.setQueryData(sessionQueryKey, me);
       toast.success(t("welcome"));
       router.replace(me.mustChangePassword ? "/change-password" : "/dashboard");

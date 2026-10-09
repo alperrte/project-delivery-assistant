@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
+import { matchPath } from "../src/i18n/routing";
 
 const PASSWORD = "E2ePassword1!";
 
@@ -69,7 +70,7 @@ export async function createOrganization(page: Page, name: string) {
   await page.locator("#org-name").fill(name);
   await page.getByRole("button", { name: /^Organizasyonu oluştur$/ }).click();
   // Creating opens the new organization's own page.
-  await expect(page).toHaveURL(/\/tr\/organizasyonlar\/(?!yeni$)[^/]+$/, { timeout: 10_000 });
+  await expect(page).toHaveURL(url => matchPath(url.pathname)?.route === "/organizations/[organizationId]", { timeout: 10_000 });
 }
 
 /** Creates a project and returns its slug, parsed from the post-create redirect URL. */
@@ -77,6 +78,12 @@ export async function createOrganization(page: Page, name: string) {
 export async function declineTeamPrompt(page: Page) {
   const dialog = page.getByRole("dialog").filter({ hasText: "Henüz bir proje ekibiniz yok" });
   await dialog.getByRole("button", { name: "Hayır", exact: true }).click();
+}
+
+/** Wait for the canonical post-create overview and read the slug, not its translated leaf segment. */
+export async function createdProjectSlug(page: Page): Promise<string> {
+  await expect(page).toHaveURL(url => matchPath(url.pathname)?.route === "/projects/[slug]/overview", { timeout: 15_000 });
+  return matchPath(new URL(page.url()).pathname)!.params.slug;
 }
 
 export async function createProject(
@@ -98,10 +105,7 @@ export async function createProject(
 
   await page.getByRole("button", { name: /^Projeyi oluştur$/ }).click();
   await declineTeamPrompt(page);
-  // The create page itself is `/projects/new`, so the new project is the first detail URL that is not "new".
-  await expect(page).toHaveURL(/\/tr\/projeler\/(?!yeni$)[^/]+$/, { timeout: 15_000 });
-  const url = new URL(page.url());
-  const slug = url.pathname.split("/").pop()!;
+  const slug = await createdProjectSlug(page);
   // Unrelated tests use an explicitly configured fixture; onboarding tests leave the policy unset.
   if (opts.taskMode !== null) {
     const project = (await api(page, "GET", `/projects/by-slug/${slug}`)).json as { id: string };
@@ -147,8 +151,11 @@ export async function createTeam(page: Page, slug: string, name: string): Promis
   await page.goto(`/projects/${slug}/teams/new`);
   await page.locator("#team-name").fill(name);
   await page.getByRole("button", { name: /^Ekibi oluştur$/ }).click();
-  await expect(page).toHaveURL(new RegExp(`/tr/projeler/${slug}/ekipler/(?!yeni$)[^/]+$`), { timeout: 15_000 });
-  return new URL(page.url()).pathname.split("/").pop()!;
+  await expect(page).toHaveURL(url => {
+    const match = matchPath(url.pathname);
+    return match?.route === "/projects/[slug]/teams/[teamId]" && match.params.slug === slug;
+  }, { timeout: 15_000 });
+  return matchPath(new URL(page.url()).pathname)!.params.teamId;
 }
 
 export async function gotoProjectTab(page: Page, slug: string, tabName: string) {

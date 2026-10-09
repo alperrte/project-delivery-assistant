@@ -39,7 +39,7 @@ test.describe.serial("Teams page (manager)", () => {
     await page.locator("#team-name").fill("Backend");
     await expect(page.locator("#team-preview").getByText("Backend")).toBeVisible();
     await page.getByRole("button", { name: /^Ekibi oluştur$/ }).click();
-    await expect(page).toHaveURL(new RegExp(`/tr/projeler/${slug}/ekipler/(?!yeni$)[^/]+$`), { timeout: 15_000 });
+    await expect(page).toHaveURL(new RegExp(`/tr/projeler/${slug}/ekipler/(?!yeni-ekip$)[^/]+$`), { timeout: 15_000 });
     await expect(page.getByRole("row", { name: new RegExp(manager.nickname) })).toBeVisible();
   });
 
@@ -54,7 +54,7 @@ test.describe.serial("Teams page (manager)", () => {
     await page.getByRole("tab", { name: "Liste" }).click();
 
     await page.getByRole("link", { name: /Backend ekibini aç/ }).first().click();
-    await expect(page).toHaveURL(new RegExp(`/tr/projeler/${slug}/ekipler/(?!yeni$)[^/]+$`));
+    await expect(page).toHaveURL(new RegExp(`/tr/projeler/${slug}/ekipler/(?!yeni-ekip$)[^/]+$`));
     await expect(page.getByRole("heading", { name: "Backend" })).toBeVisible();
   });
 

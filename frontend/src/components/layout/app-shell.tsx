@@ -5,7 +5,7 @@ import Link from "./workspace-link";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
-import { Buildings, SquaresFour, House, GearSix, CalendarBlank, SidebarSimple, EnvelopeSimple } from "@phosphor-icons/react";
+import { Buildings, SquaresFour, House, GearSix, CalendarBlank, SidebarSimple, EnvelopeSimple, ShieldCheck } from "@phosphor-icons/react";
 import { AppHeader } from "./app-header";
 import { NotificationOwner } from "@/features/notifications/notification-owner";
 import { ProjectSidebarNav } from "./project-sidebar-nav";
@@ -26,6 +26,7 @@ import { sessionQueryKey, useSession } from "@/features/auth/hooks/use-session";
 import { clearPrivateInvitations } from "@/features/invitations/query-keys";
 import { clearPrivateNotifications } from "@/features/notifications/query-keys";
 import { clearPrivateTeams } from "@/features/squads/cache";
+import { clearPrivateAdmin } from "@/features/admin/query-keys";
 import { useApplySavedPreferences, useRestoreSessionBaseline } from "@/features/settings/session-preferences";
 
 import { useIncomingInvitationCount } from "@/features/invitations/hooks";
@@ -58,6 +59,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     clearPrivateInvitations(queryClient);
     clearPrivateNotifications(queryClient);
     clearPrivateTeams(queryClient);
+    clearPrivateAdmin(queryClient);
     restoreBaseline();
     router.replace("/login");
     // `restoreBaseline` is recreated every render; the session ending is the only trigger that matters.
@@ -70,6 +72,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       clearPrivateInvitations(queryClient);
       clearPrivateNotifications(queryClient);
       clearPrivateTeams(queryClient);
+      clearPrivateAdmin(queryClient);
       restoreBaseline();
       queryClient.removeQueries({ queryKey: sessionQueryKey });
       router.replace("/login");
@@ -83,12 +86,14 @@ export function AppShell({ children }: { children: ReactNode }) {
     clearPrivateInvitations(queryClient);
     clearPrivateNotifications(queryClient);
     clearPrivateTeams(queryClient);
+    clearPrivateAdmin(queryClient);
     try {
       await authApi.logout();
     } finally {
       clearPrivateInvitations(queryClient);
       clearPrivateNotifications(queryClient);
       clearPrivateTeams(queryClient);
+      clearPrivateAdmin(queryClient);
       restoreBaseline();
       queryClient.removeQueries({ queryKey: sessionQueryKey });
       router.replace("/login");
@@ -132,6 +137,7 @@ export function AppShellView({ children, pathname, user, collapsed = false, onLo
 }) {
   const t = useTranslations("app");
   const tw = useTranslations("workspace");
+  const ta = useTranslations("admin");
   const incoming = useIncomingInvitationCount(!contained);
   const ti = useTranslations("invitations");
   const [menuOpen, setMenuOpen] = useState(false);
@@ -192,7 +198,21 @@ export function AppShellView({ children, pathname, user, collapsed = false, onLo
             {!narrow && tw("calendar")}
           </Link>
         </nav>
-        <div className={cn("space-y-3 p-3", narrow && "px-2")}>
+        <div className={cn("space-y-1 p-3", narrow && "px-2")}>
+          {user?.globalRole === "ADMIN" && (
+            <Link
+              href="/admin/users"
+              onClick={() => setMenuOpen(false)}
+              title={narrow ? ta("nav.label") : undefined}
+              aria-label={narrow ? ta("nav.label") : undefined}
+              aria-current={pathname.startsWith("/admin") ? "page" : undefined}
+              data-admin-link
+              className={navItemClass(pathname.startsWith("/admin"), cn("flex items-center gap-3 rounded-md py-2 text-[13px] hover:bg-muted hover:text-foreground", narrow ? "justify-center px-0" : "px-3"))}
+            >
+              <ShieldCheck size={19} aria-hidden="true" />
+              {!narrow && ta("nav.label")}
+            </Link>
+          )}
           <Link
             href="/settings"
             onClick={() => setMenuOpen(false)}

@@ -82,7 +82,7 @@ Bu checklist uygulanırken:
 - [ ] **Çerez Politikası** — Çerez onay banner'ından ayrı olarak kullanılan çerezlerin türlerini ve amaçlarını açıklar.
 - [ ] **Hakkımızda Sayfası** — Projenin, ürünün veya kurumun kim olduğunu ve ne sunduğunu açıklar.
 - [ ] **Kullanım Koşulları** — Kullanıcı ile platform arasındaki kullanım kurallarını ve sorumlulukları tanımlar.
-- [ ] **İletişim / Destek Kanalı** — Kullanıcının problem, KVKK talebi veya genel iletişim için ulaşabileceği açık ve çalışan bir kanal sağlar.
+- [x] **İletişim / Destek Kanalı** — Kullanıcının problem, KVKK talebi veya genel iletişim için ulaşabileceği açık ve çalışan bir kanal sağlar. (2026-10-09: herkese açık iletişim formu `/iletisim`; yerel gerçek SMTP yolu Mailpit ile kanıtlandı, üretimde `MAIL_ENABLED`/`SMTP_*` yapılandırması gerekir; görünür e-posta adresi yok.)
 
 # B — CTA / UX / UI State
 
@@ -262,3 +262,7 @@ Own server-filtered New/History pages, individual/all read persistent row retent
 ## Project invitations/create UX scoped verification - 2026-10-08
 
 Own/project-managed count separation, nested Teams disclosure/flyout, keyboard/mobile/three-language bounded badge, local banner decode/error/cleanup/previous-preview preservation, responsive sticky actions and event-time notification context verified in targeted real Chromium/API/PostgreSQL. Navbar position/reserve, account isolation, read/history/popup distinction and existing landing inert isolation retained. Global checklist boxes unchanged; Organization invitations are outside scope / Pending product decision. Canonical gate PASSED exit0; backend548/0/0/0, Chromium328+1 expected skip, lint/type/build/Docker smoke. Separate [implementation completion](../../docs/compliation/2026-10-08-project-invitations-create-ux.md); independent Next production audit follow-up is open, not a release waiver.
+
+## Auth frontend/main conflict integration ? 2026-10-09 (scoped)
+
+Cookie/contact/admin and main About/License/version/focus/JSON-LD/canonical named routes retained together. Footer/legal/cookie preferences, error/static503 contact, TR/EN/DE public content/accessibility, sitemap/hreflang/robots, canonical create/section/history and existing app regressions passed. Final canonical gate:649 backend0 failure/error/skip,555 Chromium +1 expected production crash-route skip, lint/type/build/Docker PASS. Long-suite QA shared sessions renew through actual CSRF/login without app UI; production auth unchanged. Global production/multi-browser/WCAG boxes are not inferred from this scoped Chromium evidence. See `docs/compliation/2026-10-09-auth-frontend-main-conflict-resolution.md`.

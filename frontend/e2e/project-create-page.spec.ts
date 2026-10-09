@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { MANAGER_STORAGE } from "./global-setup";
-import { api, createProject, declineTeamPrompt, openProjectListPage } from "./helpers";
+import { createdProjectSlug, api, createProject, declineTeamPrompt, openProjectListPage } from "./helpers";
 
 test.use({ storageState: MANAGER_STORAGE });
 
@@ -75,7 +75,7 @@ test.describe("Yeni proje sayfası", () => {
     await page.getByRole("button", { name: "React", exact: true }).click();
     await page.getByRole("button", { name: /^Projeyi oluştur$/ }).click();
     await declineTeamPrompt(page);
-    await expect(page).toHaveURL(/\/tr\/projeler\/(?!yeni$)[^/]+$/, { timeout: 15_000 });
+    await expect(page).toHaveURL(/\/tr\/projeler\/[^/]+\/genel-bakis$/, { timeout: 15_000 });
 
     // The detail page loads its own /home; let it finish so only requests made by the list page are counted.
     await page.waitForLoadState("networkidle");
@@ -84,9 +84,9 @@ test.describe("Yeni proje sayfası", () => {
       if (/\/projects\/[^/]+\/home/.test(request.url())) homeCalls.push(request.url());
     });
 
-    const slug = new URL(page.url()).pathname.split("/").pop()!;
+    const slug = await createdProjectSlug(page);
     await openProjectListPage(page, slug);
-    const card = page.getByRole("article").filter({ has: page.locator(`a[href="/tr/projeler/${slug}"]`) });
+    const card = page.getByRole("article").filter({ has: page.locator(`a[href="/tr/projeler/${slug}/genel-bakis"]`) });
     await expect(card).toBeVisible();
     await expect(card.locator('img[src*="/logo?v="]')).toBeVisible();
     await expect(card.getByText("1 üye")).toBeVisible();
@@ -111,11 +111,11 @@ test.describe("Yeni proje sayfası", () => {
     await page.getByRole("button", { name: "React", exact: true }).click();
     await page.getByRole("button", { name: /^Projeyi oluştur$/ }).click();
     await declineTeamPrompt(page);
-    await expect(page).toHaveURL(/\/tr\/projeler\/(?!yeni$)[^/]+$/, { timeout: 15_000 });
+    await expect(page).toHaveURL(/\/tr\/projeler\/[^/]+\/genel-bakis$/, { timeout: 15_000 });
 
-    const slug = new URL(page.url()).pathname.split("/").pop()!;
+    const slug = await createdProjectSlug(page);
     await openProjectListPage(page, slug);
-    const card = page.getByRole("article").filter({ has: page.locator(`a[href="/tr/projeler/${slug}"]`) });
+    const card = page.getByRole("article").filter({ has: page.locator(`a[href="/tr/projeler/${slug}/genel-bakis"]`) });
     await expect(card.locator('img[src*="/banner?v="]')).toBeVisible();
   });
 

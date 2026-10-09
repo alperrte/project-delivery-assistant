@@ -2,8 +2,8 @@
 
 import Link from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
-import { CaretDown, EnvelopeSimple, List, SignOut } from "@phosphor-icons/react";
-import { CONTACT_EMAIL, INFO_LINKS } from "@/features/public-info/site-info";
+import { CaretDown, Cookie, EnvelopeSimple, List, SignOut } from "@phosphor-icons/react";
+import { CONTACT_HREF, INFO_LINKS } from "@/features/public-info/site-info";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar } from "@/components/ui/avatar";
+import { openConsentPreferences } from "@/features/consent/consent-store";
 import { profilePhotoUrl } from "@/features/account/api";
 import { cn } from "@/lib/utils";
 import { GlobalSearch } from "./global-search";
@@ -24,7 +25,7 @@ import { useAutoHide } from "./use-auto-hide";
 import { WorkspaceHistoryControls } from "./workspace-history-controls";
 import { NotificationsMenu } from "@/features/notifications/notifications-menu";
 
-type SessionUser = { id?: string; nickname?: string; email?: string; profilePhotoVersion?: number | null } | null | undefined;
+type SessionUser = { id?: string; nickname?: string; email?: string; globalRole?: string; profilePhotoVersion?: number | null } | null | undefined;
 
 /**
  * Glass navbar centered on the physical viewport, independent of sidebar
@@ -49,6 +50,7 @@ export function AppHeader({
   const t = useTranslations("app");
   const tw = useTranslations("workspace");
   const tf = useTranslations("siteFooter");
+  const ta = useTranslations("admin");
   const { ref, hidden, reveal } = useAutoHide<HTMLElement>(!contained, mobileMenuOpen);
 
   return (
@@ -107,13 +109,20 @@ export function AppHeader({
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem render={<Link href="/account" />}>{tw("accountSettings")}</DropdownMenuItem>
+              {user?.globalRole === "ADMIN" && (
+                <DropdownMenuItem render={<Link href="/admin/users" />}>{ta("nav.label")}</DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
                 <DropdownMenuLabel>{tf("information")}</DropdownMenuLabel>
                 {INFO_LINKS.map(({ key, href }) => (
                   <DropdownMenuItem key={key} className="min-h-11" render={<Link href={href} />}>{tf(key)}</DropdownMenuItem>
                 ))}
-                <DropdownMenuItem className="min-h-11" render={<a href={"mailto:" + CONTACT_EMAIL} />}>
+                <DropdownMenuItem className="min-h-11" onClick={openConsentPreferences}>
+                  <Cookie data-icon="inline-start" size={16} aria-hidden="true" />
+                  {tf("manageCookies")}
+                </DropdownMenuItem>
+                <DropdownMenuItem className="min-h-11" render={<Link href={CONTACT_HREF} />}>
                   <EnvelopeSimple data-icon="inline-start" size={16} aria-hidden="true" />
                   {tf("contact")}
                 </DropdownMenuItem>

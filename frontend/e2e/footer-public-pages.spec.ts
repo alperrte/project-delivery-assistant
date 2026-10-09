@@ -1,7 +1,7 @@
 import { test, expect, type Locator, type Page } from "@playwright/test";
 import { buildPath } from "../src/i18n/routing";
 
-const infoPaths = ["/about", "/faq", "/kvkk", "/privacy", "/accessibility", "/license"] as const;
+const infoPaths = ["/about", "/faq", "/kvkk", "/privacy", "/cookies", "/accessibility", "/license"] as const;
 
 for (const [locale, faqTitle] of [
   ["tr", "Sıkça Sorulan Sorular"],
@@ -27,7 +27,7 @@ for (const [locale, faqTitle] of [
         }
       } else {
         expect(await page.locator("article section").count()).toBeGreaterThanOrEqual(path === "/about" ? 4 : 5);
-        if (path === "/kvkk" || path === "/privacy") {
+        if (path === "/kvkk" || path === "/privacy" || path === "/cookies") {
           await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", "noindex, follow");
         }
       }
@@ -46,7 +46,8 @@ for (const width of [320, 390, 768, 1440]) {
         await page.goto(path);
         await expect(page.locator("footer")).toHaveCount(1);
         await page.locator("footer").scrollIntoViewIfNeeded();
-        await expect(page.locator('footer a[href="mailto:pdassistant.info@gmail.com"]')).toBeVisible();
+        await expect(page.locator('footer a[href="/tr/iletisim"]')).toBeVisible();
+        await expect(page.locator('footer a[href^="mailto:"]')).toHaveCount(0);
         expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
         const outOfBounds = await page.locator("footer a").evaluateAll(links => links.some(link => {
           const rect = link.getBoundingClientRect();
@@ -63,7 +64,8 @@ test("footer links open the correct information and contributor targets", async 
   const footer = page.locator("footer");
   await expect(footer.getByRole("link", { name: "Alper Temiz GitHub profili" })).toHaveAttribute("href", "https://github.com/alperrte");
   await expect(footer.getByRole("link", { name: "Hamza Taşbay GitHub profili" })).toHaveAttribute("href", "https://github.com/HmzT270");
-  await expect(footer.locator('a[href="mailto:pdassistant.info@gmail.com"]')).toBeVisible();
+  await expect(footer.locator('a[href="/tr/iletisim"]')).toBeVisible();
+  await expect(footer.locator('a[href^="mailto:"]')).toHaveCount(0);
   for (const path of infoPaths) {
     await footer.locator('a[href="' + buildPath(path, {}, "tr") + '"]').click();
     await expect(page).toHaveURL(new RegExp(buildPath(path, {}, "tr") + "$"));
@@ -162,7 +164,15 @@ test("authenticated app shell has no footer and information links work from the 
   for (const path of infoPaths) {
     await expect(menu.locator('a[href="' + buildPath(path, {}, "tr") + '"]')).toBeVisible();
   }
-  await expect(menu.locator('a[href="mailto:pdassistant.info@gmail.com"]')).toBeVisible();
+  await expect(menu.locator('a[href="/tr/iletisim"]')).toBeVisible();
+  await expect(menu.locator('a[href^="mailto:"]')).toHaveCount(0);
+  // The cookie policy is listed with the other policies and the preferences can be reopened from the same group.
+  await expect(menu.getByRole("menuitem", { name: "Çerez tercihlerini yönet" })).toBeVisible();
+  await menu.getByRole("menuitem", { name: "Çerez tercihlerini yönet" }).click();
+  await expect(page.getByRole("dialog")).toContainText("Çerez tercihleri");
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await page.getByRole("button", { name: /Hesap menüsü/ }).click();
   await menu.locator('a[href="/tr/gizlilik"]').click();
   await expect(page).toHaveURL(/\/tr\/gizlilik$/);
   await expect(page.locator("h1")).toHaveText("Gizlilik Politikası");
