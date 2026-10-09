@@ -197,6 +197,14 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
           const invalid = repositoryUrl.trim() !== "" && !GITHUB_REPOSITORY_URL.test(repositoryUrl.trim());
           setRepositoryUrlInvalid(invalid);
           if (!invalid) mutation.mutate(form);
+        }, (invalid) => {
+          // react-hook-form focuses the first invalid text field itself; the type cards are a Controller without a ref,
+          // so when the type is the only thing missing, focus has to be moved by hand or nothing seems to happen.
+          if (Object.keys(invalid).every((key) => key === "projectType")) {
+            const card = document.getElementById(`${ids}-type-picker`)?.querySelector<HTMLElement>('[role="radio"]');
+            card?.focus();
+            card?.scrollIntoView({ block: "center" });
+          }
         })}
         noValidate
       >
@@ -253,7 +261,7 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
                 control={control}
                 name="projectType"
                 render={({ field }) => (
-                  <TypePicker value={field.value} onChange={field.onChange} labelledBy={typeLabelId} invalid={!!errors.projectType} />
+                  <TypePicker id={`${ids}-type-picker`} value={field.value} onChange={field.onChange} labelledBy={typeLabelId} invalid={!!errors.projectType} />
                 )}
               />
               {errors.projectType && (

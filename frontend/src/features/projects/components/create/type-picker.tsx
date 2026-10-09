@@ -11,15 +11,18 @@ type TypePickerProps = {
   onChange: (value: ProjectType) => void;
   labelledBy: string;
   invalid?: boolean;
+  /** Lets the form move focus here when this is the first field with an error. */
+  id?: string;
 };
 
-export function TypePicker({ value, onChange, labelledBy, invalid }: TypePickerProps) {
+export function TypePicker({ value, onChange, labelledBy, invalid, id }: TypePickerProps) {
   const t = useTranslations("projects.newPage.types");
 
   return (
     <RadioGroup
       value={value ?? ""}
       onValueChange={(next) => onChange(next as ProjectType)}
+      id={id}
       aria-labelledby={labelledBy}
       aria-invalid={invalid}
       className="grid-cols-1 gap-2.5 sm:grid-cols-2 xl:grid-cols-3"

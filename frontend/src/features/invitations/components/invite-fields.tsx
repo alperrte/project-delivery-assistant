@@ -11,8 +11,9 @@ import { ProjectRoleLabel } from "@/features/projects/role-presentation";
 export const INVITATION_MESSAGE_MAX = 100;
 
 /** Roles the invitee receives on accepting; at least one is required by the server. */
-export function RolePicker({ value, onChange }: { value: ProjectRole[]; onChange: (roles: ProjectRole[]) => void }) {
+export function RolePicker({ value, onChange, showError = false }: { value: ProjectRole[]; onChange: (roles: ProjectRole[]) => void; showError?: boolean }) {
   const t = useTranslations("invitations");
+  const tv = useTranslations("validation");
   const ids = useId();
 
   function toggle(role: ProjectRole, checked: boolean) {
@@ -20,7 +21,7 @@ export function RolePicker({ value, onChange }: { value: ProjectRole[]; onChange
   }
 
   return (
-    <fieldset className="space-y-1.5">
+    <fieldset className="space-y-1.5" aria-describedby={showError ? `${ids}-error` : undefined}>
       <legend className="text-sm font-medium leading-none">{t("rolesLabel")}</legend>
       <div className="grid grid-cols-1 gap-2 pt-1.5 sm:grid-cols-2">
         {PROJECT_ROLES.map((role) => (
@@ -30,6 +31,7 @@ export function RolePicker({ value, onChange }: { value: ProjectRole[]; onChange
           </label>
         ))}
       </div>
+      {showError && <p id={`${ids}-error`} role="alert" className="text-sm text-destructive">{tv("rolesRequired")}</p>}
     </fieldset>
   );
 }

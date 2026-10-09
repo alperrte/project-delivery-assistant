@@ -1214,6 +1214,7 @@
     "confirmPasswordPlaceholder": "Passwort wiederholen"
   },
   "validation": {
+    "rolesRequired": "Wählen Sie mindestens eine Rolle.",
     "required": "Dieses Feld ist erforderlich.",
     "email": "Geben Sie eine gültige E-Mail-Adresse ein.",
     "nickname": "3-32 Zeichen; nur Buchstaben, Ziffern und Unterstrich.",

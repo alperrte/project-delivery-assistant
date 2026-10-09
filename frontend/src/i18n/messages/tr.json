@@ -1214,6 +1214,7 @@
     "confirmPasswordPlaceholder": "Şifrenizi tekrar girin"
   },
   "validation": {
+    "rolesRequired": "En az bir rol seçin.",
     "required": "Bu alan zorunlu.",
     "email": "Geçerli bir e-posta adresi girin.",
     "nickname": "3-32 karakter; yalnız harf, rakam ve alt çizgi.",

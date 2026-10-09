@@ -63,6 +63,18 @@ test.describe("Yeni proje sayfası", () => {
     await page.getByRole("button", { name: /^Projeyi oluştur$/ }).click();
     await expect(page).toHaveURL(/\/tr\/projeler\/yeni-proje$/);
     await expect(page.getByRole("alert").filter({ hasText: "Bu alan zorunlu." })).toBeVisible();
+    // The type cards are the only invalid field, so focus has to land on them instead of staying on the button.
+    await expect(page.getByRole("radio").first()).toBeFocused();
+  });
+
+  test("yalnız boşluktan oluşan ad kabul edilmez", async ({ page }) => {
+    await page.goto("/projects/new");
+    await page.locator("#project-name").fill("     ");
+    await page.getByRole("radio", { name: /^Web/ }).click();
+    await page.getByRole("button", { name: /^Projeyi oluştur$/ }).click();
+    await expect(page).toHaveURL(/\/tr\/projeler\/yeni-proje$/);
+    await expect(page.locator("#project-name")).toBeFocused();
+    await expect(page.getByRole("alert").filter({ hasText: "Bu alan zorunlu." })).toBeVisible();
   });
 
   test("logo ile oluşturulan proje listede logosuyla görünür, kart başına /home çağrılmaz", async ({ page }) => {
