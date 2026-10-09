@@ -60,13 +60,13 @@
 
 ### Hizmet türüne göre diğer yükümlülükler
 
-- [ ] Ticari işletme bilgileri
-- [ ] ETBİS ve e-ticaret kontrolü
-- [ ] Mesafeli satış / ön bilgilendirme
-- [ ] İade, cayma ve iptal
-- [ ] Ticari elektronik ileti
+- [Eklenmeyecek] Ticari işletme bilgileri
+- [Eklenmeyecek] ETBİS ve e-ticaret kontrolü
+- [Eklenmeyecek] Mesafeli satış / ön bilgilendirme
+- [Eklenmeyecek] İade, cayma ve iptal
+- [Eklenmeyecek] Ticari elektronik ileti
 - [ ] GDPR ve yurt dışı yükümlülükleri
-- [ ] Telif ve lisans kullanımı
+- [X] Telif ve lisans kullanımı
 
 ## 3. Erişilebilirlik: herkes için kullanılabilir site
 
@@ -129,7 +129,7 @@
 ### Teknik SEO ve keşfedilebilirlik
 
 - [ ] SEO / GEO yaklaşımı
-- [ ] Benzersiz sayfa başlığı
+- [X] Benzersiz sayfa başlığı
 - [ ] Meta description
 - [ ] robots.txt
 - [ ] sitemap.xml

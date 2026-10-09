@@ -1152,6 +1152,7 @@
     "emailPlaceholder": "ornek@gmail.com",
     "passwordPlaceholder": "Şifrenizi girin",
     "metaTitle": "Giriş yap",
+    "metaDescription": "PDA hesabınızla giriş yapın; projelerinize, görevlerinize ve ekibinize kaldığınız yerden devam edin.",
     "rememberMe": "Beni hatırla",
     "hero": {
       "title": "Planlayın. Yönetin. Teslim edin.",
@@ -1164,6 +1165,7 @@
     }
   },
   "register": {
+    "metaDescription": "PDA'da hesap oluşturun; projenizi kurun, ekibinizi davet edin ve işi birlikte teslim edin.",
     "title": "Hesap oluşturun",
     "subtitle": "Birkaç bilgiyle başlayın.",
     "email": "E-posta",
@@ -1204,6 +1206,8 @@
     "url": "Geçerli bir http/https adresi girin."
   },
   "forgotPassword": {
+    "metaTitle": "Şifremi unuttum",
+    "metaDescription": "PDA şifrenizi mi unuttunuz? E-posta adresinize gönderilen kodla yeni bir şifre belirleyin.",
     "title": "Şifrenizi mi unuttunuz?",
     "subtitle": "E-posta adresinizi girin, hesabınız varsa bir kod gönderelim.",
     "email": "E-posta",
@@ -2347,6 +2351,42 @@
       "open": "Mesaj seçeneklerini aç",
       "label": "Mesaj seçenekleri"
     }
+  },
+  "pageTitles": {
+    "dashboard": "Genel bakış",
+    "projects": "Projeler",
+    "projectNew": "Yeni proje",
+    "projectOverview": "Genel bakış",
+    "projectCriteria": "Kriterler",
+    "projectTeams": "Tüm ekipler",
+    "projectInvitations": "Ekip davetleri",
+    "projectRepository": "Depo",
+    "projectEdit": "Projeyi düzenle",
+    "teamNew": "Yeni ekip",
+    "team": "Ekip",
+    "teamEdit": "Ekibi düzenle",
+    "tasks": "Görevler",
+    "taskNew": "Yeni görev",
+    "board": "Pano",
+    "pool": "Görev havuzu",
+    "task": "Görev",
+    "taskEdit": "Görevi düzenle",
+    "sprints": "Sprintler",
+    "sprint": "Sprint",
+    "labels": "Etiketler",
+    "organizations": "Organizasyonlar",
+    "organizationNew": "Yeni organizasyon",
+    "organization": "Organizasyon",
+    "organizationEdit": "Organizasyonu düzenle",
+    "settings": "Ayarlar",
+    "account": "Hesap",
+    "myTasks": "Görevlerim",
+    "calendar": "Takvim",
+    "reminderNew": "Yeni anımsatıcı",
+    "reminderEdit": "Anımsatıcıyı düzenle",
+    "invitations": "Davetler",
+    "invitation": "Davet",
+    "changePassword": "Şifre değiştir"
   },
   "siteFooter": {
     "description": "Projeleri, ekipleri ve teslim sürecini birlikte yönetin.",

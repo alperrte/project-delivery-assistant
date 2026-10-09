@@ -27,7 +27,7 @@ test("square personal cards open on the same page with keyboard, comments and re
   const open = card.getByRole("button", { name: `${f.task.title}, ${f.task.taskKey} görevini aç`, exact: true });
   await open.focus(); await page.keyboard.press("Enter");
   await expect(taskDialog(page)).toBeVisible();
-  await expect(page).toHaveURL(/\/tr\/gorevler\?/);
+  await expect(page).toHaveURL(/\/tr\/gorevlerim\?/);
   await expect(taskDialog(page).getByRole("heading", { name: f.task.title })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(taskDialog(page)).toHaveCount(0);
@@ -41,7 +41,7 @@ test("square personal cards open on the same page with keyboard, comments and re
   expect((await api(page, "GET", `/projects/${f.projectId}/tasks/${f.task.id}/comments`)).json).toMatchObject({ content: [{ body: "Comment from the personal task card" }] });
   await page.reload(); await expect(taskDialog(page).getByRole("heading", { name: f.task.title })).toBeVisible();
   await page.keyboard.press("Escape"); await expect(taskDialog(page)).toHaveCount(0);
-  await expect(page).toHaveURL(/\/tr\/gorevler\?project=/);
+  await expect(page).toHaveURL(/\/tr\/gorevlerim\?project=/);
   await card.getByRole("button", { name: `${f.task.taskKey} görevine yorum yap`, exact: true }).click();
   await expect(taskDialog(page).getByRole("combobox", { name: "Yorum", exact: true })).toBeFocused();
 });
@@ -93,7 +93,7 @@ test("a non-following co-manager receives localized work notifications and opens
     await started.getByRole("link", { name: "Görevi aç", exact: true }).click();
     await expect(taskDialog(manager).getByRole("heading", { name: f.task.title })).toBeVisible();
     await expect.poll(() => taskDialog(manager).evaluate(dialog => dialog.contains(document.activeElement))).toBe(true);
-    await expect(manager).toHaveURL(/\/tr\/gorevler\?/);
+    await expect(manager).toHaveURL(/\/tr\/gorevlerim\?/);
     const records = (await api(manager, "GET", "/notifications?type=TASK_STATUS_CHANGED&size=100")).json as { content: { resourceId: string; read: boolean }[] };
     expect(records.content.filter(n => n.resourceId === f.task.id)).toEqual([expect.objectContaining({ read: true })]);
     await page.locator(`[data-task-card="${f.task.id}"]`).getByRole("button", { name: "Tamamla", exact: true }).click();

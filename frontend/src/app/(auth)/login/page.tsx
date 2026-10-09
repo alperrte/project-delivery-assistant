@@ -10,7 +10,7 @@ import { OAuthErrorNotice } from "@/features/auth/components/oauth-error-notice"
 
 export async function generateMetadata() {
   const t = await getTranslations("login");
-  return { title: t("metaTitle"), alternates: {
+  return { title: t("metaTitle"), description: t("metaDescription"), alternates: {
     canonical: buildPath("/login", {}, await getLocale() as Locale),
     languages: Object.fromEntries(locales.map((language) => [language, buildPath("/login", {}, language)])),
   } };

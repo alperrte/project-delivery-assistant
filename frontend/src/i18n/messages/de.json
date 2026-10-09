@@ -1152,6 +1152,7 @@
     "emailPlaceholder": "beispiel@gmail.com",
     "passwordPlaceholder": "Passwort eingeben",
     "metaTitle": "Anmelden",
+    "metaDescription": "Melden Sie sich bei Ihrem PDA-Konto an und machen Sie mit Ihren Projekten, Aufgaben und Ihrem Team dort weiter, wo Sie aufgehört haben.",
     "rememberMe": "Angemeldet bleiben",
     "hero": {
       "title": "Planen. Steuern. Liefern.",
@@ -1164,6 +1165,7 @@
     }
   },
   "register": {
+    "metaDescription": "Erstellen Sie ein PDA-Konto, richten Sie Ihr Projekt ein, laden Sie Ihr Team ein und liefern Sie gemeinsam.",
     "title": "Konto erstellen",
     "subtitle": "Starten Sie mit wenigen Angaben.",
     "email": "E-Mail",
@@ -1204,6 +1206,8 @@
     "url": "Geben Sie eine gültige HTTP/HTTPS-Adresse ein."
   },
   "forgotPassword": {
+    "metaTitle": "Passwort vergessen",
+    "metaDescription": "Passwort vergessen? Legen Sie mit dem Code, den wir an Ihre E-Mail-Adresse senden, ein neues Passwort fest.",
     "title": "Passwort vergessen?",
     "subtitle": "Geben Sie Ihre E-Mail-Adresse ein. Falls Sie ein Konto haben, senden wir Ihnen einen Code.",
     "email": "E-Mail",
@@ -2347,6 +2351,42 @@
       "open": "Nachrichtenaktionen öffnen",
       "label": "Nachrichtenaktionen"
     }
+  },
+  "pageTitles": {
+    "dashboard": "Übersicht",
+    "projects": "Projekte",
+    "projectNew": "Neues Projekt",
+    "projectOverview": "Übersicht",
+    "projectCriteria": "Kriterien",
+    "projectTeams": "Alle Teams",
+    "projectInvitations": "Team-Einladungen",
+    "projectRepository": "Repository",
+    "projectEdit": "Projekt bearbeiten",
+    "teamNew": "Neues Team",
+    "team": "Team",
+    "teamEdit": "Team bearbeiten",
+    "tasks": "Aufgaben",
+    "taskNew": "Neue Aufgabe",
+    "board": "Board",
+    "pool": "Pool",
+    "task": "Aufgabe",
+    "taskEdit": "Aufgabe bearbeiten",
+    "sprints": "Sprints",
+    "sprint": "Sprint",
+    "labels": "Labels",
+    "organizations": "Organisationen",
+    "organizationNew": "Neue Organisation",
+    "organization": "Organisation",
+    "organizationEdit": "Organisation bearbeiten",
+    "settings": "Einstellungen",
+    "account": "Konto",
+    "myTasks": "Meine Aufgaben",
+    "calendar": "Kalender",
+    "reminderNew": "Neue Erinnerung",
+    "reminderEdit": "Erinnerung bearbeiten",
+    "invitations": "Einladungen",
+    "invitation": "Einladung",
+    "changePassword": "Passwort ändern"
   },
   "siteFooter": {
     "description": "Projekte, Teams und die Umsetzung gemeinsam organisieren.",

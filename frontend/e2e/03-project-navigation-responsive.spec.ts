@@ -130,11 +130,11 @@ test("language changes keep the selected project, section and sidebar target", a
   await expect(page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Tüm Ekipler", exact: true })).toHaveAttribute("aria-current", "page");
   await page.getByRole("button", { name: "Dil" }).click();
   await page.getByRole("menuitem", { name: "English" }).click();
-  await expect(page).toHaveURL(/\/en\/projects\/responsive-project\?section=teams$/);
+  await expect(page).toHaveURL(/\/en\/projects\/responsive-project\/teams$/);
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await page.getByRole("button", { name: "Language" }).click();
   await page.getByRole("menuitem", { name: "Deutsch" }).click();
-  await expect(page).toHaveURL(/\/de\/projekte\/responsive-project\?section=teams$/);
+  await expect(page).toHaveURL(/\/de\/projekte\/responsive-project\/teams$/);
   await expect(page.locator("html")).toHaveAttribute("lang", "de");
 });
 

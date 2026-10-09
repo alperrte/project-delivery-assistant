@@ -11,7 +11,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale() as Locale;
   const home = buildPath("/", {}, locale);
   return {
-    title: { absolute: `${t("metaTitle")} · PDA` }, description: t("metaDescription"),
+    // The tab shows the page name; the slogan stays as the social-share title below.
+    title: { absolute: `${t("homeTitle")} · PDA` }, description: t("metaDescription"),
     alternates: { canonical: home, languages: Object.fromEntries(locales.map((language) => [language, buildPath("/", {}, language)])) },
     openGraph: {
       type: "website", title: t("metaTitle"), description: t("metaDescription"), url: home,

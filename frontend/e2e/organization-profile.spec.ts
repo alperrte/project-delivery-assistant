@@ -19,7 +19,7 @@ test("organization profile preview, URL validation and responsive themes", async
  await page.locator("#org-website").fill("javascript:alert(1)");
  await page.locator('button[type="submit"]').click();
  await expect(page.locator("#org-website-error")).toBeVisible();
- await expect(page).toHaveURL(/\/yeni$/);
+ await expect(page).toHaveURL(/\/yeni-organizasyon$/);
  for (const dark of [false, true]) {
   await page.evaluate(dark => document.documentElement.classList.toggle("dark", dark), dark);
   for (const width of [320, 390, 768, 1280, 1440]) {

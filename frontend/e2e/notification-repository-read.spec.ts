@@ -24,7 +24,7 @@ test("repository link uses the guarded read operation and retains persisted hist
     const read = f.b.waitForResponse(response => response.url().endsWith(`/notifications/${note.id}/read`) && response.request().method() === "PATCH");
     await row.getByRole("link", { name: "Depoyu aç", exact: true }).click();
     expect((await read).status()).toBe(200);
-    await expect(f.b).toHaveURL(new RegExp(`/projeler/${project.slug}\\?section=repository`));
+    await expect(f.b).toHaveURL(new RegExp(`/projeler/${project.slug}/depo`));
     expect(notificationInDatabase(f.user.id, note.id)).toMatchObject({ rowCount: 1, read: true, presentedAt: null });
     const center = await openNotificationCenter(f.b);
     await center.getByRole("tab", { name: "Geçmiş", exact: true }).click();

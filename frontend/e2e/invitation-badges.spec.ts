@@ -49,13 +49,13 @@ test("real incoming and managed badges share totals; Teams disclosure and flyout
     await parent.press("Space"); await expect(managed).toHaveCount(0);
     await parent.press("Enter"); await expect(managed).toBeVisible();
     await sidebar.getByRole("link", { name: "Tüm Ekipler", exact: true }).click();
-    await expect(a).toHaveURL(/section=teams/);
+    await expect(a).toHaveURL(/\/ekipler$/);
     await expect(parent).toHaveAttribute("aria-expanded", "true");
     await sidebar.getByRole("button", { name: /daralt/ }).click();
     const flyout = sidebar.getByRole("button", { name: "Ekipler", exact: true });
     await flyout.press("Enter");
     await a.getByRole("link", { name: "Ekip Davetleri", exact: true }).click();
-    await expect(a).toHaveURL(/section=invitations/);
+    await expect(a).toHaveURL(/\/ekip-davetleri$/);
     await expect(a.getByRole("link", { name: "Ekip Davetleri", exact: true })).toHaveCount(0);
     // Real acceptance and rejection, while both consumers retain their warm query cache.
     expect((await api(b, "POST", `/project-invitations/${invitations[0]}/accept`)).status).toBe(200);
@@ -108,7 +108,7 @@ test("real 101-row managed total stays bounded and accessible on mobile and in t
     await expect(parent).toHaveAttribute("aria-expanded", "true");
     await expect.poll(async () => (await parent.boundingBox())!.height).toBeGreaterThanOrEqual(44);
     await drawer.getByRole("link", { name: "Tüm Ekipler", exact: true }).click();
-    await expect(page).toHaveURL(/section=teams/);
+    await expect(page).toHaveURL(/\/ekipler$/);
     await expect(drawer).toBeHidden();
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
   } finally {
