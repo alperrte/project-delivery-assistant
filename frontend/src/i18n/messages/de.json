@@ -2414,7 +2414,9 @@
     "reminderEdit": "Erinnerung bearbeiten",
     "invitations": "Einladungen",
     "invitation": "Einladung",
-    "changePassword": "Passwort ändern"
+    "changePassword": "Passwort ändern",
+    "adminUsers": "Benutzer · Verwaltung",
+    "adminAnalytics": "Analyse · Verwaltung"
   },
   "siteFooter": {
     "description": "Projekte, Teams und die Umsetzung gemeinsam organisieren.",

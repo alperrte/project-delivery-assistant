@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
-import { buildPath } from "@/i18n/routing";
-import { locales, type Locale } from "@/i18n/config";
+import { type Locale } from "@/i18n/config";
+import { Breadcrumb } from "@/components/common/breadcrumb";
+import { pageAlternates } from "@/lib/seo/alternates";
+import { PageJsonLd } from "@/lib/seo/json-ld";
 import { ContactForm } from "./contact-form";
 
 export async function contactMetadata(): Promise<Metadata> {
@@ -10,18 +12,19 @@ export async function contactMetadata(): Promise<Metadata> {
   return {
     title: t("title"),
     description: t("description"),
-    alternates: {
-      canonical: buildPath("/contact", {}, locale),
-      languages: Object.fromEntries(locales.map((language) => [language, buildPath("/contact", {}, language)])),
-    },
+    alternates: pageAlternates("/contact", locale),
   };
 }
 
 /** Public: the form works for visitors who are not signed in. */
 export async function ContactPage() {
   const t = await getTranslations("contact");
+  const app = await getTranslations("common");
+  const landing = await getTranslations("landing");
   return (
     <article className="max-w-2xl">
+      <PageJsonLd route="/contact" type="ContactPage" name={t("title")} description={t("description")} />
+      <Breadcrumb label={app("breadcrumb")} items={[{ label: landing("homeTitle"), href: "/" }, { label: t("title") }]} className="mb-6" />
       <header>
         <p className="text-sm font-medium text-muted-foreground">PDA · Project Delivery Assistant</p>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">{t("title")}</h1>

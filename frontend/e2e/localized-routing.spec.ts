@@ -120,6 +120,7 @@ test("public information pages declare their type and breadcrumb", async ({ requ
     ["/tr/hakkimizda", "AboutPage", "tr"], ["/en/about", "AboutPage", "en"], ["/de/ueber-uns", "AboutPage", "de"],
     ["/tr/sss", "WebPage", "tr"], ["/en/license", "WebPage", "en"], ["/de/barrierefreiheit", "WebPage", "de"],
     ["/tr/kvkk", "WebPage", "tr"], ["/en/privacy", "WebPage", "en"], ["/de/datenschutz", "WebPage", "de"],
+    ["/tr/iletisim", "ContactPage", "tr"], ["/en/contact", "ContactPage", "en"], ["/de/kontakt", "ContactPage", "de"],
   ]) {
     const html = await (await request.get(path)).text();
     const graphs = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((match) => JSON.parse(match[1])).filter((block) => block["@graph"]);
@@ -136,6 +137,7 @@ test("public information pages show the same breadcrumb they declare as structur
   for (const [path, label, home, homeHref] of [
     ["/tr/hakkimizda", "Konum", "Ana sayfa", "/tr/ana-sayfa"], ["/en/faq", "Breadcrumb", "Home", "/en/home"], ["/de/datenschutz", "Brotkrumen", "Startseite", "/de/startseite"],
     ["/en/license", "Breadcrumb", "Home", "/en/home"], ["/tr/erisilebilirlik", "Konum", "Ana sayfa", "/tr/ana-sayfa"],
+    ["/tr/iletisim", "Konum", "Ana sayfa", "/tr/ana-sayfa"], ["/de/kontakt", "Brotkrumen", "Startseite", "/de/startseite"],
   ]) {
     await page.goto(path);
     const trail = page.getByRole("navigation", { name: label, exact: true });
@@ -163,7 +165,7 @@ test("the FAQ page lists every visible question as structured data", async ({ pa
 });
 
 test("public pages declare x-default, the page language and a 1200x630 share image", async ({ page, request }) => {
-  for (const [path, locale, ogLocale] of [["/tr/ana-sayfa", "tr", "tr_TR"], ["/en/faq", "en", "en_US"], ["/de/anmelden", "de", "de_DE"]]) {
+  for (const [path, locale, ogLocale] of [["/tr/ana-sayfa", "tr", "tr_TR"], ["/en/faq", "en", "en_US"], ["/de/anmelden", "de", "de_DE"], ["/en/contact", "en", "en_US"]]) {
     await page.goto(path);
     await expect(page.locator('link[rel="alternate"][hreflang="x-default"]'), path).toHaveAttribute("href", /\/tr\//);
     await expect(page.locator('meta[property="og:locale"]'), path).toHaveAttribute("content", ogLocale);
@@ -201,9 +203,9 @@ test("protected localized deep links go to the same-language login", async ({ re
 
 test("every protected page sends a visitor without a session to the login of the same language; public pages stay open", async ({ request }) => {
   const protectedPages: Record<string, string[]> = {
-    tr: ["/tr/genel-bakis", "/tr/projeler", "/tr/projeler/yeni-proje", "/tr/projeler/x/ekipler", "/tr/projeler/x/duzenle", "/tr/projeler/x/gorevler/pano", "/tr/organizasyonlar", "/tr/organizasyonlar/yeni-organizasyon", "/tr/ayarlar", "/tr/hesap", "/tr/gorevlerim", "/tr/takvim", "/tr/takvim/yeni-animsatici", "/tr/davetler", "/tr/sifre-degistir"],
-    en: ["/en/dashboard", "/en/projects", "/en/projects/new-project", "/en/projects/x/teams", "/en/projects/x/edit", "/en/projects/x/tasks/board", "/en/organizations", "/en/settings", "/en/account", "/en/my-tasks", "/en/calendar", "/en/invitations", "/en/change-password"],
-    de: ["/de/uebersicht", "/de/projekte", "/de/projekte/x/teams", "/de/organisationen", "/de/einstellungen", "/de/konto", "/de/meine-aufgaben", "/de/kalender", "/de/einladungen", "/de/passwort-aendern"],
+    tr: ["/tr/genel-bakis", "/tr/projeler", "/tr/projeler/yeni-proje", "/tr/projeler/x/ekipler", "/tr/projeler/x/duzenle", "/tr/projeler/x/gorevler/pano", "/tr/organizasyonlar", "/tr/organizasyonlar/yeni-organizasyon", "/tr/ayarlar", "/tr/hesap", "/tr/gorevlerim", "/tr/takvim", "/tr/takvim/yeni-animsatici", "/tr/davetler", "/tr/sifre-degistir", "/tr/yonetim", "/tr/yonetim/kullanicilar", "/tr/yonetim/analitik"],
+    en: ["/en/dashboard", "/en/projects", "/en/projects/new-project", "/en/projects/x/teams", "/en/projects/x/edit", "/en/projects/x/tasks/board", "/en/organizations", "/en/settings", "/en/account", "/en/my-tasks", "/en/calendar", "/en/invitations", "/en/change-password", "/en/admin", "/en/admin/users"],
+    de: ["/de/uebersicht", "/de/projekte", "/de/projekte/x/teams", "/de/organisationen", "/de/einstellungen", "/de/konto", "/de/meine-aufgaben", "/de/kalender", "/de/einladungen", "/de/passwort-aendern", "/de/verwaltung/analyse"],
   };
   const login = { tr: "/tr/giris", en: "/en/login", de: "/de/anmelden" };
   for (const [locale, paths] of Object.entries(protectedPages)) {
@@ -266,4 +268,8 @@ test("public canonical, hreflang, sitemap and robots agree on localized paths", 
   expect(robots).toContain("Disallow: /en/my-tasks");
   expect(robots).toContain("Disallow: /tr/gorevlerim");
   expect(robots).not.toContain("Disallow: /de/barrierefreiheit");
+  // `noindex` is only read when crawlers may fetch the page, so the reset form is not disallowed.
+  expect(robots).not.toContain("sifremi-unuttum");
+  await page.goto("/tr/sifremi-unuttum");
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
 });

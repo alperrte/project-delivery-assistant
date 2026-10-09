@@ -9,6 +9,7 @@ const PAGES: { route: PageRoute; title: string; note: string }[] = [
   { route: "/", title: "Home", note: "What PDA is and what it does" },
   { route: "/about", title: "About", note: "The story and the team behind PDA" },
   { route: "/faq", title: "FAQ", note: "Answers about accounts, projects, teams, privacy and support" },
+  { route: "/contact", title: "Contact", note: "Send a message to the PDA team" },
   { route: "/license", title: "License", note: "Apache License 2.0 summary and full text" },
   { route: "/accessibility", title: "Accessibility", note: "Accessibility statement" },
 ];
