@@ -14,12 +14,12 @@
 - [ ] Çerez Politikası ve tercih bağlantısı
 - [ ] Erişilebilirlik Bildirimi
 - [ ] İletişim adresi ve destek bağlantısı
-- [ ] Geliştirici / ekip profilleri
-- [ ] Sosyal medya bağlantıları
-- [ ] Kaynak kod bağlantısı
+- [X] Geliştirici / ekip profilleri
+- [Eklenmeyecek] Sosyal medya bağlantıları
+- [X] Kaynak kod bağlantısı
 - [X] Açık kaynak lisansı
-- [ ] Sürüm bilgisi
-- [ ] Footer erişilebilirliği
+- [X] Sürüm bilgisi
+- [X] Footer erişilebilirliği
 
 ### İletişim ve destek sayfası
 

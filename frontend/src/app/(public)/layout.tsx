@@ -20,7 +20,7 @@ export default async function PublicLayout({ children }: { children: ReactNode }
       <a href="#public-main" className="sr-only z-50 rounded-md bg-primary p-3 text-primary-foreground focus:not-sr-only focus:fixed focus:top-2 focus:left-2">{t("skip")}</a>
       <header className="border-b border-border bg-card">
         <div className="mx-auto flex max-w-[1560px] flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-8">
-          <Link href="/" aria-label="PDA · Project Delivery Assistant" className="w-24 rounded-md outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"><Logo variant="wordmark" compact plain size={96} /></Link>
+          <Link href="/" aria-label="PDA · Project Delivery Assistant" className="w-24 rounded-md outline-hidden focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"><Logo variant="wordmark" compact plain size={96} /></Link>
           <nav aria-label={landing("navigation")} className="flex flex-wrap items-center justify-end gap-2">
             <LocaleSwitcher />
             <ThemeToggle />

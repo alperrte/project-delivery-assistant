@@ -54,7 +54,7 @@ export async function PublicInfoPage({ page }: { page: InfoPage }) {
               <div className="divide-y divide-border border-y border-border">
                 {group.questions.map(({ question, answer }, index) => (
                   <details key={question} className="group">
-                    <summary aria-controls={group.id + "-answer-" + index} className="flex list-none items-start justify-between gap-4 py-5 text-base font-medium outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring [&::-webkit-details-marker]:hidden">
+                    <summary aria-controls={group.id + "-answer-" + index} className="flex list-none items-start justify-between gap-4 py-5 text-base font-medium outline-hidden focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring [&::-webkit-details-marker]:hidden">
                       {question}<CaretDown size={18} aria-hidden="true" className="mt-1 shrink-0 transition-transform group-open:rotate-180" />
                     </summary>
                     <p id={group.id + "-answer-" + index} className="pb-5 pr-6 text-base leading-7 text-muted-foreground">{answer}</p>
@@ -76,7 +76,7 @@ export async function PublicInfoPage({ page }: { page: InfoPage }) {
               <h2 id="full-text-title" className="mb-4 text-xl font-semibold">{t("fullTextTitle")}</h2>
               <p className="mb-4 text-base leading-7 text-muted-foreground">{t("fullTextNote")}</p>
               {/* Scrollable region: focusable so keyboard users can scroll it; the legal text stays in its original English. */}
-              <pre lang="en" tabIndex={0} aria-label={t("fullTextTitle")} className="max-h-[70vh] overflow-auto rounded-lg border border-border bg-muted p-4 font-mono text-xs leading-5 outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring">{APACHE_LICENSE_TEXT}</pre>
+              <pre lang="en" tabIndex={0} aria-label={t("fullTextTitle")} className="max-h-[70vh] overflow-auto rounded-lg border border-border bg-muted p-4 font-mono text-xs leading-5 outline-hidden focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring">{APACHE_LICENSE_TEXT}</pre>
             </section>
           )}
           {(page === "kvkk" || page === "privacy") && (
