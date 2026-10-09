@@ -1,6 +1,8 @@
 package com.pda.user;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -18,7 +20,12 @@ public interface UserAdministration {
      */
     BootstrapOutcome bootstrapAdmin(String email, String rawPassword);
 
-    UserPage list(int page, int size);
+    /**
+     * Newest first, paged on the server. {@code search} matches the email or nickname as a case-insensitive substring
+     * (blank = no search); {@code status} is an {@code AccountStatus} name (blank = every status). An unknown status
+     * is an {@link IllegalArgumentException}.
+     */
+    UserPage list(int page, int size, String search, String status);
 
     Optional<UserDetail> find(UUID userId, Instant now);
 
@@ -29,6 +36,13 @@ public interface UserAdministration {
     StatusOutcome enable(UUID targetId);
 
     UserCounts counts();
+
+    /** Accounts created in {@code [from, toExclusive)}, cut into days of {@code zone}; empty days are absent. Never uses analytics data. */
+    RegistrationReport registrations(Instant from, Instant toExclusive, ZoneId zone);
+
+    record RegistrationReport(long inRange, List<DailyCount> daily) {}
+
+    record DailyCount(LocalDate date, long count) {}
 
     record UserSummary(UUID id, String email, String nickname, String accountStatus, String emailVerificationStatus,
                        String globalRole, boolean mustChangePassword, Instant createdAt) {}

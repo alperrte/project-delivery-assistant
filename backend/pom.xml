@@ -30,6 +30,7 @@
     <java.version>25</java.version>
     <spring-modulith.version>2.1.1</spring-modulith.version>
     <org.mapstruct.version>1.6.3</org.mapstruct.version>
+    <greenmail.version>2.1.14</greenmail.version>
     <!-- Security patch overrides of the Spring Boot 4.1.1 BOM (OSV advisories, 2026-10-02). Remove an override once the
          BOM itself ships a version at or above it. -->
     <tomcat.version>11.0.25</tomcat.version>
@@ -204,6 +205,13 @@
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>testcontainers-postgresql</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <!-- In-memory SMTP server for the contact-form mail tests (test scope only; the application never uses it). -->
+    <dependency>
+      <groupId>com.icegreen</groupId>
+      <artifactId>greenmail-junit5</artifactId>
+      <version>${greenmail.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
