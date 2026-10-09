@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useTranslations } from "next-intl";
+import { HeadingLevelProvider } from "@/components/common/page-title";
 import { PdaDemoWorkspace, type DemoStage } from "./demo/pda-demo-workspace";
 export { DELIVERY_STATUSES } from "./demo/pda-demo-workspace";
 import styles from "./landing.module.css";
@@ -32,7 +33,7 @@ function PdaViewport({ stage, progress }: { stage: DemoStage; progress: number |
   }, []);
   return <div ref={root} className={styles.pdaViewport} data-pda-viewport={stage} role="img" aria-label="PDA">
     <div className={styles.pdaCanvas} style={{ width: dimensions.width || "100%", height: dimensions.height, transform: "scale(" + dimensions.scale + ")", "--demo-height": dimensions.height + "px" } as CSSProperties} aria-hidden="true">
-      <PdaDemoWorkspace stage={stage} progress={progress} />
+      <HeadingLevelProvider level="h2"><PdaDemoWorkspace stage={stage} progress={progress} /></HeadingLevelProvider>
     </div>
   </div>;
 }

@@ -128,7 +128,7 @@
 
 ### Teknik SEO ve keşfedilebilirlik
 
-- [ ] SEO / GEO yaklaşımı
+- [X] SEO / GEO yaklaşımı
 - [X] Benzersiz sayfa başlığı
 - [ ] Meta description
 - [ ] robots.txt

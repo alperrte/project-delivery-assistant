@@ -4,8 +4,9 @@ import { CaretDown } from "@phosphor-icons/react/ssr";
 import { APACHE_LICENSE_TEXT } from "./apache-license";
 import { PageContents } from "./page-contents";
 import { CONTACT_EMAIL, type InfoPage } from "./site-info";
-import { buildPath } from "@/i18n/routing";
-import { locales, type Locale } from "@/i18n/config";
+import { type Locale } from "@/i18n/config";
+import { pageAlternates } from "@/lib/seo/alternates";
+import { FaqJsonLd, PageJsonLd } from "@/lib/seo/json-ld";
 
 type Section = { id: string; title: string; paragraphs: string[]; items?: string[] };
 type FaqGroup = { id: string; title: string; questions: { question: string; answer: string }[] };
@@ -16,7 +17,7 @@ export async function infoMetadata(page: InfoPage): Promise<Metadata> {
   const route = `/${page}` as const;
   return {
     title: t("title"), description: t("description"),
-    alternates: { canonical: buildPath(route, {}, locale), languages: Object.fromEntries(locales.map((language) => [language, buildPath(route, {}, language)])) },
+    alternates: pageAlternates(route, locale),
     ...(page === "kvkk" || page === "privacy" ? { robots: { index: false, follow: true } } : {}),
   };
 }
@@ -33,6 +34,8 @@ export async function PublicInfoPage({ page }: { page: InfoPage }) {
 
   return (
     <article>
+      <PageJsonLd route={`/${page}`} type={page === "about" ? "AboutPage" : "WebPage"} name={t("title")} description={t("description")} />
+      {page === "faq" && <FaqJsonLd questions={groups.flatMap((group) => group.questions)} />}
       <header className="max-w-3xl">
         <p className="text-sm font-medium text-muted-foreground">PDA · Project Delivery Assistant</p>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">{t("title")}</h1>

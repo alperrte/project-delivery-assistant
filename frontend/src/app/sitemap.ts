@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { locales } from "@/i18n/config";
 import { buildPath, type PageRoute } from "@/i18n/routing";
+import { languageAlternates } from "@/lib/seo/alternates";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -15,7 +16,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ];
   return pages.flatMap(({ route, priority }) => locales.map((locale) => ({
     url: `${base}${buildPath(route, {}, locale)}`,
-    alternates: { languages: Object.fromEntries(locales.map((language) => [language, `${base}${buildPath(route, {}, language)}`])) },
+    alternates: { languages: languageAlternates(route, base) },
     changeFrequency: "monthly" as const,
     priority,
   })));

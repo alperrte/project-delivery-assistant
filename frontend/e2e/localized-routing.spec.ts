@@ -90,6 +90,76 @@ test("project section pages carry their own title", async ({ request }) => {
   }
 });
 
+test("the home page carries valid structured data in the page language", async ({ request }) => {
+  for (const [path, locale] of [["/tr/ana-sayfa", "tr"], ["/en/home", "en"], ["/de/startseite", "de"]]) {
+    const html = await (await request.get(path)).text();
+    const blocks = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)];
+    expect(blocks, path).toHaveLength(1);
+    const graph = JSON.parse(blocks[0][1])["@graph"];
+    expect(graph.map((node: { "@type": string }) => node["@type"]), path).toEqual(["Organization", "WebSite", "SoftwareApplication"]);
+    expect(graph[2].inLanguage, path).toBe(locale);
+    expect(graph[2].license, path).toBe("https://www.apache.org/licenses/LICENSE-2.0");
+  }
+});
+
+test("public information pages declare their type and breadcrumb", async ({ request }) => {
+  for (const [path, type, locale] of [
+    ["/tr/hakkimizda", "AboutPage", "tr"], ["/en/about", "AboutPage", "en"], ["/de/ueber-uns", "AboutPage", "de"],
+    ["/tr/sss", "WebPage", "tr"], ["/en/license", "WebPage", "en"], ["/de/barrierefreiheit", "WebPage", "de"],
+    ["/tr/kvkk", "WebPage", "tr"], ["/en/privacy", "WebPage", "en"], ["/de/datenschutz", "WebPage", "de"],
+  ]) {
+    const html = await (await request.get(path)).text();
+    const graphs = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((match) => JSON.parse(match[1])).filter((block) => block["@graph"]);
+    expect(graphs, path).toHaveLength(1);
+    const [webpage, breadcrumb] = graphs[0]["@graph"];
+    expect(webpage["@type"], path).toBe(type);
+    expect(webpage.inLanguage, path).toBe(locale);
+    expect(breadcrumb["@type"], path).toBe("BreadcrumbList");
+    expect(breadcrumb.itemListElement.map((item: { position: number }) => item.position), path).toEqual([1, 2]);
+  }
+});
+
+test("the FAQ page lists every visible question as structured data", async ({ page }) => {
+  for (const path of ["/tr/sss", "/en/faq", "/de/faq"]) {
+    await page.goto(path);
+    const blocks = await page.locator('script[type="application/ld+json"]').allTextContents();
+    const entity = blocks.map((block) => JSON.parse(block)).find((block) => block["@type"] === "FAQPage");
+    expect(entity, path).toBeDefined();
+    const visible = await page.locator("details > summary").allInnerTexts();
+    expect(entity.mainEntity.map((item: { name: string }) => item.name), path).toEqual(visible.map((text) => text.trim()));
+    expect(entity.mainEntity[0].acceptedAnswer.text.length, path).toBeGreaterThan(20);
+  }
+});
+
+test("public pages declare x-default, the page language and a 1200x630 share image", async ({ page, request }) => {
+  for (const [path, locale, ogLocale] of [["/tr/ana-sayfa", "tr", "tr_TR"], ["/en/faq", "en", "en_US"], ["/de/anmelden", "de", "de_DE"]]) {
+    await page.goto(path);
+    await expect(page.locator('link[rel="alternate"][hreflang="x-default"]'), path).toHaveAttribute("href", /\/tr\//);
+    await expect(page.locator('meta[property="og:locale"]'), path).toHaveAttribute("content", ogLocale);
+    await expect(page.locator('meta[property="og:locale:alternate"]'), path).toHaveCount(2);
+    await expect(page.locator('meta[property="og:image:width"]'), locale).toHaveAttribute("content", "1200");
+    await expect(page.locator('meta[property="og:image:height"]'), locale).toHaveAttribute("content", "630");
+  }
+  const image = await (await request.get("/images/branding/og-image.png")).body();
+  expect([image.readUInt32BE(16), image.readUInt32BE(20)]).toEqual([1200, 630]);
+  expect(await (await request.get("/sitemap.xml")).text()).toContain('hreflang="x-default"');
+});
+
+test("the home page has one h1; the product demo uses h2 for its screen titles", async ({ page }) => {
+  await page.goto("/tr/ana-sayfa");
+  await expect(page.locator("h1")).toHaveCount(1);
+});
+
+test("llms.txt summarises the site for AI assistants and links every public page in each language", async ({ request }) => {
+  const response = await request.get("/llms.txt");
+  expect(response.status()).toBe(200);
+  expect(response.headers()["content-type"]).toContain("text/plain");
+  const text = await response.text();
+  expect(text.startsWith("# PDA · Project Delivery Assistant")).toBe(true);
+  for (const path of ["/tr/ana-sayfa", "/en/faq", "/de/ueber-uns", "/tr/lisans", "/de/barrierefreiheit"]) expect(text, path).toContain(path);
+  expect(text).toContain("Apache License 2.0");
+});
+
 test("protected localized deep links go to the same-language login", async ({ request }) => {
   const response = await request.get("/de/projekte/pda-backend/aufgaben/board?page=2", { maxRedirects: 0 });
   expect(response.status()).toBe(307);
@@ -122,5 +192,8 @@ test("public canonical, hreflang, sitemap and robots agree on localized paths", 
   expect(sitemap).toContain("/de/barrierefreiheit");
   const robots = await (await request.get("/robots.txt")).text();
   expect(robots).toContain("Disallow: /de/projekte");
+  expect(robots).toContain("Disallow: /de/meine-aufgaben");
+  expect(robots).toContain("Disallow: /en/my-tasks");
+  expect(robots).toContain("Disallow: /tr/gorevlerim");
   expect(robots).not.toContain("Disallow: /de/barrierefreiheit");
 });

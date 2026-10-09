@@ -22,6 +22,7 @@ import { projectStatusBadgeClass, projectPriorityBadgeClass } from "../status-co
 import { ProjectMark } from "./project-mark";
 import { ProjectOverview } from "./project-overview";
 import { ProjectSettingsForm } from "./project-settings-form";
+import { PageTitle } from "@/components/common/page-title";
 
 export function ProjectDetail({ slug }: { slug: string }) {
   const t = useTranslations("projects.detail");
@@ -61,7 +62,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                <h1 className="font-heading text-[1.65rem] font-bold leading-tight text-foreground sm:text-[2rem]">{project.name}</h1>
+                <PageTitle className="font-heading text-[1.65rem] font-bold leading-tight text-foreground sm:text-[2rem]">{project.name}</PageTitle>
                 <Badge className={`px-2.5 py-0.5 ${projectStatusBadgeClass(project.status)}`}>{tp(`statusValues.${project.status}`)}</Badge>
                 <Badge className={`px-2.5 py-0.5 ${projectPriorityBadgeClass(project.priority)}`}>{tp(`priorityValues.${project.priority}`)}</Badge>
               </div>
