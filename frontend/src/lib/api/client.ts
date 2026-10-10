@@ -3,6 +3,14 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/api/v1
 /** Fired on `window` when a request is still unauthenticated after the session renewal failed. */
 export const SESSION_EXPIRED_EVENT = "pda:session-expired";
 
+/** Fired on `window` when a request never reached the server (offline, refused connection). It carries no detail. */
+export const NETWORK_FAILURE_EVENT = "pda:network-failure";
+
+/** The analytics endpoint reports its own failures nowhere: a dead connection must not cause more traffic. */
+function reportNetworkFailure(path: string) {
+  if (typeof window !== "undefined" && !path.startsWith("/analytics")) window.dispatchEvent(new Event(NETWORK_FAILURE_EVENT));
+}
+
 export class ApiError extends Error {
   constructor(
     public readonly status: number,
@@ -95,6 +103,7 @@ async function send(path: string, init: RequestInit, method: string, guard?: () 
     if (Number.isFinite(remaining) && remaining >= 0) accessExpiresAt = Date.now() + remaining;
     return res;
   } catch {
+    reportNetworkFailure(path);
     throw new ApiError(0);
   }
 }

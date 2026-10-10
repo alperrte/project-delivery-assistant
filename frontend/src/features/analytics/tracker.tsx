@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import { ADMIN_ENTRY_PATH } from "@/i18n/routing";
 import { purgeAnalyticsStorage } from "@/features/consent/contract";
 import { useConsent } from "@/features/consent/consent-store";
+import { NETWORK_FAILURE_EVENT } from "@/lib/api/client";
+import { isChunkLoadError, reportClientError } from "./cta";
 import { forgetIdentity } from "./identifiers";
 import { readLanding, routeTemplate, type Landing } from "./route";
 import { sendAnalyticsEvent } from "./transport";
@@ -80,6 +82,35 @@ function startEngagement(currentRoute: () => string) {
 }
 
 /**
+ * Browser-level failures, reported by kind only (see `reportClientError`): a promise nobody handled, a script or
+ * stylesheet of the application that did not load, and a request that never reached the server. Installed only while
+ * analytics is allowed. Render errors are reported by the error screens themselves.
+ */
+function startErrorReporting() {
+  const onRejection = (event: PromiseRejectionEvent) => {
+    const reason: unknown = event.reason;
+    // A cancelled request is routine, not a failure.
+    if (reason instanceof DOMException && reason.name === "AbortError") return;
+    reportClientError(isChunkLoadError(reason) ? "chunk_load" : "unhandled_rejection");
+  };
+  // Resource errors do not bubble, so this listens in the capture phase and only reacts to the application's own files.
+  const onResource = (event: Event) => {
+    const target = event.target;
+    if (target instanceof HTMLScriptElement && target.src.includes("/_next/static/")) reportClientError("chunk_load");
+    else if (target instanceof HTMLLinkElement && target.href.includes("/_next/static/")) reportClientError("chunk_load");
+  };
+  const onNetwork = () => reportClientError("network");
+  window.addEventListener("unhandledrejection", onRejection);
+  window.addEventListener("error", onResource, true);
+  window.addEventListener(NETWORK_FAILURE_EVENT, onNetwork);
+  return () => {
+    window.removeEventListener("unhandledrejection", onRejection);
+    window.removeEventListener("error", onResource, true);
+    window.removeEventListener(NETWORK_FAILURE_EVENT, onNetwork);
+  };
+}
+
+/**
  * Mounted once for the whole application. While analytics is not allowed it does nothing at all: no listener, no
  * timer, no identifier, no request. The decision itself is re-read by the transport before every request.
  */
@@ -112,6 +143,11 @@ export function AnalyticsTracker() {
   useEffect(() => {
     if (!allowed) return;
     return startEngagement(() => routeRef.current);
+  }, [allowed]);
+
+  useEffect(() => {
+    if (!allowed) return;
+    return startErrorReporting();
   }, [allowed]);
 
   return null;

@@ -49,3 +49,15 @@ export function promoteToAdmin(email: string) {
   const changed = psql(`WITH changed AS (UPDATE users SET global_role = 'ADMIN' WHERE email = '${email}' RETURNING id) SELECT count(*) FROM changed`);
   if (changed !== "1") throw new Error("Expected to promote exactly one test account");
 }
+
+/** The call-to-action ids stored for one analytics session, in the order they happened. */
+export function analyticsCtaClicks(sessionId: string): string[] {
+  const out = psql(`SELECT coalesce(json_agg(cta_id ORDER BY occurred_at, id), '[]'::json) FROM analytics_cta_clicks WHERE session_id = '${uuid(sessionId)}'`);
+  return JSON.parse(out) as string[];
+}
+
+/** The client errors stored for one analytics session: route template and kind only. */
+export function analyticsClientErrors(sessionId: string): { path: string; error_kind: string }[] {
+  const out = psql(`SELECT coalesce(json_agg(row_to_json(t)), '[]'::json) FROM (SELECT path, error_kind FROM analytics_client_errors WHERE session_id = '${uuid(sessionId)}' ORDER BY occurred_at, id) t`);
+  return JSON.parse(out) as { path: string; error_kind: string }[];
+}

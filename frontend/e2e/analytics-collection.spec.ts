@@ -61,8 +61,11 @@ test("accept: page views reach PostgreSQL as route templates without query, toke
   await accept(page);
   await expect.poll(() => sent.length).toBeGreaterThanOrEqual(1);
   const id = await sessionId(page);
-  const visitor = await page.evaluate((key) => localStorage.getItem(key), ANALYTICS_VISITOR_KEY);
+  // The stored visitor is the random id plus when it was made (it is renewed after 12 months).
+  const stored = JSON.parse((await page.evaluate((key) => localStorage.getItem(key), ANALYTICS_VISITOR_KEY))!) as { id: string; createdAt: string };
+  const visitor = stored.id;
   expect(visitor).toMatch(/^[0-9a-f-]{36}$/);
+  expect(Math.abs(Date.now() - Date.parse(stored.createdAt))).toBeLessThan(60_000);
 
   await page.getByRole("link", { name: "Kayıt ol" }).first().click();
   await expect(page).toHaveURL(/\/tr\/kayit$/);

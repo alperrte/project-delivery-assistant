@@ -1,6 +1,7 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
+import { renderErrorKind, reportClientError } from "@/features/analytics/cta";
 import { ErrorContent } from "@/features/errors/error-content";
 import { isLocale, LOCALE_COOKIE } from "@/i18n/config";
 import tr from "@/i18n/errors/tr.json";
@@ -27,7 +28,9 @@ function readDark() {
 }
 
 /** Root-layout failures must not depend on NextIntl, ThemeProvider or session queries. */
-export default function GlobalError({ retry }: { error: Error & { digest?: string }; retry: () => void }) {
+export default function GlobalError({ error, retry }: { error: Error & { digest?: string }; retry: () => void }) {
+  // Kind only; the root layout (and with it the analytics tracker) is gone, so the transport opens its own session.
+  useEffect(() => { reportClientError(renderErrorKind(error)); }, [error]);
   const locale = useSyncExternalStore(subscribe, readLocale, () => "tr" as const);
   const dark = useSyncExternalStore(subscribe, readDark, () => false);
   const copy = copies[locale];

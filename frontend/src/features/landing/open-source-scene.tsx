@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { ArrowUpRight, Minus, Square, Terminal, X } from "lucide-react";
 import { useReducedMotionPreference } from "@/lib/preferences/motion";
 import { REPOSITORY_URL } from "@/features/public-info/site-info";
+import { trackCta } from "@/features/analytics/cta";
 import { commandSequence } from "./command-sequence";
 import { advanceAnimationProgress, releaseCompletedAnimation } from "./animation-progress";
 import styles from "./landing.module.css";
@@ -112,7 +113,7 @@ export function OpenSourceScene() {
             <div data-fact><p className={styles.factBrand} translate="no">PDA</p><p className={styles.factLicense}>{t("openSource")} <span>Apache 2.0</span></p></div>
             <h3 data-fact>{t("sourceFact")}</h3>
             <ul className={styles.techList}>{TECHNOLOGIES.map(tech => <li data-fact key={tech.name}><span className={styles.techIcon} style={{ maskImage: "url(/images/tech/" + tech.asset + ".svg)", maskMode: tech.asset === "nextjs" ? "luminance" : "alpha" }} aria-hidden="true" /><div><strong translate="no">{tech.name}</strong><span>{t(tech.role)}</span></div></li>)}</ul>
-            <a data-fact href={REPOSITORY_URL} className={styles.sourceLink}>{t("source")}<ArrowUpRight size={18} aria-hidden="true" /></a>
+            <a data-fact href={REPOSITORY_URL} onClick={() => trackCta("github_repo")} className={styles.sourceLink}>{t("source")}<ArrowUpRight size={18} aria-hidden="true" /></a>
           </div>
         </div>
       </div>

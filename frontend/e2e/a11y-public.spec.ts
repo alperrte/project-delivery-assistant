@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
-const paths = ["/", "/login", "/register", "/forgot-password", "/about", "/faq", "/kvkk", "/privacy", "/accessibility", "/license"] as const;
+const paths = ["/", "/login", "/register", "/forgot-password", "/about", "/faq", "/kvkk", "/privacy", "/terms", "/cookies", "/contact", "/accessibility", "/license"] as const;
 const locales = ["tr", "en", "de"] as const;
 const themes = ["light", "dark"] as const;
 const viewports = [{ name: "mobile", width: 390, height: 844 }, { name: "desktop", width: 1440, height: 900 }] as const;

@@ -12,6 +12,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { route: "/about", priority: 0.5 },
     { route: "/faq", priority: 0.6 },
     { route: "/contact", priority: 0.5 },
+    { route: "/kvkk", priority: 0.4 },
+    { route: "/privacy", priority: 0.4 },
+    { route: "/terms", priority: 0.4 },
+    { route: "/cookies", priority: 0.4 },
     { route: "/accessibility", priority: 0.4 },
     { route: "/license", priority: 0.3 },
   ];

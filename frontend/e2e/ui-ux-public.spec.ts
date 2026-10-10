@@ -5,7 +5,7 @@ import tr from "../src/i18n/messages/tr.json";
 // UI/UX audit of the public pages (no backend needed). The checks mirror the checklist's section 6 items; the matching
 // signed-in checks live in ui-ux-app.spec.ts. Results are also written to test-results/ui-audit.jsonl.
 
-const PUBLIC = ["/", "/login", "/register", "/forgot-password", "/contact", "/about", "/faq", "/cookies", "/license", "/accessibility", "/privacy", "/kvkk"];
+const PUBLIC = ["/", "/login", "/register", "/forgot-password", "/contact", "/about", "/faq", "/cookies", "/license", "/accessibility", "/privacy", "/kvkk", "/terms"];
 
 async function open(page: Page, path: string) {
   const errors: string[] = [];

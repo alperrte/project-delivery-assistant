@@ -9,6 +9,7 @@ import { consumeHomeReturn } from "@/components/common/home-link";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { SiteFooter } from "@/components/layout/site-footer";
+import { TrackedLink } from "@/features/analytics/tracked-link";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useReducedMotionPreference } from "@/lib/preferences/motion";
@@ -45,8 +46,8 @@ export function LandingPage() {
           <LocaleSwitcher hideLabelOnMobile triggerClassName="min-h-11" />
           <ThemeToggle />
           <Link href="/about" className={styles.headerLink}>{footer("about")}</Link>
-          <Link href="/login" className={styles.headerLink}>{t("login")}</Link>
-          <Link href="/register" className={cn(buttonVariants(), "auth-cta hover:brightness-110", styles.headerLogin)}>{t("register")}<ArrowUpRight size={15} aria-hidden="true" /></Link>
+          <TrackedLink ctaId="header_login" href="/login" className={styles.headerLink}>{t("login")}</TrackedLink>
+          <TrackedLink ctaId="header_register" href="/register" className={cn(buttonVariants(), "auth-cta hover:brightness-110", styles.headerLogin)}>{t("register")}<ArrowUpRight size={15} aria-hidden="true" /></TrackedLink>
         </nav>
       </header>
       <main id="landing-main" tabIndex={-1}>
@@ -64,8 +65,8 @@ export function LandingPage() {
           <h2 id="final-heading">{t("finalFirst")}<br />{t("finalSecond")}<br /><span>{t("finalThird")}</span></h2>
           <p>{t("finalDescription")}</p>
           <div className={styles.actions}>
-            <Link href="/register" className={cn(buttonVariants(), "auth-cta hover:brightness-110", styles.primary)}>{t("start")}<ArrowUpRight size={19} aria-hidden="true" /></Link>
-            <Link href="/login" className={styles.textLink}>{t("login")}<ArrowUpRight size={17} aria-hidden="true" /></Link>
+            <TrackedLink ctaId="landing_register" href="/register" className={cn(buttonVariants(), "auth-cta hover:brightness-110", styles.primary)}>{t("start")}<ArrowUpRight size={19} aria-hidden="true" /></TrackedLink>
+            <TrackedLink ctaId="landing_login" href="/login" className={styles.textLink}>{t("login")}<ArrowUpRight size={17} aria-hidden="true" /></TrackedLink>
           </div>
         </section>
       </main>

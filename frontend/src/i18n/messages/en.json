@@ -143,6 +143,7 @@
     "ADMIN_SELF_DENIED": "You cannot end your own membership.",
     "ADMIN_LAST_ADMIN": "The last active administrator cannot be ended.",
     "USER_NOT_FOUND": "User not found.",
+    "SUPPORT_REQUEST_NOT_FOUND": "Support request not found.",
     "emailNotVerified": "Your email address has not been verified yet.",
     "resetTicketInvalid": "The verification has expired. Please start again.",
     "verificationRequired": "Please verify the code sent to your email first.",
@@ -1341,7 +1342,10 @@
     "nicknamePlaceholder": "pda_assistant",
     "passwordPlaceholder": "Create a password",
     "confirmPasswordPlaceholder": "Repeat your password",
-    "codeSent": "We sent the verification code to your email."
+    "codeSent": "We sent the verification code to your email.",
+    "notice": "By registering you accept the <terms>Terms of Use</terms> and confirm that you have read the <kvkk>KVKK Privacy Notice</kvkk> and the <privacy>Privacy Policy</privacy>. These are information texts, not a request for consent.",
+    "noticeOauth": "By continuing with Google or GitHub you accept the <terms>Terms of Use</terms> and confirm that you have read the <kvkk>KVKK Privacy Notice</kvkk> and the <privacy>Privacy Policy</privacy>.",
+    "newTab": "(opens in a new tab)"
   },
   "validation": {
     "rolesRequired": "Select at least one role.",
@@ -2558,6 +2562,11 @@
     "changePassword": "Change password",
     "adminUsers": "Users · Administration",
     "adminAnalytics": "Analytics · Administration",
+    "adminUser": "User details · Administration",
+    "adminSystem": "System · Administration",
+    "adminAudit": "Audit log · Administration",
+    "adminSupport": "Support requests · Administration",
+    "adminSupportRequest": "Support request · Administration",
     "memberInvite": "Invite member"
   },
   "siteFooter": {
@@ -2565,7 +2574,7 @@
     "information": "Information and support",
     "about": "About us",
     "faq": "Frequently Asked Questions",
-    "kvkk": "KVKK",
+    "kvkk": "KVKK Privacy Notice",
     "privacy": "Privacy Policy",
     "accessibility": "Accessibility",
     "license": "License",
@@ -2577,7 +2586,8 @@
     "version": "Version {version}",
     "source": "Source code",
     "cookies": "Cookie Policy",
-    "manageCookies": "Manage cookie preferences"
+    "manageCookies": "Manage cookie preferences",
+    "terms": "Terms of Use"
   },
   "publicPages": {
     "common": {
@@ -2587,9 +2597,7 @@
       "contents": "On this page",
       "contactTitle": "Contact us",
       "contactAction": "Open the contact form",
-      "contactText": "Use the contact form for questions, data requests or accessibility feedback. Do not share your password, verification code or secret invitation details.",
-      "reviewTitle": "Review before launch",
-      "reviewNotice": "This information draft describes the current PDA features. The data controller's identity, hosting and email providers, data locations and retention periods must be confirmed before launch. This text does not request consent or represent a completed KVKK compliance process.",
+      "contactText": "Use the contact form or the e-mail address below for questions, personal-data (KVKK/GDPR) requests or accessibility feedback. Do not share your password, verification code or secret invitation details.",
       "references": "Official references",
       "noticeReference": "KVKK: Duty to inform",
       "cookieReference": "KVKK: Cookie practices guide"
@@ -2660,7 +2668,7 @@
             },
             {
               "question": "How do I create an account?",
-              "answer": "Open the registration link on the sign-in screen and enter your email, username and password. After registration, the application tries to sign you in; if that fails, it directs you to the sign-in screen."
+              "answer": "Open the registration link on the sign-in screen and fill in the e-mail, nickname and password fields. A six-digit verification code is sent to your e-mail address; once you enter it your account is activated and you are signed in. The registration form links to the KVKK Privacy Notice and the Privacy Policy; these are information, and there is no separate consent checkbox."
             },
             {
               "question": "Can I sign in with Google or GitHub?",
@@ -2715,16 +2723,16 @@
           "title": "Accounts and privacy",
           "questions": [
             {
-              "question": "What if I forget my password?",
-              "answer": "Use the forgot password link on the sign-in screen. Reset email delivery depends on the service's email configuration; check your inbox and spam folder. Use the provider's recovery flow for a Google or GitHub password."
+              "question": "I forgot my password. What should I do?",
+              "answer": "Use the Forgot password link on the sign-in screen. A code is sent to your e-mail address; enter it and choose a new password. E-mail depends on the service's configuration; check your inbox and spam folder. For the password of your Google or GitHub account, use that provider's recovery flow."
             },
             {
               "question": "What does Remember me store?",
               "answer": "This option only remembers your email address in this browser. It does not store your password or extend your session. Avoid it on shared devices; turn it off on a subsequent sign-in to clear the remembered email."
             },
             {
-              "question": "How can I review my data or request deletion?",
-              "answer": "Read the KVKK and Privacy Policy pages for information about data processing. Send account or data requests to the contact email. The current account screen does not have an automatic deletion button; the request scope and identity verification need separate review."
+              "question": "How do I delete my account or get access to my data?",
+              "answer": "You can delete your account yourself on the account screen: you confirm with a one-time link sent to your e-mail and your own sign-in credentials, and the account is anonymised at once. If you own a project or an organisation, you must first transfer ownership or delete it. For requests such as access, correction or export of your data, choose the category “KVKK / data request” in the contact form or write to pdassistant.info@gmail.com; we reply within 30 days at the latest. Details are in the KVKK Privacy Notice and the Privacy Policy."
             }
           ]
         },
@@ -2750,197 +2758,459 @@
     },
     "privacy": {
       "title": "Privacy Policy",
-      "description": "How information is used in PDA, what project members can see and which preferences are stored in your browser.",
+      "description": "Which information PDA uses and why, who can see it, how long it is kept, how to delete your account and the GDPR information for visitors in the EU/EEA.",
       "sections": [
         {
           "id": "scope",
-          "title": "Scope and contact",
+          "title": "Scope and who is responsible",
           "paragraphs": [
-            "This policy covers PDA's account, project, team, task and calendar features. When you visit external Google or GitHub pages, those services' own privacy terms apply.",
-            "The README lists Alper Temiz and Hamza Taşbay as developers. The service's data controller must be identified separately before launch; developer names alone do not establish that identity. The form on the Contact page is the way to reach the team."
+            "This policy covers the account, project, team, task, chat, calendar and other features of the PDA web application. When you go to external GitHub or Google pages, the privacy terms of that service apply.",
+            "The data controllers are Hamza Taşbay and Alper Temiz, natural persons and maintainers of the open-source PDA project. You can reach us through the contact form or at pdassistant.info@gmail.com.",
+            "The detailed information under the Turkish Law No. 6698 (legal bases, transfers, your rights) is in the KVKK Privacy Notice; this policy is a user-oriented summary of the same information."
           ]
         },
         {
           "id": "data",
-          "title": "Information used",
+          "title": "Which information is used?",
           "paragraphs": [
-            "Account and workspace information is stored according to the features you use. Passwords are not stored as plain text; local account passwords are protected with one-way hashes."
+            "Depending on the features you use, the following information is kept. Passwords are not stored in plain text; they are protected by a one-way password hash."
           ],
           "items": [
-            "Account: email, username, account status, registration times and an external sign-in provider identity where applicable.",
-            "Project and team: project information, memberships, roles, invitations, responses and uploaded project logos.",
-            "Work content: tasks, comments, attachments, time entries, success criteria and reminders, when you use those features.",
-            "Session: timestamps, browser/device information and secure authentication records. IP addresses are used for request rate limiting.",
-            "Contact: messages you send us and the email address needed to reply."
+            "Account: e-mail, nickname, account status, registration times, the ID of a linked external sign-in provider if any; first and last name (on accounts created through an invitation); optional profile photo.",
+            "Two-factor authentication (optional): the authenticator secret is stored encrypted, backup codes as hashes.",
+            "Projects and teams: projects, memberships, roles, invitations, accept or decline responses, project logo and banner, organisations and their images.",
+            "Work content: tasks, comments, file attachments, time entries, success criteria, calendar entries and reminders, project chat messages (with replies and reactions), in-app notifications and the notification history, only for the features you use.",
+            "Session: session times, browser/device information and secure session verification records. The network address is used for request rate limiting.",
+            "Support messages: the name, (optional) last name, e-mail address, category and message you write in the contact form.",
+            "Visit analytics (only with your consent): an anonymous visitor and session ID, page type, source of the visit, active time, whether certain buttons were clicked and the type of an error."
           ]
         },
         {
           "id": "purposes",
-          "title": "Why information is used",
+          "title": "What the information is used for",
           "paragraphs": [
-            "Account information supports sign-in and account protection; project, team and task information supports your shared workspace. Invitations and notifications are delivered to their recipients. Session and request checks aim to reduce unauthorised access and misuse.",
-            "Do not put sensitive personal data, passwords or unnecessary information about other people in descriptions, comments or files."
+            "Account information is used for signing you in and protecting your account; project, team and task data is used to provide your shared workspace. Invitations and notifications are delivered to the person concerned. Controls such as sessions, rate limiting and bot traps aim to reduce unauthorised access and abuse. Support messages are used to answer you.",
+            "Visit analytics is used only with your consent, to understand anonymously how the site is used and where errors occur. It is not linked to your account.",
+            "Do not add special categories of personal data, passwords or unnecessary information about other people to project descriptions, comments, chat and files."
           ]
         },
         {
           "id": "visibility",
-          "title": "Who can see information?",
+          "title": "Who can see it?",
           "paragraphs": [
-            "Workspace content is limited by project membership and role permissions. Authorised project members may see your email and username in team lists. Invitation recipients can see the preview provided for their own invitation.",
-            "Choosing Google/GitHub sign-in involves authentication with that provider. The repository connection reads public GitHub information. Hosting, database and email providers and data locations must be confirmed in the pre-launch processing inventory; this draft does not guarantee storage in a particular country or the absence of transfers."
+            "Workspace content is limited by project membership and role permissions. Authorised project members can see your e-mail and nickname in team lists; the project chat is visible to the project's members. The recipient of an invitation can see the invitation preview shown to them.",
+            "Only the PDA administrator can see your support messages. The administrator account can see the account list (e-mail, nickname, status), session records and support requests, and can disable accounts. Administrator actions are written to the administration audit log.",
+            "When you choose Google/GitHub sign-in, authentication takes place with that provider; the repository connection reads GitHub's public repository information. Your data is not sold and not shared for advertising."
+          ]
+        },
+        {
+          "id": "deletion",
+          "title": "Account deletion and anonymisation",
+          "paragraphs": [
+            "You can delete your account yourself on the account screen. The action is confirmed with a short-lived one-time link sent to your e-mail and your own sign-in credentials.",
+            "The moment the account is deleted it is anonymised: the e-mail address, name, nickname and password hash are erased, all sessions are closed and project memberships end. This cannot be undone.",
+            "If you own a project or an organisation, you must transfer ownership or delete the project/organisation before deleting your account. The administrator account cannot delete itself. After deletion, the account may still appear with an anonymised identity in other users' project records (for example in task history).",
+            "An administrator can disable an account for misuse or security reasons; sessions are then closed and sign-in is blocked, and no data is deleted."
           ]
         },
         {
           "id": "browser-storage",
           "title": "Cookies and browser preferences",
           "paragraphs": [
-            "PDA uses no advertising cookies or third-party trackers. Session and security cookies are required for the application to work. Visit analytics runs only with your explicit choice and is off by default; see the Cookie Policy page for details and your preferences."
-          ],
-          "items": [
-            "PDA_ACCESS, PDA_REFRESH and PDA_SESSION: sign-in and session flow. Their durations depend on session configuration; they are cleared on sign-out.",
-            "XSRF-TOKEN: security cookie used to protect action requests against forged requests.",
-            "NEXT_LOCALE: a one-year cookie remembering your selected language.",
-            "Local browser storage: theme, menu/team view and an optional remembered email. They may remain until browser data is cleared or the relevant preference is changed.",
-            "Session storage: the last selected project for the user, kept for the browser session.",
-            "Cookie choice: the pda:cookie-consent key stores your decision in this browser.",
-            "Analytics (optional, off by default): if you allow it, page type, visit source and actively spent time are measured with an anonymous visitor and session ID; it is not linked to your account. When you withdraw consent, new measurements stop and these IDs are deleted."
+            "PDA uses no advertising cookies or third-party tracking tools; fonts are loaded from PDA's own server. Session and security cookies are necessary for the application to work. Visit analytics runs only with your explicit choice and is off by default.",
+            "Every cookie and storage entry is listed with its purpose and duration in the Cookie Policy; you can change your choice there or with the “Manage cookie preferences” link at the bottom of the page."
+          ]
+        },
+        {
+          "id": "transfers",
+          "title": "Service providers and transfers abroad",
+          "paragraphs": [
+            "E-mails are sent through Gmail SMTP (Google, USA). The optional Google/GitHub sign-in and the GitHub repository features connect to the respective providers (USA). The hosting provider has not been chosen yet; this policy will be updated once it is.",
+            "Details of these transfers and their legal basis are in the “Recipients and transfers abroad” section of the KVKK Privacy Notice and in the GDPR sections below."
           ]
         },
         {
           "id": "retention",
-          "title": "Retention and data requests",
+          "title": "Retention periods",
           "paragraphs": [
-            "Active account and project records are stored in the database for service features. A session expiring does not mean all historical records are automatically deleted.",
-            "Category-specific retention, backup and deletion schedules must be defined before launch. There is currently no automatic account deletion screen. Contact us with access, correction or deletion requests; they should be reviewed after verifying account ownership and considering other people's rights."
-          ]
+            "At the end of the periods below, data is deleted or anonymised automatically."
+          ],
+          "table": {
+            "caption": "Retention periods",
+            "headers": [
+              "Data",
+              "Period",
+              "At the end"
+            ],
+            "rows": [
+              [
+                "Account data and workspace content",
+                "Until you delete the account",
+                "The account is anonymised the moment it is deleted: e-mail address, name, nickname and password hash are erased, sessions are closed, project and organisation memberships end. An owner of a project or organisation must transfer ownership or delete it before deleting their account."
+              ],
+              [
+                "Revoked or expired session records",
+                "30 days",
+                "Deleted automatically."
+              ],
+              [
+                "Contact-form status records and stored support messages (name, e-mail, category, message)",
+                "12 months",
+                "Deleted automatically. The e-mail copy sent to the PDA inbox is not covered by this automatic deletion; you can ask for it to be deleted as a data-subject request."
+              ],
+              [
+                "Visit analytics (sessions, page views, button clicks and error events)",
+                "12 months",
+                "Deleted automatically. The anonymous visitor ID is renewed in your browser every 12 months and removed at once when you withdraw your analytics consent."
+              ],
+              [
+                "Administration audit log (account IDs, action type, time and outcome only)",
+                "24 months",
+                "Deleted automatically."
+              ]
+            ]
+          }
         },
         {
           "id": "security",
-          "title": "Security and updates",
+          "title": "Security",
           "paragraphs": [
-            "PDA stores session tokens in HttpOnly cookies, hashes passwords and checks project permissions on the server. These measures do not guarantee absolute security. Sign out after using a shared device.",
-            "This policy and its update date should be reviewed when features or processing conditions change. KVKK rights and processing conditions are described on the separate KVKK page."
+            "PDA keeps session tokens in HttpOnly cookies, stores passwords as one-way hashes, encrypts two-factor secrets, checks project permissions on the server and protects administrator access with a separate two-factor sign-in. The contact form uses bot traps that send no data to a third party instead of a CAPTCHA.",
+            "These measures are not an absolute security guarantee. On shared devices, sign out when you are done and consider enabling two-factor authentication."
+          ]
+        },
+        {
+          "id": "children",
+          "title": "Children",
+          "paragraphs": [
+            "PDA is not intended for children under 16 and does not verify age. If you are under 16, do not create an account without the knowledge of your parent or legal guardian. If you notice an account that belongs to a child, tell us and we will delete it."
+          ]
+        },
+        {
+          "id": "gdpr-controller",
+          "title": "GDPR: controller and contact (Art. 13(1)(a)–(b))",
+          "paragraphs": [
+            "For visitors in the European Union or the European Economic Area, the following information is given under Articles 13 and 14 of the General Data Protection Regulation (GDPR). The controllers are Hamza Taşbay and Alper Temiz, natural persons and maintainers of the open-source PDA project, based in Türkiye. Contact: the contact form or pdassistant.info@gmail.com. No data protection officer has been appointed."
+          ]
+        },
+        {
+          "id": "gdpr-bases",
+          "title": "GDPR: purposes and legal bases (Art. 6)",
+          "paragraphs": [
+            "We process personal data on the following bases."
+          ],
+          "items": [
+            "Art. 6(1)(b), contract: creating your account, authenticating you and providing the workspace you ask for under the Terms of Use. Providing the e-mail address, nickname and password is necessary for this; without it no account can be created.",
+            "Art. 6(1)(f), legitimate interests: security of accounts and systems, preventing abuse (sessions, rate limiting, bot traps, administration audit log) and answering contact-form messages. Our interest is to run a secure service and to reply to the people who write to us; you can object (see your rights).",
+            "Art. 6(1)(a), consent: optional visit analytics, including button-click and error events, and only after you opt in in the cookie layer. You can withdraw consent at any time without affecting the lawfulness of processing before withdrawal.",
+            "Art. 6(1)(c), legal obligation: answering requests of data subjects and authorities and keeping records where the law requires it."
+          ],
+          "closing": [
+            "We do not use automated decision-making or profiling that produces legal or similarly significant effects on you (Art. 22). We do not intentionally process special categories of data (Art. 9)."
+          ]
+        },
+        {
+          "id": "gdpr-transfers",
+          "title": "GDPR: recipients and international transfers (Chapter V)",
+          "paragraphs": [
+            "Recipients are the project members you work with, Google (Gmail SMTP for e-mail; optional Google sign-in), GitHub (optional sign-in; repository features) and, once chosen, the hosting provider. The controllers themselves are located in Türkiye, a third country without a European Commission adequacy decision.",
+            "Google and GitHub may process data in the USA. Where they transfer personal data to third countries, they rely on the transfer mechanisms they provide, for example an adequacy decision (Art. 45) or standard contractual clauses (Art. 46); which mechanism applies is set out in the providers' own documentation. Sign-in with Google/GitHub is optional."
+          ]
+        },
+        {
+          "id": "gdpr-retention",
+          "title": "GDPR: storage period (Art. 13(2)(a))",
+          "paragraphs": [
+            "The criteria and periods are those in the retention table above: accounts until you delete them (anonymised at once), analytics data 12 months, ended sessions 30 days, contact-form status records and stored support messages 12 months, administration audit log 24 months."
+          ]
+        },
+        {
+          "id": "gdpr-rights",
+          "title": "GDPR: your rights and complaints (Art. 15–21, 77)",
+          "paragraphs": [
+            "You have the right of access (Art. 15), rectification (Art. 16), erasure (Art. 17), restriction of processing (Art. 18), data portability (Art. 20) and objection to processing based on legitimate interests (Art. 21), and the right to withdraw consent at any time (Art. 7(3)). Send your request through the contact form (category “KVKK / data request”) or to pdassistant.info@gmail.com; we reply within 30 days at the latest.",
+            "You can delete your account yourself. Data portability is not yet a self-service function; we provide your data in a structured, commonly used format on request.",
+            "You have the right to lodge a complaint with a supervisory authority, in particular in the EU/EEA member state of your habitual residence, place of work or place of the alleged infringement (Art. 77), as well as with the Turkish Personal Data Protection Board."
+          ]
+        },
+        {
+          "id": "gdpr-representative",
+          "title": "GDPR: representative in the EU (Art. 27)",
+          "paragraphs": [
+            "The controllers are established outside the European Union. Whether Article 3(2) GDPR applies to PDA, and therefore whether a representative in the Union must be appointed under Article 27, is being assessed. No representative has been appointed at present; this section will be updated when the assessment concludes."
+          ]
+        },
+        {
+          "id": "changes",
+          "title": "Changes",
+          "paragraphs": [
+            "When features or the conditions of data processing change, this policy is updated and the “Last updated” date at the top of the page changes. Significant changes are published on this page."
           ]
         }
       ]
     },
     "kvkk": {
-      "title": "KVKK Information",
-      "description": "Pre-launch information about PDA's current data flows and individual rights under Turkish Law No. 6698.",
+      "title": "KVKK Privacy Notice",
+      "description": "Notice under Article 10 of Turkish Law No. 6698 (KVKK): the personal data PDA processes, purposes and legal bases, recipients, retention periods and your rights.",
       "sections": [
         {
           "id": "controller",
-          "title": "Data controller and scope",
+          "title": "Data controllers and scope",
           "paragraphs": [
-            "This pre-launch draft describes data used for registration, sign-in, project/team work, invitations and support. The natural or legal person acting as data controller has not yet been confirmed, so this is not presented as a completed privacy notice.",
-            "The form on the Contact page is the designated way to reach the project team. The controller identity and appropriate application channels must be confirmed before this text is finalised."
+            "This notice informs you, under Article 10 of the Turkish Personal Data Protection Law No. 6698 (KVKK), about the personal data processed when you use PDA · Project Delivery Assistant (PDA).",
+            "The data controllers are Hamza Taşbay and Alper Temiz, the maintainers of the open-source PDA project. Both are natural persons; PDA is not run on behalf of a company or commercial business, so there is no trade name, MERSİS number or registered e-mail (KEP) address.",
+            "You can reach the controllers through the contact form on this site or at pdassistant.info@gmail.com. How to submit a personal-data request is described under “How to apply”.",
+            "This notice is not a request for consent. The only processing that relies on explicit consent is the optional visit analytics; you decide on it separately and freely in the cookie layer (see the Cookie Policy)."
           ]
         },
         {
           "id": "collection",
-          "title": "How information is collected",
+          "title": "Data processed and how it is collected",
           "paragraphs": [
-            "Information is collected electronically through registration/sign-in forms, content you enter in project and task screens, invitations from project managers, your chosen sign-in provider and support messages.",
-            "These flows may process email, username, membership/role information, project and task content, invitation responses, session times and browser information. A project manager can also create an invitation by entering your email address."
+            "Data is collected electronically and partly automatically through the registration and sign-in forms, the screens and forms of the application, the contact form, the cookie layer, project members who invite you and, if you choose it, Google or GitHub sign-in."
+          ],
+          "items": [
+            "Identity and contact: e-mail address and nickname; first and last name (only on accounts created through a project invitation, entered by the inviting person, and in the contact form if you write it); optional profile photo.",
+            "Account security: a one-way hash of your password (the password itself is not stored); hashes of verification and reset codes; if you enable it, two-factor data (the secret is stored encrypted, backup codes as hashes); the ID of a linked Google/GitHub account; session records (session times, browser/device information). For administrator actions an audit log is kept that contains only account IDs, action type, time and outcome.",
+            "Workspace content: projects, teams, organisations, tasks, comments, file attachments, project chat messages, in-app notifications, invitations, calendar entries and reminders, only for the features you use.",
+            "Support requests: the name, (optional) last name, e-mail address, category and message you write in the contact form.",
+            "Operational security: network address information used for request rate limiting and the bot-trap fields of the contact form.",
+            "Visit analytics (only with your explicit consent): a randomly generated anonymous visitor and session ID, the type of page visited, the source of the visit, active time, whether certain buttons (register, sign in, contact submission, source-code link) were clicked and the type of an error that occurred in the application. No IP address or browser information is stored for analytics; only the page type is recorded, not the page address."
+          ],
+          "closing": [
+            "Do not enter special categories of personal data (health, religion, race, biometric data and the like) into PDA; it is not designed to process them."
           ]
         },
         {
           "id": "basis",
-          "title": "Purposes and legal grounds",
+          "title": "Purposes and legal bases",
           "paragraphs": [
-            "A valid processing condition must be established for each activity before launch. The mappings below are a review framework for current features; they do not assume that every activity automatically relies on the same legal ground."
+            "Your data is processed for the following purposes on the basis of the conditions in Article 5 of the Law."
           ],
-          "items": [
-            "Account and workspace delivery: registration, authentication, memberships and task tracking. Necessity for establishing or performing a service relationship is assessed under Article 5(2)(c).",
-            "Account and system security: session management, permission checks and request limits. Legitimate interest under Article 5(2)(f) requires necessity and balancing individual rights.",
-            "Data requests and legal obligations: Articles 5(2)(ç) and 5(2)(e) are assessed according to the applicable obligation or right.",
-            "If an additional activity requires explicit consent, its purpose and scope must be explained and consent obtained separately. Reading this page is not consent."
+          "table": {
+            "caption": "Processing purposes, data categories and legal bases",
+            "headers": [
+              "Purpose",
+              "Data categories",
+              "Legal basis"
+            ],
+            "rows": [
+              [
+                "Creating the account, authenticating you and providing the workspace",
+                "Identity and contact, account security, workspace content",
+                "Art. 5/2(c): necessary for the conclusion or performance of a contract (the Terms of Use)"
+              ],
+              [
+                "Account and system security, preventing abuse (session management, authorisation checks, rate limiting, bot trap, administration audit log)",
+                "Session records, network address, audit log, bot-trap fields",
+                "Art. 5/2(f): legitimate interest (provided your fundamental rights and freedoms are not harmed)"
+              ],
+              [
+                "Answering contact-form messages and support requests",
+                "Support request",
+                "Art. 5/2(f): legitimate interest; if your request is a personal-data application, also Art. 5/2(ç)"
+              ],
+              [
+                "Answering personal-data applications and meeting legal obligations",
+                "Information in the application, information needed to verify identity",
+                "Art. 5/2(ç): legal obligation of the controller"
+              ],
+              [
+                "Keeping records to establish, exercise or defend a right in possible disputes",
+                "Support request, audit log, account and transaction records",
+                "Art. 5/2(e): establishment, exercise or protection of a right"
+              ],
+              [
+                "Anonymous measurement of how the site is used, of the sign-up flow and of errors",
+                "Visit analytics data",
+                "Art. 5/1: explicit consent (given in the cookie layer, withdrawable at any time)"
+              ]
+            ]
+          },
+          "closing": [
+            "Notice and consent are separate: reading this notice or registering does not mean you have given explicit consent to analytics. Declining analytics does not affect your use of PDA."
           ]
         },
         {
           "id": "recipients",
-          "title": "Recipients and transfers",
+          "title": "Recipients and transfers abroad",
           "paragraphs": [
-            "Project content and membership details are shown to authorised members for collaboration; invitation previews are presented to their recipients. Google/GitHub sign-in involves authentication processing with the chosen provider; public repository connections send repository information requests to GitHub.",
-            "Hosting, database and email providers, data locations and international transfer conditions must be established before launch. This draft offers no transfer assurance without knowing the actual transfers and their legal mechanism."
+            "Your personal data is not sold and not shared for advertising. It is passed on to the following recipients, for the stated purpose and to the extent necessary."
+          ],
+          "items": [
+            "Project members: workspace content and membership information (e-mail, nickname, profile photo) are shown to the authorised members of the project for working together; an invitation preview is shown to the recipient of the invitation.",
+            "E-mail service (Google, USA): verification codes, password reset, invitation and notification e-mails and contact-form messages are sent through Gmail SMTP. Contact-form messages are also delivered to the PDA inbox (pdassistant.info@gmail.com, Gmail).",
+            "Sign-in with Google and GitHub (optional): if you choose it, authentication takes place at the provider (USA); PDA receives the basic account information needed for sign-in (account ID, e-mail address, name).",
+            "GitHub API (repository features): when you connect a public repository to a project, repository information and recent commits are read from the GitHub API (USA).",
+            "Hosting provider: the hosting provider for PDA's production environment has not been chosen yet. Once it is chosen, this notice will be updated with its name, the data location and any transfer abroad.",
+            "Authorities: public bodies and authorities, where a legal obligation arises."
+          ],
+          "closing": [
+            "Transfers abroad (Art. 9): Google and GitHub may process data in the USA. These transfers rely on the transfer mechanisms the providers use under Article 9 of the Law; which mechanism applies is stated in the providers' own privacy and data-processing documents. E-mail sending is necessary for the service to work; sign-in with Google/GitHub is optional and you can also register with e-mail and password."
           ]
         },
         {
           "id": "storage",
-          "title": "Retention and deletion",
+          "title": "Retention periods",
           "paragraphs": [
-            "Data supports account, project and security features. Retention must be set for each category, purpose and legal requirement; production deletion and backup schedules are not yet confirmed.",
-            "Deletion, destruction or anonymisation should be reviewed when processing conditions no longer apply. Deleting an account does not automatically remove other users' project records or information retained on legal grounds."
+            "Data is kept for as long as the purpose requires and is then deleted or anonymised. Deletions run automatically."
+          ],
+          "table": {
+            "caption": "Retention periods",
+            "headers": [
+              "Data",
+              "Period",
+              "At the end"
+            ],
+            "rows": [
+              [
+                "Account data and workspace content",
+                "Until you delete the account",
+                "The account is anonymised the moment it is deleted: e-mail address, name, nickname and password hash are erased, sessions are closed, project and organisation memberships end. An owner of a project or organisation must transfer ownership or delete it before deleting their account."
+              ],
+              [
+                "Revoked or expired session records",
+                "30 days",
+                "Deleted automatically."
+              ],
+              [
+                "Contact-form status records and stored support messages (name, e-mail, category, message)",
+                "12 months",
+                "Deleted automatically. The e-mail copy sent to the PDA inbox is not covered by this automatic deletion; you can ask for it to be deleted as a data-subject request."
+              ],
+              [
+                "Visit analytics (sessions, page views, button clicks and error events)",
+                "12 months",
+                "Deleted automatically. The anonymous visitor ID is renewed in your browser every 12 months and removed at once when you withdraw your analytics consent."
+              ],
+              [
+                "Administration audit log (account IDs, action type, time and outcome only)",
+                "24 months",
+                "Deleted automatically."
+              ]
+            ]
+          },
+          "closing": [
+            "Deleting your account does not by itself remove other users' project records (for example task history); these records may remain with an anonymised account ID. If a legal retention duty arises, the relevant information is kept for that period. The backup and hosting arrangements will be added to this notice once the hosting provider is chosen."
           ]
         },
         {
           "id": "rights",
-          "title": "Your rights under the law",
+          "title": "Your rights under the Law",
           "paragraphs": [
-            "You may exercise your Article 11 rights by applying to the data controller."
+            "Under Article 11 of the Law you can apply to the controller to exercise the following rights."
           ],
           "items": [
-            "Learn whether your personal data is processed and request information about processing.",
-            "Learn the purpose and whether data is used accordingly.",
-            "Know recipients of transfers in Türkiye or abroad.",
-            "Request correction of incomplete or inaccurate data.",
-            "Request deletion or destruction under the law's conditions, and notification of correction/deletion to recipients.",
-            "Object to an adverse result from analysis exclusively through automated systems.",
-            "Request compensation for damage caused by unlawful processing."
+            "To learn whether your personal data is processed and, if so, to request information.",
+            "To learn the purpose of processing and whether the data is used in line with that purpose.",
+            "To know the third parties in Türkiye or abroad to whom the data is transferred.",
+            "To request correction of incomplete or inaccurate data.",
+            "To request deletion or destruction of the data under the conditions of the Law, and to request that corrections and deletions be notified to recipients.",
+            "To object to a result against you that arises solely from analysis by automated systems.",
+            "To claim compensation for damage caused by unlawful processing."
+          ],
+          "closing": [
+            "You can update your profile yourself on the account screen and delete your account there. Exporting your data is not yet a feature inside the application; it is provided on request."
           ]
         },
         {
           "id": "requests",
-          "title": "Requests and contact",
+          "title": "How to apply",
           "paragraphs": [
-            "Use the form on the Contact page for questions or data requests. State the request topic, the email associated with your account and the action you seek. Do not send passwords, verification codes or invitation tokens.",
-            "This general contact address should not be assumed to satisfy every legally prescribed application method. The controller and official channels must be confirmed before launch. Any information needed to verify identity should be proportionate to the request."
+            "To exercise your rights, choose one of two ways: select the category “KVKK / data request” in the contact form, or send an e-mail to pdassistant.info@gmail.com.",
+            "State your name, the e-mail address linked to your account and your request clearly. Sending from the e-mail address linked to your account is usually enough to confirm the application is yours; if necessary we may ask for proportionate additional verification. Do not send passwords, verification codes or invitation links.",
+            "We conclude your application, depending on its nature, as soon as possible and at the latest within 30 days, free of charge. If the process requires a separate cost, the fee in the tariff set by the Board may be charged.",
+            "If you find the answer insufficient, you can complain to the Personal Data Protection Board within 30 days of learning the answer and in any case within 60 days of the application date."
+          ]
+        },
+        {
+          "id": "security",
+          "title": "Data security and breach notification",
+          "paragraphs": [
+            "Passwords are stored as one-way hashes, session tokens are kept in HttpOnly cookies, two-factor secrets are encrypted, project permissions are checked on the server and administrator access is protected by a separate two-factor sign-in. These measures are not an absolute security guarantee.",
+            "If personal data is obtained unlawfully by others, we notify the Board and the data subjects affected as soon as possible under Article 12 of the Law (within 72 hours, as required by a Board decision)."
+          ]
+        },
+        {
+          "id": "verbis",
+          "title": "VERBİS assessment",
+          "paragraphs": [
+            "The data controllers are natural persons and run PDA as a non-commercial open-source project. Whether they must register in the Data Controllers' Registry (VERBİS) is being assessed against the exemption criteria set by the Personal Data Protection Board (annual number of employees, annual financial balance-sheet total and main field of activity).",
+            "Because this assessment has not concluded, there is no VERBİS registration number. This notice will be updated if the outcome changes."
+          ]
+        },
+        {
+          "id": "updates",
+          "title": "Updates and GDPR information",
+          "paragraphs": [
+            "This notice is updated when the processing conditions change, and the “Last updated” date at the top of the page changes.",
+            "If you are in the European Union or the European Economic Area, the GDPR information (legal bases, transfers, rights, complaints) is in the GDPR sections of the Privacy Policy."
           ]
         }
       ]
     },
     "accessibility": {
-      "title": "Accessibility",
-      "description": "PDA's accessibility approach, available controls and how to report barriers.",
+      "title": "Accessibility Statement",
+      "description": "PDA's accessibility goal, its current status, known limitations, how it is evaluated and how to report a barrier.",
       "sections": [
         {
           "id": "approach",
-          "title": "Our approach",
+          "title": "Our goal",
           "paragraphs": [
-            "We aim to make PDA accessible across screen sizes and different user needs. Accessibility requires renewed checks as the product develops.",
-            "The application has not undergone an independent, comprehensive WCAG conformance assessment. This page is not a certification or a claim that every screen works perfectly."
+            "We aim for PDA to be accessible on different screen sizes and for different needs. Our target standard is WCAG 2.2 level AA. Accessibility is continuing work that must be checked again as the product develops."
+          ]
+        },
+        {
+          "id": "status",
+          "title": "Current status and evaluation",
+          "paragraphs": [
+            "This statement is based on an evaluation dated 10 October 2026. There is no formal WCAG audit of PDA by an independent body; we therefore do not declare full conformance, and this page is not a certificate.",
+            "Our own methods: the public pages (landing, sign-in, registration, password reset, about, FAQ, the legal information pages, accessibility and licence) are scanned automatically with axe against the WCAG 2.0, 2.1 and 2.2 A/AA rules in three languages, in light and dark themes, at phone and desktop widths (the a11y-public test in the end-to-end suite). Forms, menus, the contact and information pages are also checked with automated tests for keyboard use, focus ring and screen width.",
+            "Automated tools catch only part of the problems; manual verification with real screen readers and different browser combinations is an ongoing need."
           ]
         },
         {
           "id": "keyboard",
           "title": "Keyboard use",
           "paragraphs": [
-            "Use Tab and Shift+Tab to move between links and controls. Activate a focused link or button with Enter. The skip link at the start of a page helps you reach its main content.",
-            "Expand or collapse FAQ questions with Enter or Space. Use the application's existing keyboard controls for menus and dialogs; supported windows can be closed with Escape."
+            "You can move between links and controls with Tab and Shift+Tab and activate the focused link or button with Enter. The Skip to content link at the start of the page helps you reach the main content.",
+            "You can open and close FAQ questions with Enter or Space. In menus and dialogs you can use the application's existing keyboard controls and close supported windows with Escape."
           ]
         },
         {
           "id": "preferences",
-          "title": "Display and reading preferences",
+          "title": "Appearance and reading preferences",
           "paragraphs": [
-            "Language and theme controls are at the top. Choose a light, dark or system theme and Turkish, English or German interface text.",
-            "You can use browser zoom. Device reduced-motion preferences reduce application animations. Content and footer links stack on narrow screens."
+            "The top of the page has language and theme controls. You can choose a light, dark or system theme and use Turkish, English or German interface text.",
+            "You can use your browser's zoom. When the reduced-motion preference on your device is on, application animations are reduced. On narrow screens, content and footer links stack."
           ]
         },
         {
           "id": "screen-readers",
-          "title": "Structure and assistive technology",
+          "title": "Meaningful content and assistive technology",
           "paragraphs": [
-            "Information pages use semantic headings, main content and navigation. Footer GitHub links have accessible names including the person's name; decorative icons are hidden from screen readers.",
-            "Other application screens still need validation across screen readers and browsers. Reporting barriers helps us improve them."
+            "On information pages, headings, main content, tables and navigation areas are structured with meaningful HTML elements. The GitHub links in the footer have an accessible name that includes the person's name; decorative icons are hidden from screen readers. Form errors are associated with their field."
+          ]
+        },
+        {
+          "id": "limitations",
+          "title": "Known limitations",
+          "paragraphs": [
+            "The following areas are not yet fully accessible or have not been verified."
+          ],
+          "items": [
+            "The analytics charts and visual summaries in the administration panel have not been verified with a screen reader; this area is open to the administrator only.",
+            "The Google and GitHub sign-in pages belong to those providers; their accessibility is not under PDA's control.",
+            "The accessibility tags of the CV PDF files that can be downloaded from the About page have not been verified.",
+            "The signed-in screens of the application (project boards, drag and drop, the calendar) have not been comprehensively verified with screen readers and different browser combinations."
           ]
         },
         {
           "id": "feedback",
           "title": "Report a barrier",
           "paragraphs": [
-            "If you cannot use a page or complete an action, use the form on the Contact page to send the page address, intended action, browser/device and any assistive technology used.",
-            "Remove personal or secret information from screenshots. You do not need to disclose medical details to report a barrier."
+            "If you cannot use a page or a process, tell us through the contact form with the category “Accessibility” or by writing to pdassistant.info@gmail.com. Give the page address, what you wanted to do, your browser/device and, if any, the assistive technology you use.",
+            "We reply to reports within 30 days at the latest and, where possible, provide the content in an alternative format. If you share screenshots, cover personal data and secrets. You do not need to explain a medical condition to make a report."
           ]
         }
       ]
@@ -2997,99 +3267,341 @@
     },
     "cookies": {
       "title": "Cookie Policy",
-      "description": "Which cookies and browser storage PDA uses and why, that analytics is off by default, and how to change your choice.",
+      "description": "Which cookies and browser storage PDA uses, why and for how long, that analytics is off by default and how to change your choice.",
       "manageTitle": "Manage your preferences",
-      "manageText": "You can switch analytics on or off at any time. When you switch it off, no new measurements are sent and the analytics identifiers in this browser are deleted.",
+      "manageText": "You can turn analytics on or off at any time. When you turn it off, no new measurements are sent and the analytics identifiers in this browser are deleted.",
       "sections": [
         {
           "id": "what",
           "title": "What are cookies?",
           "paragraphs": [
-            "Cookies are small records a website stores in your browser. On this page \"cookie\" also covers browser local storage (localStorage) and session storage (sessionStorage) used for the same purposes.",
-            "PDA uses no advertising cookies, no user profiling, no third-party trackers and no browser fingerprinting."
+            "Cookies are small records that a website stores in your browser. On this page, “cookie” also covers browser local storage (localStorage) and session storage (sessionStorage) used for the same purpose.",
+            "PDA uses no advertising cookies, no profiling, no third-party tracking tools and no browser fingerprinting. Fonts are loaded from PDA's own server."
           ]
         },
         {
           "id": "categories",
           "title": "Categories",
           "paragraphs": [
-            "PDA uses two consent categories. Necessary is always on and cannot be switched off. Analytics works only with your explicit choice and is off by default."
+            "PDA uses two consent categories. The necessary category is always on and cannot be switched off; appearance and usage preferences are treated as the functional part of this category (see the reasoning below). The analytics category runs only with your explicit choice and is off by default."
           ],
           "items": [
-            "Necessary: sign-in, session security, protection against forged requests, language selection and the record of this choice.",
-            "Analytics: anonymous measurement of page type, visit source and actively spent time."
+            "Necessary: sign-in, session security, protection against forged requests, language choice, temporary verification steps and the record of this choice.",
+            "Functional preferences: remember a setting you made yourself (theme, layout, remembered e-mail) in this browser.",
+            "Analytics: anonymous measurement of page type, source of the visit, active time, clicks on certain buttons and the type of errors."
           ]
         },
         {
           "id": "necessary",
           "title": "Necessary cookies and storage",
           "paragraphs": [
-            "The records below are required for the service to work and are used regardless of your analytics choice. All of them are managed by PDA (first party). Durations depend on the service configuration; those given are the defaults. If you block them in your browser, sign-in and session features stop working."
+            "The following records are required for the service to work and are used regardless of your analytics choice. All are managed by PDA (first party). Durations depend on the service configuration; the values given are the defaults. If you block them in your browser settings, sign-in and session features will not work."
           ],
-          "items": [
-            "PDA_ACCESS: short-lived access token. HttpOnly; sent only to the /api path. Default duration 15 minutes.",
-            "PDA_REFRESH: token that renews the session. HttpOnly; sent only to the /api/v1/auth path. Default duration 7 days; removed on sign-out.",
-            "PDA_SESSION: a marker that carries no token and shows whether a session exists. HttpOnly; same duration as the refresh token; removed on sign-out.",
-            "XSRF-TOKEN: forged-request (CSRF) protection. Read by the page to attach to action requests; kept for the browser session.",
-            "JSESSIONID: used only during the Google or GitHub sign-in flow. HttpOnly; short-lived, about 30 minutes.",
-            "NEXT_LOCALE: your selected language; one year.",
-            "pda:cookie-consent (localStorage): the record of this cookie choice (version, analytics permission, date); until you delete it.",
-            "pda:last-session-refresh (localStorage): a timestamp that stops tabs from renewing the session at the same time."
-          ]
+          "table": {
+            "caption": "Necessary cookies and storage entries",
+            "headers": [
+              "Name",
+              "Type",
+              "Purpose",
+              "Duration"
+            ],
+            "rows": [
+              [
+                "PDA_ACCESS",
+                "Cookie, HttpOnly; sent only to the /api path",
+                "Short-lived access token",
+                "15 minutes"
+              ],
+              [
+                "PDA_REFRESH",
+                "Cookie, HttpOnly; sent only to the /api/v1/auth path",
+                "Token that renews the session",
+                "7 days; deleted on sign-out"
+              ],
+              [
+                "PDA_SESSION",
+                "Cookie, HttpOnly",
+                "Marker, carrying no token, that shows whether a session exists",
+                "Same as the refresh token; deleted on sign-out"
+              ],
+              [
+                "PDA_MFA",
+                "Cookie, HttpOnly; sent only to the two-factor path",
+                "Temporary proof, after the password step, that lets you enter your two-factor code",
+                "5 minutes; deleted when used"
+              ],
+              [
+                "PDA_ADMIN_MFA",
+                "Cookie, HttpOnly; sent only to the administrator verification path",
+                "Temporary proof for the second step of the administrator sign-in",
+                "5 minutes; deleted when used"
+              ],
+              [
+                "PDA_ADMIN_ENROLL",
+                "Cookie, HttpOnly; sent only to the administrator set-up path",
+                "Temporary proof for an administrator's first authenticator set-up",
+                "10 minutes; deleted when used"
+              ],
+              [
+                "PDA_RESET",
+                "Cookie, HttpOnly; narrow path",
+                "Temporary proof to continue the password reset",
+                "10 minutes; deleted when used"
+              ],
+              [
+                "PDA_PWCHANGE",
+                "Cookie, HttpOnly; narrow path",
+                "Temporary proof to continue an in-session password change",
+                "10 minutes; deleted when used"
+              ],
+              [
+                "XSRF-TOKEN",
+                "Cookie; read by the page",
+                "Protection against forged requests (CSRF)",
+                "Browser session"
+              ],
+              [
+                "JSESSIONID",
+                "Cookie, HttpOnly",
+                "Used only during the Google or GitHub sign-in flow",
+                "About 30 minutes"
+              ],
+              [
+                "NEXT_LOCALE",
+                "Cookie",
+                "Your chosen language",
+                "1 year"
+              ],
+              [
+                "pda:cookie-consent",
+                "localStorage",
+                "The record of this cookie choice (version, analytics consent, date)",
+                "Until you delete it"
+              ],
+              [
+                "pda:last-session-refresh",
+                "localStorage",
+                "Timestamp that stops tabs from renewing the session at the same time",
+                "Overwritten; until you delete it"
+              ],
+              [
+                "pda.pendingVerification",
+                "sessionStorage",
+                "Carries the e-mail address to be verified after registration or sign-in to the verification page (the address is not carried in the URL)",
+                "Until verification ends or the tab closes"
+              ],
+              [
+                "pda:renderer",
+                "sessionStorage",
+                "Result of whether the browser draws animations in software or hardware; the interface adapts to it",
+                "Until the tab closes"
+              ]
+            ]
+          }
         },
         {
           "id": "preferences",
           "title": "Appearance and usage preferences",
           "paragraphs": [
-            "The records below only remember settings you made in this browser. They do not measure your visit and are not sent to the server as analytics. The legal category of these records must be confirmed in the pre-launch legal review."
+            "The following records only remember settings you made yourself in this browser. They do not measure your visit, are not sent to the server and have no tracking purpose. Without them we could not provide the appearance and settings you chose on your next visit; we therefore treat them as functional records necessary to provide the service you asked for and do not ask for separate consent. You can delete them in your browser settings; your settings then return to the defaults."
           ],
-          "items": [
-            "theme: light, dark or system theme.",
-            "pda:motion and pda:theme-transition: animation preferences.",
-            "pda:sidebar-collapsed: whether the sidebar is collapsed.",
-            "pda.teams.view: the view on the teams page.",
-            "pda:task-mode-help:v1:<user id>: the preference to hide the task type help.",
-            "pda.rememberedEmail: your email address, only if you choose \"Remember me\" on the sign-in screen.",
-            "pda:last-project:<user id> and pda:session-baseline (sessionStorage): the last selected project and the language and theme at the start of the session; removed when the tab closes."
+          "table": {
+            "caption": "Appearance and usage preference entries",
+            "headers": [
+              "Name",
+              "Type",
+              "Purpose",
+              "Duration"
+            ],
+            "rows": [
+              [
+                "theme",
+                "localStorage",
+                "Light, dark or system theme",
+                "Until you delete it"
+              ],
+              [
+                "pda:motion, pda:theme-transition",
+                "localStorage",
+                "Animation preferences",
+                "Until you delete it"
+              ],
+              [
+                "pda:sidebar-collapsed",
+                "localStorage",
+                "Whether the sidebar is collapsed",
+                "Until you delete it"
+              ],
+              [
+                "pda:teams-view:v1:<user ID>",
+                "localStorage",
+                "Layout of the teams page (replaces the old pda.teams.view key)",
+                "Until you delete it"
+              ],
+              [
+                "pda:task-mode-help:v1:<user ID>",
+                "localStorage",
+                "Preference to hide the task-type help",
+                "Until you delete it"
+              ],
+              [
+                "pda.rememberedEmail",
+                "localStorage",
+                "Your e-mail address, only if you choose “Remember me” on the sign-in screen",
+                "Until you turn the option off"
+              ],
+              [
+                "pda:last-project:<user ID>",
+                "sessionStorage",
+                "The last selected project during the session",
+                "Until the tab closes"
+              ],
+              [
+                "pda:session-baseline",
+                "sessionStorage",
+                "Language and theme at the start of the session",
+                "Until the tab closes"
+              ]
+            ]
+          },
+          "closing": [
+            "<user ID> is the random internal ID of your account; it is not your e-mail address or name."
           ]
         },
         {
           "id": "analytics",
           "title": "Analytics (off by default)",
           "paragraphs": [
-            "Analytics collects no data and creates no identifier until you select \"Accept all\" or switch Analytics on in the preferences window. It stays off while you have not decided. When on, measurements are kept on PDA's own server; there is no third-party analytics tool.",
-            "No name, email, message content, token, password, account ID or browser fingerprint is collected. Even if you are signed in, measurements are not linked to your account.",
-            "The retention period for analytics data has not been decided yet (LEGAL CONTENT REQUIRED); this period and the deletion rules will be fixed before launch.",
-            "Business figures such as the number of accounts, active and terminated accounts and submitted contact forms do not depend on your analytics choice; they are calculated from the service's own records."
+            "Analytics collects no data and creates no identifier until you say “Accept all” or switch Analytics on in the preferences window. It also stays off as long as you have not decided. When on, the measurement is kept on PDA's own server; there is no third-party analytics tool.",
+            "No name, e-mail, message content, token, password, account ID, IP address, browser information or browser fingerprint is collected. Even if you are signed in, the measurement is not linked to your account.",
+            "Collected analytics records are deleted automatically after 12 months. The anonymous visitor ID is renewed in your browser every 12 months; a new record is not linked to the old ID.",
+            "Operating figures such as the number of accounts, active and ended accounts and submitted contact forms do not depend on your analytics consent; they are calculated from the service's own records."
           ],
           "items": [
-            "The type of page visited (for example \"project page\"); project names, user IDs and address queries are not recorded.",
-            "The source of the visit: direct, search engine, another site (domain name only) or a campaign link (utm_source, utm_medium, utm_campaign).",
-            "Time actively spent on the site; time while the tab is in the background or the window is unfocused does not count.",
-            "A randomly generated anonymous visitor and session ID: pda:analytics-visitor and pda:analytics-session (localStorage). The session ID is renewed after 30 minutes of inactivity. Both are deleted when you withdraw consent."
+            "The type of page visited (for example “project page”); project names, user IDs or address queries are not recorded.",
+            "The source of the visit: direct, search engine, another site (domain only) or a campaign link (utm_source, utm_medium, utm_campaign).",
+            "Active time on the site; time while the tab is in the background or the window is out of focus is not counted.",
+            "Button clicks: only whether buttons from a fixed list were clicked (the register and sign-in buttons on the landing page and in the header, submission of the registration and contact forms, the source-code link); nothing about who clicked or what you typed is recorded.",
+            "Error events: when an error occurs in the application, only the error type (rendering, file loading, unhandled promise rejection or network) and the page type are recorded. No error message, detail, address or identifier is recorded. The same error is reported once per session.",
+            "Randomly generated anonymous visitor and session IDs: pda:analytics-visitor and pda:analytics-session (localStorage). The session ID is renewed after 30 minutes of inactivity. Both are deleted when you withdraw consent."
           ]
         },
         {
           "id": "manage",
           "title": "Changing and withdrawing your choice",
           "paragraphs": [
-            "Open the preferences window at any time with the \"Manage cookie preferences\" link at the bottom of the page or the button on this page. When you switch analytics off, new measurements stop immediately and the analytics identifiers in this browser are deleted. There is no separate automatic process for deleting aggregated data collected earlier; this will be decided before launch.",
-            "Your choice belongs to this browser and is not tied to your account: you make a separate choice in another browser or on another device. When the cookie practice changes significantly, the consent version is raised and you are asked again."
+            "You can open the preferences window at any time with the “Manage cookie preferences” link at the bottom of the page or the button on this page. When you turn analytics off, new measurements stop at once, button-click and error events are no longer sent, and the analytics identifiers in this browser are deleted. Because the identifier is deleted, records collected earlier can no longer be linked to you; they are deleted automatically after 12 months.",
+            "Effect of withdrawal: necessary cookies keep working; no feature other than analytics is restricted. Withdrawal does not affect the lawfulness of processing based on consent before its withdrawal.",
+            "The choice belongs to this browser and is not tied to your account: you need to choose separately in another browser or device. When the cookie practice changes in a meaningful way, the consent version is raised and your choice is asked again."
           ]
         },
         {
           "id": "third-parties",
           "title": "Third parties",
           "paragraphs": [
-            "PDA has no advertising or third-party analytics cookies. When you sign in with Google or GitHub, your browser is redirected to that provider's page and the provider's own cookie and privacy terms apply. Verification, invitation and contact emails are sent from the server and do not set cookies in your browser."
+            "PDA has no advertising or third-party analytics cookies. When you sign in with Google or GitHub, your browser is redirected to that provider's page and the provider's own cookie and privacy terms apply. Verification, invitation and contact e-mails are sent from the server and leave no cookie in your browser."
           ]
         },
         {
           "id": "legal",
-          "title": "Contact and legal information",
+          "title": "Legal basis and contact",
           "paragraphs": [
-            "You can send questions about cookies through the form on the Contact page.",
-            "The controller's company name and address, VERBİS registration, legal basis text and retention periods have not been decided yet, so these fields are marked LEGAL CONTENT REQUIRED and have not been invented."
+            "Storing or reading information on your device is subject to your consent unless it is strictly necessary to provide a service you expressly requested. Necessary and functional records fall under that exception: under Turkish law they rest on Article 5/2(c) and (f) of the KVKK; in the EU, Article 5(3) of the ePrivacy Directive and its national implementations apply, for visitors in Germany § 25(2) No. 2 TDDDG (formerly TTDSG). Analytics rests only on your explicit consent (Art. 5/1 KVKK; Art. 6(1)(a) GDPR; § 25(1) TDDDG). The regulator's cookie guide is linked in the official references below.",
+            "Send questions about cookies through the contact form or to pdassistant.info@gmail.com. The data controllers are Hamza Taşbay and Alper Temiz (details in the KVKK Privacy Notice and the Privacy Policy)."
+          ]
+        }
+      ]
+    },
+    "terms": {
+      "title": "Terms of Use",
+      "description": "The account rules, acceptable use, responsibilities, suspension and deletion of accounts and the governing law that apply when you use PDA.",
+      "sections": [
+        {
+          "id": "scope",
+          "title": "Scope and acceptance",
+          "paragraphs": [
+            "These terms apply to your use of the online version of PDA · Project Delivery Assistant (PDA) provided by the project maintainers Hamza Taşbay and Alper Temiz. PDA is open-source software that lets project delivery be managed in a shared workspace with projects, teams, tasks, a calendar and chat.",
+            "By creating an account or using PDA you accept these terms. If you do not accept them, do not use PDA. For installations you run on your own infrastructure, the terms of the person who operates that installation apply, not these."
+          ]
+        },
+        {
+          "id": "account",
+          "title": "Account rules",
+          "paragraphs": [
+            "You must give correct information when registering, use your account only yourself and keep your password secret. You are responsible for actions taken with your account; if you suspect unauthorised use, change your password and tell us. We recommend enabling two-factor authentication.",
+            "PDA is not intended for children under 16. Do not create an account in someone else's name without their permission."
+          ]
+        },
+        {
+          "id": "acceptable-use",
+          "title": "Acceptable use",
+          "paragraphs": [
+            "When using PDA you agree not to do the following."
+          ],
+          "items": [
+            "Share unlawful content, content that infringes the rights of others (copyright, personality, privacy), or content that threatens, harasses, spreads hatred or misleads.",
+            "Use software, request volume or methods that harm PDA, other users or the infrastructure, or try to get around rate limits, authorisation checks or bot traps.",
+            "Perform security testing, vulnerability scanning or attempts at unauthorised access without permission. If you find a vulnerability, tell us through the contact form with the category “Bug report” or by e-mail; do not publish details in public places.",
+            "Create accounts in bulk or by automation, or use the contact form to send unsolicited messages.",
+            "Upload other people's personal data, passwords or special categories of personal data to PDA unlawfully."
+          ]
+        },
+        {
+          "id": "content",
+          "title": "User content and responsibility",
+          "paragraphs": [
+            "You or the rights holder own the content you add to projects, tasks, comments, chat and files. You give PDA permission to use that content to provide the service (storing it and showing it to authorised project members); we claim no right to use it for any other purpose.",
+            "You are responsible for the lawfulness of your content and for having the rights needed to share it. Project members and managers manage the content in their projects within their permissions. You can report unlawful content through the contact form."
+          ]
+        },
+        {
+          "id": "availability",
+          "title": "Availability and no warranty",
+          "paragraphs": [
+            "PDA is free, open-source software under active development. The service is provided “as is” and “as available”; there is no warranty that it will be uninterrupted, error-free or fit for a particular purpose. Features may change without notice, and there may be outages and maintenance.",
+            "We recommend keeping your own copy of important data. Export is not yet a feature inside the application; it is provided on request."
+          ]
+        },
+        {
+          "id": "suspension",
+          "title": "Suspension of accounts",
+          "paragraphs": [
+            "If these terms or security are violated, an administrator can disable an account. For a disabled account sessions are closed and sign-in is blocked; no data in the account is deleted and the action can be reversed. Administrator actions are recorded. To object to a decision, use the contact form or the e-mail address."
+          ]
+        },
+        {
+          "id": "deletion",
+          "title": "Deleting your account",
+          "paragraphs": [
+            "You can delete your account at any time on the account screen. The account is anonymised the moment it is deleted and all sessions are closed. If you own a project or an organisation, you must transfer ownership or delete it first; the administrator account cannot delete itself. Details are in the Privacy Policy."
+          ]
+        },
+        {
+          "id": "license",
+          "title": "Relationship to the open-source licence",
+          "paragraphs": [
+            "PDA's source code is released under the Apache License 2.0; you may use, modify and distribute the code under the terms of that licence. These Terms of Use do not change the licence of the source code; they only govern the use of the online version of PDA. The summary and the full text of the licence are on the License page."
+          ]
+        },
+        {
+          "id": "liability",
+          "title": "Limitation of liability",
+          "paragraphs": [
+            "Subject to mandatory legal liability, PDA's maintainers cannot be held liable for indirect damage or for loss of data or profit arising from the use of, or inability to use, the service. Each user is responsible for their actions towards other users and for their content."
+          ]
+        },
+        {
+          "id": "law",
+          "title": "Governing law",
+          "paragraphs": [
+            "These terms are governed by the law of the Republic of Türkiye. Mandatory provisions and jurisdiction rules of consumer protection law, including those of your country of residence, remain unaffected."
+          ]
+        },
+        {
+          "id": "changes",
+          "title": "Changes",
+          "paragraphs": [
+            "We update these terms when needed. The current text is published on this page and the “Last updated” date changes; continuing to use PDA after a change means you accept the current terms."
           ]
         }
       ]
@@ -3279,7 +3791,11 @@
       "label": "Administration",
       "section": "Administration sections",
       "users": "Users",
-      "analytics": "Analytics"
+      "analytics": "Analytics",
+      "support": "Support requests",
+      "audit": "Audit log",
+      "system": "System",
+      "newRequests": ", {count, plural, one {# new request} other {# new requests}}"
     },
     "checking": "Checking permission…",
     "users": {
@@ -3330,7 +3846,8 @@
         "confirm": "Re-activate",
         "cancel": "Cancel",
         "done": "{name} was re-activated."
-      }
+      },
+      "openDetail": "Open details for {name}"
     },
     "analytics": {
       "title": "Analytics",
@@ -3417,6 +3934,409 @@
       },
       "duration": {
         "zero": "0 sec"
+      },
+      "behavior": {
+        "sections": {
+          "pages": "Pages",
+          "flows": "Flows",
+          "notFound": "Missing pages (404)",
+          "ctas": "CTA clicks",
+          "conversion": "Conversion",
+          "errors": "Client errors"
+        },
+        "empty": "No records in this range.",
+        "columns": {
+          "page": "Page",
+          "views": "Views",
+          "sessions": "Sessions"
+        },
+        "pages": {
+          "note": "Pages appear as route templates (for example /projects/[slug]); no ids or query text are stored. Only from visitors who allowed cookies.",
+          "top": "Most viewed pages",
+          "entry": "Entry pages",
+          "exit": "Exit pages"
+        },
+        "flows": {
+          "note": "The first page of a session and the second page it opened next.",
+          "title": "Page flows",
+          "from": "Entry page",
+          "to": "Next page"
+        },
+        "notFound": {
+          "note": "Visits to an address that does not exist.",
+          "views": "404 views",
+          "sessions": "Sessions affected"
+        },
+        "ctas": {
+          "note": "Clicks on call-to-action buttons and links; each click carries only a fixed button id.",
+          "title": "CTA clicks",
+          "cta": "Button",
+          "clicks": "Clicks"
+        },
+        "ctaNames": {
+          "landing_register": "Home page: Sign up",
+          "landing_login": "Home page: Sign in",
+          "header_register": "Header: Sign up",
+          "header_login": "Header: Sign in",
+          "register_submit": "Registration form submitted",
+          "contact_submit": "Contact form submitted",
+          "github_repo": "GitHub repository link"
+        },
+        "conversion": {
+          "note": "A conversion is a session that submitted the registration form. The rate is the share among sessions that started in the range.",
+          "sessions": "Sessions",
+          "converted": "Converted",
+          "rate": "Conversion rate",
+          "bySource": "By traffic source",
+          "byCampaign": "By campaign"
+        },
+        "errors": {
+          "note": "Only from the browsers of visitors who allowed cookies. No error text, user or address detail is collected; only the kind of error and the page template.",
+          "total": "Total client errors",
+          "byKind": "By kind of error",
+          "byRoute": "By page",
+          "kind": "Kind",
+          "count": "Count"
+        },
+        "errorKinds": {
+          "render": "Rendering error",
+          "chunk_load": "File failed to load",
+          "unhandled_rejection": "Unhandled error",
+          "network": "Network error"
+        }
+      }
+    },
+    "userDetail": {
+      "title": "User details",
+      "breadcrumb": "Administration path",
+      "breadcrumbFallback": "User",
+      "description": "Account information, what the role grants, linked sign-in methods and open sessions.",
+      "loading": "Loading user",
+      "error": "The user could not be loaded.",
+      "backToUsers": "Back to users",
+      "notFound": {
+        "title": "User not found",
+        "description": "This user does not exist or has been removed."
+      },
+      "profile": {
+        "title": "Profile",
+        "nickname": "Username",
+        "email": "Email",
+        "status": "Account status",
+        "verification": "Email verification",
+        "verified": "Verified",
+        "unverified": "Awaiting verification",
+        "created": "Registered",
+        "mustChangePassword": "Password change required",
+        "yes": "Yes",
+        "no": "No",
+        "providers": "Linked sign-in methods",
+        "noProviders": "No linked accounts; email and password only."
+      },
+      "providers": {
+        "GOOGLE": "Google",
+        "GITHUB": "GitHub"
+      },
+      "access": {
+        "title": "Role and permissions",
+        "role": "Role",
+        "permissions": "Platform permissions",
+        "noPermissions": "This role has no platform permissions.",
+        "singleAdminNote": "This installation has a single administrator: the account created through environment variables. Roles cannot be changed."
+      },
+      "permissions": {
+        "USER_MANAGE": "Manage users (end or restore membership) and handle support requests",
+        "SESSION_MANAGE": "View and end user sessions",
+        "AUDIT_VIEW": "View the audit log",
+        "SYSTEM_VIEW": "View system status, counts and analytics"
+      },
+      "sessions": {
+        "title": "Open sessions",
+        "description": "The sessions of this account that are open right now. Ending a session signs the user out on that device.",
+        "loading": "Loading sessions",
+        "error": "Sessions could not be loaded.",
+        "tableLabel": "Open sessions",
+        "columns": {
+          "device": "Device",
+          "created": "Started",
+          "lastUsed": "Last used",
+          "expires": "Ends"
+        },
+        "unknownDevice": "Unknown device",
+        "neverUsed": "Not used yet",
+        "revoke": "End session",
+        "revokeTitle": "End session: {device}",
+        "revokeDescription": "{name} is signed out on this device immediately and has to sign in again. The account and sessions on other devices are not affected.",
+        "revokeDescriptionSelf": "This is your own account. The session you end may be the one you are using; if so, you are sent back to the administrator sign-in.",
+        "revokeConfirm": "End session",
+        "revokeDone": "Session ended.",
+        "gone": "This session is no longer open. The list was refreshed.",
+        "cancel": "Cancel",
+        "revokeAll": "End all sessions",
+        "revokeAllTitle": "End all sessions for {name}",
+        "revokeAllDescription": "{count, plural, one {# open session is ended} other {# open sessions are ended}}: {name} is signed out on every device immediately and has to sign in again. The account is not deleted.",
+        "revokeAllDescriptionSelf": "This is your own account. All your sessions, including the one you are using, are ended and you are sent back to the administrator sign-in.",
+        "revokeAllConfirm": "End all sessions",
+        "revokeAllDone": "{count, plural, one {# session ended.} other {# sessions ended.}}",
+        "empty": {
+          "title": "No open sessions",
+          "description": "This account has no open session right now.",
+          "disabled": "The account has no open session because its membership was ended."
+        }
+      }
+    },
+    "system": {
+      "title": "System",
+      "description": "Service health, configured features, scheduled jobs and platform counts. Secret values are never shown; only whether they are set.",
+      "refresh": "Refresh",
+      "retry": "Try again",
+      "loading": "Loading system information",
+      "sections": {
+        "health": "Health and configuration",
+        "operations": "Operational counters",
+        "jobs": "Scheduled jobs",
+        "counts": "Platform counts",
+        "projects": "Projects"
+      },
+      "health": {
+        "status": {
+          "label": "Service status",
+          "hint": "Overall state of the server."
+        },
+        "database": {
+          "label": "Database",
+          "hint": "Whether the server can reach its database."
+        },
+        "mail": {
+          "label": "Email delivery",
+          "hint": "While off, code and notification emails are not sent."
+        },
+        "google": {
+          "label": "Sign-in with Google",
+          "hint": "The button works when credentials are set."
+        },
+        "github": {
+          "label": "Sign-in with GitHub",
+          "hint": "The button works when credentials are set."
+        },
+        "apiDocs": {
+          "label": "API documentation",
+          "hint": "While on, the Swagger interface is reachable; it should be off in production."
+        },
+        "totpKey": {
+          "label": "Two-step verification key",
+          "hint": "Required for the administrator sign-in; the key itself is never shown."
+        }
+      },
+      "states": {
+        "up": "Running",
+        "down": "Down",
+        "reachable": "Reachable",
+        "unreachable": "Unreachable",
+        "on": "On",
+        "off": "Off",
+        "configured": "Configured",
+        "notConfigured": "Not configured"
+      },
+      "operations": {
+        "note": "These counters and jobs live only in the memory of this server process: they reset on restart, and with several instances each reports its own values.",
+        "activeSessions": "Open sessions",
+        "activeSessionsHint": "Sessions of all accounts that are neither ended nor expired.",
+        "clientErrors": "Client errors (4xx)",
+        "clientErrorsHint": "Last 24 hours.",
+        "serverErrors": "Server errors (5xx)",
+        "serverErrorsHint": "Last 24 hours."
+      },
+      "jobs": {
+        "description": "Jobs that run regularly in the background, when they last ran and how many records they touched.",
+        "tableLabel": "Scheduled jobs",
+        "columns": {
+          "job": "Job",
+          "lastRun": "Last run",
+          "outcome": "Result",
+          "affected": "Records affected"
+        },
+        "notRun": "Not run yet",
+        "outcomes": {
+          "SUCCESS": "Succeeded",
+          "FAILURE": "Failed"
+        },
+        "affectedCount": "{count, plural, one {# record} other {# records}}",
+        "names": {
+          "retentionAnalytics": "Analytics retention cleanup",
+          "retentionAudit": "Audit log retention cleanup",
+          "retentionContact": "Contact and support retention cleanup",
+          "retentionUserSessions": "Old session cleanup",
+          "pendingRegistrationCleanup": "Unverified registration cleanup",
+          "repositoryCommitScan": "Repository commit scan",
+          "taskDeadlineScan": "Task deadline scan"
+        },
+        "empty": {
+          "title": "No scheduled jobs",
+          "description": "This process has not reported any job yet."
+        }
+      },
+      "counts": {
+        "users": "User accounts",
+        "projects": "Projects",
+        "total": "Total",
+        "active": "Active",
+        "disabled": "Ended",
+        "pending": "Awaiting verification",
+        "admins": "Administrators",
+        "archived": "Archived"
+      },
+      "projects": {
+        "description": "Name, status and active member count only. There is no project content and no way into a project.",
+        "tableLabel": "Project list",
+        "columns": {
+          "name": "Project",
+          "status": "Status",
+          "members": "Active members",
+          "created": "Created"
+        },
+        "membersCount": "{count, plural, one {# active member} other {# active members}}",
+        "statuses": {
+          "PLANNING": "Planning",
+          "ACTIVE": "Active",
+          "ON_HOLD": "On hold",
+          "COMPLETED": "Completed",
+          "ARCHIVED": "Archived"
+        },
+        "empty": {
+          "title": "No projects yet",
+          "description": "Projects appear here once users create them."
+        }
+      },
+      "errors": {
+        "status": "System status could not be loaded.",
+        "overview": "Platform counts could not be loaded.",
+        "projects": "Projects could not be loaded."
+      }
+    },
+    "audit": {
+      "title": "Audit log",
+      "description": "The permanent record of administrator actions: sign-in, ending membership, ending sessions and support request status. An entry holds only the action, its target and the result; no email address and no free text.",
+      "loading": "Loading audit log",
+      "error": "The audit log could not be loaded.",
+      "retry": "Try again",
+      "tableLabel": "Audit events",
+      "unknownAccount": "Unknown account",
+      "removedAccount": "Removed account",
+      "supportRequest": "Support request {id}",
+      "filters": {
+        "action": "Action",
+        "allActions": "All actions",
+        "from": "From",
+        "to": "To",
+        "clear": "Clear filters",
+        "invalid": "The start date cannot be after the end date, and the range can be at most 800 days.",
+        "zone": "Day boundaries are calculated in this time zone: {zone}"
+      },
+      "columns": {
+        "time": "Time",
+        "actor": "Done by",
+        "action": "Action",
+        "target": "Target",
+        "outcome": "Result"
+      },
+      "actions": {
+        "ADMIN_SIGN_IN": "Administrator sign-in",
+        "USER_DISABLE": "Membership ended",
+        "USER_ENABLE": "Account restored",
+        "SESSION_REVOKE": "Session ended",
+        "SESSION_REVOKE_ALL": "All sessions ended",
+        "SUPPORT_REQUEST_STATUS_CHANGE": "Support request status changed"
+      },
+      "outcomes": {
+        "SUCCESS": "Succeeded",
+        "FAILURE": "Failed",
+        "DENIED": "Denied"
+      },
+      "targets": {
+        "SYSTEM": "—"
+      },
+      "empty": {
+        "title": "No entries yet",
+        "description": "Administrator actions appear here as they happen.",
+        "filteredTitle": "No entries for this filter",
+        "filteredDescription": "Change the action or the date range."
+      }
+    },
+    "support": {
+      "title": "Support requests",
+      "description": "Messages from the contact form. Messages are kept for 12 months; you can only change their status.",
+      "loading": "Loading support requests",
+      "error": "Support requests could not be loaded.",
+      "retry": "Try again",
+      "tableLabel": "Support requests",
+      "filters": {
+        "status": "Status",
+        "category": "Category",
+        "allStatuses": "All statuses",
+        "allCategories": "All categories",
+        "clear": "Clear filters"
+      },
+      "columns": {
+        "date": "Date",
+        "category": "Category",
+        "name": "Name",
+        "email": "Email",
+        "message": "Message",
+        "status": "Status",
+        "delivery": "Notification email"
+      },
+      "statuses": {
+        "NEW": "New",
+        "IN_PROGRESS": "In progress",
+        "CLOSED": "Closed"
+      },
+      "categories": {
+        "GENERAL": "General",
+        "BUG": "Bug report",
+        "DATA_REQUEST": "Data request (GDPR / KVKK)",
+        "ACCESSIBILITY": "Accessibility"
+      },
+      "delivery": {
+        "SENT": "Delivered",
+        "FAILED": "Not delivered"
+      },
+      "empty": {
+        "title": "No support requests yet",
+        "description": "Messages appear here when the contact form is used.",
+        "filteredTitle": "No requests for this filter",
+        "filteredDescription": "Change the status or category filter."
+      },
+      "detail": {
+        "title": "Support request",
+        "breadcrumb": "Administration path",
+        "breadcrumbFallback": "Request",
+        "description": "The visitor's message is shown as plain text.",
+        "back": "Back to support requests",
+        "loading": "Loading support request",
+        "error": "The support request could not be loaded.",
+        "notFound": {
+          "title": "Support request not found",
+          "description": "This request does not exist or was deleted when its retention period ended."
+        },
+        "message": "Message",
+        "details": "Details",
+        "received": "Received",
+        "statusChanged": "Status changed",
+        "reply": "Reply by email",
+        "replySubject": "PDA contact: {category}",
+        "statusTitle": "Status",
+        "statusHelp": "Close the request after you have replied. A closed request can be reopened.",
+        "actions": {
+          "NEW": "Mark as new",
+          "IN_PROGRESS": "Start handling",
+          "CLOSED": "Close request"
+        },
+        "closeTitle": "Close request",
+        "closeDescription": "The request is marked \"Closed\" and the change is written to the audit log. You can reopen it at any time; the message is not deleted.",
+        "closeConfirm": "Close request",
+        "cancel": "Cancel",
+        "changed": "Request status changed to \"{status}\"."
       }
     }
   },
@@ -3441,7 +4361,7 @@
       },
       "analytics": {
         "title": "Analytics",
-        "description": "Measures the type of page visited, where the visit came from and the time actively spent on the site, anonymously. It is not linked to your account and collects no name, email or content. Off by default."
+        "description": "Measures, anonymously, the type of page visited, where the visit came from, the time actively spent on the site, whether certain buttons were clicked and the type of any error. It is not linked to your account and collects no name, email or content. Off by default."
       },
       "rejectAll": "Reject all",
       "acceptAll": "Accept all",
@@ -3460,7 +4380,16 @@
       "messageHint": "At least 10 and at most 5000 characters.",
       "counter": "{count} / 5000",
       "submit": "Send",
-      "submitting": "Sending…"
+      "submitting": "Sending…",
+      "category": "Category",
+      "categories": {
+        "general": "General",
+        "bug": "Bug report",
+        "dataRequest": "KVKK or data request",
+        "accessibility": "Accessibility"
+      },
+      "optional": "Optional.",
+      "honeypot": "Website"
     },
     "validation": {
       "required": "This field is required.",
@@ -3477,9 +4406,13 @@
     },
     "notice": {
       "title": "Before you send",
-      "text": "Your message is delivered to the PDA team by email and is not kept on the site. Do not write your password, verification code or the secret parts of an invitation link.",
-      "privacy": "Privacy Policy"
-    }
+      "text": "The data controllers are Hamza Taşbay and Alper Temiz. Your message is processed to reply to you; it is kept for 12 months and delivered by email to the PDA inbox (Gmail). Do not write your password, verification code or the secret parts of an invitation link.",
+      "privacy": "Privacy Policy",
+      "more": "Details:",
+      "kvkk": "KVKK Privacy Notice"
+    },
+    "emailAlt": "You can also write to us directly by email:",
+    "stale": "The form could not be verified because it stayed open for a long time or your device clock is wrong. Your message is kept; please send it again."
   },
   "passwordRules": {
     "title": "The password must contain:",

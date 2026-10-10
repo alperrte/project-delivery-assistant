@@ -1,7 +1,8 @@
 import { test, expect, type Locator, type Page } from "@playwright/test";
 import { buildPath } from "../src/i18n/routing";
 
-const infoPaths = ["/about", "/faq", "/kvkk", "/privacy", "/cookies", "/accessibility", "/license"] as const;
+const infoPaths = ["/about", "/faq", "/kvkk", "/privacy", "/terms", "/cookies", "/accessibility", "/license"] as const;
+const EMAIL = "pdassistant.info@gmail.com";
 
 for (const [locale, faqTitle] of [
   ["tr", "Sıkça Sorulan Sorular"],
@@ -27,9 +28,9 @@ for (const [locale, faqTitle] of [
         }
       } else {
         expect(await page.locator("article section").count()).toBeGreaterThanOrEqual(path === "/about" ? 4 : 5);
-        if (path === "/kvkk" || path === "/privacy" || path === "/cookies") {
-          await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", "noindex, follow");
-        }
+        // Every information page is final and indexable: no robots meta tag, no review notice, no placeholder wording.
+        await expect(page.locator('meta[name="robots"]')).toHaveCount(0);
+        await expect(page.locator("article")).not.toContainText(/HUKUKİ İÇERİK|teyit edilmemiştir|Yayın öncesi|Review before launch|Prüfung vor Veröffentlichung/);
       }
     }
     expect(errors).toEqual([]);
@@ -47,7 +48,7 @@ for (const width of [320, 390, 768, 1440]) {
         await expect(page.locator("footer")).toHaveCount(1);
         await page.locator("footer").scrollIntoViewIfNeeded();
         await expect(page.locator('footer a[href="/tr/iletisim"]')).toBeVisible();
-        await expect(page.locator('footer a[href^="mailto:"]')).toHaveCount(0);
+        await expect(page.locator('footer a[href^="mailto:"]')).toHaveAttribute("href", "mailto:" + EMAIL);
         expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
         const outOfBounds = await page.locator("footer a").evaluateAll(links => links.some(link => {
           const rect = link.getBoundingClientRect();
@@ -65,7 +66,11 @@ test("footer links open the correct information and contributor targets", async 
   await expect(footer.getByRole("link", { name: "Alper Temiz GitHub profili" })).toHaveAttribute("href", "https://github.com/alperrte");
   await expect(footer.getByRole("link", { name: "Hamza Taşbay GitHub profili" })).toHaveAttribute("href", "https://github.com/HmzT270");
   await expect(footer.locator('a[href="/tr/iletisim"]')).toBeVisible();
-  await expect(footer.locator('a[href^="mailto:"]')).toHaveCount(0);
+  // The one public address is shown next to the contact link (and is the same constant JSON-LD and llms.txt use).
+  await expect(footer.locator('a[href^="mailto:"]')).toHaveText(EMAIL);
+  await expect(footer.locator('a[href^="mailto:"]')).toHaveAttribute("href", "mailto:" + EMAIL);
+  await expect(footer.getByRole("link", { name: "KVKK Aydınlatma Metni" })).toHaveAttribute("href", "/tr/kvkk");
+  await expect(footer.getByRole("link", { name: "Kullanım Koşulları" })).toHaveAttribute("href", "/tr/kullanim-kosullari");
   for (const path of infoPaths) {
     await footer.locator('a[href="' + buildPath(path, {}, "tr") + '"]').click();
     await expect(page).toHaveURL(new RegExp(buildPath(path, {}, "tr") + "$"));
@@ -165,6 +170,8 @@ test("authenticated app shell has no footer and information links work from the 
     await expect(menu.locator('a[href="' + buildPath(path, {}, "tr") + '"]')).toBeVisible();
   }
   await expect(menu.locator('a[href="/tr/iletisim"]')).toBeVisible();
+  await expect(menu.locator('a[href="/tr/kullanim-kosullari"]')).toHaveText("Kullanım Koşulları");
+  await expect(menu.locator('a[href="/tr/kvkk"]')).toHaveText("KVKK Aydınlatma Metni");
   await expect(menu.locator('a[href^="mailto:"]')).toHaveCount(0);
   // The cookie policy is listed with the other policies and the preferences can be reopened from the same group.
   await expect(menu.getByRole("menuitem", { name: "Çerez tercihlerini yönet" })).toBeVisible();

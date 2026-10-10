@@ -4,20 +4,25 @@
 Kaynak: `.agents/faz-md/Web_Sitesi_Master_Checklist.md` içindeki `### HAMZA` işaretli bölümler (satır 11–72 ve 293–312). Ayrıntılı kriterler: `.agents/web-rules/03_LEGAL_CORPORATE.md`, `.agents/web-rules/WEB_SITE_MASTER_CHECKLIST_TR.md` (admin/analitik için ayrıntılı kriter yok → bu planda tanımlanır).
 Yürütme: implementation → targeted test → fix → re-test → DoD → `[x]`. Kodlama Sonnet 5.5 (high); inceleme/test/doküman Opus. Commit/push kullanıcıda; staging, branch geçişi ve `pull --ff-only` ajan tarafından. Test politikası: fazlarda hedefli kontroller, tam pre-push son fazda bir kez. Arka planda tam test koşarken çalışma ağacında branch değiştirilmez.
 
-> Yasal metinler gerçek bilgilerle **inceleme taslağı** olarak yazılır; hukuki danışmanlık yerine geçmez. Sayfalardaki "Yayın öncesi inceleme" notu ve `noindex`, kullanıcı hukuki onay verene kadar kalır.
+> **Güncelleme (2026-10-11, kullanıcı kararı):** KVKK, Gizlilik, Çerez ve Kullanım Koşulları sayfaları **final** yayımlanır: "Yayın öncesi inceleme" notu ve `noindex` kalkar, sitemap'e girer, yer tutucu kalmaz. Metinler yalnız kullanıcının verdiği gerçek bilgilere dayanır.
 
 ## Branch execution status
 
 - [x] Phase 0 — Read-only audit (2026-10-10)
 - [x] Phase 1 — `auth-service-backend`: iletişim/destek, saklama işleri, audit log, admin/analitik uçları
-- [ ] Gate 1 — kullanıcı commit/push + merge
-- [ ] Phase 2 — `auth-service-frontend`: yasal sayfalar + Kullanım Koşulları, footer, kayıt bildirimi, çerez envanteri, iletişim formu, admin/analitik arayüzleri
+- [x] Gate 1 — kullanıcı commit/push + merge (PR #142)
+- [x] Phase 2 — `auth-service-frontend`: yasal sayfalar + Kullanım Koşulları, footer, kayıt bildirimi, çerez envanteri, iletişim formu, admin/analitik arayüzleri
 - [ ] Gate 2 — kullanıcı commit/push + merge
+- [ ] Phase 2.5 — `general-features`: Task 12 (Performans §10)
+- [ ] Gate 2.5 — kullanıcı commit/push + merge
 - [ ] Phase 3 — main üzerinde final doğrulama + completion + checklist `[x]` güncellemesi
 
 Gerekçe: iletişim, analitik ve admin modülleri 2026-10-09'da auth branch'lerinde geliştirildi (`docs/compliation/2026-10-09-auth-branch-ayrimi.md`); backend uçları main'e girmeden frontend gerçek backend'le test edilemez.
 
-## Kullanıcı kararları (2026-10-10)
+## Kullanıcı kararları (2026-10-10 / 2026-10-11)
+
+- **Kapsam genişlemesi (2026-10-11):** checklist'in HAMZA etiketli olmayan **10. Performans ve teknik kalite** bölümü de bu çalışmaya dahil (Task 12; audit sonrası planlanır).
+- **Yasal sayfalar final (2026-10-11):** bkz. üstteki not.
 
 - **Veri sorumlusu:** Hamza Taşbay ve Alper Temiz (gerçek kişiler, açık kaynak proje sahipleri); şirket/MERSİS/KEP yok. VERBİS için "gerçek kişi veri sorumlusu — kayıt yükümlülüğü değerlendirmesi" metni.
 - **İletişim:** form + görünür adres `pdassistant.info@gmail.com` (footer, İletişim, KVKK başvuru bölümü); form varsayılan alıcısı da bu adres (`CONTACT_RECIPIENT` ile değiştirilebilir); JSON-LD/llms.txt aynı adres.
@@ -90,42 +95,59 @@ STOP → `BRANCH COMPLETE — auth-service-backend` (backend `clean verify` 892/
 
 ## Task 6 — Yasal içerik ve Kullanım Koşulları (frontend, TR/EN/DE)
 
-- [ ] 6.1 KVKK Aydınlatma Metni: sorumlu (Hamza Taşbay, Alper Temiz), kanal, amaç-hukuki sebep eşleşmesi, alıcılar ve yurt dışı aktarım (Gmail SMTP, Google/GitHub OAuth, GitHub API, barındırma TBD), saklama tablosu, m.11 hakları + başvuru (form kategorisi + e-posta, 30 gün), VERBİS değerlendirmesi.
-- [ ] 6.2 Gizlilik Politikası: güncel veri kategorileri (ad/soyad, profil fotoğrafı, 2FA, sohbet, bildirim, organizasyon, takvim, analitik onaylı), hesap silme/anonimleştirme akışı, saklama, güvenlik.
-- [ ] 6.3 Çerez Politikası: eksik 8 kayıt + `pda:teams-view:v1:<id>`; saklama süreleri; tercih çerezlerinin kategorisi.
-- [ ] 6.4 GDPR bölümleri (EN/DE): Art. 13, Art. 6, Chapter V, haklar, şikâyet hakkı, Art. 27 değerlendirmesi; DE TTDSG.
-- [ ] 6.5 Kullanım Koşulları sayfası: kurallar, sorumluluklar, hesap askıya alma (DISABLED), kullanıcı içeriği, sorumluluk sınırı, açık kaynak lisansı ile ilişki, uygulanacak hukuk.
-- [ ] 6.6 Erişilebilirlik bildirimi: WCAG 2.2 AA hedefi, bilinen sınırlamalar, değerlendirme tarihi/yöntemi, yanıt süresi, başvuru yolu.
-- [ ] 6.7 SSS güncellemesi (hesap silme var; veri talebi kanalı).
-- [ ] 6.8 Footer: Kullanım Koşulları linki, "KVKK Aydınlatma Metni" etiketi, görünür e-posta; hesap menüsü; sitemap/`isLegalPage`.
-- [ ] 6.9 Kayıt formu (ve OAuth başlangıcı) aydınlatma linki (onay kutusu yok — aydınlatma/açık rıza ayrılığı).
-- [ ] 6.10 `CONTACT_EMAIL` tek adres (JSON-LD, llms.txt).
+- [x] 6.1 KVKK Aydınlatma Metni: sorumlu (Hamza Taşbay, Alper Temiz), kanal, amaç-hukuki sebep eşleşmesi, alıcılar ve yurt dışı aktarım (Gmail SMTP, Google/GitHub OAuth, GitHub API, barındırma TBD), saklama tablosu, m.11 hakları + başvuru (form kategorisi + e-posta, 30 gün), VERBİS değerlendirmesi.
+- [x] 6.2 Gizlilik Politikası: güncel veri kategorileri (ad/soyad, profil fotoğrafı, 2FA, sohbet, bildirim, organizasyon, takvim, analitik onaylı), hesap silme/anonimleştirme akışı, saklama, güvenlik.
+- [x] 6.3 Çerez Politikası: eksik 8 kayıt + `pda:teams-view:v1:<id>`; saklama süreleri; tercih çerezlerinin kategorisi.
+- [x] 6.4 GDPR bölümleri (EN/DE): Art. 13, Art. 6, Chapter V, haklar, şikâyet hakkı, Art. 27 değerlendirmesi; DE TTDSG.
+- [x] 6.5 Kullanım Koşulları sayfası: kurallar, sorumluluklar, hesap askıya alma (DISABLED), kullanıcı içeriği, sorumluluk sınırı, açık kaynak lisansı ile ilişki, uygulanacak hukuk.
+- [x] 6.6 Erişilebilirlik bildirimi: WCAG 2.2 AA hedefi, bilinen sınırlamalar, değerlendirme tarihi/yöntemi, yanıt süresi, başvuru yolu.
+- [x] 6.7 SSS güncellemesi (hesap silme var; veri talebi kanalı).
+- [x] 6.8 Footer: Kullanım Koşulları linki, "KVKK Aydınlatma Metni" etiketi, görünür e-posta; hesap menüsü; sitemap/`isLegalPage`.
+- [x] 6.9 Kayıt formu (ve OAuth başlangıcı) aydınlatma linki (onay kutusu yok — aydınlatma/açık rıza ayrılığı).
+- [x] 6.10 `CONTACT_EMAIL` tek adres (JSON-LD, llms.txt).
 
 ## Task 7 — İletişim formu arayüzü (frontend)
 
-- [ ] 7.1 Kategori alanı, opsiyonel soyad, honeypot + zaman damgası, bildirim metni (sorumlu, amaç, alıcı/sağlayıcı, saklama 12 ay, KVKK linki).
-- [ ] 7.2 E2E (spam, kategori, başarı/hata).
+- [x] 7.1 Kategori alanı, opsiyonel soyad, honeypot + zaman damgası, bildirim metni (sorumlu, amaç, alıcı/sağlayıcı, saklama 12 ay, KVKK linki).
+- [x] 7.2 E2E (spam, kategori, başarı/hata).
 
 ## Task 8 — Admin arayüzleri (frontend)
 
-- [ ] 8.1 Kullanıcı detayı (rozetler: rol + izinler salt okunur; bağlı sağlayıcılar; aktif oturumlar; tek/hepsini kapat — onaylı).
-- [ ] 8.2 Sistem sekmesi (sağlık, mail, OAuth, zamanlanmış işler, sayaçlar, kullanıcı/proje sayıları, projeler listesi).
-- [ ] 8.3 Audit log sekmesi (filtre, sayfalama).
-- [ ] 8.4 Destek talepleri sekmesi (liste, detay, durum değiştirme — onaylı).
-- [ ] 8.5 Analitik: en çok görüntülenen/giriş/çıkış sayfaları, akış, CTA ve dönüşüm, 404/hata sayıları.
-- [ ] 8.6 Tek admin politikası notu (rol yönetimi yok).
+- [x] 8.1 Kullanıcı detayı (rozetler: rol + izinler salt okunur; bağlı sağlayıcılar; aktif oturumlar; tek/hepsini kapat — onaylı).
+- [x] 8.2 Sistem sekmesi (sağlık, mail, OAuth, zamanlanmış işler, sayaçlar, kullanıcı/proje sayıları, projeler listesi).
+- [x] 8.3 Audit log sekmesi (filtre, sayfalama).
+- [x] 8.4 Destek talepleri sekmesi (liste, detay, durum değiştirme — onaylı).
+- [x] 8.5 Analitik: en çok görüntülenen/giriş/çıkış sayfaları, akış, CTA ve dönüşüm, 404/hata sayıları.
+- [x] 8.6 Tek admin politikası notu (rol yönetimi yok).
 
 ## Task 9 — Analitik istemci (frontend)
 
-- [ ] 9.1 CTA olayları (onaylı), istemci hata raporu (onaylı, PII yok), ziyaretçi kimliği 12 ayda yenileme.
-- [ ] 9.2 E2E: onaysız hiçbir şey gitmez; onaylı CTA/hata olayları.
+- [x] 9.1 CTA olayları (onaylı), istemci hata raporu (onaylı, PII yok), ziyaretçi kimliği 12 ayda yenileme.
+- [x] 9.2 E2E: onaysız hiçbir şey gitmez; onaylı CTA/hata olayları.
 
 ## Task 10 — Phase 2 regresyon + doküman
 
-- [ ] 10.1 lint/tsc + hedefli Playwright (legal, footer, contact, consent, admin-*, analytics, privacy-regression, public paket).
-- [ ] 10.2 Docs + completion kaydı.
+- [x] 10.1 lint/tsc + hedefli Playwright (legal, footer, contact, consent, admin-*, analytics, privacy-regression, public paket).
+- [x] 10.2 Docs + completion kaydı.
 
 STOP → `BRANCH COMPLETE — auth-service-frontend`
+
+## Task 12 — Performans ve teknik kalite (checklist §10) — Phase 2.5 `general-features`
+
+Audit (2026-10-11): 13 maddenin hiçbiri tamam değil; 4 kısmi (lazy loading, font, cache, yavaş ağ), 2 yakın (API timeout/retry, source map/debug). Branch: `general-features` (genel/çapraz konu; Phase 2 merge edildikten sonra — landing CTA değişiklikleriyle çakışmamak için). Ajan kararları: landing demo görselleri aynı kalır, yalnız görünür olunca yüklenir (statik poster yok); görseller kalite kaybı göze batmayacak şekilde yeniden sıkıştırılır (önce/sonra ekran görüntüsü karşılaştırması); Lighthouse eşikleri performans ≥ 0,9, LCP < 2,5 sn, CLS < 0,1, TBT < 200 ms (mobil ölçümde ulaşılamayanlar raporlanır).
+
+- [x] 12.1 Read-only audit.
+- [ ] 12.2 Ölçüm tabanı: production build üzerinde Lighthouse (mobil + masaüstü) `/`, `/login`, `/about`, `/register`, dashboard; sonuçlar `docs/compliation/` altına; bundle boyutu tabanı.
+- [ ] 12.3 Code splitting / gereksiz kod: landing demo `next/dynamic` + görünürlükte yükleme; chat, QR (`qrcode.react`), tema geçiş overlay'i tembel yükleme; `NextIntlClientProvider`'a yalnız gereken namespace'ler (ölçüp doğrula); `console.error` yaması yalnız geliştirmede; kullanılmayan `yazı.jpeg` silinir; `knip` ile tek seferlik tarama.
+- [ ] 12.4 Görseller: AVIF+WebP formatları, kaynak PNG'lerin yeniden sıkıştırılması/boyutlandırılması (arka planlar, wordmark'lar, ikonlar, OG, PWA ikonları, JSON-LD logosu), yalnız aktif temanın arka planı/wordmark'ı öncelikli, `loading="lazy"` eksik `<img>`'ler, `sizes` düzeltmeleri, `deviceSizes` sınırı.
+- [ ] 12.5 Font: hero başlık fontu için ölçüme dayalı `preload`.
+- [ ] 12.6 Cache: `/images`, `/icons` için `Cache-Control`, `images.minimumCacheTTL`, backend `server.compression`, politika dokümanı; robots'tan `/_next/` kaldırılır.
+- [ ] 12.7 API timeout/retry: istemci `AbortSignal.timeout` (15 sn) + yerelleştirilmiş zaman aşımı mesajı; yalnız GET için ağ/5xx'te sınırlı üstel retry; OAuth `RestClient` timeout.
+- [ ] 12.8 Core Web Vitals: onaylı `useReportWebVitals` → analitik; Playwright LCP/CLS duman testi; demo viewport CLS düzeltmesi.
+- [ ] 12.9 Yavaş ağ: CDP Slow 4G + 4x CPU spec'i; ana `(app)` segmentlerine `loading.tsx`.
+- [ ] 12.10 Bundle takibi: analyzer script + bütçe kontrolü (`pre-push.ps1` build sonrası).
+- [ ] 12.11 Debug hijyeni: `productionBrowserSourceMaps: false` açık, `server.error.include-*` ve actuator exposure açıkça sabit, `APP_ENV` varsayılanının üretim için güvenli olması (dev profilinin etkisi incelenir).
+- [ ] 12.12 Ölçüm tekrarı (önce/sonra tablosu) + checklist §10 `[X]` (yalnız kanıtlananlar; `N/A — gerekçe` kuralı).
 
 ## Task 11 — Final doğrulama (main)
 
