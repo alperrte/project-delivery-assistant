@@ -1,5 +1,9 @@
 # Web Sitesi Kesinlikle Olması Gerekenler — Master Checklist
 
+## Navbar scroll düzeltmesi — 2026-10-11
+
+Yalnız oturum içi navbar etkileşimi kontrol edildi: masaüstünde navbar dışında yukarı scroll ve scrollbar kenarında yukarı çıkma görünürlüğü tetiklemez; hover/focus/açık bildirim popup'ı/Ctrl-K/dokunmatik drawer ve dokunmatik scroll-up erişimi korunur. Dört hedefli Chromium testi, TypeScript ve hedefli ESLint başarılıdır. Keyboard/Focus/Responsive global kutuları bu sınırlı kontrolle değiştirilmedi. Kayıt: `docs/compliation/2026-10-11-navbar-scroll-reveal-fix.md`.
+
 ## source-map-js security follow-up — 2026-10-06
 
 Onaylı ayrı transitive patch 1.2.1→1.2.2; application/invitation/UI/test kaynakları değişmedi. Temiz npm ci, lint/TypeScript/build, 33 targeted Chromium ve canonical pre-push geçti: 469 backend testi, 0 failure/error/skip; 248 Chromium passed + 1 expected crash-route skip; Docker health PASS. Güncelleme sonrası full audit 5 high (mevcut dev debt), production audit 0. Global checklist kutuları değişmedi. Ayrı kayıt: `docs/compliation/2026-10-06-source-map-js-security-remediation.md`.

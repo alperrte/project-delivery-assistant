@@ -4,7 +4,7 @@ import { NAVBAR_IDLE_MS } from "../src/components/layout/use-auto-hide";
 
 const header = (page: Page) => page.locator(".app-shell header").first();
 
-test("desktop upward scroll reopens the navbar and idle hides it again", async ({ browser }) => {
+test("desktop upward scroll outside the navbar does not reveal it", async ({ browser }) => {
   const context = await browser.newContext({ storageState: MANAGER_STORAGE, viewport: { width: 1280, height: 400 } });
   const page = await context.newPage();
   try {
@@ -12,9 +12,29 @@ test("desktop upward scroll reopens the navbar and idle hides it again", async (
     await page.mouse.move(5, 350); await page.mouse.wheel(0, 5000);
     await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(80);
     await expect(header(page)).toHaveClass(/opacity-0/);
-    await page.mouse.wheel(0, -100);
+    // Watch every class change to catch brief reveal/hide flicker between assertions.
+    await header(page).evaluate(node => {
+      node.dataset.unexpectedReveals = "0";
+      const observer = new MutationObserver(() => {
+        if (!node.classList.contains("opacity-0")) {
+          node.dataset.unexpectedReveals = String(Number(node.dataset.unexpectedReveals) + 1);
+        }
+      });
+      observer.observe(node, { attributes: true, attributeFilter: ["class"] });
+    });
+    for (let step = 0; step < 3; step++) {
+      await page.mouse.wheel(0, -100);
+      await page.waitForTimeout(NAVBAR_IDLE_MS + 100);
+      await expect(header(page)).toHaveClass(/opacity-0/);
+    }
+    // Moving up along the scrollbar edge must not hit the navbar reveal strip.
+    await page.mouse.move(1279, 2);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(NAVBAR_IDLE_MS + 100);
+    await expect(header(page)).toHaveClass(/opacity-0/);
+    await expect(header(page)).toHaveAttribute("data-unexpected-reveals", "0");
+    await page.mouse.move(640, 2);
     await expect(header(page)).not.toHaveClass(/opacity-0/);
-    await expect(header(page)).toHaveClass(/opacity-0/, { timeout: 2500 });
   } finally { await context.close(); }
 });
 
