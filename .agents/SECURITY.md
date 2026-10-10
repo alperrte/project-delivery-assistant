@@ -305,7 +305,7 @@ Existing team DELETE and legacy archive adapters enforce active project SQUAD_MA
 
 Claim sets popupPresentedAt atomically on oldest unread SQUAD_DELETED; read/readAt stays independent. At-most-once grant may lose a popup when the response is lost after commit; durable own history remains. Fanout uses committed immutable recipient snapshot, replay event/recipient dedup and existing registry recovery; rollback creates no notification. Additive nullable teamDeletion snapshot carries bounded plain text. Actor-scoped frontend notification cache/AbortSignal/lifetime cleanup prevents prior-user responses/toasts surfacing after logout/login. No browser auth/private list persistence.
 
-Team memberPreview adds safe real first/last names only after project/team authorization; no email/global directory expansion. Existing manager invitation list batch adds safe inviter nickname/photo version and target photo version; target email privacy/token rules retained. Swagger `/swagger-ui/index.html` and `/v3/api-docs`, normal login/CSRF. Delete/claim have no JSON body; safe team create `{"name":"Example Team","includeCreator":true}`.
+Team memberPreview adds safe real first/last names only after project/team authorization; no email/global directory expansion. Each preview item also returns `roles` (project role names in enum order, 2026-10-10) from the existing membership batch; roles are labels only, never grant access, and add no query or email. Existing manager invitation list batch adds safe inviter nickname/photo version and target photo version; target email privacy/token rules retained. Swagger `/swagger-ui/index.html` and `/v3/api-docs`, normal login/CSRF. Delete/claim have no JSON body; safe team create `{"name":"Example Team","includeCreator":true}`.
 
 
 ### Own nickname profile update - 2026-10-07
@@ -432,7 +432,7 @@ Swagger check path: `/swagger-ui/index.html` with `API_DOCS_ENABLED=true`: `GET 
 | Endpoint | Auth / scope | Input | Success | Important errors |
 | --- | --- | --- | --- | --- |
 | `POST /api/v1/auth/password/change` | Access cookie + CSRF (also allowed while a forced change is pending) | `{currentPassword, newPassword (8-128), confirmNewPassword}` | `200`; other sessions revoked, forced-change flag cleared | `400` wrong current / same password / mismatch / invalid, `401`, `403` CSRF, `429` IP limit (5/10 min) |
-| `GET /api/v1/admin/users?page&size` | ADMIN (`USER_MANAGE`) | size clamped 1..100 | `200` page of `{id,email,nickname,accountStatus,emailVerificationStatus,globalRole,mustChangePassword,createdAt}` | `401`, `403` |
+| `GET /api/v1/admin/users?page&size&search&status` | ADMIN (`USER_MANAGE`) | size clamped 1..100; `status` is only `ACTIVE`, `DISABLED` or `PENDING_VERIFICATION` (`DELETED` anonymised accounts and unknown values are rejected) | `200` page of `{id,email,nickname,accountStatus,emailVerificationStatus,globalRole,mustChangePassword,createdAt}` | `400` invalid `status`/`search`, `401`, `403` |
 | `GET /api/v1/admin/users/{id}` | ADMIN | UUID path | `200` user + linked providers + active session count | `400` bad UUID, `404` |
 | `POST /api/v1/admin/users/{id}/disable` | ADMIN + CSRF | none | `200`; revokes all target sessions | `404`, `409` self or last active admin |
 | `POST /api/v1/admin/users/{id}/enable` | ADMIN + CSRF | none | `200` | `404` |
@@ -443,7 +443,7 @@ Swagger check path: `/swagger-ui/index.html` with `API_DOCS_ENABLED=true`: `GET 
 | `GET /api/v1/admin/projects?page&size` | ADMIN (`SYSTEM_VIEW`) | paging | `200` `{id,name,slug,status,archived,activeMembers,createdAt}` only | `401`, `403` |
 | `GET /api/v1/admin/system/status` | ADMIN (`SYSTEM_VIEW`) | none | `200` `{status,database,googleLoginConfigured,githubLoginConfigured,mailEnabled,apiDocsEnabled}` booleans only | `401`, `403` |
 
-Rules: the bootstrapped admin is blocked (`403 password_change_required`) everywhere except `me`, `password/change`, `logout`, `refresh`, `csrf` until the password is changed; the initial password gives no authority afterwards. An administrator cannot disable self or the last active administrator (row lock prevents two admins disabling each other). Disabling revokes every session. The project overview is aggregate metadata, not an access path: an admin who is not a member still gets `403` on project endpoints. Admin actions are logged with actor/target ids only.
+Rules (since 2026-10-10 the ENV administrator no longer carries the flag and signs in only through the separate administrator sign-in, see the last section; the mechanism below stays for any account that carries the flag): an account with the forced-change flag is blocked (`403 password_change_required`) everywhere except `me`, `password/change`, `logout`, `refresh`, `csrf` until the password is changed; the initial password gives no authority afterwards. An administrator cannot disable self or the last active administrator (row lock prevents two admins disabling each other). Disabling revokes every session. The project overview is aggregate metadata, not an access path: an admin who is not a member still gets `403` on project endpoints. Admin actions are logged with actor/target ids only.
 
 ### Auth Faz 9 endpoints (forgot / reset password)
 
@@ -1029,3 +1029,53 @@ New public endpoints (all CSRF-protected, rate limited, none leak whether an acc
 - **Mail pages are not indexed**: `/verify-email` and `/delete-account` are `noindex` and absent from the sitemap.
 
 §14 additions: the sensitive bucket (5 per 10 minutes) covers `register/verify`, `register/resend`, `password/reset/verify`, `password/change/code|verify` and `account/deletion/confirm`; `login/2fa` shares the login bucket. The e2e override raises these limits for local test runs only.
+
+## Separate administrator sign-in, mandatory 2FA and the administrator-verified session (2026-10-10)
+
+Backend part of the `/pd-admin` work (the UI follows in the frontend branch). Hiding the `/pd-admin` URL is **not** a security control; every rule below is enforced by the backend.
+
+**Administrators have their own sign-in.**
+
+- `POST /api/v1/auth/login` and the Google/GitHub sign-in refuse an `ADMIN` account **exactly like a wrong password** (`401 Invalid credentials`, same body shape, no cookie, no session; the bcrypt work still runs). The provider flow ends with the generic `/login?oauth_error=provider_error`. The regular `login/2fa` step also refuses an administrator. Nothing tells the caller that the account is an administrator.
+- The administrator sign-in is the four endpoints below. They are public, need `X-XSRF-TOKEN`, use the sensitive rate-limit bucket (5 per 10 minutes per address, counted per route) and never issue an access or refresh token from the password alone.
+
+| Endpoint | Needs | Request | Success | Failures |
+| --- | --- | --- | --- | --- |
+| `POST /api/v1/auth/admin/login` | CSRF | `{email, password}` | `200 {"status":"TWO_FACTOR_REQUIRED"}` + cookie `PDA_ADMIN_MFA` (authenticator confirmed), or `200 {"status":"TWO_FACTOR_ENROLLMENT_REQUIRED"}` + cookie `PDA_ADMIN_ENROLL` (no confirmed authenticator yet). No session. | `401` the same generic body for unknown account, wrong password, a non-administrator and a disabled account; `503 two_factor_unavailable` (no usable `TOTP_ENCRYPTION_KEY`; answered before the credentials are looked at, so it reveals nothing; no ticket); `429 RATE_LIMITED` |
+| `POST /api/v1/auth/admin/login/2fa` | CSRF + `PDA_ADMIN_MFA` | `{code}` (6-digit authenticator code or a backup code; spaces and dashes tolerated) | `200 {"status":"SIGNED_IN"}`; access + refresh cookies, **administrator-verified session**; the ticket is used up | `400 two_factor_code_invalid`, `401 two_factor_session_expired` (no/expired/used/foreign ticket), `429 two_factor_locked` (5 wrong codes, 15 min, per account), `503 two_factor_unavailable` |
+| `POST /api/v1/auth/admin/2fa/setup` | CSRF + `PDA_ADMIN_ENROLL` | none | `200 {secret, otpauthUri}`, `Cache-Control: no-store`; `otpauth://totp/PDA:{email}?secret=...&issuer=PDA&algorithm=SHA1&digits=6&period=30`. May be repeated (a new, still unconfirmed secret replaces the old one); does not use the ticket up. The secret exists only in this response. | `401 two_factor_session_expired`, `503 two_factor_unavailable` |
+| `POST /api/v1/auth/admin/2fa/enable` | CSRF + `PDA_ADMIN_ENROLL` | `{code}` (first code from the app) | `200 {"status":"SIGNED_IN","recoveryCodes":[10 codes]}` (shown once); two-factor is now on; access + refresh cookies, administrator-verified session; the ticket is used up | `400 two_factor_code_invalid` (two-factor stays **off**, no session, the ticket stays usable until it expires), `401 two_factor_session_expired`, `429 two_factor_locked` |
+
+**Tickets** (cookies are `HttpOnly`, `SameSite=Lax`, `Secure` in production, narrow path, cleared when used and on logout):
+
+| Cookie | Path | Lifetime | Accepted by |
+| --- | --- | --- | --- |
+| `PDA_ADMIN_MFA` | `/api/v1/auth/admin/login/2fa` | 5 min | `admin/login/2fa` only |
+| `PDA_ADMIN_ENROLL` | `/api/v1/auth/admin/2fa` | 10 min | `admin/2fa/setup`, `admin/2fa/enable` only |
+
+A ticket is a signed JWT (`token_use` `admin_mfa` / `admin_enroll`, subject = the account, `ref` = a row id) **plus a server-side row** in `admin_auth_tickets` (V67): account, purpose, `expires_at`, `consumed_at`. The row decides: it must exist, belong to the same account and purpose, be unexpired and unconsumed, and the account must still be an active administrator (an enrolment ticket is also refused once two-factor is on). Using a ticket up is one conditional `UPDATE ... WHERE consumed_at IS NULL AND expires_at > now`, so a replay or a concurrent second use affects 0 rows and rolls the whole sign-in back (single use). A wrong code does not use the ticket up (five wrong codes lock the second factor of the account instead). A new password step deletes the earlier tickets of that account, so only the newest counts. A ticket is never an access token (`token_use` differs), the regular `PDA_MFA` ticket is not accepted by the administrator endpoints and vice versa, and an administrator ticket is meaningless on every regular endpoint.
+
+**Administrator-verified session.** `user_sessions.admin_verified_at` (V67) is set only when a session is opened by `admin/login/2fa` or `admin/2fa/enable` (`UserSessions.openAdminVerified`). Refresh rotation updates the same row, so the mark survives rotation; sessions that existed before V67 have no mark. `JwtCookieAuthenticationFilter` reads the mark from the session row of every request of an `ADMIN` account and exposes it as `AuthenticatedUser.adminVerified` (also in `GET /auth/me`; always `false` for a non-administrator). The whole `/api/v1/admin/**` namespace then needs `ROLE_ADMIN` **and** `adminVerified`:
+
+| Caller | Answer |
+| --- | --- |
+| anonymous, or only a ticket | `401` |
+| active `USER` session | `403` |
+| `ADMIN` with a session without the mark (an older session) | `403` `{"code":"admin_reauthentication_required"}`: sign in again through the administrator sign-in |
+| `ADMIN` with an administrator-verified session | allowed |
+
+The filter enforces this for the whole namespace (a new controller cannot forget it); `AdminAuthorization.require` repeats it as the second line (`AdminReauthenticationRequiredException`, the same 403 code). The forced-password-change check runs first and is unchanged.
+
+**Two-factor is mandatory for every `ADMIN`** (the ENV administrator and anyone promoted later): the first administrator sign-in enrols an authenticator before any session exists. `POST /api/v1/auth/2fa/disable` is refused for an administrator (`403` `admin_two_factor_required`), whatever the password and code. Backup-code regeneration (`2fa/recovery-codes`, needs a current authenticator code) stays.
+
+**ENV bootstrap administrator.** `User.bootstrapAdmin` no longer sets `must_change_password`, and V68 clears the flag for administrators (the flag was only ever set by the bootstrap, so no other account changes). The password still never changes on restart. The `mustChangePassword` filter mechanism (allow-list, `password/change`) is unchanged for any account that carries the flag. The authenticator app is the compensating control for using the ENV password without rotation.
+
+**Missing or changed `TOTP_ENCRYPTION_KEY`.** Never a 500: the administrator sign-in answers `503 two_factor_unavailable` before issuing anything, and every second-step path (`login/2fa`, `admin/login/2fa`, enrolment) answers `503 two_factor_unavailable` when the key is absent or no longer opens the stored secret (`TwoFactorUnavailableException`). Fail-closed: no ticket and no session.
+
+**Logout** clears `PDA_ACCESS`, `PDA_REFRESH`, `PDA_SESSION`, `PDA_MFA`, `PDA_ADMIN_MFA` and `PDA_ADMIN_ENROLL` (each with its own path).
+
+**Audit log.** SLF4J lines from `AdminAuthService` / `LocalLoginService` carry the account id and the outcome only (password accepted, enrolment started/completed, second factor rejected, ticket rejected, administrator refused on the regular path); never an email, password, secret, code, ticket or token.
+
+**Recovery if the phone is lost.** The ten backup codes shown once at enrolment (each single use; `admin/login/2fa` accepts them; they can be regenerated from a signed-in administrator session with a current authenticator code). If every backup code is lost too, an operator with database access deletes that administrator's rows: `DELETE FROM totp_recovery_codes WHERE user_id = '<id>'; DELETE FROM totp_credentials WHERE user_id = '<id>';` (and may revoke the sessions). The next administrator sign-in then re-enrols an authenticator. There is deliberately no web or ENV switch for this. **FOLLOW-UP SECURITY FEATURE (not implemented):** an ENV-triggered, audited administrator 2FA reset.
+
+Tests: `AdminAuthIntegrationTest`, `AdminAuthHardeningIntegrationTest`, `AdminAuthMigrationTest`, `RateLimitFilterKeyTest`, `SecurityBaselineTest`, `GoogleOAuthIntegrationTest`, `AdminIntegrationTest`.

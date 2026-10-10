@@ -53,6 +53,11 @@ public class TotpService {
 
     public record Enabled(Result result, List<String> recoveryCodes) {}
 
+    /** False when no TOTP_ENCRYPTION_KEY is configured: no secret can be stored or read. */
+    public boolean available() {
+        return crypto.available();
+    }
+
     @Transactional(readOnly = true)
     public boolean isEnabled(UUID userId) {
         return credentials.findByUserId(userId).map(TotpCredential::isConfirmed).orElse(false);

@@ -2,6 +2,8 @@ package com.pda.auth.infrastructure.config;
 
 import com.pda.auth.AuthenticatedSession;
 import com.pda.auth.application.service.JwtTokens;
+import com.pda.user.AdminReauthenticationRequiredException;
+import com.pda.user.GlobalRole;
 import com.pda.user.UserAccounts;
 import com.pda.user.UserSessions;
 import jakarta.servlet.FilterChain;
@@ -22,6 +24,8 @@ final class JwtCookieAuthenticationFilter extends OncePerRequestFilter {
 
     /** Response header: milliseconds the access token that authenticated the request stays valid. Exposed by CORS. */
     static final String ACCESS_EXPIRES_IN_HEADER = "X-Access-Token-Expires-In";
+
+    private static final String ADMIN_API = "/api/v1/admin";
 
     private static final Set<String> ALLOWED_WHILE_PASSWORD_CHANGE_PENDING = Set.of(
             "/api/v1/auth/me", "/api/v1/auth/password/change", "/api/v1/auth/logout",
@@ -64,7 +68,13 @@ final class JwtCookieAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain chain) throws ServletException, IOException {
         tokens.parseAccess(cookies.access(request)).ifPresent(identity -> {
             if (sessions.isActive(identity.sessionId(), identity.userId(), clock.instant())) {
-                users.findActiveById(identity.userId()).ifPresent(user -> {
+                users.findActiveById(identity.userId()).ifPresent(found -> {
+                    // Only an administrator account can carry the mark, and only when its session was opened by the
+                    // administrator sign-in; the role itself is never taken from the token.
+                    UserAccounts.AuthenticatedUser user = GlobalRole.ADMIN.name().equals(found.globalRole())
+                            ? found.withAdminVerified(sessions.isAdminVerified(
+                                    identity.sessionId(), identity.userId(), clock.instant()))
+                            : found;
                     SecurityContextHolder.getContext().setAuthentication(
                             new UsernamePasswordAuthenticationToken(user, null,
                                     List.of(new SimpleGrantedAuthority("ROLE_" + user.globalRole()))));
@@ -88,6 +98,35 @@ final class JwtCookieAuthenticationFilter extends OncePerRequestFilter {
                     + "\"detail\":\"Password change required\",\"code\":\"password_change_required\"}");
             return;
         }
+        if (adminSessionNotVerified(request)) {
+            SecurityContextHolder.clearContext();
+            writeAdminReauthenticationRequired(response);
+            return;
+        }
         chain.doFilter(request, response);
+    }
+
+    /**
+     * The administrator API needs an administrator account AND a session opened by the administrator sign-in. An
+     * administrator whose session came from anywhere else (an older session) is told to sign in again; a non-administrator
+     * and an anonymous caller keep their ordinary 403 / 401 from the authorization rules.
+     */
+    private static boolean adminSessionNotVerified(HttpServletRequest request) {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof UserAccounts.AuthenticatedUser user)
+                || !GlobalRole.ADMIN.name().equals(user.globalRole()) || user.adminVerified()) {
+            return false;
+        }
+        String path = request.getRequestURI().substring(request.getContextPath().length());
+        return path.equals(ADMIN_API) || path.startsWith(ADMIN_API + "/");
+    }
+
+    static void writeAdminReauthenticationRequired(HttpServletResponse response) throws IOException {
+        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        response.setContentType("application/problem+json");
+        response.setHeader("Cache-Control", "no-store");
+        response.getWriter().write("{\"type\":\"about:blank\",\"title\":\"Forbidden\",\"status\":403,"
+                + "\"detail\":\"Administrator sign-in required\",\"code\":\""
+                + AdminReauthenticationRequiredException.CODE + "\"}");
     }
 }

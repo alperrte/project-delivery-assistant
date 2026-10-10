@@ -54,6 +54,17 @@ class SecurityBaselineTest {
     }
 
     @Test
+    void theAdministratorSignInEndpointsRequireCsrfAndNothingElseUnderThemIsOpen() throws Exception {
+        for (String path : new String[] {"/api/v1/auth/admin/login", "/api/v1/auth/admin/login/2fa",
+                "/api/v1/auth/admin/2fa/setup", "/api/v1/auth/admin/2fa/enable"}) {
+            mvc.perform(post(path)).andExpect(status().isForbidden());
+            mvc.perform(get(path)).andExpect(status().isForbidden());
+        }
+        mvc.perform(post("/api/v1/auth/admin/2fa/disable")).andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/auth/admin")).andExpect(status().isForbidden());
+    }
+
+    @Test
     void onlyHealthActuatorEndpointIsPublic() throws Exception {
         // No actuator in this slice: a permitted path reaches routing (404), a denied one stops at 403.
         mvc.perform(get("/actuator/health")).andExpect(status().isNotFound());

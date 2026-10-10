@@ -107,7 +107,7 @@ Notification type remains TASK_STATUS_CHANGED. GET /api/v1/notifications and PAT
 - Existing `DELETE /api/v1/projects/{p}/teams/{t}`: active PROJECT_MANAGER/SQUAD_MANAGE + CSRF, no body,204. Existing legacy squad archive routes delegate to the same delete use-case. Missing/deleted/wrong-project404; children/orphan409 (`TEAM_HAS_CHILDREN`, `TEAM_ARCHIVE_WOULD_ORPHAN`); unauthorized/CSRF403. Retained rows/FKs, pending invitations CANCELLED or elapsed EXPIRED, no project/task/membership cascade. Existing archived-target pool claim/release semantics retained.
 - Own `POST /api/v1/notifications/team-deletions/claim`: cookie session+CSRF, no body/actor/ID;200 one NotificationResponse or204. Nonempty body400; unauthenticated401; CSRF403. Private/no-store. Oldest unread/unpresented SQUAD_DELETED row gets an atomic presentation timestamp; read/unread stays separate. This grants at-most-once presentation, not guaranteed visual delivery after a lost response.
 - Existing own notification list/count/read/read-all contracts remain. Additive nullable `teamDeletion={projectName,teamName,actorNickname,occurredAt}` and `popupPresentedAt`; SQUAD_DELETED/resource SQUAD.
-- Authorized team `memberPreview` adds nullable real firstName/lastName; bounded newest5 batch data, no email/global directory expansion. Manager invitation list adds nullable invitedByNickname/invitedByPhotoVersion/profilePhotoVersion from one authorized page batch; no token in list responses.
+- Authorized team `memberPreview` adds nullable real firstName/lastName; bounded newest5 batch data, no email/global directory expansion. Each preview item also carries `roles` (array of `ProjectRole` names in enum order, first = primary; 2026-10-10), taken from the same member batch query (no extra query, no email). Manager invitation list adds nullable invitedByNickname/invitedByPhotoVersion/profilePhotoVersion from one authorized page batch; no token in list responses.
 - Swagger: `/swagger-ui/index.html`, `/v3/api-docs`; normal login/CSRF. Safe inputs: create team `{"name":"Example Team","includeCreator":true}`; delete/claim have no body.
 
 ## Frontend foundation own nickname API - 2026-10-07
@@ -155,3 +155,22 @@ Existing own GET `/api/v1/project-invitations/me?status=PENDING&page=0&size=1` n
 | `GET /api/v1/admin/analytics?from&to&zone` | ADMIN (`SYSTEM_VIEW`) | ISO dates (inclusive, default last 30 days, at most 366 days), IANA `zone` (default UTC) | `200 {range, traffic{visits, uniqueSessions, uniqueVisitors, averageEngagedSeconds, daily[], sources[], topReferrers[], topCampaigns[]}, registrations{inRange, daily[]}, accounts{total, active, terminated, pendingVerification, admins}, contactRequests{inRange, total, daily[]}}` | `400` bad zone/range, `401`, `403` |
 
 Swagger check path (`API_DOCS_ENABLED=true`): `GET /api/v1/auth/csrf`, then call the two public POSTs with the returned token header; log in as an administrator for the admin calls. Local mail can be read in Mailpit (`http://localhost:8025`) when the stack is started with `docker-compose.e2e.yml`.
+
+## Administrator sign-in and the administrator-verified session - 2026-10-10
+
+Full rules and the ticket model: `.agents/SECURITY.md`, last section. Swagger check path (`API_DOCS_ENABLED=true`): `GET /api/v1/auth/csrf`, then the calls below with the returned `X-XSRF-TOKEN` header; the ticket cookies are kept by the browser or Swagger UI between calls (an authenticator code is needed for the last step).
+
+| Endpoint | Auth | Input | Success | Errors |
+| --- | --- | --- | --- | --- |
+| `POST /api/v1/auth/admin/login` | Public + CSRF; 5 / 10 min / address | `{email, password}` | `200 {"status":"TWO_FACTOR_REQUIRED"}` + cookie `PDA_ADMIN_MFA` (path `/api/v1/auth/admin/login/2fa`, 5 min) or `200 {"status":"TWO_FACTOR_ENROLLMENT_REQUIRED"}` + cookie `PDA_ADMIN_ENROLL` (path `/api/v1/auth/admin/2fa`, 10 min); no session | `401` identical for unknown / wrong password / not an ADMIN / disabled, `503 two_factor_unavailable`, `429` |
+| `POST /api/v1/auth/admin/2fa/setup` | Public + CSRF + `PDA_ADMIN_ENROLL`; 5 / 10 min | none | `200 {secret, otpauthUri}`, `no-store` (the only response that ever carries the secret) | `401 two_factor_session_expired`, `503`, `429` |
+| `POST /api/v1/auth/admin/2fa/enable` | Public + CSRF + `PDA_ADMIN_ENROLL`; 5 / 10 min | `{code}` (6 digits) | `200 {"status":"SIGNED_IN","recoveryCodes":[10]}` + `PDA_ACCESS`/`PDA_REFRESH` cookies; two-factor on; ticket used up | `400 two_factor_code_invalid` (two-factor stays off), `401 two_factor_session_expired`, `429 two_factor_locked` / rate limit |
+| `POST /api/v1/auth/admin/login/2fa` | Public + CSRF + `PDA_ADMIN_MFA`; 5 / 10 min | `{code}` (6 digits or a backup code) | `200 {"status":"SIGNED_IN"}` + `PDA_ACCESS`/`PDA_REFRESH` cookies; ticket used up | `400 two_factor_code_invalid`, `401 two_factor_session_expired`, `429 two_factor_locked` / rate limit, `503` |
+
+Changed behaviour of existing routes:
+
+- `POST /api/v1/auth/login` and the Google/GitHub sign-in answer an `ADMIN` account like a wrong password (`401`, redirect `/login?oauth_error=provider_error`); `POST /api/v1/auth/login/2fa` also refuses an administrator.
+- `GET /api/v1/auth/me` additionally returns `adminVerified` (`true` only for an `ADMIN` session opened by the administrator sign-in).
+- `/api/v1/admin/**` needs `ROLE_ADMIN` and an administrator-verified session: anonymous `401`, `USER` `403`, `ADMIN` with an older session `403` `{"code":"admin_reauthentication_required"}`.
+- `POST /api/v1/auth/2fa/disable` is `403` `{"code":"admin_two_factor_required"}` for an `ADMIN` account; a missing or changed `TOTP_ENCRYPTION_KEY` is `503` `{"code":"two_factor_unavailable"}` on every second-step route (never `500`).
+- `POST /api/v1/auth/logout` also clears `PDA_MFA`, `PDA_ADMIN_MFA` and `PDA_ADMIN_ENROLL`.

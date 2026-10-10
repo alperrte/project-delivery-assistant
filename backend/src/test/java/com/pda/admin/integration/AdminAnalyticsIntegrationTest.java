@@ -57,6 +57,8 @@ class AdminAnalyticsIntegrationTest {
     @Autowired UserRepository users;
     @Autowired JdbcTemplate jdbc;
     @Autowired BCryptPasswordEncoder encoder;
+    @Autowired com.pda.user.UserSessions sessions;
+    @Autowired com.pda.auth.application.service.JwtTokens tokens;
 
     private static final AtomicInteger IPS = new AtomicInteger();
 
@@ -77,6 +79,10 @@ class AdminAnalyticsIntegrationTest {
     }
 
     private Cookie access(User user) throws Exception {
+        if (user.getGlobalRole() == com.pda.user.GlobalRole.ADMIN) {
+            // Administrators cannot use the regular login; this is the session the administrator sign-in leaves.
+            return AdminSessionFactory.verified(sessions, tokens, user.getId())[0];
+        }
         Cookie csrf = csrf();
         String address = "dash-test-" + IPS.incrementAndGet();
         var headers = mvc.perform(post("/api/v1/auth/login").cookie(csrf).header("X-XSRF-TOKEN", csrf.getValue())

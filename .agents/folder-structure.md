@@ -182,6 +182,7 @@ Frontend: `features/consent/` (contract, store, banner, dialog, provider, manage
 - Backend `notification/{api/NotificationController,application/NotificationService,infrastructure/NotificationRepository}`: `projectId` + çoklu `type` filtresi.
 - Frontend `features/notifications/hooks/use-invitation-responses.ts`, `features/invitations/components/{invitation-response-badge,invitation-response-strip}.tsx`.
 - E2E: `teams-view-toggle`, `invite-member-page`, `team-invitation-response-badge`.
+- Ekip kartı üye kutusu: backend `squad/application/service/TeamView.MemberPreview` + `squad/api/TeamController.MemberPreviewResponse` `roles` alanı; frontend `features/squads/types.ts` (`TeamMemberPreview.roles`) ve `components/team-member-preview.tsx` kart varyantı (kural: `frontend-design-rules.md`). E2E: `team-member-preview`.
 
 ## Proje frontend iyileştirmeleri (2026-10-10)
 

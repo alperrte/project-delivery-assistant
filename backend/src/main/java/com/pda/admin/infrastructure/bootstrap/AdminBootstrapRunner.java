@@ -47,7 +47,7 @@ public class AdminBootstrapRunner implements ApplicationRunner {
             return;
         }
         switch (administration.bootstrapAdmin(email, password)) {
-            case CREATED -> log.info("Initial administrator created; a password change is required at first login.");
+            case CREATED -> log.info("Initial administrator created; it signs in at the separate administrator sign-in and enrols an authenticator app at first use.");
             case ADMIN_EXISTS -> log.info("Admin bootstrap skipped: an administrator already exists.");
             case EMAIL_TAKEN -> log.warn("Admin bootstrap skipped: ADMIN_EMAIL belongs to an existing non-admin account; it was not modified.");
         }

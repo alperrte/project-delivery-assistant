@@ -46,7 +46,7 @@ public class AdminUserController {
     @Operation(summary = "List users",
             description = "ADMIN only. Paged on the server, newest first; size is clamped to 1..100. Optional `search` "
                     + "(email or nickname, case-insensitive substring, at most 100 characters) and `status` "
-                    + "(PENDING_VERIFICATION, ACTIVE or DISABLED).")
+                    + "(PENDING_VERIFICATION, ACTIVE or DISABLED; any other value, including DELETED, is a 400).")
     @ApiResponse(responseCode = "200", description = "One page of users")
     @ApiResponse(responseCode = "401", description = "Missing or invalid access cookie")
     @ApiResponse(responseCode = "403", description = "Caller is not an administrator")

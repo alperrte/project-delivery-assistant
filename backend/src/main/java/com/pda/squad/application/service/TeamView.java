@@ -1,6 +1,7 @@
 package com.pda.squad.application.service;
 
 import com.pda.squad.domain.entity.Squad;
+import com.pda.user.ProjectRole;
 
 import java.time.Instant;
 import java.util.List;
@@ -14,7 +15,9 @@ public record TeamView(Squad team, long memberCount, UserRef updatedBy, List<Mem
                        LastJoined lastJoined) {
 
     public record UserRef(UUID userId, String nickname, Long profilePhotoVersion) {}
-    public record MemberPreview(UUID userId, String nickname, Long profilePhotoVersion, String firstName, String lastName) {}
+    /** {@code roles} are the member's project roles in enum order (the first one is the primary role). */
+    public record MemberPreview(UUID userId, String nickname, Long profilePhotoVersion, String firstName, String lastName,
+                                List<ProjectRole> roles) {}
 
     public record LastJoined(UUID userId, String nickname, Instant joinedAt) {}
 }

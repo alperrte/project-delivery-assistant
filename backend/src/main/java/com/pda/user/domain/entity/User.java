@@ -144,14 +144,17 @@ public class User {
         return user;
     }
 
-    /** Platform administrator created from the operator-provided bootstrap credentials; must rotate the password. */
+    /**
+     * Platform administrator created from the operator-provided bootstrap credentials. No forced password change: the
+     * mandatory authenticator app of the administrator sign-in is the compensating control. The mustChangePassword
+     * mechanism itself stays for other flows.
+     */
     public static User bootstrapAdmin(String email, String nickname, String rawPassword,
                                       BCryptPasswordEncoder passwordEncoder) {
         User user = registerLocalActive(email, nickname, rawPassword, passwordEncoder);
         user.emailVerificationStatus = EmailVerificationStatus.VERIFIED;
         user.emailVerifiedAt = Instant.now();
         user.globalRole = GlobalRole.ADMIN;
-        user.mustChangePassword = true;
         return user;
     }
 
