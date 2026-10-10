@@ -70,6 +70,23 @@ class RateLimitFilterKeyTest {
     }
 
     @Test
+    void theAdministratorSignInEndpointsUseTheStrictBucketPerRouteWhileTheRegularLoginKeepsItsOwn() throws Exception {
+        AuthRateLimitFilter filter = AuthRateLimitFilter.configured(new MockEnvironment());
+        for (String path : new String[] {"/api/v1/auth/admin/login", "/api/v1/auth/admin/login/2fa",
+                "/api/v1/auth/admin/2fa/setup", "/api/v1/auth/admin/2fa/enable"}) {
+            for (int i = 0; i < 5; i++) {
+                assertEquals(200, status(filter, "POST", path, "198.51.100.60"), path);
+            }
+            assertEquals(429, status(filter, "POST", path, "198.51.100.60"), path);
+            assertEquals(200, status(filter, "POST", path, "198.51.100.61"), path);
+        }
+        // Exhausting the administrator routes does not touch the regular login bucket of the same address.
+        assertEquals(200, status(filter, "POST", "/api/v1/auth/login", "198.51.100.60"));
+        // Only POST is limited; the routes do not exist for other methods.
+        assertEquals(200, status(filter, "GET", "/api/v1/auth/admin/login", "198.51.100.60"));
+    }
+
+    @Test
     void varyingTheIdInAnInvitationPathCannotMintEndlessKeysOrLockOthersOut() throws Exception {
         ProjectInvitationRateLimitFilter filter = new ProjectInvitationRateLimitFilter();
         // The same invitation is limited per URI, as before.

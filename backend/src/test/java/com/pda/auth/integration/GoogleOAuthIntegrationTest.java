@@ -225,6 +225,29 @@ class GoogleOAuthIntegrationTest {
     }
 
     @Test
+    void anAdministratorAccountCannotSignInThroughTheProviderAndGetsTheGenericFailure() throws Exception {
+        String subject = subject();
+        String email = subject + "@example.test";
+        oauth.login(profile(subject, email, true, "Ada Lovelace"), "Chrome/1.0");
+        UUID adminId = accounts.findActiveByOAuthIdentity(OAuthProvider.GOOGLE, subject).orElseThrow().id();
+        jdbc.update("UPDATE users SET global_role = 'ADMIN' WHERE id = ?", adminId);
+        int sessionsBefore = jdbc.queryForObject("SELECT count(*) FROM user_sessions WHERE user_id = ?", Integer.class, adminId);
+
+        assertThrows(com.pda.auth.application.service.InvalidCredentialsException.class,
+                () -> oauth.login(profile(subject, email, true, "Ada Lovelace"), "Chrome/1.0"));
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setSession(new MockHttpSession());
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        handlers.success(request, response, googleToken(subject, email, true));
+
+        assertEquals("http://localhost:3000/login?oauth_error=provider_error", response.getRedirectedUrl());
+        assertTrue(response.getHeaders(HttpHeaders.SET_COOKIE).isEmpty());
+        assertEquals(sessionsBefore, jdbc.queryForObject("SELECT count(*) FROM user_sessions WHERE user_id = ?",
+                Integer.class, adminId));
+    }
+
+    @Test
     void successHandlerInLinkModeLinksWithoutIssuingCookies() throws Exception {
         User user = newLocalUser();
         String subject = subject();

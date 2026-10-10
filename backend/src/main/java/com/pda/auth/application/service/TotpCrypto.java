@@ -79,7 +79,7 @@ public class TotpCrypto {
             cipher.updateAAD(aad(userId));
             return cipher.doFinal(all, IV_BYTES, all.length - IV_BYTES);
         } catch (GeneralSecurityException | IllegalArgumentException exception) {
-            throw new IllegalStateException("TOTP secret could not be read", exception);
+            throw new TwoFactorUnavailableException(exception);
         }
     }
 
@@ -98,7 +98,7 @@ public class TotpCrypto {
 
     private void requireKey() {
         if (encryptionKey == null) {
-            throw new IllegalStateException("Two-factor authentication is unavailable");
+            throw new TwoFactorUnavailableException();
         }
     }
 

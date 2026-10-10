@@ -1,5 +1,6 @@
 package com.pda.auth.infrastructure.config;
 
+import com.pda.auth.application.service.InvalidCredentialsException;
 import com.pda.auth.application.service.LocalLoginService.LoginResult;
 import com.pda.auth.application.service.OAuthLoginService;
 import com.pda.auth.application.service.OAuthLoginService.FailureReason;
@@ -62,6 +63,9 @@ public final class OAuthLoginHandlers {
             }
         } catch (OAuthLoginException exception) {
             target = "/login?oauth_error=" + exception.reason().code();
+        } catch (InvalidCredentialsException exception) {
+            // An administrator account never signs in through a provider; the answer is the generic failure.
+            target = "/login?oauth_error=" + FailureReason.PROVIDER_ERROR.code();
         } catch (RuntimeException exception) {
             log.warn("OAuth login failed: {}", exception.getClass().getSimpleName());
             target = "/login?oauth_error=" + FailureReason.PROVIDER_ERROR.code();

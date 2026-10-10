@@ -71,6 +71,8 @@ public class AuthSessionController {
     public ResponseEntity<Void> logout(HttpServletRequest servletRequest, HttpServletResponse servletResponse) {
         login.logout(cookies.refresh(servletRequest));
         cookies.clear(servletRequest, servletResponse);
+        // A half-finished sign-in (regular or administrator second step) must not outlive the logout either.
+        cookies.clearSignInTickets(servletRequest, servletResponse);
         return ResponseEntity.ok().build();
     }
 
