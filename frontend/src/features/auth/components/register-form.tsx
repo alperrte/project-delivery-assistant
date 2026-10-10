@@ -3,10 +3,9 @@
 import { useState } from "react";
 import Link from "@/i18n/navigation";
 import { useRouter } from "@/i18n/navigation";
-import { useTranslations } from "next-intl";
-import { useForm } from "react-hook-form";
+import { useLocale, useTranslations } from "next-intl";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { SubmitButton } from "@/components/common/submit-button";
 import { FormField } from "@/components/common/form-field";
@@ -14,12 +13,9 @@ import { ApiError } from "@/lib/api/client";
 import { errorKey } from "@/lib/api/error-message";
 import { authApi } from "../api";
 import { registerSchema, type RegisterValues } from "../schemas";
-import { sessionQueryKey } from "../hooks/use-session";
-import { clearPrivateInvitations } from "@/features/invitations/query-keys";
-import { clearPrivateNotifications } from "@/features/notifications/query-keys";
-import { clearPrivateTeams } from "@/features/squads/cache";
-import { clearPrivateAdmin } from "@/features/admin/query-keys";
 import { authCtaClass } from "./auth-card";
+import { PasswordRules } from "./password-rules";
+import { holdCredentialsForVerification, writePendingVerification } from "./pending-verification";
 import { useShake } from "./use-shake";
 
 const SERVER_FIELDS = ["email", "nickname", "password", "confirmPassword"] as const;
@@ -29,7 +25,7 @@ export function RegisterForm() {
   const tv = useTranslations("validation");
   const te = useTranslations("errors");
   const router = useRouter();
-  const queryClient = useQueryClient();
+  const locale = useLocale();
   const [formError, setFormError] = useState<string | null>(null);
   const [scope, shake] = useShake<HTMLFormElement>();
 
@@ -37,13 +33,15 @@ export function RegisterForm() {
     register,
     handleSubmit,
     setError,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<RegisterValues>({ resolver: zodResolver(registerSchema) });
+  const password = useWatch({ control, name: "password" }) ?? "";
 
   async function onSubmit(values: RegisterValues) {
     setFormError(null);
     try {
-      await authApi.register(values);
+      await authApi.register({ ...values, locale });
     } catch (err) {
       // Field-level 400s from the server surface next to the offending input.
       if (err instanceof ApiError && err.invalidFields) {
@@ -56,24 +54,12 @@ export function RegisterForm() {
       return;
     }
 
-    // Sign the new account straight in with the same credentials; the backend
-    // sets the HttpOnly session cookies exactly as for a normal login.
-    try {
-      await authApi.login({ email: values.email, password: values.password });
-      const me = await authApi.me();
-      clearPrivateInvitations(queryClient);
-      clearPrivateNotifications(queryClient);
-      clearPrivateTeams(queryClient);
-      clearPrivateAdmin(queryClient);
-      queryClient.setQueryData(sessionQueryKey, me);
-      toast.success(t("welcome"));
-      router.replace(me.mustChangePassword ? "/change-password" : "/dashboard");
-    } catch {
-      // The account exists; only the sign-in failed (e.g. rate limit), so the
-      // login page is the way forward.
-      toast.success(t("success"));
-      router.replace("/login");
-    }
+    // The account stays unusable until the mailed code is entered; the code was just sent, so the verify page
+    // must not mail another one on arrival.
+    writePendingVerification({ email: values.email, sendOnOpen: false });
+    holdCredentialsForVerification(values.email, values.password);
+    toast.success(t("codeSent"));
+    router.replace("/verify-email");
   }
 
   return (
@@ -100,10 +86,10 @@ export function RegisterForm() {
           placeholder={t("passwordPlaceholder")}
           password
           autoComplete="new-password"
-          hint={t("passwordHint")}
           error={errors.password && tv(errors.password.message!)}
           {...register("password")}
         />
+        <PasswordRules value={password} />
         <FormField
           label={t("confirmPassword")}
           placeholder={t("confirmPasswordPlaceholder")}

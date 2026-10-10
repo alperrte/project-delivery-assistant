@@ -1,6 +1,6 @@
 package com.pda.auth.infrastructure.config;
 
-import com.pda.auth.application.service.LocalLoginService.LoginTokens;
+import com.pda.auth.application.service.LocalLoginService.LoginResult;
 import com.pda.auth.application.service.OAuthLoginService;
 import com.pda.auth.application.service.OAuthLoginService.FailureReason;
 import com.pda.auth.application.service.OAuthLoginService.OAuthLoginException;
@@ -51,9 +51,14 @@ public final class OAuthLoginHandlers {
                 LinkOutcome outcome = oauth.link(UUID.fromString(userId), profile);
                 target = "/?oauth_link=" + linkCode(outcome);
             } else {
-                LoginTokens tokens = oauth.login(profile, request.getHeader("User-Agent"));
-                cookies.write(tokens, request, response);
-                target = "/projects";
+                LoginResult result = oauth.login(profile, request.getHeader("User-Agent"));
+                if (result.needsSecondFactor()) {
+                    cookies.writeSecondFactorPending(result.secondFactorUserId(), request, response);
+                    target = "/login?step=2fa";
+                } else {
+                    cookies.write(result.tokens(), request, response);
+                    target = "/projects";
+                }
             }
         } catch (OAuthLoginException exception) {
             target = "/login?oauth_error=" + exception.reason().code();

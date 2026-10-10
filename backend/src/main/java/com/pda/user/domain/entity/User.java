@@ -192,6 +192,23 @@ public class User {
         }
     }
 
+    /**
+     * Wipes everything that identifies the person and ends the account for good. The row stays so that content that
+     * points at its id keeps a valid reference; the unique email and nickname get placeholders derived from the id.
+     */
+    public void anonymise() {
+        String suffix = id.toString().replace("-", "");
+        email = "deleted-" + suffix + "@deleted.invalid";
+        nickname = "deleted_" + suffix.substring(0, 20);
+        firstName = null;
+        lastName = null;
+        passwordHash = null;
+        mustChangePassword = false;
+        profilePhotoUpdatedAt = null;
+        globalRole = GlobalRole.USER;
+        accountStatus = AccountStatus.DELETED;
+    }
+
     @PrePersist
     void onCreate() {
         Instant now = Instant.now();

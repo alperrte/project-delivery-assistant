@@ -75,10 +75,17 @@ Seçim ölçütleri: ücretsiz veya düşük maliyet, Spring Boot + Docker uyumu
 
 ## E2E stack with a mail sink, and new settings (2026-10-09)
 
-`docker-compose.e2e.yml` is an override for LOCAL browser tests only: `docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d --build`. It adds Mailpit (`axllent/mailpit:v1.31.4`, UI/API on `127.0.0.1:8025`, SMTP only on the compose network), points the backend at it (`MAIL_ENABLED=true`, `SMTP_HOST=mailpit`, `SMTP_PORT=1025`, `SMTP_AUTH=false`, `SMTP_STARTTLS=false`, `MAIL_FROM=pda-e2e@example.test`) and raises the per-address rate limits. No test mail can reach a real mailbox. Never use it for a deployment.
+`docker-compose.e2e.yml` (Mailpit mail sink and raised rate limits for local browser tests) was removed on 2026-10-10. The Playwright specs that read mail from Mailpit need an equivalent override before they can run again. The stack now always uses the real `MAIL_*`/`SMTP_*` settings.
 
 New optional settings (defaults are the production values; names only in `.env.example`): `CONTACT_RECIPIENT` (fixed contact inbox, default `pdassistant@gmail.com`), `ANALYTICS_RATE_LIMIT_MAX_REQUESTS` (600), `CONTACT_RATE_LIMIT_MAX_REQUESTS` (5). Contact mail uses the existing `MAIL_*`/`SMTP_*` settings; without `MAIL_ENABLED=true` the contact form answers `503 CONTACT_UNAVAILABLE`. Behind a reverse proxy set `TRUSTED_PROXY_CIDRS`, otherwise all visitors share one rate-limit bucket.
 
 ## Canonical smoke and long serial browser suites ? 2026-10-09
 
 Pre-push frontend smoke targets canonical `/tr/ana-sayfa`; legacy `/tr` still redirects308 and Windows PowerShell treats that redirect as an error. The working page must still answer200. Browser suite shared test accounts renew their saved sessions every5min through the existing real CSRF/login API without mounting app UI; snapshot replacement is atomic and timer/browser/pending cleanup belongs to global-setup teardown. This affects ignored QA artifacts only, not token lifetimes or deployment ENV. Final merged gate:649 backend0 failure/error/skip +555 Chromium/1 expected skip, lint/type/build/Docker PASS. See `docs/compliation/2026-10-09-auth-frontend-main-conflict-resolution.md`.
+
+## Auth hardening settings (2026-10-10)
+
+- `TOTP_ENCRYPTION_KEY` — Base64 of 32 random bytes (`openssl rand -base64 32`), different from every other key. Without it two-step verification reports itself unavailable. Losing or changing it makes stored authenticator secrets unreadable: users would have to set 2FA up again.
+- `EMAIL_VERIFICATION_HMAC_KEY` — now required for registration too (it hashes the mailed codes).
+- `MAIL_ENABLED=true` with working `SMTP_*` is required: registration, password reset/change and account deletion all send mail, and registration answers `503` without creating an account when mail is off. Gmail needs an app password (2-step verification on).
+- To try real mail locally, run plain `docker compose up -d` with the `SMTP_*` values in `.env`.

@@ -161,3 +161,11 @@ Additive `notifications.invitation_project_name VARCHAR(160) NULL`; subset CHECK
 ## V63 - contact requests (2026-10-09)
 
 `contact_requests` (`id`, `created_at`, `delivery_status` SENT/FAILED) with an index on `created_at`. No name, e-mail or message is stored; only SENT rows are counted in the admin dashboard.
+
+## V64–V66 — auth hardening (2026-10-10)
+
+- **V64**: `password_reset_challenges.completed_at`; new `password_change_challenges` (one row per user: `code_hash`, `expires_at`, `last_sent_at`, `attempt_count` 0–5, `consumed_at`, `completed_at`, failure-window counters).
+- **V65**: `totp_credentials` (one per user; `secret_encrypted` AES-256-GCM, `confirmed_at`, `last_used_step`, `failed_attempts`, `locked_until`) and `totp_recovery_codes` (`code_hash`, `used_at`; unique per user and hash). Both cascade on user delete.
+- **V66**: `users.account_status` also allows `DELETED`; new `account_deletion_requests` (one per user; `token_hash` unique, `expires_at`, `attempt_count` 0–5, `consumed_at`).
+
+Registration now creates `PENDING_VERIFICATION` users; expired pending users are deleted by a scheduled job. No data migration for older accounts (the database was reset before launch).

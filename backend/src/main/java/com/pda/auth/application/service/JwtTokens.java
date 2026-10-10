@@ -70,6 +70,28 @@ public class JwtTokens {
         });
     }
 
+    /**
+     * A short-lived, single-purpose ticket (password reset, password change, second login step). {@code ref} binds the
+     * ticket to the server-side record that makes it single use, so it stops working when that record moves on.
+     */
+    public IssuedToken issueTicket(UUID userId, String purpose, String ref, Duration lifetime) {
+        Instant now = clock.instant();
+        Instant expiresAt = now.plus(lifetime);
+        return new IssuedToken(Jwts.builder().issuer(ISSUER).subject(userId.toString())
+                .id(UUID.randomUUID().toString()).issuedAt(Date.from(now)).expiration(Date.from(expiresAt))
+                .claim("token_use", purpose).claim("ref", ref).signWith(signingKey).compact(), expiresAt);
+    }
+
+    public Optional<Ticket> parseTicket(String token, String purpose) {
+        return parse(token, purpose).flatMap(claims -> {
+            try {
+                return Optional.of(new Ticket(UUID.fromString(claims.getSubject()), claims.get("ref", String.class)));
+            } catch (RuntimeException exception) {
+                return Optional.empty();
+            }
+        });
+    }
+
     public Duration accessLifetime() { return accessLifetime; }
     public Duration refreshLifetime() { return refreshLifetime; }
 
@@ -101,5 +123,6 @@ public class JwtTokens {
     }
 
     public record IssuedToken(String value, Instant expiresAt) {}
+    public record Ticket(UUID userId, String ref) {}
     public record AccessIdentity(UUID userId, UUID sessionId, Instant expiresAt) {}
 }

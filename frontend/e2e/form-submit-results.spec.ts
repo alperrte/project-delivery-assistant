@@ -1,7 +1,9 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { MANAGER_STORAGE } from "./global-setup";
+import { readFileSync } from "node:fs";
+import { MANAGER_STORAGE, MANAGER_USER_FILE } from "./global-setup";
 import { REJECTED_STATE } from "./consent-state";
-import { api, createProject, login, uniqueUser } from "./helpers";
+import { api, createProject, login, openPasswordChangeForm, uniqueUser } from "./helpers";
+import { waitForCode } from "./mailpit";
 import tr from "../src/i18n/messages/tr.json";
 
 test.use({ storageState: MANAGER_STORAGE });
@@ -258,8 +260,8 @@ const scenarios: Scenario[] = [
     stubSuccess: 204,
     url: () => /\/auth\/password\/change$/,
     async open(page) {
-      await page.goto("/account");
-      await page.waitForLoadState("networkidle");
+      // The form is behind a code mailed to the account.
+      await openPasswordChangeForm(page, (JSON.parse(readFileSync(MANAGER_USER_FILE, "utf-8")) as { email: string }).email);
       const field = page.getByLabel(tr.changePassword.currentPassword, { exact: true });
       await field.fill("Gecerli-Parola-1");
       await page.getByLabel(tr.changePassword.newPassword, { exact: true }).fill("Yeni-Parola-12345");
@@ -268,8 +270,11 @@ const scenarios: Scenario[] = [
       return { submit: page.locator('form:has(input[autocomplete="current-password"]) button[type="submit"]'), field, enter: true };
     },
     async expectSuccess(page, _c, opened) {
-      await expect(toast(page, "success")).toBeVisible();
-      await expect(opened.field!).toHaveValue("");
+      // The verified-code toast may still be on screen, so look for the update's own message.
+      await expect(toast(page, "success").filter({ hasText: tr.changePassword.success })).toBeVisible();
+      // The form closes again: the next change needs a new mailed code.
+      await expect(opened.field!).toHaveCount(0);
+      await expect(page.getByRole("button", { name: tr.securityFlow.password.start, exact: true })).toBeVisible();
     },
   },
 ];
@@ -424,8 +429,13 @@ test.describe("Gönderim sonuçları: kayıt ve giriş (gerçek sunucu)", () => 
     await page.locator('input[name="password"]').fill(user.password);
     await page.locator('input[name="confirmPassword"]').fill(user.password);
     await page.getByRole("button", { name: /^Kayıt ol$/ }).click();
+    // Registration only mails a code; the account cannot sign in until the code is entered.
     await expect(toast(page, "success")).toBeVisible();
-    await expect(page.locator("#main-content")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByLabel(tr.codeEntry.label, { exact: true })).toBeVisible();
+    await page.getByLabel(tr.codeEntry.label, { exact: true }).fill(await waitForCode(user.email));
+    await page.getByRole("button", { name: tr.verifyEmail.verify, exact: true }).click();
+    await expect(toast(page, "success")).toBeVisible();
+    await login(page, user.email, user.password);
 
     const fresh = await (await browser.newContext({ storageState: REJECTED_STATE })).newPage();
     await login(fresh, user.email, user.password);

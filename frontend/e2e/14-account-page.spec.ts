@@ -5,7 +5,7 @@ import { MANAGER_STORAGE, MANAGER_USER_FILE } from "./global-setup";
 test.use({ storageState: MANAGER_STORAGE });
 
 /** Account settings: who the person is and their password. It lives in the navbar's account menu, apart from Settings. */
-test("the navbar's account menu opens Hesap ayarları with the account details and the password form", async ({ page }) => {
+test("the navbar's account menu opens Hesap ayarları with the account details and the password start button", async ({ page }) => {
   const manager: { nickname: string; email: string } = JSON.parse(readFileSync(MANAGER_USER_FILE, "utf-8"));
 
   await page.goto("/dashboard");
@@ -19,7 +19,9 @@ test("the navbar's account menu opens Hesap ayarları with the account details a
   const main = page.locator("#main-content");
   await expect(main.getByRole("textbox", { name: "Kullanıcı adı", exact: true })).toHaveValue(manager.nickname);
   await expect(main.getByText(manager.email, { exact: true })).toBeVisible();
-  await expect(main.getByRole("button", { name: "Şifreyi güncelle" })).toBeVisible();
+  // The password form is closed until a code mailed to the account is entered: only the start button shows.
+  await expect(main.getByRole("button", { name: "Şifreyi değiştir", exact: true })).toBeVisible();
+  await expect(main.getByRole("button", { name: "Şifreyi güncelle" })).toHaveCount(0);
   // The interface choices are not here: they are on Settings.
   await expect(page.getByRole("radiogroup")).toHaveCount(0);
 });

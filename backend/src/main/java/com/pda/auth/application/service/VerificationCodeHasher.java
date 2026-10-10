@@ -49,6 +49,11 @@ public class VerificationCodeHasher {
         return hmac("pwd-reset", userId, code);
     }
 
+    /** Hashes a password-change code (account settings), under its own domain prefix. */
+    public String hashChangeCode(UUID userId, String code) {
+        return hmac("pwd-change", userId, code);
+    }
+
     private String hmac(String domain, UUID userId, String code) {
         if (key == null) {
             throw new IllegalStateException("Email verification is unavailable");

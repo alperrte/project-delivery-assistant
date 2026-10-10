@@ -72,7 +72,7 @@ test("an administrator sees the users, searches on the server and ends then rest
     await target.page.locator('input[name="email"]').fill(target.user.email);
     await target.page.locator('input[name="password"]').fill(target.user.password);
     await target.page.getByRole("button", { name: /^Giriş yap$/ }).click();
-    await expect(target.page.locator("p[role=alert]")).toContainText("hatalı");
+    await expect(target.page.locator("[role=alert]:not(#__next-route-announcer__)")).toContainText("hatalı");
     await expect(target.page).toHaveURL(/\/tr\/giris/);
 
     // History is untouched: the account and its project still exist.

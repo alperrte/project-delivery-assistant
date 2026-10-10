@@ -17,10 +17,22 @@ import org.springframework.web.filter.OncePerRequestFilter;
 final class AuthRateLimitFilter extends OncePerRequestFilter {
 
     private static final String PASSWORD_CHANGE_PATH = "/api/v1/auth/password/change";
+    private static final String PASSWORD_CHANGE_CODE_PATH = "/api/v1/auth/password/change/code";
+    private static final String PASSWORD_CHANGE_VERIFY_PATH = "/api/v1/auth/password/change/verify";
     private static final String PASSWORD_FORGOT_PATH = "/api/v1/auth/password/forgot";
     private static final String PASSWORD_RESET_PATH = "/api/v1/auth/password/reset";
+    private static final String PASSWORD_RESET_VERIFY_PATH = "/api/v1/auth/password/reset/verify";
+    private static final String REGISTER_VERIFY_PATH = "/api/v1/auth/register/verify";
+    private static final String REGISTER_RESEND_PATH = "/api/v1/auth/register/resend";
     private static final String REFRESH_PATH = "/api/v1/auth/refresh";
     private static final String LOGIN_PATH = "/api/v1/auth/login";
+    // The second sign-in step shares the login bucket; the real guess limit is the per-account lock on the credential.
+    private static final String LOGIN_SECOND_FACTOR_PATH = "/api/v1/auth/login/2fa";
+    private static final String TWO_FACTOR_ENABLE_PATH = "/api/v1/auth/2fa/enable";
+    private static final String TWO_FACTOR_DISABLE_PATH = "/api/v1/auth/2fa/disable";
+    private static final String TWO_FACTOR_RECOVERY_PATH = "/api/v1/auth/2fa/recovery-codes";
+    private static final String ACCOUNT_DELETION_REQUEST_PATH = "/api/v1/auth/account/deletion/request";
+    private static final String ACCOUNT_DELETION_CONFIRM_PATH = "/api/v1/auth/account/deletion/confirm";
     static final String ANALYTICS_PATH = "/api/v1/analytics/events";
     static final String CONTACT_PATH = "/api/v1/contact";
     private static final long WINDOW_MILLIS = Duration.ofMinutes(10).toMillis();
@@ -66,7 +78,7 @@ final class AuthRateLimitFilter extends OncePerRequestFilter {
 
     /**
      * The limits come from {@code auth.rate-limit.sensitive-max-requests} (register, register by invitation, external
-     * invitation preview, password change/forgot/reset), {@code auth.rate-limit.login-max-requests} and
+     * invitation preview, register verify/resend, password change/forgot/reset), {@code auth.rate-limit.login-max-requests} and
      * {@code auth.rate-limit.refresh-max-requests} (refresh and OAuth). Without them the production defaults apply;
      * a raised value is meant for automated tests that sign many throw-away users up from one address, and is
      * announced in the log so it cannot go unnoticed. The public anonymous endpoints have their own limits:
@@ -100,7 +112,13 @@ final class AuthRateLimitFilter extends OncePerRequestFilter {
         return !"/api/v1/auth/register".equals(path) && !"/api/v1/auth/register/invitation".equals(path)
                 && !"/api/v1/project-invitations/external/preview".equals(path) && !LOGIN_PATH.equals(path)
                 && !REFRESH_PATH.equals(path) && !PASSWORD_CHANGE_PATH.equals(path)
+                && !PASSWORD_CHANGE_CODE_PATH.equals(path) && !PASSWORD_CHANGE_VERIFY_PATH.equals(path)
                 && !PASSWORD_FORGOT_PATH.equals(path) && !PASSWORD_RESET_PATH.equals(path)
+                && !PASSWORD_RESET_VERIFY_PATH.equals(path)
+                && !REGISTER_VERIFY_PATH.equals(path) && !REGISTER_RESEND_PATH.equals(path)
+                && !LOGIN_SECOND_FACTOR_PATH.equals(path) && !TWO_FACTOR_ENABLE_PATH.equals(path)
+                && !TWO_FACTOR_DISABLE_PATH.equals(path) && !TWO_FACTOR_RECOVERY_PATH.equals(path)
+                && !ACCOUNT_DELETION_REQUEST_PATH.equals(path) && !ACCOUNT_DELETION_CONFIRM_PATH.equals(path)
                 && !ANALYTICS_PATH.equals(path) && !CONTACT_PATH.equals(path);
     }
 
@@ -122,7 +140,7 @@ final class AuthRateLimitFilter extends OncePerRequestFilter {
         // would let one unauthenticated client fill the table and lock everybody else out.
         String key = routeOf(path) + ":" + request.getRemoteAddr();
         int limit = REFRESH_PATH.equals(path) || isOAuthRedirect(path) ? maxRefreshRequests
-                : LOGIN_PATH.equals(path) ? maxLoginRequests
+                : LOGIN_PATH.equals(path) || LOGIN_SECOND_FACTOR_PATH.equals(path) ? maxLoginRequests
                 : ANALYTICS_PATH.equals(path) ? maxAnalyticsRequests
                 : CONTACT_PATH.equals(path) ? maxContactRequests : maxRequests;
         if (!allow(key, limit, System.currentTimeMillis())) {

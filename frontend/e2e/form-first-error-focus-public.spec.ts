@@ -9,7 +9,7 @@ const alertWith = (page: Page, text: string) => page.getByRole("alert").filter({
 
 const API = "http://localhost:8080/api/v1";
 
-/** Step one of the reset flow is answered by a stub so the code / new password step can be reached without a backend. */
+/** The first two steps of the reset flow are answered by stubs so the new-password step can be reached without a backend. */
 async function stubCodeRequest(page: Page, origin: string) {
   const cors = {
     "access-control-allow-origin": origin,
@@ -22,6 +22,7 @@ async function stubCodeRequest(page: Page, origin: string) {
     body: JSON.stringify({ headerName: "X-XSRF-TOKEN", parameterName: "_csrf", token: "t" }),
   }));
   await page.route(`${API}/auth/password/forgot`, (route) => route.fulfill({ status: 204, headers: cors }));
+  await page.route(`${API}/auth/password/reset/verify`, (route) => route.fulfill({ status: 204, headers: cors }));
 }
 
 test.describe("İlk hataya yönlendirme: herkese açık formlar", () => {
@@ -56,25 +57,34 @@ test.describe("İlk hataya yönlendirme: herkese açık formlar", () => {
     await expect(page.getByLabel(tr.forgotPassword.email, { exact: true })).toBeFocused();
   });
 
-  test("şifremi unuttum, ikinci adım: kod, yeni şifre ve tekrar sırayla odaklanır", async ({ page }) => {
+  test("şifremi unuttum: kod adımında, sonra yeni şifre adımında hata alanı odaklanır", async ({ page }) => {
     await page.goto(buildPath("/forgot-password", {}, "tr"));
     await stubCodeRequest(page, new URL(page.url()).origin);
     await page.getByLabel(tr.forgotPassword.email, { exact: true }).fill("kisi@example.test");
     await page.getByRole("button", { name: tr.forgotPassword.sendCode, exact: true }).click();
     await expect(page.getByText(tr.forgotPassword.codeSentTitle)).toBeVisible();
 
-    const submit = page.getByRole("button", { name: tr.forgotPassword.reset, exact: true });
-    const code = page.getByLabel(tr.forgotPassword.code, { exact: true });
-    const newPassword = page.getByLabel(tr.forgotPassword.newPassword, { exact: true });
-    const confirm = page.getByLabel(tr.forgotPassword.confirmPassword, { exact: true });
-
-    await submit.click();
+    const verify = page.getByRole("button", { name: tr.forgotPassword.verify, exact: true });
+    const code = page.getByLabel(tr.codeEntry.label, { exact: true });
+    await verify.click();
     await expect(alertWith(page, tr.validation.code)).toBeVisible();
     await expect(code).toBeFocused();
 
+    // The right code opens the last step: new password and its repetition.
     await code.fill("123456");
+    await verify.click();
+    const submit = page.getByRole("button", { name: tr.forgotPassword.reset, exact: true });
+    const newPassword = page.getByLabel(tr.forgotPassword.newPassword, { exact: true });
+    const confirm = page.getByLabel(tr.forgotPassword.confirmPassword, { exact: true });
+    await expect(newPassword).toBeVisible();
+
     await submit.click();
-    await expect(alertWith(page, tr.validation.passwordMin)).toBeVisible();
+    await expect(alertWith(page, tr.validation.required).first()).toBeVisible();
+    await expect(newPassword).toBeFocused();
+
+    await newPassword.fill("zayifparola");
+    await submit.click();
+    await expect(alertWith(page, tr.validation.passwordWeak)).toBeVisible();
     await expect(newPassword).toBeFocused();
 
     await newPassword.fill("Parola-12345");

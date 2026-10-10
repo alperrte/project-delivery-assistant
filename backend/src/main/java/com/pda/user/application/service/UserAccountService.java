@@ -1,19 +1,24 @@
 package com.pda.user.application.service;
 
 import com.pda.user.OAuthProvider;
+import com.pda.user.UserAccountDeletedEvent;
 import com.pda.user.UserAccounts;
 import com.pda.user.UserRegistrationConflictException;
 import com.pda.user.domain.entity.User;
 import com.pda.user.domain.entity.UserOAuthIdentity;
 import com.pda.user.domain.enums.AccountStatus;
 import com.pda.user.infrastructure.repository.UserOAuthIdentityRepository;
+import com.pda.user.infrastructure.repository.UserPreferenceRepository;
+import com.pda.user.infrastructure.repository.UserProfilePhotoRepository;
 import com.pda.user.infrastructure.repository.UserRepository;
+import com.pda.user.infrastructure.repository.UserSessionRepository;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -31,12 +36,22 @@ public class UserAccountService implements UserAccounts {
     private final UserRepository users;
     private final UserOAuthIdentityRepository identities;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final UserSessionRepository sessions;
+    private final UserPreferenceRepository preferences;
+    private final UserProfilePhotoRepository photos;
+    private final ApplicationEventPublisher events;
     private final String dummyHash;
 
     public UserAccountService(UserRepository users, UserOAuthIdentityRepository identities,
-                              BCryptPasswordEncoder passwordEncoder) {
+                              BCryptPasswordEncoder passwordEncoder, UserSessionRepository sessions,
+                              UserPreferenceRepository preferences, UserProfilePhotoRepository photos,
+                              ApplicationEventPublisher events) {
         this.users = users;
         this.identities = identities;
+        this.sessions = sessions;
+        this.preferences = preferences;
+        this.photos = photos;
+        this.events = events;
         this.passwordEncoder = passwordEncoder;
         this.dummyHash = passwordEncoder.encode(java.util.UUID.randomUUID().toString());
     }
@@ -49,6 +64,19 @@ public class UserAccountService implements UserAccounts {
         }
         try {
             return users.saveAndFlush(User.registerLocalActive(email, nickname, rawPassword, passwordEncoder)).getId();
+        } catch (DataIntegrityViolationException exception) {
+            throw new UserRegistrationConflictException();
+        }
+    }
+
+    @Override
+    @Transactional
+    public UUID registerPendingLocal(String email, String nickname, String rawPassword) {
+        if (users.existsByEmailIgnoreCase(email) || users.existsByNickname(nickname)) {
+            throw new UserRegistrationConflictException();
+        }
+        try {
+            return users.saveAndFlush(User.registerLocal(email, nickname, rawPassword, passwordEncoder)).getId();
         } catch (DataIntegrityViolationException exception) {
             throw new UserRegistrationConflictException();
         }
@@ -72,9 +100,68 @@ public class UserAccountService implements UserAccounts {
     @Override
     @Transactional(readOnly = true)
     public Optional<UUID> findPendingByEmail(String email) {
-        return users.findByEmail(email)
+        return users.findByEmailIgnoreCase(email == null ? "" : email.strip())
                 .filter(user -> user.getAccountStatus() == AccountStatus.PENDING_VERIFICATION)
                 .map(User::getId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<UUID> findPendingByNickname(String nickname) {
+        return users.findByNickname(nickname)
+                .filter(user -> user.getAccountStatus() == AccountStatus.PENDING_VERIFICATION)
+                .map(User::getId);
+    }
+
+    @Override
+    @Transactional
+    public boolean deleteAccount(UUID userId) {
+        Optional<User> candidate = users.findById(userId)
+                .filter(user -> user.getAccountStatus() == AccountStatus.ACTIVE);
+        if (candidate.isEmpty()) {
+            return false;
+        }
+        sessions.deleteAllOf(userId);
+        identities.deleteAllOf(userId);
+        preferences.deleteById(userId);
+        photos.deleteById(userId);
+        User user = candidate.get();
+        user.anonymise();
+        users.saveAndFlush(user);
+        events.publishEvent(new UserAccountDeletedEvent(userId));
+        return true;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isAdministrator(UUID userId) {
+        return users.findById(userId).map(user -> user.getGlobalRole() == com.pda.user.GlobalRole.ADMIN).orElse(false);
+    }
+
+    @Override
+    @Transactional
+    public boolean deletePending(UUID userId) {
+        Optional<User> candidate = users.findById(userId)
+                .filter(user -> user.getAccountStatus() == AccountStatus.PENDING_VERIFICATION);
+        if (candidate.isEmpty()) {
+            return false;
+        }
+        users.delete(candidate.get());
+        users.flush();
+        return true;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean matchesPendingLocal(String email, String password) {
+        Optional<User> found = users.findByEmailIgnoreCase(email == null ? "" : email.strip());
+        if (found.isEmpty()) {
+            passwordEncoder.matches(password, dummyHash);
+            return false;
+        }
+        User user = found.get();
+        boolean matches = user.matchesPassword(password, passwordEncoder);
+        return matches && user.getAccountStatus() == AccountStatus.PENDING_VERIFICATION;
     }
 
     @Override
@@ -209,6 +296,19 @@ public class UserAccountService implements UserAccounts {
         }
         user.changePassword(newPassword, passwordEncoder);
         return PasswordChangeOutcome.CHANGED;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean hasPassword(UUID userId) {
+        return users.findById(userId).map(User::hasPassword).orElse(false);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean passwordMatches(UUID userId, String password) {
+        return users.findById(userId).filter(user -> user.getAccountStatus() == AccountStatus.ACTIVE)
+                .map(user -> user.matchesPassword(password, passwordEncoder)).orElse(false);
     }
 
     @Override

@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -37,12 +38,16 @@ import org.springdoc.core.properties.SwaggerUiConfigProperties;
 
 @SpringBootTest(classes = BackendApplication.class)
 @AutoConfigureMockMvc
+@Import(CapturingMailConfiguration.class)
 @Testcontainers(disabledWithoutDocker = true)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class LocalAuthIntegrationTest {
 
     private static final byte[] JWT_KEY = new byte[32];
     static { new SecureRandom().nextBytes(JWT_KEY); }
+
+    private static final byte[] HMAC_KEY = new byte[32];
+    static { new SecureRandom().nextBytes(HMAC_KEY); }
 
     @Container
     static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:17-alpine");
@@ -55,10 +60,12 @@ class LocalAuthIntegrationTest {
         registry.add("FRONTEND_URL", () -> "http://localhost:3000");
         registry.add("JWT_SECRET", () -> Base64.getEncoder().encodeToString(JWT_KEY));
         registry.add("MAIL_ENABLED", () -> "true");
+        registry.add("EMAIL_VERIFICATION_HMAC_KEY", () -> Base64.getEncoder().encodeToString(HMAC_KEY));
         registry.add("API_DOCS_ENABLED", () -> "true");
     }
 
     @Autowired MockMvc mvc;
+    @Autowired CapturingMailConfiguration.CapturingMailPort mail;
     @Autowired UserRepository users;
     @Autowired JdbcTemplate jdbc;
     @Autowired BCryptPasswordEncoder encoder;
@@ -73,16 +80,18 @@ class LocalAuthIntegrationTest {
                 .andExpect(jsonPath("$.paths['/api/v1/auth/login'].post.responses['200']").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/auth/logout'].post.responses['200']").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/auth/register'].post.responses['200']").exists())
-                .andExpect(jsonPath("$.components.schemas.RegisterRequest.properties.password.minLength").value(8));
+                .andExpect(jsonPath("$.paths['/api/v1/auth/register/verify'].post.responses['200']").exists())
+                .andExpect(jsonPath("$.paths['/api/v1/auth/register/resend'].post.responses['202']").exists())
+                .andExpect(jsonPath("$.components.schemas.RegisterRequest.properties.password").exists());
         mvc.perform(get("/v3/api-docs/swagger-config")).andExpect(status().isOk());
         assertTrue(swaggerUiProperties.isCsrfEnabled());
     }
 
     @Test
-    void registerLoginMeLogoutFlowNeedsNoEmail() throws Exception {
+    void registerVerifyLoginMeLogoutFlow() throws Exception {
         String email = UUID.randomUUID() + "@example.test";
         String nickname = "u" + UUID.randomUUID().toString().replace("-", "").substring(0, 20);
-        String password = UUID.randomUUID().toString().substring(0, 8);
+        String password = "Strong-" + UUID.randomUUID().toString().substring(0, 8);
         Cookie csrf = csrfCookie();
 
         mvc.perform(post("/api/v1/auth/register").cookie(csrf).header("X-XSRF-TOKEN", csrf.getValue())
@@ -91,10 +100,23 @@ class LocalAuthIntegrationTest {
                                 + "\",\"password\":\"" + password + "\",\"confirmPassword\":\""
                                 + password + "\"}"))
                 .andExpect(status().isOk());
+        var pending = users.findByEmail(email).orElseThrow();
+        assertEquals(AccountStatus.PENDING_VERIFICATION, pending.getAccountStatus());
+        assertEquals(null, pending.getEmailVerifiedAt());
+        mvc.perform(post("/api/v1/auth/login").cookie(csrf)
+                        .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"" + email + "\",\"password\":\"" + password + "\"}"))
+                .andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("email_not_verified"));
+        mvc.perform(post("/api/v1/auth/verify-email").cookie(csrf).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/api/v1/auth/register/verify").cookie(csrf).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"" + email + "\",\"code\":\"" + mail.lastSecretFor(email) + "\"}"))
+                .andExpect(status().isOk());
         var user = users.findByEmail(email).orElseThrow();
         assertEquals(AccountStatus.ACTIVE, user.getAccountStatus());
-        assertEquals(EmailVerificationStatus.PENDING, user.getEmailVerificationStatus());
-        assertEquals(null, user.getEmailVerifiedAt());
+        assertEquals(EmailVerificationStatus.VERIFIED, user.getEmailVerificationStatus());
+        assertNotNull(user.getEmailVerifiedAt());
 
         var login = mvc.perform(post("/api/v1/auth/login").cookie(csrf)
                         .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)

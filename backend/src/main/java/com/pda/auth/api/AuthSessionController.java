@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -33,12 +34,18 @@ public class AuthSessionController {
     }
 
     @PostMapping("/login")
-    @Operation(summary = "Log in with email and password", description = "Public with CSRF. Issues HttpOnly access and refresh cookies.")
-    @ApiResponse(responseCode = "200", description = "Login succeeded; access and refresh cookies were set")
-    public ResponseEntity<Void> login(@Valid @RequestBody LoginRequest request,
-                                      HttpServletRequest servletRequest, HttpServletResponse servletResponse) {
-        cookies.write(login.login(request.email(), request.password(), servletRequest.getHeader("User-Agent")),
-                servletRequest, servletResponse);
+    @Operation(summary = "Log in with email and password",
+            description = "Public with CSRF. Issues HttpOnly access and refresh cookies. When the account has two-factor on, no session is opened: the answer is {\"status\":\"TWO_FACTOR_REQUIRED\"} plus a 5-minute PDA_MFA cookie that only /login/2fa accepts.")
+    @ApiResponse(responseCode = "200", description = "Login succeeded (cookies set, empty body) or the second factor is still due (TWO_FACTOR_REQUIRED)")
+    public ResponseEntity<Object> login(@Valid @RequestBody LoginRequest request,
+                                        HttpServletRequest servletRequest, HttpServletResponse servletResponse) {
+        LocalLoginService.LoginResult result =
+                login.login(request.email(), request.password(), servletRequest.getHeader("User-Agent"));
+        if (result.needsSecondFactor()) {
+            cookies.writeSecondFactorPending(result.secondFactorUserId(), servletRequest, servletResponse);
+            return ResponseEntity.ok().header("Cache-Control", "no-store").body(Map.of("status", "TWO_FACTOR_REQUIRED"));
+        }
+        cookies.write(result.tokens(), servletRequest, servletResponse);
         return ResponseEntity.ok().build();
     }
 

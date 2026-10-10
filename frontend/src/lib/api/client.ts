@@ -158,7 +158,22 @@ export async function renewAccessSession(): Promise<boolean> {
 }
 
 // Public endpoints never need a session, so a 401 there must not start a renewal or end the session.
-const NO_REFRESH = ["/auth/login", "/auth/register", "/auth/register/invitation", "/auth/refresh", "/auth/logout", "/analytics/events", "/contact"];
+const NO_REFRESH = [
+  "/auth/login",
+  "/auth/login/2fa",
+  "/auth/register",
+  "/auth/register/invitation",
+  "/auth/register/verify",
+  "/auth/register/resend",
+  "/auth/password/forgot",
+  "/auth/password/reset/verify",
+  "/auth/password/reset",
+  "/auth/account/deletion/confirm",
+  "/auth/refresh",
+  "/auth/logout",
+  "/analytics/events",
+  "/contact",
+];
 
 type ApiRequestOptions = {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";

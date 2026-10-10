@@ -12,4 +12,7 @@ public interface UserOAuthIdentityRepository extends JpaRepository<UserOAuthIden
     Optional<UserOAuthIdentity> findByUserIdAndProvider(UUID userId, OAuthProvider provider);
     List<UserOAuthIdentity> findByUserIdOrderByCreatedAtAsc(UUID userId);
     long countByUserId(UUID userId);
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.data.jpa.repository.Query("delete from UserOAuthIdentity i where i.userId = :userId")
+    int deleteAllOf(@org.springframework.data.repository.query.Param("userId") UUID userId);
 }
