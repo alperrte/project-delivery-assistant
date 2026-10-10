@@ -169,6 +169,14 @@ Backend: `com.pda.analytics` (public `AnalyticsReporting`; `api` ingest controll
 
 Frontend: `features/consent/` (contract, store, banner, dialog, provider, manage button), `features/analytics/` (identifiers, route template, transport, tracker), `features/contact/` (api, schema, form, page), `features/admin/` (api, query keys, guard, users page, analytics page, charts), routes `(public)/cookies`, `(public)/contact`, `(app)/admin/{users,analytics}`. E2E: `consent-state.ts` (default visitor who already decided), `db.ts`, `mailpit.ts`, `cookie-consent`, `analytics-collection`, `contact-form`, `contact-delivery`, `admin-users`, `admin-analytics`, `privacy-regression` specs. Root: `docker-compose.e2e.yml` (Mailpit + relaxed limits), `PDA_COOKIE_ANALYTICS_ADMIN_CONTACT_PLAN.md` (plan and progress).
 
+## Ekipler / üye daveti / yanıt rozeti (2026-10-10)
+
+- `features/squads/components/team-table.tsx` (tablo görünümü), `teams-page.tsx` (Kart | Tablo | Şema).
+- Rota `app/(app)/projects/[slug]/team-invitations/new/page.tsx` → `features/squads/components/invite-member-page.tsx` (`add-team-member-dialog.tsx` kaldırıldı).
+- Backend `notification/{api/NotificationController,application/NotificationService,infrastructure/NotificationRepository}`: `projectId` + çoklu `type` filtresi.
+- Frontend `features/notifications/hooks/use-invitation-responses.ts`, `features/invitations/components/{invitation-response-badge,invitation-response-strip}.tsx`.
+- E2E: `teams-view-toggle`, `invite-member-page`, `team-invitation-response-badge`.
+
 ## Proje frontend iyileştirmeleri (2026-10-10)
 
 - Rotalar: `app/(app)/projects/[slug]/criteria/{new,[criterionId]/edit}`, `app/(app)/projects/[slug]/sprints/{new,[sprintId]/edit}`; formlar `features/criteria/components/criterion-form-page.tsx`, `features/sprints/components/sprint-form-page.tsx` (dialoglar kaldırıldı).

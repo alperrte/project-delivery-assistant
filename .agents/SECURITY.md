@@ -682,6 +682,10 @@ Relevant inventory: POST/GET `/api/v1/projects`, PUT `/api/v1/projects/{id}`, GE
 
 No new endpoint, role, cookie/session/CSRF/CORS policy or ENV. Frontend private invitation queries are principal-scoped and cancelled/removed at sign-in/out/session boundaries. Existing invitation writes lock/expire elapsed pending target rows before fresh insert; manager reads/count/candidates use effective expiry. Resend expired invitation200 creates a fresh token/ID; DELETE expired204 retains EXPIRED, grants no membership. Existing authority checks and DB constraints remain. Full inventory/manual checks in the separate implementation completion. SMTP delivery remains disabled in the audited local environment.
 
+### Notification project/type filter - 2026-10-10
+
+Existing `GET /api/v1/notifications` and `GET /api/v1/notifications/unread-count` accept optional `projectId` (UUID) and repeatable `type` (NotificationType enum names; duplicates collapsed). Omitted → previous behaviour. Recipient is always the principal; no recipient parameter. Invalid type or non-UUID projectId → `400`; anonymous → `401`. Parameterized JPQL, existing `ix_notifications_recipient_unread` index. No new matcher/role/CSRF/ENV/migration (the existing GET matcher covers query parameters). Used by the "Ekip Davetleri +N" badge: unread `PROJECT_INVITATION_ACCEPTED/REJECTED` for the selected project — recipient rule unchanged, so only the inviting manager sees it. Safe example: `GET /api/v1/notifications/unread-count?projectId=<uuid>&type=PROJECT_INVITATION_ACCEPTED&type=PROJECT_INVITATION_REJECTED`.
+
 ### Notification read/history compatibility - 2026-10-07
 
 Existing GET /api/v1/notifications adds nullable read: false only unread,true only read,omitted retains unreadOnly/all; read=true with unreadOnly=true400. Recipient predicate always principal-scoped, size1-100 and createdAt DESC,id DESC unchanged. Own PATCH/{id}/read and /read-all retain session+CSRF; no request body selects recipient, foreign ID404 and anonymous/session401 (CSRF-valid), forced-password/CSRF403. No new matcher/role/auth/storage policy or migration.

@@ -190,6 +190,46 @@ class NotificationReadStateIntegrationTest {
         } finally { commit.countDown(); pool.shutdownNow(); }
     }
 
+    @Test void projectAndTypeFiltersRestrictOwnUnreadCountAndListWithoutChangingDefaults() throws Exception {
+        var a = account(); var b = account(); UUID projectA = UUID.randomUUID(), projectB = UUID.randomUUID();
+        UUID acceptedA = note(a.id, NotificationType.PROJECT_INVITATION_ACCEPTED, projectA);
+        UUID rejectedA = note(a.id, NotificationType.PROJECT_INVITATION_REJECTED, projectA);
+        UUID readA = note(a.id, NotificationType.PROJECT_INVITATION_ACCEPTED, projectA); service.markRead(a.id, readA);
+        note(a.id, NotificationType.PROJECT_INVITATION_CREATED, projectA);
+        note(a.id, NotificationType.PROJECT_INVITATION_ACCEPTED, projectB);
+        note(b.id, NotificationType.PROJECT_INVITATION_ACCEPTED, projectA);
+        var both = List.of(NotificationType.PROJECT_INVITATION_ACCEPTED, NotificationType.PROJECT_INVITATION_REJECTED);
+        assertEquals(4, service.unreadCount(a.id)); assertEquals(4, service.unreadCount(a.id, null, null));
+        assertEquals(4, service.unreadCount(a.id, null, List.of()));
+        assertEquals(3, service.unreadCount(a.id, projectA, null));
+        assertEquals(2, service.unreadCount(a.id, projectA, both));
+        assertEquals(1, service.unreadCount(a.id, projectA, List.of(NotificationType.PROJECT_INVITATION_REJECTED)));
+        assertEquals(1, service.unreadCount(a.id, projectB, both));
+        assertEquals(3, service.unreadCount(a.id, null, both));
+        assertEquals(2, service.unreadCount(a.id, projectA, List.of(NotificationType.PROJECT_INVITATION_ACCEPTED,
+                NotificationType.PROJECT_INVITATION_ACCEPTED, NotificationType.PROJECT_INVITATION_REJECTED)));
+        assertEquals(0, service.unreadCount(a.id, UUID.randomUUID(), both));
+        assertEquals(1, service.unreadCount(b.id, projectA, both)); assertEquals(0, service.unreadCount(b.id, projectB, both));
+        var listed = service.list(a.id, true, null, projectA, both, 0, 20);
+        assertEquals(Set.of(acceptedA, rejectedA), new HashSet<>(listed.map(Notification::getId).getContent()));
+        assertEquals(1, service.list(a.id, false, true, projectA, both, 0, 20).getTotalElements());
+        assertEquals(5, service.list(a.id, false, null, null, null, 0, 20).getTotalElements());
+        mvc.perform(get(BASE + "/unread-count?projectId=" + projectA + "&type=PROJECT_INVITATION_ACCEPTED&type=PROJECT_INVITATION_REJECTED")
+                .cookie(a.access)).andExpect(status().isOk()).andExpect(jsonPath("$.count").value(2));
+        mvc.perform(get(BASE + "/unread-count").cookie(a.access)).andExpect(jsonPath("$.count").value(4));
+        mvc.perform(get(BASE + "?unreadOnly=true&projectId=" + projectA + "&type=PROJECT_INVITATION_REJECTED").cookie(a.access))
+                .andExpect(jsonPath("$.totalElements").value(1)).andExpect(jsonPath("$.content[0].id").value(rejectedA.toString()));
+        for (String q : List.of("?projectId=x", "?type=NOPE")) {
+            mvc.perform(get(BASE + "/unread-count" + q).cookie(a.access)).andExpect(status().isBadRequest());
+            mvc.perform(get(BASE + q).cookie(a.access)).andExpect(status().isBadRequest());
+        }
+        mvc.perform(get(BASE + "/unread-count?projectId=" + projectA)).andExpect(status().isUnauthorized());
+    }
+
+    private UUID note(UUID user, NotificationType type, UUID project) {
+        return tx.execute(status -> rows.saveAndFlush(new Notification(user, type, "Filter title", "Plain text message",
+                null, project, ResourceType.PROJECT, UUID.randomUUID())).getId());
+    }
     private UUID note(UUID user) {
         return tx.execute(status -> rows.saveAndFlush(new Notification(user, NotificationType.PROJECT_MEMBER_ADDED,
                 "Persisted title", "Plain text message", null, UUID.randomUUID(), ResourceType.PROJECT, UUID.randomUUID())).getId());

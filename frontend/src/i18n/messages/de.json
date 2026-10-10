@@ -33,7 +33,8 @@
       "organizationCreateTitle": "Die Organisation konnte nicht erstellt werden.",
       "organizationEditTitle": "Änderungen konnten nicht gespeichert werden.",
       "description": "Bitte prüfen Sie die fehlenden oder ungültigen Felder.",
-      "sectionsLabel": "Zu prüfende Abschnitte:"
+      "sectionsLabel": "Zu prüfende Abschnitte:",
+      "memberInviteTitle": "Die Einladung konnte nicht gesendet werden."
     }
   },
   "errors": {
@@ -820,6 +821,21 @@
   },
   "invitations": {
     "pendingCount": "{count, plural, one {# ausstehende Einladung} other {# ausstehende Einladungen}}",
+    "responseCount": "{count, plural, one {# neue Einladungsantwort} other {# neue Einladungsantworten}}",
+    "responses": {
+      "title": "Neue Einladungsantworten",
+      "hint": "Es werden nur ungelesene Antworten auf von Ihnen gesendete Einladungen angezeigt.",
+      "listLabel": "Ungelesene Einladungsantworten",
+      "accepted": "{name} hat die Einladung angenommen",
+      "rejected": "{name} hat die Einladung abgelehnt",
+      "unknownPerson": "Jemand",
+      "project": "Projekt: {project}",
+      "team": "Team: {team}",
+      "markRead": "Als gelesen markieren",
+      "markReadNamed": "Antwort von {name} als gelesen markieren",
+      "markAllRead": "Alle als gelesen markieren",
+      "readFailed": "Konnte nicht als gelesen markiert werden. Bitte erneut versuchen."
+    },
     "registeredUser": "Registrierter Benutzer",
     "newUser": "Neuer PDA-Benutzer",
     "firstName": "Vorname",
@@ -1006,8 +1022,21 @@
     "emptyViewerDescription": "In diesem Projekt wurde noch kein Team erstellt.",
     "view": {
       "label": "Ansicht",
-      "list": "Liste",
+      "grid": "Raster",
+      "table": "Tabelle",
       "chart": "Schema"
+    },
+    "table": {
+      "label": "Team-Tabelle",
+      "team": "Team",
+      "members": "Mitglieder",
+      "memberCount": "Mitgliederzahl",
+      "parent": "Übergeordnetes Team",
+      "updated": "Letzte Änderung",
+      "actions": "Aktionen",
+      "noParent": "Kein übergeordnetes Team",
+      "noMembers": "Noch keine Mitglieder",
+      "memberCountValue": "{count, plural, one {# Mitglied} other {# Mitglieder}}"
     },
     "chart": {
       "label": "Organigramm der Teams",
@@ -1069,8 +1098,8 @@
       }
     },
     "addMember": {
-      "button": "Mitglied hinzufügen",
-      "title": "Mitglied zum Team hinzufügen",
+      "button": "Mitglied einladen",
+      "title": "Mitglied einladen",
       "description": "Suchen Sie die Person nach Namen. Ist sie nicht im Projekt, wird sie in dieses Team eingeladen.",
       "team": "Team",
       "teamPlaceholder": "Team auswählen",
@@ -1090,7 +1119,29 @@
       "alreadyInvited": "Einladung ausstehend",
       "outsideProject": "{name} ist nicht im Projekt. Mit der Annahme tritt die Person dem Projekt und diesem Team gleichzeitig bei.",
       "added": "Person zum Team hinzugefügt.",
-      "cancel": "Abbrechen"
+      "cancel": "Abbrechen",
+      "backToInvitations": "Zurück zu den Team-Einladungen",
+      "backToTeam": "Zurück zum Team",
+      "teamUnknown": "Team nicht gefunden",
+      "sections": {
+        "team": {
+          "title": "Team",
+          "description": "Wählen Sie das Team, für das die Einladung gesendet wird.",
+          "lockedDescription": "Die Einladung wird für das Team gesendet, aus dem Sie diese Seite geöffnet haben."
+        },
+        "person": {
+          "title": "Person",
+          "description": "Suchen Sie einen PDA-Nutzer oder laden Sie jemanden per E-Mail ein."
+        },
+        "roles": {
+          "title": "Rollen und Nachricht",
+          "description": "Wählen Sie die Rollen, die die Person bei Annahme erhält, und fügen Sie optional eine Nachricht hinzu."
+        }
+      },
+      "errors": {
+        "teamRequired": "Wählen Sie ein Team.",
+        "personRequired": "Wählen Sie eine Person zum Einladen."
+      }
     },
     "detail": {
       "backToTeams": "Zurück zu den Teams",
@@ -2438,7 +2489,8 @@
     "invitation": "Einladung",
     "changePassword": "Passwort ändern",
     "adminUsers": "Benutzer · Verwaltung",
-    "adminAnalytics": "Analyse · Verwaltung"
+    "adminAnalytics": "Analyse · Verwaltung",
+    "memberInvite": "Mitglied einladen"
   },
   "siteFooter": {
     "description": "Projekte, Teams und die Umsetzung gemeinsam organisieren.",

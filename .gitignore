@@ -102,6 +102,7 @@ pnpm-debug.log*
 frontend/coverage/
 frontend/playwright-report/
 frontend/test-results/
+/test-results/
 frontend/.nyc_output/
 frontend/e2e/.auth/
 

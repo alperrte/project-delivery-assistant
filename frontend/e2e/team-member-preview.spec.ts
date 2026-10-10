@@ -59,11 +59,13 @@ test("real onboarding names reach the team card without member requests; 101 tea
       await expect(card.locator(`[data-member-preview="${identity.id}"]`)).toHaveCount(0);
       expect(await page.evaluate(() => (window as unknown as { previewDocument: number }).previewDocument)).toBe(7);
       await card.getByRole("link", { name: "Named preview ekibini aç", exact: true }).click();
-      await page.getByRole("button", { name: "Üye ekle", exact: true }).click();
-      const addDialog = page.getByRole("dialog", { name: "Ekibe üye ekle", exact: true });
-      await addDialog.getByLabel("Kişi ara", { exact: true }).fill(user.nickname);
-      await addDialog.getByRole("button", { name: `${user.nickname} kişisini ekibe ekle`, exact: true }).click();
-      await expect(addDialog).toBeHidden();
+      await page.getByRole("link", { name: "Üye davet et", exact: true }).click();
+      await expect(page.getByRole("dialog")).toHaveCount(0);
+      await page.getByLabel("Kişi ara", { exact: true }).fill(user.nickname);
+      await page.getByRole("button", { name: `${user.nickname} kişisini ekibe ekle`, exact: true }).click();
+      // Adding a project member is immediate: the page stays, the row turns into "in team" and the way back is a link.
+      await expect(page.getByRole("list", { name: "Arama sonuçları", exact: true }).getByText("Ekipte", { exact: true })).toBeVisible();
+      await page.getByRole("link", { name: "Ekibe dön", exact: true }).click();
       await page.getByRole("navigation", { name: "Konum", exact: true }).getByRole("link", { name: "Ekipler", exact: true }).click();
       await expect(card.locator(`[data-member-preview="${identity.id}"]`)).toContainText(initials);
       expect(await page.evaluate(() => (window as unknown as { previewDocument: number }).previewDocument)).toBe(7);

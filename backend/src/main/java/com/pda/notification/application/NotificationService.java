@@ -9,7 +9,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
+import java.util.Collection;
+import java.util.EnumSet;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -45,8 +48,29 @@ public class NotificationService {
         return repository.listByReadState(user, state, type, PageRequest.of(page, size,
                 Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("id"))));
     }
+    /** Optional {@code projectId} and {@code types} filters; null/empty means no restriction. Recipient is always {@code user}. */
+    @Transactional(readOnly = true)
+    public Page<Notification> list(UUID user, boolean unreadOnly, Boolean read, UUID projectId,
+                                   Collection<NotificationType> types, int page, int size) {
+        if (unreadOnly && Boolean.TRUE.equals(read)) throw new IllegalArgumentException("Conflicting read filters");
+        Boolean state = read != null ? read : unreadOnly ? Boolean.FALSE : null;
+        Set<NotificationType> set = typeSet(types);
+        return repository.listFiltered(user, state, projectId, set.isEmpty(), set.isEmpty() ? ANY_TYPE : set,
+                PageRequest.of(page, size, Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("id"))));
+    }
     @Transactional(readOnly = true)
     public long unreadCount(UUID user) { return repository.countByRecipientUserIdAndReadFalse(user); }
+    /** Own unread count restricted by optional project and/or notification types (null/empty = unrestricted). */
+    @Transactional(readOnly = true)
+    public long unreadCount(UUID user, UUID projectId, Collection<NotificationType> types) {
+        Set<NotificationType> set = typeSet(types);
+        if (projectId == null && set.isEmpty()) return unreadCount(user);
+        return repository.countUnreadFiltered(user, projectId, set.isEmpty(), set.isEmpty() ? ANY_TYPE : set);
+    }
+    private static Set<NotificationType> typeSet(Collection<NotificationType> types) {
+        return types == null || types.isEmpty() ? Set.of() : EnumSet.copyOf(types);
+    }
+    private static final Set<NotificationType> ANY_TYPE = Set.of(NotificationType.values()[0]);
     @Transactional
     public Notification markRead(UUID user, UUID id) {
         repository.markRead(user, id, Instant.now());

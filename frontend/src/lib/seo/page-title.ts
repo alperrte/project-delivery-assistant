@@ -9,7 +9,7 @@ export type PageTitleKey =
   | "tasks" | "taskNew" | "board" | "pool" | "task" | "taskEdit" | "sprints" | "sprintNew" | "sprint" | "sprintEdit" | "labels"
   | "organizations" | "organizationNew" | "organization" | "organizationEdit"
   | "settings" | "account" | "myTasks" | "calendar" | "reminderNew" | "reminderEdit"
-  | "invitations" | "invitation" | "changePassword" | "adminUsers" | "adminAnalytics";
+  | "memberInvite" | "invitations" | "invitation" | "changePassword" | "adminUsers" | "adminAnalytics";
 
 /**
  * Signed-in screens are never indexed, but the browser tab, history and screen readers still need a page name

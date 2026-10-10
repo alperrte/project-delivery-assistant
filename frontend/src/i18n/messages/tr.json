@@ -33,7 +33,8 @@
       "organizationCreateTitle": "Organizasyon oluşturulamadı.",
       "organizationEditTitle": "Değişiklikler kaydedilemedi.",
       "description": "Lütfen eksik veya hatalı alanları kontrol edin.",
-      "sectionsLabel": "Eksik bölümler:"
+      "sectionsLabel": "Eksik bölümler:",
+      "memberInviteTitle": "Davet gönderilemedi."
     }
   },
   "errors": {
@@ -820,6 +821,21 @@
   },
   "invitations": {
     "pendingCount": "{count} bekleyen davet",
+    "responseCount": "{count} yeni davet yanıtı",
+    "responses": {
+      "title": "Yeni davet yanıtları",
+      "hint": "Yalnız sizin gönderdiğiniz davetlerin okunmamış yanıtları listelenir.",
+      "listLabel": "Okunmamış davet yanıtları",
+      "accepted": "{name} daveti kabul etti",
+      "rejected": "{name} daveti reddetti",
+      "unknownPerson": "Bir kullanıcı",
+      "project": "Proje: {project}",
+      "team": "Ekip: {team}",
+      "markRead": "Okundu işaretle",
+      "markReadNamed": "{name} yanıtını okundu işaretle",
+      "markAllRead": "Tümünü okundu işaretle",
+      "readFailed": "Okundu işaretlenemedi. Tekrar deneyin."
+    },
     "registeredUser": "Kayıtlı kullanıcı",
     "newUser": "Yeni PDA kullanıcısı",
     "firstName": "Ad",
@@ -1006,8 +1022,21 @@
     "emptyViewerDescription": "Bu projede henüz ekip oluşturulmadı.",
     "view": {
       "label": "Görünüm",
-      "list": "Liste",
+      "grid": "Kart",
+      "table": "Tablo",
       "chart": "Şema"
+    },
+    "table": {
+      "label": "Ekip tablosu",
+      "team": "Ekip",
+      "members": "Üyeler",
+      "memberCount": "Üye sayısı",
+      "parent": "Üst ekip",
+      "updated": "Son güncelleme",
+      "actions": "İşlemler",
+      "noParent": "Üst ekip yok",
+      "noMembers": "Henüz üye yok",
+      "memberCountValue": "{count} üye"
     },
     "chart": {
       "label": "Ekip organizasyon şeması",
@@ -1069,8 +1098,8 @@
       }
     },
     "addMember": {
-      "button": "Üye ekle",
-      "title": "Ekibe üye ekle",
+      "button": "Üye davet et",
+      "title": "Üye davet et",
       "description": "Kişiyi adıyla arayın. Projede değilse bu ekibe davet edilir.",
       "team": "Ekip",
       "teamPlaceholder": "Ekip seçin",
@@ -1090,7 +1119,29 @@
       "alreadyInvited": "Davet bekliyor",
       "outsideProject": "{name} projede değil. Davet kabul edilince projeye ve bu ekibe birlikte katılır.",
       "added": "Kişi ekibe eklendi.",
-      "cancel": "Vazgeç"
+      "cancel": "Vazgeç",
+      "backToInvitations": "Ekip davetlerine dön",
+      "backToTeam": "Ekibe dön",
+      "teamUnknown": "Ekip bulunamadı",
+      "sections": {
+        "team": {
+          "title": "Ekip",
+          "description": "Davetin hangi ekip için gönderileceğini seçin.",
+          "lockedDescription": "Davet, açtığınız ekip için gönderilir."
+        },
+        "person": {
+          "title": "Kişi",
+          "description": "Bir PDA kullanıcısını arayın ya da e-posta ile birini davet edin."
+        },
+        "roles": {
+          "title": "Roller ve mesaj",
+          "description": "Kişinin daveti kabul edince alacağı rolleri seçin ve isterseniz bir mesaj ekleyin."
+        }
+      },
+      "errors": {
+        "teamRequired": "Bir ekip seçin.",
+        "personRequired": "Davet edilecek bir kişi seçin."
+      }
     },
     "detail": {
       "backToTeams": "Ekiplere dön",
@@ -2438,7 +2489,8 @@
     "invitation": "Davet",
     "changePassword": "Şifre değiştir",
     "adminUsers": "Kullanıcılar · Yönetim",
-    "adminAnalytics": "Analitik · Yönetim"
+    "adminAnalytics": "Analitik · Yönetim",
+    "memberInvite": "Üye davet et"
   },
   "siteFooter": {
     "description": "Projeleri, ekipleri ve teslim sürecini birlikte yönetin.",

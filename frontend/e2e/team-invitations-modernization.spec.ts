@@ -17,8 +17,11 @@ test("real invitation form, eight role icons, inviter summary and responsive his
     const team = (await api(page, "POST", `/projects/${project.id}/teams`, { name: "Modern invitation team", includeCreator: true })).json as { id: string };
     const actor = (await api(page, "GET", "/auth/me")).json as { nickname: string };
     await page.goto(`/projects/${project.slug}?section=invitations`);
-    await page.getByRole("button", { name: tr.invitations.invite, exact: true }).click();
-    const dialog = page.getByRole("dialog", { name: tr.squads.addMember.title, exact: true });
+    await page.getByRole("link", { name: tr.invitations.invite, exact: true }).click();
+    await expect(page).toHaveURL(`/tr/projeler/${project.slug}/ekip-davetleri/yeni`);
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(page.getByRole("heading", { level: 1, name: tr.squads.addMember.title, exact: true })).toBeVisible();
+    const dialog = page.locator("#main-content form"); // a full page since the invite dialog was retired
     await dialog.getByRole("combobox", { name: tr.squads.addMember.team, exact: true }).click();
     await page.getByRole("option", { name: "Modern invitation team", exact: true }).click();
     await dialog.getByRole("tab", { name: tr.squads.addMember.modeEmail, exact: true }).click();
@@ -32,7 +35,7 @@ test("real invitation form, eight role icons, inviter summary and responsive his
     await dialog.getByRole("button", { name: tr.invitations.send, exact: true }).click();
     const response = await createResponse; expect(response.status()).toBe(201);
     const created = await response.json() as { invitationId: string };
-    await expect(dialog).toBeHidden();
+    await expect(page).toHaveURL(`/tr/projeler/${project.slug}/ekip-davetleri`);
     const row = page.getByRole("row").filter({ hasText: "Mehmet Ali Yılmaz" });
     await expect(row).toContainText(actor.nickname);
     await expect(row.locator('[data-slot="badge"] svg[aria-hidden=true]')).toHaveCount(8);
@@ -104,8 +107,9 @@ test("e-posta ile davette geçersiz adres alanın yanında hata verir ve gönder
   try {
     await api(page, "POST", `/projects/${project.id}/teams`, { name: "Email check team", includeCreator: true });
     await page.goto(`/projects/${project.slug}?section=invitations`);
-    await page.getByRole("button", { name: tr.invitations.invite, exact: true }).click();
-    const dialog = page.getByRole("dialog", { name: tr.squads.addMember.title, exact: true });
+    await page.getByRole("link", { name: tr.invitations.invite, exact: true }).click();
+    await expect(page).toHaveURL(`/tr/projeler/${project.slug}/ekip-davetleri/yeni`);
+    const dialog = page.locator("#main-content form"); // a full page since the invite dialog was retired
     await dialog.getByRole("combobox", { name: tr.squads.addMember.team, exact: true }).click();
     await page.getByRole("option", { name: "Email check team", exact: true }).click();
     await dialog.getByRole("tab", { name: tr.squads.addMember.modeEmail, exact: true }).click();
@@ -114,33 +118,48 @@ test("e-posta ile davette geçersiz adres alanın yanında hata verir ve gönder
     await dialog.getByRole("checkbox", { name: tr.roles[PROJECT_ROLES[0]], exact: true }).check();
     const field = dialog.getByLabel(tr.invitations.email, { exact: true });
     const send = dialog.getByRole("button", { name: tr.invitations.send, exact: true });
+    const summary = dialog.getByRole("alert").filter({ hasText: tr.forms.summary.memberInviteTitle });
+    // The submit button stays enabled; an invalid submit sends nothing, focuses the first invalid field and shows the summary.
+    let posts = 0;
+    page.on("request", request => { if (request.method() === "POST" && request.url().endsWith(`/projects/${project.id}/invitations`)) posts++; });
 
     await field.fill("ayse@");
     await field.blur();
     await expect(dialog.getByRole("alert").filter({ hasText: tr.validation.email })).toBeVisible();
     await expect(field).toHaveAttribute("aria-invalid", "true");
-    await expect(send).toBeDisabled();
+    await send.click();
+    await expect(field).toBeFocused();
+    await expect(summary).toBeVisible();
+    expect(posts).toBe(0);
 
     await field.fill("ayse@example.test");
     await expect(dialog.getByRole("alert").filter({ hasText: tr.validation.email })).toHaveCount(0);
-    await expect(send).toBeEnabled();
+    await expect(summary).toHaveCount(0);
 
-    // Required fields explain themselves instead of leaving the button silently disabled.
+    // Required fields explain themselves.
     const first = dialog.getByLabel(tr.invitations.firstName, { exact: true });
     await first.fill("");
     await first.blur();
     await expect(dialog.getByRole("alert").filter({ hasText: tr.validation.required })).toBeVisible();
     await expect(first).toHaveAttribute("aria-invalid", "true");
-    await expect(send).toBeDisabled();
+    await send.click();
+    await expect(first).toBeFocused();
+    await expect(summary).toBeVisible();
+    expect(posts).toBe(0);
     await first.fill("Ayşe");
     await expect(dialog.getByRole("alert").filter({ hasText: tr.validation.required })).toHaveCount(0);
+    await expect(summary).toHaveCount(0);
 
     await dialog.getByRole("checkbox", { name: tr.roles[PROJECT_ROLES[0]], exact: true }).uncheck();
     await expect(dialog.getByRole("alert").filter({ hasText: tr.validation.rolesRequired })).toBeVisible();
-    await expect(send).toBeDisabled();
+    await send.click();
+    await expect(dialog.locator("fieldset").getByRole("checkbox").first()).toBeFocused();
+    await expect(summary).toBeVisible();
+    expect(posts).toBe(0);
     await dialog.getByRole("checkbox", { name: tr.roles[PROJECT_ROLES[0]], exact: true }).check();
     await expect(dialog.getByRole("alert").filter({ hasText: tr.validation.rolesRequired })).toHaveCount(0);
-    await expect(send).toBeEnabled();
+    await expect(summary).toHaveCount(0);
+    expect(posts).toBe(0);
   } finally {
     expect((await api(page, "DELETE", `/projects/${project.id}`)).status).toBe(204);
     await context.close();

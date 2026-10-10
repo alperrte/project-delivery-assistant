@@ -33,7 +33,8 @@
       "organizationCreateTitle": "The organization could not be created.",
       "organizationEditTitle": "Changes could not be saved.",
       "description": "Please check the missing or invalid fields.",
-      "sectionsLabel": "Sections to fix:"
+      "sectionsLabel": "Sections to fix:",
+      "memberInviteTitle": "The invitation could not be sent."
     }
   },
   "errors": {
@@ -820,6 +821,21 @@
   },
   "invitations": {
     "pendingCount": "{count, plural, one {# pending invitation} other {# pending invitations}}",
+    "responseCount": "{count, plural, one {# new invitation response} other {# new invitation responses}}",
+    "responses": {
+      "title": "New invitation responses",
+      "hint": "Only unread answers to invitations you sent are listed.",
+      "listLabel": "Unread invitation responses",
+      "accepted": "{name} accepted the invitation",
+      "rejected": "{name} declined the invitation",
+      "unknownPerson": "Someone",
+      "project": "Project: {project}",
+      "team": "Team: {team}",
+      "markRead": "Mark as read",
+      "markReadNamed": "Mark {name}'s response as read",
+      "markAllRead": "Mark all as read",
+      "readFailed": "Could not mark as read. Try again."
+    },
     "registeredUser": "Registered user",
     "newUser": "New PDA user",
     "firstName": "First name",
@@ -952,8 +968,21 @@
     "emptyViewerDescription": "No team has been created in this project yet.",
     "view": {
       "label": "View",
-      "list": "List",
+      "grid": "Grid",
+      "table": "Table",
       "chart": "Chart"
+    },
+    "table": {
+      "label": "Team table",
+      "team": "Team",
+      "members": "Members",
+      "memberCount": "Member count",
+      "parent": "Parent team",
+      "updated": "Last update",
+      "actions": "Actions",
+      "noParent": "No parent team",
+      "noMembers": "No members yet",
+      "memberCountValue": "{count, plural, one {# member} other {# members}}"
     },
     "card": {
       "members": "Members",
@@ -1045,8 +1074,8 @@
       }
     },
     "addMember": {
-      "button": "Add member",
-      "title": "Add a member to the team",
+      "button": "Invite member",
+      "title": "Invite member",
       "description": "Search for a person by name. If they are not in the project they are invited to this team.",
       "team": "Team",
       "teamPlaceholder": "Choose a team",
@@ -1066,7 +1095,29 @@
       "alreadyInvited": "Invitation pending",
       "outsideProject": "{name} is not in the project. On accepting the invitation they join the project and this team together.",
       "added": "Person added to the team.",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "backToInvitations": "Back to team invitations",
+      "backToTeam": "Back to the team",
+      "teamUnknown": "Team not found",
+      "sections": {
+        "team": {
+          "title": "Team",
+          "description": "Choose the team the invitation is sent for.",
+          "lockedDescription": "The invitation is sent for the team you opened this from."
+        },
+        "person": {
+          "title": "Person",
+          "description": "Search for a PDA user or invite someone by e-mail."
+        },
+        "roles": {
+          "title": "Roles and message",
+          "description": "Choose the roles the person receives on accepting, and add a message if you like."
+        }
+      },
+      "errors": {
+        "teamRequired": "Choose a team.",
+        "personRequired": "Choose a person to invite."
+      }
     },
     "detail": {
       "backToTeams": "Back to teams",
@@ -2414,7 +2465,8 @@
     "invitation": "Invitation",
     "changePassword": "Change password",
     "adminUsers": "Users · Administration",
-    "adminAnalytics": "Analytics · Administration"
+    "adminAnalytics": "Analytics · Administration",
+    "memberInvite": "Invite member"
   },
   "siteFooter": {
     "description": "Manage projects, teams and delivery together.",

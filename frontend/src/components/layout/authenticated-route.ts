@@ -3,7 +3,7 @@ import { matchPath, type PageRoute } from "@/i18n/routing";
 /** A route policy, not a visited-history list. Tests compare it with the real (app) layout routes. */
 export const AUTHENTICATED_ROUTES = [
   "/dashboard", "/projects", "/projects/new", "/projects/[slug]",
-  "/projects/[slug]/overview", "/projects/[slug]/criteria", "/projects/[slug]/criteria/new", "/projects/[slug]/criteria/[criterionId]/edit", "/projects/[slug]/teams", "/projects/[slug]/team-invitations", "/projects/[slug]/repository", "/projects/[slug]/edit",
+  "/projects/[slug]/overview", "/projects/[slug]/criteria", "/projects/[slug]/criteria/new", "/projects/[slug]/criteria/[criterionId]/edit", "/projects/[slug]/teams", "/projects/[slug]/team-invitations", "/projects/[slug]/team-invitations/new", "/projects/[slug]/repository", "/projects/[slug]/edit",
   "/projects/[slug]/teams/new", "/projects/[slug]/teams/[teamId]", "/projects/[slug]/teams/[teamId]/edit", "/projects/[slug]/teams/[teamId]/members",
   "/projects/[slug]/tasks", "/projects/[slug]/tasks/new", "/projects/[slug]/tasks/board", "/projects/[slug]/tasks/pool", "/projects/[slug]/tasks/[taskId]", "/projects/[slug]/tasks/[taskId]/edit",
   "/projects/[slug]/sprints", "/projects/[slug]/sprints/new", "/projects/[slug]/sprints/[sprintId]", "/projects/[slug]/sprints/[sprintId]/edit", "/projects/[slug]/labels",

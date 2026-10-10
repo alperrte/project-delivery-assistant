@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { usePathname, useRouter, useSearchParams } from "@/i18n/navigation";
+import Link, { usePathname, useRouter, useSearchParams } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -13,11 +13,10 @@ import { PaginationBar } from "@/components/common/pagination-bar";
 import { Avatar } from "@/components/ui/avatar";
 import { profilePhotoSrc } from "@/features/account/api";
 import { ProjectRoleBadge } from "@/features/projects/role-presentation";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AddTeamMemberDialog } from "@/features/squads/components/add-team-member-dialog";
 import { errorKey } from "@/lib/api/error-message";
 import { invitationsApi } from "../api";
 import { invitationKeys } from "../query-keys";
@@ -27,6 +26,7 @@ import { InvitationStatusBadge } from "./invitation-status-badge";
 
 import { usePendingInvitationCount } from "../hooks";
 import { PendingInvitationBadge } from "./pending-invitation-badge";
+import { InvitationResponseStrip } from "./invitation-response-strip";
 
 const PAGE_SIZE = 20;
 export const INVITATION_TABS = ["PENDING", "ACCEPTED", "REJECTED", "CANCELLED", "EXPIRED"] as const satisfies readonly InvitationStatus[];
@@ -75,7 +75,7 @@ function StatusBadge({ invitation }: { invitation: Invitation }) {
   );
 }
 
-export function InvitationsPage({ projectId }: { projectId: string }) {
+export function InvitationsPage({ projectId, slug }: { projectId: string; slug: string }) {
   const count = usePendingInvitationCount(projectId, true);
   const t = useTranslations("invitations");
   const te = useTranslations("errors");
@@ -185,17 +185,14 @@ export function InvitationsPage({ projectId }: { projectId: string }) {
         titleAdornment={<PendingInvitationBadge count={count.isSuccess ? count.data : undefined} />}
         description={t("pageDescription")}
         action={
-          <AddTeamMemberDialog
-            projectId={projectId}
-            trigger={
-              <Button>
-                <Plus data-icon="inline-start" size={16} aria-hidden="true" />
-                {t("invite")}
-              </Button>
-            }
-          />
+          <Link href={`/projects/${slug}/team-invitations/new`} className={buttonVariants()}>
+            <Plus data-icon="inline-start" size={16} aria-hidden="true" />
+            {t("invite")}
+          </Link>
         }
       />
+
+      <InvitationResponseStrip projectId={projectId} />
 
       <Tabs value={tab} onValueChange={(next) => isTab(next as string) && go({ status: next as Tab, page: 0 })} className="mb-4">
         <TabsList aria-label={t("tabsLabel")} className="max-w-full overflow-x-auto">

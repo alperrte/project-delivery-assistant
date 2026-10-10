@@ -51,7 +51,7 @@ test.describe.serial("Teams page (manager)", () => {
     await page.getByRole("tab", { name: "Şema" }).click();
     await expect(page).toHaveURL(/view=chart/);
     await expect(page.getByRole("link", { name: /Backend ekibini aç/ })).toBeVisible();
-    await page.getByRole("tab", { name: "Liste" }).click();
+    await page.getByRole("tab", { name: "Kart" }).click();
 
     await page.getByRole("link", { name: /Backend ekibini aç/ }).first().click();
     await expect(page).toHaveURL(new RegExp(`/tr/projeler/${slug}/ekipler/(?!yeni-ekip$)[^/]+$`));

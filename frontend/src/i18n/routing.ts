@@ -13,6 +13,7 @@ export const PAGE_ROUTES = [
   "/projects/[slug]/criteria/[criterionId]/edit",
   "/projects/[slug]/teams",
   "/projects/[slug]/team-invitations",
+  "/projects/[slug]/team-invitations/new",
   "/projects/[slug]/repository",
   "/projects/[slug]/edit",
   "/projects/[slug]/teams/new",
