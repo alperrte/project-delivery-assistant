@@ -26,9 +26,13 @@ function Avatar({
 }) {
   // Remember which source failed instead of a boolean, so a new photo URL gets its own chance to load.
   const [failedSrc, setFailedSrc] = useState<string | null>(null)
-  const words = name.trim().split(/\s+/).filter(Boolean)
+  // Words without a letter or digit (a lone "-" or "_" between names) never become initials.
+  const allWords = name.trim().split(/\s+/u).filter(Boolean)
+  const wordsWithText = allWords.filter((word) => /[\p{L}\p{N}]/u.test(word))
+  const words = wordsWithText.length ? wordsWithText : allWords
   // A single word (a nickname) shows its first two letters; a full name shows the first letter of two words.
-  const initials = (words.length > 1 ? words.slice(0, 2).map((word) => word[0]).join("") : (words[0] ?? "").slice(0, 2)).toUpperCase()
+  // Code points, so a supplementary-plane letter is never cut in half.
+  const initials = (words.length > 1 ? words.slice(0, 2).map((word) => Array.from(word)[0]).join("") : Array.from(words[0] ?? "").slice(0, 2).join("")).toUpperCase()
   const showPhoto = Boolean(src) && failedSrc !== src
 
   return (

@@ -48,7 +48,7 @@ export function RegisterForm() {
       // Field-level 400s from the server surface next to the offending input.
       if (err instanceof ApiError && err.invalidFields) {
         for (const field of SERVER_FIELDS) {
-          if (err.invalidFields[field]) setError(field, { message: "required" });
+          if (err.invalidFields[field]) setError(field, { message: field === "nickname" ? "nickname" : "required" });
         }
       }
       setFormError(te(errorKey(err)));

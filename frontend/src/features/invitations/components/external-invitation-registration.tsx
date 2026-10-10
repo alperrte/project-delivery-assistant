@@ -78,7 +78,7 @@ export function ExternalInvitationRegistration() {
     setError(null);
     try {
       const accepted = await authApi.registerInvitation({ token, email: preview.email,
-        firstName: preview.firstName, lastName: preview.lastName, nickname, password, confirmPassword });
+        firstName: preview.firstName, lastName: preview.lastName, nickname: validation.data.nickname, password, confirmPassword });
       await authApi.login({ email: preview.email, password });
       const me = await authApi.me();
       clearPrivateInvitations(queryClient);

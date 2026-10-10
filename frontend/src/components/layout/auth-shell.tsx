@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { Logo } from "@/components/common/logo";
 import { HomeLink } from "@/components/common/home-link";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
+import { RenderingProbe } from "@/components/layout/rendering-probe";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { cn } from "@/lib/utils";
@@ -39,14 +40,17 @@ const NEON_FILTER_ID = "pda-scene-neon";
  *
  * Over each photo a light runs along its neon strips: the same image again,
  * filtered down to the strips (`NeonFilter`), is lit only where a soft band
- * passes (`auth-neon` in globals.css) and screened onto the photo.
+ * passes (`auth-neon` in globals.css) and screened onto the photo. Without hardware acceleration that group is dropped
+ * (`RenderingProbe`, `<html data-renderer="software">`): composited in software it makes the theme switch crawl.
  */
 export async function AuthShell({ children }: { children: ReactNode }) {
   const t = await getTranslations("brand");
   return (
-    // A page that renders `data-auth-fixed` locks to the viewport, but only on screens tall enough to hold it:
-    // on shorter ones the page keeps scrolling so nothing is cut off (zoom and small laptops stay usable).
-    <div className="relative isolate flex min-h-[100dvh] flex-col bg-(--background) text-(--auth-ink) [@media(min-height:970px)]:has-[[data-auth-fixed]]:h-dvh [@media(min-height:970px)]:has-[[data-auth-fixed]]:overflow-hidden">
+    // A page that renders `data-auth-fixed` locks to the viewport (`.auth-shell` in globals.css), but only on screens
+    // tall enough to hold it: on shorter ones the page keeps scrolling so nothing is cut off (zoom and small laptops
+    // stay usable). While the cookie banner is up the lock is released and the column stops above the banner instead.
+    <div className="auth-shell relative isolate flex min-h-[calc(100dvh-var(--cookie-banner-offset,0px))] flex-col bg-(--background) text-(--auth-ink)">
+      <RenderingProbe />
       <NeonFilter />
       <div aria-hidden className="auth-enter-scene pointer-events-none fixed inset-0 -z-10 overflow-hidden">
         {SCENES.map(({ src, shift, theme }) => (

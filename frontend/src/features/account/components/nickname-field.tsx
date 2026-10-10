@@ -11,7 +11,7 @@ import { ApiError } from "@/lib/api/client";
 import type { AuthenticatedUser } from "@/features/auth/api";
 import { sessionQueryKey } from "@/features/auth/hooks/use-session";
 import { accountApi } from "../api";
-import { nicknameIdentityQuery, normalizeNickname, validNickname } from "../nickname";
+import { nicknameIdentityQuery, nicknameProblem, normalizeNickname } from "../nickname";
 
 export function NicknameField({ user }: { user: AuthenticatedUser }) {
   const t = useTranslations("account.nicknameEdit");
@@ -27,7 +27,7 @@ export function NicknameField({ user }: { user: AuthenticatedUser }) {
     });
     return () => { active.current = false; operation.current?.abort(); stop(); };
   }, [client, user.id]);
-  const normalized = normalizeNickname(value), dirty = normalized !== user.nickname, valid = validNickname(value);
+  const normalized = normalizeNickname(value), dirty = normalized !== user.nickname, problem = nicknameProblem(value), valid = problem === null;
 
   async function save(event: React.FormEvent) {
     event.preventDefault();
@@ -46,7 +46,7 @@ export function NicknameField({ user }: { user: AuthenticatedUser }) {
         : failure instanceof ApiError && failure.status === 400 ? t("invalid") : t("failed"));
     } finally { operation.current = null; if (current()) setBusy(false); }
   }
-  const shownError = error ?? (dirty && !valid ? t("invalid") : null);
+  const shownError = error ?? (dirty && problem ? t(problem === "spaces" ? "invalidSpaces" : "invalid") : null);
   return <form onSubmit={save} className="space-y-2">
     <Label htmlFor={id}>{t("label")}</Label>
     <Input id={id} name="nickname" autoComplete="nickname" value={value} disabled={busy}

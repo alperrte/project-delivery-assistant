@@ -33,7 +33,7 @@ function CommentBody({ comment }: { comment: Comment }) {
       {segments.map((segment, index) =>
         segment.type === "mention" ? (
           <span key={index} className="rounded-sm bg-primary/10 px-1 font-medium text-foreground">
-            @{segment.value}
+            {segment.value}
           </span>
         ) : (
           <span key={index}>{segment.value}</span>

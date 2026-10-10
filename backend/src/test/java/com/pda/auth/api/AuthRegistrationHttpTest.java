@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -22,6 +24,7 @@ import com.pda.user.UserRegistrationConflictException;
 import com.pda.auth.infrastructure.config.SecurityBaselineConfiguration;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -154,7 +157,7 @@ class AuthRegistrationHttpTest {
     @Test
     void invalidFieldResponseNamesFieldsWithoutEchoingInput() throws Exception {
         Cookie cookie = csrfCookie();
-        String body = "{\"email\":\"member@example.test\",\"nickname\":\"bad-name\","
+        String body = "{\"email\":\"member@example.test\",\"nickname\":\"bad.name\","
                 + "\"password\":\"short\",\"confirmPassword\":\"short\"}";
         mvc.perform(post("/api/v1/auth/register").with(request -> {
                     request.setRemoteAddr("203.0.113.20");
@@ -166,6 +169,68 @@ class AuthRegistrationHttpTest {
                 .andExpect(jsonPath("$.invalidFields[1]").value("password"))
                 .andExpect(result -> assertFalse(result.getResponse().getContentAsString().contains("short")))
                 .andExpect(header().string("Cache-Control", "no-store"));
+    }
+
+    @Test
+    void spacedNicknamesAreAcceptedAndTrimmedOnRegisterAndInvitationRegister() throws Exception {
+        Cookie cookie = csrfCookie();
+        String[][] cases = {
+                {"Hamza Taşbay", "Hamza Taşbay"}, {"  Hamza Taşbay  ", "Hamza Taşbay"},
+                {"Çağrı Öztürk", "Çağrı Öztürk"},
+                {"Ayşe-Nur", "Ayşe-Nur"}, {"Hamza_Taşbay-27", "Hamza_Taşbay-27"},
+                {"\\tAli Veli\\n", "Ali Veli"}};
+        int index = 0;
+        for (String[] pair : cases) {
+            String address = "203.0.115." + (++index);
+            String json = "\"nickname\":\"" + pair[0] + "\",\"password\":\"valid password phrase\","
+                    + "\"confirmPassword\":\"valid password phrase\"";
+            mvc.perform(post("/api/v1/auth/register").with(request -> { request.setRemoteAddr(address); return request; })
+                            .cookie(cookie).header("X-XSRF-TOKEN", cookie.getValue())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"email\":\"member@example.test\"," + json + "}"))
+                    .andExpect(status().isOk());
+            verify(workflow).register("member@example.test", pair[1], "valid password phrase", "valid password phrase");
+            Mockito.clearInvocations(workflow);
+            mvc.perform(post("/api/v1/auth/register/invitation")
+                            .with(request -> { request.setRemoteAddr(address); return request; })
+                            .cookie(cookie).header("X-XSRF-TOKEN", cookie.getValue())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"token\":\"token\",\"email\":\"member@example.test\",\"firstName\":\"A\","
+                                    + "\"lastName\":\"B\"," + json + "}"))
+                    .andExpect(status().isOk());
+            verify(workflow).registerWithInvitation("token", "member@example.test", "A", "B", pair[1],
+                    "valid password phrase", "valid password phrase");
+            Mockito.clearInvocations(workflow);
+        }
+    }
+
+    @Test
+    void ambiguousOrUnsafeNicknamesAreFieldErrorsOnBothRegistrationRoutes() throws Exception {
+        Cookie cookie = csrfCookie();
+        String[] invalid = {"Hamza  Taşbay", "Hamza\\tTaşbay", "Hamza Taşbay", "Ha​mza", "Ha‍mza",
+                "Ha﻿mza", "Ha⁠mza", "ab", "a".repeat(33), "   ", "<script>", "a@b", "a.b",
+                "😀😀😀", "Hamza\\nTaşbay"};
+        int index = 0;
+        for (String value : invalid) {
+            String address = "203.0.116." + (++index);
+            String json = "\"nickname\":\"" + value + "\",\"password\":\"valid password phrase\","
+                    + "\"confirmPassword\":\"valid password phrase\"";
+            mvc.perform(post("/api/v1/auth/register").with(request -> { request.setRemoteAddr(address); return request; })
+                            .cookie(cookie).header("X-XSRF-TOKEN", cookie.getValue())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"email\":\"member@example.test\"," + json + "}"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.invalidFields[0]").value("nickname"));
+            mvc.perform(post("/api/v1/auth/register/invitation")
+                            .with(request -> { request.setRemoteAddr(address); return request; })
+                            .cookie(cookie).header("X-XSRF-TOKEN", cookie.getValue())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"token\":\"token\",\"email\":\"member@example.test\",\"firstName\":\"A\","
+                                    + "\"lastName\":\"B\"," + json + "}"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.invalidFields[0]").value("nickname"));
+        }
+        verifyNoInteractions(workflow);
     }
 
     @Test

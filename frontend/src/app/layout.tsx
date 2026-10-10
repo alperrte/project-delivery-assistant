@@ -5,6 +5,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale } from "next-intl/server";
 import { Providers } from "@/components/providers";
 import type { Locale } from "@/i18n/config";
+import { RENDERER_BOOT_SCRIPT } from "@/lib/rendering";
 import { OG_IMAGE, openGraphLocale } from "@/lib/seo/alternates";
 import "./globals.css";
 
@@ -66,6 +67,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       className={`${inter.variable} ${exo2.variable} ${jetbrainsMono.variable}`}
       suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: RENDERER_BOOT_SCRIPT }} />
+      </head>
       <body className="min-h-[100dvh]">
         <NextIntlClientProvider>
           <Providers>{children}</Providers>

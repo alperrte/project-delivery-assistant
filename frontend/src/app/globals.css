@@ -4,15 +4,16 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* The document viewport and explicitly owned navigation scrollers, never nested chat/forms/portals. */
-html:has(.app-shell) {
+/* The document viewport of every page (signed-in workspace, landing, auth and public pages) and explicitly owned navigation
+   scrollers, never nested chat/forms/portals. One palette: the label-blue thumb of the active theme. */
+html {
   --workspace-scrollbar-thumb: var(--label-blue);
   --workspace-scrollbar-hover: color-mix(in oklab, var(--label-blue) 80%, var(--foreground));
   scrollbar-color: var(--workspace-scrollbar-thumb) transparent;
   scrollbar-width: thin;
 }
 /* scrollbar-color inherits: stop viewport color at body, then opt the actual nav boxes back in. */
-html:has(.app-shell) > body,
+html > body,
 [data-workspace-scroll] > * {
   scrollbar-color: auto;
   scrollbar-width: auto;
@@ -21,21 +22,21 @@ html:has(.app-shell) > body,
   scrollbar-color: var(--workspace-scrollbar-thumb) transparent;
   scrollbar-width: thin;
 }
-html:has(.app-shell)::-webkit-scrollbar,
+html::-webkit-scrollbar,
 [data-workspace-scroll]::-webkit-scrollbar { width: 8px; }
-html:has(.app-shell)::-webkit-scrollbar-track,
+html::-webkit-scrollbar-track,
 [data-workspace-scroll]::-webkit-scrollbar-track { background: transparent; }
-html:has(.app-shell)::-webkit-scrollbar-thumb,
+html::-webkit-scrollbar-thumb,
 [data-workspace-scroll]::-webkit-scrollbar-thumb {
   background: var(--workspace-scrollbar-thumb);
   border: 2px solid transparent;
   background-clip: padding-box;
   border-radius: 999px;
 }
-html:has(.app-shell)::-webkit-scrollbar-thumb:hover,
+html::-webkit-scrollbar-thumb:hover,
 [data-workspace-scroll]::-webkit-scrollbar-thumb:hover { background-color: var(--workspace-scrollbar-hover); }
 @media (forced-colors: active) {
-  html:has(.app-shell), [data-workspace-scroll] { scrollbar-color: auto; }
+  html, [data-workspace-scroll] { scrollbar-color: auto; }
 }
 
 /* One layout reserve for the workspace header, main content and full chat. */
@@ -528,6 +529,14 @@ html:has(.app-shell)::-webkit-scrollbar-thumb:hover,
   0% { transform: translateX(-60%); }
   48%, 100% { transform: translateX(-6.7%); }
 }
+/*
+ * No hardware acceleration (`RenderingProbe` sets data-renderer on <html>): the screen/multiply group is re-blended on
+ * the CPU over the whole viewport every frame, which held the theme switch at ~7 fps on /login at 2560x1440 (measured:
+ * 21-25 frames in 1.5 s, 15-18 over 50 ms; 64 frames with the neon removed). The photos themselves are unchanged.
+ */
+html[data-renderer="software"] .auth-neon {
+  display: none;
+}
 
 /* First visit: scene, logo, headline, card and corner controls in turn. */
 .auth-enter-scene {
@@ -611,6 +620,17 @@ html.theme-close-in::view-transition-old(root) {
 ::view-transition-old(theme-orb) {
   display: none;
 }
+/*
+ * The auth page's endless loops (logo electrons, neon sweep, slogan sheen) rest while the circle plays: the page is
+ * captured live into the view transition, so every loop frame would be styled, painted and composited again on top of
+ * the reveal (measured on /login under a 4x CPU slowdown: -40% paint, -8% main-thread time in the switch window).
+ * They resume from where they stopped when the transition ends; the entrance animations are not touched.
+ */
+html:is(.theme-reveal, .theme-close-in) .logo-current,
+html:is(.theme-reveal, .theme-close-in) .auth-neon-band,
+html:is(.theme-reveal, .theme-close-in) .auth-slogan::after {
+  animation-play-state: paused;
+}
 
 @layer base {
   * {
@@ -682,4 +702,14 @@ html[data-motion="off"] .logo-current {
 /* Room below the page while the cookie banner is shown; the banner sets the variable itself, so nothing stays under it. */
 body {
   padding-bottom: var(--cookie-banner-offset, 0px);
+}
+
+/* Auth pages that render `data-auth-fixed` fill exactly the viewport on tall screens. The cookie banner takes its room
+   from the body padding above, so while it is shown (html[data-cookie-banner-open]) the column is only 100dvh minus that
+   room (min-height on the element) and is not locked: it ends above the banner and still scrolls if it needs more. */
+@media (min-height: 970px) {
+  html:not([data-cookie-banner-open]) .auth-shell:has([data-auth-fixed]) {
+    height: 100dvh;
+    overflow: hidden;
+  }
 }

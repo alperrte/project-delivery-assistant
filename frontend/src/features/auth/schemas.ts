@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { normalizeNickname, nicknameProblem } from "@/features/account/nickname";
 
 /** Messages are i18n keys under `validation`; forms translate them on render. */
 export const loginSchema = z.object({
@@ -11,7 +12,11 @@ export const loginSchema = z.object({
 export const registerSchema = z
   .object({
     email: z.string().min(1, "required").email("email"),
-    nickname: z.string().regex(/^[\p{L}\p{N}_]{3,32}$/u, "nickname"),
+    // Trimmed before validation so the submitted value is the stored one; consecutive spaces get their own message.
+    nickname: z.string().transform(normalizeNickname).superRefine((value, ctx) => {
+      const problem = nicknameProblem(value);
+      if (problem) ctx.addIssue({ code: "custom", message: problem === "spaces" ? "nicknameSpaces" : "nickname" });
+    }),
     password: z.string().min(8, "passwordMin").max(128, "passwordMax"),
     confirmPassword: z.string().min(1, "required"),
   })

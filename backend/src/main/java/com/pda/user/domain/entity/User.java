@@ -3,6 +3,7 @@ package com.pda.user.domain.entity;
 import com.pda.user.domain.enums.AccountStatus;
 import com.pda.user.domain.enums.EmailVerificationStatus;
 import com.pda.user.GlobalRole;
+import com.pda.user.NicknameRules;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -48,7 +49,7 @@ public class User {
     private String lastName;
 
     @NotBlank
-    @Pattern(regexp = "[\\p{L}\\p{N}_]{3,32}")
+    @Pattern(regexp = NicknameRules.REGEX)
     @Column(nullable = false, length = 32)
     private String nickname;
 
@@ -95,7 +96,7 @@ public class User {
     }
 
     public void renameNickname(String value) {
-        if (!com.pda.user.domain.NicknameRules.valid(value)) throw new IllegalArgumentException("Invalid nickname");
+        if (!NicknameRules.valid(value)) throw new IllegalArgumentException("Invalid nickname");
         this.nickname = value;
     }
 
