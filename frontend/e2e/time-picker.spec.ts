@@ -133,16 +133,16 @@ for (const theme of ["light", "dark"] as const) {
   });
 }
 
-test("the date pickers work inside the sprint dialog and keep the end date after the start date", async ({ page }) => {
+test("the date pickers work on the sprint page and keep the end date after the start date", async ({ page }) => {
   const project = await fixture(page);
   await page.goto(`/projects/${project.slug}/sprints`);
-  await page.getByRole("button", { name: "Sprint oluştur", exact: true }).first().click();
-  const dialog = page.getByRole("dialog", { name: "Yeni sprint" });
-  await expect(dialog).toBeVisible();
-  await dialog.locator("#sprint-name").fill("Picker sprint");
+  await page.getByRole("link", { name: "Sprint oluştur", exact: true }).first().click();
+  await expect(page).toHaveURL(/\/tr\/projeler\/[^/]+\/sprintler\/yeni$/);
+  await expect(page.getByRole("heading", { name: "Yeni sprint" })).toBeVisible();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await page.locator("#sprint-name").fill("Picker sprint");
 
   await chooseDate(page, "sprint-start", "2030-02-01");
-  await expect(dialog).toBeVisible();
   await expect(page.locator("#sprint-start")).toContainText("2030");
   // The end picker's minimum is the chosen start date.
   await page.locator("#sprint-end").click();
@@ -156,7 +156,6 @@ test("the date pickers work inside the sprint dialog and keep the end date after
   await expect(endCalendar.locator('[data-date="2030-02-01"]')).toBeEnabled();
   await endCalendar.locator('[data-date="2030-02-14"]').click();
   await expect(endCalendar).toHaveCount(0);
-  await expect(dialog).toBeVisible();
 
   // Moving the start after the end re-validates the end date.
   await chooseDate(page, "sprint-start", "2030-03-01");
@@ -165,10 +164,10 @@ test("the date pickers work inside the sprint dialog and keep the end date after
   await expect(page.locator("#sprint-end")).not.toHaveAttribute("aria-invalid", "true");
 
   const request = page.waitForRequest(r => r.method() === "POST" && r.url().endsWith(`/projects/${project.id}/sprints`));
-  await dialog.getByRole("button", { name: "Oluştur", exact: true }).click();
+  await page.getByRole("button", { name: "Oluştur", exact: true }).click();
   const payload = (await request).postDataJSON();
   expect(payload).toMatchObject({ name: "Picker sprint", startDate: "2030-03-01", endDate: "2030-03-14" });
-  await expect(dialog).toHaveCount(0);
+  await expect(page).toHaveURL(/\/tr\/projeler\/[^/]+\/sprintler$/);
 });
 
 test("the work date picker works inside the worklog dialog and cannot pick a future day", async ({ page }) => {

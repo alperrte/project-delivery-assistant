@@ -23,6 +23,9 @@ export const invitationsApi = {
     apiRequest<InvitationProjectPreview>(`/project-invitations/${invitationId}/preview`, { signal }),
   previewLogoUrl: (invitationId: string, logoVersion: number) =>
     apiUrl(`/project-invitations/${invitationId}/logo?v=${logoVersion}`),
+  /** Invitee-only, own PENDING invitation, live project; any other state answers 404 and the card keeps its plain band. */
+  bannerUrl: (invitationId: string, bannerVersion: number) =>
+    apiUrl(`/project-invitations/${invitationId}/banner?v=${bannerVersion}`),
   acceptMine: (invitationId: string) =>
     apiRequest<Member>(`/project-invitations/${invitationId}/accept`, { method: "POST" }),
   rejectMine: (invitationId: string, message: string) =>

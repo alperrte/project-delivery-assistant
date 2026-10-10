@@ -217,7 +217,7 @@ function SprintDetailBody({ slug, project, projectId, isManager, userId, sprintI
           </div>
           {isManager && allowsAdvanced(project.taskManagementMode) && data.status !== "COMPLETED" && (
             <div className="space-y-1.5">
-              <SprintActions projectId={projectId} sprint={data} size="default" blockedByActive={hasOtherActive} blockedHintId={hintId} onArchived={() => router.push(`/projects/${slug}/sprints`)} />
+              <SprintActions slug={slug} projectId={projectId} sprint={data} size="default" blockedByActive={hasOtherActive} blockedHintId={hintId} onArchived={() => router.push(`/projects/${slug}/sprints`)} />
               {hasOtherActive && data.status === "PLANNED" && (
                 <p id={hintId} className="text-xs text-muted-foreground">
                   {t("startBlocked")}

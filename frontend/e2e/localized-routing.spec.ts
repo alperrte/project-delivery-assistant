@@ -63,6 +63,10 @@ test("project sections and create pages have their own named URL per language", 
     "/de/projekte/x/uebersicht", "/de/projekte/x/kriterien", "/de/projekte/x/teams", "/de/projekte/x/team-einladungen",
     "/de/projekte/x/repository", "/de/projekte/x/bearbeiten", "/de/projekte/neues-projekt", "/de/organisationen/neue-organisation",
     "/de/projekte/x/aufgaben/neue-aufgabe", "/de/projekte/x/teams/neues-team", "/de/kalender/neue-erinnerung", "/de/meine-aufgaben",
+    // Criterion and sprint create/edit pages sit next to the (virtual) criteria section and the sprint detail page.
+    "/tr/projeler/x/kriterler/yeni", "/tr/projeler/x/kriterler/c1/duzenle", "/tr/projeler/x/sprintler/yeni", "/tr/projeler/x/sprintler/s1/duzenle",
+    "/en/projects/x/criteria/new", "/en/projects/x/criteria/c1/edit", "/en/projects/x/sprints/new", "/en/projects/x/sprints/s1/edit",
+    "/de/projekte/x/kriterien/neu", "/de/projekte/x/kriterien/c1/bearbeiten", "/de/projekte/x/sprints/neu", "/de/projekte/x/sprints/s1/bearbeiten",
   ]) {
     const response = await request.get(path, { maxRedirects: 0, headers: cookie });
     expect(response.status(), path).toBe(200);
@@ -84,6 +88,32 @@ test("older project section, create and my-tasks URLs redirect to the named URL"
     ["/tr/projeler/x/gorevler/yeni", "/tr/projeler/x/gorevler/yeni-gorev"],
     ["/tr/takvim/yeni?date=2026-10-09", "/tr/takvim/yeni-animsatici?date=2026-10-09"],
     ["/tr/gorevler", "/tr/gorevlerim"], ["/en/tasks", "/en/my-tasks"], ["/de/aufgaben", "/de/meine-aufgaben"],
+  ]) {
+    const response = await request.get(path, { maxRedirects: 0, headers: cookie });
+    expect(response.status(), path).toBe(308);
+    expect(response.headers().location, path).toBe(destination);
+  }
+});
+
+test("criterion and sprint form pages keep their own URL, while the criteria section and sprint detail still resolve", async ({ request }) => {
+  const cookie = { Cookie: "PDA_SESSION=1" };
+  // The virtual section URL is not captured by the physical criteria/new and criteria/[id]/edit pages (and the reverse).
+  for (const [path, title] of [
+    ["/tr/projeler/x/kriterler", "Kriterler · PDA"], ["/tr/projeler/x/kriterler/yeni", "Yeni kriter · PDA"],
+    ["/tr/projeler/x/kriterler/c1/duzenle", "Kriteri düzenle · PDA"], ["/tr/projeler/x/sprintler", "Sprintler · PDA"],
+    ["/tr/projeler/x/sprintler/yeni", "Yeni sprint · PDA"], ["/tr/projeler/x/sprintler/s1", "Sprint · PDA"],
+    ["/tr/projeler/x/sprintler/s1/duzenle", "Sprinti düzenle · PDA"],
+    ["/en/projects/x/criteria/new", "New criterion · PDA"], ["/en/projects/x/sprints/s1/edit", "Edit sprint · PDA"],
+    ["/de/projekte/x/kriterien/neu", "Neues Kriterium · PDA"], ["/de/projekte/x/sprints/neu", "Neuer Sprint · PDA"],
+  ]) {
+    const html = await (await request.get(path, { headers: cookie })).text();
+    expect(html, path).toContain(`<title>${title}</title>`);
+  }
+  // Other-language and unprefixed forms redirect to the one canonical address.
+  for (const [path, destination] of [
+    ["/tr/projects/x/criteria/new", "/tr/projeler/x/kriterler/yeni"],
+    ["/en/projeler/x/sprintler/s1/duzenle", "/en/projects/x/sprints/s1/edit"],
+    ["/de/projects/x/criteria/c1/edit", "/de/projekte/x/kriterien/c1/bearbeiten"],
   ]) {
     const response = await request.get(path, { maxRedirects: 0, headers: cookie });
     expect(response.status(), path).toBe(308);

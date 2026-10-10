@@ -15,10 +15,16 @@ import { ApiError } from "@/lib/api/client";
 import { errorKey } from "@/lib/api/error-message";
 import { repositoryApi, repositoryKeys } from "../api";
 import { safeGitHubLink } from "../links";
-import { RepositoryBranches } from "./repository-branches";
+import { RepositoryBranches, COMMIT_MAX_PAGE } from "./repository-branches";
 import { RepositoryOverview } from "./repository-overview";
 
 type RepositoryView = "overview" | "branches";
+
+/** `?cpage=` as a page the API serves (1..10); anything else is page 1. */
+function parseCommitPage(value: string | null): number {
+  const page = Number(value);
+  return Number.isInteger(page) && page >= 1 && page <= COMMIT_MAX_PAGE ? page : 1;
+}
 
 export function RepositorySettings({ projectId, isManager }: { projectId: string; isManager: boolean }) {
   const t = useTranslations("repository");
@@ -40,6 +46,7 @@ export function RepositorySettings({ projectId, isManager }: { projectId: string
   const advanced = connection?.trackingMode === "ADVANCED";
   const view: RepositoryView = advanced && searchParams.get("view") === "branches" ? "branches" : "overview";
   const branchParam = searchParams.get("branch") || null;
+  const commitPage = parseCommitPage(searchParams.get("cpage"));
 
   /** The view and the branch live in the URL so a link to a branch can be shared and survives a reload. */
   function navigate(next: { view: RepositoryView; branch?: string | null }) {
@@ -47,10 +54,20 @@ export function RepositorySettings({ projectId, isManager }: { projectId: string
     params.set("section", "repository");
     params.delete("view");
     params.delete("branch");
+    // A new view or branch starts its history on page 1.
+    params.delete("cpage");
     if (next.view === "branches") {
       params.set("view", "branches");
       if (next.branch) params.set("branch", next.branch);
     }
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+  }
+
+  /** The commit-history page lives in the URL as well (`?cpage=`), so Back/Forward step through pages like on GitHub. */
+  function changeCommitPage(page: number) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (page > 1) params.set("cpage", String(page));
+    else params.delete("cpage");
     router.push(`${pathname}?${params.toString()}`, { scroll: false });
   }
 
@@ -129,6 +146,8 @@ export function RepositorySettings({ projectId, isManager }: { projectId: string
                   projectId={projectId}
                   connection={connection}
                   branchParam={branchParam}
+                  commitPage={commitPage}
+                  onCommitPageChange={changeCommitPage}
                   onSelectBranch={(branch) => navigate({ view: "branches", branch })}
                 />
               </TabsContent>

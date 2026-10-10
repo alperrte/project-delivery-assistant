@@ -4,7 +4,7 @@ import { MANAGER_STORAGE, MEMBER_STORAGE } from "./global-setup";
 
 /**
  * Repository management page: Overview / Branches views, branch selection kept in the URL, ahead/behind summary,
- * merged / not-merged filter, author strip + author filter, "load more", GitHub failure states and the notification
+ * merged / not-merged filter, author strip + author filter, numbered commit pages, GitHub failure states and the notification
  * for new commits. The project, membership and notifications are real; only the GitHub-backed repository endpoints
  * are answered by `page.route` so the content is deterministic and no external service is called.
  */
@@ -55,7 +55,11 @@ type Mode = { failCompare?: number; failCommits?: number; trackingMode?: "BASIC"
 
 /** Answers the repository GET endpoints (including the CORS preflight the cross-origin API call may trigger). */
 async function mockRepository(page: Page, mode: Mode = {}) {
-  const cors = { "access-control-allow-origin": "http://localhost:3000", "access-control-allow-credentials": "true" };
+  const cors = {
+    "access-control-allow-origin": "http://localhost:3000",
+    "access-control-allow-credentials": "true",
+    "access-control-expose-headers": "X-Has-Next-Page",
+  };
   await page.route("**/api/v1/projects/*/repository**", async (route: Route) => {
     const request = route.request();
     if (request.method() === "OPTIONS") {
@@ -67,8 +71,8 @@ async function mockRepository(page: Page, mode: Mode = {}) {
       return;
     }
     const url = new URL(request.url());
-    const json = (body: unknown, status = 200) =>
-      route.fulfill({ status, contentType: "application/json", headers: cors, body: JSON.stringify(body) });
+    const json = (body: unknown, status = 200, headers: Record<string, string> = {}) =>
+      route.fulfill({ status, contentType: "application/json", headers: { ...cors, ...headers }, body: JSON.stringify(body) });
 
     if (url.pathname.endsWith("/repository/branches")) return json(BRANCHES);
     if (url.pathname.endsWith("/repository/compare")) {
@@ -83,7 +87,8 @@ async function mockRepository(page: Page, mode: Mode = {}) {
       const pageNo = Number(url.searchParams.get("page") ?? 1);
       let list = branch === "feature/login" ? FEATURE : branch && branch !== "main" ? [] : MAIN;
       if (author) list = list.filter((item) => item.authorLogin === author);
-      return json(list.slice((pageNo - 1) * limit, pageNo * limit));
+      const hasNext = pageNo < 10 && list.length > pageNo * limit;
+      return json(list.slice((pageNo - 1) * limit, pageNo * limit), 200, { "X-Has-Next-Page": String(hasNext) });
     }
     return json({ ...CONNECTION, trackingMode: mode.trackingMode ?? "ADVANCED" });
   });
@@ -137,7 +142,7 @@ test.describe.serial("Repository management", () => {
     await expect(managerPage.getByRole("list", { name: "Dallar" }).getByRole("button", { name: /feature\/login/ })).toBeVisible();
   });
 
-  test("selecting a branch shows ahead/behind, merge badges, filters, authors and load more", async () => {
+  test("selecting a branch shows ahead/behind, merge badges, filters, authors and numbered pages", async () => {
     await managerPage.getByRole("list", { name: "Dallar" }).getByRole("button", { name: /feature\/login/ }).click();
     await expect(managerPage).toHaveURL(/branch=feature%2Flogin/);
     await expect(managerPage.getByTestId("branch-status")).toContainText("main dalının 3 commit ilerisinde, 2 commit gerisinde.");
@@ -153,20 +158,24 @@ test.describe.serial("Repository management", () => {
     await expect(list.getByRole("listitem")).toHaveCount(27);
     await managerPage.getByRole("button", { name: "Tümü" }).click();
 
-    await managerPage.getByRole("button", { name: "Daha fazla yükle" }).click();
-    await expect(list.getByRole("listitem")).toHaveCount(35);
-    await expect(managerPage.getByRole("button", { name: "Daha fazla yükle" })).toHaveCount(0);
+    // 35 commits, 30 per page: a numbered second page with the last five, then no further page.
+    const next = managerPage.getByRole("navigation", { name: "Sayfalama" }).getByRole("button", { name: "Sonraki" });
+    await next.click();
+    await expect(managerPage).toHaveURL(/cpage=2/);
+    await expect(list.getByRole("listitem")).toHaveCount(5);
+    await expect(next).toBeDisabled();
 
-    // The author strip is built from the loaded commits and filters from the server.
+    // The author strip is built from the first page and filters from the server; filtering goes back to page 1.
     const alice = managerPage.getByRole("button", { name: /Alice Dev/ });
     await expect(alice).toContainText("20 commit");
-    await expect(managerPage.getByRole("button", { name: /Bob Dev/ })).toContainText("15 commit");
+    await expect(managerPage.getByRole("button", { name: /Bob Dev/ })).toContainText("10 commit");
     await alice.click();
     await expect(alice).toHaveAttribute("aria-pressed", "true");
+    await expect(managerPage).not.toHaveURL(/cpage=/);
     await expect(managerPage.getByRole("heading", { name: "alice commit'leri" })).toBeVisible();
     await expect(list.getByRole("listitem")).toHaveCount(20);
     await alice.click();
-    await expect(list.getByRole("listitem")).toHaveCount(35);
+    await expect(list.getByRole("listitem")).toHaveCount(30);
   });
 
   test("the selected branch survives a reload and an unknown branch falls back with a notice", async () => {

@@ -1,19 +1,20 @@
 "use client";
 
 import { useState } from "react";
+import Link from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { CheckCircle, CircleNotch, PencilSimple, Play, Trash } from "@phosphor-icons/react";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { settle } from "@/features/tasks/components/detail/detail-section";
 import { useTaskMutation } from "@/features/tasks/hooks";
 import { sprintsApi } from "../api";
 import type { Sprint } from "../types";
 import { CompleteSprintDialog } from "./complete-sprint-dialog";
-import { SprintDialog } from "./sprint-dialog";
 
 type SprintActionsProps = {
+  slug: string;
   projectId: string;
   sprint: Sprint;
   /** Another sprint is running, so this planned one cannot start yet. */
@@ -26,9 +27,8 @@ type SprintActionsProps = {
 };
 
 /** Start, complete, edit and archive, limited to what the sprint's status allows. Only managers get this. */
-export function SprintActions({ projectId, sprint, blockedByActive, blockedHintId, onArchived, size = "sm" }: SprintActionsProps) {
+export function SprintActions({ slug, projectId, sprint, blockedByActive, blockedHintId, onArchived, size = "sm" }: SprintActionsProps) {
   const t = useTranslations("sprints.actions");
-  const [editing, setEditing] = useState(false);
   const [completing, setCompleting] = useState(false);
 
   const start = useTaskMutation(projectId, () => sprintsApi.start(projectId, sprint.id), {
@@ -56,10 +56,10 @@ export function SprintActions({ projectId, sprint, blockedByActive, blockedHintI
         </Button>
       )}
       {sprint.status !== "COMPLETED" && (
-        <Button variant="outline" size={size} onClick={() => setEditing(true)}>
+        <Link href={`/projects/${slug}/sprints/${sprint.id}/edit`} className={buttonVariants({ variant: "outline", size })}>
           <PencilSimple aria-hidden="true" />
           {t("edit")}
-        </Button>
+        </Link>
       )}
       {sprint.status === "PLANNED" && sprint.taskCount === 0 && (
         <ConfirmDialog
@@ -78,7 +78,6 @@ export function SprintActions({ projectId, sprint, blockedByActive, blockedHintI
         />
       )}
 
-      <SprintDialog projectId={projectId} sprint={sprint} open={editing} onOpenChange={setEditing} />
       {sprint.status === "ACTIVE" && <CompleteSprintDialog projectId={projectId} sprint={sprint} open={completing} onOpenChange={setCompleting} />}
     </div>
   );

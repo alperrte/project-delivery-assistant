@@ -167,21 +167,18 @@ const scenarios: Scenario[] = [
     },
   },
   {
-    name: "kriter penceresi",
+    name: "yeni kriter",
     method: "POST",
-    dialog: true,
     url: (c) => new RegExp(`/projects/${c.projectId}/criteria$`),
     async open(page, c) {
-      await page.goto(`/projects/${c.slug}/criteria`);
-      await page.getByRole("button", { name: tr.criteria.create }).first().click();
-      const dialog = page.getByRole("dialog");
-      const field = dialog.locator("#criterion-title");
+      await page.goto(`/projects/${c.slug}/criteria/new`);
+      const field = page.locator("#criterion-title");
       await field.fill(`Sonuç kriteri ${Date.now()}`);
-      return { submit: dialog.locator('button[type="submit"]'), field, enter: true };
+      return { submit: page.locator('form button[type="submit"]'), field, enter: true };
     },
     async expectSuccess(page) {
       await expect(toast(page, "success")).toBeVisible();
-      await expect(page.getByRole("dialog")).toHaveCount(0);
+      await expect(page).toHaveURL(/\/tr\/projeler\/[^/]+\/kriterler$/, { timeout: 15_000 });
     },
   },
   {
@@ -203,21 +200,18 @@ const scenarios: Scenario[] = [
     },
   },
   {
-    name: "sprint penceresi",
+    name: "yeni sprint",
     method: "POST",
-    dialog: true,
     url: (c) => new RegExp(`/projects/${c.projectId}/sprints$`),
     async open(page, c) {
-      await page.goto(`/projects/${c.slug}/sprints`);
-      await page.getByRole("button", { name: tr.sprints.create }).first().click();
-      const dialog = page.getByRole("dialog");
-      const field = dialog.locator("#sprint-name");
+      await page.goto(`/projects/${c.slug}/sprints/new`);
+      const field = page.locator("#sprint-name");
       await field.fill(`Sonuç sprinti ${Date.now()}`);
-      return { submit: dialog.locator('button[type="submit"]'), field, enter: true };
+      return { submit: page.locator('form button[type="submit"]'), field, enter: true };
     },
     async expectSuccess(page) {
       await expect(toast(page, "success")).toBeVisible();
-      await expect(page.getByRole("dialog")).toHaveCount(0);
+      await expect(page).toHaveURL(/\/tr\/projeler\/[^/]+\/sprintler$/, { timeout: 15_000 });
     },
   },
   {

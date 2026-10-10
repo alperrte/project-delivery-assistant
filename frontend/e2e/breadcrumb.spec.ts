@@ -41,6 +41,13 @@ test.describe.serial("Breadcrumb (signed in)", () => {
     await page.goto(`/projects/${slug}/teams/new`);
     await expect(trail(page).getByRole("listitem")).toHaveText(["Projeler", projectName, "Ekipler", "Yeni ekip"]);
 
+    await page.goto(`/projects/${slug}/criteria/new`);
+    await expect(trail(page).getByRole("listitem")).toHaveText(["Projeler", projectName, "Kriterler", "Yeni kriter"]);
+    await expect(trail(page).getByRole("link", { name: "Kriterler" })).toHaveAttribute("href", `/tr/projeler/${slug}/kriterler`);
+
+    await page.goto(`/projects/${slug}/sprints/new`);
+    await expect(trail(page).getByRole("listitem")).toHaveText(["Projeler", projectName, "Sprintler", "Yeni sprint"]);
+
     await page.goto(`/projects/${slug}/tasks/new`);
     await expect(trail(page).locator("[aria-current=page]")).toHaveText("Yeni görev");
     await expect(trail(page).getByRole("listitem")).toHaveText(["Projeler", projectName, "Görevler", "Yeni görev"]);

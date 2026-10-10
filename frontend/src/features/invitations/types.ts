@@ -69,4 +69,6 @@ export type InvitationProjectPreview = {
   memberCount: number;
   updatedAt: string;
   logoVersion: number | null;
+  /** Epoch ms of the banner; `null` when the project has none. Served by the invitation-scoped banner route. */
+  bannerVersion?: number | null;
 };

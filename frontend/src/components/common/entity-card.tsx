@@ -27,12 +27,14 @@ type EntityCardProps = {
   description: string;
   /** Status pill under the description. */
   badge?: ReactNode;
+  /** Small overlay in the header band's top-left corner; it takes no layout space, so the card keeps its height. */
+  cornerStart?: ReactNode;
   /** Body sections (use EntityCardSection) and the footer. */
   children?: ReactNode;
   className?: string;
 };
 
-export function EntityCard({ tone = "neutral", banner, corner, mark, title, description, badge, children, className }: EntityCardProps) {
+export function EntityCard({ tone = "neutral", banner, corner, mark, title, description, badge, cornerStart, children, className }: EntityCardProps) {
   const palette = TONES[tone];
   return (
     <article
@@ -44,6 +46,7 @@ export function EntityCard({ tone = "neutral", banner, corner, mark, title, desc
       )}
     >
       {corner && <div className="absolute top-4 right-4 z-10">{corner}</div>}
+      {cornerStart && <div className="absolute top-4 left-4 z-10">{cornerStart}</div>}
       <div className={cn("relative overflow-hidden rounded-lg px-4 py-5 text-center", palette.band)}>
         {banner && (
           <>

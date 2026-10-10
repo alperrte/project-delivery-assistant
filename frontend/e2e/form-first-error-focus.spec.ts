@@ -84,13 +84,13 @@ test.describe.serial("İlk hataya yönlendirme: giriş gerektiren formlar", () =
     await expect(page.locator("#task-title")).toBeFocused();
   });
 
-  test("kriter penceresi: başlık boşken başlık alanı odaklanır", async () => {
+  test("yeni kriter: başlık boşken başlık alanı odaklanır", async () => {
     await page.goto(`/projects/${slug}/criteria`);
-    await page.getByRole("button", { name: tr.criteria.create }).first().click();
-    const dialog = page.getByRole("dialog");
-    await dialog.locator('button[type="submit"]').click();
+    await page.getByRole("link", { name: tr.criteria.create }).first().click();
+    await expect(page).toHaveURL(/\/tr\/projeler\/[^/]+\/kriterler\/yeni$/);
+    await page.locator('form button[type="submit"]').click();
     await expect(alertWith(page, tr.validation.required)).toBeVisible();
-    await expect(dialog.locator("#criterion-title")).toBeFocused();
+    await expect(page.locator("#criterion-title")).toBeFocused();
   });
 
   test("etiket penceresi: ad boşken ad alanı odaklanır", async () => {
@@ -180,12 +180,12 @@ test.describe.serial("İlk hataya yönlendirme: giriş gerektiren formlar", () =
     await expectPasswordFocusOrder(page);
   });
 
-  test("sprint penceresi: ad boşken ad alanı odaklanır", async () => {
+  test("yeni sprint: ad boşken ad alanı odaklanır", async () => {
     await page.goto(`/projects/${slug}/sprints`);
-    await page.getByRole("button", { name: tr.sprints.create }).first().click();
-    const dialog = page.getByRole("dialog");
-    await dialog.locator('button[type="submit"]').click();
+    await page.getByRole("link", { name: tr.sprints.create }).first().click();
+    await expect(page).toHaveURL(/\/tr\/projeler\/[^/]+\/sprintler\/yeni$/);
+    await page.locator('form button[type="submit"]').click();
     await expect(alertWith(page, tr.validation.required)).toBeVisible();
-    await expect(dialog.locator("#sprint-name")).toBeFocused();
+    await expect(page.locator("#sprint-name")).toBeFocused();
   });
 });

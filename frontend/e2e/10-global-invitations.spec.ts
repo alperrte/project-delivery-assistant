@@ -59,7 +59,8 @@ test.describe.serial("Global invitations", () => {
     const row = memberPage.getByRole("row").filter({ hasText: projectName });
     await expect(row).toBeVisible();
     await expect(row).toContainText("Bekliyor");
-    await expect(row).toContainText("Core ekibine katılım daveti");
+    // The team is a secondary line under the project; the full sentence lives in its title.
+    await expect(row.getByTitle("Core ekibine katılım daveti")).toHaveCount(1);
     await expect(row).toContainText("Katılmanı bekliyoruz");
   });
 

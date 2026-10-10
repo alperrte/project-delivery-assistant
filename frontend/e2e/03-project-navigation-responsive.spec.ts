@@ -70,7 +70,7 @@ test("project sections use the shared sidebar on desktop and its mobile drawer",
   await expect(page.getByRole("heading", { name: "Başarı kriterleri" })).toBeVisible();
   await expect(page.getByRole("dialog")).toBeHidden();
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
-  expect(await page.getByRole("button", { name: "Yeni kriter" }).evaluate((button) => getComputedStyle(button).cursor)).toBe("pointer");
+  expect(await page.getByRole("link", { name: "Yeni kriter" }).evaluate((button) => getComputedStyle(button).cursor)).toBe("pointer");
 
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("button", { name: "Ekipler", exact: true }).click();

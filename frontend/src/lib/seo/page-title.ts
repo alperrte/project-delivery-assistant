@@ -4,8 +4,9 @@ import { getTranslations } from "next-intl/server";
 export type PageTitleKey =
   | "dashboard" | "projects" | "projectNew"
   | "projectOverview" | "projectCriteria" | "projectTeams" | "projectInvitations" | "projectRepository" | "projectEdit"
+  | "criterionNew" | "criterionEdit"
   | "teamNew" | "team" | "teamEdit"
-  | "tasks" | "taskNew" | "board" | "pool" | "task" | "taskEdit" | "sprints" | "sprint" | "labels"
+  | "tasks" | "taskNew" | "board" | "pool" | "task" | "taskEdit" | "sprints" | "sprintNew" | "sprint" | "sprintEdit" | "labels"
   | "organizations" | "organizationNew" | "organization" | "organizationEdit"
   | "settings" | "account" | "myTasks" | "calendar" | "reminderNew" | "reminderEdit"
   | "invitations" | "invitation" | "changePassword" | "adminUsers" | "adminAnalytics";
