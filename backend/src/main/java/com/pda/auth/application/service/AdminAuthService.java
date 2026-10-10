@@ -1,5 +1,9 @@
 package com.pda.auth.application.service;
 
+import com.pda.audit.AdminAuditLog;
+import com.pda.audit.AuditAction;
+import com.pda.audit.AuditOutcome;
+import com.pda.audit.AuditTargetType;
 import com.pda.auth.application.service.LocalLoginService.LoginTokens;
 import com.pda.auth.domain.entity.AdminAuthTicket;
 import com.pda.auth.domain.entity.AdminAuthTicket.Purpose;
@@ -23,7 +27,10 @@ import org.springframework.transaction.annotation.Transactional;
  * current authenticator code, or after the first authenticator code of an enrolment. Every refusal for "no such
  * account", "wrong password", "not an administrator" and "disabled" is the same {@link InvalidCredentialsException}.
  *
- * <p>Log lines carry the account id and the outcome only, never an email, password, secret, code or token.
+ * <p>Log lines carry the account id and the outcome only, never an email, password, secret, code or token. The final
+ * result of every sign-in attempt is also written to the persistent audit trail ({@code ADMIN_SIGN_IN}): SUCCESS when a
+ * verified session opened, FAILURE for wrong credentials, a wrong code or a bad ticket, DENIED when the account is locked
+ * or two-factor is unavailable. The actor id is recorded only when the account is known; never an email.
  */
 @Service
 public class AdminAuthService {
@@ -40,15 +47,17 @@ public class AdminAuthService {
     private final LocalLoginService login;
     private final JwtTokens tokens;
     private final AdminAuthTicketRepository tickets;
+    private final AdminAuditLog audit;
     private final Clock clock;
 
     public AdminAuthService(UserAccounts users, TotpService twoFactor, LocalLoginService login, JwtTokens tokens,
-                            AdminAuthTicketRepository tickets, Clock clock) {
+                            AdminAuthTicketRepository tickets, AdminAuditLog audit, Clock clock) {
         this.users = users;
         this.twoFactor = twoFactor;
         this.login = login;
         this.tokens = tokens;
         this.tickets = tickets;
+        this.audit = audit;
         this.clock = clock;
     }
 
@@ -69,6 +78,7 @@ public class AdminAuthService {
     public FirstFactor login(String email, String password) {
         if (!twoFactor.available()) {
             log.warn("Administrator sign-in unavailable: two-factor encryption key is not configured.");
+            auditSignIn(null, AuditOutcome.DENIED);
             throw new TwoFactorUnavailableException();
         }
         UserAccounts.AuthenticatedUser admin = users.authenticateLocal(email, password)
@@ -76,6 +86,7 @@ public class AdminAuthService {
                 .orElse(null);
         if (admin == null) {
             log.warn("Administrator sign-in rejected: credentials or account not eligible.");
+            auditSignIn(null, AuditOutcome.FAILURE);
             throw new InvalidCredentialsException();
         }
         boolean enrolled = twoFactor.isEnabled(admin.id());
@@ -107,11 +118,13 @@ public class AdminAuthService {
         TotpService.Enabled enabled = twoFactor.enable(userId, code);
         if (enabled.result() != TotpService.Result.OK) {
             log.warn("Administrator authenticator enrolment code rejected. userId={} result={}", userId, enabled.result());
+            auditSignIn(userId, outcomeOf(enabled.result()));
             return new Enrolled(enabled.result(), List.of(), null);
         }
         consume(verified.ticketId());
         LoginTokens opened = login.openAdminSession(userId, userAgent);
         log.info("Administrator authenticator enrolled; verified session opened. userId={}", userId);
+        auditSignIn(userId, AuditOutcome.SUCCESS);
         return new Enrolled(TotpService.Result.OK, enabled.recoveryCodes(), opened);
     }
 
@@ -123,11 +136,13 @@ public class AdminAuthService {
         TotpService.Result result = twoFactor.verify(userId, code);
         if (result != TotpService.Result.OK) {
             log.warn("Administrator second factor rejected. userId={} result={}", userId, result);
+            auditSignIn(userId, outcomeOf(result));
             return new SignedIn(result, null);
         }
         consume(verified.ticketId());
         LoginTokens opened = login.openAdminSession(userId, userAgent);
         log.info("Administrator signed in with the second factor; verified session opened. userId={}", userId);
+        auditSignIn(userId, AuditOutcome.SUCCESS);
         return new SignedIn(TotpService.Result.OK, opened);
     }
 
@@ -154,8 +169,23 @@ public class AdminAuthService {
                                 .map(user -> new Verified(row.getId(), user))));
         if (verified.isEmpty()) {
             log.warn("Administrator sign-in ticket rejected: missing, expired, used or not valid for this step.");
+            auditSignIn(null, AuditOutcome.FAILURE);
         }
         return verified;
+    }
+
+    /** One sign-in result in the audit trail; the account is its own target. Written even when this transaction rolls back. */
+    private void auditSignIn(UUID userId, AuditOutcome outcome) {
+        audit.record(AuditAction.ADMIN_SIGN_IN, userId, userId == null ? AuditTargetType.SYSTEM : AuditTargetType.USER,
+                userId, outcome);
+    }
+
+    private static AuditOutcome outcomeOf(TotpService.Result result) {
+        return switch (result) {
+            case OK -> AuditOutcome.SUCCESS;
+            case INVALID -> AuditOutcome.FAILURE;
+            case LOCKED -> AuditOutcome.DENIED;
+        };
     }
 
     /** Exactly one caller can use a ticket up; a concurrent second use rolls the whole sign-in back. */

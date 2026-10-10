@@ -1,5 +1,6 @@
 package com.pda.contact.infrastructure.mail;
 
+import com.pda.contact.SupportCategory;
 import com.pda.contact.application.service.ContactMailPort;
 import com.pda.contact.application.service.ContactMessage;
 import jakarta.mail.MessagingException;
@@ -21,14 +22,29 @@ import org.springframework.stereotype.Component;
  *   <li>To is {@code pda.contact.recipient}, validated once at start-up;</li>
  *   <li>Reply-To is the visitor's address, parsed strictly as one bare address.</li>
  * </ul>
- * The subject is fixed, the body is plain text, and every submitted value that is not the free-text message is cut
- * to a single line first, so a line break can never add a header.
+ * The subject is fixed text plus the category label (a fixed list, never visitor text), the body is plain text, and every
+ * submitted value that is not the free-text message is cut to a single line first, so a line break can never add a header.
+ * Only the {@code smtp} provider exists; any other {@code MAIL_PROVIDER} value is refused at start-up.
  */
 @Component
 @Lazy
 public class SmtpContactMailAdapter implements ContactMailPort {
 
     static final String SUBJECT = "Yeni PDA İletişim Talebi";
+
+    /** Fixed, human-readable label of each category for the subject and the body. */
+    static String label(SupportCategory category) {
+        return switch (category == null ? SupportCategory.GENERAL : category) {
+            case GENERAL -> "Genel";
+            case BUG -> "Hata bildirimi";
+            case DATA_REQUEST -> "KVKK/GDPR veri talebi";
+            case ACCESSIBILITY -> "Erişilebilirlik";
+        };
+    }
+
+    static String subject(ContactMessage message) {
+        return SUBJECT + " [" + label(message.category()) + "]";
+    }
 
     private final JavaMailSenderImpl sender;
     private final String fromAddress;
@@ -96,14 +112,17 @@ public class SmtpContactMailAdapter implements ContactMailPort {
         helper.setFrom(fromAddress);
         helper.setTo(recipient);
         helper.setReplyTo(singleAddress(message.email()));
-        helper.setSubject(SUBJECT);
+        helper.setSubject(subject(message));
         helper.setText(body(message), false);
         return mime;
     }
 
     static String body(ContactMessage message) {
+        String name = singleLine(message.firstName())
+                + (message.lastName() == null ? "" : " " + singleLine(message.lastName()));
         return "Yeni PDA İletişim Talebi\n\n"
-                + "Ad Soyad:\n" + singleLine(message.firstName()) + " " + singleLine(message.lastName()) + "\n\n"
+                + "Kategori:\n" + label(message.category()) + "\n\n"
+                + "Ad Soyad:\n" + name + "\n\n"
                 + "E-posta:\n" + singleLine(message.email()) + "\n\n"
                 + "Mesaj:\n" + message.message() + "\n";
     }

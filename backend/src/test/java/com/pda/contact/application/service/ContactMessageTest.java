@@ -30,8 +30,20 @@ class ContactMessageTest {
 
     @Test
     void requiredFieldsAndWhitespaceOnlyValuesAreRejected() {
-        assertEquals(List.of("firstName", "lastName", "email", "message"), invalidFields(null, null, null, null));
-        assertEquals(List.of("firstName", "lastName", "email", "message"), invalidFields("   ", "\t", "  ", "          "));
+        // The last name is optional (data minimisation): empty or whitespace-only means "not given".
+        assertEquals(List.of("firstName", "email", "message"), invalidFields(null, null, null, null));
+        assertEquals(List.of("firstName", "email", "message"), invalidFields("   ", "\t", "  ", "          "));
+        assertEquals(null, ContactMessage.validated("E", null, "a@b.co", TEXT).lastName());
+        assertEquals(null, ContactMessage.validated("E", "   ", "a@b.co", TEXT).lastName());
+    }
+
+    @Test
+    void theCategoryDefaultsToGeneralAndIsKept() {
+        assertEquals(com.pda.contact.SupportCategory.GENERAL, ContactMessage.validated("E", "Y", "a@b.co", TEXT).category());
+        assertEquals(com.pda.contact.SupportCategory.GENERAL,
+                ContactMessage.validated("E", "Y", "a@b.co", TEXT, null).category());
+        assertEquals(com.pda.contact.SupportCategory.DATA_REQUEST,
+                ContactMessage.validated("E", null, "a@b.co", TEXT, com.pda.contact.SupportCategory.DATA_REQUEST).category());
     }
 
     @Test

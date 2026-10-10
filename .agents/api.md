@@ -148,7 +148,7 @@ Existing own GET `/api/v1/project-invitations/me?status=PENDING&page=0&size=1` n
 
 | Endpoint | Auth | Input | Success | Errors |
 | --- | --- | --- | --- | --- |
-| `POST /api/v1/analytics/events` | Public + CSRF; 600 / 10 min / address; body <= 2 KB | `{type: PAGE_VIEW or ENGAGEMENT, visitorId, sessionId (UUIDs), path (route template), referrerHost?, utmSource?, utmMedium?, utmCampaign?, engagedSeconds? (0..600, ENGAGEMENT), consentVersion}` | `204` | `400 ANALYTICS_INVALID`, `404 ANALYTICS_SESSION_UNKNOWN`, `403` CSRF, `411`/`413`, `429` |
+| `POST /api/v1/analytics/events` | Public + CSRF; 600 / 10 min / address; body <= 2 KB | `{type: PAGE_VIEW, ENGAGEMENT, CTA_CLICK or CLIENT_ERROR (the last two: see 2026-10-10 below), visitorId, sessionId (UUIDs), path (route template), referrerHost?, utmSource?, utmMedium?, utmCampaign?, engagedSeconds? (0..600, ENGAGEMENT), consentVersion}` | `204` | `400 ANALYTICS_INVALID`, `404 ANALYTICS_SESSION_UNKNOWN`, `403` CSRF, `411`/`413`, `429` |
 | `POST /api/v1/contact` | Public + CSRF; 5 / 10 min / address; body <= 16 KB | `{firstName (<=80), lastName (<=80), email (ASCII address <=254), message (10..5000)}`; other properties ignored | `200 {"status":"SENT"}` after the mail server accepted the message | `400 CONTACT_INVALID` (+ `invalidFields`), `409 CONTACT_DUPLICATE`, `503 CONTACT_UNAVAILABLE`, `503 CONTACT_DELIVERY_FAILED`, `413`, `429` |
 | `GET /api/v1/admin/users?page&size&search&status` | ADMIN (`USER_MANAGE`) | `search` <= 100 chars (email/nickname substring, case-insensitive); `status` ACTIVE, DISABLED or PENDING_VERIFICATION | `200` page | `400` unknown status / long search, `401`, `403` |
 | `POST /api/v1/admin/users/{id}/disable` / `enable` | ADMIN + CSRF | none | `200` | `404 USER_NOT_FOUND`, `409 ADMIN_SELF_DENIED`, `409 ADMIN_LAST_ADMIN` |
@@ -174,3 +174,21 @@ Changed behaviour of existing routes:
 - `/api/v1/admin/**` needs `ROLE_ADMIN` and an administrator-verified session: anonymous `401`, `USER` `403`, `ADMIN` with an older session `403` `{"code":"admin_reauthentication_required"}`.
 - `POST /api/v1/auth/2fa/disable` is `403` `{"code":"admin_two_factor_required"}` for an `ADMIN` account; a missing or changed `TOTP_ENCRYPTION_KEY` is `503` `{"code":"two_factor_unavailable"}` on every second-step route (never `500`).
 - `POST /api/v1/auth/logout` also clears `PDA_MFA`, `PDA_ADMIN_MFA` and `PDA_ADMIN_ENROLL`.
+
+## Support inbox, audit trail, status and behaviour analytics - 2026-10-10
+
+Details, privacy rules and retention are in `.agents/SECURITY.md` (last section). All admin routes below need `ROLE_ADMIN` plus an administrator-verified session; responses are `no-store`; POSTs need CSRF.
+
+| Endpoint | Permission | Request | Response |
+| --- | --- | --- | --- |
+| `POST /api/v1/contact` | public + CSRF | `{firstName, lastName?, email, message, category?, website?, startedAt?}`; `category` GENERAL (default) / BUG / DATA_REQUEST / ACCESSIBILITY; `website` honeypot (must be empty); `startedAt` epoch ms when the form was shown | `200 {"status":"SENT"}` (also for a bot-like submission, which is dropped), `400 CONTACT_INVALID` (`invalidFields` may contain `startedAt` for a form older than 24 h or from the future), `409`, `413`, `429`, `503` |
+| `GET /api/v1/admin/support-requests?page&size&status&category` | USER_MANAGE | newest first, size 1..100 | `{items:[summary + messagePreview],page,size,totalElements}` |
+| `GET /api/v1/admin/support-requests/{id}` | USER_MANAGE | - | detail with `message`; `404 SUPPORT_REQUEST_NOT_FOUND` |
+| `POST /api/v1/admin/support-requests/{id}/status` | USER_MANAGE | `{status: NEW / IN_PROGRESS / CLOSED}` | updated detail; audited |
+| `GET /api/v1/admin/audit-events?page&size&action&from&to&zone` | AUDIT_VIEW | `action` ADMIN_SIGN_IN, USER_DISABLE, USER_ENABLE, SESSION_REVOKE, SESSION_REVOKE_ALL, SUPPORT_REQUEST_STATUS_CHANGE; `from`/`to` ISO dates, inclusive, in `zone` (default UTC) | `{items:[{id,occurredAt,actorUserId,actorNickname,action,targetType,targetId,targetNickname,outcome}],page,size,totalElements}` |
+| `GET /api/v1/admin/system/status` | SYSTEM_VIEW | - | previous booleans plus `totpEncryptionKeyConfigured`, `activeSessions`, `httpErrorsLast24h {clientErrors,serverErrors}`, `scheduledJobs [{name,lastRunAt,lastOutcome,lastAffected}]` |
+| `GET /api/v1/admin/users/{id}` | USER_MANAGE | - | `{user, linkedProviders, activeSessions, platformPermissions[]}` (permissions read only) |
+| `GET /api/v1/admin/analytics?from&to&zone` | SYSTEM_VIEW | - | previous blocks plus `behavior {topPages, entryPages, exitPages, flows, notFound, ctas, conversions, clientErrors}` |
+| `POST /api/v1/analytics/events` | public + CSRF | new types `CTA_CLICK` (`ctaId`: landing_register, landing_login, header_register, header_login, register_submit, contact_submit, github_repo) and `CLIENT_ERROR` (`errorKind`: render, chunk_load, unhandled_rejection, network; `path` = route template) | `204`; `400 ANALYTICS_INVALID` for an unknown id/kind, `404 ANALYTICS_SESSION_UNKNOWN` |
+
+Existing admin contracts reviewed for the new admin screens (unchanged unless listed): `GET /api/v1/admin/users` (page/size/search/status), `POST .../disable`, `.../enable`, `GET .../sessions`, `POST .../sessions/revoke-all`, `POST .../sessions/{sessionId}/revoke` (disable, enable and both revokes are now audited), `GET /api/v1/admin/overview`, `GET /api/v1/admin/projects?page&size`.

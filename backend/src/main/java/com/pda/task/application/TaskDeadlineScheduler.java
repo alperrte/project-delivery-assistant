@@ -1,5 +1,6 @@
 package com.pda.task.application;
 
+import com.pda.shared.ScheduledJobRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -12,18 +13,27 @@ import org.springframework.stereotype.Component;
 public class TaskDeadlineScheduler {
     private static final Logger log = LoggerFactory.getLogger(TaskDeadlineScheduler.class);
 
-    private final TaskDeadlineService service;
+    static final String JOB = "task.deadline-scan";
 
-    public TaskDeadlineScheduler(TaskDeadlineService service) { this.service = service; }
+    private final TaskDeadlineService service;
+    private final ScheduledJobRegistry jobs;
+
+    public TaskDeadlineScheduler(TaskDeadlineService service, ScheduledJobRegistry jobs) {
+        this.service = service;
+        this.jobs = jobs;
+        jobs.register(JOB);
+    }
 
     @Scheduled(fixedDelayString = "${pda.task.deadline-scan-interval:PT5M}",
             initialDelayString = "${pda.task.deadline-scan-interval:PT5M}")
     void scan() {
         try {
             int published = service.scan();
+            jobs.success(JOB, published);
             if (published > 0) log.info("Task deadline scan published {} notification(s)", published);
         } catch (RuntimeException exception) {
             // A failed scan must not kill the schedule; the next run picks the same candidates up again.
+            jobs.failure(JOB);
             log.warn("Task deadline scan failed", exception);
         }
     }

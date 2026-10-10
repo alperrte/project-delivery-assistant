@@ -1,6 +1,13 @@
 package com.pda.admin.api;
 
 import com.pda.admin.application.service.AdminAuthorization;
+import com.pda.audit.AdminAuditLog;
+import com.pda.audit.AuditAction;
+import com.pda.audit.AuditOutcome;
+import com.pda.audit.AuditTargetType;
+import com.pda.user.GlobalRole;
+import com.pda.user.OAuthProvider;
+import com.pda.user.RolePolicy;
 import com.pda.user.PlatformPermission;
 import com.pda.user.UserAccounts;
 import com.pda.user.UserAdministration;
@@ -10,6 +17,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import java.time.Clock;
 import java.util.List;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -26,19 +35,22 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/admin/users")
 public class AdminUserController {
 
+    private static final Logger log = LoggerFactory.getLogger(AdminUserController.class);
     private static final int MAX_PAGE_SIZE = 100;
     private static final int MAX_SEARCH_LENGTH = 100;
 
     private final UserAdministration administration;
     private final UserSessions sessions;
     private final AdminAuthorization authorization;
+    private final AdminAuditLog audit;
     private final Clock clock;
 
     public AdminUserController(UserAdministration administration, UserSessions sessions,
-                               AdminAuthorization authorization, Clock clock) {
+                               AdminAuthorization authorization, AdminAuditLog audit, Clock clock) {
         this.administration = administration;
         this.sessions = sessions;
         this.authorization = authorization;
+        this.audit = audit;
         this.clock = clock;
     }
 
@@ -62,14 +74,16 @@ public class AdminUserController {
     }
 
     @GetMapping("/{userId}")
-    @Operation(summary = "User detail", description = "ADMIN only. Includes linked providers and active session count.")
+    @Operation(summary = "User detail",
+            description = "ADMIN only. Includes linked providers, the active session count and the platform permissions "
+                    + "the account role grants (read only; there is no role management: a single ENV administrator exists).")
     @ApiResponse(responseCode = "200", description = "User detail")
     @ApiResponse(responseCode = "404", description = "User not found")
     public ResponseEntity<Object> detail(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
                                          @PathVariable UUID userId) {
         authorization.require(principal, PlatformPermission.USER_MANAGE);
         return administration.find(userId, clock.instant())
-                .<ResponseEntity<Object>>map(this::noStore)
+                .<ResponseEntity<Object>>map(detail -> noStore(AdminUserDetail.of(detail)))
                 .orElseGet(AdminUserController::notFound);
     }
 
@@ -82,7 +96,9 @@ public class AdminUserController {
     public ResponseEntity<Object> disable(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
                                           @PathVariable UUID userId) {
         authorization.require(principal, PlatformPermission.USER_MANAGE);
-        return status(administration.disable(principal.id(), userId, clock.instant()));
+        UserAdministration.StatusOutcome outcome = administration.disable(principal.id(), userId, clock.instant());
+        auditStatus(AuditAction.USER_DISABLE, principal.id(), userId, outcome);
+        return status(outcome);
     }
 
     @PostMapping("/{userId}/enable")
@@ -92,7 +108,9 @@ public class AdminUserController {
     public ResponseEntity<Object> enable(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
                                          @PathVariable UUID userId) {
         authorization.require(principal, PlatformPermission.USER_MANAGE);
-        return status(administration.enable(userId));
+        UserAdministration.StatusOutcome outcome = administration.enable(principal.id(), userId);
+        auditStatus(AuditAction.USER_ENABLE, principal.id(), userId, outcome);
+        return status(outcome);
     }
 
     @GetMapping("/{userId}/sessions")
@@ -117,9 +135,13 @@ public class AdminUserController {
                                             @PathVariable UUID userId) {
         authorization.require(principal, PlatformPermission.SESSION_MANAGE);
         if (administration.find(userId, clock.instant()).isEmpty()) {
+            audit.record(AuditAction.SESSION_REVOKE_ALL, principal.id(), AuditTargetType.USER, userId, AuditOutcome.FAILURE);
             return notFound();
         }
-        return noStore(new RevokedResponse(sessions.revokeAll(userId, clock.instant())));
+        int revoked = sessions.revokeAll(userId, clock.instant());
+        log.info("All sessions revoked by administrator. actorId={} targetId={} revoked={}", principal.id(), userId, revoked);
+        audit.record(AuditAction.SESSION_REVOKE_ALL, principal.id(), AuditTargetType.USER, userId, AuditOutcome.SUCCESS);
+        return noStore(new RevokedResponse(revoked));
     }
 
     @PostMapping("/{userId}/sessions/{sessionId}/revoke")
@@ -130,9 +152,26 @@ public class AdminUserController {
                                             @PathVariable UUID userId, @PathVariable UUID sessionId) {
         authorization.require(principal, PlatformPermission.SESSION_MANAGE);
         if (!sessions.revokeById(userId, sessionId, clock.instant())) {
+            audit.record(AuditAction.SESSION_REVOKE, principal.id(), AuditTargetType.USER, userId, AuditOutcome.FAILURE);
             return notFound();
         }
+        log.info("Session revoked by administrator. actorId={} targetId={} sessionId={}", principal.id(), userId, sessionId);
+        audit.record(AuditAction.SESSION_REVOKE, principal.id(), AuditTargetType.USER, userId, AuditOutcome.SUCCESS);
         return ResponseEntity.ok().header("Cache-Control", "no-store").build();
+    }
+
+    /** CHANGED is a success, a refusal by a rule is DENIED, an unknown target FAILURE; a no-op is not an event. */
+    private void auditStatus(AuditAction action, UUID actorId, UUID targetId,
+                             UserAdministration.StatusOutcome outcome) {
+        AuditOutcome result = switch (outcome) {
+            case CHANGED -> AuditOutcome.SUCCESS;
+            case NOT_FOUND -> AuditOutcome.FAILURE;
+            case SELF_DENIED, LAST_ADMIN -> AuditOutcome.DENIED;
+            case UNCHANGED -> null;
+        };
+        if (result != null) {
+            audit.record(action, actorId, AuditTargetType.USER, targetId, result);
+        }
     }
 
     private ResponseEntity<Object> status(UserAdministration.StatusOutcome outcome) {
@@ -163,4 +202,20 @@ public class AdminUserController {
     }
 
     public record RevokedResponse(int revoked) {}
+
+    /** The user detail plus what the account role grants; the permissions are derived, never stored or editable. */
+    public record AdminUserDetail(UserAdministration.UserSummary user, List<OAuthProvider> linkedProviders,
+                                  long activeSessions, List<String> platformPermissions) {
+
+        static AdminUserDetail of(UserAdministration.UserDetail detail) {
+            List<String> permissions;
+            try {
+                permissions = RolePolicy.permissions(GlobalRole.valueOf(detail.user().globalRole())).stream()
+                        .map(Enum::name).sorted().toList();
+            } catch (IllegalArgumentException unknownRole) {
+                permissions = List.of();
+            }
+            return new AdminUserDetail(detail.user(), detail.linkedProviders(), detail.activeSessions(), permissions);
+        }
+    }
 }

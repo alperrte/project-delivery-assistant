@@ -58,6 +58,11 @@ class AdminAuthHardeningIntegrationTest {
         registry.add("FRONTEND_URL", () -> "http://localhost:3000");
         registry.add("JWT_SECRET", () -> Base64.getEncoder().encodeToString(JWT_KEY));
         // No TOTP_ENCRYPTION_KEY and no rate-limit overrides: the production limits (5 sensitive per 10 minutes) apply.
+        // Set explicitly, because pre-push loads the root .env into the process environment and a real key or relaxed
+        // limit from there would otherwise leak into this test.
+        registry.add("TOTP_ENCRYPTION_KEY", () -> "");
+        registry.add("auth.rate-limit.sensitive-max-requests", () -> "5");
+        registry.add("auth.rate-limit.login-max-requests", () -> "30");
     }
 
     private static final String PASSWORD = "Strong-Pass1";
