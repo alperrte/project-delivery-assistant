@@ -260,6 +260,131 @@ class AnalyticsApiIntegrationTest {
         assertEquals(0, jdbc.queryForObject("SELECT count(*) FROM analytics_sessions WHERE id = ?", Integer.class, session));
     }
 
+    private int count(String table, UUID session) {
+        return jdbc.queryForObject("SELECT count(*) FROM " + table + " WHERE session_id = ?", Integer.class, session);
+    }
+
+    private UUID knownSession(UUID visitor, String address) throws Exception {
+        UUID session = UUID.randomUUID();
+        send(address, event("PAGE_VIEW", visitor, session, "/", "")).andExpect(status().isNoContent());
+        return session;
+    }
+
+    @Test
+    void everyAllowListedCtaIdIsStoredForAKnownSessionAndNothingElse() throws Exception {
+        UUID visitor = UUID.randomUUID();
+        for (String cta : new String[] {"landing_register", "landing_login", "header_register", "header_login",
+                "register_submit", "contact_submit", "github_repo"}) {
+            String address = address();
+            UUID session = knownSession(visitor, address);
+            var result = send(address, event("CTA_CLICK", visitor, session, "/", "\"ctaId\":\"" + cta + "\""))
+                    .andExpect(status().isNoContent()).andReturn();
+            assertEquals("no-store", result.getResponse().getHeader("Cache-Control"));
+            assertNull(result.getResponse().getHeader("Set-Cookie"));
+            assertEquals(cta, jdbc.queryForObject("SELECT cta_id FROM analytics_cta_clicks WHERE session_id = ?",
+                    String.class, session));
+            // A click is not a page view and does not move the page counter.
+            assertEquals(1, session(session).get("page_views"));
+        }
+        assertEquals(List.of("cta_id", "id", "occurred_at", "session_id"), jdbc.queryForList(
+                "SELECT column_name FROM information_schema.columns WHERE table_name = 'analytics_cta_clicks' ORDER BY column_name",
+                String.class));
+    }
+
+    @Test
+    void anUnknownMalformedOrMissingCtaIdIsRejectedAndStoresNothing() throws Exception {
+        UUID visitor = UUID.randomUUID();
+        String address = address();
+        UUID session = knownSession(visitor, address);
+        for (String extra : new String[] {"\"ctaId\":\"buy_now\"", "\"ctaId\":\"LANDING_REGISTER\"",
+                "\"ctaId\":\"landing-register\"", "\"ctaId\":\"landing_register \"", "\"ctaId\":\"\"",
+                "\"ctaId\":\"a@b.example\"", "\"ctaId\":\"" + "a".repeat(41) + "\"", ""}) {
+            send(address, event("CTA_CLICK", visitor, session, "/", extra)).andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.code").value("ANALYTICS_INVALID"));
+        }
+        assertEquals(0, count("analytics_cta_clicks", session));
+    }
+
+    @Test
+    void ctaClicksAndClientErrorsNeedAKnownSessionOfTheSameVisitorAndAConsentVersion() throws Exception {
+        UUID visitor = UUID.randomUUID();
+        String address = address();
+        send(address, event("CTA_CLICK", visitor, UUID.randomUUID(), "/", "\"ctaId\":\"landing_login\""))
+                .andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("ANALYTICS_SESSION_UNKNOWN"));
+        send(address, event("CLIENT_ERROR", visitor, UUID.randomUUID(), "/", "\"errorKind\":\"render\""))
+                .andExpect(status().isNotFound());
+        UUID session = knownSession(visitor, address);
+        UUID intruder = UUID.randomUUID();
+        send(address, event("CTA_CLICK", intruder, session, "/", "\"ctaId\":\"landing_login\""))
+                .andExpect(status().isBadRequest());
+        send(address, event("CLIENT_ERROR", intruder, session, "/", "\"errorKind\":\"render\""))
+                .andExpect(status().isBadRequest());
+        // The consent version is required exactly like for page views.
+        send(address, "{\"type\":\"CTA_CLICK\",\"visitorId\":\"" + visitor + "\",\"sessionId\":\"" + session
+                + "\",\"path\":\"/\",\"ctaId\":\"landing_login\"}").andExpect(status().isBadRequest());
+        assertEquals(0, count("analytics_cta_clicks", session));
+        assertEquals(0, count("analytics_client_errors", session));
+    }
+
+    @Test
+    void aClientErrorStoresTheRouteAndTheKindOnlyEvenWhenMessagesAndStacksAreSent() throws Exception {
+        UUID visitor = UUID.randomUUID();
+        String address = address();
+        UUID session = knownSession(visitor, address);
+        send(address, event("CLIENT_ERROR", visitor, session, "/projects/[slug]/tasks",
+                "\"errorKind\":\"chunk_load\",\"message\":\"ChunkLoadError at https://app.example/x?token=abc\","
+                        + "\"stack\":\"at foo (bar.js:1)\",\"url\":\"https://app.example/p/42\",\"userId\":\"" + UUID.randomUUID()
+                        + "\",\"userAgent\":\"Mozilla\",\"email\":\"a@b.example\""))
+                .andExpect(status().isNoContent());
+        Map<String, Object> row = jdbc.queryForMap("SELECT * FROM analytics_client_errors WHERE session_id = ?", session);
+        assertEquals("/projects/[slug]/tasks", row.get("path"));
+        assertEquals("CHUNK_LOAD", row.get("error_kind"));
+        assertEquals(List.of("error_kind", "id", "occurred_at", "path", "session_id"), jdbc.queryForList(
+                "SELECT column_name FROM information_schema.columns WHERE table_name = 'analytics_client_errors' ORDER BY column_name",
+                String.class));
+        // No stored value carries any of the rejected material.
+        assertEquals(0, jdbc.queryForObject("SELECT count(*) FROM analytics_client_errors WHERE path || error_kind"
+                + " ~* '(token|abc|stack|mozilla|@|http)'", Integer.class));
+        for (String kind : new String[] {"render", "chunk_load", "unhandled_rejection", "network"}) {
+            send(address, event("CLIENT_ERROR", visitor, session, "/dashboard", "\"errorKind\":\"" + kind + "\""))
+                    .andExpect(status().isNoContent());
+        }
+        assertEquals(5, count("analytics_client_errors", session));
+    }
+
+    @Test
+    void anUnknownMalformedOrMissingErrorKindIsRejectedAndStoresNothing() throws Exception {
+        UUID visitor = UUID.randomUUID();
+        String address = address();
+        UUID session = knownSession(visitor, address);
+        for (String extra : new String[] {"\"errorKind\":\"oops\"", "\"errorKind\":\"RENDER\"",
+                "\"errorKind\":\"TypeError: x is undefined\"", "\"errorKind\":\"\"", ""}) {
+            send(address, event("CLIENT_ERROR", visitor, session, "/", extra)).andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.code").value("ANALYTICS_INVALID"));
+        }
+        // The route must be a template like for page views.
+        send(address, event("CLIENT_ERROR", visitor, session, "/p/42?x=1", "\"errorKind\":\"render\""))
+                .andExpect(status().isBadRequest());
+        assertEquals(0, count("analytics_client_errors", session));
+    }
+
+    @Test
+    void clicksAndErrorsAreBoundedPerSessionAndFurtherOnesAreDroppedQuietly() throws Exception {
+        UUID visitor = UUID.randomUUID();
+        String address = address();
+        UUID session = knownSession(visitor, address);
+        jdbc.update("INSERT INTO analytics_cta_clicks (id, session_id, cta_id, occurred_at) "
+                + "SELECT gen_random_uuid(), ?, 'landing_login', now() FROM generate_series(1, 99)", session);
+        jdbc.update("INSERT INTO analytics_client_errors (id, session_id, path, error_kind, occurred_at) "
+                + "SELECT gen_random_uuid(), ?, '/', 'NETWORK', now() FROM generate_series(1, 49)", session);
+        for (int i = 0; i < 2; i++) {
+            send(address, event("CTA_CLICK", visitor, session, "/", "\"ctaId\":\"landing_login\"")).andExpect(status().isNoContent());
+            send(address, event("CLIENT_ERROR", visitor, session, "/", "\"errorKind\":\"network\"")).andExpect(status().isNoContent());
+        }
+        assertEquals(100, count("analytics_cta_clicks", session));
+        assertEquals(50, count("analytics_client_errors", session));
+    }
+
     @Test
     void theEndpointIsRateLimitedPerAddress() throws Exception {
         UUID visitor = UUID.randomUUID(), session = UUID.randomUUID();

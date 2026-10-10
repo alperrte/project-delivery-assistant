@@ -58,8 +58,12 @@ public class AdminAnalyticsService {
 
     public record ContactRequests(long inRange, long total, List<Day> daily) {}
 
+    /**
+     * {@code behavior} carries the page, flow, call-to-action, conversion and client-error reports of the consented
+     * analytics (see {@link AnalyticsReporting.BehaviorReport}); like traffic it is empty when nobody consented.
+     */
     public record Dashboard(Range range, Traffic traffic, Registrations registrations, Accounts accounts,
-                            ContactRequests contactRequests) {}
+                            ContactRequests contactRequests, AnalyticsReporting.BehaviorReport behavior) {}
 
     /**
      * @param from first day (inclusive) in {@code zoneId}; defaults to 29 days before {@code to}
@@ -81,6 +85,7 @@ public class AdminAnalyticsService {
         Instant end = last.plusDays(1).atStartOfDay(zone).toInstant();
 
         var traffic = analytics.traffic(start, end, zone);
+        var behavior = analytics.behavior(start, end);
         var registrations = users.registrations(start, end, zone);
         var counts = users.counts();
         var messages = contact.report(start, end, zone);
@@ -109,7 +114,7 @@ public class AdminAnalyticsService {
                 new Registrations(registrations.inRange(), registrationDays),
                 new Accounts(counts.total(), counts.active(), counts.disabled(), counts.pendingVerification(),
                         counts.admins()),
-                new ContactRequests(messages.sentInRange(), messages.sentTotal(), contactDays));
+                new ContactRequests(messages.sentInRange(), messages.sentTotal(), contactDays), behavior);
     }
 
     private static ZoneId zone(String id) {
