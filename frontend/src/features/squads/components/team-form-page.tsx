@@ -156,7 +156,8 @@ export function TeamFormPage({ slug, teamId }: { slug: string; teamId?: string }
       createdAt: base?.createdAt ?? now,
       updatedAt: now,
       updatedBy: author,
-      memberPreview: base ? base.memberPreview : includeCreator ? [author] : [],
+      // The session carries no project roles, so the live preview shows the creator without a role line.
+      memberPreview: base ? base.memberPreview : includeCreator ? [{ ...author, roles: [] }] : [],
       lastJoined: base ? base.lastJoined : includeCreator ? { userId: author.userId, nickname: author.nickname, joinedAt: now } : null,
     };
     // `author` is derived from the session; keying on its fields keeps the memo stable.

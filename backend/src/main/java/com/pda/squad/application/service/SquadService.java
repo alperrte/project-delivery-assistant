@@ -310,7 +310,8 @@ public class SquadService {
                 if (member == null) continue;
                 var profile = profiles.get(member.userId());
                 preview.add(new MemberPreview(member.userId(), member.nickname(), member.profilePhotoVersion(),
-                        profile == null ? null : profile.firstName(), profile == null ? null : profile.lastName()));
+                        profile == null ? null : profile.firstName(), profile == null ? null : profile.lastName(),
+                        member.roles().stream().sorted().toList()));
                 if (lastJoined == null)
                     lastJoined = new LastJoined(member.userId(), member.nickname(), joinedAt.get(membershipId));
             }

@@ -305,7 +305,7 @@ Existing team DELETE and legacy archive adapters enforce active project SQUAD_MA
 
 Claim sets popupPresentedAt atomically on oldest unread SQUAD_DELETED; read/readAt stays independent. At-most-once grant may lose a popup when the response is lost after commit; durable own history remains. Fanout uses committed immutable recipient snapshot, replay event/recipient dedup and existing registry recovery; rollback creates no notification. Additive nullable teamDeletion snapshot carries bounded plain text. Actor-scoped frontend notification cache/AbortSignal/lifetime cleanup prevents prior-user responses/toasts surfacing after logout/login. No browser auth/private list persistence.
 
-Team memberPreview adds safe real first/last names only after project/team authorization; no email/global directory expansion. Existing manager invitation list batch adds safe inviter nickname/photo version and target photo version; target email privacy/token rules retained. Swagger `/swagger-ui/index.html` and `/v3/api-docs`, normal login/CSRF. Delete/claim have no JSON body; safe team create `{"name":"Example Team","includeCreator":true}`.
+Team memberPreview adds safe real first/last names only after project/team authorization; no email/global directory expansion. Each preview item also returns `roles` (project role names in enum order, 2026-10-10) from the existing membership batch; roles are labels only, never grant access, and add no query or email. Existing manager invitation list batch adds safe inviter nickname/photo version and target photo version; target email privacy/token rules retained. Swagger `/swagger-ui/index.html` and `/v3/api-docs`, normal login/CSRF. Delete/claim have no JSON body; safe team create `{"name":"Example Team","includeCreator":true}`.
 
 
 ### Own nickname profile update - 2026-10-07
@@ -432,7 +432,7 @@ Swagger check path: `/swagger-ui/index.html` with `API_DOCS_ENABLED=true`: `GET 
 | Endpoint | Auth / scope | Input | Success | Important errors |
 | --- | --- | --- | --- | --- |
 | `POST /api/v1/auth/password/change` | Access cookie + CSRF (also allowed while a forced change is pending) | `{currentPassword, newPassword (8-128), confirmNewPassword}` | `200`; other sessions revoked, forced-change flag cleared | `400` wrong current / same password / mismatch / invalid, `401`, `403` CSRF, `429` IP limit (5/10 min) |
-| `GET /api/v1/admin/users?page&size` | ADMIN (`USER_MANAGE`) | size clamped 1..100 | `200` page of `{id,email,nickname,accountStatus,emailVerificationStatus,globalRole,mustChangePassword,createdAt}` | `401`, `403` |
+| `GET /api/v1/admin/users?page&size&search&status` | ADMIN (`USER_MANAGE`) | size clamped 1..100; `status` is only `ACTIVE`, `DISABLED` or `PENDING_VERIFICATION` (`DELETED` anonymised accounts and unknown values are rejected) | `200` page of `{id,email,nickname,accountStatus,emailVerificationStatus,globalRole,mustChangePassword,createdAt}` | `400` invalid `status`/`search`, `401`, `403` |
 | `GET /api/v1/admin/users/{id}` | ADMIN | UUID path | `200` user + linked providers + active session count | `400` bad UUID, `404` |
 | `POST /api/v1/admin/users/{id}/disable` | ADMIN + CSRF | none | `200`; revokes all target sessions | `404`, `409` self or last active admin |
 | `POST /api/v1/admin/users/{id}/enable` | ADMIN + CSRF | none | `200` | `404` |

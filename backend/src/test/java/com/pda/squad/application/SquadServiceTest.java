@@ -71,7 +71,7 @@ class SquadServiceTest {
         UUID manager = registerUser("perfmanager");
         UUID project = projectService.create(manager, "Preview performance", null, null).getId();
         squadService.create(manager, project, "Anchor", null, null, true);
-        List<Object[]> accountRows = new java.util.ArrayList<>(), membershipRows = new java.util.ArrayList<>(), roleRows = new java.util.ArrayList<>();
+        List<Object[]> accountRows = new java.util.ArrayList<>(), membershipRows = new java.util.ArrayList<>(), roleRows = new java.util.ArrayList<>(), extraRoleRows = new java.util.ArrayList<>();
         List<Object[]> teamRows = new java.util.ArrayList<>(), squadRows = new java.util.ArrayList<>();
         for (int i = 0; i < 100; i++) {
             UUID team = UUID.randomUUID();
@@ -81,12 +81,14 @@ class SquadServiceTest {
                 String[][] names = {{"Alper", "Temiz"}, {"Nisa", "Camcı"}, {"Kerem", "Kaya"}, {"Hamza", "Temiz"}, {"Mehmet Ali", "Yılmaz"}};
                 accountRows.add(new Object[]{user, user + "@example.test", "p" + user.toString().replace("-", "").substring(0, 20), names[m][0], names[m][1]});
                 membershipRows.add(new Object[]{membership, project, user}); roleRows.add(new Object[]{membership});
+                if (m == 0) extraRoleRows.add(new Object[]{membership}); // TESTER is inserted first, BACKEND_DEVELOPER after: output must still be enum-ordered
                 squadRows.add(new Object[]{UUID.randomUUID(), team, membership, manager});
             }
         }
         jdbc.batchUpdate("INSERT INTO users(id,email,nickname,first_name,last_name,account_status,email_verification_status,global_role,created_at,updated_at) VALUES (?,?,?,?,?,'ACTIVE','VERIFIED','USER',now(),now())", accountRows);
         jdbc.batchUpdate("INSERT INTO project_memberships(id,project_id,user_id,status,joined_at) VALUES (?,?,?,'ACTIVE',now())", membershipRows);
         jdbc.batchUpdate("INSERT INTO project_membership_roles(membership_id,role) VALUES (?,'TESTER')", roleRows);
+        jdbc.batchUpdate("INSERT INTO project_membership_roles(membership_id,role) VALUES (?,'BACKEND_DEVELOPER')", extraRoleRows);
         jdbc.batchUpdate("INSERT INTO squads(id,project_id,name,created_by,updated_by,created_at,updated_at) VALUES (?,?,?,?,?,now(),now())", teamRows);
         jdbc.batchUpdate("INSERT INTO squad_members(id,squad_id,project_membership_id,added_by,added_at) VALUES (?,?,?,?,now())", squadRows);
         var statistics = entityManagerFactory.unwrap(org.hibernate.SessionFactory.class).getStatistics();
@@ -101,6 +103,10 @@ class SquadServiceTest {
             assertTrue(hundred.getContent().stream().flatMap(t -> t.memberPreview().stream()).anyMatch(p -> "Kerem".equals(p.firstName()) && "Kaya".equals(p.lastName())));
             assertTrue(hundred.getContent().stream().flatMap(t -> t.memberPreview().stream()).anyMatch(p -> "Hamza".equals(p.firstName()) && "Temiz".equals(p.lastName())));
             assertTrue(hundred.getContent().stream().flatMap(t -> t.memberPreview().stream()).anyMatch(p -> "Mehmet Ali".equals(p.firstName()) && "Yılmaz".equals(p.lastName())));
+            var previews = hundred.getContent().stream().flatMap(t -> t.memberPreview().stream()).toList();
+            assertTrue(previews.stream().allMatch(p -> p.roles() != null && !p.roles().isEmpty()));
+            assertTrue(previews.stream().filter(p -> "Alper".equals(p.firstName())).allMatch(p -> p.roles().equals(List.of(ProjectRole.BACKEND_DEVELOPER, ProjectRole.TESTER))));
+            assertTrue(previews.stream().filter(p -> "Nisa".equals(p.firstName())).allMatch(p -> p.roles().equals(List.of(ProjectRole.TESTER))));
             assertEquals(small, large, "Prepared query count must remain fixed:30=" + small + ",100=" + large);
             System.out.println("Team preview prepared queries: size30=" + small + ", size100=" + large);
             assertEquals(30, thirty.getContent().size());
