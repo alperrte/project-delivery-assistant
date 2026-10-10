@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { normalizeNickname, nicknameProblem } from "@/features/account/nickname";
 
 /**
  * The same rule the backend enforces (StrongPasswordValidator): 8-128 characters with at least one uppercase
@@ -32,7 +33,11 @@ export const loginSchema = z.object({
 export const registerSchema = z
   .object({
     email: z.string().min(1, "required").email("email"),
-    nickname: z.string().regex(/^[\p{L}\p{N}_]{3,32}$/u, "nickname"),
+    // Trimmed before validation so the submitted value is the stored one; consecutive spaces get their own message.
+    nickname: z.string().transform(normalizeNickname).superRefine((value, ctx) => {
+      const problem = nicknameProblem(value);
+      if (problem) ctx.addIssue({ code: "custom", message: problem === "spaces" ? "nicknameSpaces" : "nickname" });
+    }),
     password: strongPassword,
     confirmPassword: z.string().min(1, "required"),
   })

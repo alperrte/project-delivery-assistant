@@ -175,3 +175,89 @@ test("the banner never hides the last control of a page: the content can be scro
     }, { message: `${width}px` }).toBe(true);
   }
 });
+
+// Bottom-centre placement: the banner is centred on every width and never stays on top of the footer links or the form.
+const PLACEMENT_WIDTHS = [320, 390, 768, 1024, 1440];
+const PLACEMENT_HEIGHTS = [700, 1000];
+const PLACEMENT_PAGES = [
+  { name: "landing", path: "/", control: "footer a, footer button" },
+  { name: "login", path: "/login", control: "form button[type=submit], footer a, footer button" },
+  { name: "public page", path: "/cookies", control: "footer a, footer button" },
+] as const;
+
+for (const { name, path, control } of PLACEMENT_PAGES) {
+  test(`banner is bottom-centred and leaves the ${name} reachable at every width, height and theme`, async ({ page }) => {
+    test.setTimeout(180_000);
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    for (const theme of ["light", "dark"]) {
+      await page.addInitScript((value) => localStorage.setItem("theme", value), theme);
+      for (const height of PLACEMENT_HEIGHTS) {
+        for (const width of PLACEMENT_WIDTHS) {
+          const message = `${name} ${theme} ${width}x${height}`;
+          await page.setViewportSize({ width, height });
+          await page.goto(path);
+          await expect(banner(page)).toBeVisible();
+          await expect(page.locator("footer")).toBeAttached();
+          const box = (await banner(page).boundingBox())!;
+          expect(Math.abs(box.x - (width - (box.x + box.width))), `${message}: centred`).toBeLessThanOrEqual(2);
+          expect(box.x, message).toBeGreaterThanOrEqual(0);
+          expect(box.y, message).toBeGreaterThanOrEqual(0);
+          expect(box.y + box.height, message).toBeLessThanOrEqual(height);
+          expect(width - (box.x + box.width), message).toBeGreaterThanOrEqual(8);
+          if (width >= 640) expect(box.width, message).toBeLessThanOrEqual(512 + 1);
+
+          // Every control can be scrolled to the top of the screen, clear of the banner; the last ones stop where the page ends,
+          // which only works because the body keeps as much room under the content as the banner takes.
+          const covered = await page.evaluate(({ selector }) => {
+            const panel = document.querySelector("[data-cookie-banner]")!.getBoundingClientRect();
+            const hidden: string[] = [];
+            for (const el of document.querySelectorAll<HTMLElement>(selector)) {
+              el.scrollIntoView({ block: "start", behavior: "instant" });
+              const rect = el.getBoundingClientRect();
+              if (!rect.width || !rect.height) continue;
+              const overlap = rect.left < panel.right && rect.right > panel.left && rect.top < panel.bottom && rect.bottom > panel.top;
+              const top = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+              if (overlap || !top || !(top === el || el.contains(top))) hidden.push((el.textContent || el.tagName).trim().slice(0, 30));
+            }
+            return hidden;
+          }, { selector: control });
+          expect(covered, `${message}: covered controls`).toEqual([]);
+          // The very end of the page: the bottom edge of the document is above the banner.
+          await page.evaluate(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "instant" }));
+          const end = await page.evaluate(() => {
+            const panel = document.querySelector("[data-cookie-banner]")!.getBoundingClientRect();
+            const last = [...document.querySelectorAll("footer a, footer button")].filter((el) => el.getBoundingClientRect().height).at(-1)!.getBoundingClientRect();
+            return { lastBottom: last.bottom, panelTop: panel.top, bodyBottom: document.body.getBoundingClientRect().bottom - parseFloat(getComputedStyle(document.body).paddingBottom) };
+          });
+          expect(end.bodyBottom, `${message}: content ends above the banner`).toBeLessThanOrEqual(end.panelTop + 1);
+          expect(end.lastBottom, message).toBeLessThanOrEqual(end.panelTop + 1);
+          expect(await page.evaluate(() => document.documentElement.scrollWidth), message).toBe(width);
+        }
+      }
+    }
+  });
+}
+
+test("the locked tall login layout ends above the banner and is locked again once a choice is made", async ({ page }) => {
+  // Tall enough that the whole column still fits next to the banner.
+  await page.setViewportSize({ width: 1440, height: 1300 });
+  await page.goto("/login");
+  await expect(banner(page)).toBeVisible();
+  const bannerTop = (await banner(page).boundingBox())!.y;
+  const footer = (await page.locator("footer").boundingBox())!;
+  // Banner up: the footer sits above it and the page does not need to scroll at all.
+  expect(footer.y + footer.height).toBeLessThanOrEqual(bannerTop);
+  expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight + 1)).toBe(true);
+  expect(await page.locator("form button[type=submit]").evaluate((button) => {
+    const rect = button.getBoundingClientRect();
+    return document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2) === button;
+  })).toBe(true);
+  await banner(page).getByRole("button", { name: "Tümünü reddet" }).click();
+  await expect(banner(page)).toHaveCount(0);
+  // No banner: the original locked layout is back (document exactly one viewport, footer on the bottom edge).
+  expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBe(1300);
+  const locked = (await page.locator("footer").boundingBox())!;
+  expect(Math.round(locked.y + locked.height)).toBe(1300);
+  expect(await page.evaluate(() => document.documentElement.style.getPropertyValue("--cookie-banner-offset"))).toBe("");
+  expect(await page.evaluate(() => document.documentElement.hasAttribute("data-cookie-banner-open"))).toBe(false);
+});

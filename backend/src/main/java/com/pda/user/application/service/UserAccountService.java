@@ -366,19 +366,29 @@ public class UserAccountService implements UserAccounts {
     /** Derives a valid, unused nickname from the provider display name (or email) without trusting its shape. */
     private String availableNickname(String displayName, String email) {
         String source = displayName != null && !displayName.isBlank() ? displayName : email.split("@", 2)[0];
-        String base = source.replaceAll("[^\\p{L}\\p{N}_]+", "_").replaceAll("^_+|_+$", "");
-        if (base.length() > 24) {
-            base = base.substring(0, 24);
-        }
-        if (base.length() < 3) {
-            base = "user";
-        }
+        String base = nicknameBase(source);
         String candidate = base;
         for (int attempt = 0; attempt < 10 && users.existsByNickname(candidate); attempt++) {
             candidate = base + "_" + java.util.concurrent.ThreadLocalRandom.current().nextInt(1000, 10000);
         }
         return users.existsByNickname(candidate)
                 ? "user_" + UUID.randomUUID().toString().replace("-", "").substring(0, 12) : candidate;
+    }
+
+    /**
+     * System-generated base nickname valid under {@link com.pda.user.NicknameRules}: whitespace runs become one ordinary space,
+     * letters/digits/underscore/hyphen are kept, every other character run becomes one underscore, edges are
+     * trimmed and the result is cut surrogate-safely to 24 code points (leaving room for the uniqueness suffix).
+     */
+    static String nicknameBase(String source) {
+        String base = java.text.Normalizer.normalize(source, java.text.Normalizer.Form.NFC)
+                .replaceAll("\\p{IsWhite_Space}+", " ")
+                .replaceAll("[^\\p{L}\\p{N}_ -]+", "_")
+                .replaceAll("^[_ -]+|[_ -]+$", "");
+        if (base.codePointCount(0, base.length()) > 24) {
+            base = base.substring(0, base.offsetByCodePoints(0, 24)).replaceAll("[_ -]+$", "");
+        }
+        return base.codePointCount(0, base.length()) < 3 ? "user" : base;
     }
 
     private static AuthenticatedUser summary(User user) {

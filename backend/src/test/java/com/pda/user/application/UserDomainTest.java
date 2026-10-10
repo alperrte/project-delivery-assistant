@@ -45,4 +45,19 @@ class UserDomainTest {
         assertTrue(validator.validate(invalid).stream()
                 .anyMatch(violation -> violation.getPropertyPath().toString().equals("nickname")));
     }
+
+    @Test
+    void nicknameAcceptsSingleSpacesAndHyphensButNotAmbiguousWhitespace() {
+        String password = UUID.randomUUID().toString();
+        for (String ok : new String[] {"Hamza Taşbay", "Çağrı Öztürk", "Ayşe-Nur", "Hamza_Taşbay-27"}) {
+            User user = User.registerLocal("ok@example.test", ok, password, passwordEncoder);
+            assertTrue(validator.validate(user).isEmpty(), ok);
+        }
+        for (String bad : new String[] {"Hamza  Taşbay", " Hamza", "Hamza ", "Hamza\tTaşbay", "Hamza Taşbay", "Ha​mza"}) {
+            User user = User.registerLocal("bad@example.test", bad, password, passwordEncoder);
+            assertTrue(validator.validate(user).stream()
+                    .anyMatch(violation -> violation.getPropertyPath().toString().equals("nickname")), bad);
+            org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> user.renameNickname(bad));
+        }
+    }
 }

@@ -32,3 +32,25 @@ test("workspace document/sidebar blue scrollbars exclude nested form/chat/modal 
     await page.emulateMedia({ forcedColors: "active" }); expect(await page.evaluate(() => getComputedStyle(document.documentElement).scrollbarColor)).toBe("auto");
   } finally { await context.close(); }
 });
+
+test("Landing, Login and a public info page use exactly the signed-in document scrollbar in both themes", async ({ browser }) => {
+  test.setTimeout(120_000);
+  const rootStyle = (dark: boolean) => (page: import("@playwright/test").Page) => page.evaluate((isDark) => {
+    document.documentElement.classList.toggle("dark", isDark);
+    const root = getComputedStyle(document.documentElement);
+    return { color: root.scrollbarColor, width: root.scrollbarWidth };
+  }, dark);
+  const member = await browser.newContext({ storageState: MEMBER_STORAGE }), visitor = await browser.newContext();
+  try {
+    const signedIn = await member.newPage(), anonymous = await visitor.newPage();
+    await signedIn.goto("/en/account"); await expect(signedIn.locator("#main-content")).toBeVisible();
+    for (const dark of [false, true]) {
+      const reference = await rootStyle(dark)(signedIn);
+      expect(reference.width).toBe("thin");
+      for (const route of ["/en", "/en/login", "/en/cookies"]) {
+        await anonymous.goto(route); await expect(anonymous.locator("footer")).toBeAttached();
+        expect(await rootStyle(dark)(anonymous), `${route} ${dark ? "dark" : "light"}`).toEqual(reference);
+      }
+    }
+  } finally { await member.close(); await visitor.close(); }
+});

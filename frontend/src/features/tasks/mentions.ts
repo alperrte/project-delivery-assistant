@@ -6,8 +6,13 @@ import type { PersonRef } from "./types";
  */
 
 const TOKEN = /@\[([0-9a-fA-F-]{36})\]/g;
-// Same alphabet the backend allows for nicknames (letters and digits of any language), so Turkish names like çağrı work.
-const NICKNAME_CHAR = /[\p{L}\p{N}_]/u;
+// Same alphabet the backend allows for nicknames (letters and digits of any language, `_` and `-`), so Turkish names
+// like çağrı work. A single space may sit between words; it is deliberately not a nickname char (see the boundary checks).
+const NICKNAME_CHAR = /[\p{L}\p{N}_-]/u;
+// What may follow `@` while a mention is being typed: words of nickname characters joined by single spaces, plus one
+// trailing space while the next word is coming. Newlines and double spaces end the mention.
+const MENTION_QUERY = /^(?:[\p{L}\p{N}_-]+(?: [\p{L}\p{N}_-]+)* ?)?$/u;
+const MAX_QUERY_CODEPOINTS = 32;
 
 export type MentionSegment = { type: "text"; value: string } | { type: "mention"; value: string; userId: string };
 
@@ -68,7 +73,7 @@ export function activeMention(text: string, caret: number): { start: number; que
   if (at < 0) return null;
   if (at > 0 && NICKNAME_CHAR.test(upToCaret[at - 1])) return null; // an e-mail address, not a mention
   const query = upToCaret.slice(at + 1);
-  return /^[\p{L}\p{N}_]{0,32}$/u.test(query) ? { start: at, query } : null;
+  return Array.from(query).length <= MAX_QUERY_CODEPOINTS && MENTION_QUERY.test(query) ? { start: at, query } : null;
 }
 
 /** Replaces the `@query` at `start` with `@nickname ` and returns the new text and caret position. */

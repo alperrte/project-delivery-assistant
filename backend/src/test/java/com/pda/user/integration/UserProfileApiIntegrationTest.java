@@ -116,11 +116,25 @@ class UserProfileApiIntegrationTest {
 
     @Test void unicodeTrimValidationCaseAndConflict() throws Exception {
         Account a=account("validation"),b=account("collision"); Cookie csrf=csrfCookie();
-        for(String value:new String[]{"ab","a".repeat(33),"a-b"," ","cafe\u0301","\uFEFFname"}) {
+        for(String value:new String[]{"ab","a".repeat(33),"a b ".repeat(9).trim()+"xyz"," ","   ","cafe\u0301","\uFEFFname",
+                "Hamza  Ta\u015Fbay","Hamza\\tTa\u015Fbay","Hamza\u00A0Ta\u015Fbay","Hamza\u2003Ta\u015Fbay","Ha\u200Bmza","Ha\u200Dmza","Ha\u2060mza",
+                "<script>","a@b","a.b","\uD83D\uDE00\uD83D\uDE00\uD83D\uDE00","Hamza\\nTa\u015Fbay","Hamza\\u0000x"}) {
             mvc.perform(put("/api/v1/users/me/profile").cookie(csrf,a.access()).header("X-XSRF-TOKEN",csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
                 .content("{\"nickname\":\""+value+"\"}"))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("NICKNAME_INVALID"));
         }
+        for(String value:new String[]{"Hamza Ta\u015Fbay","Hamza_Ta\u015Fbay","Hamza-Ta\u015Fbay","\u00C7a\u011Fr\u0131 \u00D6zt\u00FCrk","Ali Veli","Ay\u015Fe-Nur","Hamza_Ta\u015Fbay-27","Hamza Ta\u015Fbay 27","Hamza"}) {
+            mvc.perform(put("/api/v1/users/me/profile").cookie(csrf,a.access()).header("X-XSRF-TOKEN",csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"nickname\":\""+value+"\"}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.nickname").value(value));
+            assertEquals(value,repository.findById(a.id()).orElseThrow().getNickname());
+        }
+        mvc.perform(put("/api/v1/users/me/profile").cookie(csrf,a.access()).header("X-XSRF-TOKEN",csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
+            .content("{\"nickname\":\"  Hamza Ta\u015Fbay\\t \"}"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.nickname").value("Hamza Ta\u015Fbay"));
+        assertEquals("Hamza Ta\u015Fbay",repository.findById(a.id()).orElseThrow().getNickname());
+        assertEquals("a".repeat(32),profiles.rename(a.id(),"a".repeat(32)).nickname());
+        assertEquals("ab c".repeat(8),profiles.rename(a.id(),"ab c".repeat(8)).nickname());
         assertEquals("\u0130pek_\u00c7elik",profiles.rename(a.id(),"\u00a0\u0130pek_\u00c7elik\u00a0").nickname());
         assertEquals("\uD801\uDC00".repeat(3),profiles.rename(a.id(),"\uD801\uDC00".repeat(3)).nickname());
         String target="case_"+UUID.randomUUID().toString().replace("-", "").substring(0,12);

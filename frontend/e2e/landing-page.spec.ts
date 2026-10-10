@@ -204,11 +204,13 @@ test("landing follows live changes to the global semantic palette", async ({ pag
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.addInitScript(() => localStorage.setItem("pda:motion", "off"));
   await page.goto("/");
+  // The stored motion preference is applied after hydration; until then the CTA's colour transition (0.15s) still runs.
+  await expect(page.locator("html")).toHaveAttribute("data-motion", "off");
   await page.evaluate(() => {
     document.documentElement.style.setProperty("--background", "#f5ebdb");
     document.documentElement.style.setProperty("--foreground", "#302718");
     document.documentElement.style.setProperty("--primary", "#34613d");
   });
   expect(await page.locator("#landing-main").evaluate(el => getComputedStyle(el.parentElement!).backgroundColor)).toBe("rgb(245, 235, 219)");
-  expect(await page.locator('main a[href="/tr/kayit"]').evaluate(el => getComputedStyle(el).backgroundColor)).toBe("rgb(52, 97, 61)");
+  await expect(page.locator('main a[href="/tr/kayit"]')).toHaveCSS("background-color", "rgb(52, 97, 61)");
 });

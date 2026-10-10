@@ -1,7 +1,7 @@
 package com.pda.user.application.service;
 
 import com.pda.user.UserAccounts;
-import com.pda.user.domain.NicknameRules;
+import com.pda.user.NicknameRules;
 import com.pda.user.infrastructure.repository.UserRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;

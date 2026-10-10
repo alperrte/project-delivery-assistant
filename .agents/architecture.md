@@ -121,3 +121,9 @@ Uygulamadaki bütün tarih/saat girdileri ortak `DatePicker`/`TimePicker` bileş
 ## Frontend/main canonical route integration ? 2026-10-09
 
 Public routing retains both consent/contact/admin routes and main About/License plus named home/create/project sections. Named project section URLs resolve through matchPath to the existing physical `/projects/[slug]` page with a section value; authenticated history recognizes that protected physical page without expanding server authorization. PublicInfoPage retains PageContents, pageAlternates, JSON-LD/full Apache text, cookie draft/noindex/preferences and support form links together. Backend module/auth/schema contracts are unchanged. Verified merge preparation: `docs/compliation/2026-10-09-auth-frontend-main-conflict-resolution.md`; commit remains user-owned.
+
+## Kullanıcı adı sözleşmesi ve render ipucu (2026-10-10)
+
+Kullanıcı adı kuralı (Unicode harf/rakam, `_`, `-`, kelimeler arasında tek boşluk, 3-32 kod noktası, baş/son boşluk kırpılır, art arda boşluk reddedilir) yalnız `com.pda.user.NicknameRules` içinde tanımlıdır. Sınıf User modülünün kök public API'sidir (`user/domain` altından taşındı); Auth DTO'ları ve User iç katmanları aynı kaynağı kullanır, böylece Modulith modül sınırı korunur ve kural ikinci kez kopyalanmaz. Frontend aynı kuralı `features/account/nickname.ts` ile yansıtır; karar sunucudadır. Kimlik (UUID, e-posta, oturum) kullanıcı adından bağımsızdır.
+
+Frontend'de render ipucu: `lib/rendering.ts` + `components/layout/rendering-probe.tsx` donanım hızlandırması olmayan tarayıcıyı tespit eder ve `<html data-renderer="software">` yazar; `globals.css` yalnız bu durumda ağır tam ekran auth neon katmanını kaldırır. Karar sekme başına `sessionStorage` içindedir ve root layout'taki küçük inline boot script ile ilk boyamadan önce uygulanır. Bu bir performans ipucudur, kimlik veya yetki girdisi değildir. Ayrıntı: `.agents/frontend-design-rules.md`.

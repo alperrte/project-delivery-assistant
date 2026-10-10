@@ -17,8 +17,9 @@ function dbNickname(id: string) {
 
 test("nickname normalization and cache scope preserve exact identity rules", () => {
   expect(normalizeNickname("\u00a0İpek_Çelik\u00a0")).toBe("İpek_Çelik");
-  for (const value of ["İpek_Çelik", "𐐀".repeat(3), "a".repeat(32)]) expect(validNickname(value)).toBe(true);
-  for (const value of ["ab", "a".repeat(33), "x-y", "cafe\u0301", "\ufeffname"]) expect(validNickname(value)).toBe(false);
+  for (const value of ["İpek_Çelik", "𐐀".repeat(3), "a".repeat(32), "x-y", "Hamza Taşbay", "Çağrı Öztürk", "  Ali Veli  "]) expect(validNickname(value)).toBe(true);
+  expect(normalizeNickname("  Hamza Taşbay  ")).toBe("Hamza Taşbay");
+  for (const value of ["ab", "a".repeat(33), "x.y", "x  y", "x\ty", "x\u00a0y", "cafe\u0301", "\ufeffname", "x\u200by"]) expect(validNickname(value)).toBe(false);
   expect(nicknameIdentityQuery(["projects", "p", "members", "all"], "A")).toBe(true);
   expect(nicknameIdentityQuery(["projects", "p", "criteria"], "A")).toBe(false);
   expect(nicknameIdentityQuery(["tasks", "counts"], "A")).toBe(false);
