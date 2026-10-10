@@ -7,7 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeTransitionOverlay } from "@/components/layout/theme-transition";
-import { applyMotionPreference, useMotionPreference } from "@/lib/preferences/motion";
+import { applyMotionPreference, useMotionPreference, useReducedMotionPreference } from "@/lib/preferences/motion";
 import { ConsentProvider } from "@/features/consent/consent-provider";
 import { AnalyticsTracker } from "@/features/analytics/tracker";
 
@@ -34,9 +34,10 @@ if (typeof window !== "undefined" && !("__themeScriptWarningPatched" in window))
  */
 function MotionPreference({ children }: { children: ReactNode }) {
   const [preference] = useMotionPreference();
+  const reduce = useReducedMotionPreference();
   useEffect(() => applyMotionPreference(preference), [preference]);
   return (
-    <MotionConfig reducedMotion={preference === "off" ? "always" : "never"}>
+    <MotionConfig reducedMotion={reduce ? "always" : "never"}>
       {children}
     </MotionConfig>
   );

@@ -14,7 +14,7 @@ const OPTIONS = [
 ] as const;
 
 const ICON_TONE = {
-  light: "text-amber-500 dark:text-amber-400",
+  light: "text-amber-700 dark:text-amber-400",
   dark: "text-[color-mix(in_oklab,var(--glow),black_25%)] dark:text-(--glow)",
 } as const;
 

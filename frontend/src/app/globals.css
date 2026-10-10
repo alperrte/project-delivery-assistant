@@ -116,7 +116,7 @@ html::-webkit-scrollbar-thumb:hover,
   --accent: #e8ecf2;
   --accent-foreground: #10131a;
   --destructive: #c8323a;
-  --success: #147a52;
+  --success: #106642;
   --warning: #a4660b;
   --border: #d8dee8;
   --border-strong: #b8c2d1;
@@ -130,7 +130,7 @@ html::-webkit-scrollbar-thumb:hover,
   /* Task label colors. A label stores one of these names, never a hex value. */
   --label-slate: #52607a;
   --label-red: #c8323a;
-  --label-orange: #b4530c;
+  --label-orange: #92400e;
   --label-amber: #8f6a00;
   --label-green: #147a52;
   --label-teal: #0b7a85;
@@ -145,8 +145,8 @@ html::-webkit-scrollbar-thumb:hover,
   --glow: #3fd3f2;
   --auth-ink: #0d1219;
   --auth-muted: #525c69;
-  --auth-link: #0a73a3;
-  --auth-link-hover: #075c83;
+  --auth-link: #075c83;
+  --auth-link-hover: #06476a;
   --auth-accent-from: #09a8cf;
   --auth-accent-to: #1b74d6;
   /* Glossy sheen band: deep cyan edges around a brighter cyan core. Not
@@ -226,8 +226,8 @@ html::-webkit-scrollbar-thumb:hover,
   --auth-field-border: rgb(186 198 212 / 0.2);
   --auth-control: rgb(13 18 25 / 0.66);
   --auth-control-border: rgb(186 198 212 / 0.2);
-  --auth-cta: #0a7fa9;
-  --auth-cta-top: #19b4dc;
+  --auth-cta: #075c83;
+  --auth-cta-top: #0a7397;
   --auth-cta-ink: #ffffff;
 }
 
@@ -255,7 +255,7 @@ html::-webkit-scrollbar-thumb:hover,
   --input: #c5c6c9;
   --ring: #525866;
   --surface-2: #f9fafa;
-  --success: #147a52;
+  --success: #106642;
   --warning: #a4660b;
   --destructive: #ba1a1a;
   --live: #10b981;
@@ -283,7 +283,7 @@ html::-webkit-scrollbar-thumb:hover,
   --surface-2: #111214;
   --success: #10b981;
   --warning: #f59e0b;
-  --destructive: #ef4444;
+  --destructive: #ff6b72;
   --live: #10b981;
 }
 :is(.app-shell, .workspace-preview) h1, :is(.app-shell, .workspace-preview) .font-heading {
@@ -660,25 +660,24 @@ html:is(.theme-reveal, .theme-close-in) .auth-slogan::after {
 }
 
 /*
- * Animations default to on; an explicit off stops them everywhere. The media-query block is a fallback
- * for documents without the application's explicit data-motion attribute.
+ * Both the device reduced-motion preference and an explicit off stop animations.
  */
 @media (prefers-reduced-motion: reduce) {
-  html:not([data-motion="on"]) *,
-  html:not([data-motion="on"]) ::before,
-  html:not([data-motion="on"]) ::after {
+  html *,
+  html ::before,
+  html ::after {
     animation-duration: 0.01ms !important;
     animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
   /* Ambient loops simply stay at rest. */
-  html:not([data-motion="on"]) .auth-slogan::after,
-  html:not([data-motion="on"]) .auth-neon-band {
+  html .auth-slogan::after,
+  html .auth-neon-band {
     animation: none !important;
   }
   /* Resting electrons would be two frozen arcs; leave the logo plain. */
-  html:not([data-motion="on"]) .logo-current {
+  html .logo-current {
     display: none;
   }
 }
@@ -713,3 +712,9 @@ body {
     overflow: hidden;
   }
 }
+
+/* A resting sheen is decorative and must not cover the readable heading. */
+@media (prefers-reduced-motion: reduce) {
+  .auth-slogan::after { display: none; }
+}
+html[data-motion="off"] .auth-slogan::after { display: none; }

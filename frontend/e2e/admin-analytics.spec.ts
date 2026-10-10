@@ -22,7 +22,7 @@ async function newAdmin(browser: Browser, options: { timezoneId?: string; locale
 
 /** The six overview cards in order: visits, sessions, engagement, registrations, active accounts, contact requests. */
 async function overview(page: Page) {
-  const values = page.locator('[data-testid="overview"] dd');
+  const values = page.locator('[data-testid="overview"] [data-stat-value]');
   await expect(values).toHaveCount(6);
   return (await values.allTextContents()).map((text) => text.trim());
 }

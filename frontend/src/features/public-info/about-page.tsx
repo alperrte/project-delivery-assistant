@@ -25,9 +25,9 @@ export async function AboutPage() {
     <article>
       <Breadcrumb label={app("breadcrumb")} items={[{ label: landing("homeTitle"), href: "/" }, { label: t("title") }]} className="mb-6" />
       <PageJsonLd route="/about" type="AboutPage" name={t("title")} description={t("description")} />
-      <header className="max-w-3xl">
+      <header>
         <p className="text-sm font-medium text-muted-foreground">PDA · Project Delivery Assistant</p>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">{t("title")}</h1>
+        <h1 className="mt-3 text-3xl font-semibold tracking-tight [overflow-wrap:anywhere] sm:text-4xl">{t("title")}</h1>
         <p className="mt-6 text-xl leading-8">{t("lead")}</p>
       </header>
 

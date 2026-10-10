@@ -103,3 +103,24 @@ test.describe("İlk hataya yönlendirme: herkese açık formlar", () => {
     await expect(page.getByLabel(tr.contact.form.message, { exact: false })).toBeFocused();
   });
 });
+
+test("verification allows the full server lifetime and resending restores field focus", async ({ page }) => {
+  await page.clock.install();
+  await page.goto(buildPath("/forgot-password", {}, "tr"));
+  await stubCodeRequest(page, new URL(page.url()).origin);
+  await page.getByLabel(tr.forgotPassword.email, { exact: true }).fill("timing@example.test");
+  await page.getByRole("button", { name: tr.forgotPassword.sendCode, exact: true }).click();
+  const code = page.getByLabel(tr.codeEntry.label, { exact: true });
+  await expect(page.getByRole("timer")).toContainText("15:00");
+  await code.fill("123456");
+  await page.clock.fastForward("03:01");
+  await expect(code).toBeEnabled();
+  await expect(code).toHaveValue("123456");
+  await page.clock.fastForward("12:00");
+  await expect(code).toBeDisabled();
+  await page.getByRole("button", { name: tr.codeEntry.resend, exact: true }).click();
+  await expect(code).toBeEnabled();
+  await expect(code).toBeFocused();
+  await expect(code).toHaveValue("");
+  await expect(page.getByRole("timer")).toContainText("15:00");
+});

@@ -130,13 +130,15 @@ for (const width of [320, 390, 768, 1024, 1440]) {
         expect(box.x + box.width).toBeLessThanOrEqual(width);
       }
     }
-    // Tab order: the four fields, then Send.
+    // Tab order follows the visible form: fields, privacy notice link, then Send.
     await page.goto("/contact");
     await page.getByLabel("Ad", { exact: true }).focus();
     for (const label of ["Soyad", "E-posta", "Mesaj"]) {
       await page.keyboard.press("Tab");
       await expect(page.getByLabel(label, { exact: true })).toBeFocused();
     }
+    await page.keyboard.press("Tab");
+    await expect(page.locator("form").getByRole("link")).toBeFocused();
     await page.keyboard.press("Tab");
     await expect(page.getByRole("button", { name: "Gönder" })).toBeFocused();
   });

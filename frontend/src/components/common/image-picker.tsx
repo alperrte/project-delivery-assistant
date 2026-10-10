@@ -41,13 +41,13 @@ export function ImagePicker({ name = "", src, onChange, maximum, labels, cover =
       </span>
       <div className="min-w-0 flex-1 space-y-2">
         <div className="flex flex-wrap items-center gap-2">
-          <Button type="button" variant={tile ? "ghost" : "outline"} className={cn(tile && "h-auto whitespace-normal px-0 py-0 text-left hover:bg-transparent", decodeError && "min-h-11 sm:min-h-8")} size="sm" disabled={disabled} onClick={() => input.current?.click()}>{!tile && <UploadSimple size={14} aria-hidden="true" />}{src ? labels.change : labels.choose}</Button>
-          {src && (removeControl ?? <Button type="button" variant="ghost" size="sm" className={decodeError ? "min-h-11 sm:min-h-8" : undefined} disabled={disabled} onClick={() => { generation.current++; setChecking(false); setError(null); onChange(null); }}>{labels.remove}</Button>)}
+          <Button type="button" variant={tile ? "ghost" : "outline"} className={cn(tile && "h-auto whitespace-normal px-0 py-0 text-left hover:bg-transparent", "min-h-11 sm:min-h-8")} size="sm" disabled={disabled} aria-describedby={`${id}-hint${error ? ` ${id}-error` : ""}`} onClick={() => input.current?.click()}>{!tile && <UploadSimple size={14} aria-hidden="true" />}{src ? labels.change : labels.choose}</Button>
+          {src && (removeControl ?? <Button type="button" variant="ghost" size="sm" className="min-h-11 sm:min-h-8" disabled={disabled} onClick={() => { generation.current++; setChecking(false); setError(null); onChange(null); }}>{labels.remove}</Button>)}
         </div>
         <p id={`${id}-hint`} className={cn("text-muted-foreground",tile ? "text-xs leading-5" : "text-sm")}>{labels.hint}</p>
         {labels.detail && <p className="text-xs leading-5 text-muted-foreground">{labels.detail}</p>}
       </div>
-      <input ref={input} id={id} type="file" accept={IMAGE_TYPES.join(",")} className="sr-only" disabled={disabled} aria-busy={checking} aria-invalid={!!error} aria-describedby={`${id}-hint${error ? ` ${id}-error` : ""}`}
+      <input ref={input} id={id} type="file" accept={IMAGE_TYPES.join(",")} className="sr-only" tabIndex={-1} disabled={disabled} aria-busy={checking} aria-invalid={!!error} aria-describedby={`${id}-hint${error ? ` ${id}-error` : ""}`}
         onChange={(event) => { accept(event.target.files?.[0]); event.target.value = ""; }} />
     </div>
     {error && <p id={`${id}-error`} role="alert" className="text-sm text-destructive">{error}</p>}

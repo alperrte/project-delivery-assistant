@@ -1551,7 +1551,7 @@
       "description": "Bu tercihler hesabınıza kaydedilir ve her girişinizde uygulanır.",
       "ui": {
         "label": "Arayüz animasyonları",
-        "hint": "Animasyonlar varsayılan olarak açıktır. Açılır pencereler, menüler, kenar çubuğu ve dil geçişi animasyonlarını buradan kapatabilirsiniz.",
+        "hint": "Animasyonlar varsayılan olarak açıktır. Cihazınızın hareket azaltma tercihi her zaman dikkate alınır. Açılır pencereler, menüler, kenar çubuğu ve dil geçişi animasyonlarını buradan kapatabilirsiniz.",
         "on": "Açık",
         "off": "Kapalı"
       },
@@ -1605,6 +1605,7 @@
   },
   "workspace": {
     "navigation": "Gezinme menüsü",
+    "showNavigation": "Gezinme çubuğunu göster",
     "offline": "Çevrimdışısınız. Bağlantı gelince bilgiler kendiliğinden yenilenir.",
     "search": "Ara",
     "searchPlaceholder": "Sayfa, proje veya organizasyon ara…",
@@ -2676,7 +2677,7 @@
             },
             {
               "question": "PDA'yı kendi bilgisayarımda veya sunucumda çalıştırabilir miyim?",
-              "answer": "Evet, PDA açık kaynaktır ve kendi altyapınızda çalıştırabilirsiniz. Backend ve veritabanı Docker ile, arayüz ise Node.js ile ayağa kalkar. Adımlar GitHub deposundaki README dosyasında anlatılıyor. Kendi kurulumunuzda verilerin saklanması ve yedeklenmesi sizin sorumluluğunuzdadır."
+              "answer": "Evet, PDA açık kaynaktır ve kendi altyapınızda çalıştırabilirsiniz. Backend ve veritabanı Docker ile, arayüz ise Next.js ile ayağa kalkar. Adımlar GitHub deposundaki README dosyasında anlatılıyor. Kendi kurulumunuzda verilerin saklanması ve yedeklenmesi sizin sorumluluğunuzdadır."
             },
             {
               "question": "PDA hangi lisansla yayınlanıyor?",
@@ -2748,7 +2749,7 @@
             },
             {
               "question": "Verilerimi incelemek veya silinmesini istemek için ne yapabilirim?",
-              "answer": "KVKK ve Gizlilik Politikası sayfalarında veri işleme bilgilerini okuyabilirsiniz. Hesap veya veri talebinizi iletişim e-postasına iletin. Mevcut hesap ekranında otomatik hesap silme düğmesi bulunmaz; talebin kapsamı ve kimlik doğrulaması ayrıca değerlendirilir."
+              "answer": "KVKK ve Gizlilik Politikası sayfalarında veri işleme bilgilerini okuyabilirsiniz. Hesap ayarlarından hesap silme işlemini başlatıp e-postanıza gönderilen bağlantı üzerinden gerekli doğrulamaları tamamlayabilirsiniz. Diğer hesap veya veri taleplerinizi iletişim e-postasına iletebilirsiniz; talebin kapsamı ve kimlik doğrulaması ayrıca değerlendirilir."
             }
           ]
         },
@@ -2835,7 +2836,7 @@
           "title": "Saklama ve veri talepleri",
           "paragraphs": [
             "Aktif hesap ve proje kayıtları hizmetin işlevleri için veritabanında tutulur. Oturum geçerlilik süresinin bitmesi tüm geçmiş kayıtların otomatik silindiği anlamına gelmez.",
-            "Kategori bazında saklama, yedekleme ve silme takvimi yayın öncesinde belirlenecektir. Mevcut sürümde otomatik hesap silme ekranı bulunmaz. Erişim, düzeltme veya silme talebinizi iletişim adresine iletebilirsiniz; talep, hesabın size ait olduğu doğrulanarak ve diğer kişilerin hakları dikkate alınarak değerlendirilmelidir."
+            "Kategori bazında saklama, yedekleme ve silme takvimi yayın öncesinde belirlenecektir. Hesap ayarlarından hesap silme işlemini başlatıp e-postanıza gönderilen bağlantı üzerinden gerekli doğrulamaları tamamlayabilirsiniz. Diğer erişim, düzeltme veya silme taleplerinizi iletişim adresine iletebilirsiniz; talepler, hesabın size ait olduğu doğrulanarak ve diğer kişilerin hakları dikkate alınarak değerlendirilmelidir."
           ]
         },
         {
@@ -2931,8 +2932,8 @@
           "id": "approach",
           "title": "Yaklaşımımız",
           "paragraphs": [
-            "PDA'nın farklı ekran boyutlarında ve farklı kullanım ihtiyaçlarında erişilebilir olmasını hedefliyoruz. Erişilebilirlik, ürün geliştikçe yeniden kontrol edilmesi gereken bir süreçtir.",
-            "Uygulama için bağımsız, kapsamlı bir WCAG uygunluk değerlendirmesi henüz yapılmamıştır. Bu sayfa sertifika veya bütün ekranların kusursuz çalıştığına dair bir beyan değildir."
+            "PDA'yı farklı ekran boyutları ve kullanım ihtiyaçları için erişilebilir olacak şekilde geliştiriyoruz. Klavye kullanımı, form etiketleri, odak görünürlüğü, yakınlaştırma ve hareket azaltma davranışları için erişilebilirlik kontrolleri yapıldı.",
+            "Ürün geliştikçe erişilebilirliği iyileştirmeye devam ediyoruz. Kullanım sırasında ek bir sorun veya erişim engeliyle karşılaşırsanız İletişim sayfasındaki form üzerinden bize ulaşabilirsiniz."
           ]
         },
         {
@@ -2955,16 +2956,16 @@
           "id": "screen-readers",
           "title": "Anlamlı içerik ve yardımcı teknolojiler",
           "paragraphs": [
-            "Bilgi sayfalarında başlıklar, ana içerik ve gezinme alanları anlamlı HTML öğeleriyle düzenlenir. Footer'daki GitHub bağlantıları kişi adını içeren erişilebilir ad taşır; dekoratif simgeler ekran okuyuculardan gizlenir.",
-            "Uygulamadaki diğer ekranların ekran okuyucu ve farklı tarayıcı kombinasyonlarında doğrulanması devam eden bir ihtiyaçtır. Karşılaştığınız engelleri bildirmeniz iyileştirmelere yardımcı olur."
+            "Başlıklar, ana içerik ve gezinme alanları anlamlı HTML öğeleriyle düzenlenir. Form alanlarında etiketler, düğmelerde erişilebilir adlar ve hata mesajlarında metin açıklamaları kullanılır. Dekoratif simgeler ekran okuyuculardan gizlenir.",
+            "Yardımcı teknoloji kullanırken okumakta veya bir işlemi tamamlamakta zorlandığınız bir alan olursa bize bildirin. Geri bildirimlerinizi erişilebilirlik iyileştirmelerinde değerlendiriyoruz."
           ]
         },
         {
           "id": "feedback",
           "title": "Bir engel bildirin",
           "paragraphs": [
-            "Bir sayfayı veya işlemi kullanamıyorsanız İletişim sayfasındaki formla bize yazın. Sayfa adresini, yapmak istediğiniz işlemi, tarayıcı/cihazınızı ve varsa kullandığınız yardımcı teknolojiyi belirtin.",
-            "Ekran görüntüsü paylaşıyorsanız kişisel verileri ve gizli bilgileri kapatın. Bildirimde bulunmak için tıbbi durumunuzu açıklamanız gerekmez."
+            "Erişilebilirlikle ilgili bir sorun, hata veya öneriniz varsa İletişim sayfasındaki form üzerinden bizimle iletişime geçin. Sayfa adresini, yapmak istediğiniz işlemi, karşılaştığınız sorunu, tarayıcı/cihazınızı ve varsa kullandığınız yardımcı teknolojiyi belirtin.",
+            "Şifrenizi, doğrulama kodunuzu veya diğer gizli bilgilerinizi paylaşmayın. Bildirimde bulunmak için tıbbi durumunuzu açıklamanız gerekmez."
           ]
         }
       ]
