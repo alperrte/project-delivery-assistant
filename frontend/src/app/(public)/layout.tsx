@@ -25,12 +25,13 @@ export default async function PublicLayout({ children }: { children: ReactNode }
             <LocaleSwitcher />
             <ThemeToggle />
             <Link href="/about" className={navLink}>{footer("about")}</Link>
+            <Link href="/contact" className={navLink}>{footer("contact")}</Link>
             <Link href="/login" className={navLink}>{landing("login")}</Link>
             <Link href="/register" className={cn(buttonVariants(), "auth-cta min-h-11 gap-2 rounded-full px-4 text-sm font-semibold hover:brightness-110")}>{landing("register")}<ArrowUpRight size={15} aria-hidden="true" className="max-sm:hidden" /></Link>
           </nav>
         </div>
       </header>
-      <main id="public-main" tabIndex={-1} className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-8 sm:py-16">{children}</main>
+      <main id="public-main" tabIndex={-1} className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 has-[>[data-contact-page]]:flex has-[>[data-contact-page]]:items-center sm:px-8 sm:py-16">{children}</main>
       <SiteFooter />
     </div>
   );

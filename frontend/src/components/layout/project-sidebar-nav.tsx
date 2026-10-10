@@ -270,6 +270,7 @@ export function ProjectSidebarNav({
       )}
 
       <div
+        role="group"
         className="ml-2 space-y-0.5 border-l border-border pl-2"
         aria-label={t("navigation")}
       >

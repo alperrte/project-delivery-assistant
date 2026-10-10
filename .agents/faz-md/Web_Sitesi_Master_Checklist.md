@@ -76,57 +76,57 @@
 
 ### Görme engelli ve az gören kullanıcılar
 
-- [ ] Ekran okuyucu desteği
-- [ ] Semantik HTML
-- [ ] Alternatif görsel metni (alt text)
-- [ ] Erişilebilir buton isimleri
-- [ ] Başlık hiyerarşisi
-- [ ] ARIA ve canlı mesajlar
-- [ ] Tablo ve grafik açıklamaları
-- [ ] Form etiketleri
-- [ ] Metin yakınlaştırma ve reflow
-- [ ] Renk kontrastı
-- [ ] Bilgi yalnız renkle verilmez
+- [ ] Ekran okuyucu desteği — Otomatik ARIA kontrolleri geçti; gerçek NVDA sesli okuması doğrulanmadı.
+- [X] Semantik HTML
+- [X] Alternatif görsel metni (alt text)
+- [X] Erişilebilir buton isimleri
+- [X] Başlık hiyerarşisi
+- [X] ARIA ve canlı mesajlar
+- [X] Tablo ve grafik açıklamaları
+- [X] Form etiketleri
+- [X] Metin yakınlaştırma ve reflow
+- [ ] Renk kontrastı — Bulunan sorunlar düzeltildi; otomatik aracın değerlendiremediği tüm arka plan ve SVG öğeleri henüz doğrulanmadı.
+- [X] Bilgi yalnız renkle verilmez
 
 ### İşitme engelli ve az işiten kullanıcılar
 
-- [ ] Video altyazıları
-- [ ] Ses kayıtlarının dökümü
-- [ ] Canlı yayın altyazısı
-- [ ] Sesli bildirim için görsel karşılık
-- [ ] Erişilebilir medya oynatıcı
-- [ ] İşaret dili seçeneği
+- [N/A] Video altyazıları — Sitede gömülü video bulunmuyor.
+- [N/A] Ses kayıtlarının dökümü — Sitede ses kaydı bulunmuyor.
+- [N/A] Canlı yayın altyazısı — Canlı yayın bulunmuyor.
+- [X] Sesli bildirim için görsel karşılık — Mevcut bildirimler görsel ve metin olarak sunuluyor.
+- [N/A] Erişilebilir medya oynatıcı — Gömülü medya oynatıcı bulunmuyor.
+- [N/A] İşaret dili seçeneği — İşaret dili alternatifi gerektiren video veya canlı yayın bulunmuyor.
 
 ### Motor engeller, klavye ve dokunma
 
-- [ ] Tam klavye kullanılabilirliği
-- [ ] Mantıklı sekme sırası
-- [ ] Görünür odak (focus)
-- [ ] İçeriğe atla bağlantısı
-- [ ] Modal / dialog odak yönetimi
-- [ ] Klavye tuzağını önleme
-- [ ] Sürükle-bırak alternatifi
-- [ ] Yeterli tıklama hedefi
-- [ ] Hover alternatifi
-- [ ] Zaman sınırı kontrolü
+- [ ] Tam klavye kullanılabilirliği — Test edilen form, menü ve pano akışları geçti; tüm oturumlu iş akışları uçtan uca doğrulanmadı.
+- [X] Mantıklı sekme sırası
+- [X] Görünür odak (focus)
+- [X] İçeriğe atla bağlantısı
+- [X] Modal / dialog odak yönetimi
+- [X] Klavye tuzağını önleme
+- [X] Sürükle-bırak alternatifi
+- [ ] Yeterli tıklama hedefi — Tespit edilen küçük hedefler düzeltildi; bütün etkileşimli öğelerin boyutları taranmadı.
+- [ ] Hover alternatifi — Test edilen menüler klavyeyle kullanılabiliyor; tüm hover içerikleri doğrulanmadı.
+- [ ] Zaman sınırı kontrolü — Kod süresi ve yeniden gönderme geçti; oturum süresi ve diğer zaman sınırlı akışlar doğrulanmadı.
 
 ### Bilişsel erişilebilirlik ve hareket hassasiyeti
 
-- [ ] Tutarlı menü ve etiketler
-- [ ] Anlaşılır mikro metin
-- [ ] Düzeltilebilir hata mesajları
-- [ ] Form verilerini koruma
-- [ ] Hareket azaltma desteği
-- [ ] Yanıp sönme riskinden kaçınma
-- [ ] Otomatik hareketi durdurma
-- [ ] Erişilebilir doğrulama
+- [X] Tutarlı menü ve etiketler
+- [X] Anlaşılır mikro metin
+- [X] Düzeltilebilir hata mesajları
+- [X] Form verilerini koruma
+- [X] Hareket azaltma desteği
+- [X] Yanıp sönme riskinden kaçınma
+- [ ] Otomatik hareketi durdurma — Kullanıcının isteğiyle footer kontrolü kaldırıldı; cihazın hareket azaltma tercihi ve hesap ayarlarındaki animasyon tercihi mevcut.
+- [X] Erişilebilir doğrulama
 
 ### Video ve çoklu ortam
 
-- [ ] Sesli betimleme
-- [ ] Medya alternatifleri
-- [ ] Otomatik ses kontrolü
-- [ ] Manuel erişilebilirlik testleri
+- [N/A] Sesli betimleme — Gömülü video bulunmuyor.
+- [N/A] Medya alternatifleri — Gömülü ses veya video bulunmuyor.
+- [N/A] Otomatik ses kontrolü — Otomatik ses çalma bulunmuyor.
+- [ ] Manuel erişilebilirlik testleri — Tarayıcıda klavye, odak ve yakınlaştırma kontrolleri yapıldı; gerçek ekran okuyucu testi eksik.
 
 ## 4. SEO, GEO, URL ve sosyal paylaşım
 

@@ -1,4 +1,6 @@
+
 {
+  "enableWorkflows": true,
   "permissions": {
     "deny": [
       "Read(./assets/**)",

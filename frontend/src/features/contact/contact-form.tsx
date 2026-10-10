@@ -4,7 +4,6 @@ import { useEffect, useId, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CheckCircle } from "@phosphor-icons/react";
 import Link from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -73,9 +72,8 @@ export function ContactForm() {
   if (sent) {
     return (
       <div role="status" className="rounded-2xl border border-border bg-card p-6 sm:p-8">
-        <CheckCircle size={32} weight="duotone" aria-hidden="true" className="text-success" />
-        <h2 ref={successHeading} tabIndex={-1} className="mt-3 text-xl font-semibold outline-none">{t("success.title")}</h2>
-        <p className="mt-2 max-w-prose text-sm leading-6 text-muted-foreground">{t("success.text")}</p>
+        <h2 ref={successHeading} tabIndex={-1} className="text-xl font-semibold outline-none">{t("success.title")}</h2>
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">{t("success.text")}</p>
         <Button type="button" variant="outline" className="mt-5 min-h-11" onClick={() => setSent(false)}>{t("success.again")}</Button>
       </div>
     );
@@ -134,15 +132,17 @@ export function ContactForm() {
 
         {formError && <p role="alert" className="text-sm text-destructive">{formError}</p>}
 
-        <SubmitButton pending={isSubmitting} className="min-h-11 w-full sm:w-auto sm:min-w-40">
-          {isSubmitting ? t("form.submitting") : t("form.submit")}
-        </SubmitButton>
       </fieldset>
       <p className="text-sm leading-6 text-muted-foreground">
         <span className="font-medium text-foreground">{t("notice.title")}: </span>
         {t("notice.text")}{" "}
         <Link href="/privacy" className="rounded-sm underline underline-offset-4 outline-none focus-visible:ring-3 focus-visible:ring-ring/50">{t("notice.privacy")}</Link>
       </p>
+      <div className="flex justify-end">
+        <SubmitButton pending={isSubmitting} className="min-h-11 w-auto min-w-40">
+          {isSubmitting ? t("form.submitting") : t("form.submit")}
+        </SubmitButton>
+      </div>
     </form>
   );
 }

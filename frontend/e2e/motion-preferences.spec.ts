@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test.use({ storageState: { cookies: [], origins: [] } });
 
 for (const legacy of [false, true]) {
-  test(`${legacy ? "legacy device-follow preference" : "a fresh browser"} enables animations independently of the device`, async ({ page }) => {
+  test(`${legacy ? "legacy device-follow preference" : "a fresh browser"} respects the device reduced-motion preference`, async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 960 });
     await page.emulateMedia({ reducedMotion: "reduce" });
     if (legacy) await page.addInitScript(() => {
@@ -11,6 +11,9 @@ for (const legacy of [false, true]) {
     });
     await page.goto("/tr");
     await expect(page.locator("html")).toHaveAttribute("data-motion", "on");
+    await expect(page.locator("#product")).not.toHaveAttribute("data-choreographed", "true");
+    await expect(page.locator("#open-source")).not.toHaveAttribute("data-choreographed", "true");
+    await page.emulateMedia({ reducedMotion: "no-preference" });
     await expect(page.locator("#product")).toHaveAttribute("data-choreographed", "true");
     await expect(page.locator("#open-source")).toHaveAttribute("data-choreographed", "true");
     await page.evaluate(() => {
@@ -85,7 +88,7 @@ for (const savedMotion of [undefined, null, "system", "off"]) {
       });
       await page.mouse.move(700, 8);
       await page.getByRole("button", { name: "Koyu", exact: true }).click();
-      await expect.poll(() => page.evaluate(() => (window as typeof window & { __defaultThemeAnimated: boolean }).__defaultThemeAnimated)).toBe(true);
+      await expect.poll(() => page.evaluate(() => (window as typeof window & { __defaultThemeAnimated: boolean }).__defaultThemeAnimated)).toBe(false);
       await expect(page.locator("html")).not.toHaveClass(/theme-close-in/);
     }
     const next = savedMotion === "off" ? "Açık" : "Kapalı";
@@ -100,3 +103,4 @@ for (const savedMotion of [undefined, null, "system", "off"]) {
     await expect(page.locator("html")).toHaveAttribute("data-motion", String(preferences.motion));
   });
 }
+
