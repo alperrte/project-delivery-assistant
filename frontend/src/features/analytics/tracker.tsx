@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
+import { ADMIN_ENTRY_PATH } from "@/i18n/routing";
 import { purgeAnalyticsStorage } from "@/features/consent/contract";
 import { useConsent } from "@/features/consent/consent-store";
 import { forgetIdentity } from "./identifiers";
@@ -84,8 +85,10 @@ function startEngagement(currentRoute: () => string) {
  */
 export function AnalyticsTracker() {
   const consent = useConsent();
-  const route = routeTemplate(usePathname() ?? "/");
-  const allowed = consent.ready && consent.analytics;
+  const pathname = usePathname() ?? "/";
+  const route = routeTemplate(pathname);
+  // The administrator sign-in is not a measured page (it would only show up as an unknown address).
+  const allowed = consent.ready && consent.analytics && pathname !== ADMIN_ENTRY_PATH;
   const routeRef = useRef(route);
 
   useEffect(() => {

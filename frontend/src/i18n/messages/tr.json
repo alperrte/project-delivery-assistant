@@ -156,7 +156,9 @@
     "deletionLinkExpired": "Silme bağlantısının süresi doldu. Hesap ayarlarından yenisini isteyin.",
     "deletionCredentialsInvalid": "E-posta veya şifre hatalı.",
     "ownsResources": "Önce sahibi olduğunuz proje ve organizasyonları devredin ya da silin.",
-    "administratorCannotDelete": "Yönetici hesapları buradan silinemez."
+    "administratorCannotDelete": "Yönetici hesapları buradan silinemez.",
+    "adminReauthenticationRequired": "Yönetim alanı için yönetici girişi gerekir. Lütfen yönetici girişinden yeniden oturum açın.",
+    "adminTwoFactorRequired": "Yönetici hesaplarında iki adımlı doğrulama zorunludur ve kapatılamaz."
   },
   "app": {
     "nav": {
@@ -1288,6 +1290,63 @@
     "useBackupCode": "Yedek kod kullan",
     "useAppCode": "Authenticator kodunu kullan",
     "twoFactorBack": "Girişe dön"
+  },
+  "adminLogin": {
+    "metaTitle": "Yönetici girişi",
+    "metaDescription": "PDA yönetim alanı için ayrı yönetici girişi.",
+    "eyebrow": "Yönetici alanı",
+    "title": "PDA Yönetici Girişi",
+    "subtitle": "Bu alan yalnızca yöneticiler içindir. Devam etmek için e-posta, şifre ve Authenticator kodunuz gerekir.",
+    "email": "E-posta",
+    "password": "Şifre",
+    "emailPlaceholder": "yonetici@ornek.com",
+    "passwordPlaceholder": "Şifrenizi girin",
+    "submit": "Devam et",
+    "submitting": "Kontrol ediliyor...",
+    "checking": "Oturum denetleniyor",
+    "notices": {
+      "sessionExpired": "Yönetici oturumunuz sona erdi. Devam etmek için yeniden giriş yapın.",
+      "reauthenticate": "Yönetim alanı için yönetici girişi gerekir. Lütfen buradan yeniden giriş yapın.",
+      "ticketExpired": "Doğrulama süresi doldu. Lütfen e-posta ve şifrenizle yeniden başlayın."
+    },
+    "totp": {
+      "title": "İki adımlı doğrulama",
+      "subtitle": "Authenticator uygulamanızdaki 6 haneli kodu girin.",
+      "backupSubtitle": "Yedek kodlarınızdan birini girin. Her kod yalnızca bir kez kullanılabilir.",
+      "code": "Doğrulama kodu",
+      "backupCode": "Yedek kod",
+      "backupPlaceholder": "xxxxx-xxxxx",
+      "submit": "Doğrula ve giriş yap",
+      "submitting": "Doğrulanıyor...",
+      "useBackup": "Yedek kod kullan",
+      "useApp": "Authenticator kodunu kullan",
+      "back": "E-posta ve şifreye dön"
+    },
+    "enroll": {
+      "title": "Authenticator'ı bağlayın",
+      "subtitle": "Yönetici hesapları için iki adımlı doğrulama zorunludur. Bu kurulum yalnızca ilk girişte yapılır.",
+      "step1": "Telefonunuzda Google Authenticator veya başka bir TOTP uygulaması açın.",
+      "step2": "Uygulamada yeni hesap ekleyin ve aşağıdaki QR kodu okutun.",
+      "qrLabel": "Authenticator kurulumu için QR kod",
+      "manualKey": "QR kodu okutamıyorsanız bu anahtarı uygulamaya elle girin (zaman tabanlı anahtar):",
+      "copy": "Anahtarı kopyala",
+      "copied": "Kopyalandı",
+      "copyFailed": "Kopyalanamadı. Anahtarı elle girin.",
+      "step3": "Uygulamanın gösterdiği 6 haneli kodu girin.",
+      "code": "Doğrulama kodu",
+      "submit": "Doğrula ve etkinleştir",
+      "submitting": "Doğrulanıyor...",
+      "back": "E-posta ve şifreye dön"
+    },
+    "codes": {
+      "title": "Yedek kodlarınızı kaydedin",
+      "warning": "Telefonunuza erişemezseniz bu kodlarla giriş yapabilirsiniz. Her kod yalnızca bir kez çalışır ve bir daha gösterilmez; bu sayfadan ayrılmadan önce güvenli bir yere kaydedin.",
+      "listLabel": "Yedek kodlar",
+      "copy": "Kodları kopyala",
+      "copied": "Kopyalandı",
+      "copyFailed": "Kopyalanamadı. Kodları elle not edin.",
+      "saved": "Kaydettim, panele git"
+    }
   },
   "register": {
     "metaDescription": "PDA'da hesap oluşturun; projenizi kurun, ekibinizi davet edin ve işi birlikte teslim edin.",
@@ -3505,6 +3564,7 @@
       "on": "Açık",
       "off": "Kapalı",
       "unavailable": "İki adımlı doğrulama bu sunucuda henüz yapılandırılmamış.",
+      "adminRequired": "Yönetici hesaplarında iki adımlı doğrulama zorunludur ve kapatılamaz.",
       "enable": "İki adımlı doğrulamayı aç",
       "preparing": "Hazırlanıyor...",
       "scanTitle": "1. QR kodu okutun",

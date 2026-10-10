@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { defaultLocale, isLocale, LOCALE_COOKIE, type Locale } from "./i18n/config";
-import { buildPath, matchPath, normalizeProjectSection } from "./i18n/routing";
+import { ADMIN_ENTRY_PATH, buildPath, matchPath, normalizeProjectSection } from "./i18n/routing";
 
 /**
  * Edge-level defense-in-depth for route access. This never replaces backend
@@ -26,6 +26,14 @@ const PROTECTED_PATHS = ["/dashboard", "/projects", "/organizations", "/settings
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  // The administrator sign-in is one unprefixed address with no locale rewrite and no session hint check: it must be
+  // reachable while signed out, and an admin with an unverified session still has to see it. Passing it through is
+  // deliberate (not just "no route matched"); the page sets noindex itself and the header repeats it.
+  if (pathname.replace(/\/+$/, "") === ADMIN_ENTRY_PATH) {
+    const response = NextResponse.next();
+    response.headers.set("X-Robots-Tag", "noindex, nofollow");
+    return response;
+  }
   const stored = request.cookies.get(LOCALE_COOKIE)?.value;
   const preferred: Locale = isLocale(stored) ? stored : defaultLocale;
   const page = matchPath(pathname, preferred);

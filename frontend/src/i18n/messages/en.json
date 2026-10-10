@@ -156,7 +156,9 @@
     "deletionLinkExpired": "The deletion link has expired. Request a new one from your account settings.",
     "deletionCredentialsInvalid": "Email or password is incorrect.",
     "ownsResources": "Hand over or delete the projects and organizations you own first.",
-    "administratorCannotDelete": "Administrator accounts cannot be deleted here."
+    "administratorCannotDelete": "Administrator accounts cannot be deleted here.",
+    "adminReauthenticationRequired": "The administration area needs the separate administrator sign-in. Please sign in again there.",
+    "adminTwoFactorRequired": "Two-step verification is mandatory for administrator accounts and cannot be turned off."
   },
   "app": {
     "nav": {
@@ -1264,6 +1266,63 @@
     "useBackupCode": "Use a backup code",
     "useAppCode": "Use the authenticator code",
     "twoFactorBack": "Back to sign in"
+  },
+  "adminLogin": {
+    "metaTitle": "Administrator sign-in",
+    "metaDescription": "The separate administrator sign-in for the PDA administration area.",
+    "eyebrow": "Administrator area",
+    "title": "PDA Administrator Sign-in",
+    "subtitle": "This area is for administrators only. You need your email, password and authenticator code to continue.",
+    "email": "Email",
+    "password": "Password",
+    "emailPlaceholder": "admin@example.com",
+    "passwordPlaceholder": "Enter your password",
+    "submit": "Continue",
+    "submitting": "Checking...",
+    "checking": "Checking the session",
+    "notices": {
+      "sessionExpired": "Your administrator session has ended. Sign in again to continue.",
+      "reauthenticate": "The administration area needs the administrator sign-in. Please sign in again here.",
+      "ticketExpired": "The verification timed out. Please start again with your email and password."
+    },
+    "totp": {
+      "title": "Two-step verification",
+      "subtitle": "Enter the 6-digit code from your authenticator app.",
+      "backupSubtitle": "Enter one of your backup codes. Each code works only once.",
+      "code": "Verification code",
+      "backupCode": "Backup code",
+      "backupPlaceholder": "xxxxx-xxxxx",
+      "submit": "Verify and sign in",
+      "submitting": "Verifying...",
+      "useBackup": "Use a backup code",
+      "useApp": "Use the authenticator code",
+      "back": "Back to email and password"
+    },
+    "enroll": {
+      "title": "Connect your authenticator",
+      "subtitle": "Two-step verification is mandatory for administrator accounts. This setup only happens on the first sign-in.",
+      "step1": "Open Google Authenticator or another TOTP app on your phone.",
+      "step2": "Add a new account in the app and scan the QR code below.",
+      "qrLabel": "QR code for the authenticator setup",
+      "manualKey": "If you cannot scan the QR code, enter this key in the app by hand (time-based key):",
+      "copy": "Copy key",
+      "copied": "Copied",
+      "copyFailed": "Could not copy. Enter the key by hand.",
+      "step3": "Enter the 6-digit code the app shows.",
+      "code": "Verification code",
+      "submit": "Verify and turn on",
+      "submitting": "Verifying...",
+      "back": "Back to email and password"
+    },
+    "codes": {
+      "title": "Save your backup codes",
+      "warning": "If you lose access to your phone you can sign in with these codes. Each code works only once and will not be shown again; save them somewhere safe before leaving this page.",
+      "listLabel": "Backup codes",
+      "copy": "Copy codes",
+      "copied": "Copied",
+      "copyFailed": "Could not copy. Write the codes down.",
+      "saved": "I saved them, open the panel"
+    }
   },
   "register": {
     "metaDescription": "Create a PDA account, set up your project, invite your team and deliver the work together.",
@@ -3481,6 +3540,7 @@
       "on": "On",
       "off": "Off",
       "unavailable": "Two-step verification is not configured on this server yet.",
+      "adminRequired": "Two-step verification is mandatory for administrator accounts and cannot be turned off.",
       "enable": "Turn on two-step verification",
       "preparing": "Preparing...",
       "scanTitle": "1. Scan the QR code",

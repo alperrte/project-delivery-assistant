@@ -2,7 +2,7 @@ import { test, expect, type Browser, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { MEMBER_USER_FILE } from "./global-setup";
 import { psql, promoteToAdmin } from "./db";
-import { api, createProject, login, registerUser, uniqueUser } from "./helpers";
+import { adminSignIn, api, createProject, login, registerUser, uniqueUser } from "./helpers";
 
 // The administration area on the real stack. Termination is the existing DISABLED state: reversible, nothing deleted.
 
@@ -14,9 +14,11 @@ async function newUser(browser: Browser, prefix: string) {
   return { context, page, user };
 }
 
+/** Registered, promoted, then signed in through the separate administrator sign-in (password + authenticator). */
 async function newAdmin(browser: Browser) {
   const made = await newUser(browser, "adm");
   promoteToAdmin(made.user.email);
+  await adminSignIn(made.page, made.user);
   await made.page.goto("/dashboard");
   await expect(made.page.locator("[data-admin-link]")).toBeVisible();
   return made;

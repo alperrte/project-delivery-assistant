@@ -12,8 +12,8 @@ Test politikası (kullanıcı kararı 2026-10-10): Phase 1–2'de yalnız hedefl
 
 - [x] Phase 0 — Global read-only auth/security audit (kod değişikliği yok)
 - [x] Phase 1 — `auth-service-backend`: Task 1, Task 3, Task 4/5 backend uçları, Task 6 backend sertleştirmesi
-- [ ] Transition Gate 1 — kullanıcı commit/push + main'e merge
-- [ ] Phase 2 — `auth-service-frontend`: Task 2, Task 4/5 arayüzü, Task 6 E2E/admin spec taşıması
+- [x] Transition Gate 1 — kullanıcı commit/push + main'e merge (PR #139, `c87d776`)
+- [x] Phase 2 — `auth-service-frontend`: Task 2, Task 4/5 arayüzü, Task 6 E2E/admin spec taşıması
 - [ ] Transition Gate 2 — kullanıcı commit/push + main'e merge
 - [ ] Phase 3 — main üzerinde final verification (Task 7) + completion dokümanı
 
@@ -23,11 +23,11 @@ Gerekçe: proje backend/frontend işlerini servis branch'lerine ayırıyor; auth
 
 - [x] Phase 0 — Global read-only auth/security audit
 - [x] Task 1 — Admin authentication contract
-- [ ] Task 2 — Dedicated `/pd-admin` login experience
+- [x] Task 2 — Dedicated `/pd-admin` login experience
 - [x] Task 3 — ENV bootstrap admin password-change behavior
-- [ ] Task 4 — Google Authenticator compatible TOTP enrollment
-- [ ] Task 5 — Admin login + TOTP verification flow
-- [ ] Task 6 — Security hardening / authorization regression
+- [x] Task 4 — Google Authenticator compatible TOTP enrollment
+- [x] Task 5 — Admin login + TOTP verification flow
+- [x] Task 6 — Security hardening / authorization regression
 - [ ] Task 7 — Full regression / final verification
 
 ---
@@ -148,16 +148,16 @@ Task 1.
 
 ### Checklist
 
-- [ ] 2.1 Rota + sayfa iskeleti + branding.
-- [ ] 2.2 Credentials adımı (Task 1 uçlarına bağlı), generic hata, rate-limit mesajı.
-- [ ] 2.3 Oturum varsa yönlendirme davranışı (A2).
-- [ ] 2.4 Public yüzeylerde link olmadığının testi; normal Login'de admin UI yok (Test 1).
-- [ ] 2.5 Responsive/tema/klavye/odak.
+- [x] 2.1 Rota + sayfa iskeleti + branding.
+- [x] 2.2 Credentials adımı (Task 1 uçlarına bağlı), generic hata, rate-limit mesajı.
+- [x] 2.3 Oturum varsa yönlendirme davranışı (A2).
+- [x] 2.4 Public yüzeylerde link olmadığının testi; normal Login'de admin UI yok (Test 1).
+- [x] 2.5 Responsive/tema/klavye/odak.
 
 ### Definition of Done
 
-- [ ] Anonim `/pd-admin` → admin login görünür; normal kullanıcı oturumu admin yetkisi vermez.
-- [ ] Public UI'da admin login linki yok.
+- [x] Anonim `/pd-admin` → admin login görünür; normal kullanıcı oturumu admin yetkisi vermez.
+- [x] Public UI'da admin login linki yok.
 
 ## Task 3 — ENV bootstrap admin password-change behavior
 
@@ -225,12 +225,12 @@ Task 1, Task 3.
 
 - [x] 4.1 Enrollment ticket + uçlar (mevcut servis üstünde). (backend: `PDA_ADMIN_ENROLL`, `/auth/admin/2fa/setup|enable`)
 - [x] 4.2 Yanlış kodla aktivasyon yok; doğru kodla aktivasyon + oturum + yedek kodlar. (backend testleri)
-- [ ] 4.3 UI adımı.
-- [ ] 4.4 Testler.
+- [x] 4.3 UI adımı.
+- [x] 4.4 Testler.
 
 ### Definition of Done
 
-- [ ] QR → ilk doğru kod → aktivasyon → admin paneli; yanlış kodla 2FA aktif değil; secret sızmıyor.
+- [x] QR → ilk doğru kod → aktivasyon → admin paneli; yanlış kodla 2FA aktif değil; secret sızmıyor.
 
 ## Task 5 — Admin login + TOTP verification flow
 
@@ -261,13 +261,13 @@ Task 4.
 ### Checklist
 
 - [x] 5.1 Challenge uçları + tek kullanımlık ticket. (backend: `PDA_ADMIN_MFA` tek kullanımlık, `admin_auth_tickets`)
-- [ ] 5.2 UI adımı + hata durumları.
-- [ ] 5.3 Logout temizliği (backend + frontend). (backend tamam: ticket cookie'leri temizleniyor; frontend `["auth","2fa"]` Phase 2)
-- [ ] 5.4 Testler.
+- [x] 5.2 UI adımı + hata durumları.
+- [x] 5.3 Logout temizliği (backend + frontend). (backend tamam: ticket cookie'leri temizleniyor; frontend `["auth","2fa"]` Phase 2)
+- [x] 5.4 Testler.
 
 ### Definition of Done
 
-- [ ] Parola + doğru TOTP → admin paneli; yanlış TOTP → oturum yok; logout sonrası korunan durum erişilemez.
+- [x] Parola + doğru TOTP → admin paneli; yanlış TOTP → oturum yok; logout sonrası korunan durum erişilemez.
 
 ## Task 6 — Security hardening / authorization regression
 
@@ -299,16 +299,16 @@ Task 5.
 - [x] 6.1 Rate limit/lockout doğrulaması ve admin kovası. (admin uçları sensitive kova 5/10 dk + TOTP hesap kilidi)
 - [x] 6.2 Key-missing fail-closed davranışı. (503 `two_factor_unavailable`, normal + admin)
 - [x] 6.3 Güvenli audit log satırları.
-- [ ] 6.4 Admin E2E'lerinin yeni akışa taşınması.
-- [ ] 6.4b (Phase 2, önceki çalışmadan devir) `landing-page.spec.ts:203` palet testinin ilk `toBe` kontrolünü otomatik bekleyen `toHaveCSS`'e çevir (0,01 ms geçiş yarışı).
-- [ ] 6.5 Secret sızıntı testleri. (backend tamam: `/me`, `/2fa`, admin liste, log hijyeni; storage/bundle Phase 2)
-- [ ] 6.6 Docs (`SECURITY.md`, `authentication.md`, `api.md`, `frontend-design-rules.md`, `folder-structure.md`) + `docs/compliation/` Phase 1 kaydı.
-- [ ] 6.7 Phase 1 hedefli kontroller (backend: `clean verify` 850/0 tamam; frontend Phase 2): etkilenen backend testleri, lint, `tsc`, admin/auth Playwright.
+- [x] 6.4 Admin E2E'lerinin yeni akışa taşınması.
+- [x] 6.4b (Phase 2, önceki çalışmadan devir) `landing-page.spec.ts:203` palet testinin ilk `toBe` kontrolünü otomatik bekleyen `toHaveCSS`'e çevir (0,01 ms geçiş yarışı).
+- [x] 6.5 Secret sızıntı testleri. (backend tamam: `/me`, `/2fa`, admin liste, log hijyeni; storage/bundle Phase 2)
+- [x] 6.6 Docs (`SECURITY.md`, `authentication.md`, `api.md`, `frontend-design-rules.md`, `folder-structure.md`) + `docs/compliation/` Phase 1 kaydı.
+- [x] 6.7 Phase 1 hedefli kontroller (backend: `clean verify` 850/0 tamam; frontend Phase 2): etkilenen backend testleri, lint, `tsc`, admin/auth Playwright.
 
 ### Definition of Done (Phase 1 branch completion)
 
-- [ ] Global DoD'nin Phase 1–2 kısmı (test 1–12 hedefli) karşılandı.
-- [ ] Commit/push yapılmadı (staging ajan, commit/push kullanıcı).
+- [x] Global DoD'nin Phase 1–2 kısmı (test 1–12 hedefli) karşılandı.
+- [x] Commit/push yapılmadı (staging ajan, commit/push kullanıcı).
 
 STOP (backend kısmı bitince) → `BRANCH COMPLETE — auth-service-backend`; frontend kısmı bitince → `BRANCH COMPLETE — auth-service-frontend`.
 
@@ -316,7 +316,7 @@ Task 2 ve Task 4/5/6'nın frontend/E2E maddeleri Phase 2'de (`auth-service-front
 
 ## Transition Gates
 
-- [ ] Gate 1 — `auth-service-backend` commit/push/merge doğrulandı; `auth-service-frontend` main'den güncellendi.
+- [x] Gate 1 — `auth-service-backend` commit/push/merge doğrulandı (PR #139); `auth-service-frontend` main'den güncellendi (eski worktree kaldırıldı).
 - [ ] Gate 2 — `auth-service-frontend` commit/push/merge doğrulandı; main güncellendi.
 
 ---

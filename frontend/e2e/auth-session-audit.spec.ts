@@ -116,6 +116,12 @@ test.describe("Üyelik, oturum ve yetkilendirme", () => {
     }
     const me = await api(page, "GET", "/auth/me");
     f.check("globalRole USER", (me.json as { globalRole?: string }).globalRole === "USER");
+    f.check("normal oturum yönetici doğrulamalı değil (adminVerified=false)", (me.json as { adminVerified?: boolean }).adminVerified === false);
+    // The separate administrator sign-in is a page, not a door: a regular session still gets the sign-in and 403 from the API.
+    await page.goto("/pd-admin");
+    await page.waitForLoadState("networkidle");
+    f.check("/pd-admin normal oturumda yönetici girişini gösteriyor", (await page.getByRole("heading", { level: 1 }).allInnerTexts()).join("|").includes("Yönetici Girişi"), page.url());
+    f.check("/pd-admin adresi yerinde kalıyor (panele geçmiyor)", new URL(page.url()).pathname === "/pd-admin", page.url());
     // Mass assignment: a role in the profile body must not change anything.
     await api(page, "PUT", "/users/me/profile", { nickname: user.nickname, globalRole: "ADMIN", role: "ADMIN" });
     const after = await api(page, "GET", "/auth/me");

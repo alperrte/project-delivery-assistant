@@ -5,16 +5,18 @@ import { useTranslations } from "next-intl";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { QRCodeSVG } from "qrcode.react";
 import { Copy, ShieldCheck } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { FormField } from "@/components/common/form-field";
 import { SubmitButton } from "@/components/common/submit-button";
+import { AuthenticatorQr } from "./authenticator-qr";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { errorKey } from "@/lib/api/error-message";
 import { authApi } from "@/features/auth/api";
+import { twoFactorStatusKey } from "@/features/auth/query-keys";
+import { useSession } from "@/features/auth/hooks/use-session";
 import {
   disableTwoFactorSchema,
   secondFactorSchema,
@@ -22,7 +24,7 @@ import {
   type SecondFactorValues,
 } from "@/features/auth/schemas";
 
-export const statusKey = ["auth", "2fa"] as const;
+export const statusKey = twoFactorStatusKey;
 
 type View =
   | { name: "status" }
@@ -179,6 +181,9 @@ export function TwoFactorPanel() {
   const te = useTranslations("errors");
   const queryClient = useQueryClient();
   const [view, setView] = useState<View>({ name: "status" });
+  // Administrator accounts must keep two-step verification on (the server refuses to turn it off), so no switch is offered.
+  const { data: me } = useSession();
+  const isAdmin = me?.globalRole === "ADMIN";
 
   const { data: status, isLoading, isError } = useQuery({ queryKey: statusKey, queryFn: authApi.twoFactorStatus });
   const refresh = () => queryClient.invalidateQueries({ queryKey: statusKey });
@@ -212,10 +217,7 @@ export function TwoFactorPanel() {
         <div className="space-y-3">
           <h3 className="text-sm font-semibold">{t("scanTitle")}</h3>
           <p className="text-sm text-muted-foreground">{t("scanText")}</p>
-          {/* A QR code needs a light ground and quiet zone to scan, whatever the theme. */}
-          <div role="img" aria-label={t("qrLabel")} className="w-fit rounded-xl border bg-white p-3">
-            <QRCodeSVG value={view.otpauthUri} size={176} bgColor="#ffffff" fgColor="#000000" level="M" />
-          </div>
+          <AuthenticatorQr uri={view.otpauthUri} label={t("qrLabel")} />
           <p className="text-sm text-muted-foreground">{t("manualKey")}</p>
           <div className="flex flex-wrap items-center gap-2">
             <code className="min-w-0 break-all rounded-md bg-muted px-2.5 py-1.5 font-mono text-sm tracking-wider">{view.secret}</code>
@@ -308,13 +310,18 @@ export function TwoFactorPanel() {
       {!status.available ? (
         <p className="text-sm text-muted-foreground">{t("unavailable")}</p>
       ) : status.enabled ? (
-        <div className="flex flex-wrap items-center gap-3">
-          <Button type="button" variant="outline" onClick={() => setView({ name: "regenerate" })}>
-            {t("regenerate")}
-          </Button>
-          <Button type="button" variant="outline" onClick={() => setView({ name: "disable" })}>
-            {t("disable")}
-          </Button>
+        <div className="space-y-3">
+          {isAdmin && <p className="text-sm text-muted-foreground">{t("adminRequired")}</p>}
+          <div className="flex flex-wrap items-center gap-3">
+            <Button type="button" variant="outline" onClick={() => setView({ name: "regenerate" })}>
+              {t("regenerate")}
+            </Button>
+            {!isAdmin && (
+              <Button type="button" variant="outline" onClick={() => setView({ name: "disable" })}>
+                {t("disable")}
+              </Button>
+            )}
+          </div>
         </div>
       ) : (
         <Button type="button" onClick={() => setup.mutate()} disabled={setup.isPending} aria-busy={setup.isPending}>

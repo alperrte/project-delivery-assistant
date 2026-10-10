@@ -284,6 +284,21 @@ test("every protected page sends a visitor without a session to the login of the
   }
 });
 
+test("the administrator sign-in is one unprefixed address: no locale redirect, no session redirect, no localized variants, never indexed", async ({ request }) => {
+  for (const acceptLanguage of ["tr-TR", "en-US", "de-DE"]) {
+    const response = await request.get("/pd-admin", { maxRedirects: 0, headers: { "accept-language": acceptLanguage } });
+    expect(response.status(), acceptLanguage).toBe(200);
+    expect(response.headers()["x-robots-tag"], acceptLanguage).toContain("noindex");
+    expect(await response.text(), acceptLanguage).toContain(`<html lang="${acceptLanguage.slice(0, 2)}"`);
+  }
+  // The language cookie wins over Accept-Language, and a prefixed or translated variant does not exist.
+  const cookie = await request.get("/pd-admin", { maxRedirects: 0, headers: { cookie: "NEXT_LOCALE=de", "accept-language": "en-US" } });
+  expect(await cookie.text()).toContain('<html lang="de"');
+  for (const path of ["/tr/pd-admin", "/en/pd-admin", "/tr/yonetici-girisi", "/pd-admin/users"]) {
+    expect((await request.get(path, { maxRedirects: 0 })).status(), path).toBe(404);
+  }
+});
+
 test("uppercase addresses redirect to the lowercase canonical URL and keep the query", async ({ request }) => {
   for (const [from, to] of [
     ["/tr/Hakkimizda", "/tr/hakkimizda"],
