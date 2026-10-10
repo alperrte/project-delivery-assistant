@@ -52,4 +52,7 @@ public interface ProjectRepository extends JpaRepository<Project, UUID> {
             + "and m.status = com.pda.project.domain.enums.MembershipStatus.ACTIVE)")
     Page<Project> findVisibleInOrganization(@Param("organizationId") UUID organizationId,
                                             @Param("userId") UUID userId, Pageable pageable);
+
+    /** Active (not archived) projects this user founded. */
+    java.util.List<Project> findByCreatedByAndArchivedAtIsNullOrderByNameAsc(UUID createdBy);
 }

@@ -18,7 +18,7 @@ import java.util.UUID;
         @UniqueConstraint(name = "uk_email_verification_challenges_user", columnNames = "user_id"))
 public class EmailVerificationChallenge {
 
-    private static final Duration CODE_LIFETIME = Duration.ofMinutes(10);
+    private static final Duration CODE_LIFETIME = Duration.ofMinutes(15);
     private static final Duration RESEND_COOLDOWN = Duration.ofSeconds(60);
     private static final int MAX_ATTEMPTS = 5;
 

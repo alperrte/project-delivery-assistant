@@ -122,7 +122,7 @@ class GoogleOAuthIntegrationTest {
     void newVerifiedGoogleUserIsOnboardedWithASessionAndNoPassword() {
         String subject = subject();
         String email = subject + "@example.test";
-        LoginTokens tokens = oauth.login(profile(subject, email, true, "Ada Lovelace"), "Chrome/1.0");
+        LoginTokens tokens = oauth.login(profile(subject, email, true, "Ada Lovelace"), "Chrome/1.0").tokens();
         assertNotNull(tokens.access());
         assertNotNull(tokens.refresh());
         UUID userId = accounts.findActiveByOAuthIdentity(OAuthProvider.GOOGLE, subject).orElseThrow().id();

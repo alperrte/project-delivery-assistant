@@ -4,6 +4,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import com.pda.shared.StrongPassword;
 
 public record InvitationRegisterRequest(
         @NotBlank @Size(max = 200) String token,
@@ -11,7 +12,7 @@ public record InvitationRegisterRequest(
         @NotBlank @Size(max = 100) String firstName,
         @NotBlank @Size(max = 100) String lastName,
         @NotBlank @Pattern(regexp = "[\\p{L}\\p{N}_]{3,32}") String nickname,
-        @NotBlank @Size(min = 8, max = 128) String password,
+        @NotBlank @StrongPassword String password,
         @NotBlank String confirmPassword) {
     public boolean passwordsMatch() { return password != null && password.equals(confirmPassword); }
 }

@@ -52,7 +52,7 @@ class EmailVerificationChallengeTest {
         assertEquals(AttemptResult.TOO_MANY_ATTEMPTS,
                 challenge.attempt(hasher.hash(userId, replacement), now.plusSeconds(61)));
         assertEquals(AttemptResult.EXPIRED,
-                challenge.attempt(hasher.hash(userId, replacement), now.plusSeconds(11 * 60)));
+                challenge.attempt(hasher.hash(userId, replacement), now.plusSeconds(16 * 60)));
     }
 
     @Test

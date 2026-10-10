@@ -23,7 +23,7 @@ import java.util.UUID;
         @UniqueConstraint(name = "uk_password_reset_challenges_user", columnNames = "user_id"))
 public class PasswordResetChallenge {
 
-    private static final Duration CODE_LIFETIME = Duration.ofMinutes(10);
+    private static final Duration CODE_LIFETIME = Duration.ofMinutes(15);
     private static final Duration RESEND_COOLDOWN = Duration.ofSeconds(60);
     private static final int MAX_ATTEMPTS = 5;
     /** Wrong guesses across all codes of the account inside this window block the reset until the window ends. */
@@ -54,6 +54,9 @@ public class PasswordResetChallenge {
 
     @Column(name = "consumed_at")
     private Instant consumedAt;
+
+    @Column(name = "completed_at")
+    private Instant completedAt;
 
     @Column(name = "window_failures", nullable = false)
     private int windowFailures;
@@ -103,6 +106,22 @@ public class PasswordResetChallenge {
             failureWindowStartedAt = null;
         }
         consumedAt = null;
+        completedAt = null;
+    }
+
+    /**
+     * The code was accepted (consumed) and the new password has not been set yet: the ticket that was handed out for
+     * this code may be used, once. A newer code ({@link #resend}) changes {@code issuedAt} and so retires the ticket.
+     */
+    public boolean ticketUsable(Instant ticketIssuedAt) {
+        return consumedAt != null && completedAt == null && issuedAt.equals(ticketIssuedAt);
+    }
+
+    public void complete(Instant now) {
+        if (consumedAt == null || completedAt != null) {
+            throw new IllegalStateException("Password reset cannot be completed");
+        }
+        completedAt = now;
     }
 
     /** True while too many wrong guesses were made within the last hour: no code is accepted, even a correct one. */
@@ -151,4 +170,5 @@ public class PasswordResetChallenge {
     public Instant getLastSentAt() { return lastSentAt; }
     public int getAttemptCount() { return attemptCount; }
     public Instant getConsumedAt() { return consumedAt; }
+    public Instant getCompletedAt() { return completedAt; }
 }

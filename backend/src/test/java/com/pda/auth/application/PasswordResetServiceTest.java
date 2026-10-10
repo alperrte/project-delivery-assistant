@@ -1,6 +1,9 @@
 package com.pda.auth.application;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import com.pda.auth.application.service.MailLocale;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -46,10 +49,10 @@ class PasswordResetServiceTest {
         when(mailPort.available()).thenReturn(true);
         when(users.findActiveByEmail("missing@example.test")).thenReturn(Optional.empty());
 
-        service.forgot("missing@example.test");
+        service.forgot("missing@example.test", MailLocale.TR);
 
         verify(challenges, never()).saveAndFlush(any());
-        verify(mailPort, never()).sendPasswordResetCode(anyString(), anyString());
+        verify(mailPort, never()).sendPasswordResetCode(anyString(), anyString(), any(MailLocale.class));
     }
 
     @Test
@@ -60,10 +63,10 @@ class PasswordResetServiceTest {
         when(challenges.findByUserId(userId)).thenReturn(Optional.empty());
         when(challenges.saveAndFlush(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        service.forgot("member@example.test");
+        service.forgot("member@example.test", MailLocale.TR);
 
         verify(challenges).saveAndFlush(any(PasswordResetChallenge.class));
-        verify(mailPort).sendPasswordResetCode(eq("member@example.test"), anyString());
+        verify(mailPort).sendPasswordResetCode(eq("member@example.test"), anyString(), eq(MailLocale.TR));
     }
 
     @Test
@@ -78,10 +81,10 @@ class PasswordResetServiceTest {
         when(users.findActiveByEmail("member@example.test")).thenReturn(Optional.of(userId));
         when(challenges.findByUserId(userId)).thenReturn(Optional.of(blocked));
 
-        service.forgot("member@example.test");
+        service.forgot("member@example.test", MailLocale.TR);
 
         verify(challenges, never()).saveAndFlush(any());
-        verify(mailPort, never()).sendPasswordResetCode(anyString(), anyString());
+        verify(mailPort, never()).sendPasswordResetCode(anyString(), anyString(), any(MailLocale.class));
     }
 
     @Test
@@ -93,10 +96,10 @@ class PasswordResetServiceTest {
         when(users.findActiveByEmail("member@example.test")).thenReturn(Optional.of(userId));
         when(challenges.findByUserId(userId)).thenReturn(Optional.of(existing));
 
-        service.forgot("member@example.test");
+        service.forgot("member@example.test", MailLocale.TR);
 
         verify(challenges, never()).saveAndFlush(any());
-        verify(mailPort, never()).sendPasswordResetCode(anyString(), anyString());
+        verify(mailPort, never()).sendPasswordResetCode(anyString(), anyString(), any(MailLocale.class));
     }
 
     @Test
@@ -104,72 +107,125 @@ class PasswordResetServiceTest {
         when(mailPort.available()).thenReturn(false);
 
         org.junit.jupiter.api.Assertions.assertThrows(VerificationMailUnavailableException.class,
-                () -> service.forgot("anyone@example.test"));
+                () -> service.forgot("anyone@example.test", MailLocale.TR));
         verify(users, never()).findActiveByEmail(anyString());
     }
 
     @Test
-    void resetIsInvalidForAnUnknownEmail() {
+    void verifyIsInvalidForAnUnknownEmail() {
         when(users.findActiveByEmail("missing@example.test")).thenReturn(Optional.empty());
 
-        ResetResult result = service.reset("missing@example.test", "123456", "new-password-1");
+        var check = service.verifyCode("missing@example.test", "123456");
 
-        assertEquals(ResetResult.INVALID, result);
-        verify(sessions, never()).revokeAll(any(), any());
+        assertEquals(ResetResult.INVALID, check.result());
+        assertNull(check.userId());
     }
 
     @Test
-    void resetIsInvalidWhenNoChallengeWasIssued() {
+    void verifyIsInvalidWhenNoChallengeWasIssued() {
         UUID userId = UUID.randomUUID();
         when(users.findActiveByEmail("member@example.test")).thenReturn(Optional.of(userId));
         when(challenges.findByUserId(userId)).thenReturn(Optional.empty());
 
-        ResetResult result = service.reset("member@example.test", "123456", "new-password-1");
-
-        assertEquals(ResetResult.INVALID, result);
+        assertEquals(ResetResult.INVALID, service.verifyCode("member@example.test", "123456").result());
     }
 
     @Test
-    void resetIsInvalidForAWrongCode() {
+    void verifyIsInvalidForAWrongCodeAndHandsOutNoTicket() {
         UUID userId = UUID.randomUUID();
         PasswordResetChallenge challenge = PasswordResetChallenge.issue(userId, codes.hashResetCode(userId, "111111"),
                 now);
         when(users.findActiveByEmail("member@example.test")).thenReturn(Optional.of(userId));
         when(challenges.findByUserId(userId)).thenReturn(Optional.of(challenge));
 
-        ResetResult result = service.reset("member@example.test", "222222", "new-password-1");
+        var check = service.verifyCode("member@example.test", "222222");
 
-        assertEquals(ResetResult.INVALID, result);
+        assertEquals(ResetResult.INVALID, check.result());
+        assertNull(check.ticketRef());
+    }
+
+    @Test
+    void verifyExpiresAfterFifteenMinutes() {
+        UUID userId = UUID.randomUUID();
+        PasswordResetChallenge challenge = PasswordResetChallenge.issue(userId, codes.hashResetCode(userId, "111111"),
+                now.minusSeconds(16 * 60));
+        when(users.findActiveByEmail("member@example.test")).thenReturn(Optional.of(userId));
+        when(challenges.findByUserId(userId)).thenReturn(Optional.of(challenge));
+
+        assertEquals(ResetResult.EXPIRED, service.verifyCode("member@example.test", "111111").result());
+    }
+
+    @Test
+    void verifyConsumesTheCodeSoItWorksOnlyOnce() {
+        UUID userId = UUID.randomUUID();
+        PasswordResetChallenge challenge = PasswordResetChallenge.issue(userId, codes.hashResetCode(userId, "111111"),
+                now);
+        when(users.findActiveByEmail("member@example.test")).thenReturn(Optional.of(userId));
+        when(challenges.findByUserId(userId)).thenReturn(Optional.of(challenge));
+
+        var first = service.verifyCode("member@example.test", "111111");
+        var second = service.verifyCode("member@example.test", "111111");
+
+        assertEquals(ResetResult.RESET, first.result());
+        assertEquals(userId, first.userId());
+        assertNotNull(first.ticketRef());
+        assertEquals(ResetResult.INVALID, second.result());
         verify(users, never()).resetPassword(any(), anyString());
     }
 
     @Test
-    void resetExpiresAfterTenMinutes() {
-        UUID userId = UUID.randomUUID();
-        PasswordResetChallenge challenge = PasswordResetChallenge.issue(userId, codes.hashResetCode(userId, "111111"),
-                now.minusSeconds(11 * 60));
-        when(users.findActiveByEmail("member@example.test")).thenReturn(Optional.of(userId));
-        when(challenges.findByUserId(userId)).thenReturn(Optional.of(challenge));
-
-        ResetResult result = service.reset("member@example.test", "111111", "new-password-1");
-
-        assertEquals(ResetResult.EXPIRED, result);
-    }
-
-    @Test
-    void resetSucceedsAndRevokesAllSessions() {
+    void resetWithTheTicketSetsThePasswordRevokesSessionsAndWorksOnlyOnce() {
         UUID userId = UUID.randomUUID();
         PasswordResetChallenge challenge = PasswordResetChallenge.issue(userId, codes.hashResetCode(userId, "111111"),
                 now);
         when(users.findActiveByEmail("member@example.test")).thenReturn(Optional.of(userId));
         when(challenges.findByUserId(userId)).thenReturn(Optional.of(challenge));
-        when(users.resetPassword(userId, "new-password-1")).thenReturn(true);
+        when(users.resetPassword(userId, "New-password-1")).thenReturn(true);
+        var ticket = service.verifyCode("member@example.test", "111111");
 
-        ResetResult result = service.reset("member@example.test", "111111", "new-password-1");
+        ResetResult first = service.reset(userId, ticket.ticketRef(), "New-password-1");
+        ResetResult second = service.reset(userId, ticket.ticketRef(), "Other-password-1");
 
-        assertEquals(ResetResult.RESET, result);
-        verify(users).resetPassword(userId, "new-password-1");
+        assertEquals(ResetResult.RESET, first);
+        assertEquals(ResetResult.INVALID, second);
+        verify(users, times(1)).resetPassword(userId, "New-password-1");
         verify(sessions, times(1)).revokeAll(userId, now);
+    }
+
+    @Test
+    void resetWithoutAcceptedCodeIsInvalid() {
+        UUID userId = UUID.randomUUID();
+        PasswordResetChallenge challenge = PasswordResetChallenge.issue(userId, codes.hashResetCode(userId, "111111"),
+                now);
+        when(challenges.findByUserId(userId)).thenReturn(Optional.of(challenge));
+        String ref = Long.toString(java.time.temporal.ChronoUnit.MICROS.between(Instant.EPOCH, now));
+
+        assertEquals(ResetResult.INVALID, service.reset(userId, ref, "New-password-1"));
+        verify(users, never()).resetPassword(any(), anyString());
+    }
+
+    @Test
+    void ticketOfAnEarlierCodeStopsWorkingWhenANewCodeIsIssued() {
+        UUID userId = UUID.randomUUID();
+        PasswordResetChallenge challenge = PasswordResetChallenge.issue(userId, codes.hashResetCode(userId, "111111"),
+                now.minusSeconds(120));
+        when(users.findActiveByEmail("member@example.test")).thenReturn(Optional.of(userId));
+        when(challenges.findByUserId(userId)).thenReturn(Optional.of(challenge));
+        var ticket = service.verifyCode("member@example.test", "111111");
+
+        challenge.resend(codes.hashResetCode(userId, "222222"), now);
+
+        assertEquals(ResetResult.INVALID, service.reset(userId, ticket.ticketRef(), "New-password-1"));
+        verify(users, never()).resetPassword(any(), anyString());
+    }
+
+    @Test
+    void resetRejectsAGarbageTicketReference() {
+        UUID userId = UUID.randomUUID();
+        when(challenges.findByUserId(userId)).thenReturn(Optional.empty());
+
+        assertEquals(ResetResult.INVALID, service.reset(userId, "not-a-number", "New-password-1"));
+        assertEquals(ResetResult.INVALID, service.reset(userId, null, "New-password-1"));
     }
 
     @Test
@@ -179,11 +235,10 @@ class PasswordResetServiceTest {
                 now);
         when(users.findActiveByEmail("member@example.test")).thenReturn(Optional.of(userId));
         when(challenges.findByUserId(userId)).thenReturn(Optional.of(challenge));
-        when(users.resetPassword(userId, "new-password-1")).thenReturn(false);
+        when(users.resetPassword(userId, "New-password-1")).thenReturn(false);
+        var ticket = service.verifyCode("member@example.test", "111111");
 
-        ResetResult result = service.reset("member@example.test", "111111", "new-password-1");
-
-        assertEquals(ResetResult.INVALID, result);
+        assertEquals(ResetResult.INVALID, service.reset(userId, ticket.ticketRef(), "New-password-1"));
         verify(sessions, never()).revokeAll(any(), any());
     }
 

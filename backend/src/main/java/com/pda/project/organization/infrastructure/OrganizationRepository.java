@@ -26,4 +26,6 @@ public interface OrganizationRepository extends JpaRepository<Organization, UUID
     Page<Organization> findByArchivedAtIsNull(Pageable pageable);
 
     Page<Organization> findByOwnerUserIdAndArchivedAtIsNull(UUID ownerUserId, Pageable pageable);
+
+    java.util.List<Organization> findByOwnerUserIdAndArchivedAtIsNullOrderByNameAsc(UUID ownerUserId);
 }

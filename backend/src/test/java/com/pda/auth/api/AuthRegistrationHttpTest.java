@@ -2,7 +2,9 @@ package com.pda.auth.api;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -27,6 +29,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
+import com.pda.auth.application.service.MailLocale;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -48,7 +51,7 @@ class AuthRegistrationHttpTest {
         Cookie cookie = csrfCookie();
         assertFalse(cookie.isHttpOnly());
         String body = "{\"email\":\"member@example.test\",\"nickname\":\"member_1\","
-                + "\"password\":\"valid password phrase\",\"confirmPassword\":\"valid password phrase\"}";
+                + "\"password\":\"Valid-Phrase-1\",\"confirmPassword\":\"Valid-Phrase-1\"}";
         mvc.perform(post("/api/v1/auth/register").contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isForbidden());
         mvc.perform(post("/api/v1/auth/register").cookie(cookie).contentType(MediaType.APPLICATION_JSON)
@@ -135,7 +138,7 @@ class AuthRegistrationHttpTest {
     void invalidInputAndDuplicateIdentityUseSafeProblemDetails() throws Exception {
         Cookie cookie = csrfCookie();
         String body = "{\"email\":\"member@example.test\",\"nickname\":\"member_1\","
-                + "\"password\":\"valid password phrase\",\"confirmPassword\":\"different password\"}";
+                + "\"password\":\"Valid-Phrase-1\",\"confirmPassword\":\"Different-Pass-1\"}";
         mvc.perform(post("/api/v1/auth/register").cookie(cookie).header("X-XSRF-TOKEN", cookie.getValue())
                         .contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isBadRequest())
@@ -143,9 +146,9 @@ class AuthRegistrationHttpTest {
                 .andExpect(header().string("Cache-Control", "no-store"));
 
         doThrow(new UserRegistrationConflictException()).when(workflow)
-                .register(anyString(), anyString(), anyString(), anyString());
+                .register(anyString(), anyString(), anyString(), anyString(), any(MailLocale.class));
         body = "{\"email\":\"member@example.test\",\"nickname\":\"member_1\","
-                + "\"password\":\"valid password phrase\",\"confirmPassword\":\"valid password phrase\"}";
+                + "\"password\":\"Valid-Phrase-1\",\"confirmPassword\":\"Valid-Phrase-1\"}";
         mvc.perform(post("/api/v1/auth/register").cookie(cookie).header("X-XSRF-TOKEN", cookie.getValue())
                         .contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isConflict());
@@ -184,16 +187,126 @@ class AuthRegistrationHttpTest {
     }
 
     @Test
-    void eightCharacterPasswordIsAccepted() throws Exception {
+    void eightCharacterPasswordWithAllRequiredClassesIsAccepted() throws Exception {
         Cookie cookie = csrfCookie();
         String body = "{\"email\":\"member@example.test\",\"nickname\":\"sample_user\","
-                + "\"password\":\"eight888\",\"confirmPassword\":\"eight888\"}";
+                + "\"password\":\"Eight-88\",\"confirmPassword\":\"Eight-88\"}";
         mvc.perform(post("/api/v1/auth/register").with(request -> {
                     request.setRemoteAddr("203.0.113.22");
                     return request;
                 }).cookie(cookie).header("X-XSRF-TOKEN", cookie.getValue())
                 .contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void verifyMapsEveryOutcomeToItsProblemCode() throws Exception {
+        Cookie cookie = csrfCookie();
+        record Case(RegistrationWorkflow.VerificationResult result, int status, String code) {}
+        for (Case c : new Case[] {
+                new Case(RegistrationWorkflow.VerificationResult.VERIFIED, 200, null),
+                new Case(RegistrationWorkflow.VerificationResult.INVALID, 400, "verification_code_invalid"),
+                new Case(RegistrationWorkflow.VerificationResult.EXPIRED, 400, "verification_code_expired"),
+                new Case(RegistrationWorkflow.VerificationResult.TOO_MANY_ATTEMPTS, 400, "verification_too_many_attempts")}) {
+            when(workflow.verify("member@example.test", "123456")).thenReturn(c.result());
+            var performed = mvc.perform(post("/api/v1/auth/register/verify").with(request -> {
+                        request.setRemoteAddr("203.0.113.30");
+                        return request;
+                    }).cookie(cookie).header("X-XSRF-TOKEN", cookie.getValue())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"email\":\"member@example.test\",\"code\":\"123456\"}"))
+                    .andExpect(status().is(c.status()))
+                    .andExpect(header().string("Cache-Control", "no-store"));
+            if (c.code() != null) {
+                performed.andExpect(jsonPath("$.code").value(c.code()));
+            }
+        }
+    }
+
+    @Test
+    void verifyRequiresCsrfAndASixDigitCode() throws Exception {
+        Cookie cookie = csrfCookie();
+        mvc.perform(post("/api/v1/auth/register/verify").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"member@example.test\",\"code\":\"123456\"}"))
+                .andExpect(status().isForbidden());
+        for (String code : new String[] {"12345", "1234567", "abcdef", "12 456", ""}) {
+            mvc.perform(post("/api/v1/auth/register/verify").with(request -> {
+                        request.setRemoteAddr("203.0.113.31");
+                        return request;
+                    }).cookie(cookie).header("X-XSRF-TOKEN", cookie.getValue())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"email\":\"member@example.test\",\"code\":\"" + code + "\"}"))
+                    .andExpect(status().isBadRequest());
+        }
+    }
+
+    @Test
+    void verifyLimitsFiveRequestsPerRemoteIp() throws Exception {
+        Cookie cookie = csrfCookie();
+        for (int i = 0; i < 5; i++) {
+            mvc.perform(post("/api/v1/auth/register/verify").with(request -> {
+                        request.setRemoteAddr("192.0.2.30");
+                        return request;
+                    }).cookie(cookie).header("X-XSRF-TOKEN", cookie.getValue())
+                    .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                    .andExpect(status().isBadRequest());
+        }
+        mvc.perform(post("/api/v1/auth/register/verify").with(request -> {
+                    request.setRemoteAddr("192.0.2.30");
+                    return request;
+                }).cookie(cookie).header("X-XSRF-TOKEN", cookie.getValue())
+                .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isTooManyRequests());
+    }
+
+    @Test
+    void resendAlwaysAnswersAcceptedAndPassesTheLanguage() throws Exception {
+        Cookie cookie = csrfCookie();
+        mvc.perform(post("/api/v1/auth/register/resend").with(request -> {
+                    request.setRemoteAddr("203.0.113.32");
+                    return request;
+                }).cookie(cookie).header("X-XSRF-TOKEN", cookie.getValue())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"member@example.test\",\"locale\":\"de\"}"))
+                .andExpect(status().isAccepted())
+                .andExpect(header().string("Cache-Control", "no-store"));
+        verify(workflow).resend("member@example.test", MailLocale.DE);
+        mvc.perform(post("/api/v1/auth/register/resend").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"member@example.test\"}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void resendLimitsFiveRequestsPerRemoteIp() throws Exception {
+        Cookie cookie = csrfCookie();
+        for (int i = 0; i < 5; i++) {
+            mvc.perform(post("/api/v1/auth/register/resend").with(request -> {
+                        request.setRemoteAddr("192.0.2.31");
+                        return request;
+                    }).cookie(cookie).header("X-XSRF-TOKEN", cookie.getValue())
+                    .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                    .andExpect(status().isBadRequest());
+        }
+        mvc.perform(post("/api/v1/auth/register/resend").with(request -> {
+                    request.setRemoteAddr("192.0.2.31");
+                    return request;
+                }).cookie(cookie).header("X-XSRF-TOKEN", cookie.getValue())
+                .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isTooManyRequests());
+    }
+
+    @Test
+    void registerPassesTheRequestedLanguage() throws Exception {
+        Cookie cookie = csrfCookie();
+        mvc.perform(post("/api/v1/auth/register").with(request -> {
+                    request.setRemoteAddr("203.0.113.33");
+                    return request;
+                }).cookie(cookie).header("X-XSRF-TOKEN", cookie.getValue())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"member@example.test\",\"nickname\":\"sample_user\","
+                        + "\"password\":\"Eight-88\",\"confirmPassword\":\"Eight-88\",\"locale\":\"en\"}"))
+                .andExpect(status().isOk());
+        verify(workflow).register("member@example.test", "sample_user", "Eight-88", "Eight-88", MailLocale.EN);
     }
 
     private Cookie csrfCookie() throws Exception {

@@ -42,4 +42,8 @@ public interface NotificationRepository extends JpaRepository<Notification, UUID
     @Modifying
     @Query("delete from Notification n where n.projectId = :projectId")
     int deleteByProjectId(UUID projectId);
+    /** Every notification of an account that is being deleted, read or not. */
+    @Modifying
+    @Query("delete from Notification n where n.recipientUserId = :recipient")
+    int deleteByRecipient(UUID recipient);
 }

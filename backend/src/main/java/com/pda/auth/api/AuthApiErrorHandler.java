@@ -1,7 +1,9 @@
 package com.pda.auth.api;
 
 import com.pda.auth.application.service.VerificationMailUnavailableException;
+import com.pda.auth.application.service.EmailNotVerifiedException;
 import com.pda.auth.application.service.InvalidCredentialsException;
+import com.pda.auth.application.service.TwoFactorUnavailableException;
 import com.pda.user.UserRegistrationConflictException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -59,6 +61,21 @@ public class AuthApiErrorHandler {
     @ExceptionHandler(VerificationMailUnavailableException.class)
     ResponseEntity<ProblemDetail> mailUnavailable() {
         return problem(HttpStatus.SERVICE_UNAVAILABLE, "Verification mail is temporarily unavailable");
+    }
+
+    @ExceptionHandler(TwoFactorUnavailableException.class)
+    ResponseEntity<ProblemDetail> twoFactorUnavailable() {
+        ProblemDetail body = ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE,
+                "Two-factor authentication is not available");
+        body.setProperty("code", "two_factor_unavailable");
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).header("Cache-Control", "no-store").body(body);
+    }
+
+    @ExceptionHandler(EmailNotVerifiedException.class)
+    ResponseEntity<ProblemDetail> emailNotVerified() {
+        ProblemDetail body = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, "Email address is not verified");
+        body.setProperty("code", "email_not_verified");
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).header("Cache-Control", "no-store").body(body);
     }
 
     @ExceptionHandler(InvalidCredentialsException.class)

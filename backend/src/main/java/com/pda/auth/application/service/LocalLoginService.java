@@ -14,22 +14,42 @@ public class LocalLoginService {
     private final UserSessions sessions;
     private final JwtTokens tokens;
     private final Clock clock;
+    private final TotpService twoFactor;
 
-    public LocalLoginService(UserAccounts users, UserSessions sessions, JwtTokens tokens, Clock clock) {
+    public LocalLoginService(UserAccounts users, UserSessions sessions, JwtTokens tokens, Clock clock,
+                             TotpService twoFactor) {
         this.users = users;
         this.sessions = sessions;
         this.tokens = tokens;
         this.clock = clock;
+        this.twoFactor = twoFactor;
     }
 
+    /** The password was right: either a session, or (two-factor is on) the account that still owes its second step. */
     @Transactional
-    public LoginTokens login(String email, String password, String userAgent) {
-        UserAccounts.AuthenticatedUser user = users.authenticateLocal(email, password)
-                .orElseThrow(InvalidCredentialsException::new);
-        JwtTokens.IssuedToken refresh = tokens.issueRefresh(user.id());
-        var sessionId = sessions.open(user.id(), refresh.value(), refresh.expiresAt(), userAgent);
-        JwtTokens.IssuedToken access = tokens.issueAccess(user.id(), sessionId);
-        return new LoginTokens(access.value(), refresh.value());
+    public LoginResult login(String email, String password, String userAgent) {
+        UserAccounts.AuthenticatedUser user = users.authenticateLocal(email, password).orElseThrow(() ->
+                users.matchesPendingLocal(email, password) ? new EmailNotVerifiedException() : new InvalidCredentialsException());
+        return afterFirstFactor(user.id(), userAgent);
+    }
+
+    /** Shared by every first factor (password, Google, GitHub): a session unless the account asks for a second one. */
+    @Transactional
+    public LoginResult afterFirstFactor(UUID userId, String userAgent) {
+        if (twoFactor.isEnabled(userId)) {
+            return LoginResult.secondFactorRequired(userId);
+        }
+        return LoginResult.signedIn(openSession(userId, userAgent));
+    }
+
+    /** The second step of a sign-in: the authenticator (or backup) code. A wrong code leaves no session behind. */
+    @Transactional
+    public SecondFactorResult completeSecondFactor(UUID userId, String code, String userAgent) {
+        if (users.findActiveById(userId).isEmpty()) {
+            return new SecondFactorResult(TotpService.Result.INVALID, null);
+        }
+        TotpService.Result result = twoFactor.verify(userId, code);
+        return new SecondFactorResult(result, result == TotpService.Result.OK ? openSession(userId, userAgent) : null);
     }
 
     // Replay detection revokes the session inside rotate(); that revocation must survive the 401 path.
@@ -51,5 +71,29 @@ public class LocalLoginService {
                 sessions.revoke(userId, refreshToken, clock.instant()));
     }
 
+    private LoginTokens openSession(UUID userId, String userAgent) {
+        JwtTokens.IssuedToken refresh = tokens.issueRefresh(userId);
+        UUID sessionId = sessions.open(userId, refresh.value(), refresh.expiresAt(), userAgent);
+        JwtTokens.IssuedToken access = tokens.issueAccess(userId, sessionId);
+        return new LoginTokens(access.value(), refresh.value());
+    }
+
     public record LoginTokens(String access, String refresh) {}
+
+    /** Exactly one of the two is set. */
+    public record LoginResult(LoginTokens tokens, UUID secondFactorUserId) {
+        static LoginResult signedIn(LoginTokens tokens) {
+            return new LoginResult(tokens, null);
+        }
+
+        static LoginResult secondFactorRequired(UUID userId) {
+            return new LoginResult(null, userId);
+        }
+
+        public boolean needsSecondFactor() {
+            return secondFactorUserId != null;
+        }
+    }
+
+    public record SecondFactorResult(TotpService.Result result, LoginTokens tokens) {}
 }

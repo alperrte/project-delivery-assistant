@@ -25,4 +25,9 @@ public interface UserSessionRepository extends JpaRepository<UserSession, UUID> 
 
     List<UserSession> findByUserIdAndRevokedAtIsNullAndExpiresAtAfterOrderByCreatedAtDesc(UUID userId, Instant now);
     long countByUserIdAndRevokedAtIsNullAndExpiresAtAfter(UUID userId, Instant now);
+
+    /** Physically removes every session row of an account that is being deleted. */
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("delete from UserSession s where s.userId = :userId")
+    int deleteAllOf(@Param("userId") UUID userId);
 }
