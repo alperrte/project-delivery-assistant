@@ -63,6 +63,8 @@ export function InvitationProjectPreviewDialog({ invitationId, onClose }: {
             invitationPreview={{
               logoSrc: project.logoVersion == null ? null
                 : invitationsApi.previewLogoUrl(invitationId, project.logoVersion),
+              bannerSrc: project.bannerVersion == null ? null
+                : invitationsApi.bannerUrl(invitationId, project.bannerVersion),
             }}
           />
         )}

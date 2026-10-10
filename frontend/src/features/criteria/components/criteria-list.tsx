@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -8,16 +9,15 @@ import { Plus, PencilSimple, Trash, CaretUp, CaretDown, MagnifyingGlass } from "
 import { PageHeader } from "@/components/common/page-header";
 import { EmptyState } from "@/components/common/empty-state";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress, ProgressTrack, ProgressIndicator } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { errorKey } from "@/lib/api/error-message";
 import { criteriaApi } from "../api";
-import { CriterionFormDialog } from "./criterion-form-dialog";
 
-export function CriteriaList({ projectId, isManager }: { projectId: string; isManager: boolean }) {
+export function CriteriaList({ slug, projectId, isManager }: { slug: string; projectId: string; isManager: boolean }) {
   const t = useTranslations("criteria");
   const te = useTranslations("errors");
   const queryClient = useQueryClient();
@@ -81,15 +81,10 @@ export function CriteriaList({ projectId, isManager }: { projectId: string; isMa
         description={t("description")}
         action={
           isManager && (
-            <CriterionFormDialog
-              projectId={projectId}
-              trigger={
-                <Button>
-                  <Plus data-icon="inline-start" size={16} />
-                  {t("create")}
-                </Button>
-              }
-            />
+            <Link href={`/projects/${slug}/criteria/new`} className={buttonVariants()}>
+              <Plus data-icon="inline-start" size={16} aria-hidden="true" />
+              {t("create")}
+            </Link>
           )
         }
       />
@@ -168,15 +163,13 @@ export function CriteriaList({ projectId, isManager }: { projectId: string; isMa
                   >
                     <CaretDown size={14} />
                   </Button>
-                  <CriterionFormDialog
-                    projectId={projectId}
-                    criterion={criterion}
-                    trigger={
-                      <Button variant="ghost" size="icon-sm" aria-label={t("form.editTitle")}>
-                        <PencilSimple size={14} />
-                      </Button>
-                    }
-                  />
+                  <Link
+                    href={`/projects/${slug}/criteria/${criterion.id}/edit`}
+                    aria-label={`${t("form.editTitle")}: ${criterion.title}`}
+                    className={buttonVariants({ variant: "ghost", size: "icon-sm" })}
+                  >
+                    <PencilSimple size={14} aria-hidden="true" />
+                  </Link>
                   <ConfirmDialog
                     trigger={
                       <Button variant="ghost" size="icon-sm" aria-label={t("delete")}>

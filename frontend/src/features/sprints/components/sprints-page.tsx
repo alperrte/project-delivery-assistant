@@ -1,12 +1,12 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId } from "react";
 import Link from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { Plus } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/common/empty-state";
 import { PageHeader } from "@/components/common/page-header";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Progress, ProgressIndicator, ProgressTrack } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProjectGate, type ProjectGateContext } from "@/features/tasks/components/project-gate";
@@ -19,7 +19,6 @@ import { daysLeft, percent } from "../dates";
 import { useSprints, useSprintSummary } from "../hooks";
 import type { Sprint, SprintStatus } from "../types";
 import { SprintActions } from "./sprint-actions";
-import { SprintDialog } from "./sprint-dialog";
 import { SprintStatusBadge } from "./sprint-status-badge";
 
 const SECTIONS: SprintStatus[] = ["ACTIVE", "PLANNED", "COMPLETED"];
@@ -91,7 +90,7 @@ function SprintRow({ slug, projectId, sprint, isManager, blockedByActive, blocke
 
       {isManager && sprint.status !== "COMPLETED" && (
         <div className="relative z-10 md:shrink-0">
-          <SprintActions projectId={projectId} sprint={sprint} blockedByActive={blockedByActive} blockedHintId={blockedHintId} />
+          <SprintActions slug={slug} projectId={projectId} sprint={sprint} blockedByActive={blockedByActive} blockedHintId={blockedHintId} />
         </div>
       )}
     </li>
@@ -102,17 +101,16 @@ function SprintsView({ slug, projectId, project, isManager: manager }: ProjectGa
   const t = useTranslations("sprints");
   const te = useTranslations("errors");
   const hintId = useId();
-  const [creating, setCreating] = useState(false);
   const sprints = useSprints(projectId);
 
   const list = sprints.data ?? [];
   const hasActive = list.some((sprint) => sprint.status === "ACTIVE");
   const isManager = manager && allowsAdvanced(project.taskManagementMode);
   const createButton = isManager && (
-    <Button onClick={() => setCreating(true)}>
+    <Link href={`/projects/${slug}/sprints/new`} className={buttonVariants()}>
       <Plus aria-hidden="true" />
       {t("create")}
-    </Button>
+    </Link>
   );
 
   return (
@@ -167,8 +165,6 @@ function SprintsView({ slug, projectId, project, isManager: manager }: ProjectGa
           })}
         </div>
       )}
-
-      <SprintDialog projectId={projectId} open={creating} onOpenChange={setCreating} />
     </div>
   );
 }

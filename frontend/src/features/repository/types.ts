@@ -61,3 +61,9 @@ export type CommitQuery = {
   page?: number;
   limit?: number;
 };
+
+/** One page of a commit history; GitHub gives no totals, only whether a next page exists. */
+export type CommitPage = {
+  commits: Commit[];
+  hasNext: boolean;
+};

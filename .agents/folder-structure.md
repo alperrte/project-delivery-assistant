@@ -169,6 +169,14 @@ Backend: `com.pda.analytics` (public `AnalyticsReporting`; `api` ingest controll
 
 Frontend: `features/consent/` (contract, store, banner, dialog, provider, manage button), `features/analytics/` (identifiers, route template, transport, tracker), `features/contact/` (api, schema, form, page), `features/admin/` (api, query keys, guard, users page, analytics page, charts), routes `(public)/cookies`, `(public)/contact`, `(app)/admin/{users,analytics}`. E2E: `consent-state.ts` (default visitor who already decided), `db.ts`, `mailpit.ts`, `cookie-consent`, `analytics-collection`, `contact-form`, `contact-delivery`, `admin-users`, `admin-analytics`, `privacy-regression` specs. Root: `docker-compose.e2e.yml` (Mailpit + relaxed limits), `PDA_COOKIE_ANALYTICS_ADMIN_CONTACT_PLAN.md` (plan and progress).
 
+## Proje frontend iyileştirmeleri (2026-10-10)
+
+- Rotalar: `app/(app)/projects/[slug]/criteria/{new,[criterionId]/edit}`, `app/(app)/projects/[slug]/sprints/{new,[sprintId]/edit}`; formlar `features/criteria/components/criterion-form-page.tsx`, `features/sprints/components/sprint-form-page.tsx` (dialoglar kaldırıldı).
+- `components/common/cursor-pagination.tsx` (toplamsız sayfalama), `lib/api/client.ts` `apiRequestWithHeaders`, `features/repository/api.ts` `commitsPage`.
+- `features/projects/hooks/use-selected-project.ts` `forgetSelectedProject`; `components/common/entity-card.tsx` `cornerStart` yuvası.
+- `features/invitations/components/my-invitations-page.tsx` (URL'de filtre/sayfa, xl tablo / altında kart), `invitationsApi.bannerUrl`.
+- E2E: `project-priority`, `project-delete-navigation`, `criteria-pages`, `sprint-pages`, `commit-pagination`, `my-invitations-redesign`, `invitation-preview-banner`.
+
 ## Commit sayfalama ve davet banner'ı — backend (2026-10-10)
 
 - `project/application/service/GitHubRepositoryClient.java`: `CommitPage` kaydı; `project/infrastructure/github/GitHubRestRepositoryClient.java`: `Link` ayrıştırma (`hasNextPage`); `project/api/ProjectRepositoryController.java`: `X-Has-Next-Page` (`HAS_NEXT_PAGE_HEADER`).

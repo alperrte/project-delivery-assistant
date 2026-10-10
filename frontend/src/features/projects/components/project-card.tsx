@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import { projectBannerUrl, projectLogoSource } from "../api";
 import { canonicalTech } from "../tech-catalog";
 import { parseTechStack } from "../tech-stack";
-import type { Project, ProjectType } from "../types";
+import type { Project, ProjectPriority, ProjectType } from "../types";
 import {
   projectStatusBadgeClass,
   projectStatusDotClass,
@@ -33,6 +33,8 @@ export type ProjectCardData = Pick<
 > & {
   /** `null` only in the create preview, before a type has been picked. */
   projectType: ProjectType | null;
+  /** Absent where the source has none (create page, invitation preview); the card then shows no priority rather than a guess. */
+  priority?: ProjectPriority | null;
   /** Epoch ms of the banner; absent in the create preview, where no banner exists yet. */
   bannerVersion?: number | null;
   /** The signed-in user may open this project's settings; only the project list tells. */
@@ -41,6 +43,25 @@ export type ProjectCardData = Pick<
 
 /** Live preview on the create page: the link is inert and the logo comes from the file the user just picked. */
 export type ProjectCardPreview = { logoSrc: string | null; bannerSrc?: string | null; updatedLabel: string };
+
+/**
+ * Priority marker for the card's header band: the project priority dot (same scale as the project header badge and
+ * the organization table row) plus the visible, localized value; colour is never the only signal.
+ */
+function ProjectPriorityChip({ priority }: { priority: ProjectPriority }) {
+  const t = useTranslations("projects");
+  return (
+    <span
+      data-testid="project-card-priority"
+      data-priority={priority}
+      className="inline-flex items-center gap-1.5 rounded-full bg-background/90 px-2.5 py-1 text-xs font-medium text-foreground shadow-sm ring-1 ring-border backdrop-blur"
+    >
+      <span className={`size-2 shrink-0 rounded-full ${projectPriorityDotClass(priority)}`} aria-hidden="true" />
+      <span className="sr-only">{t("columns.priority")}: </span>
+      {t(`overview.priorityValues.${priority}`)}
+    </span>
+  );
+}
 
 const techChip = "relative z-10 inline-flex size-8 items-center justify-center rounded-md border bg-surface-2 text-xs font-medium text-muted-foreground";
 
@@ -52,13 +73,15 @@ function logoSource(project: Pick<Project, "id" | "logoVersion">, preview?: Proj
 }
 
 /**
- * The banner shows on the card in the Projeler list and, as the user picks it, on the create page's preview card; the
- * invitation preview never has one.
+ * The banner shows on the card in the Projeler list and, as the user picks it, on the create page's preview card. The
+ * invitation preview takes the recipient-scoped URL its caller built (the member-only project route would refuse an
+ * invitee); without one, or when it fails to load, the card keeps its plain band.
  */
 function bannerSource(project: Pick<ProjectCardData, "id" | "bannerVersion">, preview?: ProjectCardPreview,
-                      invitation?: boolean): string | null {
+                      invitationBannerSrc?: string | null): string | null {
   if (preview) return preview.bannerSrc ?? null;
-  if (invitation || project.bannerVersion == null) return null;
+  if (invitationBannerSrc !== undefined) return invitationBannerSrc;
+  if (project.bannerVersion == null) return null;
   return projectBannerUrl(project.id, project.bannerVersion);
 }
 
@@ -104,8 +127,8 @@ function TechStrip({ labels }: { labels: string[] }) {
 export function ProjectCard({ project, preview, invitationPreview }: {
   project: ProjectCardData;
   preview?: ProjectCardPreview;
-  /** Recipient-scoped logo URL. The invitation view never renders the project-open action. */
-  invitationPreview?: { logoSrc: string | null };
+  /** Recipient-scoped logo and banner URLs. The invitation view never renders the project-open action. */
+  invitationPreview?: { logoSrc: string | null; bannerSrc?: string | null };
 }) {
   const t = useTranslations("projects");
   const locale = useLocale();
@@ -115,7 +138,7 @@ export function ProjectCard({ project, preview, invitationPreview }: {
   const when = preview?.updatedLabel ?? date.format(new Date(project.updatedAt));
   const updated = project.updatedBy ? t("card.updatedBy", { date: when, name: project.updatedBy.nickname }) : when;
   const logo = logoSource(project, preview, invitationPreview?.logoSrc);
-  const banner = bannerSource(project, preview, !!invitationPreview);
+  const banner = bannerSource(project, preview, invitationPreview ? (invitationPreview.bannerSrc ?? null) : undefined);
 
   return (
     <EntityCard
@@ -131,6 +154,7 @@ export function ProjectCard({ project, preview, invitationPreview }: {
           <PencilSimple size={18} aria-hidden="true" />
         </Link>
       ) : undefined}
+      cornerStart={project.priority && !invitationPreview ? <ProjectPriorityChip priority={project.priority} /> : undefined}
       mark={<ProjectMark key={logo ?? "none"} name={project.name} src={logo} />}
       title={project.name}
       description={project.tagline || project.description || project.projectGoal || t("cardNoDescription")}

@@ -44,6 +44,10 @@ export function AppBreadcrumb() {
     if (!second) {
       const current = projectSection(section, true);
       if (current !== "overview") items.push({ label: tabs(current) });
+    } else if (second === "criteria") {
+      items.push({ label: tabs("criteria"), href: `${base}?section=criteria` });
+      if (rest[0] === "new") items.push({ label: titles("criterionNew") });
+      else if (rest[0]) items.push({ label: titles("criterionEdit") });
     } else if (second === "teams") {
       items.push({ label: tabs("teams"), href: `${base}?section=teams` });
       const [teamId, action] = rest;
@@ -65,7 +69,12 @@ export function AppBreadcrumb() {
       }
     } else if (second === "sprints") {
       items.push({ label: nav("sprints"), href: `${base}/sprints` });
-      if (rest[0]) items.push({ label: sprint?.label ?? titles("sprint") });
+      const [sprintId, action] = rest;
+      if (sprintId === "new") items.push({ label: titles("sprintNew") });
+      else if (sprintId) {
+        items.push({ label: sprint?.label ?? titles("sprint"), href: `${base}/sprints/${sprintId}` });
+        if (action === "edit") items.push({ label: titles("sprintEdit") });
+      }
     } else if (second === "labels") {
       items.push({ label: nav("labels") });
     }

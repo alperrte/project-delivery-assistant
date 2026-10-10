@@ -119,13 +119,11 @@ test.describe.serial("Yükleniyor durumu: giriş gerektiren formlar", () => {
     await expectLoadingThenIdle(submit, seen);
   });
 
-  test("kriter penceresi", async () => {
+  test("yeni kriter", async () => {
     const seen = await hold(page, { method: "POST", url: new RegExp(`/projects/${projectId}/criteria$`) });
-    await page.goto(`/projects/${slug}/criteria`);
-    await page.getByRole("button", { name: tr.criteria.create }).first().click();
-    const dialog = page.getByRole("dialog");
-    await dialog.locator("#criterion-title").fill("Yükleniyor kriteri");
-    const submit = dialog.locator('button[type="submit"]');
+    await page.goto(`/projects/${slug}/criteria/new`);
+    await page.locator("#criterion-title").fill("Yükleniyor kriteri");
+    const submit = page.locator('form button[type="submit"]');
     await submit.click();
     await expectLoadingThenIdle(submit, seen);
   });
@@ -141,13 +139,11 @@ test.describe.serial("Yükleniyor durumu: giriş gerektiren formlar", () => {
     await expectLoadingThenIdle(submit, seen);
   });
 
-  test("sprint penceresi", async () => {
+  test("yeni sprint", async () => {
     const seen = await hold(page, { method: "POST", url: new RegExp(`/projects/${projectId}/sprints$`) });
-    await page.goto(`/projects/${slug}/sprints`);
-    await page.getByRole("button", { name: tr.sprints.create }).first().click();
-    const dialog = page.getByRole("dialog");
-    await dialog.locator("#sprint-name").fill("Yükleniyor sprinti");
-    const submit = dialog.locator('button[type="submit"]');
+    await page.goto(`/projects/${slug}/sprints/new`);
+    await page.locator("#sprint-name").fill("Yükleniyor sprinti");
+    const submit = page.locator('form button[type="submit"]');
     await submit.click();
     await expectLoadingThenIdle(submit, seen);
   });

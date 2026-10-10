@@ -37,7 +37,8 @@ test("global invitations show a recipient-owned project preview without an open 
   await page.goto("/invitations");
   const row = page.getByRole("row").filter({ hasText: "Atlas" });
   await expect(row).toContainText("Core");
-  await expect(row).toContainText("Core ekibine katılım daveti");
+  // The team reads as a secondary line under the project; the full sentence lives in its title.
+  await expect(row.getByTitle("Core ekibine katılım daveti")).toHaveCount(1);
   await expect(row).toContainText("Katılmanı bekliyoruz");
   await expect(row).toContainText("manager");
   await expect(row).toContainText("Bekliyor");

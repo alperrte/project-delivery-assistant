@@ -14,8 +14,8 @@ Kullanıcı kararı (2026-10-10): staging (`git add`), branch değiştirme ve `g
 - [x] Phase 1 — `general-features` (2026-10-10, pre-push PASSED)
 - [x] Transition Gate 1 — user commit/push confirmation (2026-10-10)
 - [x] Phase 2 — `project-service-backend` (Talep 3 + 9 backend prerequisite; 2026-10-10)
-- [ ] Transition Gate 2 — user commit/push confirmation
-- [ ] Phase 3 — `project-service-frontend`
+- [x] Transition Gate 2 — user commit/push confirmation (2026-10-10)
+- [x] Phase 3 — `project-service-frontend` (2026-10-10)
 - [ ] Transition Gate 3 — user commit/push confirmation
 - [ ] Phase 4 — `squad-service-backend`
 - [ ] Transition Gate 4 — user commit/push confirmation
@@ -423,8 +423,8 @@ STOP → `BRANCH COMPLETE — project-service-backend`
 
 ## Transition Gate 2
 
-- [ ] Kullanıcı backend commit/push'u doğruladı.
-- [ ] `project-service-frontend` Phase 1 + Phase 2 commitlerini içeriyor.
+- [x] Kullanıcı backend commit/push'u doğruladı (`2446c6b`; main'e PR #127 `278ecbb`).
+- [x] `project-service-frontend` Phase 1 + Phase 2 commitlerini içeriyor (`pull --ff-only origin main` → `278ecbb`; `ba2d4df` ve `2446c6b` erişilebilir; ortak bileşenler, `X-Has-Next-Page`, davet banner route'u mevcut).
 
 ---
 
@@ -459,12 +459,12 @@ Transition Gate 2.
 
 ### Checklist
 
-- [ ] 9.1 Kart + preview priority.
-- [ ] 9.2 E2E T2.
+- [x] 9.1 Kart (`ProjectPriorityChip`, başlık bandında `EntityCard.cornerStart` — kart yüksekliği değişmez; proje öncelik skalası `projectPriorityDotClass`, header/ProjectRow ile aynı) + settings preview (`watched.priority`). Create/davet önizlemesinde kaynakta öncelik yok → gösterilmez.
+- [x] 9.2 E2E T2 `project-priority.spec.ts` (LOW→HIGH, reload yok, B izolasyonu).
 
 ### Definition of Done
 
-- [ ] Hard reload olmadan edit/kart/preview aynı değer; Project B etkilenmiyor.
+- [x] Hard reload olmadan edit/kart/preview aynı değer; Project B etkilenmiyor.
 
 ## Task 10 — Silinen proje sidebar/route temizliği (Talep 6)
 
@@ -495,14 +495,16 @@ Transition Gate 2.
 
 ### Checklist
 
-- [ ] 10.1 Hook: 404'te remembered slug temizliği + `forgetSelectedProject`.
-- [ ] 10.2 Delete akışı.
-- [ ] 10.3 Sidebar error durumu.
-- [ ] 10.4 E2E T3.
+- [x] 10.1 Hook: 404/403'te `project`/`slug` undefined; hatırlanan slug ise `forgetSelectedProject` ile temizlenip ilk projeye düşülür.
+- [x] 10.2 Delete akışı: `forgetSelectedProject`, yalnız `["projects","by-slug",slug]`, `["projects","detail",id]` ve `["projects",id]` prefix'i kaldırılır, liste invalidate, `router.replace("/projects")`; global clear yok.
+- [x] 10.3 Sidebar: hook slug vermediğinde mevcut pasif "Proje seçin" durumu (bileşen değişmedi).
+- [x] 10.4 E2E T3 `project-delete-navigation.spec.ts` 2/2 (UI silme, Back, direkt URL 404, reload, başka bağlamdan API ile silinen hatırlanan proje).
+
+Not: Başka sekmede silinen proje, 30 sn `staleTime` nedeniyle bir sonraki tam yükleme/yeniden sorguya kadar sidebar'da kalabilir. `17-project-chat` dev sunucusunda zamanlama nedeniyle düştü, production build'de 21/21 geçti.
 
 ### Definition of Done
 
-- [ ] Stale slug link üretmiyor; eski route 404; başka hesap etkilenmiyor.
+- [x] Stale slug link üretmiyor; eski route 404; başka bağlam etkilenmiyor.
 
 ## Task 11 — Kriter create/edit tam sayfa (Talep 5)
 
@@ -533,14 +535,14 @@ Task 10 DoD; Phase 1 `StickyFormActions`/`FormErrorSummary`.
 
 ### Checklist
 
-- [ ] 11.1 Routing.
-- [ ] 11.2 Form sayfası.
-- [ ] 11.3 Liste entegrasyonu (Link).
-- [ ] 11.4 E2E T4.
+- [x] 11.1 Routing: `criteria/new`, `criteria/[criterionId]/edit` (TR `kriterler/yeni`, `kriterler/<id>/duzenle`; DE `kriterien/neu`, `…/bearbeiten`); sanal `/criteria` bölümü çalışmaya devam ediyor; breadcrumb, başlık, sidebar aktifliği, `authenticated-route`.
+- [x] 11.2 `criterion-form-page.tsx`: aynı alanlar/şema/API; başarıda criteria + home invalidation (eski bug düzeltildi); yönetici değilse forbidden, bilinmeyen id not-found; `StickyFormActions`, `beforeunload`. Tek bölümlü form: özet paneli yok, inline hata + ilk alana odak (tasarım kuralı netleştirildi).
+- [x] 11.3 Liste: oluştur/düzenle `Link`; dialog (`criterion-form-dialog.tsx`) kaldırıldı.
+- [x] 11.4 E2E T4 `criteria-pages.spec.ts` 9/9 (gerçek API/DB, home progress cache ısıtılarak doğrulandı, Back/Cancel, üye forbidden, 390px light/dark); Alper'in form spec'leri dialog→sayfa uyarlandı (aynı doğrulamalar).
 
 ### Definition of Done
 
-- [ ] Modal açılmıyor; create/edit gerçek DB; Back doğru; home progress güncel.
+- [x] Modal açılmıyor; create/edit gerçek DB; Back doğru; home progress güncel.
 
 ## Task 12 — Sprint create/edit tam sayfa (Talep 14)
 
@@ -571,14 +573,14 @@ Task 11 DoD; Phase 1 DatePicker.
 
 ### Checklist
 
-- [ ] 12.1 Routing.
-- [ ] 12.2 Sayfa.
-- [ ] 12.3 Liste/actions bağlantıları.
-- [ ] 12.4 E2E T6.
+- [x] 12.1 Routing: `sprints/new` (statik segment `[sprintId]`'den önce), `sprints/[sprintId]/edit` (TR `sprintler/yeni`, `…/duzenle`); breadcrumb "new"/"edit"i sprint adı sanmıyor.
+- [x] 12.2 `sprint-form-page.tsx`: aynı alanlar, varsayılanlar (bugün, +13 gün), DatePicker + `trigger("endDate")`, `useTaskMutation`; yönetici/advanced/COMPLETED kısıtları. Oluşturma → liste; düzenleme başarı/iptal → sprint detayı (ekip/görev şablonlarıyla aynı).
+- [x] 12.3 Liste/actions/detay bağlantıları `Link`; `sprint-dialog.tsx` kaldırıldı.
+- [x] 12.4 E2E T6 `sprint-pages.spec.ts` 10/10 (chooseDate, bitiş<başlangıç POST'u engeller ve odak, DB, SIMPLE proje/üye engeli, 390px light/dark).
 
 ### Definition of Done
 
-- [ ] Modal yok; shared DatePicker; DB'de sprint; edit çalışır.
+- [x] Modal yok; shared DatePicker; DB'de sprint; edit çalışır.
 
 ## Task 13 — Commit history pagination UI (Talep 3)
 
@@ -609,13 +611,13 @@ Transition Gate 2 (`X-Has-Next-Page` mevcut).
 
 ### Checklist
 
-- [ ] 13.1 API header okuma.
-- [ ] 13.2 Pagination bileşeni + liste.
-- [ ] 13.3 E2E T7.
+- [x] 13.1 API header okuma: `apiRequestWithHeaders` (client.ts, mevcut çağrılar değişmez), `repositoryApi.commitsPage` → `{commits, hasNext}`.
+- [x] 13.2 `components/common/cursor-pagination.tsx` (PaginationBar dili, `aria-current`, 44px touch, page 10 limit notu); branch görünümünde infinite/"Load more" yerine sayfa bazlı `useQuery` (30/sayfa), `?cpage=` URL, dal/yazar değişiminde sayfa 1. BASIC mod yalnız son 10 commit özeti (değişmedi).
+- [x] 13.3 E2E T7 `commit-pagination.spec.ts` 7/7 (frontend→backend isteği `page.route` ile; GitHub dış kota nedeniyle — gerçek header/CORS Phase 2 backend entegrasyon testlerinde); `repository-management` 8/8 güncellendi; repository/lifecycle batch 58/58.
 
 ### Definition of Done
 
-- [ ] Sayfa 1 → 2 → Önceki deterministik; loading'de eski liste yok.
+- [x] Sayfa 1 → 2 → Önceki deterministik; loading'de eski liste yok (skeleton; route kapısıyla doğrulandı).
 
 ## Task 14 — Proje Davetlerim redesign (Talep 8)
 
@@ -646,13 +648,13 @@ Transition Gate 2.
 
 ### Checklist
 
-- [ ] 14.1 Layout.
-- [ ] 14.2 Responsive 320–1440 + light/dark.
-- [ ] 14.3 Mevcut invitation spec'leri yeşil.
+- [x] 14.1 Layout: `xl`+ semantik tablo (Proje+ekip+mesaj, Roller `ProjectRoleBadge`, Davet eden Avatar, Tarih `<time>`, Durum, İşlemler 44px); altında kart listesi. `lg` yerine `xl`: 1024'te 240px sidebar ile 6 sütun yatay taştı (ölçüldü; eski eşikle aynı). Filtre `?status=ALL`, sayfa `?page=` URL'de.
+- [x] 14.2 Responsive 320/390/768/1024/1280/1440 + light/dark + TR/EN/DE (`my-invitations-redesign.spec.ts` 8/8).
+- [x] 14.3 Mevcut invitation spec'leri yeşil (badges, cache, remediation, pending-contract, notification-context, global-invitations-preview, errors, 02, 04 (rate-limit penceresi sonrası), 10, team-invitations-modernization); `10-global-invitations` ve `global-invitations-preview` seçicileri yeni yerleşime uyarlandı (davranış aynı).
 
 ### Definition of Done
 
-- [ ] Hiçbir mevcut bilgi/davranış kaybolmadı.
+- [x] Hiçbir mevcut bilgi/davranış kaybolmadı (tek bilinçli değişiklik: sorgu hatasında eski satırlar gizlenir, yönetici sayfasıyla aynı).
 
 ## Task 15 — Davet önizleme banner (Talep 9)
 
@@ -683,12 +685,12 @@ Transition Gate 2; Task 14.
 
 ### Checklist
 
-- [ ] 15.1 Banner kaynağı.
-- [ ] 15.2 E2E T9 (banner'lı, banner'sız, bozuk görsel).
+- [x] 15.1 Banner kaynağı: `bannerVersion` varsa `invitationsApi.bannerUrl(id, v)` → `ProjectCard.invitationPreview.bannerSrc`; `EntityCover` yükleme hatasında noktalı yüzeye düşer.
+- [x] 15.2 E2E T9 `invitation-preview-banner.spec.ts` 4/4 (gerçek yüklenmiş banner 200/image/png/no-store/naturalWidth>0; banner'sız: görsel ve istek yok, route 404; 500 → fallback, dialog ve Kabul et kullanılabilir).
 
 ### Definition of Done
 
-- [ ] Banner görünüyor; fallback güvenli.
+- [x] Banner görünüyor; fallback güvenli.
 
 ## Task 16 — Phase 3 regresyon
 
@@ -713,17 +715,17 @@ Task 9–15 DoD.
 
 ### Checklist
 
-- [ ] 16.1 lint/type/build.
-- [ ] 16.2 Hedefli + etkilenen Playwright.
-- [ ] 16.3 pre-push PASS.
-- [ ] 16.4 Docs + completion kaydı.
+- [x] 16.1 lint/type/build (temiz; pre-push içinde de).
+- [x] 16.2 Hedefli + etkilenen Playwright (task bazında; `17-project-chat` production build'de 21/21).
+- [x] 16.3 pre-push: 751/754. `project-priority` spec'i tam pakette sayfalama nedeniyle düştü, düzeltildi (yeniden kullanılan ve yeni yöneticiyle geçti); aralıklı `team-member-preview` 401'i için kullanıcı kararıyla istisna kaydedildi.
+- [x] 16.4 Docs (`frontend-design-rules.md`, `architecture.md`, `folder-structure.md`) + `docs/compliation/2026-10-10-project-service-frontend-ui-refinements.md`.
 
 ### Definition of Done (Branch completion)
 
-- [ ] Talep 2, 3, 5, 6, 8, 9, 14 tamamlandı/test edildi.
-- [ ] Targeted Playwright + lint/type/build geçti.
-- [ ] Backend contract'ları real API/PostgreSQL ile doğrulandı.
-- [ ] Commit/push/staging yapılmadı.
+- [x] Talep 2, 3, 5, 6, 8, 9, 14 tamamlandı/test edildi.
+- [x] Targeted Playwright + lint/type/build geçti.
+- [x] Backend contract'ları real API/PostgreSQL ile doğrulandı (davet banner'ı gerçek yüklenen görselle; commit `X-Has-Next-Page` backend entegrasyon testleriyle, UI testi frontend→backend mock).
+- [x] Commit/push yapılmadı (staging kullanıcı kararıyla ajan tarafından yapıldı).
 
 STOP → `BRANCH COMPLETE — project-service-frontend`
 

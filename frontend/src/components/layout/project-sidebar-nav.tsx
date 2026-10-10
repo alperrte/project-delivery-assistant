@@ -50,6 +50,10 @@ export function ProjectSidebarNav({
   // all belong to the Teams section.
   const teamsRoute = /^\/projects\/([^/]+)\/teams(?:\/|$)/.exec(pathname);
 
+  // The criteria section is a virtual `?section=criteria` page; only its physical create/edit pages reach this
+  // pathname (/projects/[slug]/criteria/new, /projects/[slug]/criteria/[id]/edit) and they keep Criteria active.
+  const criteriaRoute = /^\/projects\/([^/]+)\/criteria(?:\/|$)/.exec(pathname);
+
   // `/projects/new` is the create page, not a project called "new";
   // the sidebar keeps the last selected project there.
   const detailSlug = /^\/projects\/([^/]+)$/.exec(pathname)?.[1];
@@ -60,6 +64,7 @@ export function ProjectSidebarNav({
   const routeSlug =
     (detailSlug === "new" ? undefined : detailSlug) ??
     teamsRoute?.[1] ??
+    criteriaRoute?.[1] ??
     taskRouteSlug(pathname);
 
   const { slug, project } = useSelectedProject(routeSlug);
@@ -94,9 +99,11 @@ export function ProjectSidebarNav({
   // Inside a task route no project section is highlighted; the task group owns the selection.
   const active = teamsRoute
     ? "teams"
-    : taskActive
-      ? null
-      : projectSection(searchParams.get("section"), isManager);
+    : criteriaRoute
+      ? "criteria"
+      : taskActive
+        ? null
+        : projectSection(searchParams.get("section"), isManager);
 
   const projectPath = slug ? `/projects/${slug}` : null;
 

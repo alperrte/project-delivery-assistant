@@ -54,9 +54,9 @@ test.describe.serial("Project lifecycle (manager)", () => {
     await expect(page.getByText("Ayarlar kaydedildi.")).toBeVisible();
 
     await page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Kriterler" }).click();
-    await page.getByRole("button", { name: /^Yeni kriter$/ }).click();
+    await page.getByRole("link", { name: /^Yeni kriter$/ }).click();
     await page.locator("#criterion-title").fill("E2E kriteri");
-    await page.getByRole("dialog").getByRole("button", { name: /^Oluştur$/ }).click();
+    await page.getByRole("button", { name: /^Oluştur$/ }).click();
     await expect(page.getByText("Kriter oluşturuldu.")).toBeVisible();
 
     await page.getByRole("checkbox", { name: /E2E kriteri/ }).click();

@@ -26,6 +26,7 @@ import { organizationsApi } from "@/features/organizations/api";
 import { RepositorySetting } from "@/features/repository/components/repository-setting";
 import { projectBannerUrl, projectLogoSource, projectsApi } from "../api";
 import { invalidateProjectMutation } from "../query-invalidation";
+import { forgetSelectedProject } from "../hooks/use-selected-project";
 import { ProjectLogoField } from "./project-logo-field";
 import { BannerField } from "./banner-field";
 import { ProjectPreviewPanel } from "./project-preview-panel";
@@ -120,9 +121,15 @@ export function ProjectSettingsForm({ project, organization }: { project: Projec
   const remove = useMutation({
     mutationFn: () => projectsApi.remove(project.id),
     onSuccess: async () => {
-      await invalidateProjectMutation(queryClient, project.organizationId);
+      // The project is gone: drop only its own cache entries (everything else stays warm), stop selecting it, and
+      // leave with replace so Back does not return to a settings page for a project that no longer exists.
+      if (user) forgetSelectedProject(user.id, project.slug);
+      queryClient.removeQueries({ queryKey: ["projects", "by-slug", project.slug] });
+      queryClient.removeQueries({ queryKey: ["projects", "detail", project.id] });
+      queryClient.removeQueries({ queryKey: ["projects", project.id] });
       toast.success(t("deleted"));
-      router.push("/projects");
+      router.replace("/projects");
+      await invalidateProjectMutation(queryClient, project.organizationId);
     },
     onError: (err) => toast.error(te(errorKey(err))),
   });
@@ -138,6 +145,7 @@ export function ProjectSettingsForm({ project, organization }: { project: Projec
       description: watched.description?.trim() || null,
       projectGoal: project.projectGoal,
       status: watched.status ?? project.status,
+      priority: watched.priority ?? project.priority,
       projectType: watched.projectType ?? project.projectType,
       techStack: watched.techStack || null,
       logoVersion: project.logoVersion,
@@ -146,7 +154,7 @@ export function ProjectSettingsForm({ project, organization }: { project: Projec
       updatedBy: project.updatedBy,
       updatedAt: project.updatedAt,
     }),
-    [project, watched.name, watched.tagline, watched.description, watched.status, watched.projectType, watched.techStack, tp],
+    [project, watched.name, watched.tagline, watched.description, watched.status, watched.priority, watched.projectType, watched.techStack, tp],
   );
   const updatedLabel = new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(project.updatedAt));
 

@@ -160,18 +160,25 @@ export async function renewAccessSession(): Promise<boolean> {
 // Public endpoints never need a session, so a 401 there must not start a renewal or end the session.
 const NO_REFRESH = ["/auth/login", "/auth/register", "/auth/register/invitation", "/auth/refresh", "/auth/logout", "/analytics/events", "/contact"];
 
-export async function apiRequest<T = void>(
+type ApiRequestOptions = {
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+  body?: unknown;
+  signal?: AbortSignal;
+  /** Lets the request finish while the page unloads (analytics flush on pagehide). */
+  keepalive?: boolean;
+  /** Asked immediately before the request is sent; returning false cancels it with an `ApiError` (status 0). */
+  guard?: () => boolean;
+};
+
+export async function apiRequest<T = void>(path: string, options: ApiRequestOptions = {}): Promise<T> {
+  return (await apiRequestWithHeaders<T>(path, options)).data;
+}
+
+/** Same request, but also hands back the response headers (e.g. `X-Has-Next-Page`) next to the parsed body. */
+export async function apiRequestWithHeaders<T = void>(
   path: string,
-  options: {
-    method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
-    body?: unknown;
-    signal?: AbortSignal;
-    /** Lets the request finish while the page unloads (analytics flush on pagehide). */
-    keepalive?: boolean;
-    /** Asked immediately before the request is sent; returning false cancels it with an `ApiError` (status 0). */
-    guard?: () => boolean;
-  } = {},
-): Promise<T> {
+  options: ApiRequestOptions = {},
+): Promise<{ data: T; headers: Headers }> {
   const method = options.method ?? "GET";
   const init: RequestInit =
     options.body === undefined
@@ -201,9 +208,9 @@ export async function apiRequest<T = void>(
   }
 
   if (!res.ok) throw await toApiError(res);
-  if (res.status === 204 || res.headers.get("content-length") === "0") return undefined as T;
+  if (res.status === 204 || res.headers.get("content-length") === "0") return { data: undefined as T, headers: res.headers };
   const text = await res.text();
-  return (text ? JSON.parse(text) : undefined) as T;
+  return { data: (text ? JSON.parse(text) : undefined) as T, headers: res.headers };
 }
 
 export const apiUrl = (path: string) => `${API_URL}${path}`;
