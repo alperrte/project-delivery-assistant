@@ -37,6 +37,13 @@ test("external invitation registers an account and joins the invited team with t
     await invitee.getByLabel("Kullanıcı adı").fill(user.nickname);
     await invitee.getByLabel("Şifre", { exact: true }).fill(user.password);
     await invitee.getByLabel("Şifre tekrarı").fill(user.password);
+    // The invitation form carries the same notice as the normal one: links to the terms, the KVKK notice and the privacy policy, no consent box.
+    const notice = invitee.locator("form p", { hasText: "Kayıt olarak" });
+    await expect(notice).toBeVisible();
+    await expect(notice.getByRole("link", { name: /Kullanım Koşulları/ })).toHaveAttribute("href", "/tr/kullanim-kosullari");
+    await expect(notice.getByRole("link", { name: /KVKK Aydınlatma Metni/ })).toHaveAttribute("href", "/tr/kvkk");
+    await expect(notice.getByRole("link", { name: /Gizlilik Politikası/ })).toHaveAttribute("href", "/tr/gizlilik");
+    await expect(invitee.locator("form").getByRole("checkbox")).toHaveCount(0);
     await invitee.getByRole("button", { name: "Kayıt ol ve projeye katıl" }).click();
     await expect(invitee).toHaveURL(new RegExp(`/tr/projeler/${slug}/genel-bakis$`), { timeout: 20_000 });
 

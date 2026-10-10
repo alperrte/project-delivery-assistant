@@ -9,12 +9,12 @@
 - [X] Hakkımızda bağlantısı
 - [X] Sıkça Sorulan Sorular (SSS)
 ### HAMZA
-- [ ] KVKK Aydınlatma Metni
-- [ ] Gizlilik Politikası
-- [ ] Kullanım Koşulları
-- [ ] Çerez Politikası ve tercih bağlantısı
-- [ ] Erişilebilirlik Bildirimi
-- [ ] İletişim adresi ve destek bağlantısı
+- [X] KVKK Aydınlatma Metni
+- [X] Gizlilik Politikası
+- [X] Kullanım Koşulları
+- [X] Çerez Politikası ve tercih bağlantısı
+- [X] Erişilebilirlik Bildirimi
+- [X] İletişim adresi ve destek bağlantısı
 ### HAMZA
 - [X] Geliştirici / ekip profilleri
 - [Eklenmeyecek] Sosyal medya bağlantıları
@@ -25,40 +25,40 @@
 
 ### İletişim ve destek sayfası
 ### HAMZA
-- [ ] İletişim formu
-- [ ] E-posta gönderim altyapısı
-- [ ] Spam ve bot koruması
-- [ ] Gönderim sonucu bildirimi
-- [ ] Tekrarlanan gönderim koruması
-- [ ] Veri işleme bilgilendirmesi
+- [X] İletişim formu
+- [X] E-posta gönderim altyapısı
+- [X] Spam ve bot koruması
+- [X] Gönderim sonucu bildirimi
+- [X] Tekrarlanan gönderim koruması
+- [X] Veri işleme bilgilendirmesi
 ### HAMZA
 ## 2. Hukuki uyum, KVKK ve çerezler
 
 ### Kişisel verilerin korunması
 ### HAMZA
-- [ ] KVKK aydınlatma metni
-- [ ] Gizlilik politikası
-- [ ] Kullanım koşulları
-- [ ] Veri sorumlusu bilgisi
-- [ ] Veri işleme amaçları ve hukuki sebepler
-- [ ] Veri minimizasyonu
-- [ ] Saklama ve imha politikası
-- [ ] İlgili kişi başvuruları
-- [ ] Açık rıza yönetimi
-- [ ] Aydınlatma ile açık rızanın ayrılığı
-- [ ] Yurt dışına veri aktarımı
+- [X] KVKK aydınlatma metni
+- [X] Gizlilik politikası
+- [X] Kullanım koşulları
+- [X] Veri sorumlusu bilgisi
+- [X] Veri işleme amaçları ve hukuki sebepler
+- [X] Veri minimizasyonu
+- [X] Saklama ve imha politikası
+- [X] İlgili kişi başvuruları
+- [X] Açık rıza yönetimi
+- [X] Aydınlatma ile açık rızanın ayrılığı
+- [X] Yurt dışına veri aktarımı
 - [ ] VERBİS değerlendirmesi
-- [ ] Veri ihlali hazırlığı
+- [X] Veri ihlali hazırlığı
 ### HAMZA
 ### Çerez kullanımı ve seçimler
 ### HAMZA
-- [ ] Çerez envanteri
-- [ ] Çerez politikası
-- [ ] Çerez onay katmanı
-- [ ] Ön izin kontrolü
-- [ ] Seçimi geri alma
-- [ ] Çerez kategorileri
-- [ ] Yanıltıcı onay tasarımından kaçınma
+- [X] Çerez envanteri
+- [X] Çerez politikası
+- [X] Çerez onay katmanı
+- [X] Ön izin kontrolü
+- [X] Seçimi geri alma
+- [X] Çerez kategorileri
+- [X] Yanıltıcı onay tasarımından kaçınma
 ### HAMZA
 ### Hizmet türüne göre diğer yükümlülükler
 
@@ -291,24 +291,24 @@
 
 ### Admin paneli (koşullu)
 ### HAMZA
-- [ ] Kullanıcı yönetimi
-- [ ] Rol ve izin yönetimi
-- [ ] Sistem ayarları
-- [ ] Destek talepleri
-- [ ] Operasyon metrikleri
-- [ ] Audit log inceleme
-- [ ] Admin güvenliği
-- [ ] Kritik işlem onayı
-- [ ] Admin indeksleme politikası
+- [X] Kullanıcı yönetimi
+- [X] Rol ve izin yönetimi
+- [X] Sistem ayarları
+- [X] Destek talepleri
+- [X] Operasyon metrikleri
+- [X] Audit log inceleme
+- [X] Admin güvenliği
+- [X] Kritik işlem onayı
+- [X] Admin indeksleme politikası
 
 ### Analytics ve monitoring (koşullu)
 
-- [ ] Sayfa görüntülenmeleri
-- [ ] Kullanıcı akışları
-- [ ] CTA ve dönüşüm ölçümü
-- [ ] Hata oranları
-- [ ] Gizlilik odaklı ölçümleme
-- [ ] Analitik için hukuki değerlendirme
+- [X] Sayfa görüntülenmeleri
+- [X] Kullanıcı akışları
+- [X] CTA ve dönüşüm ölçümü
+- [X] Hata oranları
+- [X] Gizlilik odaklı ölçümleme
+- [X] Analitik için hukuki değerlendirme
 ### HAMZA
 
 

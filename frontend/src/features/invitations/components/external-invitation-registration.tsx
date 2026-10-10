@@ -6,6 +6,8 @@ import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
 import { AuthCard, authCtaClass } from "@/features/auth/components/auth-card";
+import { RegistrationNotice } from "@/features/auth/components/registration-notice";
+import { trackCta } from "@/features/analytics/cta";
 import { FormField } from "@/components/common/form-field";
 import { CircleNotch } from "@phosphor-icons/react";
 import { SubmitButton } from "@/components/common/submit-button";
@@ -79,6 +81,7 @@ export function ExternalInvitationRegistration() {
     try {
       const accepted = await authApi.registerInvitation({ token, email: preview.email,
         firstName: preview.firstName, lastName: preview.lastName, nickname: validation.data.nickname, password, confirmPassword });
+      trackCta("register_submit");
       await authApi.login({ email: preview.email, password });
       const me = await authApi.me();
       clearPrivateInvitations(queryClient);
@@ -108,6 +111,7 @@ export function ExternalInvitationRegistration() {
                 <FormField label={ta("password")} value={password} onChange={(event) => setPassword(event.target.value)} password autoComplete="new-password" />
                 <FormField label={ta("confirmPassword")} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} password autoComplete="new-password" />
                 <SubmitButton pending={busy} className={authCtaClass}>{t("externalJoin")}</SubmitButton>
+                <RegistrationNotice />
               </form>
               <p className="text-sm text-muted-foreground">{t("externalAlreadyRegistered")} <Link href={`/login#invitation=${encodeURIComponent(token!)}`} className="underline">{ta("toLogin")}</Link></p>
             </>}

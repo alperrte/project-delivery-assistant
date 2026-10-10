@@ -156,6 +156,7 @@ test("public information pages declare their type and breadcrumb", async ({ requ
     ["/tr/hakkimizda", "AboutPage", "tr"], ["/en/about", "AboutPage", "en"], ["/de/ueber-uns", "AboutPage", "de"],
     ["/tr/sss", "WebPage", "tr"], ["/en/license", "WebPage", "en"], ["/de/barrierefreiheit", "WebPage", "de"],
     ["/tr/kvkk", "WebPage", "tr"], ["/en/privacy", "WebPage", "en"], ["/de/datenschutz", "WebPage", "de"],
+    ["/tr/kullanim-kosullari", "WebPage", "tr"], ["/en/terms", "WebPage", "en"], ["/de/nutzungsbedingungen", "WebPage", "de"],
     ["/tr/iletisim", "ContactPage", "tr"], ["/en/contact", "ContactPage", "en"], ["/de/kontakt", "ContactPage", "de"],
   ]) {
     const html = await (await request.get(path)).text();
@@ -215,7 +216,7 @@ test("public pages declare x-default, the page language and a 1200x630 share ima
 });
 
 test("every public page carries a complete share card: title, description, own url, site name, type, image and Twitter tags", async ({ page }) => {
-  const paths = ["/tr/ana-sayfa", "/en/home", "/de/startseite", "/tr/giris", "/en/register", "/de/passwort-vergessen", "/tr/hakkimizda", "/en/faq", "/de/kontakt", "/tr/cerez-politikasi", "/en/license", "/de/barrierefreiheit", "/en/privacy", "/tr/kvkk"];
+  const paths = ["/tr/ana-sayfa", "/en/home", "/de/startseite", "/tr/giris", "/en/register", "/de/passwort-vergessen", "/tr/hakkimizda", "/en/faq", "/de/kontakt", "/tr/cerez-politikasi", "/en/license", "/de/barrierefreiheit", "/en/privacy", "/tr/kvkk", "/en/terms", "/de/cookie-richtlinie"];
   for (const path of paths) {
     await page.goto(path);
     const content = (selector: string) => page.locator(selector).first().getAttribute("content");
@@ -265,9 +266,9 @@ test("protected localized deep links go to the same-language login", async ({ re
 
 test("every protected page sends a visitor without a session to the login of the same language; public pages stay open", async ({ request }) => {
   const protectedPages: Record<string, string[]> = {
-    tr: ["/tr/genel-bakis", "/tr/projeler", "/tr/projeler/yeni-proje", "/tr/projeler/x/ekipler", "/tr/projeler/x/duzenle", "/tr/projeler/x/gorevler/pano", "/tr/organizasyonlar", "/tr/organizasyonlar/yeni-organizasyon", "/tr/ayarlar", "/tr/hesap", "/tr/gorevlerim", "/tr/takvim", "/tr/takvim/yeni-animsatici", "/tr/davetler", "/tr/sifre-degistir", "/tr/yonetim", "/tr/yonetim/kullanicilar", "/tr/yonetim/analitik"],
-    en: ["/en/dashboard", "/en/projects", "/en/projects/new-project", "/en/projects/x/teams", "/en/projects/x/edit", "/en/projects/x/tasks/board", "/en/organizations", "/en/settings", "/en/account", "/en/my-tasks", "/en/calendar", "/en/invitations", "/en/change-password", "/en/admin", "/en/admin/users"],
-    de: ["/de/uebersicht", "/de/projekte", "/de/projekte/x/teams", "/de/organisationen", "/de/einstellungen", "/de/konto", "/de/meine-aufgaben", "/de/kalender", "/de/einladungen", "/de/passwort-aendern", "/de/verwaltung/analyse"],
+    tr: ["/tr/genel-bakis", "/tr/projeler", "/tr/projeler/yeni-proje", "/tr/projeler/x/ekipler", "/tr/projeler/x/duzenle", "/tr/projeler/x/gorevler/pano", "/tr/organizasyonlar", "/tr/organizasyonlar/yeni-organizasyon", "/tr/ayarlar", "/tr/hesap", "/tr/gorevlerim", "/tr/takvim", "/tr/takvim/yeni-animsatici", "/tr/davetler", "/tr/sifre-degistir", "/tr/yonetim", "/tr/yonetim/kullanicilar", "/tr/yonetim/analitik", "/tr/yonetim/sistem", "/tr/yonetim/denetim-kaydi", "/tr/yonetim/destek-talepleri", "/tr/yonetim/kullanicilar/x", "/tr/yonetim/destek-talepleri/x"],
+    en: ["/en/dashboard", "/en/projects", "/en/projects/new-project", "/en/projects/x/teams", "/en/projects/x/edit", "/en/projects/x/tasks/board", "/en/organizations", "/en/settings", "/en/account", "/en/my-tasks", "/en/calendar", "/en/invitations", "/en/change-password", "/en/admin", "/en/admin/users", "/en/admin/system", "/en/admin/audit", "/en/admin/support", "/en/admin/users/x"],
+    de: ["/de/uebersicht", "/de/projekte", "/de/projekte/x/teams", "/de/organisationen", "/de/einstellungen", "/de/konto", "/de/meine-aufgaben", "/de/kalender", "/de/einladungen", "/de/passwort-aendern", "/de/verwaltung/analyse", "/de/verwaltung/system", "/de/verwaltung/audit-protokoll", "/de/verwaltung/support-anfragen", "/de/verwaltung/benutzer/x", "/de/verwaltung/support-anfragen/x"],
   };
   const login = { tr: "/tr/giris", en: "/en/login", de: "/de/anmelden" };
   for (const [locale, paths] of Object.entries(protectedPages)) {
@@ -339,12 +340,19 @@ test("public canonical, hreflang, sitemap and robots agree on localized paths", 
   expect(sitemap).toContain("/tr/erisilebilirlik");
   expect(sitemap).toContain("/en/accessibility");
   expect(sitemap).toContain("/de/barrierefreiheit");
+  // The data-protection and legal pages are final: listed with their language versions and open to crawlers.
+  for (const slug of ["/tr/kvkk", "/en/kvkk", "/de/kvkk", "/tr/gizlilik", "/en/privacy", "/de/datenschutz", "/tr/kullanim-kosullari", "/en/terms", "/de/nutzungsbedingungen", "/tr/cerez-politikasi", "/en/cookies", "/de/cookie-richtlinie"]) {
+    expect(sitemap, slug).toContain(slug);
+  }
   const robots = await (await request.get("/robots.txt")).text();
   expect(robots).toContain("Disallow: /de/projekte");
   expect(robots).toContain("Disallow: /de/meine-aufgaben");
   expect(robots).toContain("Disallow: /en/my-tasks");
   expect(robots).toContain("Disallow: /tr/gorevlerim");
   expect(robots).not.toContain("Disallow: /de/barrierefreiheit");
+  for (const slug of ["kvkk", "gizlilik", "privacy", "datenschutz", "kullanim-kosullari", "terms", "nutzungsbedingungen", "cerez-politikasi", "cookies", "cookie-richtlinie"]) {
+    expect(robots, slug).not.toContain(slug);
+  }
   // `noindex` is only read when crawlers may fetch the page, so the reset form is not disallowed.
   expect(robots).not.toContain("sifremi-unuttum");
   await page.goto("/tr/sifremi-unuttum");

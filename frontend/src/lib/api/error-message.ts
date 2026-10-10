@@ -119,6 +119,7 @@ const CODE_KEYS: Record<string, string> = {
       "ADMIN_SELF_DENIED",
       "ADMIN_LAST_ADMIN",
       "USER_NOT_FOUND",
+      "SUPPORT_REQUEST_NOT_FOUND",
     ].map((code) => [code, code]),
   ),
 };

@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { GitHubIcon, GoogleIcon } from "@/components/common/brand-icons";
 import { buttonVariants } from "@/components/ui/button";
@@ -12,7 +13,7 @@ import { oauthStartUrl } from "../api";
  * "or" above the buttons when they follow the form (login), "or with email"
  * below them when they come first (register).
  */
-export function OAuthButtons({ divider = "orEmail" }: { divider?: "or" | "orEmail" }) {
+export function OAuthButtons({ divider = "orEmail", notice }: { divider?: "or" | "orEmail"; notice?: ReactNode }) {
   const t = useTranslations("oauth");
   const cls = cn(
     buttonVariants({ variant: "outline" }),
@@ -40,6 +41,7 @@ export function OAuthButtons({ divider = "orEmail" }: { divider?: "or" | "orEmai
           {t("github")}
         </a>
       </div>
+      {notice}
       {divider === "orEmail" && rule}
     </div>
   );

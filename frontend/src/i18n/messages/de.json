@@ -143,6 +143,7 @@
     "ADMIN_SELF_DENIED": "Sie können Ihre eigene Mitgliedschaft nicht beenden.",
     "ADMIN_LAST_ADMIN": "Der letzte aktive Administrator kann nicht beendet werden.",
     "USER_NOT_FOUND": "Benutzer nicht gefunden.",
+    "SUPPORT_REQUEST_NOT_FOUND": "Support-Anfrage nicht gefunden.",
     "emailNotVerified": "Ihre E-Mail-Adresse wurde noch nicht bestätigt.",
     "resetTicketInvalid": "Die Bestätigung ist abgelaufen. Bitte beginnen Sie von vorn.",
     "verificationRequired": "Bitte bestätigen Sie zuerst den Code, den wir Ihnen per E-Mail geschickt haben.",
@@ -1365,7 +1366,10 @@
     "nicknamePlaceholder": "pda_assistant",
     "passwordPlaceholder": "Passwort erstellen",
     "confirmPasswordPlaceholder": "Passwort wiederholen",
-    "codeSent": "Wir haben den Bestätigungscode an Ihre E-Mail gesendet."
+    "codeSent": "Wir haben den Bestätigungscode an Ihre E-Mail gesendet.",
+    "notice": "Mit der Registrierung akzeptieren Sie die <terms>Nutzungsbedingungen</terms> und bestätigen, den <kvkk>KVKK-Datenschutzhinweis</kvkk> und die <privacy>Datenschutzerklärung</privacy> gelesen zu haben. Dies sind Informationstexte, keine Bitte um Einwilligung.",
+    "noticeOauth": "Wenn Sie mit Google oder GitHub fortfahren, akzeptieren Sie die <terms>Nutzungsbedingungen</terms> und bestätigen, den <kvkk>KVKK-Datenschutzhinweis</kvkk> und die <privacy>Datenschutzerklärung</privacy> gelesen zu haben.",
+    "newTab": "(öffnet in neuem Tab)"
   },
   "validation": {
     "rolesRequired": "Wählen Sie mindestens eine Rolle.",
@@ -2583,6 +2587,11 @@
     "changePassword": "Passwort ändern",
     "adminUsers": "Benutzer · Verwaltung",
     "adminAnalytics": "Analyse · Verwaltung",
+    "adminUser": "Benutzerdetails · Verwaltung",
+    "adminSystem": "System · Verwaltung",
+    "adminAudit": "Audit-Protokoll · Verwaltung",
+    "adminSupport": "Support-Anfragen · Verwaltung",
+    "adminSupportRequest": "Support-Anfrage · Verwaltung",
     "memberInvite": "Mitglied einladen"
   },
   "siteFooter": {
@@ -2590,7 +2599,7 @@
     "information": "Information und Hilfe",
     "about": "Über uns",
     "faq": "Häufige Fragen",
-    "kvkk": "KVKK",
+    "kvkk": "KVKK-Datenschutzhinweis",
     "privacy": "Datenschutzerklärung",
     "accessibility": "Barrierefreiheit",
     "license": "Lizenz",
@@ -2602,7 +2611,8 @@
     "version": "Version {version}",
     "source": "Quellcode",
     "cookies": "Cookie-Richtlinie",
-    "manageCookies": "Cookie-Einstellungen verwalten"
+    "manageCookies": "Cookie-Einstellungen verwalten",
+    "terms": "Nutzungsbedingungen"
   },
   "publicPages": {
     "common": {
@@ -2612,9 +2622,7 @@
       "contents": "Auf dieser Seite",
       "contactTitle": "Kontakt aufnehmen",
       "contactAction": "Kontaktformular öffnen",
-      "contactText": "Nutzen Sie das Kontaktformular bei Fragen, Datenanfragen oder Barrieren. Teilen Sie keine Passwörter, Bestätigungscodes oder geheimen Einladungsinformationen.",
-      "reviewTitle": "Prüfung vor Veröffentlichung",
-      "reviewNotice": "Dieser Informationsentwurf beschreibt die aktuellen PDA-Funktionen. Die Identität des Verantwortlichen, Hosting- und E-Mail-Anbieter, Datenstandorte und Speicherfristen müssen vor dem Start bestätigt werden. Der Text fordert keine Einwilligung an und bedeutet keine abgeschlossene KVKK-Konformitätsprüfung.",
+      "contactText": "Nutzen Sie das Kontaktformular oder die folgende E-Mail-Adresse bei Fragen, Anfragen zu personenbezogenen Daten (KVKK/DSGVO) oder Hinweisen zur Barrierefreiheit. Teilen Sie keine Passwörter, Bestätigungscodes oder geheimen Einladungsinformationen.",
       "references": "Offizielle Quellen",
       "noticeReference": "KVKK: Informationspflicht",
       "cookieReference": "KVKK: Leitfaden zur Cookie-Nutzung"
@@ -2684,8 +2692,8 @@
               "answer": "Unter der Apache License 2.0. Sie erlaubt, die Software zu nutzen, zu verändern und weiterzugeben, und knüpft daran Bedingungen wie das Beibehalten der Urheberrechts- und Lizenzhinweise. Eine Zusammenfassung und den vollständigen Text finden Sie auf der Seite Lizenz."
             },
             {
-              "question": "Wie erstelle ich ein Konto?",
-              "answer": "Öffnen Sie den Registrierungslink auf der Anmeldeseite und geben Sie E-Mail, Benutzername und Passwort ein. Nach der Registrierung versucht die Anwendung, Sie anzumelden. Falls dies fehlschlägt, gelangen Sie zur Anmeldeseite."
+              "question": "Wie lege ich ein Konto an?",
+              "answer": "Öffnen Sie den Registrierungslink auf dem Anmeldebildschirm und füllen Sie die Felder für E-Mail, Benutzername und Passwort aus. An Ihre E-Mail-Adresse wird ein sechsstelliger Bestätigungscode gesendet; sobald Sie ihn eingeben, wird Ihr Konto aktiviert und Sie sind angemeldet. Das Registrierungsformular verlinkt den KVKK-Datenschutzhinweis und die Datenschutzerklärung; sie dienen der Information, ein gesondertes Einwilligungskästchen gibt es nicht."
             },
             {
               "question": "Kann ich mich mit Google oder GitHub anmelden?",
@@ -2740,16 +2748,16 @@
           "title": "Konto und Datenschutz",
           "questions": [
             {
-              "question": "Was mache ich, wenn ich mein Passwort vergessen habe?",
-              "answer": "Nutzen Sie den Link zur Passwortwiederherstellung auf der Anmeldeseite. Der E-Mail-Versand hängt von der Konfiguration des Dienstes ab; prüfen Sie Posteingang und Spamordner. Für Google- oder GitHub-Passwörter verwenden Sie die Wiederherstellung des jeweiligen Anbieters."
+              "question": "Ich habe mein Passwort vergessen. Was tun?",
+              "answer": "Nutzen Sie auf dem Anmeldebildschirm den Link „Passwort vergessen“. An Ihre E-Mail-Adresse wird ein Code gesendet; geben Sie ihn ein und wählen Sie ein neues Passwort. Der E-Mail-Versand hängt von der Konfiguration des Dienstes ab; prüfen Sie Posteingang und Spam-Ordner. Für das Passwort Ihres Google- oder GitHub-Kontos nutzen Sie den Wiederherstellungsablauf des jeweiligen Anbieters."
             },
             {
               "question": "Was speichert die Option Angemeldet bleiben?",
               "answer": "Diese Option merkt sich nur Ihre E-Mail-Adresse in diesem Browser. Sie speichert kein Passwort und verlängert die Sitzung nicht. Vermeiden Sie sie auf gemeinsam genutzten Geräten; deaktivieren Sie sie bei einer späteren Anmeldung, um die gespeicherte E-Mail zu entfernen."
             },
             {
-              "question": "Wie kann ich meine Daten prüfen oder eine Löschung beantragen?",
-              "answer": "Die KVKK- und Datenschutzseiten erläutern die Datenverarbeitung. In den Kontoeinstellungen können Sie die Löschung Ihres Kontos anstoßen und die erforderlichen Prüfungen über den Link abschließen, den Sie per E-Mail erhalten. Andere Konto- oder Datenanfragen können Sie an die Kontaktadresse senden; Umfang und Identitätsprüfung werden gesondert geprüft."
+              "question": "Wie lösche ich mein Konto oder erhalte Zugriff auf meine Daten?",
+              "answer": "Sie können Ihr Konto auf dem Kontobildschirm selbst löschen: Sie bestätigen mit einem Einmal-Link, der an Ihre E-Mail-Adresse gesendet wird, und Ihren eigenen Anmeldedaten; das Konto wird sofort anonymisiert. Wenn Sie ein Projekt oder eine Organisation besitzen, müssen Sie zuvor die Inhaberschaft übertragen oder sie löschen. Für Anfragen wie Auskunft, Berichtigung oder Export Ihrer Daten wählen Sie im Kontaktformular die Kategorie „KVKK / Datenanfrage“ oder schreiben Sie an pdassistant.info@gmail.com; wir antworten spätestens innerhalb von 30 Tagen. Einzelheiten stehen im KVKK-Datenschutzhinweis und in der Datenschutzerklärung."
             }
           ]
         },
@@ -2775,197 +2783,459 @@
     },
     "privacy": {
       "title": "Datenschutzerklärung",
-      "description": "Welche Informationen PDA verwendet, was Projektmitglieder sehen und welche Einstellungen im Browser gespeichert werden.",
+      "description": "Welche Informationen PDA wofür verwendet, wer sie sehen kann, wie lange sie gespeichert werden, wie Sie Ihr Konto löschen und die DSGVO-Informationen für Besucher in der EU/im EWR.",
       "sections": [
         {
           "id": "scope",
-          "title": "Umfang und Kontakt",
+          "title": "Geltungsbereich und Verantwortliche",
           "paragraphs": [
-            "Diese Erklärung umfasst die Konto-, Projekt-, Team-, Aufgaben- und Kalenderfunktionen von PDA. Auf externen Google- oder GitHub-Seiten gelten die jeweiligen Datenschutzbedingungen.",
-            "Die README nennt Alper Temiz und Hamza Taşbay als Entwickler. Die Identität des datenschutzrechtlich Verantwortlichen ist vor dem Start gesondert festzulegen; Entwicklernamen allein bestimmen diese Rolle nicht. Als Kontaktweg dient das Formular auf der Kontaktseite."
+            "Diese Erklärung gilt für die Konto-, Projekt-, Team-, Aufgaben-, Chat-, Kalender- und weiteren Funktionen der PDA-Webanwendung. Wenn Sie zu externen GitHub- oder Google-Seiten wechseln, gelten deren eigene Datenschutzbestimmungen.",
+            "Verantwortliche sind Hamza Taşbay und Alper Temiz, natürliche Personen und Betreuer des Open-Source-Projekts PDA. Sie erreichen uns über das Kontaktformular oder unter pdassistant.info@gmail.com.",
+            "Die ausführlichen Informationen nach dem türkischen Gesetz Nr. 6698 (Rechtsgrundlagen, Übermittlungen, Ihre Rechte) stehen im KVKK-Datenschutzhinweis; diese Erklärung ist eine nutzerorientierte Zusammenfassung derselben Informationen."
           ]
         },
         {
           "id": "data",
-          "title": "Verwendete Informationen",
+          "title": "Welche Informationen werden verwendet?",
           "paragraphs": [
-            "Konto- und Arbeitsbereichsdaten werden entsprechend den genutzten Funktionen gespeichert. Passwörter werden nicht im Klartext gespeichert; lokale Kontopasswörter werden durch nicht umkehrbare Hashwerte geschützt."
+            "Je nach genutzten Funktionen werden die folgenden Informationen gespeichert. Passwörter werden nicht im Klartext gespeichert, sondern durch einen Einweg-Passwort-Hash geschützt."
           ],
           "items": [
-            "Konto: E-Mail, Benutzername, Kontostatus, Registrierungszeiten und gegebenenfalls Identität beim externen Anmeldeanbieter.",
-            "Projekt und Team: Projektangaben, Mitgliedschaften, Rollen, Einladungen, Antworten und hochgeladene Projektlogos.",
-            "Arbeitsinhalte: Aufgaben, Kommentare, Anhänge, Zeiteinträge, Erfolgskriterien und Erinnerungen bei Nutzung dieser Funktionen.",
-            "Sitzung: Zeitangaben, Browser-/Geräteinformationen und sichere Anmeldedatensätze. IP-Adressen dienen der Begrenzung von Anfragen.",
-            "Kontakt: Ihre Nachricht und die E-Mail-Adresse für eine Antwort."
+            "Konto: E-Mail, Benutzername, Kontostatus, Registrierungszeitpunkte, ggf. die ID eines externen Anmeldeanbieters; Vor- und Nachname (bei Konten, die über eine Einladung entstehen); optionales Profilfoto.",
+            "Zwei-Faktor-Authentifizierung (optional): Das Geheimnis der Authenticator-App wird verschlüsselt, Backup-Codes werden als Hash gespeichert.",
+            "Projekte und Teams: Projekte, Mitgliedschaften, Rollen, Einladungen, Annahme- oder Ablehnungsantworten, Projektlogo und -banner, Organisationen und deren Bilder.",
+            "Arbeitsinhalte: Aufgaben, Kommentare, Dateianhänge, Zeiteinträge, Erfolgskriterien, Kalendereinträge und Erinnerungen, Projekt-Chat-Nachrichten (mit Antworten und Reaktionen), In-App-Benachrichtigungen und der Benachrichtigungsverlauf, nur bei den Funktionen, die Sie nutzen.",
+            "Sitzung: Sitzungszeiten, Browser-/Geräteinformationen und Datensätze zur sicheren Sitzungsprüfung. Die Netzwerkadresse wird zur Begrenzung der Anfragehäufigkeit verwendet.",
+            "Support-Nachrichten: Name, (optional) Nachname, E-Mail-Adresse, Kategorie und Nachricht aus dem Kontaktformular.",
+            "Besuchsanalyse (nur mit Ihrer Einwilligung): eine anonyme Besucher- und Sitzungs-ID, Seitentyp, Herkunft des Besuchs, aktive Zeit, ob bestimmte Schaltflächen angeklickt wurden, und die Art eines Fehlers."
           ]
         },
         {
           "id": "purposes",
-          "title": "Zwecke der Verwendung",
+          "title": "Wofür die Informationen verwendet werden",
           "paragraphs": [
-            "Kontodaten ermöglichen Anmeldung und Kontoschutz; Projekt-, Team- und Aufgabendaten ermöglichen den gemeinsamen Arbeitsbereich. Einladungen und Benachrichtigungen erreichen ihre Empfänger. Sitzungs- und Anfrageprüfungen sollen unbefugten Zugriff und Missbrauch reduzieren.",
-            "Tragen Sie keine sensiblen personenbezogenen Daten, Passwörter oder unnötigen Angaben über andere Personen in Beschreibungen, Kommentare oder Dateien ein."
+            "Kontoinformationen dienen Ihrer Anmeldung und dem Schutz Ihres Kontos; Projekt-, Team- und Aufgabendaten dienen der Bereitstellung Ihres gemeinsamen Arbeitsbereichs. Einladungen und Benachrichtigungen werden der betreffenden Person zugestellt. Kontrollen wie Sitzungen, Anfragebegrenzung und Bot-Fallen sollen unbefugten Zugriff und Missbrauch verringern. Support-Nachrichten dienen dazu, Ihnen zu antworten.",
+            "Die Besuchsanalyse wird nur mit Ihrer Einwilligung verwendet, um anonym zu verstehen, wie die Website genutzt wird und wo Fehler auftreten. Sie wird nicht mit Ihrem Konto verknüpft.",
+            "Tragen Sie keine besonderen Kategorien personenbezogener Daten, Passwörter oder unnötige Angaben über andere Personen in Projektbeschreibungen, Kommentare, den Chat und Dateien ein."
           ]
         },
         {
           "id": "visibility",
-          "title": "Wer kann Informationen sehen?",
+          "title": "Wer kann es sehen?",
           "paragraphs": [
-            "Arbeitsinhalte sind durch Projektmitgliedschaft und Rollenberechtigungen begrenzt. Berechtigte Projektmitglieder können Ihre E-Mail und Ihren Benutzernamen in Teamlisten sehen. Empfänger sehen die Vorschau ihrer eigenen Einladung.",
-            "Bei Google-/GitHub-Anmeldung erfolgt die Authentifizierung mit dem gewählten Anbieter. Die Repository-Verbindung liest öffentliche GitHub-Informationen. Hosting-, Datenbank- und E-Mail-Anbieter sowie Datenstandorte müssen vor dem Start festgelegt werden; dieser Entwurf garantiert weder einen bestimmten Speicherort noch das Ausbleiben von Übermittlungen."
+            "Inhalte des Arbeitsbereichs sind durch Projektmitgliedschaft und Rollenberechtigungen begrenzt. Berechtigte Projektmitglieder sehen Ihre E-Mail und Ihren Benutzernamen in Teamlisten; den Projekt-Chat sehen die Mitglieder des Projekts. Der Empfänger einer Einladung sieht die ihm angezeigte Einladungsvorschau.",
+            "Ihre Support-Nachrichten kann nur der PDA-Administrator sehen. Das Administratorkonto kann die Kontoliste (E-Mail, Benutzername, Status), Sitzungsdatensätze und Support-Anfragen sehen und Konten deaktivieren. Administratoraktionen werden im Audit-Protokoll der Verwaltung festgehalten.",
+            "Wenn Sie die Anmeldung mit Google/GitHub wählen, erfolgt die Authentifizierung beim jeweiligen Anbieter; die Repository-Anbindung liest öffentliche Repository-Informationen von GitHub. Ihre Daten werden nicht verkauft und nicht zu Werbezwecken weitergegeben."
+          ]
+        },
+        {
+          "id": "deletion",
+          "title": "Kontolöschung und Anonymisierung",
+          "paragraphs": [
+            "Sie können Ihr Konto auf dem Kontobildschirm selbst löschen. Der Vorgang wird mit einem kurzlebigen Einmal-Link, der an Ihre E-Mail-Adresse gesendet wird, und Ihren eigenen Anmeldedaten bestätigt.",
+            "Im Moment der Löschung wird das Konto anonymisiert: E-Mail-Adresse, Name, Benutzername und Passwort-Hash werden gelöscht, alle Sitzungen beendet und Projektmitgliedschaften beendet. Das kann nicht rückgängig gemacht werden.",
+            "Wenn Sie ein Projekt oder eine Organisation besitzen, müssen Sie vor der Kontolöschung die Inhaberschaft übertragen oder das Projekt bzw. die Organisation löschen. Das Administratorkonto kann sich nicht selbst löschen. Nach der Löschung kann das Konto in Projektdaten anderer Nutzer (z. B. im Aufgabenverlauf) mit einer anonymisierten Identität weiter erscheinen.",
+            "Ein Administrator kann ein Konto bei Missbrauch oder aus Sicherheitsgründen deaktivieren; Sitzungen werden dann beendet und die Anmeldung gesperrt, es werden keine Daten gelöscht."
           ]
         },
         {
           "id": "browser-storage",
-          "title": "Cookies und Browsereinstellungen",
+          "title": "Cookies und Browser-Einstellungen",
           "paragraphs": [
-            "PDA verwendet keine Werbe-Cookies oder Tracker von Drittanbietern. Sitzungs- und Sicherheitscookies sind für den Betrieb der Anwendung erforderlich. Die Besuchsanalyse läuft nur mit Ihrer ausdrücklichen Auswahl und ist standardmäßig ausgeschaltet; Einzelheiten und Ihre Einstellungen finden Sie auf der Seite Cookie-Richtlinie."
-          ],
-          "items": [
-            "PDA_ACCESS, PDA_REFRESH und PDA_SESSION: Anmeldung und Sitzungsablauf. Die Laufzeit hängt von der Sitzungskonfiguration ab; beim Abmelden werden sie gelöscht.",
-            "XSRF-TOKEN: Sicherheitscookie zum Schutz von Aktionsanfragen gegen gefälschte Anfragen.",
-            "NEXT_LOCALE: Sprachcookie mit einer Laufzeit von einem Jahr.",
-            "Lokaler Browserspeicher: Design, Menü-/Teamansicht und optional gespeicherte E-Mail. Angaben können bis zum Löschen der Browserdaten oder Ändern der Einstellung bleiben.",
-            "Sitzungsspeicher: zuletzt gewähltes Projekt des Benutzers für die Browsersitzung.",
-            "Cookie-Auswahl: Der Schlüssel pda:cookie-consent speichert Ihre Entscheidung in diesem Browser.",
-            "Analyse (optional, standardmäßig ausgeschaltet): Wenn Sie sie erlauben, werden Seitenart, Besuchsquelle und aktiv verbrachte Zeit mit einer anonymen Besucher- und Sitzungs-ID gemessen; sie wird nicht mit Ihrem Konto verknüpft. Wenn Sie die Einwilligung widerrufen, enden neue Messungen und diese IDs werden gelöscht."
+            "PDA verwendet keine Werbe-Cookies oder Tracking-Werkzeuge Dritter; Schriftarten werden vom eigenen Server von PDA geladen. Sitzungs- und Sicherheits-Cookies sind für den Betrieb der Anwendung erforderlich. Die Besuchsanalyse läuft nur mit Ihrer ausdrücklichen Wahl und ist standardmäßig ausgeschaltet.",
+            "Jedes Cookie und jeder Speichereintrag ist mit Zweck und Dauer in der Cookie-Richtlinie aufgeführt; dort oder über den Link „Cookie-Einstellungen verwalten“ am Seitenende können Sie Ihre Auswahl ändern."
+          ]
+        },
+        {
+          "id": "transfers",
+          "title": "Dienstleister und Übermittlung ins Ausland",
+          "paragraphs": [
+            "E-Mails werden über Gmail SMTP (Google, USA) versendet. Die optionale Anmeldung mit Google/GitHub und die GitHub-Repository-Funktionen verbinden mit den jeweiligen Anbietern (USA). Der Hosting-Anbieter ist noch nicht ausgewählt; diese Erklärung wird aktualisiert, sobald er feststeht.",
+            "Einzelheiten zu diesen Übermittlungen und ihrer Rechtsgrundlage stehen im Abschnitt „Empfänger und Übermittlung ins Ausland“ des KVKK-Datenschutzhinweises und in den DSGVO-Abschnitten unten."
           ]
         },
         {
           "id": "retention",
-          "title": "Speicherung und Datenanfragen",
+          "title": "Speicherfristen",
           "paragraphs": [
-            "Aktive Konto- und Projektdatensätze liegen für die Dienstfunktionen in der Datenbank. Eine abgelaufene Sitzung bedeutet nicht die automatische Löschung aller historischen Datensätze.",
-            "Speicher-, Sicherungs- und Löschfristen je Datenkategorie müssen vor dem Start bestimmt werden. In den Kontoeinstellungen können Sie die Löschung Ihres Kontos anstoßen und die erforderlichen Prüfungen über den Link abschließen, den Sie per E-Mail erhalten. Andere Anfragen zu Auskunft, Berichtigung oder Löschung können an die Kontaktadresse gehen; Kontoinhaberschaft und Rechte anderer Personen sind dabei zu prüfen."
-          ]
+            "Nach Ablauf der folgenden Fristen werden Daten automatisch gelöscht oder anonymisiert."
+          ],
+          "table": {
+            "caption": "Speicherfristen",
+            "headers": [
+              "Daten",
+              "Frist",
+              "Nach Fristende"
+            ],
+            "rows": [
+              [
+                "Kontodaten und Inhalte des Arbeitsbereichs",
+                "Bis Sie das Konto löschen",
+                "Das Konto wird im Moment der Löschung anonymisiert: E-Mail-Adresse, Name, Benutzername und Passwort-Hash werden gelöscht, Sitzungen beendet, Projekt- und Organisationsmitgliedschaften beendet. Wer ein Projekt oder eine Organisation besitzt, muss vor der Kontolöschung die Inhaberschaft übertragen oder das Projekt bzw. die Organisation löschen."
+              ],
+              [
+                "Beendete oder abgelaufene Sitzungsdatensätze",
+                "30 Tage",
+                "Werden automatisch gelöscht."
+              ],
+              [
+                "Statusdatensätze des Kontaktformulars und gespeicherte Support-Nachrichten (Name, E-Mail, Kategorie, Nachricht)",
+                "12 Monate",
+                "Werden automatisch gelöscht. Die an das PDA-Postfach gesendete E-Mail-Kopie ist von dieser automatischen Löschung nicht erfasst; Sie können ihre Löschung als Betroffenenanfrage verlangen."
+              ],
+              [
+                "Besuchsanalyse (Sitzungen, Seitenaufrufe, Schaltflächenklicks und Fehlerereignisse)",
+                "12 Monate",
+                "Werden automatisch gelöscht. Die anonyme Besucher-ID wird in Ihrem Browser alle 12 Monate erneuert und beim Widerruf der Analyse-Einwilligung sofort entfernt."
+              ],
+              [
+                "Audit-Protokoll der Verwaltung (nur Konto-IDs, Aktionsart, Zeitpunkt und Ergebnis)",
+                "24 Monate",
+                "Wird automatisch gelöscht."
+              ]
+            ]
+          }
         },
         {
           "id": "security",
-          "title": "Sicherheit und Änderungen",
+          "title": "Sicherheit",
           "paragraphs": [
-            "PDA hält Sitzungstokens in HttpOnly-Cookies, verwendet Passwort-Hashwerte und prüft Projektberechtigungen auf dem Server. Dies garantiert keine absolute Sicherheit. Melden Sie sich auf gemeinsam genutzten Geräten ab.",
-            "Diese Erklärung und ihr Aktualisierungsdatum sind bei Änderungen der Funktionen oder Verarbeitung zu prüfen. KVKK-Rechte und Verarbeitungsvoraussetzungen erläutert die gesonderte KVKK-Seite."
+            "PDA hält Sitzungs-Token in HttpOnly-Cookies, speichert Passwörter als Einweg-Hash, verschlüsselt Zwei-Faktor-Geheimnisse, prüft Projektberechtigungen auf dem Server und schützt den Administratorzugang durch eine eigene Zwei-Faktor-Anmeldung. Das Kontaktformular verwendet statt eines CAPTCHA Bot-Fallen, die keine Daten an Dritte senden.",
+            "Diese Maßnahmen sind keine absolute Sicherheitsgarantie. Melden Sie sich auf gemeinsam genutzten Geräten nach der Arbeit ab und erwägen Sie, die Zwei-Faktor-Authentifizierung zu aktivieren."
+          ]
+        },
+        {
+          "id": "children",
+          "title": "Kinder",
+          "paragraphs": [
+            "PDA richtet sich nicht an Kinder unter 16 Jahren und prüft das Alter nicht. Wenn Sie unter 16 sind, legen Sie kein Konto ohne Wissen Ihrer Eltern oder gesetzlichen Vertreter an. Wenn Sie ein Konto eines Kindes bemerken, teilen Sie es uns mit; wir löschen es."
+          ]
+        },
+        {
+          "id": "gdpr-controller",
+          "title": "DSGVO: Verantwortliche und Kontakt (Art. 13 Abs. 1 lit. a, b)",
+          "paragraphs": [
+            "Für Besucher in der Europäischen Union oder im Europäischen Wirtschaftsraum gelten die folgenden Informationen nach Art. 13 und 14 der Datenschutz-Grundverordnung (DSGVO). Verantwortliche sind Hamza Taşbay und Alper Temiz, natürliche Personen und Betreuer des Open-Source-Projekts PDA mit Sitz in der Türkei. Kontakt: das Kontaktformular oder pdassistant.info@gmail.com. Ein Datenschutzbeauftragter wurde nicht benannt."
+          ]
+        },
+        {
+          "id": "gdpr-bases",
+          "title": "DSGVO: Zwecke und Rechtsgrundlagen (Art. 6)",
+          "paragraphs": [
+            "Wir verarbeiten personenbezogene Daten auf folgenden Grundlagen."
+          ],
+          "items": [
+            "Art. 6 Abs. 1 lit. b, Vertrag: Anlage Ihres Kontos, Ihre Authentifizierung und die Bereitstellung des von Ihnen gewünschten Arbeitsbereichs nach den Nutzungsbedingungen. Die Angabe von E-Mail-Adresse, Benutzername und Passwort ist dafür erforderlich; ohne sie kann kein Konto angelegt werden.",
+            "Art. 6 Abs. 1 lit. f, berechtigte Interessen: Sicherheit von Konten und Systemen, Missbrauchsabwehr (Sitzungen, Anfragebegrenzung, Bot-Fallen, Audit-Protokoll der Verwaltung) und Beantwortung von Kontaktformular-Nachrichten. Unser Interesse ist der sichere Betrieb des Dienstes und die Antwort an Personen, die uns schreiben; Sie können widersprechen (siehe Ihre Rechte).",
+            "Art. 6 Abs. 1 lit. a, Einwilligung: optionale Besuchsanalyse einschließlich Schaltflächenklick- und Fehlerereignissen, und zwar erst, nachdem Sie in der Cookie-Ebene zugestimmt haben. Sie können die Einwilligung jederzeit widerrufen, ohne dass die Rechtmäßigkeit der bis dahin erfolgten Verarbeitung berührt wird.",
+            "Art. 6 Abs. 1 lit. c, rechtliche Verpflichtung: Beantwortung von Anfragen betroffener Personen und von Behörden sowie Aufbewahrung von Aufzeichnungen, soweit das Gesetz es verlangt."
+          ],
+          "closing": [
+            "Wir setzen keine automatisierte Entscheidungsfindung und kein Profiling mit rechtlicher oder ähnlich erheblicher Wirkung ein (Art. 22). Besondere Kategorien von Daten (Art. 9) verarbeiten wir nicht gezielt."
+          ]
+        },
+        {
+          "id": "gdpr-transfers",
+          "title": "DSGVO: Empfänger und Drittlandübermittlung (Kapitel V)",
+          "paragraphs": [
+            "Empfänger sind die Projektmitglieder, mit denen Sie zusammenarbeiten, Google (Gmail SMTP für E-Mails; optionale Anmeldung mit Google), GitHub (optionale Anmeldung; Repository-Funktionen) und, sobald ausgewählt, der Hosting-Anbieter. Die Verantwortlichen selbst befinden sich in der Türkei, einem Drittland ohne Angemessenheitsbeschluss der Europäischen Kommission.",
+            "Google und GitHub können Daten in den USA verarbeiten. Soweit sie personenbezogene Daten in Drittländer übermitteln, stützen sie sich auf die von ihnen bereitgestellten Übermittlungsmechanismen, etwa einen Angemessenheitsbeschluss (Art. 45) oder Standardvertragsklauseln (Art. 46); welcher Mechanismus gilt, ergibt sich aus der Dokumentation der Anbieter. Die Anmeldung mit Google/GitHub ist optional."
+          ]
+        },
+        {
+          "id": "gdpr-retention",
+          "title": "DSGVO: Speicherdauer (Art. 13 Abs. 2 lit. a)",
+          "paragraphs": [
+            "Kriterien und Fristen sind die der obigen Tabelle: Konten bis zur Löschung durch Sie (sofort anonymisiert), Analysedaten 12 Monate, beendete Sitzungen 30 Tage, Statusdatensätze des Kontaktformulars und gespeicherte Support-Nachrichten 12 Monate, Audit-Protokoll der Verwaltung 24 Monate."
+          ]
+        },
+        {
+          "id": "gdpr-rights",
+          "title": "DSGVO: Ihre Rechte und Beschwerde (Art. 15–21, 77)",
+          "paragraphs": [
+            "Sie haben das Recht auf Auskunft (Art. 15), Berichtigung (Art. 16), Löschung (Art. 17), Einschränkung der Verarbeitung (Art. 18), Datenübertragbarkeit (Art. 20) und Widerspruch gegen Verarbeitungen auf Grundlage berechtigter Interessen (Art. 21) sowie das Recht, eine Einwilligung jederzeit zu widerrufen (Art. 7 Abs. 3). Senden Sie Ihre Anfrage über das Kontaktformular (Kategorie „KVKK / Datenanfrage“) oder an pdassistant.info@gmail.com; wir antworten spätestens innerhalb von 30 Tagen.",
+            "Sie können Ihr Konto selbst löschen. Die Datenübertragbarkeit ist noch keine Selbstbedienungsfunktion; wir stellen Ihre Daten auf Anfrage in einem strukturierten, gängigen Format bereit.",
+            "Sie haben das Recht, bei einer Aufsichtsbehörde Beschwerde einzulegen, insbesondere in dem EU-/EWR-Mitgliedstaat Ihres gewöhnlichen Aufenthaltsorts, Ihres Arbeitsplatzes oder des Orts des mutmaßlichen Verstoßes (Art. 77), sowie beim türkischen Datenschutzrat."
+          ]
+        },
+        {
+          "id": "gdpr-representative",
+          "title": "DSGVO: Vertreter in der EU (Art. 27)",
+          "paragraphs": [
+            "Die Verantwortlichen sind außerhalb der Europäischen Union niedergelassen. Ob Art. 3 Abs. 2 DSGVO auf PDA Anwendung findet und damit ein Vertreter in der Union nach Art. 27 zu benennen ist, wird derzeit geprüft. Derzeit ist kein Vertreter benannt; dieser Abschnitt wird aktualisiert, sobald die Prüfung abgeschlossen ist."
+          ]
+        },
+        {
+          "id": "changes",
+          "title": "Änderungen",
+          "paragraphs": [
+            "Ändern sich Funktionen oder die Bedingungen der Datenverarbeitung, wird diese Erklärung aktualisiert und das Datum „Zuletzt aktualisiert“ am Seitenanfang ändert sich. Wesentliche Änderungen veröffentlichen wir auf dieser Seite."
           ]
         }
       ]
     },
     "kvkk": {
-      "title": "KVKK-Information",
-      "description": "Informationen vor dem Start zu PDA-Datenflüssen und Betroffenenrechten nach dem türkischen Gesetz Nr. 6698.",
+      "title": "KVKK-Datenschutzhinweis",
+      "description": "Information nach Art. 10 des türkischen Gesetzes Nr. 6698 (KVKK): Welche personenbezogenen Daten PDA verarbeitet, Zwecke und Rechtsgrundlagen, Empfänger, Speicherfristen und Ihre Rechte.",
       "sections": [
         {
           "id": "controller",
-          "title": "Verantwortlicher und Umfang",
+          "title": "Verantwortliche und Geltungsbereich",
           "paragraphs": [
-            "Dieser Entwurf beschreibt Daten bei Registrierung, Anmeldung, Projekt-/Teamarbeit, Einladungen und Unterstützung. Die verantwortliche natürliche oder juristische Person wurde noch nicht bestätigt; daher wird der Text nicht als abgeschlossene Datenschutzinformation dargestellt.",
-            "Für den Kontakt mit dem Projektteam ist das Formular auf der Kontaktseite vorgesehen. Die Identität des Verantwortlichen und geeignete Antragswege sind vor der endgültigen Fassung festzulegen."
+            "Dieser Hinweis informiert Sie nach Art. 10 des türkischen Datenschutzgesetzes Nr. 6698 (KVKK) über die personenbezogenen Daten, die bei der Nutzung von PDA · Project Delivery Assistant (PDA) verarbeitet werden.",
+            "Verantwortliche sind Hamza Taşbay und Alper Temiz, die Betreuer des Open-Source-Projekts PDA. Beide sind natürliche Personen; PDA wird nicht im Namen eines Unternehmens oder gewerblichen Betriebs betrieben, daher gibt es keine Firma, keine MERSİS-Nummer und keine KEP-Adresse (registrierte E-Mail-Adresse).",
+            "Sie erreichen die Verantwortlichen über das Kontaktformular dieser Website oder unter pdassistant.info@gmail.com. Wie Sie eine Anfrage zu personenbezogenen Daten stellen, steht im Abschnitt „So stellen Sie eine Anfrage“.",
+            "Dieser Hinweis ist keine Bitte um Einwilligung. Die einzige Verarbeitung, die auf einer ausdrücklichen Einwilligung beruht, ist die optionale Besuchsanalyse; darüber entscheiden Sie getrennt und frei in der Cookie-Ebene (siehe Cookie-Richtlinie)."
           ]
         },
         {
           "id": "collection",
-          "title": "Wie werden Daten erhoben?",
+          "title": "Verarbeitete Daten und Art der Erhebung",
           "paragraphs": [
-            "Die elektronische Erhebung erfolgt über Registrierungs-/Anmeldeformulare, eingegebene Projekt- und Aufgabeninhalte, Einladungen von Projektmanagern, den gewählten Anmeldeanbieter und Supportnachrichten.",
-            "Dabei können E-Mail, Benutzername, Mitgliedschafts-/Rollenangaben, Projekt- und Aufgabeninhalte, Einladungsantworten, Sitzungszeiten und Browserinformationen verarbeitet werden. Eine Einladung kann auch entstehen, wenn ein Projektmanager Ihre E-Mail eingibt."
+            "Die Daten werden elektronisch und teilweise automatisiert erhoben: über die Registrierungs- und Anmeldeformulare, die Bildschirme und Formulare der Anwendung, das Kontaktformular, die Cookie-Ebene, Projektmitglieder, die Sie einladen, und – wenn Sie dies wählen – die Anmeldung mit Google oder GitHub."
+          ],
+          "items": [
+            "Identität und Kontakt: E-Mail-Adresse und Benutzername; Vor- und Nachname (nur bei Konten, die über eine Projekteinladung entstehen und von der einladenden Person eingegeben werden, sowie im Kontaktformular, wenn Sie ihn eintragen); optionales Profilfoto.",
+            "Kontosicherheit: ein Einweg-Hash Ihres Passworts (das Passwort selbst wird nicht gespeichert); Hashes von Bestätigungs- und Zurücksetzungscodes; bei Aktivierung Daten der Zwei-Faktor-Authentifizierung (das Geheimnis wird verschlüsselt, Backup-Codes werden als Hash gespeichert); die ID eines verknüpften Google-/GitHub-Kontos; Sitzungsdatensätze (Sitzungszeiten, Browser-/Geräteinformationen). Für Administratoraktionen wird ein Audit-Protokoll geführt, das nur Konto-IDs, Aktionsart, Zeitpunkt und Ergebnis enthält.",
+            "Inhalte des Arbeitsbereichs: Projekte, Teams, Organisationen, Aufgaben, Kommentare, Dateianhänge, Projekt-Chat-Nachrichten, In-App-Benachrichtigungen, Einladungen, Kalendereinträge und Erinnerungen, nur bei den Funktionen, die Sie nutzen.",
+            "Support-Anfragen: Name, (optional) Nachname, E-Mail-Adresse, Kategorie und Nachricht, die Sie im Kontaktformular eingeben.",
+            "Betriebssicherheit: Netzwerkadressinformationen, die für die Begrenzung der Anfragehäufigkeit verwendet werden, sowie die Bot-Falle-Felder des Kontaktformulars.",
+            "Besuchsanalyse (nur mit Ihrer ausdrücklichen Einwilligung): eine zufällig erzeugte anonyme Besucher- und Sitzungs-ID, die Art der besuchten Seite, die Herkunft des Besuchs, die aktive Nutzungszeit, ob bestimmte Schaltflächen (Registrieren, Anmelden, Kontaktformular senden, Link zum Quellcode) angeklickt wurden, und die Art eines in der Anwendung aufgetretenen Fehlers. Für die Analyse werden weder IP-Adresse noch Browserinformationen gespeichert; erfasst wird nur der Seitentyp, nicht die Seitenadresse."
+          ],
+          "closing": [
+            "Geben Sie keine besonderen Kategorien personenbezogener Daten (Gesundheit, Religion, Herkunft, biometrische Daten u. Ä.) in PDA ein; PDA ist nicht dafür ausgelegt, sie zu verarbeiten."
           ]
         },
         {
           "id": "basis",
           "title": "Zwecke und Rechtsgrundlagen",
           "paragraphs": [
-            "Vor dem Start ist für jeden Vorgang eine gültige Verarbeitungsvoraussetzung festzustellen. Die folgenden Zuordnungen sind ein Prüfraster für vorhandene Funktionen; es wird nicht angenommen, dass alle Vorgänge automatisch dieselbe Rechtsgrundlage haben."
+            "Ihre Daten werden für die folgenden Zwecke auf Grundlage der Voraussetzungen des Art. 5 KVKK verarbeitet."
           ],
-          "items": [
-            "Konto und Arbeitsbereich: Registrierung, Authentifizierung, Mitgliedschaften und Aufgabenverwaltung. Die Erforderlichkeit für Begründung oder Erfüllung des Dienstverhältnisses ist nach Art. 5 Abs. 2(c) zu prüfen.",
-            "Konto- und Systemsicherheit: Sitzungen, Berechtigungsprüfungen und Anfragebegrenzung. Berechtigtes Interesse nach Art. 5 Abs. 2(f) erfordert Erforderlichkeit und eine Abwägung der Betroffenenrechte.",
-            "Datenanfragen und gesetzliche Pflichten: Art. 5 Abs. 2(ç) und 5 Abs. 2(e) sind je nach Pflicht oder Recht zu prüfen.",
-            "Erfordert eine zusätzliche Verarbeitung ausdrückliche Einwilligung, sind Zweck und Umfang gesondert zu erläutern und die Einwilligung separat einzuholen. Das Lesen dieser Seite ist keine Einwilligung."
+          "table": {
+            "caption": "Verarbeitungszwecke, Datenkategorien und Rechtsgrundlagen",
+            "headers": [
+              "Zweck",
+              "Datenkategorien",
+              "Rechtsgrundlage"
+            ],
+            "rows": [
+              [
+                "Kontoanlage, Authentifizierung und Bereitstellung des Arbeitsbereichs",
+                "Identität und Kontakt, Kontosicherheit, Inhalte des Arbeitsbereichs",
+                "Art. 5/2(c): Erforderlichkeit für Abschluss oder Erfüllung eines Vertrags (der Nutzungsbedingungen)"
+              ],
+              [
+                "Konto- und Systemsicherheit, Missbrauchsabwehr (Sitzungsverwaltung, Berechtigungsprüfung, Anfragebegrenzung, Bot-Falle, Audit-Protokoll der Verwaltung)",
+                "Sitzungsdatensätze, Netzwerkadresse, Audit-Protokoll, Bot-Falle-Felder",
+                "Art. 5/2(f): berechtigtes Interesse (sofern Ihre Grundrechte und -freiheiten nicht beeinträchtigt werden)"
+              ],
+              [
+                "Beantwortung von Kontaktformular-Nachrichten und Support-Anfragen",
+                "Support-Anfrage",
+                "Art. 5/2(f): berechtigtes Interesse; ist Ihre Anfrage ein Antrag zu personenbezogenen Daten, zusätzlich Art. 5/2(ç)"
+              ],
+              [
+                "Beantwortung von Anträgen zu personenbezogenen Daten und Erfüllung rechtlicher Pflichten",
+                "Angaben im Antrag, zur Identitätsprüfung erforderliche Angaben",
+                "Art. 5/2(ç): rechtliche Verpflichtung des Verantwortlichen"
+              ],
+              [
+                "Aufbewahrung von Aufzeichnungen zur Begründung, Ausübung oder Verteidigung von Rechten bei möglichen Streitigkeiten",
+                "Support-Anfrage, Audit-Protokoll, Konto- und Vorgangsdaten",
+                "Art. 5/2(e): Begründung, Ausübung oder Schutz eines Rechts"
+              ],
+              [
+                "Anonyme Messung der Websitenutzung, des Registrierungsablaufs und von Fehlern",
+                "Daten der Besuchsanalyse",
+                "Art. 5/1: ausdrückliche Einwilligung (in der Cookie-Ebene erteilt, jederzeit widerrufbar)"
+              ]
+            ]
+          },
+          "closing": [
+            "Information und Einwilligung sind getrennt: Das Lesen dieses Hinweises oder die Registrierung bedeutet nicht, dass Sie der Analyse ausdrücklich zugestimmt haben. Wenn Sie die Analyse ablehnen, bleibt die Nutzung von PDA unberührt."
           ]
         },
         {
           "id": "recipients",
-          "title": "Empfänger und Übermittlungen",
+          "title": "Empfänger und Übermittlung ins Ausland",
           "paragraphs": [
-            "Projektinhalte und Mitgliedschaftsangaben werden berechtigten Mitgliedern zur Zusammenarbeit angezeigt; Einladungsvorschauen gehen an die jeweiligen Empfänger. Bei Google-/GitHub-Anmeldung verarbeitet der gewählte Anbieter Authentifizierungsdaten. Öffentliche Repository-Verbindungen senden Anfragen an GitHub.",
-            "Hosting-, Datenbank- und E-Mail-Anbieter, Datenstandorte und Bedingungen grenzüberschreitender Übermittlungen müssen vor dem Start bestimmt werden. Ohne Kenntnis tatsächlicher Übermittlungen und der Rechtsmechanismen bietet dieser Entwurf keine entsprechende Zusicherung."
+            "Ihre personenbezogenen Daten werden nicht verkauft und nicht zu Werbezwecken weitergegeben. Sie werden an die folgenden Empfänger weitergegeben, zum genannten Zweck und nur im erforderlichen Umfang."
+          ],
+          "items": [
+            "Projektmitglieder: Inhalte des Arbeitsbereichs und Mitgliedschaftsangaben (E-Mail, Benutzername, Profilfoto) werden den berechtigten Mitgliedern des Projekts für die Zusammenarbeit angezeigt; die Einladungsvorschau wird dem Empfänger der Einladung angezeigt.",
+            "E-Mail-Dienst (Google, USA): Bestätigungscodes, Passwort-Zurücksetzung, Einladungs- und Benachrichtigungs-E-Mails sowie Kontaktformular-Nachrichten werden über Gmail SMTP versendet. Kontaktformular-Nachrichten werden zusätzlich an das PDA-Postfach (pdassistant.info@gmail.com, Gmail) zugestellt.",
+            "Anmeldung mit Google und GitHub (optional): Wenn Sie dies wählen, erfolgt die Authentifizierung beim jeweiligen Anbieter (USA); PDA erhält die für die Anmeldung nötigen Basisinformationen des Kontos (Konto-ID, E-Mail-Adresse, Name).",
+            "GitHub-API (Repository-Funktionen): Wenn Sie einem Projekt ein öffentliches Repository zuordnen, werden Repository-Informationen und aktuelle Commits über die GitHub-API (USA) gelesen.",
+            "Hosting-Anbieter: Der Hosting-Anbieter für die Produktivumgebung von PDA ist noch nicht ausgewählt. Sobald er feststeht, wird dieser Hinweis um Name, Datenstandort und eine etwaige Übermittlung ins Ausland ergänzt.",
+            "Behörden: Behörden und öffentliche Stellen, soweit eine rechtliche Verpflichtung besteht."
+          ],
+          "closing": [
+            "Übermittlung ins Ausland (Art. 9): Google und GitHub können Daten in den USA verarbeiten. Diese Übermittlungen beruhen auf den Übermittlungsmechanismen, die die Anbieter nach Art. 9 KVKK verwenden; welcher Mechanismus gilt, steht in den eigenen Datenschutz- und Datenverarbeitungsunterlagen der Anbieter. Der E-Mail-Versand ist für den Betrieb des Dienstes erforderlich; die Anmeldung mit Google/GitHub ist optional, Sie können sich auch mit E-Mail und Passwort registrieren."
           ]
         },
         {
           "id": "storage",
-          "title": "Speicherung und Löschung",
+          "title": "Speicherfristen",
           "paragraphs": [
-            "Daten unterstützen Konto-, Projekt- und Sicherheitsfunktionen. Fristen sind je Kategorie, Zweck und gesetzlicher Anforderung festzulegen; Lösch- und Sicherungspläne für den Produktivbetrieb wurden noch nicht bestätigt.",
-            "Entfallen Verarbeitungsvoraussetzungen, ist die Löschung, Vernichtung oder Anonymisierung zu prüfen. Eine Kontolöschung entfernt nicht automatisch Projektdatensätze anderer Benutzer oder rechtlich aufzubewahrende Informationen."
+            "Daten werden so lange gespeichert, wie der Zweck es erfordert, und danach gelöscht oder anonymisiert. Löschungen laufen automatisch."
+          ],
+          "table": {
+            "caption": "Speicherfristen",
+            "headers": [
+              "Daten",
+              "Frist",
+              "Nach Fristende"
+            ],
+            "rows": [
+              [
+                "Kontodaten und Inhalte des Arbeitsbereichs",
+                "Bis Sie das Konto löschen",
+                "Das Konto wird im Moment der Löschung anonymisiert: E-Mail-Adresse, Name, Benutzername und Passwort-Hash werden gelöscht, Sitzungen beendet, Projekt- und Organisationsmitgliedschaften beendet. Wer ein Projekt oder eine Organisation besitzt, muss vor der Kontolöschung die Inhaberschaft übertragen oder das Projekt bzw. die Organisation löschen."
+              ],
+              [
+                "Beendete oder abgelaufene Sitzungsdatensätze",
+                "30 Tage",
+                "Werden automatisch gelöscht."
+              ],
+              [
+                "Statusdatensätze des Kontaktformulars und gespeicherte Support-Nachrichten (Name, E-Mail, Kategorie, Nachricht)",
+                "12 Monate",
+                "Werden automatisch gelöscht. Die an das PDA-Postfach gesendete E-Mail-Kopie ist von dieser automatischen Löschung nicht erfasst; Sie können ihre Löschung als Betroffenenanfrage verlangen."
+              ],
+              [
+                "Besuchsanalyse (Sitzungen, Seitenaufrufe, Schaltflächenklicks und Fehlerereignisse)",
+                "12 Monate",
+                "Werden automatisch gelöscht. Die anonyme Besucher-ID wird in Ihrem Browser alle 12 Monate erneuert und beim Widerruf der Analyse-Einwilligung sofort entfernt."
+              ],
+              [
+                "Audit-Protokoll der Verwaltung (nur Konto-IDs, Aktionsart, Zeitpunkt und Ergebnis)",
+                "24 Monate",
+                "Wird automatisch gelöscht."
+              ]
+            ]
+          },
+          "closing": [
+            "Die Löschung Ihres Kontos entfernt Projektdaten anderer Nutzer (z. B. den Aufgabenverlauf) nicht von selbst; diese Datensätze können mit einer anonymisierten Konto-ID bestehen bleiben. Entsteht eine gesetzliche Aufbewahrungspflicht, werden die betreffenden Angaben für diese Zeit aufbewahrt. Backup- und Hosting-Regelungen werden diesem Hinweis hinzugefügt, sobald der Hosting-Anbieter feststeht."
           ]
         },
         {
           "id": "rights",
-          "title": "Ihre gesetzlichen Rechte",
+          "title": "Ihre Rechte nach dem Gesetz",
           "paragraphs": [
-            "Sie können Ihre Rechte nach Art. 11 durch einen Antrag an den Verantwortlichen ausüben."
+            "Nach Art. 11 KVKK können Sie sich an den Verantwortlichen wenden, um die folgenden Rechte auszuüben."
           ],
           "items": [
-            "Erfahren, ob personenbezogene Daten verarbeitet werden, und Informationen dazu erhalten.",
-            "Zweck und zweckgemäße Verwendung erfahren.",
-            "Empfänger in der Türkei oder im Ausland kennen.",
-            "Berichtigung unvollständiger oder falscher Daten verlangen.",
-            "Unter den gesetzlichen Voraussetzungen Löschung oder Vernichtung sowie Information der Empfänger über Berichtigung/Löschung verlangen.",
-            "Einem nachteiligen Ergebnis ausschließlich automatisierter Analyse widersprechen.",
-            "Ersatz eines Schadens durch rechtswidrige Verarbeitung verlangen."
+            "zu erfahren, ob Ihre personenbezogenen Daten verarbeitet werden, und gegebenenfalls Auskunft zu verlangen;",
+            "den Zweck der Verarbeitung zu erfahren und ob die Daten zweckgemäß verwendet werden;",
+            "die Dritten im In- oder Ausland zu erfahren, an die die Daten übermittelt werden;",
+            "die Berichtigung unvollständiger oder unrichtiger Daten zu verlangen;",
+            "unter den gesetzlichen Voraussetzungen die Löschung oder Vernichtung der Daten zu verlangen und zu verlangen, dass Berichtigungen und Löschungen den Empfängern mitgeteilt werden;",
+            "einem Ergebnis zu widersprechen, das sich ausschließlich aus der Analyse durch automatisierte Systeme zu Ihrem Nachteil ergibt;",
+            "bei Schäden durch rechtswidrige Verarbeitung Schadensersatz zu verlangen."
+          ],
+          "closing": [
+            "Sie können Ihr Profil auf dem Kontobildschirm selbst aktualisieren und Ihr Konto dort löschen. Der Export Ihrer Daten ist noch keine Funktion in der Anwendung; er wird auf Anfrage bereitgestellt."
           ]
         },
         {
           "id": "requests",
-          "title": "Anfragen und Kontakt",
+          "title": "So stellen Sie eine Anfrage",
           "paragraphs": [
-            "Senden Sie Fragen oder Datenanfragen über das Formular auf der Kontaktseite. Nennen Sie Thema, Konto-E-Mail und gewünschte Maßnahme; senden Sie keine Passwörter, Bestätigungscodes oder Einladungstokens.",
-            "Diese allgemeine Kontaktadresse erfüllt nicht automatisch alle gesetzlich vorgeschriebenen Antragswege. Verantwortlicher und offizielle Kanäle müssen vor dem Start festgelegt werden. Angaben zur Identitätsprüfung sollen dem Antrag angemessen sein."
+            "Zur Ausübung Ihrer Rechte haben Sie zwei Möglichkeiten: Wählen Sie im Kontaktformular die Kategorie „KVKK / Datenanfrage“ oder senden Sie eine E-Mail an pdassistant.info@gmail.com.",
+            "Nennen Sie in Ihrer Anfrage Ihren Namen, die mit Ihrem Konto verknüpfte E-Mail-Adresse und Ihr Anliegen klar. Das Senden von der mit Ihrem Konto verknüpften E-Mail-Adresse genügt meist, um zu bestätigen, dass die Anfrage von Ihnen stammt; bei Bedarf können wir eine verhältnismäßige zusätzliche Bestätigung verlangen. Senden Sie keine Passwörter, Bestätigungscodes oder Einladungslinks.",
+            "Wir schließen Ihre Anfrage je nach Art so schnell wie möglich und spätestens innerhalb von 30 Tagen kostenlos ab. Erfordert der Vorgang gesondert Kosten, kann die vom Datenschutzrat festgelegte Gebühr verlangt werden.",
+            "Halten Sie die Antwort für unzureichend, können Sie sich innerhalb von 30 Tagen nach Kenntnis der Antwort und in jedem Fall innerhalb von 60 Tagen nach dem Antragsdatum beim Datenschutzrat (Kişisel Verileri Koruma Kurulu) beschweren."
+          ]
+        },
+        {
+          "id": "security",
+          "title": "Datensicherheit und Meldung von Verletzungen",
+          "paragraphs": [
+            "Passwörter werden als Einweg-Hash gespeichert, Sitzungs-Token in HttpOnly-Cookies gehalten, Zwei-Faktor-Geheimnisse verschlüsselt, Projektberechtigungen auf dem Server geprüft und der Administratorzugang durch eine eigene Zwei-Faktor-Anmeldung geschützt. Diese Maßnahmen sind keine absolute Sicherheitsgarantie.",
+            "Gelangen personenbezogene Daten rechtswidrig in fremde Hände, melden wir dies nach Art. 12 KVKK so schnell wie möglich (nach einem Beschluss des Datenschutzrats innerhalb von 72 Stunden) dem Datenschutzrat und den betroffenen Personen."
+          ]
+        },
+        {
+          "id": "verbis",
+          "title": "VERBİS-Bewertung",
+          "paragraphs": [
+            "Die Verantwortlichen sind natürliche Personen und betreiben PDA als nichtkommerzielles Open-Source-Projekt. Ob sie sich im Register der Verantwortlichen (VERBİS) eintragen müssen, wird anhand der vom Datenschutzrat festgelegten Ausnahmekriterien (jährliche Beschäftigtenzahl, jährliche Bilanzsumme und Haupttätigkeit) geprüft.",
+            "Da diese Prüfung nicht abgeschlossen ist, gibt es keine VERBİS-Registernummer. Dieser Hinweis wird aktualisiert, wenn sich das Ergebnis ändert."
+          ]
+        },
+        {
+          "id": "updates",
+          "title": "Aktualisierungen und DSGVO-Hinweis",
+          "paragraphs": [
+            "Ändern sich die Verarbeitungsbedingungen, wird dieser Hinweis aktualisiert und das Datum „Zuletzt aktualisiert“ am Seitenanfang ändert sich.",
+            "Wenn Sie sich in der Europäischen Union oder im Europäischen Wirtschaftsraum befinden, finden Sie die DSGVO-Informationen (Rechtsgrundlagen, Übermittlungen, Rechte, Beschwerde) in den DSGVO-Abschnitten der Datenschutzerklärung."
           ]
         }
       ]
     },
     "accessibility": {
-      "title": "Barrierefreiheit",
-      "description": "PDA-Ansatz zur Barrierefreiheit, verfügbare Bedienelemente und Meldung von Hindernissen.",
+      "title": "Erklärung zur Barrierefreiheit",
+      "description": "Das Ziel von PDA zur Barrierefreiheit, der aktuelle Stand, bekannte Einschränkungen, die Bewertungsmethode und wie Sie eine Barriere melden.",
       "sections": [
         {
           "id": "approach",
-          "title": "Unser Ansatz",
+          "title": "Unser Ziel",
           "paragraphs": [
-            "Wir entwickeln PDA so, dass es auf unterschiedlichen Bildschirmgrößen und für unterschiedliche Bedürfnisse zugänglich ist. Tastaturbedienung, Formularbeschriftungen, sichtbarer Fokus, Zoom und die Reduzierung von Bewegung wurden auf Barrierefreiheit geprüft.",
-            "Wir verbessern die Barrierefreiheit mit der Weiterentwicklung des Produkts. Wenn Sie auf ein weiteres Problem oder eine Zugangsbarriere stoßen, kontaktieren Sie uns bitte über das Formular auf der Kontaktseite."
+            "Wir möchten, dass PDA auf unterschiedlichen Bildschirmgrößen und für unterschiedliche Bedürfnisse zugänglich ist. Unser Zielstandard ist WCAG 2.2 Stufe AA. Barrierefreiheit ist eine fortlaufende Aufgabe, die mit der Weiterentwicklung des Produkts immer wieder überprüft werden muss."
+          ]
+        },
+        {
+          "id": "status",
+          "title": "Aktueller Stand und Bewertung",
+          "paragraphs": [
+            "Diese Erklärung beruht auf einer Bewertung vom 10. Oktober 2026. Es gibt keine formale WCAG-Prüfung von PDA durch eine unabhängige Stelle; wir erklären daher keine vollständige Konformität, und diese Seite ist kein Zertifikat.",
+            "Unsere eigenen Methoden: Die öffentlichen Seiten (Startseite, Anmeldung, Registrierung, Passwort-Zurücksetzung, Über uns, FAQ, die rechtlichen Informationsseiten, Barrierefreiheit und Lizenz) werden automatisch mit axe gegen die WCAG-2.0-, 2.1- und 2.2-Regeln A/AA geprüft, und zwar in drei Sprachen, im hellen und dunklen Design sowie in Smartphone- und Desktopbreite (der Test a11y-public in der Ende-zu-Ende-Testsuite). Formulare, Menüs, die Kontakt- und Informationsseiten werden zusätzlich mit automatisierten Tests auf Tastaturbedienung, Fokusrahmen und Bildschirmbreite geprüft.",
+            "Automatisierte Werkzeuge erfassen nur einen Teil der Probleme; die manuelle Prüfung mit echten Screenreadern und verschiedenen Browser-Kombinationen bleibt ein laufender Bedarf."
           ]
         },
         {
           "id": "keyboard",
           "title": "Tastaturbedienung",
           "paragraphs": [
-            "Wechseln Sie mit Tab und Shift+Tab zwischen Links und Bedienelementen. Aktivieren Sie fokussierte Links oder Schaltflächen mit Enter. Der Sprunglink am Seitenanfang führt zum Hauptinhalt.",
-            "FAQ-Antworten können mit Enter oder Leertaste geöffnet und geschlossen werden. Nutzen Sie die vorhandene Tastaturbedienung für Menüs und Dialoge; unterstützte Fenster lassen sich mit Escape schließen."
+            "Sie können mit Tab und Umschalt+Tab zwischen Links und Bedienelementen wechseln und den fokussierten Link oder die Schaltfläche mit der Eingabetaste ausführen. Der Link „Zum Inhalt springen“ am Seitenanfang hilft Ihnen, den Hauptinhalt zu erreichen.",
+            "FAQ-Fragen lassen sich mit Eingabe- oder Leertaste öffnen und schließen. In Menüs und Dialogen können Sie die vorhandenen Tastaturbefehle der Anwendung verwenden und unterstützte Fenster mit Escape schließen."
           ]
         },
         {
           "id": "preferences",
-          "title": "Darstellung und Lesen",
+          "title": "Darstellung und Leseeinstellungen",
           "paragraphs": [
-            "Oben befinden sich Sprach- und Designkontrollen. Wählen Sie helles, dunkles oder Systemdesign sowie türkische, englische oder deutsche Texte.",
-            "Sie können den Browserzoom nutzen. Die Geräteeinstellung für reduzierte Bewegung verringert Animationen. Auf schmalen Bildschirmen werden Inhalte und Footerlinks untereinander angeordnet."
+            "Am oberen Seitenrand befinden sich Bedienelemente für Sprache und Design. Sie können ein helles, dunkles oder das Systemdesign wählen und die Oberflächentexte auf Türkisch, Englisch oder Deutsch nutzen.",
+            "Sie können den Zoom Ihres Browsers verwenden. Ist auf Ihrem Gerät die Einstellung für reduzierte Bewegung aktiv, werden Animationen der Anwendung reduziert. Auf schmalen Bildschirmen werden Inhalte und Fußzeilen-Links untereinander angeordnet."
           ]
         },
         {
           "id": "screen-readers",
-          "title": "Struktur und Hilfsmittel",
+          "title": "Sinnvolle Inhalte und assistive Technologien",
           "paragraphs": [
-            "Überschriften, Hauptinhalt und Navigation verwenden semantisches HTML. Formularfelder haben Beschriftungen, Schaltflächen zugängliche Namen und Fehlermeldungen erklärende Texte. Dekorative Symbole werden vor Screenreadern verborgen.",
-            "Wenn Sie Hilfsmittel verwenden und Schwierigkeiten beim Lesen oder beim Ausführen einer Aktion haben, teilen Sie uns dies bitte mit. Ihre Rückmeldungen fließen in Verbesserungen der Barrierefreiheit ein."
+            "Auf den Informationsseiten sind Überschriften, Hauptinhalt, Tabellen und Navigationsbereiche mit sinnvollen HTML-Elementen strukturiert. Die GitHub-Links in der Fußzeile haben einen zugänglichen Namen mit dem Namen der Person; dekorative Symbole sind für Screenreader ausgeblendet. Formularfehler sind mit ihrem Feld verknüpft."
+          ]
+        },
+        {
+          "id": "limitations",
+          "title": "Bekannte Einschränkungen",
+          "paragraphs": [
+            "Die folgenden Bereiche sind noch nicht vollständig barrierefrei oder nicht überprüft."
+          ],
+          "items": [
+            "Die Analysediagramme und visuellen Zusammenfassungen im Verwaltungsbereich wurden nicht mit einem Screenreader überprüft; dieser Bereich steht nur dem Administrator offen.",
+            "Die Anmeldeseiten von Google und GitHub gehören den jeweiligen Anbietern; ihre Barrierefreiheit liegt nicht in der Kontrolle von PDA.",
+            "Die Barrierefreiheits-Tags der Lebenslauf-PDF-Dateien, die auf der Seite „Über uns“ heruntergeladen werden können, wurden nicht überprüft.",
+            "Die angemeldeten Bildschirme der Anwendung (Projekt-Boards, Drag-and-drop, Kalender) wurden nicht umfassend mit Screenreadern und verschiedenen Browser-Kombinationen überprüft."
           ]
         },
         {
           "id": "feedback",
-          "title": "Ein Hindernis melden",
+          "title": "Eine Barriere melden",
           "paragraphs": [
-            "Bei einem Problem mit der Barrierefreiheit, einem Fehler oder einem Vorschlag kontaktieren Sie uns bitte über das Formular auf der Kontaktseite. Geben Sie die Seitenadresse, die gewünschte Aktion, das aufgetretene Problem, Browser/Gerät und gegebenenfalls verwendete Hilfsmittel an.",
-            "Teilen Sie weder Ihr Passwort noch Ihren Bestätigungscode oder andere vertrauliche Informationen. Medizinische Angaben sind für eine Meldung nicht erforderlich."
+            "Wenn Sie eine Seite oder einen Vorgang nicht nutzen können, melden Sie es uns über das Kontaktformular mit der Kategorie „Barrierefreiheit“ oder per E-Mail an pdassistant.info@gmail.com. Nennen Sie die Seitenadresse, was Sie tun wollten, Ihren Browser bzw. Ihr Gerät und gegebenenfalls die verwendete assistive Technologie.",
+            "Wir antworten auf Meldungen spätestens innerhalb von 30 Tagen und stellen den Inhalt nach Möglichkeit in einem alternativen Format bereit. Wenn Sie Screenshots teilen, verdecken Sie personenbezogene Daten und Geheimnisse. Sie müssen für eine Meldung keine gesundheitlichen Umstände erläutern."
           ]
         }
       ]
@@ -3022,7 +3292,7 @@
     },
     "cookies": {
       "title": "Cookie-Richtlinie",
-      "description": "Welche Cookies und welchen Browser-Speicher PDA warum verwendet, dass die Analyse standardmäßig ausgeschaltet ist und wie Sie Ihre Auswahl ändern.",
+      "description": "Welche Cookies und welchen Browser-Speicher PDA warum und wie lange verwendet, dass die Analyse standardmäßig ausgeschaltet ist und wie Sie Ihre Auswahl ändern.",
       "manageTitle": "Einstellungen verwalten",
       "manageText": "Sie können die Analyse jederzeit ein- oder ausschalten. Wenn Sie sie ausschalten, werden keine neuen Messungen gesendet und die Analyse-Kennungen in diesem Browser gelöscht.",
       "sections": [
@@ -3030,91 +3300,333 @@
           "id": "what",
           "title": "Was sind Cookies?",
           "paragraphs": [
-            "Cookies sind kleine Einträge, die eine Website in Ihrem Browser speichert. Auf dieser Seite umfasst \"Cookie\" auch den lokalen Browser-Speicher (localStorage) und den Sitzungsspeicher (sessionStorage), die für denselben Zweck dienen.",
-            "PDA verwendet keine Werbe-Cookies, kein Nutzerprofiling, keine Tracker Dritter und kein Browser-Fingerprinting."
+            "Cookies sind kleine Einträge, die eine Website in Ihrem Browser speichert. Auf dieser Seite umfasst „Cookie“ auch den lokalen Browser-Speicher (localStorage) und den Sitzungsspeicher (sessionStorage), die zum gleichen Zweck verwendet werden.",
+            "PDA verwendet keine Werbe-Cookies, kein Profiling, keine Tracking-Werkzeuge Dritter und kein Browser-Fingerprinting. Schriftarten werden vom eigenen Server von PDA geladen."
           ]
         },
         {
           "id": "categories",
           "title": "Kategorien",
           "paragraphs": [
-            "PDA verwendet zwei Einwilligungskategorien. Notwendig ist immer aktiv und lässt sich nicht ausschalten. Die Analyse funktioniert nur mit Ihrer ausdrücklichen Auswahl und ist standardmäßig ausgeschaltet."
+            "PDA verwendet zwei Einwilligungskategorien. Die Kategorie „Notwendig“ ist immer aktiv und kann nicht abgeschaltet werden; Darstellungs- und Nutzungseinstellungen gelten als funktionaler Teil dieser Kategorie (siehe die Begründung unten). Die Kategorie „Analyse“ läuft nur mit Ihrer ausdrücklichen Wahl und ist standardmäßig ausgeschaltet."
           ],
           "items": [
-            "Notwendig: Anmeldung, Sitzungssicherheit, Schutz vor gefälschten Anfragen, Sprachauswahl und die Speicherung dieser Auswahl.",
-            "Analyse: anonyme Messung von Seitenart, Besuchsquelle und aktiv verbrachter Zeit."
+            "Notwendig: Anmeldung, Sitzungssicherheit, Schutz vor gefälschten Anfragen, Sprachauswahl, vorübergehende Bestätigungsschritte und die Speicherung dieser Auswahl.",
+            "Funktionale Einstellungen: merken sich eine von Ihnen selbst vorgenommene Einstellung (Design, Ansicht, gemerkte E-Mail) in diesem Browser.",
+            "Analyse: anonyme Messung von Seitentyp, Herkunft des Besuchs, aktiver Nutzungszeit, Klicks auf bestimmte Schaltflächen und Fehlerarten."
           ]
         },
         {
           "id": "necessary",
           "title": "Notwendige Cookies und Speicher",
           "paragraphs": [
-            "Die folgenden Einträge sind für den Betrieb des Dienstes erforderlich und werden unabhängig von Ihrer Analyse-Auswahl verwendet. Alle werden von PDA (First Party) verwaltet. Die Laufzeiten hängen von der Konfiguration des Dienstes ab; angegeben sind die Standardwerte. Wenn Sie sie im Browser blockieren, funktionieren Anmeldung und Sitzung nicht."
+            "Die folgenden Einträge sind für den Betrieb des Dienstes erforderlich und werden unabhängig von Ihrer Analyse-Auswahl verwendet. Alle werden von PDA selbst (First Party) verwaltet. Die Laufzeiten hängen von der Konfiguration des Dienstes ab; angegeben sind die Standardwerte. Wenn Sie sie in den Browser-Einstellungen blockieren, funktionieren Anmeldung und Sitzung nicht."
           ],
-          "items": [
-            "PDA_ACCESS: kurzlebiges Zugriffstoken. HttpOnly; wird nur an den Pfad /api gesendet. Standardlaufzeit 15 Minuten.",
-            "PDA_REFRESH: Token zur Erneuerung der Sitzung. HttpOnly; wird nur an den Pfad /api/v1/auth gesendet. Standardlaufzeit 7 Tage; wird beim Abmelden entfernt.",
-            "PDA_SESSION: Markierung ohne Token, die anzeigt, ob eine Sitzung besteht. HttpOnly; gleiche Laufzeit wie das Erneuerungstoken; wird beim Abmelden entfernt.",
-            "XSRF-TOKEN: Schutz vor gefälschten Anfragen (CSRF). Wird von der Seite gelesen und an Aktionsanfragen angehängt; bleibt für die Browsersitzung.",
-            "JSESSIONID: wird nur während der Anmeldung über Google oder GitHub verwendet. HttpOnly; kurzlebig, etwa 30 Minuten.",
-            "NEXT_LOCALE: Ihre gewählte Sprache; ein Jahr.",
-            "pda:cookie-consent (localStorage): die Speicherung dieser Cookie-Auswahl (Version, Analyse-Erlaubnis, Datum); bis Sie sie löschen.",
-            "pda:last-session-refresh (localStorage): ein Zeitstempel, der verhindert, dass Tabs die Sitzung gleichzeitig erneuern."
-          ]
+          "table": {
+            "caption": "Notwendige Cookies und Speichereinträge",
+            "headers": [
+              "Name",
+              "Art",
+              "Zweck",
+              "Dauer"
+            ],
+            "rows": [
+              [
+                "PDA_ACCESS",
+                "Cookie, HttpOnly; nur an den Pfad /api gesendet",
+                "Kurzlebiges Zugriffs-Token",
+                "15 Minuten"
+              ],
+              [
+                "PDA_REFRESH",
+                "Cookie, HttpOnly; nur an den Pfad /api/v1/auth gesendet",
+                "Token zur Erneuerung der Sitzung",
+                "7 Tage; beim Abmelden gelöscht"
+              ],
+              [
+                "PDA_SESSION",
+                "Cookie, HttpOnly",
+                "Markierung ohne Token, die anzeigt, ob eine Sitzung besteht",
+                "Wie das Erneuerungs-Token; beim Abmelden gelöscht"
+              ],
+              [
+                "PDA_MFA",
+                "Cookie, HttpOnly; nur an den Zwei-Faktor-Pfad gesendet",
+                "Vorübergehender Nachweis nach dem Passwortschritt, damit Sie Ihren Zwei-Faktor-Code eingeben können",
+                "5 Minuten; nach Verwendung gelöscht"
+              ],
+              [
+                "PDA_ADMIN_MFA",
+                "Cookie, HttpOnly; nur an den Administrator-Prüfpfad gesendet",
+                "Vorübergehender Nachweis für den zweiten Schritt der Administrator-Anmeldung",
+                "5 Minuten; nach Verwendung gelöscht"
+              ],
+              [
+                "PDA_ADMIN_ENROLL",
+                "Cookie, HttpOnly; nur an den Administrator-Einrichtungspfad gesendet",
+                "Vorübergehender Nachweis für die erstmalige Einrichtung der Authenticator-App eines Administrators",
+                "10 Minuten; nach Verwendung gelöscht"
+              ],
+              [
+                "PDA_RESET",
+                "Cookie, HttpOnly; enger Pfad",
+                "Vorübergehender Nachweis, um das Zurücksetzen des Passworts fortzusetzen",
+                "10 Minuten; nach Verwendung gelöscht"
+              ],
+              [
+                "PDA_PWCHANGE",
+                "Cookie, HttpOnly; enger Pfad",
+                "Vorübergehender Nachweis, um eine Passwortänderung innerhalb der Sitzung fortzusetzen",
+                "10 Minuten; nach Verwendung gelöscht"
+              ],
+              [
+                "XSRF-TOKEN",
+                "Cookie; von der Seite gelesen",
+                "Schutz vor gefälschten Anfragen (CSRF)",
+                "Browsersitzung"
+              ],
+              [
+                "JSESSIONID",
+                "Cookie, HttpOnly",
+                "Nur während der Anmeldung mit Google oder GitHub verwendet",
+                "Etwa 30 Minuten"
+              ],
+              [
+                "NEXT_LOCALE",
+                "Cookie",
+                "Ihre gewählte Sprache",
+                "1 Jahr"
+              ],
+              [
+                "pda:cookie-consent",
+                "localStorage",
+                "Speicherung dieser Cookie-Auswahl (Version, Analyse-Einwilligung, Datum)",
+                "Bis Sie sie löschen"
+              ],
+              [
+                "pda:last-session-refresh",
+                "localStorage",
+                "Zeitstempel, der verhindert, dass Tabs die Sitzung gleichzeitig erneuern",
+                "Wird überschrieben; bis Sie ihn löschen"
+              ],
+              [
+                "pda.pendingVerification",
+                "sessionStorage",
+                "Überträgt die zu bestätigende E-Mail-Adresse nach Registrierung oder Anmeldung zur Bestätigungsseite (die Adresse wird nicht in der URL übertragen)",
+                "Bis die Bestätigung endet oder der Tab geschlossen wird"
+              ],
+              [
+                "pda:renderer",
+                "sessionStorage",
+                "Ergebnis, ob der Browser Animationen per Software oder Hardware zeichnet; die Oberfläche passt sich daran an",
+                "Bis der Tab geschlossen wird"
+              ]
+            ]
+          }
         },
         {
           "id": "preferences",
           "title": "Darstellungs- und Nutzungseinstellungen",
           "paragraphs": [
-            "Die folgenden Einträge merken sich nur Einstellungen, die Sie in diesem Browser vorgenommen haben. Sie messen Ihren Besuch nicht und werden nicht als Analyse an den Server gesendet. Die rechtliche Kategorie dieser Einträge muss in der rechtlichen Prüfung vor dem Start bestätigt werden."
+            "Die folgenden Einträge merken sich nur Einstellungen, die Sie selbst in diesem Browser vorgenommen haben. Sie messen Ihren Besuch nicht, werden nicht an den Server gesendet und dienen nicht dem Tracking. Ohne sie könnten wir die von Ihnen gewählte Darstellung und Einstellungen beim nächsten Besuch nicht bereitstellen; wir behandeln sie daher als funktionale Einträge, die für den von Ihnen ausdrücklich gewünschten Dienst unbedingt erforderlich sind (§ 25 Abs. 2 Nr. 2 TDDDG), und holen dafür keine gesonderte Einwilligung ein. Sie können sie in den Browser-Einstellungen löschen; Ihre Einstellungen kehren dann zu den Standardwerten zurück."
           ],
-          "items": [
-            "theme: helles, dunkles oder System-Design.",
-            "pda:motion und pda:theme-transition: Animationseinstellungen.",
-            "pda:sidebar-collapsed: ob die Seitenleiste eingeklappt ist.",
-            "pda.teams.view: die Ansicht auf der Teams-Seite.",
-            "pda:task-mode-help:v1:<Benutzer-ID>: die Einstellung, die Hilfe zur Aufgabenart auszublenden.",
-            "pda.rememberedEmail: Ihre E-Mail-Adresse, nur wenn Sie auf dem Anmeldebildschirm \"Angemeldet bleiben\" wählen.",
-            "pda:last-project:<Benutzer-ID> und pda:session-baseline (sessionStorage): das zuletzt gewählte Projekt sowie Sprache und Design zu Beginn der Sitzung; wird beim Schließen des Tabs entfernt."
+          "table": {
+            "caption": "Einträge für Darstellungs- und Nutzungseinstellungen",
+            "headers": [
+              "Name",
+              "Art",
+              "Zweck",
+              "Dauer"
+            ],
+            "rows": [
+              [
+                "theme",
+                "localStorage",
+                "Helles, dunkles oder Systemdesign",
+                "Bis Sie es löschen"
+              ],
+              [
+                "pda:motion, pda:theme-transition",
+                "localStorage",
+                "Animationseinstellungen",
+                "Bis Sie sie löschen"
+              ],
+              [
+                "pda:sidebar-collapsed",
+                "localStorage",
+                "Ob die Seitenleiste eingeklappt ist",
+                "Bis Sie es löschen"
+              ],
+              [
+                "pda:teams-view:v1:<Benutzer-ID>",
+                "localStorage",
+                "Ansicht der Teamseite (ersetzt den alten Schlüssel pda.teams.view)",
+                "Bis Sie es löschen"
+              ],
+              [
+                "pda:task-mode-help:v1:<Benutzer-ID>",
+                "localStorage",
+                "Einstellung, die Hilfe zur Aufgabenart auszublenden",
+                "Bis Sie sie löschen"
+              ],
+              [
+                "pda.rememberedEmail",
+                "localStorage",
+                "Ihre E-Mail-Adresse, nur wenn Sie auf dem Anmeldebildschirm „Angemeldet bleiben“ wählen",
+                "Bis Sie die Option ausschalten"
+              ],
+              [
+                "pda:last-project:<Benutzer-ID>",
+                "sessionStorage",
+                "Das zuletzt gewählte Projekt während der Sitzung",
+                "Bis der Tab geschlossen wird"
+              ],
+              [
+                "pda:session-baseline",
+                "sessionStorage",
+                "Sprache und Design zu Beginn der Sitzung",
+                "Bis der Tab geschlossen wird"
+              ]
+            ]
+          },
+          "closing": [
+            "<Benutzer-ID> ist die zufällige interne ID Ihres Kontos; sie ist weder Ihre E-Mail-Adresse noch Ihr Name."
           ]
         },
         {
           "id": "analytics",
           "title": "Analyse (standardmäßig ausgeschaltet)",
           "paragraphs": [
-            "Die Analyse erhebt keine Daten und erzeugt keine Kennung, bis Sie \"Alle akzeptieren\" wählen oder die Analyse im Einstellungsfenster einschalten. Solange Sie nicht entschieden haben, bleibt sie ausgeschaltet. Wenn sie aktiv ist, werden die Messungen auf dem eigenen Server von PDA gespeichert; es gibt kein Analysewerkzeug eines Drittanbieters.",
-            "Name, E-Mail, Nachrichteninhalt, Token, Passwort, Konto-ID oder Browser-Fingerabdruck werden nicht erfasst. Auch wenn Sie angemeldet sind, werden die Messungen nicht mit Ihrem Konto verknüpft.",
-            "Die Speicherdauer der Analysedaten ist noch nicht festgelegt (RECHTLICHER INHALT ERFORDERLICH); diese Dauer und die Löschregeln werden vor dem Start festgelegt.",
-            "Betriebskennzahlen wie die Zahl der Konten, aktiven und beendeten Konten und gesendeten Kontaktformulare hängen nicht von Ihrer Analyse-Auswahl ab; sie werden aus den eigenen Datensätzen des Dienstes berechnet."
+            "Die Analyse erhebt keine Daten und erzeugt keine Kennung, bevor Sie „Alle akzeptieren“ wählen oder im Einstellungsfenster Analyse einschalten. Sie bleibt auch ausgeschaltet, solange Sie nicht entschieden haben. Ist sie eingeschaltet, werden die Messdaten auf dem eigenen Server von PDA gespeichert; es gibt kein Analysewerkzeug eines Dritten.",
+            "Es werden weder Name, E-Mail, Nachrichteninhalt, Token, Passwort, Konto-ID, IP-Adresse, Browserinformationen noch ein Browser-Fingerprint erhoben. Auch wenn Sie angemeldet sind, wird die Messung nicht mit Ihrem Konto verknüpft.",
+            "Erhobene Analysedaten werden nach 12 Monaten automatisch gelöscht. Die anonyme Besucher-ID wird in Ihrem Browser alle 12 Monate erneuert; ein neuer Datensatz wird nicht mit der alten ID verknüpft.",
+            "Betriebszahlen wie die Anzahl der Konten, aktiver und beendeter Konten und gesendeter Kontaktformulare hängen nicht von Ihrer Analyse-Einwilligung ab; sie werden aus den eigenen Datensätzen des Dienstes berechnet."
           ],
           "items": [
-            "Die Art der besuchten Seite (zum Beispiel \"Projektseite\"); Projektnamen, Benutzer-IDs und Adressabfragen werden nicht gespeichert.",
-            "Die Quelle des Besuchs: direkt, Suchmaschine, eine andere Website (nur Domainname) oder ein Kampagnenlink (utm_source, utm_medium, utm_campaign).",
-            "Aktiv auf der Seite verbrachte Zeit; Zeit mit Tab im Hintergrund oder ohne Fensterfokus zählt nicht.",
-            "Eine zufällig erzeugte anonyme Besucher- und Sitzungs-ID: pda:analytics-visitor und pda:analytics-session (localStorage). Die Sitzungs-ID wird nach 30 Minuten Inaktivität erneuert. Beide werden gelöscht, wenn Sie die Einwilligung widerrufen."
+            "Die Art der besuchten Seite (z. B. „Projektseite“); Projektnamen, Benutzer-IDs oder Adressparameter werden nicht erfasst.",
+            "Die Herkunft des Besuchs: direkt, Suchmaschine, andere Website (nur Domain) oder Kampagnenlink (utm_source, utm_medium, utm_campaign).",
+            "Aktive Zeit auf der Website; Zeit, in der der Tab im Hintergrund oder das Fenster nicht fokussiert ist, wird nicht gezählt.",
+            "Schaltflächenklicks: nur ob Schaltflächen aus einer festen Liste angeklickt wurden (Registrieren- und Anmelden-Schaltflächen auf der Startseite und im Kopfbereich, Absenden des Registrierungs- und des Kontaktformulars, Link zum Quellcode); nichts darüber, wer geklickt hat oder was Sie eingegeben haben, wird erfasst.",
+            "Fehlerereignisse: Tritt in der Anwendung ein Fehler auf, werden nur die Fehlerart (Darstellung, Laden von Dateien, nicht abgefangene Promise-Ablehnung oder Netzwerk) und der Seitentyp erfasst. Fehlermeldung, Details, Adresse oder Kennung werden nicht erfasst. Derselbe Fehler wird pro Sitzung einmal gemeldet.",
+            "Zufällig erzeugte anonyme Besucher- und Sitzungs-ID: pda:analytics-visitor und pda:analytics-session (localStorage). Die Sitzungs-ID wird nach 30 Minuten Inaktivität erneuert. Beide werden gelöscht, wenn Sie die Einwilligung widerrufen."
           ]
         },
         {
           "id": "manage",
           "title": "Auswahl ändern und widerrufen",
           "paragraphs": [
-            "Öffnen Sie das Einstellungsfenster jederzeit über den Link \"Cookie-Einstellungen verwalten\" am Seitenende oder die Schaltfläche auf dieser Seite. Wenn Sie die Analyse ausschalten, enden neue Messungen sofort und die Analyse-Kennungen in diesem Browser werden gelöscht. Für das Löschen früher erhobener, aggregierter Daten gibt es keinen separaten automatischen Vorgang; dies wird vor dem Start festgelegt.",
-            "Ihre Auswahl gehört zu diesem Browser und ist nicht an Ihr Konto gebunden: In einem anderen Browser oder auf einem anderen Gerät treffen Sie eine eigene Auswahl. Ändert sich die Cookie-Praxis wesentlich, wird die Einwilligungsversion erhöht und Sie werden erneut gefragt."
+            "Sie können das Einstellungsfenster jederzeit über den Link „Cookie-Einstellungen verwalten“ am Seitenende oder die Schaltfläche auf dieser Seite öffnen. Schalten Sie die Analyse aus, enden neue Messungen sofort, Schaltflächenklick- und Fehlerereignisse werden nicht mehr gesendet und die Analyse-Kennungen in diesem Browser werden gelöscht. Da die Kennung gelöscht ist, lassen sich früher erhobene Datensätze Ihnen nicht mehr zuordnen; sie werden nach 12 Monaten automatisch gelöscht.",
+            "Wirkung des Widerrufs: Notwendige Cookies funktionieren weiter; außer der Analyse wird keine Funktion eingeschränkt. Der Widerruf berührt nicht die Rechtmäßigkeit der aufgrund der Einwilligung bis zum Widerruf erfolgten Verarbeitung.",
+            "Die Auswahl gehört zu diesem Browser und ist nicht an Ihr Konto gebunden: In einem anderen Browser oder auf einem anderen Gerät müssen Sie gesondert wählen. Ändert sich die Cookie-Praxis wesentlich, wird die Einwilligungsversion erhöht und Ihre Auswahl erneut abgefragt."
           ]
         },
         {
           "id": "third-parties",
           "title": "Dritte",
           "paragraphs": [
-            "PDA enthält keine Werbe- oder Analyse-Cookies von Drittanbietern. Wenn Sie sich mit Google oder GitHub anmelden, leitet Ihr Browser auf die Seite des Anbieters weiter und dessen eigene Cookie- und Datenschutzbedingungen gelten. E-Mails zu Bestätigung, Einladung und Kontakt werden vom Server gesendet und setzen keine Cookies in Ihrem Browser."
+            "PDA hat keine Werbe- oder Analyse-Cookies von Dritten. Wenn Sie sich mit Google oder GitHub anmelden, wird Ihr Browser auf die Seite des jeweiligen Anbieters weitergeleitet, und dessen eigene Cookie- und Datenschutzbestimmungen gelten. Bestätigungs-, Einladungs- und Kontakt-E-Mails werden vom Server gesendet und hinterlassen kein Cookie in Ihrem Browser."
           ]
         },
         {
           "id": "legal",
-          "title": "Kontakt und rechtliche Angaben",
+          "title": "Rechtsgrundlage und Kontakt",
           "paragraphs": [
-            "Fragen zu Cookies können Sie über das Formular auf der Kontaktseite senden.",
-            "Firmenname und Anschrift des Verantwortlichen, VERBİS-Eintrag, Text zur Rechtsgrundlage und Speicherfristen sind noch nicht festgelegt; diese Angaben sind daher als RECHTLICHER INHALT ERFORDERLICH markiert und nicht erfunden."
+            "Nach § 25 Abs. 1 TDDDG (bis 2024: TTDSG) ist für das Speichern von Informationen auf Ihrem Endgerät oder den Zugriff darauf Ihre Einwilligung erforderlich. Ausgenommen ist nach § 25 Abs. 2 Nr. 2 TDDDG, was unbedingt erforderlich ist, damit wir einen von Ihnen ausdrücklich gewünschten digitalen Dienst zur Verfügung stellen können. Die Einträge der Kategorie „Notwendig“ und die funktionalen Einstellungen stützen wir auf diese Ausnahme (Verarbeitung personenbezogener Daten dabei: Art. 6 Abs. 1 lit. b und f DSGVO). Die Analyse beruht allein auf Ihrer ausdrücklichen Einwilligung (§ 25 Abs. 1 TDDDG; Art. 6 Abs. 1 lit. a DSGVO; Art. 5/1 KVKK). Für die Verarbeitung nach türkischem Recht gelten Art. 5/2(c) und (f) KVKK. Den Cookie-Leitfaden der Behörde finden Sie unter den offiziellen Quellen unten.",
+            "Fragen zu Cookies senden Sie über das Kontaktformular oder an pdassistant.info@gmail.com. Verantwortliche sind Hamza Taşbay und Alper Temiz (Einzelheiten im KVKK-Datenschutzhinweis und in der Datenschutzerklärung)."
+          ]
+        }
+      ]
+    },
+    "terms": {
+      "title": "Nutzungsbedingungen",
+      "description": "Kontoregeln, zulässige Nutzung, Verantwortlichkeiten, Sperrung und Löschung von Konten sowie das anwendbare Recht bei der Nutzung von PDA.",
+      "sections": [
+        {
+          "id": "scope",
+          "title": "Geltungsbereich und Annahme",
+          "paragraphs": [
+            "Diese Bedingungen gelten für Ihre Nutzung der Online-Version von PDA · Project Delivery Assistant (PDA), die von den Projektbetreuern Hamza Taşbay und Alper Temiz bereitgestellt wird. PDA ist Open-Source-Software, mit der die Projektabwicklung in einem gemeinsamen Arbeitsbereich mit Projekten, Teams, Aufgaben, Kalender und Chat verwaltet werden kann.",
+            "Mit der Anlage eines Kontos oder der Nutzung von PDA nehmen Sie diese Bedingungen an. Wenn Sie sie nicht annehmen, nutzen Sie PDA nicht. Für Installationen, die Sie auf eigener Infrastruktur betreiben, gelten die Bedingungen der Person, die diese Installation betreibt, nicht diese."
+          ]
+        },
+        {
+          "id": "account",
+          "title": "Kontoregeln",
+          "paragraphs": [
+            "Sie müssen bei der Registrierung richtige Angaben machen, Ihr Konto nur selbst nutzen und Ihr Passwort geheim halten. Sie sind für Handlungen mit Ihrem Konto verantwortlich; bei Verdacht auf unbefugte Nutzung ändern Sie Ihr Passwort und informieren uns. Wir empfehlen, die Zwei-Faktor-Authentifizierung zu aktivieren.",
+            "PDA richtet sich nicht an Kinder unter 16 Jahren. Legen Sie kein Konto im Namen einer anderen Person ohne deren Erlaubnis an."
+          ]
+        },
+        {
+          "id": "acceptable-use",
+          "title": "Zulässige Nutzung",
+          "paragraphs": [
+            "Bei der Nutzung von PDA verpflichten Sie sich, Folgendes zu unterlassen."
+          ],
+          "items": [
+            "Rechtswidrige Inhalte, Inhalte, die Rechte anderer (Urheberrecht, Persönlichkeitsrecht, Privatsphäre) verletzen, oder bedrohende, belästigende, hasserfüllte oder irreführende Inhalte zu teilen.",
+            "Software, Anfragevolumen oder Methoden zu verwenden, die PDA, andere Nutzer oder die Infrastruktur schädigen, oder zu versuchen, Anfragebegrenzungen, Berechtigungsprüfungen oder Bot-Fallen zu umgehen.",
+            "Ohne Erlaubnis Sicherheitstests, Schwachstellenscans oder Versuche unbefugten Zugriffs durchzuführen. Wenn Sie eine Schwachstelle finden, melden Sie sie uns über das Kontaktformular mit der Kategorie „Fehlermeldung“ oder per E-Mail; veröffentlichen Sie keine Einzelheiten an öffentlichen Orten.",
+            "Konten massenhaft oder automatisiert anzulegen oder das Kontaktformular zum Versand unerwünschter Nachrichten zu nutzen.",
+            "Personenbezogene Daten anderer, Passwörter oder besondere Kategorien personenbezogener Daten rechtswidrig in PDA hochzuladen."
+          ]
+        },
+        {
+          "id": "content",
+          "title": "Nutzerinhalte und Verantwortung",
+          "paragraphs": [
+            "Die Inhalte, die Sie zu Projekten, Aufgaben, Kommentaren, im Chat und in Dateien hinzufügen, gehören Ihnen oder dem Rechteinhaber. Sie erlauben PDA, diese Inhalte zur Erbringung des Dienstes zu verwenden (zu speichern und berechtigten Projektmitgliedern anzuzeigen); einen Anspruch auf Nutzung für andere Zwecke erheben wir nicht.",
+            "Sie sind für die Rechtmäßigkeit Ihrer Inhalte und dafür verantwortlich, die zum Teilen nötigen Rechte zu besitzen. Projektmitglieder und Projektverantwortliche verwalten die Inhalte ihrer Projekte im Rahmen ihrer Berechtigungen. Rechtswidrige Inhalte können Sie über das Kontaktformular melden."
+          ]
+        },
+        {
+          "id": "availability",
+          "title": "Verfügbarkeit und keine Gewährleistung",
+          "paragraphs": [
+            "PDA ist kostenlose Open-Source-Software in aktiver Entwicklung. Der Dienst wird „wie besehen“ und „wie verfügbar“ bereitgestellt; es wird nicht zugesichert, dass er ununterbrochen, fehlerfrei oder für einen bestimmten Zweck geeignet ist. Funktionen können sich ohne Vorankündigung ändern, und es kann Ausfälle und Wartungsarbeiten geben.",
+            "Wir empfehlen, eine eigene Kopie wichtiger Daten aufzubewahren. Der Export ist noch keine Funktion in der Anwendung; er wird auf Anfrage bereitgestellt."
+          ]
+        },
+        {
+          "id": "suspension",
+          "title": "Sperrung von Konten",
+          "paragraphs": [
+            "Bei Verstößen gegen diese Bedingungen oder gegen die Sicherheit kann ein Administrator ein Konto deaktivieren. Bei einem deaktivierten Konto werden Sitzungen beendet und die Anmeldung gesperrt; Daten im Konto werden nicht gelöscht, und der Vorgang kann rückgängig gemacht werden. Administratoraktionen werden aufgezeichnet. Um einer Entscheidung zu widersprechen, nutzen Sie das Kontaktformular oder die E-Mail-Adresse."
+          ]
+        },
+        {
+          "id": "deletion",
+          "title": "Konto löschen",
+          "paragraphs": [
+            "Sie können Ihr Konto jederzeit auf dem Kontobildschirm löschen. Im Moment der Löschung wird das Konto anonymisiert und werden alle Sitzungen beendet. Wenn Sie ein Projekt oder eine Organisation besitzen, müssen Sie zuvor die Inhaberschaft übertragen oder sie löschen; das Administratorkonto kann sich nicht selbst löschen. Einzelheiten stehen in der Datenschutzerklärung."
+          ]
+        },
+        {
+          "id": "license",
+          "title": "Verhältnis zur Open-Source-Lizenz",
+          "paragraphs": [
+            "Der Quellcode von PDA wird unter der Apache License 2.0 veröffentlicht; Sie dürfen den Code nach den Bedingungen dieser Lizenz nutzen, verändern und weitergeben. Diese Nutzungsbedingungen ändern die Lizenz des Quellcodes nicht; sie regeln nur die Nutzung der Online-Version von PDA. Zusammenfassung und Volltext der Lizenz finden Sie auf der Seite Lizenz."
+          ]
+        },
+        {
+          "id": "liability",
+          "title": "Haftungsbeschränkung",
+          "paragraphs": [
+            "Vorbehaltlich zwingender gesetzlicher Haftung haften die Betreuer von PDA nicht für mittelbare Schäden oder für Daten- oder Gewinnverlust, die aus der Nutzung oder Nichtnutzbarkeit des Dienstes entstehen. Für Handlungen gegenüber anderen Nutzern und für Inhalte ist jeweils der betreffende Nutzer verantwortlich."
+          ]
+        },
+        {
+          "id": "law",
+          "title": "Anwendbares Recht",
+          "paragraphs": [
+            "Für diese Bedingungen gilt das Recht der Republik Türkei. Zwingende Vorschriften und Zuständigkeitsregeln des Verbraucherschutzrechts, auch die Ihres Wohnsitzlandes, bleiben unberührt."
+          ]
+        },
+        {
+          "id": "changes",
+          "title": "Änderungen",
+          "paragraphs": [
+            "Wir aktualisieren diese Bedingungen bei Bedarf. Der aktuelle Text wird auf dieser Seite veröffentlicht und das Datum „Zuletzt aktualisiert“ ändert sich; die weitere Nutzung von PDA nach einer Änderung bedeutet, dass Sie die aktuellen Bedingungen annehmen."
           ]
         }
       ]
@@ -3304,7 +3816,11 @@
       "label": "Verwaltung",
       "section": "Verwaltungsbereiche",
       "users": "Benutzer",
-      "analytics": "Analyse"
+      "analytics": "Analyse",
+      "support": "Support-Anfragen",
+      "audit": "Audit-Protokoll",
+      "system": "System",
+      "newRequests": ", {count, plural, one {# neue Anfrage} other {# neue Anfragen}}"
     },
     "checking": "Berechtigung wird geprüft…",
     "users": {
@@ -3355,7 +3871,8 @@
         "confirm": "Wieder aktivieren",
         "cancel": "Abbrechen",
         "done": "{name} wurde wieder aktiviert."
-      }
+      },
+      "openDetail": "Details von {name} öffnen"
     },
     "analytics": {
       "title": "Analyse",
@@ -3442,6 +3959,409 @@
       },
       "duration": {
         "zero": "0 Sek."
+      },
+      "behavior": {
+        "sections": {
+          "pages": "Seiten",
+          "flows": "Abläufe",
+          "notFound": "Nicht gefundene Seiten (404)",
+          "ctas": "CTA-Klicks",
+          "conversion": "Conversion",
+          "errors": "Client-Fehler"
+        },
+        "empty": "Keine Einträge in diesem Zeitraum.",
+        "columns": {
+          "page": "Seite",
+          "views": "Aufrufe",
+          "sessions": "Sitzungen"
+        },
+        "pages": {
+          "note": "Seiten erscheinen als Routenvorlagen (zum Beispiel /projects/[slug]); IDs und Abfragetext werden nicht gespeichert. Nur von Besuchern, die Cookies erlaubt haben.",
+          "top": "Meistaufgerufene Seiten",
+          "entry": "Einstiegsseiten",
+          "exit": "Ausstiegsseiten"
+        },
+        "flows": {
+          "note": "Die erste Seite einer Sitzung und die zweite Seite, die danach geöffnet wurde.",
+          "title": "Seitenabläufe",
+          "from": "Einstiegsseite",
+          "to": "Nächste Seite"
+        },
+        "notFound": {
+          "note": "Besuche einer Adresse, die es nicht gibt.",
+          "views": "404-Aufrufe",
+          "sessions": "Betroffene Sitzungen"
+        },
+        "ctas": {
+          "note": "Klicks auf Handlungsaufforderungen (Schaltflächen und Links); jeder Klick trägt nur eine feste Schaltflächen-ID.",
+          "title": "CTA-Klicks",
+          "cta": "Schaltfläche",
+          "clicks": "Klicks"
+        },
+        "ctaNames": {
+          "landing_register": "Startseite: Registrieren",
+          "landing_login": "Startseite: Anmelden",
+          "header_register": "Kopfzeile: Registrieren",
+          "header_login": "Kopfzeile: Anmelden",
+          "register_submit": "Registrierungsformular gesendet",
+          "contact_submit": "Kontaktformular gesendet",
+          "github_repo": "Link zum GitHub-Repository"
+        },
+        "conversion": {
+          "note": "Eine Conversion ist eine Sitzung, die das Registrierungsformular gesendet hat. Die Quote ist der Anteil an den im Zeitraum begonnenen Sitzungen.",
+          "sessions": "Sitzungen",
+          "converted": "Konvertiert",
+          "rate": "Conversion-Quote",
+          "bySource": "Nach Traffic-Quelle",
+          "byCampaign": "Nach Kampagne"
+        },
+        "errors": {
+          "note": "Nur aus den Browsern von Besuchern, die Cookies erlaubt haben. Es werden weder Fehlertext noch Benutzer- oder Adressdetails erfasst, nur die Fehlerart und die Seitenvorlage.",
+          "total": "Client-Fehler insgesamt",
+          "byKind": "Nach Fehlerart",
+          "byRoute": "Nach Seite",
+          "kind": "Art",
+          "count": "Anzahl"
+        },
+        "errorKinds": {
+          "render": "Darstellungsfehler",
+          "chunk_load": "Datei konnte nicht geladen werden",
+          "unhandled_rejection": "Unbehandelter Fehler",
+          "network": "Netzwerkfehler"
+        }
+      }
+    },
+    "userDetail": {
+      "title": "Benutzerdetails",
+      "breadcrumb": "Verwaltungspfad",
+      "breadcrumbFallback": "Benutzer",
+      "description": "Kontoinformationen, die Berechtigungen der Rolle, verknüpfte Anmeldemethoden und offene Sitzungen.",
+      "loading": "Benutzer wird geladen",
+      "error": "Der Benutzer konnte nicht geladen werden.",
+      "backToUsers": "Zurück zu den Benutzern",
+      "notFound": {
+        "title": "Benutzer nicht gefunden",
+        "description": "Dieser Benutzer existiert nicht oder wurde entfernt."
+      },
+      "profile": {
+        "title": "Profil",
+        "nickname": "Benutzername",
+        "email": "E-Mail",
+        "status": "Kontostatus",
+        "verification": "E-Mail-Bestätigung",
+        "verified": "Bestätigt",
+        "unverified": "Bestätigung ausstehend",
+        "created": "Registriert",
+        "mustChangePassword": "Passwortänderung erforderlich",
+        "yes": "Ja",
+        "no": "Nein",
+        "providers": "Verknüpfte Anmeldemethoden",
+        "noProviders": "Keine verknüpften Konten; nur E-Mail und Passwort."
+      },
+      "providers": {
+        "GOOGLE": "Google",
+        "GITHUB": "GitHub"
+      },
+      "access": {
+        "title": "Rolle und Berechtigungen",
+        "role": "Rolle",
+        "permissions": "Plattformberechtigungen",
+        "noPermissions": "Diese Rolle hat keine Plattformberechtigungen.",
+        "singleAdminNote": "In dieser Installation gibt es nur einen Administrator: das über Umgebungsvariablen angelegte Konto. Rollen können nicht geändert werden."
+      },
+      "permissions": {
+        "USER_MANAGE": "Benutzer verwalten (Mitgliedschaft beenden oder wiederherstellen) und Support-Anfragen bearbeiten",
+        "SESSION_MANAGE": "Sitzungen von Benutzern ansehen und beenden",
+        "AUDIT_VIEW": "Audit-Protokoll ansehen",
+        "SYSTEM_VIEW": "Systemstatus, Zahlen und Analyse ansehen"
+      },
+      "sessions": {
+        "title": "Offene Sitzungen",
+        "description": "Die Sitzungen dieses Kontos, die gerade offen sind. Das Beenden einer Sitzung meldet den Benutzer auf diesem Gerät ab.",
+        "loading": "Sitzungen werden geladen",
+        "error": "Die Sitzungen konnten nicht geladen werden.",
+        "tableLabel": "Offene Sitzungen",
+        "columns": {
+          "device": "Gerät",
+          "created": "Begonnen",
+          "lastUsed": "Zuletzt verwendet",
+          "expires": "Endet"
+        },
+        "unknownDevice": "Unbekanntes Gerät",
+        "neverUsed": "Noch nicht verwendet",
+        "revoke": "Sitzung beenden",
+        "revokeTitle": "Sitzung beenden: {device}",
+        "revokeDescription": "{name} wird auf diesem Gerät sofort abgemeldet und muss sich erneut anmelden. Das Konto und die Sitzungen auf anderen Geräten bleiben unberührt.",
+        "revokeDescriptionSelf": "Das ist Ihr eigenes Konto. Die beendete Sitzung kann die sein, die Sie gerade verwenden; dann werden Sie zur Administratoranmeldung zurückgeleitet.",
+        "revokeConfirm": "Sitzung beenden",
+        "revokeDone": "Sitzung beendet.",
+        "gone": "Diese Sitzung ist nicht mehr offen. Die Liste wurde aktualisiert.",
+        "cancel": "Abbrechen",
+        "revokeAll": "Alle Sitzungen beenden",
+        "revokeAllTitle": "Alle Sitzungen von {name} beenden",
+        "revokeAllDescription": "{count, plural, one {# offene Sitzung wird beendet} other {# offene Sitzungen werden beendet}}: {name} wird auf allen Geräten sofort abgemeldet und muss sich erneut anmelden. Das Konto wird nicht gelöscht.",
+        "revokeAllDescriptionSelf": "Das ist Ihr eigenes Konto. Alle Ihre Sitzungen, auch die aktuell verwendete, werden beendet, und Sie werden zur Administratoranmeldung zurückgeleitet.",
+        "revokeAllConfirm": "Alle Sitzungen beenden",
+        "revokeAllDone": "{count, plural, one {# Sitzung beendet.} other {# Sitzungen beendet.}}",
+        "empty": {
+          "title": "Keine offenen Sitzungen",
+          "description": "Dieses Konto hat gerade keine offene Sitzung.",
+          "disabled": "Das Konto hat keine offene Sitzung, weil seine Mitgliedschaft beendet wurde."
+        }
+      }
+    },
+    "system": {
+      "title": "System",
+      "description": "Zustand des Dienstes, konfigurierte Funktionen, geplante Aufgaben und Plattformzahlen. Geheime Werte werden nie angezeigt; es wird nur gezeigt, ob sie gesetzt sind.",
+      "refresh": "Aktualisieren",
+      "retry": "Erneut versuchen",
+      "loading": "Systeminformationen werden geladen",
+      "sections": {
+        "health": "Zustand und Konfiguration",
+        "operations": "Betriebszähler",
+        "jobs": "Geplante Aufgaben",
+        "counts": "Plattformzahlen",
+        "projects": "Projekte"
+      },
+      "health": {
+        "status": {
+          "label": "Dienststatus",
+          "hint": "Gesamtzustand des Servers."
+        },
+        "database": {
+          "label": "Datenbank",
+          "hint": "Ob der Server seine Datenbank erreicht."
+        },
+        "mail": {
+          "label": "E-Mail-Versand",
+          "hint": "Solange er aus ist, werden keine Code- und Benachrichtigungs-E-Mails gesendet."
+        },
+        "google": {
+          "label": "Anmeldung mit Google",
+          "hint": "Die Schaltfläche funktioniert, wenn die Zugangsdaten gesetzt sind."
+        },
+        "github": {
+          "label": "Anmeldung mit GitHub",
+          "hint": "Die Schaltfläche funktioniert, wenn die Zugangsdaten gesetzt sind."
+        },
+        "apiDocs": {
+          "label": "API-Dokumentation",
+          "hint": "Wenn sie an ist, ist die Swagger-Oberfläche erreichbar; im Produktivbetrieb sollte sie aus sein."
+        },
+        "totpKey": {
+          "label": "Schlüssel für die Zwei-Schritt-Bestätigung",
+          "hint": "Für die Administratoranmeldung erforderlich; der Schlüssel selbst wird nie angezeigt."
+        }
+      },
+      "states": {
+        "up": "Läuft",
+        "down": "Ausgefallen",
+        "reachable": "Erreichbar",
+        "unreachable": "Nicht erreichbar",
+        "on": "An",
+        "off": "Aus",
+        "configured": "Konfiguriert",
+        "notConfigured": "Nicht konfiguriert"
+      },
+      "operations": {
+        "note": "Diese Zähler und Aufgaben liegen nur im Speicher dieses Serverprozesses: Sie werden bei einem Neustart zurückgesetzt, und bei mehreren Instanzen meldet jede ihre eigenen Werte.",
+        "activeSessions": "Offene Sitzungen",
+        "activeSessionsHint": "Sitzungen aller Konten, die weder beendet noch abgelaufen sind.",
+        "clientErrors": "Client-Fehler (4xx)",
+        "clientErrorsHint": "Letzte 24 Stunden.",
+        "serverErrors": "Serverfehler (5xx)",
+        "serverErrorsHint": "Letzte 24 Stunden."
+      },
+      "jobs": {
+        "description": "Aufgaben, die regelmäßig im Hintergrund laufen, wann sie zuletzt liefen und wie viele Datensätze sie betrafen.",
+        "tableLabel": "Geplante Aufgaben",
+        "columns": {
+          "job": "Aufgabe",
+          "lastRun": "Letzter Lauf",
+          "outcome": "Ergebnis",
+          "affected": "Betroffene Datensätze"
+        },
+        "notRun": "Noch nicht gelaufen",
+        "outcomes": {
+          "SUCCESS": "Erfolgreich",
+          "FAILURE": "Fehlgeschlagen"
+        },
+        "affectedCount": "{count, plural, one {# Datensatz} other {# Datensätze}}",
+        "names": {
+          "retentionAnalytics": "Bereinigung der Analysedaten (Aufbewahrung)",
+          "retentionAudit": "Bereinigung des Audit-Protokolls (Aufbewahrung)",
+          "retentionContact": "Bereinigung von Kontakt und Support (Aufbewahrung)",
+          "retentionUserSessions": "Bereinigung alter Sitzungen",
+          "pendingRegistrationCleanup": "Bereinigung unbestätigter Registrierungen",
+          "repositoryCommitScan": "Commit-Scan der Repositories",
+          "taskDeadlineScan": "Scan der Aufgabenfristen"
+        },
+        "empty": {
+          "title": "Keine geplanten Aufgaben",
+          "description": "Dieser Prozess hat noch keine Aufgabe gemeldet."
+        }
+      },
+      "counts": {
+        "users": "Benutzerkonten",
+        "projects": "Projekte",
+        "total": "Gesamt",
+        "active": "Aktiv",
+        "disabled": "Beendet",
+        "pending": "Bestätigung ausstehend",
+        "admins": "Administratoren",
+        "archived": "Archiviert"
+      },
+      "projects": {
+        "description": "Nur Name, Status und Zahl der aktiven Mitglieder. Es gibt keine Projektinhalte und keinen Zugang in ein Projekt.",
+        "tableLabel": "Projektliste",
+        "columns": {
+          "name": "Projekt",
+          "status": "Status",
+          "members": "Aktive Mitglieder",
+          "created": "Erstellt"
+        },
+        "membersCount": "{count, plural, one {# aktives Mitglied} other {# aktive Mitglieder}}",
+        "statuses": {
+          "PLANNING": "In Planung",
+          "ACTIVE": "Aktiv",
+          "ON_HOLD": "Pausiert",
+          "COMPLETED": "Abgeschlossen",
+          "ARCHIVED": "Archiviert"
+        },
+        "empty": {
+          "title": "Noch keine Projekte",
+          "description": "Projekte erscheinen hier, sobald Benutzer sie anlegen."
+        }
+      },
+      "errors": {
+        "status": "Der Systemstatus konnte nicht geladen werden.",
+        "overview": "Die Plattformzahlen konnten nicht geladen werden.",
+        "projects": "Die Projekte konnten nicht geladen werden."
+      }
+    },
+    "audit": {
+      "title": "Audit-Protokoll",
+      "description": "Die dauerhafte Aufzeichnung von Administratoraktionen: Anmeldung, Beenden der Mitgliedschaft, Beenden von Sitzungen und Status von Support-Anfragen. Ein Eintrag enthält nur Aktion, Ziel und Ergebnis; keine E-Mail-Adresse und keinen Freitext.",
+      "loading": "Audit-Protokoll wird geladen",
+      "error": "Das Audit-Protokoll konnte nicht geladen werden.",
+      "retry": "Erneut versuchen",
+      "tableLabel": "Audit-Ereignisse",
+      "unknownAccount": "Unbekanntes Konto",
+      "removedAccount": "Entferntes Konto",
+      "supportRequest": "Support-Anfrage {id}",
+      "filters": {
+        "action": "Aktion",
+        "allActions": "Alle Aktionen",
+        "from": "Von",
+        "to": "Bis",
+        "clear": "Filter zurücksetzen",
+        "invalid": "Das Startdatum darf nicht nach dem Enddatum liegen, und der Zeitraum darf höchstens 800 Tage umfassen.",
+        "zone": "Tagesgrenzen werden in dieser Zeitzone berechnet: {zone}"
+      },
+      "columns": {
+        "time": "Zeitpunkt",
+        "actor": "Durchgeführt von",
+        "action": "Aktion",
+        "target": "Ziel",
+        "outcome": "Ergebnis"
+      },
+      "actions": {
+        "ADMIN_SIGN_IN": "Administratoranmeldung",
+        "USER_DISABLE": "Mitgliedschaft beendet",
+        "USER_ENABLE": "Konto wiederhergestellt",
+        "SESSION_REVOKE": "Sitzung beendet",
+        "SESSION_REVOKE_ALL": "Alle Sitzungen beendet",
+        "SUPPORT_REQUEST_STATUS_CHANGE": "Status einer Support-Anfrage geändert"
+      },
+      "outcomes": {
+        "SUCCESS": "Erfolgreich",
+        "FAILURE": "Fehlgeschlagen",
+        "DENIED": "Abgelehnt"
+      },
+      "targets": {
+        "SYSTEM": "—"
+      },
+      "empty": {
+        "title": "Noch keine Einträge",
+        "description": "Administratoraktionen erscheinen hier, sobald sie stattfinden.",
+        "filteredTitle": "Keine Einträge für diesen Filter",
+        "filteredDescription": "Ändern Sie die Aktion oder den Zeitraum."
+      }
+    },
+    "support": {
+      "title": "Support-Anfragen",
+      "description": "Nachrichten aus dem Kontaktformular. Nachrichten werden 12 Monate aufbewahrt; Sie können nur den Status ändern.",
+      "loading": "Support-Anfragen werden geladen",
+      "error": "Die Support-Anfragen konnten nicht geladen werden.",
+      "retry": "Erneut versuchen",
+      "tableLabel": "Support-Anfragen",
+      "filters": {
+        "status": "Status",
+        "category": "Kategorie",
+        "allStatuses": "Alle Status",
+        "allCategories": "Alle Kategorien",
+        "clear": "Filter zurücksetzen"
+      },
+      "columns": {
+        "date": "Datum",
+        "category": "Kategorie",
+        "name": "Name",
+        "email": "E-Mail",
+        "message": "Nachricht",
+        "status": "Status",
+        "delivery": "Benachrichtigungs-E-Mail"
+      },
+      "statuses": {
+        "NEW": "Neu",
+        "IN_PROGRESS": "In Bearbeitung",
+        "CLOSED": "Geschlossen"
+      },
+      "categories": {
+        "GENERAL": "Allgemein",
+        "BUG": "Fehlermeldung",
+        "DATA_REQUEST": "Datenanfrage (DSGVO / KVKK)",
+        "ACCESSIBILITY": "Barrierefreiheit"
+      },
+      "delivery": {
+        "SENT": "Zugestellt",
+        "FAILED": "Nicht zugestellt"
+      },
+      "empty": {
+        "title": "Noch keine Support-Anfragen",
+        "description": "Nachrichten erscheinen hier, sobald das Kontaktformular verwendet wird.",
+        "filteredTitle": "Keine Anfragen für diesen Filter",
+        "filteredDescription": "Ändern Sie den Status- oder Kategoriefilter."
+      },
+      "detail": {
+        "title": "Support-Anfrage",
+        "breadcrumb": "Verwaltungspfad",
+        "breadcrumbFallback": "Anfrage",
+        "description": "Die Nachricht der Person wird als reiner Text angezeigt.",
+        "back": "Zurück zu den Support-Anfragen",
+        "loading": "Support-Anfrage wird geladen",
+        "error": "Die Support-Anfrage konnte nicht geladen werden.",
+        "notFound": {
+          "title": "Support-Anfrage nicht gefunden",
+          "description": "Diese Anfrage existiert nicht oder wurde nach Ablauf der Aufbewahrungsfrist gelöscht."
+        },
+        "message": "Nachricht",
+        "details": "Details",
+        "received": "Eingegangen",
+        "statusChanged": "Status geändert",
+        "reply": "Per E-Mail antworten",
+        "replySubject": "PDA-Kontakt: {category}",
+        "statusTitle": "Status",
+        "statusHelp": "Schließen Sie die Anfrage, nachdem Sie geantwortet haben. Eine geschlossene Anfrage kann wieder geöffnet werden.",
+        "actions": {
+          "NEW": "Als neu markieren",
+          "IN_PROGRESS": "In Bearbeitung nehmen",
+          "CLOSED": "Anfrage schließen"
+        },
+        "closeTitle": "Anfrage schließen",
+        "closeDescription": "Die Anfrage wird als \"Geschlossen\" markiert, und die Änderung wird im Audit-Protokoll festgehalten. Sie können sie jederzeit wieder öffnen; die Nachricht wird nicht gelöscht.",
+        "closeConfirm": "Anfrage schließen",
+        "cancel": "Abbrechen",
+        "changed": "Der Status der Anfrage wurde auf \"{status}\" gesetzt."
       }
     }
   },
@@ -3466,7 +4386,7 @@
       },
       "analytics": {
         "title": "Analyse",
-        "description": "Misst anonym die Art der besuchten Seite, die Herkunft des Besuchs und die aktiv auf der Seite verbrachte Zeit. Sie wird nicht mit Ihrem Konto verknüpft und erfasst weder Namen, E-Mail noch Inhalte. Standardmäßig ausgeschaltet."
+        "description": "Misst anonym die Art der besuchten Seite, die Herkunft des Besuchs, die aktiv auf der Seite verbrachte Zeit, ob bestimmte Schaltflächen angeklickt wurden, und die Art eines Fehlers. Sie wird nicht mit Ihrem Konto verknüpft und erfasst weder Namen, E-Mail noch Inhalte. Standardmäßig ausgeschaltet."
       },
       "rejectAll": "Alle ablehnen",
       "acceptAll": "Alle akzeptieren",
@@ -3485,7 +4405,16 @@
       "messageHint": "Mindestens 10 und höchstens 5000 Zeichen.",
       "counter": "{count} / 5000",
       "submit": "Senden",
-      "submitting": "Wird gesendet…"
+      "submitting": "Wird gesendet…",
+      "category": "Kategorie",
+      "categories": {
+        "general": "Allgemein",
+        "bug": "Fehlermeldung",
+        "dataRequest": "KVKK- oder Datenanfrage",
+        "accessibility": "Barrierefreiheit"
+      },
+      "optional": "Optional.",
+      "honeypot": "Website"
     },
     "validation": {
       "required": "Dieses Feld ist erforderlich.",
@@ -3502,9 +4431,13 @@
     },
     "notice": {
       "title": "Bevor Sie senden",
-      "text": "Ihre Nachricht wird per E-Mail an das PDA-Team zugestellt und nicht auf der Seite gespeichert. Schreiben Sie weder Ihr Passwort noch Bestätigungscodes oder die geheimen Teile eines Einladungslinks.",
-      "privacy": "Datenschutzerklärung"
-    }
+      "text": "Verantwortliche sind Hamza Taşbay und Alper Temiz. Ihre Nachricht wird verarbeitet, um Ihnen zu antworten; sie wird 12 Monate gespeichert und per E-Mail an das PDA-Postfach (Gmail) zugestellt. Schreiben Sie weder Ihr Passwort noch Bestätigungscodes oder die geheimen Teile eines Einladungslinks.",
+      "privacy": "Datenschutzerklärung",
+      "more": "Einzelheiten:",
+      "kvkk": "KVKK-Datenschutzhinweis"
+    },
+    "emailAlt": "Sie können uns auch direkt per E-Mail schreiben:",
+    "stale": "Das Formular konnte nicht geprüft werden, weil es lange geöffnet blieb oder die Uhr Ihres Geräts falsch geht. Ihre Nachricht bleibt erhalten; bitte senden Sie sie erneut."
   },
   "passwordRules": {
     "title": "Das Passwort muss enthalten:",
