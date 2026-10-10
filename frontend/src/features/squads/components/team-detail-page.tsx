@@ -25,7 +25,6 @@ import { squadsApi } from "../api";
 import { projectLogoSrc, teamsKey, useProjectContext } from "../hooks";
 import { relativeTime } from "../relative-time";
 import type { TeamMember } from "../types";
-import { AddTeamMemberDialog } from "./add-team-member-dialog";
 import { DeleteTeamButton } from "./delete-team-button";
 import { TeamMembersTable } from "./team-members-table";
 import { PageTitle } from "@/components/common/page-title";
@@ -254,7 +253,7 @@ export function TeamDetailPage({ slug, teamId }: { slug: string; teamId: string 
 
         {isManager && (
           <div className="flex flex-wrap items-center gap-2">
-            <AddTeamMemberDialog projectId={projectId} teamId={teamId} trigger={<Button>{ta("button")}</Button>} />
+            <Link href={`/projects/${slug}/team-invitations/new?team=${teamId}`} className={buttonVariants()}>{ta("button")}</Link>
             <Button variant="outline" aria-pressed={editMode} onClick={() => setEditMode((current) => !current)}>
               {editMode ? <Check data-icon="inline-start" size={16} aria-hidden="true" /> : <PencilSimple data-icon="inline-start" size={16} aria-hidden="true" />}
               {editMode ? t("editMode.done") : t("editTeam")}
@@ -342,7 +341,7 @@ export function TeamDetailPage({ slug, teamId }: { slug: string; teamId: string 
         <EmptyState
           title={t("emptyTitle")}
           description={isManager ? t("emptyDescription") : t("emptyViewerDescription")}
-          action={isManager ? <AddTeamMemberDialog projectId={projectId} teamId={teamId} trigger={<Button>{ta("button")}</Button>} /> : undefined}
+          action={isManager ? <Link href={`/projects/${slug}/team-invitations/new?team=${teamId}`} className={buttonVariants()}>{ta("button")}</Link> : undefined}
         />
       )}
 

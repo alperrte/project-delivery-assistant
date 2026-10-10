@@ -1,11 +1,11 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import Link from "@/i18n/navigation";
 import { usePathname, useRouter, useSearchParams } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
-import { ListBullets, Plus, TreeStructure } from "@phosphor-icons/react";
+import { Plus, SquaresFour, Table as TableIcon, TreeStructure } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/common/empty-state";
 import { EntityGrid } from "@/components/common/entity-card";
 import { PageHeader } from "@/components/common/page-header";
@@ -14,42 +14,75 @@ import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Project } from "@/features/projects/types";
+import { useSession } from "@/features/auth/hooks/use-session";
 import { membersApi } from "@/features/projects/members-api";
 import { errorKey } from "@/lib/api/error-message";
 import { squadsApi, TEAM_PAGE_SIZE } from "../api";
 import { teamsKey } from "../hooks";
 import { TeamCard } from "./team-card";
 import { TeamChart } from "./team-chart";
+import { TeamTable } from "./team-table";
 
-type View = "list" | "chart";
-const VIEW_STORAGE_KEY = "pda.teams.view";
+type View = "grid" | "table" | "chart";
+/** Per-account choice. The pre-v1 global key is only read once, to migrate it to the first account that opens the page. */
+const LEGACY_VIEW_KEY = "pda.teams.view";
+const viewStorageKey = (userId: string) => `pda:teams-view:v1:${userId}`;
 
-const isView = (value: string | null): value is View => value === "list" || value === "chart";
+/** `list` is the old name of the card view. */
+function parseView(value: string | null | undefined): View | null {
+  if (value === "list") return "grid";
+  return value === "grid" || value === "table" || value === "chart" ? value : null;
+}
 
 const viewListeners = new Set<() => void>();
 
-function readStoredView(): View | null {
+function readStoredView(userId: string | undefined): View | null {
+  if (!userId) return null;
   try {
-    const saved = window.localStorage.getItem(VIEW_STORAGE_KEY);
-    return isView(saved) ? saved : null;
+    return parseView(window.localStorage.getItem(viewStorageKey(userId)))
+      ?? parseView(window.localStorage.getItem(LEGACY_VIEW_KEY));
   } catch {
-    // Storage can be blocked; the list view is a fine default.
+    // Storage can be blocked; the grid view is a fine default.
     return null;
   }
 }
 
 function subscribeToView(listener: () => void) {
   viewListeners.add(listener);
-  return () => { viewListeners.delete(listener); };
+  window.addEventListener("storage", listener);
+  return () => {
+    viewListeners.delete(listener);
+    window.removeEventListener("storage", listener);
+  };
 }
 
-function storeView(next: View) {
+function notifyViewChange() {
+  viewListeners.forEach((listener) => listener());
+}
+
+function storeView(userId: string | undefined, next: View) {
+  if (!userId) return;
   try {
-    window.localStorage.setItem(VIEW_STORAGE_KEY, next);
+    window.localStorage.setItem(viewStorageKey(userId), next);
   } catch {
     // Not remembering the choice is harmless.
   }
-  viewListeners.forEach((listener) => listener());
+  notifyViewChange();
+}
+
+/** Moves the legacy global choice under the signed-in account (once), so it never leaks to the next account. */
+function migrateLegacyView(userId: string) {
+  try {
+    const legacy = parseView(window.localStorage.getItem(LEGACY_VIEW_KEY));
+    if (!legacy) return;
+    if (!parseView(window.localStorage.getItem(viewStorageKey(userId)))) {
+      window.localStorage.setItem(viewStorageKey(userId), legacy);
+    }
+    window.localStorage.removeItem(LEGACY_VIEW_KEY);
+    notifyViewChange();
+  } catch {
+    // Nothing to migrate when storage is unavailable.
+  }
 }
 
 /** `?page=` is one based in the URL; anything unusable falls back to the first page. */
@@ -81,11 +114,14 @@ export function TeamsPage({ project, isManager }: { project: Project; isManager:
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const userId = useSession().data?.id;
   // The saved choice is only read on the client, so the server snapshot is null and hydration agrees.
-  const remembered = useSyncExternalStore(subscribeToView, readStoredView, () => null);
+  const remembered = useSyncExternalStore(subscribeToView, () => readStoredView(userId), () => null);
+  useEffect(() => {
+    if (userId) migrateLegacyView(userId);
+  }, [userId]);
 
-  const requested = searchParams.get("view");
-  const view: View = isView(requested) ? requested : (remembered ?? "list");
+  const view: View = parseView(searchParams.get("view")) ?? remembered ?? "grid";
 
   const teams = useQuery({
     queryKey: [...teamsKey(project.id), "all"],
@@ -109,8 +145,9 @@ export function TeamsPage({ project, isManager }: { project: Project; isManager:
   }
 
   function changeView(next: View) {
-    storeView(next);
-    router.replace(href({ view: next, page: 0 }), { scroll: false });
+    storeView(userId, next);
+    // The page stays: grid and table slice the same list, and the chart simply ignores it.
+    router.replace(href({ view: next }), { scroll: false });
   }
 
   function goToPage(next: number) {
@@ -139,11 +176,15 @@ export function TeamsPage({ project, isManager }: { project: Project; isManager:
         action={
           <div className="flex flex-wrap items-center gap-2">
             {all.length > 0 && (
-              <Tabs value={view} onValueChange={(next) => isView(next as string) && changeView(next as View)}>
+              <Tabs value={view} onValueChange={(next) => { const chosen = parseView(next as string); if (chosen) changeView(chosen); }}>
                 <TabsList aria-label={t("view.label")} className="group-data-horizontal/tabs:h-9">
-                  <TabsTrigger value="list" className="px-2.5">
-                    <ListBullets size={16} aria-hidden="true" />
-                    {t("view.list")}
+                  <TabsTrigger value="grid" className="px-2.5">
+                    <SquaresFour size={16} aria-hidden="true" />
+                    {t("view.grid")}
+                  </TabsTrigger>
+                  <TabsTrigger value="table" className="px-2.5">
+                    <TableIcon size={16} aria-hidden="true" />
+                    {t("view.table")}
                   </TabsTrigger>
                   <TabsTrigger value="chart" className="px-2.5">
                     <TreeStructure size={16} aria-hidden="true" />
@@ -176,20 +217,24 @@ export function TeamsPage({ project, isManager }: { project: Project; isManager:
         />
       )}
 
-      {teams.data && all.length > 0 && view === "list" && (
+      {teams.data && all.length > 0 && view !== "chart" && (
         <>
-          <EntityGrid>
-            {visible.map((team) => (
-              <li key={team.id} className="flex min-w-0">
-                <TeamCard
-                  team={team}
-                  project={project}
-                  parentName={team.parentTeamId ? parentNames.get(team.parentTeamId) : null}
-                  canManage={isManager}
-                />
-              </li>
-            ))}
-          </EntityGrid>
+          {view === "table" ? (
+            <TeamTable teams={visible} project={project} parentNames={parentNames} canManage={isManager} />
+          ) : (
+            <EntityGrid>
+              {visible.map((team) => (
+                <li key={team.id} className="flex min-w-0">
+                  <TeamCard
+                    team={team}
+                    project={project}
+                    parentName={team.parentTeamId ? parentNames.get(team.parentTeamId) : null}
+                    canManage={isManager}
+                  />
+                </li>
+              ))}
+            </EntityGrid>
+          )}
           <PaginationBar
             page={page}
             totalPages={totalPages}

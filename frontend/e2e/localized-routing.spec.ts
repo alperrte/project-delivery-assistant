@@ -67,6 +67,8 @@ test("project sections and create pages have their own named URL per language", 
     "/tr/projeler/x/kriterler/yeni", "/tr/projeler/x/kriterler/c1/duzenle", "/tr/projeler/x/sprintler/yeni", "/tr/projeler/x/sprintler/s1/duzenle",
     "/en/projects/x/criteria/new", "/en/projects/x/criteria/c1/edit", "/en/projects/x/sprints/new", "/en/projects/x/sprints/s1/edit",
     "/de/projekte/x/kriterien/neu", "/de/projekte/x/kriterien/c1/bearbeiten", "/de/projekte/x/sprints/neu", "/de/projekte/x/sprints/s1/bearbeiten",
+    // The member invite page sits next to the (virtual) team-invitations section.
+    "/tr/projeler/x/ekip-davetleri/yeni", "/en/projects/x/team-invitations/new", "/de/projekte/x/team-einladungen/neu",
   ]) {
     const response = await request.get(path, { maxRedirects: 0, headers: cookie });
     expect(response.status(), path).toBe(200);
@@ -105,6 +107,9 @@ test("criterion and sprint form pages keep their own URL, while the criteria sec
     ["/tr/projeler/x/sprintler/s1/duzenle", "Sprinti düzenle · PDA"],
     ["/en/projects/x/criteria/new", "New criterion · PDA"], ["/en/projects/x/sprints/s1/edit", "Edit sprint · PDA"],
     ["/de/projekte/x/kriterien/neu", "Neues Kriterium · PDA"], ["/de/projekte/x/sprints/neu", "Neuer Sprint · PDA"],
+    // The invite page and the virtual team-invitations section do not capture each other.
+    ["/tr/projeler/x/ekip-davetleri", "Ekip davetleri · PDA"], ["/tr/projeler/x/ekip-davetleri/yeni", "Üye davet et · PDA"],
+    ["/en/projects/x/team-invitations/new", "Invite member · PDA"], ["/de/projekte/x/team-einladungen/neu", "Mitglied einladen · PDA"],
   ]) {
     const html = await (await request.get(path, { headers: cookie })).text();
     expect(html, path).toContain(`<title>${title}</title>`);
@@ -114,6 +119,7 @@ test("criterion and sprint form pages keep their own URL, while the criteria sec
     ["/tr/projects/x/criteria/new", "/tr/projeler/x/kriterler/yeni"],
     ["/en/projeler/x/sprintler/s1/duzenle", "/en/projects/x/sprints/s1/edit"],
     ["/de/projects/x/criteria/c1/edit", "/de/projekte/x/kriterien/c1/bearbeiten"],
+    ["/tr/projects/x/team-invitations/new?team=t1", "/tr/projeler/x/ekip-davetleri/yeni?team=t1"],
   ]) {
     const response = await request.get(path, { maxRedirects: 0, headers: cookie });
     expect(response.status(), path).toBe(308);

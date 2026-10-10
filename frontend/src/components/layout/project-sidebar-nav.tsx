@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChatNavItem } from "@/features/chat/components/chat-nav-item";
 import { usePendingInvitationCount } from "@/features/invitations/hooks";
+import { useInvitationResponseCount } from "@/features/notifications/hooks/use-invitation-responses";
 import { useCurrentMember } from "@/features/projects/hooks/use-current-member";
 import { projectsApi } from "@/features/projects/api";
 import { useSelectedProject } from "@/features/projects/hooks/use-selected-project";
@@ -54,6 +55,10 @@ export function ProjectSidebarNav({
   // pathname (/projects/[slug]/criteria/new, /projects/[slug]/criteria/[id]/edit) and they keep Criteria active.
   const criteriaRoute = /^\/projects\/([^/]+)\/criteria(?:\/|$)/.exec(pathname);
 
+  // Likewise the team-invitations section is virtual (`?section=invitations`); only its physical invite page
+  // (/projects/[slug]/team-invitations/new) reaches this pathname and it keeps "Team invitations" active.
+  const invitationsRoute = /^\/projects\/([^/]+)\/team-invitations(?:\/|$)/.exec(pathname);
+
   // `/projects/new` is the create page, not a project called "new";
   // the sidebar keeps the last selected project there.
   const detailSlug = /^\/projects\/([^/]+)$/.exec(pathname)?.[1];
@@ -65,6 +70,7 @@ export function ProjectSidebarNav({
     (detailSlug === "new" ? undefined : detailSlug) ??
     teamsRoute?.[1] ??
     criteriaRoute?.[1] ??
+    invitationsRoute?.[1] ??
     taskRouteSlug(pathname);
 
   const { slug, project } = useSelectedProject(routeSlug);
@@ -95,15 +101,21 @@ export function ProjectSidebarNav({
     isManager && !contained,
   );
   const pendingInvitations = isManager && !contained && pending.isSuccess ? pending.data : undefined;
+  // Unread accepted/rejected answers for the selected project (only the inviting manager receives them). It is a
+  // second, independent number: never merged with the pending total.
+  const responses = useInvitationResponseCount(project?.id, isManager && !contained);
+  const responseInvitations = isManager && !contained && responses.isSuccess ? responses.data : undefined;
 
   // Inside a task route no project section is highlighted; the task group owns the selection.
   const active = teamsRoute
     ? "teams"
-    : criteriaRoute
-      ? "criteria"
-      : taskActive
-        ? null
-        : projectSection(searchParams.get("section"), isManager);
+    : invitationsRoute
+      ? "invitations"
+      : criteriaRoute
+        ? "criteria"
+        : taskActive
+          ? null
+          : projectSection(searchParams.get("section"), isManager);
 
   const projectPath = slug ? `/projects/${slug}` : null;
 
@@ -119,7 +131,7 @@ export function ProjectSidebarNav({
     key={`${actor?.id ?? "demo"}:${project?.id ?? slug}:${pathname}:${active}`}
     projectPath={projectPath} active={!!routeSlug && (active === "teams" || active === "invitations")}
     isInvitationRoute={!!routeSlug && active === "invitations"} isManager={isManager}
-    count={pendingInvitations} collapsed={collapsed} onNavigate={onNavigate} /> : null;
+    count={pendingInvitations} responseCount={responseInvitations} collapsed={collapsed} onNavigate={onNavigate} /> : null;
 
   const taskItems = TASK_NAV.filter(
     (item) => !("managerOnly" in item && item.managerOnly && !isManager) &&

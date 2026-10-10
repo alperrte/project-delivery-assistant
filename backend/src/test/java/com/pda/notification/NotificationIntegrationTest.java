@@ -249,6 +249,70 @@ class NotificationIntegrationTest {
                 .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(0));
     }
 
+    @Test void invitationResponseCountIsScopedByProjectTypeAndRecipient() throws Exception {
+        Account manager = account(), x = account(), y = account(), z = account();
+        UUID projectA = projects.create(manager.id(), "Response A " + UUID.randomUUID(), null, null).getId();
+        UUID projectB = projects.create(manager.id(), "Response B " + UUID.randomUUID(), null, null).getId();
+        UUID teamA = squads.create(manager.id(), projectA, "Team A", null, null, true).getId();
+        UUID teamB = squads.create(manager.id(), projectB, "Team B", null, null, true).getId();
+        var inviteX = invitations.inviteRegisteredUser(manager.id(), projectA, x.id(), Set.of(ProjectRole.TESTER), null, teamA);
+        var inviteY = invitations.inviteRegisteredUser(manager.id(), projectA, y.id(), Set.of(ProjectRole.TESTER), null, teamA);
+        var inviteZ = invitations.inviteRegisteredUser(manager.id(), projectB, z.id(), Set.of(ProjectRole.TESTER), null, teamB);
+        String count = "/api/v1/notifications/unread-count";
+        String responses = "type=PROJECT_INVITATION_ACCEPTED&type=PROJECT_INVITATION_REJECTED";
+        mvc.perform(get(count + "?projectId=" + projectA + "&" + responses).cookie(manager.access()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(0));
+        invitations.acceptMine(x.id(), inviteX.invitation().getId());
+        invitations.rejectMine(y.id(), inviteY.invitation().getId(), "No");
+        invitations.acceptMine(z.id(), inviteZ.invitation().getId());
+        mvc.perform(get(count + "?projectId=" + projectA + "&" + responses).cookie(manager.access()))
+                .andExpect(header().string("Cache-Control", "private, no-store"))
+                .andExpect(jsonPath("$.count").value(2));
+        mvc.perform(get(count + "?projectId=" + projectB + "&" + responses).cookie(manager.access()))
+                .andExpect(jsonPath("$.count").value(1));
+        mvc.perform(get(count + "?projectId=" + projectA + "&type=PROJECT_INVITATION_ACCEPTED").cookie(manager.access()))
+                .andExpect(jsonPath("$.count").value(1));
+        mvc.perform(get(count + "?projectId=" + projectA + "&type=PROJECT_INVITATION_REJECTED").cookie(manager.access()))
+                .andExpect(jsonPath("$.count").value(1));
+        mvc.perform(get(count + "?projectId=" + projectA + "&type=PROJECT_INVITATION_CREATED").cookie(manager.access()))
+                .andExpect(jsonPath("$.count").value(0));
+        mvc.perform(get(count + "?" + responses).cookie(manager.access())).andExpect(jsonPath("$.count").value(3));
+        mvc.perform(get(count + "?projectId=" + projectA).cookie(manager.access())).andExpect(jsonPath("$.count").value(2));
+        mvc.perform(get(count).cookie(manager.access())).andExpect(jsonPath("$.count").value(3));
+        mvc.perform(get(count + "?projectId=" + UUID.randomUUID() + "&" + responses).cookie(manager.access()))
+                .andExpect(jsonPath("$.count").value(0));
+        // Invitees never receive the inviter's response notifications.
+        for (Account other : java.util.List.of(x, y, z))
+            mvc.perform(get(count + "?projectId=" + projectA + "&" + responses).cookie(other.access()))
+                    .andExpect(jsonPath("$.count").value(0));
+        mvc.perform(get("/api/v1/notifications?unreadOnly=true&projectId=" + projectA + "&" + responses).cookie(manager.access()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(2))
+                .andExpect(jsonPath("$.content[0].projectId").value(projectA.toString()))
+                .andExpect(jsonPath("$.content[1].projectId").value(projectA.toString()))
+                .andExpect(jsonPath("$.content[0].invitationContext").exists());
+        mvc.perform(get("/api/v1/notifications?read=false&projectId=" + projectB + "&type=PROJECT_INVITATION_ACCEPTED").cookie(manager.access()))
+                .andExpect(jsonPath("$.totalElements").value(1));
+        mvc.perform(get("/api/v1/notifications?projectId=" + projectA + "&" + responses).cookie(x.access()))
+                .andExpect(jsonPath("$.totalElements").value(0));
+        // Reading one decrements only that project's count; merely listing never marks read.
+        String firstId = JsonPath.read(mvc.perform(get("/api/v1/notifications?unreadOnly=true&projectId=" + projectA + "&" + responses)
+                .cookie(manager.access())).andReturn().getResponse().getContentAsString(), "$.content[0].id");
+        Cookie csrf = csrf();
+        mvc.perform(patch("/api/v1/notifications/" + firstId + "/read").cookie(csrf, manager.access())
+                .header("X-XSRF-TOKEN", csrf.getValue())).andExpect(status().isOk());
+        mvc.perform(get(count + "?projectId=" + projectA + "&" + responses).cookie(manager.access()))
+                .andExpect(jsonPath("$.count").value(1));
+        mvc.perform(get(count + "?projectId=" + projectB + "&" + responses).cookie(manager.access()))
+                .andExpect(jsonPath("$.count").value(1));
+        // Validation and authentication.
+        for (String bad : java.util.List.of("?projectId=not-a-uuid", "?type=NOT_A_TYPE", "?type=PROJECT_INVITATION_ACCEPTED&type=BOGUS"))
+            mvc.perform(get(count + bad).cookie(manager.access())).andExpect(status().isBadRequest());
+        for (String bad : java.util.List.of("?projectId=not-a-uuid", "?type=NOT_A_TYPE", "?type=PROJECT_INVITATION_ACCEPTED&type=BOGUS"))
+            mvc.perform(get("/api/v1/notifications" + bad).cookie(manager.access())).andExpect(status().isBadRequest());
+        mvc.perform(get(count + "?projectId=" + projectA + "&" + responses)).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/v1/notifications?projectId=" + projectA + "&" + responses)).andExpect(status().isUnauthorized());
+    }
+
     private static TaskCommand command(String title, TaskPriority priority, Instant deadlineAt) {
         return new TaskCommand(new TaskDraft(title, null, priority, null, deadlineAt, null, null),
                 null, null, null, null, null);

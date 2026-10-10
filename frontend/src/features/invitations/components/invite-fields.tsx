@@ -21,7 +21,7 @@ export function RolePicker({ value, onChange, showError = false }: { value: Proj
   }
 
   return (
-    <fieldset className="space-y-1.5" aria-describedby={showError ? `${ids}-error` : undefined}>
+    <fieldset className="space-y-1.5" aria-invalid={showError || undefined} aria-describedby={showError ? `${ids}-error` : undefined}>
       <legend className="text-sm font-medium leading-none">{t("rolesLabel")}</legend>
       <div className="grid grid-cols-1 gap-2 pt-1.5 sm:grid-cols-2">
         {PROJECT_ROLES.map((role) => (

@@ -13,8 +13,9 @@ test("external invitation registers an account and joins the invited team with t
   try {
     const slug = await createProject(manager, projectName);
     const teamId = await createTeam(manager, slug, "Backend");
-    await manager.getByRole("button", { name: /^Üye ekle$/ }).first().click();
-    const dialog = manager.getByRole("dialog");
+    await manager.getByRole("link", { name: /^Üye davet et$/ }).first().click();
+    await expect(manager).toHaveURL(`/tr/projeler/${slug}/ekip-davetleri/yeni?team=${teamId}`);
+    const dialog = manager.locator("#main-content form"); // a full page since the invite dialog was retired
     await dialog.getByRole("tab", { name: "E-posta ile davet" }).click();
     await dialog.getByLabel("Ad", { exact: true }).fill("Çağrı");
     await dialog.getByLabel("Soyad").fill("Şahin");
@@ -26,6 +27,7 @@ test("external invitation registers an account and joins the invited team with t
       dialog.getByRole("button", { name: "Davet gönder" }).click(),
     ]);
     expect(response.status()).toBe(201);
+    await expect(manager).toHaveURL(`/tr/projeler/${slug}/ekipler/${teamId}`);
     const created = await response.json();
     expect(created.token).toBeTruthy();
 

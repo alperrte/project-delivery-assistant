@@ -16,8 +16,8 @@ Kullanıcı kararı (2026-10-10): staging (`git add`), branch değiştirme ve `g
 - [x] Phase 2 — `project-service-backend` (Talep 3 + 9 backend prerequisite; 2026-10-10)
 - [x] Transition Gate 2 — user commit/push confirmation (2026-10-10)
 - [x] Phase 3 — `project-service-frontend` (2026-10-10)
-- [ ] Transition Gate 3 — user commit/push confirmation
-- [ ] Phase 4 — `squad-service-backend`
+- [x] Transition Gate 3 — user commit/push confirmation (2026-10-10)
+- [x] Phase 4 — `squad-service-backend` (2026-10-10)
 - [ ] Transition Gate 4 — user commit/push confirmation
 - [ ] Phase 5 — `notification-service`
 - [ ] Transition Gate 5 — user commit/push confirmation
@@ -731,8 +731,8 @@ STOP → `BRANCH COMPLETE — project-service-frontend`
 
 ## Transition Gate 3
 
-- [ ] Kullanıcı commit/push'u doğruladı.
-- [ ] `squad-service-backend` gerekli shared prerequisites'i içeriyor.
+- [x] Kullanıcı commit/push'u doğruladı (`c2578be`; main'e PR #128 `8a0353a`).
+- [x] `squad-service-backend` gerekli shared prerequisites'i içeriyor (`pull --ff-only origin main` → `8a0353a`; Phase 1–3 commitleri erişilebilir; `StickyFormActions`/`FormErrorSummary` mevcut). Not: Phase 3 commit'ine yanlışlıkla kökte üretilmiş `test-results/.last-run.json` girmişti; bu branch'te repodan çıkarıldı ve kök `.gitignore`'a `/test-results/` eklendi.
 
 ---
 
@@ -767,13 +767,13 @@ Transition Gate 3.
 
 ### Checklist
 
-- [ ] 17.1 Görünüm state.
-- [ ] 17.2 Tablo bileşeni.
-- [ ] 17.3 E2E T8.
+- [x] 17.1 Görünüm state: `grid | table | chart` (eski `list` → grid), `?view=` önceliği, kullanıcıya özel `pda:teams-view:v1:<userId>` (try/catch, `useSyncExternalStore`, eski global anahtar bir kez taşınıp silinir); görünüm değişiminde `?page=` korunur.
+- [x] 17.2 `team-table.tsx`: `md`+ semantik tablo (Ekip, Üyeler `TeamMemberPreview compact`, Üye sayısı, Üst ekip `xl`+, Son güncelleme, yönetici işlemleri 44px), altında `divide-y` yığılmış liste; grid ile aynı sayfa dilimi.
+- [x] 17.3 E2E T8 `teams-view-toggle.spec.ts` 7/7 (aynı veri seti, görünüm değişiminde 0 ek istek, sayfa korunur, hesaba özel tercih, üye yönetici işlemi görmez, `?view=list`, 320/390/768/1024/1280 light/dark); team spec'leri 19/19.
 
 ### Definition of Done
 
-- [ ] Üç görünüm aynı veri seti; tek ağ isteği; sayfa korunur.
+- [x] Üç görünüm aynı veri seti; tek ağ isteği; sayfa korunur.
 
 ## Task 18 — Üye Davet Et tam sayfa (Talep 10)
 
@@ -804,13 +804,15 @@ Task 17; Phase 1 shared form kabuğu.
 
 ### Checklist
 
-- [ ] 18.1 Routing.
-- [ ] 18.2 Sayfa.
-- [ ] 18.3 E2E T5 (DB'de davet, duplicate 409, yabancı teamId 404).
+- [x] 18.1 Routing: `team-invitations/new` (TR `ekip-davetleri/yeni`, DE `team-einladungen/neu`), sanal Ekip Davetleri bölümüyle çakışmıyor; başlık, breadcrumb, sidebar aktifliği, `authenticated-route`.
+- [x] 18.2 `invite-member-page.tsx`: Ekip / Kişi / Roller ve mesaj bölümleri, `FormErrorSummary` + ilk hatalı alana odak, `StickyFormActions`, `beforeunload`; "Ekibe ekle" anında eylem olarak kaldı; 409/404/429 sayfada `role=alert`; `?team=` ile takım kilitli ve başarı/iptal takım detayına döner, aksi halde Ekip Davetleri listesine. `add-team-member-dialog.tsx` kaldırıldı; tetikleyiciler `Link`.
+- [x] 18.3 E2E T5 `invite-member-page.spec.ts` 7/7 (gerçek davet DB'de, duplicate 409, yabancı teamId 404 ve davet oluşmaz, üye forbidden, 390px light/dark, TR/EN/DE); 02, 04, team-invitations-modernization, team-member-preview, localized-routing uyarlandı; batch 53/53.
+
+Takip: davet 409'unda genel `errors.conflict` metni gösteriliyor (backend ayrı kod döndürmüyor; mevcut davranış).
 
 ### Definition of Done
 
-- [ ] Modal yok; mevcut davranışlar (aday, ekibe ekle, e-posta, roller, mesaj) korunuyor.
+- [x] Modal yok; mevcut davranışlar (aday, ekibe ekle, e-posta, roller, mesaj) korunuyor.
 
 ## Task 19 — Takım daveti yanıt rozeti (Talep 11)
 
@@ -841,14 +843,14 @@ Task 18.
 
 ### Checklist
 
-- [ ] 19.1 Backend filtre + test.
-- [ ] 19.2 Hook + rozet.
-- [ ] 19.3 Şerit + okundu.
-- [ ] 19.4 E2E T10.
+- [x] 19.1 Backend: liste ve unread-count'a opsiyonel `projectId` + çoklu `type` (parametresiz eski davranış; geçersiz değer 400; alıcı daima principal); 2 yeni integration testi; tam verify 659/0/0/0.
+- [x] 19.2 Hook (`use-invitation-responses.ts`, aktör ailesi altında anahtarlar) + "+N" rozeti (success outline, pending'den ayrı aria-label; çocuk link, üst Ekipler ve daraltılmış flyout).
+- [x] 19.3 Ekip Davetleri şeridi: listelenen kimliklerle tekli/toplu okundu (read-all yok); sayfayı açmak okundu yapmaz.
+- [x] 19.4 E2E T10 `team-invitation-response-badge.spec.ts` (gerçek çok kullanıcılı: +1/+2, pending ayrı, proje B izolasyonu, şerit, bell sayısı, eş yönetici rozet görmez, hesap değişiminde sızıntı yok); bildirim/davet batch 47/47.
 
 ### Definition of Done
 
-- [ ] Pending ile karışmıyor; proje ve aktör izolasyonu geçti.
+- [x] Pending ile karışmıyor; proje ve aktör izolasyonu geçti.
 
 ## Task 20 — Phase 4 regresyon
 
@@ -872,19 +874,19 @@ Task 17–19 DoD.
 
 ### Checklist
 
-- [ ] 20.1 Backend verify.
-- [ ] 20.2 lint/type/build.
-- [ ] 20.3 Playwright.
-- [ ] 20.4 pre-push PASS.
-- [ ] 20.5 Docs + completion.
+- [x] 20.1 Backend verify (659/0/0/0).
+- [x] 20.2 lint/type/build (temiz).
+- [x] 20.3 Playwright (task batch'leri + pre-push içinde 765/769).
+- [x] 20.4 pre-push: 765/769. `teams-view-toggle` dark tema yarışı düzeltildi (`--repeat-each=3` ile 21/21); aralıklı `team-member-preview` 401'i için kullanıcı kararıyla istisna kaydedildi.
+- [x] 20.5 Docs (SECURITY.md bildirim filtresi, architecture, folder-structure, design rules) + `docs/compliation/2026-10-10-squad-service-teams-invite-response-badge.md`.
 
 ### Definition of Done (Branch completion)
 
-- [ ] Talep 7, 10, 11 tamamlandı/test edildi.
-- [ ] Pending count ile response badge karışmıyor.
-- [ ] Real accept/reject multi-user flow geçti.
-- [ ] Actor/project isolation geçti.
-- [ ] Commit/push/staging yapılmadı.
+- [x] Talep 7, 10, 11 tamamlandı/test edildi.
+- [x] Pending count ile response badge karışmıyor.
+- [x] Real accept/reject multi-user flow geçti.
+- [x] Actor/project isolation geçti.
+- [x] Commit/push yapılmadı (staging kullanıcı kararıyla ajan tarafından yapıldı).
 
 STOP → `BRANCH COMPLETE — squad-service-backend`
 

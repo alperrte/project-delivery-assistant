@@ -8,7 +8,8 @@ import { reconcileNotificationRead } from "../query-keys";
 import type { Notification } from "../types";
 
 type Actor = { userId: string | undefined; current: () => boolean } | null;
-export type ReadAction = { kind: "read"; id: string } | { kind: "all" };
+/** `many` marks only the listed ids (one PATCH each), never the whole inbox. */
+export type ReadAction = { kind: "read"; id: string } | { kind: "all" } | { kind: "many"; ids: readonly string[] };
 type Operation = { action: ReadAction; actor: string; controller: AbortController };
 export type ReadResult = { action: ReadAction; data: Notification | { count: number }; refreshError?: unknown };
 
@@ -27,15 +28,33 @@ export function useNotificationRead(owner: Actor, onError?: (error: unknown) => 
     return () => { live.current = false; operation.current?.controller.abort(); unsubscribe(); };
   }, [client, userId]);
 
+  /** Sequential per-id reads; a partial failure still reconciles what was committed before it rethrows. */
+  async function send(op: Operation, owns: () => boolean): Promise<Notification | { count: number } | undefined> {
+    const action = op.action;
+    if (action.kind === "read") return notificationsApi.read(action.id, op.controller.signal);
+    if (action.kind === "all") return notificationsApi.readAll(op.controller.signal);
+    let done = 0;
+    try {
+      for (const id of action.ids) {
+        if (!owns()) return undefined;
+        await notificationsApi.read(id, op.controller.signal);
+        done++;
+      }
+    } catch (error) {
+      if (done > 0 && owns()) await reconcileNotificationRead(client, op.actor).catch(() => undefined);
+      throw error;
+    }
+    return { count: done };
+  }
+
   const mutation = useMutation({
     retry: false,
     mutationFn: async (op: Operation): Promise<ReadResult | undefined> => {
       const owns = () => current() && userId === op.actor && !op.controller.signal.aborted;
       try {
         if (!owns()) return;
-        const data = op.action.kind === "read"
-          ? await notificationsApi.read(op.action.id, op.controller.signal)
-          : await notificationsApi.readAll(op.controller.signal);
+        const data = await send(op, owns);
+        if (!data) return;
         if (!owns()) return;
         let refreshError: unknown;
         try { await reconcileNotificationRead(client, op.actor); }

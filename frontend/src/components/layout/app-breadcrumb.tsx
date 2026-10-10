@@ -48,6 +48,10 @@ export function AppBreadcrumb() {
       items.push({ label: tabs("criteria"), href: `${base}?section=criteria` });
       if (rest[0] === "new") items.push({ label: titles("criterionNew") });
       else if (rest[0]) items.push({ label: titles("criterionEdit") });
+    } else if (second === "team-invitations") {
+      // Only the physical invite page lives below this virtual section.
+      items.push({ label: tabs("invitations"), href: `${base}?section=invitations` });
+      if (rest[0] === "new") items.push({ label: titles("memberInvite") });
     } else if (second === "teams") {
       items.push({ label: tabs("teams"), href: `${base}?section=teams` });
       const [teamId, action] = rest;
