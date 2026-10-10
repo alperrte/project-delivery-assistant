@@ -22,6 +22,7 @@ public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificat
     boolean existsByEmail(String email);
     boolean existsByEmailIgnoreCase(String email);
     boolean existsByNickname(String nickname);
+    Optional<User> findByNickname(String nickname);
     boolean existsByGlobalRole(GlobalRole globalRole);
     long countByAccountStatus(AccountStatus accountStatus);
     long countByGlobalRole(GlobalRole globalRole);

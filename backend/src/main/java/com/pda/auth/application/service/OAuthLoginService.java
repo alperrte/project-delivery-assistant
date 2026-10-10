@@ -1,11 +1,10 @@
 package com.pda.auth.application.service;
 
-import com.pda.auth.application.service.LocalLoginService.LoginTokens;
+import com.pda.auth.application.service.LocalLoginService.LoginResult;
 import com.pda.user.OAuthProvider;
 import com.pda.user.UserAccounts;
 import com.pda.user.UserAccounts.LinkOutcome;
 import com.pda.user.UserRegistrationConflictException;
-import com.pda.user.UserSessions;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,13 +17,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class OAuthLoginService {
 
     private final UserAccounts users;
-    private final UserSessions sessions;
-    private final JwtTokens tokens;
+    private final LocalLoginService logins;
 
-    public OAuthLoginService(UserAccounts users, UserSessions sessions, JwtTokens tokens) {
+    public OAuthLoginService(UserAccounts users, LocalLoginService logins) {
         this.users = users;
-        this.sessions = sessions;
-        this.tokens = tokens;
+        this.logins = logins;
     }
 
     /** Provider claims after the OIDC library validated signature, issuer, audience, expiry and nonce. */
@@ -61,17 +58,15 @@ public class OAuthLoginService {
     }
 
     @Transactional
-    public LoginTokens login(Profile profile, String userAgent) {
+    public LoginResult login(Profile profile, String userAgent) {
         if (profile.subject() == null || profile.subject().isBlank()) {
             throw new OAuthLoginException(FailureReason.PROVIDER_ERROR);
         }
         UUID userId = users.findActiveByOAuthIdentity(profile.provider(), profile.subject())
                 .map(UserAccounts.AuthenticatedUser::id)
                 .orElseGet(() -> onboard(profile));
-        JwtTokens.IssuedToken refresh = tokens.issueRefresh(userId);
-        UUID sessionId = sessions.open(userId, refresh.value(), refresh.expiresAt(), userAgent);
-        JwtTokens.IssuedToken access = tokens.issueAccess(userId, sessionId);
-        return new LoginTokens(access.value(), refresh.value());
+        // A provider only proves the first factor; an account with two-factor on still owes its authenticator code.
+        return logins.afterFirstFactor(userId, userAgent);
     }
 
     /** Connects the provider identity to an already authenticated user. Never creates or merges accounts. */

@@ -9,9 +9,18 @@ import java.util.UUID;
 
 /** Public User module contract for Auth use cases. */
 public interface UserAccounts {
+    /** Creates an ACTIVE local account at once (no email proof); the public sign-up uses {@link #registerPendingLocal}. */
     UUID registerLocal(String email, String nickname, String rawPassword);
+    /** Creates a local account that cannot sign in until its email is verified (PENDING_VERIFICATION). */
+    UUID registerPendingLocal(String email, String nickname, String rawPassword);
     UUID registerInvitedLocal(String email, String nickname, String rawPassword, String firstName, String lastName);
     Optional<UUID> findPendingByEmail(String email);
+    /** Id of the account that still waits for its email proof and holds this nickname, or empty. */
+    Optional<UUID> findPendingByNickname(String nickname);
+    /** Permanently removes an account that is still PENDING_VERIFICATION; any other account is left untouched. */
+    boolean deletePending(UUID userId);
+    /** True when the password is right for a PENDING_VERIFICATION account (equal work for unknown emails). */
+    boolean matchesPendingLocal(String email, String password);
     boolean activateVerifiedEmail(UUID userId);
     Optional<AuthenticatedUser> authenticateLocal(String email, String password);
     Optional<AuthenticatedUser> findActiveById(UUID userId);
@@ -43,6 +52,22 @@ public interface UserAccounts {
      * from the current one. A successful change also ends a forced first-login change.
      */
     PasswordChangeOutcome changePassword(UUID userId, String currentPassword, String newPassword);
+
+    /** True when the account can sign in with a password (a provider-only account cannot). */
+    boolean hasPassword(UUID userId);
+
+    /** True when the password is right for this ACTIVE account; false for wrong, missing or passwordless. */
+    boolean passwordMatches(UUID userId, String password);
+
+    /**
+     * Anonymises an ACTIVE account for good: personal data, password, sessions, provider links, preferences and photo
+     * are wiped, the status becomes DELETED and the email and nickname are freed. Publishes
+     * {@link UserAccountDeletedEvent} in the same transaction. False when the account is not ACTIVE.
+     */
+    boolean deleteAccount(UUID userId);
+
+    /** True for an administrator account; those cannot be deleted by their owner. */
+    boolean isAdministrator(UUID userId);
 
     /** ACTIVE user id for that email (case-sensitive, matching {@code authenticateLocal}), or empty otherwise. */
     Optional<UUID> findActiveByEmail(String email);

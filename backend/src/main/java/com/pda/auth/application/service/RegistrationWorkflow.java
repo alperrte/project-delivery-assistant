@@ -4,6 +4,7 @@ import com.pda.auth.domain.entity.EmailVerificationChallenge;
 import com.pda.auth.domain.entity.EmailVerificationChallenge.AttemptResult;
 import com.pda.auth.infrastructure.repository.EmailVerificationChallengeRepository;
 import com.pda.user.UserAccounts;
+import com.pda.user.UserRegistrationConflictException;
 import com.pda.project.ProjectInvitationOnboarding;
 import java.time.Clock;
 import java.time.Instant;
@@ -35,12 +36,49 @@ public class RegistrationWorkflow {
         this.clock = clock;
     }
 
+    /**
+     * Creates the account in PENDING_VERIFICATION and mails the first code in the same transaction, so a mail that
+     * cannot be sent leaves nothing behind. An earlier unverified attempt with the same email is replaced (its
+     * mailbox owner is the only one who can finish either attempt); an unverified attempt that still holds the
+     * nickname with a live code is a conflict.
+     */
     @Transactional
-    public void register(String email, String nickname, String password, String confirmPassword) {
+    public void register(String email, String nickname, String password, String confirmPassword, MailLocale locale) {
         if (password == null || !password.equals(confirmPassword)) {
             throw new IllegalArgumentException("Password confirmation does not match");
         }
-        users.registerLocal(email, nickname, password);
+        ensureMailAvailable();
+        String address = email.strip();
+        Instant now = now();
+        users.findPendingByEmail(address).ifPresent(this::discardPending);
+        users.findPendingByNickname(nickname).ifPresent(pending -> {
+            if (challenges.findByUserId(pending).map(challenge -> challenge.getExpiresAt().isAfter(now)).orElse(false)) {
+                throw new UserRegistrationConflictException();
+            }
+            discardPending(pending);
+        });
+        UUID userId = users.registerPendingLocal(address, nickname, password);
+        String code = codes.newCode();
+        challenges.saveAndFlush(EmailVerificationChallenge.issue(userId, codes.hash(userId, code), now));
+        mail.getObject().sendVerificationCode(address, code, locale);
+    }
+
+    /** Deletes registrations whose last code ran out unused, freeing their email and nickname. Returns how many. */
+    @Transactional
+    public int purgeExpiredPending() {
+        int removed = 0;
+        for (EmailVerificationChallenge challenge : challenges.findByExpiresAtBeforeAndConsumedAtIsNull(now())) {
+            if (discardPending(challenge.getUserId())) {
+                removed++;
+            }
+        }
+        return removed;
+    }
+
+    private boolean discardPending(UUID userId) {
+        challenges.findByUserId(userId).ifPresent(challenges::delete);
+        challenges.flush();
+        return users.deletePending(userId);
     }
 
     @Transactional
@@ -92,7 +130,7 @@ public class RegistrationWorkflow {
     }
 
     @Transactional
-    public void resend(String email) {
+    public void resend(String email, MailLocale locale) {
         ensureMailAvailable();
         Optional<UUID> userId = users.findPendingByEmail(email);
         if (userId.isEmpty()) {
@@ -111,7 +149,7 @@ public class RegistrationWorkflow {
         } else {
             challenges.saveAndFlush(EmailVerificationChallenge.issue(userId.get(), hash, now));
         }
-        mail.getObject().sendVerificationCode(email, code);
+        mail.getObject().sendVerificationCode(email.strip(), code, locale);
     }
 
     private void ensureMailAvailable() {

@@ -1,18 +1,28 @@
 package com.pda.auth.infrastructure.mail;
 
+import com.pda.auth.application.service.MailLocale;
 import com.pda.auth.application.service.VerificationMailPort;
 import com.pda.auth.application.service.VerificationMailUnavailableException;
+import com.pda.auth.infrastructure.mail.VerificationMailTemplate.Kind;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+import java.io.IOException;
 import java.util.Properties;
 import org.springframework.core.env.Environment;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.MailException;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 import org.springframework.context.annotation.Lazy;
 
 @Component
 @Lazy
 public class SmtpVerificationMailAdapter implements VerificationMailPort {
+
+    private static final String LOGO_RESOURCE = "branding/pda-logo.png";
+    private static volatile byte[] logoBytes;
 
     private final JavaMailSenderImpl sender;
     private final String fromAddress;
@@ -48,6 +58,7 @@ public class SmtpVerificationMailAdapter implements VerificationMailPort {
         properties.put("mail.smtp.connectiontimeout", "5000");
         properties.put("mail.smtp.timeout", "5000");
         properties.put("mail.smtp.writetimeout", "5000");
+        configured.setDefaultEncoding("UTF-8");
         sender = configured;
         fromAddress = from;
     }
@@ -58,38 +69,52 @@ public class SmtpVerificationMailAdapter implements VerificationMailPort {
     }
 
     @Override
-    public void sendVerificationCode(String recipientEmail, String code) {
+    public void sendVerificationCode(String recipientEmail, String code, MailLocale locale) {
+        send(recipientEmail, VerificationMailTemplate.render(Kind.REGISTER, locale, code));
+    }
+
+    @Override
+    public void sendPasswordResetCode(String recipientEmail, String code, MailLocale locale) {
+        send(recipientEmail, VerificationMailTemplate.render(Kind.PASSWORD_RESET, locale, code));
+    }
+
+    @Override
+    public void sendPasswordChangeCode(String recipientEmail, String code, MailLocale locale) {
+        send(recipientEmail, VerificationMailTemplate.render(Kind.PASSWORD_CHANGE, locale, code));
+    }
+
+    @Override
+    public void sendAccountDeletionLink(String recipientEmail, String link, MailLocale locale) {
+        send(recipientEmail, VerificationMailTemplate.render(Kind.ACCOUNT_DELETION, locale, link));
+    }
+
+    private void send(String recipientEmail, VerificationMailTemplate.Rendered mail) {
         if (sender == null) {
             throw new VerificationMailUnavailableException();
         }
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(fromAddress);
-        message.setTo(recipientEmail);
-        message.setSubject("PDA email verification");
-        message.setText("Your PDA verification code is " + code + ". It expires in 10 minutes.");
         try {
+            MimeMessage message = sender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom(fromAddress);
+            helper.setTo(recipientEmail);
+            helper.setSubject(mail.subject());
+            helper.setText(mail.text(), mail.html());
+            helper.addInline(VerificationMailTemplate.LOGO_CID, new ByteArrayResource(logo()), "image/png");
             sender.send(message);
-        } catch (MailException exception) {
+        } catch (MailException | MessagingException | IOException exception) {
             throw new VerificationMailUnavailableException();
         }
     }
 
-    @Override
-    public void sendPasswordResetCode(String recipientEmail, String code) {
-        if (sender == null) {
-            throw new VerificationMailUnavailableException();
+    private static byte[] logo() throws IOException {
+        byte[] cached = logoBytes;
+        if (cached == null) {
+            try (var stream = new ClassPathResource(LOGO_RESOURCE).getInputStream()) {
+                cached = stream.readAllBytes();
+            }
+            logoBytes = cached;
         }
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(fromAddress);
-        message.setTo(recipientEmail);
-        message.setSubject("PDA password reset code");
-        message.setText("Your PDA password reset code is " + code + ". It expires in 10 minutes. "
-                + "If you did not request this, you can ignore this email.");
-        try {
-            sender.send(message);
-        } catch (MailException exception) {
-            throw new VerificationMailUnavailableException();
-        }
+        return cached;
     }
 
     private static String required(Environment environment, String key) {

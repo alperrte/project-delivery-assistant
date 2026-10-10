@@ -106,7 +106,7 @@ class ProjectInvitationApiIntegrationTest {
         String nickname = "u" + UUID.randomUUID().toString().replace("-", "").substring(0, 12);
         String body = "{\"token\":\"" + token + "\",\"email\":\"" + email + "\",\"firstName\":\"İrem\","
                 + "\"lastName\":\"Öz\",\"nickname\":\"" + nickname + "\","
-                + "\"password\":\"password123\",\"confirmPassword\":\"password123\"}";
+                + "\"password\":\"Password-123\",\"confirmPassword\":\"Password-123\"}";
         mvc.perform(post("/api/v1/auth/register/invitation")
                         .cookie(csrf).header("X-XSRF-TOKEN", csrf.getValue())
                         .contentType(MediaType.APPLICATION_JSON)

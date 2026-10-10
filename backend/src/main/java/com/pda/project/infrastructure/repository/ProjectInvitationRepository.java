@@ -78,4 +78,6 @@ public interface ProjectInvitationRepository extends JpaRepository<ProjectInvita
     @Query("select i from ProjectInvitation i where i.projectId = :projectId and i.teamId = :teamId "
             + "and i.status = com.pda.project.domain.enums.InvitationStatus.PENDING")
     List<ProjectInvitation> lockPendingForTeam(UUID projectId, UUID teamId);
+
+    List<ProjectInvitation> findByInvitedUserIdAndStatus(UUID invitedUserId, InvitationStatus status);
 }

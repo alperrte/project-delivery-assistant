@@ -64,3 +64,25 @@ Tarayıcı ile backend farklı origin'lerdeyse izinli origin'leri açıkça tan�
 - Password, cookie, JWT, imza anahtarı ve diğer secret'ları response hata ayrıntısına veya loglara yazmayın.
 
 İlgili karar: [0003 Cookie auth](decisions/0003-cookie-auth.md).
+
+## Auth sertleştirme (2026-10-10): güçlü parola, e-posta kodları, 2FA, hesap silme
+
+Bu bölüm yukarıdaki Faz 2 ("hesap doğrudan ACTIVE, register mail göndermez, otomatik giriş") ve Faz 9 ("tek adımlı sıfırlama, 10 dakika") anlatımlarının **yerine geçer**; eski bölümler tarihçe olarak durur. Tamamlanma kaydı: `docs/compliation/2026-10-10-auth-sertlestirme.md`.
+
+**Parola kuralı.** Kayıt, davetli kayıt, şifre sıfırlama ve şifre değiştirmede yeni parola 8–128 karakter olmalı ve en az bir büyük harf, bir rakam, bir özel karakter içermelidir (`@StrongPassword`). Frontend aynı kuralı canlı liste olarak gösterir (`PasswordRules`); kural yine de yalnız backend'de bağlayıcıdır.
+
+**Kayıt + e-posta doğrulama.** `POST /auth/register` hesabı `PENDING_VERIFICATION` açar ve 6 haneli kodu e-postalar (mail kapalıysa hesap açılmadan `503`). `POST /auth/register/verify {email, code}` hesabı `ACTIVE` yapar; `POST /auth/register/resend {email, locale}` her zaman `202` döner (60 sn bekleme içinde sessiz no-op). Doğrulanmamış hesap, şifre doğru olsa bile `403 email_not_verified` alır (şifre yanlışsa yine `401`). Kod 15 dakika geçerli, tek kullanımlık, 5 denemelidir; süresi dolan bekleyen kayıt zamanlanmış işle silinir ve aynı e-posta/kullanıcı adıyla yeni kayıt bekleyeni anında temizler. Kod tek başına oturum açmaz (backend `register/verify` çerez üretmez). Frontend, kayıtta (ya da doğrulanmamış girişte) yazılan şifreyi yalnızca bellekte tutar ve kod doğrulanınca aynı şifreyle `POST /auth/login` çağırarak kullanıcıyı otomatik girdirir; şifre bellekte yoksa (sayfa yenilendi, başka adres) ya da giriş başarısızsa `/login`'e gidilir. Davetli kayıt (`/register/invitation`) mail kodu istemez.
+
+**Şifremi unuttum (3 adım).** `POST /password/forgot {email, locale}` → `POST /password/reset/verify {email, code}` (kodu tüketir, 10 dakikalık HttpOnly `PDA_RESET` bileti verir) → `POST /password/reset {newPassword, confirmPassword}` (bileti kullanır, tüm oturumları iptal eder). Eski `{email, code, …}` gövdeli tek adım kalktı.
+
+**Hesap ayarlarında şifre değiştirme.** `POST /password/change/code` (oturum + CSRF, kod mailler) → `POST /password/change/verify {code}` (10 dakikalık `PDA_PWCHANGE` bileti) → `POST /password/change {currentPassword, newPassword, confirmNewPassword}`. Bilet yoksa `403 verification_required`. Zorunlu ilk giriş değişimi (`mustChangePassword`) mail kodundan muaftır. Arayüzde "Şifremi unuttum" kısayolu vardır.
+
+**TOTP 2FA.** `GET /auth/2fa`, `POST /auth/2fa/setup`, `/enable` (10 yedek kodu bir kez döner), `/disable` (şifre + TOTP ya da yedek kod), `/recovery-codes` (yeniler). RFC 6238 (SHA-1, 30 sn, 6 hane, ±1 adım, kullanılmış adım tekrar kabul edilmez); gizli anahtar `TOTP_ENCRYPTION_KEY` ile AES-256-GCM şifreli saklanır; 5 hatalı kod 15 dakika kilitler. 2FA açıkken `POST /login` oturum açmaz: 5 dakikalık `PDA_MFA` çerezi ve `TWO_FACTOR_REQUIRED` döner, `POST /login/2fa {code}` (TOTP ya da yedek kod) oturumu açar. Google/GitHub girişi de aynı ara adımdan geçer (`/login?step=2fa`).
+
+**Oturum sonu.** Access token'ı 401 verip yenileme de başarısız olunca arayüz `/login?reason=session-expired&next=<sayfa>` açar ve "Oturumunuz sona erdi" gösterir; elle çıkışta mesaj yoktur. Süre dolumu `Clock` ile sabitlenmiş backend testleriyle (access 15 dk, refresh 7 gün, iptal edilen oturum) ve `auth-session-audit.spec.ts` ile doğrulanır.
+
+**Hesap silme.** `POST /auth/account/deletion/request` (oturum + CSRF) "Hesabınızı gerçekten silmek istiyor musunuz?" bağlantılı mail yollar (15 dk, tek kullanımlık, DB'de yalnız hash). Bağlantı public `/delete-account?token=…` sayfasını açar; `POST /auth/account/deletion/confirm {token, email, password}` (şifresiz OAuth hesabında yalnız e-posta; 2FA açıksa kod da) hesabı **anonimleştirir**: durum `DELETED`, ad "Silinmiş kullanıcı", e-posta/kullanıcı adı/şifre/foto/OAuth/2FA/oturum/tercih/bildirim silinir, üyelikler kalkar; görev-yorum-mesaj geçmişi kalır. Proje ya da organizasyon sahibi `409 owns_resources` alır (liste döner). `ADMIN` hesabı kendini silemez (`403 administrator_cannot_delete`). Silinen hesap bir daha açılamaz; e-posta ve kullanıcı adı yeniden kullanılabilir.
+
+**Mail.** Kayıt, sıfırlama, şifre değişimi ve silme mailleri HTML + düz metindir (üstte gömülü PDA logosu, ortada kod/buton, 15 dakika notu, "PDA ekibi"); dil sitenin o anki dilidir (tr/en/de), silme bağlantısı backend'deki sabit yol tablosundan kurulur.
+
+Yeni ayarlar: `TOTP_ENCRYPTION_KEY` (Base64, 32 bayt; boşsa 2FA kapalı), mevcut `EMAIL_VERIFICATION_HMAC_KEY` artık kayıtta da zorunludur.

@@ -1001,3 +1001,16 @@ Braces <=3.0.3 has no official patched release as checked2026-10-08; open5-high 
 **Admin.** `GET /api/v1/admin/users` gained server-side `search` and `status`; problem bodies carry `ADMIN_SELF_DENIED`, `ADMIN_LAST_ADMIN`, `USER_NOT_FOUND`. `GET /api/v1/admin/analytics` is ADMIN + `SYSTEM_VIEW` and composes consented traffic with registrations, account counts and delivered contact messages from their own tables; none of those operational numbers depends on analytics consent. Query keys are `["admin", actorId, ...]` and are removed on sign-out, session end, 401 and every sign-in. "Terminate membership" is the existing reversible `DISABLED` state (sessions revoked, login blocked, nothing deleted).
 
 **Public endpoint allow-list additions.** `POST /api/v1/analytics/events` and `POST /api/v1/contact` are `permitAll` with CORS and CSRF; they are also allowed while a forced password change is pending. Both are answered `Cache-Control: no-store`.
+
+## Auth hardening: codes, tickets, 2FA, account deletion (2026-10-10)
+
+New public endpoints (all CSRF-protected, rate limited, none leak whether an account exists): `POST /api/v1/auth/register/verify`, `register/resend`, `password/reset/verify`, `login/2fa`, `account/deletion/confirm`. Session-only endpoints: `password/change/code`, `password/change/verify`, `2fa` (GET), `2fa/setup|enable|disable|recovery-codes`, `account/deletion/request`. Each is listed in `SecurityBaselineConfiguration` and, where it needs no session, in the 401 list.
+
+- **Mailed codes** (registration, reset, password change): 6 digits, HMAC-hashed with a per-purpose prefix (`EMAIL_VERIFICATION_HMAC_KEY`), 15 minutes, at most 5 attempts, single use (`consumed_at`), 60 s resend cooldown. Only the hash is stored.
+- **Tickets**: short-lived HttpOnly JWT cookies with a fixed `token_use` — `PDA_RESET` (10 min), `PDA_PWCHANGE` (10 min), `PDA_MFA` (5 min). They carry no session authority and are cleared when used.
+- **Passwords**: 8–128 characters with an uppercase letter, a digit and a special character everywhere a new password is chosen.
+- **TOTP**: the secret is encrypted with `TOTP_ENCRYPTION_KEY` (AES-256-GCM); a used time step is never accepted again; 5 wrong codes lock the credential for 15 minutes; backup codes are hashed and single use. OAuth logins also pass the second step.
+- **Account deletion**: a one-time link (hash only, 15 min, 5 attempts) plus the owner's own credentials; accounts owning a project or organisation are refused; administrators cannot delete themselves. Deletion anonymises (`DELETED`) and revokes every session.
+- **Mail pages are not indexed**: `/verify-email` and `/delete-account` are `noindex` and absent from the sitemap.
+
+§14 additions: the sensitive bucket (5 per 10 minutes) covers `register/verify`, `register/resend`, `password/reset/verify`, `password/change/code|verify` and `account/deletion/confirm`; `login/2fa` shares the login bucket. The e2e override raises these limits for local test runs only.

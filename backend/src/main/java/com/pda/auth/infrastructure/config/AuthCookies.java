@@ -6,6 +6,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.Optional;
+import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -25,6 +27,20 @@ public class AuthCookies {
      * token's lifetime since that is how long a session can still be silently renewed.
      */
     public static final String SESSION_HINT = "PDA_SESSION";
+    /** Ticket handed out after the forgot-password code was accepted; only valid for setting the new password. */
+    public static final String RESET_TICKET = "PDA_RESET";
+    public static final String RESET_TICKET_PATH = "/api/v1/auth/password";
+    /** Ticket handed out after the account-settings password-change code was accepted. */
+    public static final String CHANGE_TICKET = "PDA_PWCHANGE";
+    public static final String CHANGE_TICKET_PATH = "/api/v1/auth/password/change";
+    /**
+     * Proof that the first sign-in factor (password or provider) was accepted while the second one is still due.
+     * Opens nothing by itself: only {@code /login/2fa} reads it, together with a valid authenticator code.
+     */
+    public static final String MFA = "PDA_MFA";
+    public static final String MFA_PATH = "/api/v1/auth/login";
+    public static final String MFA_PURPOSE = "mfa_login";
+    public static final Duration MFA_LIFETIME = Duration.ofMinutes(5);
     private final JwtTokens tokens;
     private final boolean production;
 
@@ -43,6 +59,32 @@ public class AuthCookies {
         add(response, ACCESS, "", "/api", Duration.ZERO, request);
         add(response, REFRESH, "", "/api/v1/auth", Duration.ZERO, request);
         add(response, SESSION_HINT, "", "/", Duration.ZERO, request);
+    }
+
+    /** Short-lived HttpOnly cookie that carries a single-purpose ticket (see {@link JwtTokens#issueTicket}). */
+    public void writeTicket(String name, String path, JwtTokens.IssuedToken ticket, Duration lifetime,
+                            HttpServletRequest request, HttpServletResponse response) {
+        add(response, name, ticket.value(), path, lifetime, request);
+    }
+
+    public void clearTicket(String name, String path, HttpServletRequest request, HttpServletResponse response) {
+        add(response, name, "", path, Duration.ZERO, request);
+    }
+
+    public String ticket(HttpServletRequest request, String name) { return read(request, name); }
+
+    /** The password (or provider) step passed for this user; the second factor is still required. */
+    public void writeSecondFactorPending(UUID userId, HttpServletRequest request, HttpServletResponse response) {
+        writeTicket(MFA, MFA_PATH, tokens.issueTicket(userId, MFA_PURPOSE, "mfa", MFA_LIFETIME), MFA_LIFETIME,
+                request, response);
+    }
+
+    public Optional<UUID> secondFactorPending(HttpServletRequest request) {
+        return tokens.parseTicket(read(request, MFA), MFA_PURPOSE).map(JwtTokens.Ticket::userId);
+    }
+
+    public void clearSecondFactorPending(HttpServletRequest request, HttpServletResponse response) {
+        clearTicket(MFA, MFA_PATH, request, response);
     }
 
     public String access(HttpServletRequest request) { return read(request, ACCESS); }

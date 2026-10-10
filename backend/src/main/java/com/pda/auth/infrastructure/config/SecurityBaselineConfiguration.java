@@ -113,7 +113,9 @@ public class SecurityBaselineConfiguration {
                                     && "/api/v1/auth/me".equals(path)
                                     || path.startsWith("/api/v1/auth/sessions")
                                     || path.startsWith("/api/v1/admin/")
-                                    || "/api/v1/auth/password/change".equals(path)
+                                    || path.startsWith("/api/v1/auth/password/change")
+                                    || path.startsWith("/api/v1/auth/2fa")
+                                    || path.equals("/api/v1/auth/account/deletion/request")
                                     || path.startsWith("/api/v1/auth/oauth/")
                                     || path.equals("/api/v1/projects") || path.startsWith("/api/v1/projects/")
                                     || path.equals("/api/v1/organizations") || path.startsWith("/api/v1/organizations/")
@@ -155,14 +157,21 @@ public class SecurityBaselineConfiguration {
                             .requestMatchers(HttpMethod.POST, "/api/v1/auth/oauth/*/link",
                                     "/api/v1/auth/oauth/*/unlink").authenticated()
                             .requestMatchers(HttpMethod.POST, "/api/v1/auth/register", "/api/v1/auth/register/invitation",
+                                    "/api/v1/auth/register/verify", "/api/v1/auth/register/resend",
                                     "/api/v1/auth/login", "/api/v1/auth/refresh",
                                     "/api/v1/auth/logout", "/api/v1/auth/password/forgot",
-                                    "/api/v1/auth/password/reset").permitAll()
+                                    "/api/v1/auth/password/reset/verify", "/api/v1/auth/password/reset",
+                                    "/api/v1/auth/login/2fa", "/api/v1/auth/account/deletion/confirm").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/api/v1/auth/account/deletion/request").authenticated()
+                            .requestMatchers(HttpMethod.GET, "/api/v1/auth/2fa").authenticated()
+                            .requestMatchers(HttpMethod.POST, "/api/v1/auth/2fa/setup", "/api/v1/auth/2fa/enable",
+                                    "/api/v1/auth/2fa/disable", "/api/v1/auth/2fa/recovery-codes").authenticated()
                             .requestMatchers(HttpMethod.GET, "/api/v1/auth/me", "/api/v1/auth/sessions")
                             .authenticated()
                             .requestMatchers(HttpMethod.POST, "/api/v1/auth/sessions/*/revoke",
                                     "/api/v1/auth/sessions/revoke-others").authenticated()
-                            .requestMatchers(HttpMethod.POST, "/api/v1/auth/password/change").authenticated()
+                            .requestMatchers(HttpMethod.POST, "/api/v1/auth/password/change", "/api/v1/auth/password/change/code",
+                                    "/api/v1/auth/password/change/verify").authenticated()
                             .requestMatchers(HttpMethod.GET, "/api/v1/users/me/preferences",
                                     "/api/v1/users/me/profile-photo", "/api/v1/users/*/profile-photo").authenticated()
                             .requestMatchers(HttpMethod.PUT, "/api/v1/users/me/profile", "/api/v1/users/me/preferences",
