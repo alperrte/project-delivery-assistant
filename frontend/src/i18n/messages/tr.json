@@ -25,6 +25,8 @@
     },
     "showPassword": "Şifreyi göster",
     "hidePassword": "Şifreyi gizle",
+
+    "close": "Kapat",
     "breadcrumb": "Konum"
   },
   "errors": {
@@ -1449,6 +1451,8 @@
   },
   "workspace": {
     "navigation": "Gezinme menüsü",
+
+    "offline": "Çevrimdışısınız. Bağlantı gelince bilgiler kendiliğinden yenilenir.",
     "search": "Ara",
     "searchPlaceholder": "Sayfa, proje veya organizasyon ara…",
     "searchGroups": {

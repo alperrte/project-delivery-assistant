@@ -25,6 +25,8 @@
     },
     "showPassword": "Show password",
     "hidePassword": "Hide password",
+
+    "close": "Close",
     "breadcrumb": "Breadcrumb"
   },
   "errors": {
@@ -1425,6 +1427,8 @@
   },
   "workspace": {
     "navigation": "Navigation menu",
+
+    "offline": "You are offline. Data refreshes by itself when the connection returns.",
     "search": "Search",
     "searchPlaceholder": "Search pages, projects, or organizations…",
     "searchGroups": {

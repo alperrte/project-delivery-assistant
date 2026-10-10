@@ -151,7 +151,7 @@ export function LoginForm({ children }: { children?: ReactNode }) {
             </label>
             <Link
               href="/forgot-password"
-              className="rounded-sm font-medium text-(--auth-link) underline-offset-4 outline-none transition-colors hover:text-(--auth-link-hover) hover:underline focus-visible:ring-2 focus-visible:ring-(--glow)"
+              className="inline-flex min-h-7 items-center rounded-sm font-medium text-(--auth-link) underline-offset-4 outline-none transition-colors hover:text-(--auth-link-hover) hover:underline focus-visible:ring-2 focus-visible:ring-(--glow)"
             >
               {t("forgotPassword")}
             </Link>

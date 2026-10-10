@@ -39,7 +39,7 @@ export function StatusMenu({ task, canChange, className }: { task: StatusTask; c
         aria-label={t("changeStatus", { status: t(`status.${task.status}`) })}
         disabled={change.isPending}
         className={cn(
-          "inline-flex h-5 shrink-0 cursor-pointer items-center gap-1.5 rounded-md px-1.5 text-xs font-medium whitespace-nowrap outline-none transition-opacity hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50",
+          "inline-flex h-6 shrink-0 cursor-pointer items-center gap-1.5 rounded-md px-1.5 text-xs font-medium whitespace-nowrap outline-none transition-opacity hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50",
           statusBadgeClass(task.status),
           className,
         )}

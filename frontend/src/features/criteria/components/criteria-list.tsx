@@ -20,11 +20,12 @@ import { CriterionFormDialog } from "./criterion-form-dialog";
 export function CriteriaList({ projectId, isManager }: { projectId: string; isManager: boolean }) {
   const t = useTranslations("criteria");
   const te = useTranslations("errors");
+  const tw = useTranslations("workspace");
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<"all" | "completed" | "remaining">("all");
   const [search, setSearch] = useState("");
 
-  const { data: criteria, isLoading, isError, error } = useQuery({
+  const { data: criteria, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["projects", projectId, "criteria"],
     queryFn: () => criteriaApi.list(projectId),
   });
@@ -63,7 +64,12 @@ export function CriteriaList({ projectId, isManager }: { projectId: string; isMa
   }
 
   if (isLoading) return <Skeleton className="h-40 w-full" />;
-  if (isError) return <p className="text-sm text-destructive">{te(errorKey(error))}</p>;
+  if (isError) return (
+    <div className="flex flex-wrap items-center gap-3">
+      <p role="alert" className="text-sm text-destructive">{te(errorKey(error))}</p>
+      <Button variant="outline" size="sm" onClick={() => void refetch()}>{tw("retry")}</Button>
+    </div>
+  );
   if (!criteria) return null;
 
   const completed = criteria.filter((c) => c.completed).length;

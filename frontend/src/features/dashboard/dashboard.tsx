@@ -55,7 +55,7 @@ function MiniCalendar() {
       {project && selectedTasks.length > 0 && <TaskAgenda entries={selectedTasks} slug={project.slug} compact />}
       {!(project && (selectedReminders.length > 0 || selectedTasks.length > 0)) && <p className="text-xs leading-5 text-muted-foreground">{tc("noItemsForDay")}</p>}
       {reminders.isError && <p role="alert" className="text-xs text-destructive">{tc("loadError")}</p>}
-      <Link href="/calendar" className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:underline">{tc("openCalendar")}<ArrowRight size={12} aria-hidden="true" /></Link>
+      <Link href="/calendar" className="inline-flex min-h-6 items-center gap-1 text-[11px] font-medium text-primary hover:underline">{tc("openCalendar")}<ArrowRight size={12} aria-hidden="true" /></Link>
       <p className="text-[10px] leading-4 text-muted-foreground">{t("calendarScope")}</p>
     </div>
   </section>;
@@ -85,10 +85,10 @@ export function Dashboard() {
           <section className="dashboard-hero rounded-lg border p-5 sm:p-6">
             <span className="mb-3 inline-flex items-center gap-1.5 rounded bg-accent px-2 py-1 text-[10px] font-medium"><Lightning size={12} aria-hidden="true" />{t("quickStart")}</span>
             <h2 className="text-xl font-semibold tracking-tight">{t("heroTitle")}</h2><p className="mt-1.5 max-w-lg text-xs leading-5 text-muted-foreground">{t("heroDescription")}</p>
-            <div className="mt-4 flex flex-wrap items-center gap-4">{create}<Link href="/organizations" className="inline-flex items-center gap-2 text-xs hover:underline">{t("teams")}<ArrowRight size={14} aria-hidden="true" /></Link></div>
+            <div className="mt-4 flex flex-wrap items-center gap-4">{create}<Link href="/organizations" className="inline-flex min-h-6 items-center gap-2 text-xs hover:underline">{t("teams")}<ArrowRight size={14} aria-hidden="true" /></Link></div>
           </section>
           <section>
-            <div className="mb-3 flex items-center justify-between gap-2"><h2 className="text-[15px] font-semibold">{t("yourProjects")}</h2><Link href="/projects" className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground">{t("allProjects")}<ArrowRight size={13} aria-hidden="true" /></Link></div>
+            <div className="mb-3 flex items-center justify-between gap-2"><h2 className="text-[15px] font-semibold">{t("yourProjects")}</h2><Link href="/projects" className="inline-flex min-h-6 items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground">{t("allProjects")}<ArrowRight size={13} aria-hidden="true" /></Link></div>
             {query.isLoading && <div aria-label={t("loading")} className="space-y-2"><Skeleton className="h-12" /><Skeleton className="h-12" /><Skeleton className="h-12" /></div>}
             {query.isError && <div role="alert" className="rounded-lg border p-5"><p className="mb-3 text-sm">{t("loadError")}</p><Button variant="outline" onClick={() => query.refetch()}>{t("retry")}</Button></div>}
             {query.data && !projects.length && <EmptyState title={t("emptyTitle")} description={t("emptyDescription")} />}

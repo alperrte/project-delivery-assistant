@@ -40,7 +40,6 @@ export async function generateMetadata(): Promise<Metadata> {
       template: "%s · PDA",
     },
     description: "Öğrenciler ve küçük ekipler için self-hosted proje teslim asistanı.",
-    icons: { icon: "/icon.png" },
     openGraph: {
       type: "website",
       siteName: "PDA · Project Delivery Assistant",
