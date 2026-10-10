@@ -161,7 +161,7 @@ class SquadApiIntegrationTest {
                         .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"userId\":\"" + contributor.id() + "\"}"))
-                .andExpect(status().isConflict());
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("TEAM_MEMBER_EXISTS"));
 
         mvc.perform(get("/api/v1/projects/" + projectId + "/squads/" + squadId + "/members")
                         .cookie(contributor.access()))

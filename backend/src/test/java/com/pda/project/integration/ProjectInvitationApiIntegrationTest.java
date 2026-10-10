@@ -170,7 +170,7 @@ class ProjectInvitationApiIntegrationTest {
         mvc.perform(post("/api/v1/projects/" + projectId + "/invitations/" + invitationId + "/accept")
                         .cookie(csrf, target.access()).header("X-XSRF-TOKEN", csrf.getValue())
                         .contentType(MediaType.APPLICATION_JSON).content("{\"token\":\"" + token + "\"}"))
-                .andExpect(status().isConflict());
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("INVITATION_NOT_PENDING"));
     }
 
     @Test
@@ -214,7 +214,7 @@ class ProjectInvitationApiIntegrationTest {
                         .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"userId\":\"" + target.id() + "\",\"teamId\":\"" + team(projectId) + "\",\"roles\":[\"ANALYST\"]}"))
-                .andExpect(status().isConflict());
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("INVITATION_ALREADY_PENDING"));
 
         mvc.perform(post("/api/v1/projects/" + projectId + "/invitations/" + invitationId + "/resend")
                         .cookie(csrf, moderator.access()).header("X-XSRF-TOKEN", csrf.getValue()))
@@ -230,7 +230,7 @@ class ProjectInvitationApiIntegrationTest {
         mvc.perform(post("/api/v1/projects/" + projectId + "/invitations/" + invitationId + "/accept")
                         .cookie(csrf, target.access()).header("X-XSRF-TOKEN", csrf.getValue())
                         .contentType(MediaType.APPLICATION_JSON).content("{\"token\":\"" + firstToken + "\"}"))
-                .andExpect(status().isConflict());
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("INVITATION_NOT_PENDING"));
 
         mvc.perform(delete("/api/v1/projects/" + projectId + "/invitations/" + resentId)
                         .cookie(csrf, moderator.access()).header("X-XSRF-TOKEN", csrf.getValue()))
@@ -240,11 +240,11 @@ class ProjectInvitationApiIntegrationTest {
                 .andExpect(status().isNoContent());
         mvc.perform(delete("/api/v1/projects/" + projectId + "/invitations/" + resentId)
                         .cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue()))
-                .andExpect(status().isConflict());
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("INVITATION_NOT_PENDING"));
         mvc.perform(post("/api/v1/projects/" + projectId + "/invitations/" + resentId + "/accept")
                         .cookie(csrf, target.access()).header("X-XSRF-TOKEN", csrf.getValue())
                         .contentType(MediaType.APPLICATION_JSON).content("{\"token\":\"" + secondToken + "\"}"))
-                .andExpect(status().isConflict());
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("INVITATION_NOT_PENDING"));
     }
 
     @Test
@@ -273,7 +273,7 @@ class ProjectInvitationApiIntegrationTest {
         mvc.perform(post("/api/v1/projects/" + projectId + "/invitations/" + invitationId + "/reject")
                         .cookie(csrf, target.access()).header("X-XSRF-TOKEN", csrf.getValue())
                         .contentType(MediaType.APPLICATION_JSON).content("{\"token\":\"" + token + "\"}"))
-                .andExpect(status().isConflict());
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("INVITATION_NOT_PENDING"));
 
         Account claimant = account("invclaimant3");
         Account bystander = account("invbystander3");
@@ -385,7 +385,7 @@ class ProjectInvitationApiIntegrationTest {
                 left, manager.id());
         mvc.perform(post("/api/v1/project-invitations/" + leftInvitation + "/accept")
                         .cookie(csrf, recipient.access()).header("X-XSRF-TOKEN", csrf.getValue()))
-                .andExpect(status().isConflict());
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("INVITATION_NOT_PENDING"));
         assertEquals(0, jdbc.queryForObject("SELECT count(*) FROM project_memberships WHERE project_id = ? AND user_id = ?",
                 Integer.class, left, recipient.id()));
     }
@@ -583,6 +583,65 @@ class ProjectInvitationApiIntegrationTest {
                         .cookie(csrf, target.access()).header("X-XSRF-TOKEN", csrf.getValue())
                         .contentType(MediaType.APPLICATION_JSON).content("{\"token\":\"" + token + "\"}"))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void invitationConflictsCarryDedicatedCodesWhileTheStatusStaysConflict() throws Exception {
+        Cookie csrf = csrfCookie();
+        Account manager = account("codemanager");
+        Account target = account("codetarget");
+        UUID projectId = createProject(manager, csrf, "Invitation conflict codes");
+        String invitations = "/api/v1/projects/" + projectId + "/invitations";
+
+        // A second pending invitation for the same registered user, addressed by id and by e-mail.
+        UUID first = invite(manager, csrf, projectId, "\"userId\":\"" + target.id() + "\"");
+        for (String identity : new String[] {"\"userId\":\"" + target.id() + "\"", "\"email\":\"" + target.email() + "\""}) {
+            mvc.perform(post(invitations).cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{" + identity + ",\"teamId\":\"" + team(projectId) + "\",\"roles\":[\"TESTER\"]}"))
+                    .andExpect(status().isConflict())
+                    .andExpect(jsonPath("$.code").value("INVITATION_ALREADY_PENDING"))
+                    .andExpect(jsonPath("$.detail", org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("@"))));
+        }
+
+        // A second pending invitation for the same external e-mail address.
+        String external = "code-" + UUID.randomUUID() + "@example.test";
+        String externalBody = "{\"email\":\"" + external + "\",\"firstName\":\"Ada\",\"lastName\":\"Test\","
+                + "\"teamId\":\"" + team(projectId) + "\",\"roles\":[\"TESTER\"]}";
+        mvc.perform(post(invitations).cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content(externalBody))
+                .andExpect(status().isCreated());
+        mvc.perform(post(invitations).cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content(externalBody))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("INVITATION_ALREADY_PENDING"));
+
+        // The target accepts; accepting or rejecting again, and cancelling the answered invitation, are not pending.
+        mvc.perform(post("/api/v1/project-invitations/" + first + "/accept")
+                        .cookie(csrf, target.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isOk());
+        mvc.perform(post("/api/v1/project-invitations/" + first + "/accept")
+                        .cookie(csrf, target.access()).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("INVITATION_NOT_PENDING"));
+        mvc.perform(post("/api/v1/project-invitations/" + first + "/reject")
+                        .cookie(csrf, target.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("INVITATION_NOT_PENDING"));
+        mvc.perform(delete(invitations + "/" + first).cookie(csrf, manager.access())
+                        .header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("INVITATION_NOT_PENDING"));
+        mvc.perform(post(invitations + "/" + first + "/resend").cookie(csrf, manager.access())
+                        .header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("INVITATION_NOT_PENDING"));
+
+        // Inviting someone who is already an active member, by id and by e-mail.
+        for (String identity : new String[] {"\"userId\":\"" + target.id() + "\"", "\"email\":\"" + target.email() + "\""}) {
+            mvc.perform(post(invitations).cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{" + identity + ",\"teamId\":\"" + team(projectId) + "\",\"roles\":[\"TESTER\"]}"))
+                    .andExpect(status().isConflict())
+                    .andExpect(jsonPath("$.code").value("INVITATION_TARGET_ALREADY_MEMBER"));
+        }
     }
 
     @Test

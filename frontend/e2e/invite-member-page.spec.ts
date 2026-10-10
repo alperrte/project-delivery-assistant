@@ -31,6 +31,7 @@ test.describe.serial("Üye davet et sayfası", () => {
   let foreignTeam: Team;
   let foreignProjectId: string;
   let memberNickname: string;
+  let memberEmail: string;
   let memberId: string;
   let memberInvitation: { invitationId: string; token: string };
   const emailBase = `e2e-invite-page-${Date.now()}`;
@@ -59,7 +60,9 @@ test.describe.serial("Üye davet et sayfası", () => {
     member = await (await browser.newContext({ storageState: MEMBER_STORAGE })).newPage();
     await member.goto("/projects");
     memberId = ((await api(member, "GET", "/auth/me")).json as { id: string }).id;
-    memberNickname = (JSON.parse(readFileSync(MEMBER_USER_FILE, "utf-8")) as { nickname: string }).nickname;
+    const memberUser = JSON.parse(readFileSync(MEMBER_USER_FILE, "utf-8")) as { nickname: string; email: string };
+    memberNickname = memberUser.nickname;
+    memberEmail = memberUser.email;
   });
 
   test.afterAll(async () => {
@@ -172,7 +175,9 @@ test.describe.serial("Üye davet et sayfası", () => {
       send().click(),
     ]);
     expect(duplicate.status()).toBe(409);
-    await expect(page.getByRole("alert").filter({ hasText: tr.errors.conflict })).toBeVisible();
+    await expect(page.getByRole("alert").filter({ hasText: tr.errors.invitationAlreadyPending })).toBeVisible();
+    await expect(page.getByText(tr.errors.conflict, { exact: true })).toHaveCount(0);
+    await expect(page.getByText("son yönetici")).toHaveCount(0);
     await expect(page).toHaveURL(`${pageUrl()}?team=${teamB.id}`);
     expect((await pending()).filter((invitation) => invitation.email === email)).toHaveLength(1);
 
@@ -202,6 +207,24 @@ test.describe.serial("Üye davet et sayfası", () => {
 
     const members = (await api(page, "GET", `/projects/${projectId}/teams/${teamB.id}/members`)).json as { content: { userId: string }[] };
     expect(members.content.map((item) => item.userId)).toContain(memberId);
+  });
+
+  test("zaten üye olan birinin e-postasıyla davet 409 verir ve 'zaten projenin üyesi' mesajı gösterilir", async () => {
+    await page.goto(`${pageUrl()}?team=${teamB.id}`);
+    await page.getByRole("tab", { name: addMember.modeEmail, exact: true }).click();
+    await page.getByLabel(tr.invitations.firstName, { exact: true }).fill("Zaten");
+    await page.getByLabel(tr.invitations.lastName, { exact: true }).fill("Üye");
+    await page.getByLabel(tr.invitations.email, { exact: true }).fill(memberEmail);
+    await page.getByRole("checkbox", { name: tr.roles[PROJECT_ROLES[6]], exact: true }).check();
+    const [response] = await Promise.all([
+      page.waitForResponse((res) => res.url().endsWith(`/projects/${projectId}/invitations`) && res.request().method() === "POST"),
+      send().click(),
+    ]);
+    expect(response.status()).toBe(409);
+    expect((await response.json()).code).toBe("INVITATION_TARGET_ALREADY_MEMBER");
+    await expect(page.getByRole("alert").filter({ hasText: tr.errors.invitationTargetAlreadyMember })).toBeVisible();
+    await expect(page.getByText(tr.errors.conflict, { exact: true })).toHaveCount(0);
+    await expect(page).toHaveURL(`${pageUrl()}?team=${teamB.id}`);
   });
 
   test("proje yöneticisi olmayan üye yetkisiz durumu görür", async () => {

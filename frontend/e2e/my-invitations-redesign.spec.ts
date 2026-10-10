@@ -27,11 +27,13 @@ test.describe.serial("My invitations redesign", () => {
   const names = {
     accept: `Redesign Accept ${stamp}`,
     reject: `Redesign Reject ${stamp}`,
+    stale: `Redesign Stale ${stamp}`,
     long: `Redesign-Uzun-Proje-Adi-${stamp}-Redesign-Uzun-Proje-Adi`,
   };
-  const ids: Record<"accept" | "reject" | "long", { projectId: string; invitationId: string }> = {
+  const ids: Record<"accept" | "reject" | "stale" | "long", { projectId: string; invitationId: string }> = {
     accept: { projectId: "", invitationId: "" },
     reject: { projectId: "", invitationId: "" },
+    stale: { projectId: "", invitationId: "" },
     long: { projectId: "", invitationId: "" },
   };
   const shotDir = path.resolve(__dirname, "../../.local/my-invitations-redesign");
@@ -67,6 +69,7 @@ test.describe.serial("My invitations redesign", () => {
     };
     await invite("accept", ["TESTER", "FRONTEND_DEVELOPER"], "Katılmanı bekliyoruz");
     await invite("reject", ["BACKEND_DEVELOPER"], undefined);
+    await invite("stale", ["TESTER"], undefined);
     await invite("long", ["PROJECT_MANAGER", "FULL_STACK_DEVELOPER", "AI_ML_DEVELOPER", "UI_UX_DEVELOPER", "ANALYST"], "Uzun bir davet mesajı ".repeat(4).trim());
   });
 
@@ -170,6 +173,23 @@ test.describe.serial("My invitations redesign", () => {
     expect(rejected.status).toBe(200);
     expect((rejected.json as { content: { id: string; rejectionMessage: string | null }[] }).content
       .find((item) => item.id === ids.reject.invitationId)?.rejectionMessage).toBe("Şu an uygun değilim");
+  });
+
+  test("accepting an invitation answered elsewhere shows the specific 'no longer pending' message", async () => {
+    await recipient.setViewportSize({ width: 1440, height: 900 });
+    await recipient.goto("/tr/davetler");
+    const row = recipient.getByRole("row").filter({ hasText: names.stale });
+    await expect(row).toBeVisible();
+    // The invitation is answered from another tab/device while this list is still on screen.
+    expect((await api(recipient, "POST", `/project-invitations/${ids.stale.invitationId}/reject`, { message: "" })).status).toBe(204);
+    const [response] = await Promise.all([
+      recipient.waitForResponse((res) => res.url().endsWith(`/project-invitations/${ids.stale.invitationId}/accept`)),
+      row.getByRole("button", { name: tr.invitations.respond.accept }).click(),
+    ]);
+    expect(response.status()).toBe(409);
+    expect((await response.json()).code).toBe("INVITATION_NOT_PENDING");
+    await expect(recipient.getByText(tr.errors.invitationNotPending)).toBeVisible();
+    await expect(recipient.getByText(tr.errors.conflict, { exact: true })).toHaveCount(0);
   });
 
   test("?status=ALL is a deep link to the history; the tabs write the URL", async () => {

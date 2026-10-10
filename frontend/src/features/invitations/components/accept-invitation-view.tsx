@@ -7,7 +7,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle, CircleNotch, EnvelopeSimple, WarningCircle, XCircle } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { errorKey } from "@/lib/api/error-message";
+import { errorKey, inviteeErrorKey } from "@/lib/api/error-message";
 import { invitationsApi } from "../api";
 import { invalidateInvitationMembership } from "../invalidation";
 
@@ -29,7 +29,7 @@ export function AcceptInvitationView({
   const accept = useMutation({
     mutationFn: () => invitationsApi.accept(projectId, invitationId, token!),
     onSuccess: async () => { await invalidateInvitationMembership(queryClient); setDone("accepted"); },
-    onError: (err) => toast.error(te(errorKey(err))),
+    onError: (err) => toast.error(te(inviteeErrorKey(err))),
   });
 
   const reject = useMutation({

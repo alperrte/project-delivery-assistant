@@ -18,7 +18,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { errorKey } from "@/lib/api/error-message";
+import { errorKey, inviteeErrorKey } from "@/lib/api/error-message";
 import { profilePhotoSrc } from "@/features/account/api";
 import { invitationsApi } from "@/features/invitations/api";
 import { InvitationProjectPreviewDialog } from "@/features/invitations/components/invitation-project-preview-dialog";
@@ -164,7 +164,7 @@ function RecipientInvitations({userId}:{userId:string|undefined}) {
       await Promise.all([refresh(), queryClient.invalidateQueries({ queryKey: ["projects"] })]);
       toast.success(t("acceptSuccess"));
     },
-    onError: (err) => toast.error(te(errorKey(err))),
+    onError: (err) => toast.error(te(inviteeErrorKey(err))),
   });
   const reject = useMutation({
     mutationFn: ({ id, message }: { id: string; message: string }) => invitationsApi.rejectMine(id, message),
