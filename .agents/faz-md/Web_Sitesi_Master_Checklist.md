@@ -310,6 +310,8 @@
 - [ ] Gizlilik odaklı ölçümleme
 - [ ] Analitik için hukuki değerlendirme
 ### HAMZA
+
+
 ## 10. Performans ve teknik kalite
 
 ### Hız ve teknik verimlilik
@@ -332,21 +334,21 @@
 
 ### Çoklu dil (koşullu)
 
-- [ ] Dil bazlı routing
-- [ ] Doğru html lang
-- [ ] Hreflang ve dil eşdeğerliği
-- [ ] Yerel tarih / sayı biçimi
-- [ ] Eksik çeviri fallback
-- [ ] Form ve hata çevirileri
-- [ ] Dil bazlı metadata / OG
+- [X] Dil bazlı routing — TR/EN/DE önekleri, çevrilmiş adresler, canonical yönlendirmeler ve dil değiştirme mevcut; ayrı yönetici girişi bilinçli olarak öneksiz.
+- [X] Doğru html lang — Root layout, çözümlenen sayfa dilini html lang alanına yazıyor.
+- [X] Hreflang ve dil eşdeğerliği — Public sayfalarda TR/EN/DE ve x-default eşleri; sitemap'te dil karşılıkları mevcut.
+- [X] Yerel tarih / sayı biçimi — Tarih/saat alanları ve analitik sayı gösterimleri seçili dille Intl üzerinden biçimlendiriliyor.
+- [ ] Eksik çeviri fallback — Desteklenmeyen dil için TR varsayılanı var; eksik mesaj anahtarları için varsayılan dil birleştirmesi veya özel getMessageFallback yok. Sözlüklerde kullanılmayan eski ekip anahtarları arasında farklar mevcut.
+- [X] Form ve hata çevirileri — Ortak validation/errors anahtarları TR/EN/DE'de mevcut; formlar doğrulama ve API hatalarını çeviri anahtarlarıyla gösteriyor.
+- [X] Dil bazlı metadata / OG — Public sayfalarda çevrilmiş title/description, OG locale ve alternateLocale mevcut; oturumlu sayfalarda çevrilmiş başlıklar ve noindex uygulanıyor.
 
 ### PWA (isteğe bağlı)
 
-- [ ] Web App Manifest
-- [ ] Uygulama ikonları
-- [ ] Service Worker
-- [ ] Offline senaryosu
-- [ ] Cache sürümü güncelleme
+- [X] Web App Manifest — manifest.ts içinde uygulama adı, start_url, standalone görünüm, renkler ve ikon tanımları mevcut.
+- [X] Uygulama ikonları — Manifest'in PNG ikonları gerçek 192×192 ve 512×512 boyutlarında; Apple ikonu 180×180.
+- [ ] Service Worker — Service worker dosyası, kayıt kodu veya PWA worker entegrasyonu bulunmuyor.
+- [ ] Offline senaryosu — Açık çalışma alanında bağlantı uyarısı ve ağ hatası davranışı var; PWA olarak çevrimdışı açılış ve offline içerik önbelleği yok.
+- [ ] Cache sürümü güncelleme — Service worker cache sürümleme, eski cache temizliği ve worker güncelleme mekanizması bulunmuyor.
 
 ## 12. Test, yayın ve yayın sonrası takip
 
