@@ -169,3 +169,8 @@ Additive `notifications.invitation_project_name VARCHAR(160) NULL`; subset CHECK
 - **V66**: `users.account_status` also allows `DELETED`; new `account_deletion_requests` (one per user; `token_hash` unique, `expires_at`, `attempt_count` 0–5, `consumed_at`).
 
 Registration now creates `PENDING_VERIFICATION` users; expired pending users are deleted by a scheduled job. No data migration for older accounts (the database was reset before launch).
+
+## V67–V68 — separate administrator sign-in (2026-10-10)
+
+- **V67**: `user_sessions.admin_verified_at TIMESTAMPTZ NULL` (set only when a session is opened by the administrator sign-in; existing sessions stay NULL and cannot use `/api/v1/admin/**`); new `admin_auth_tickets` (`id` = the row named by the signed ticket cookie, `user_id` cascades on user delete, `purpose` `ADMIN_MFA` or `ADMIN_ENROLL`, `created_at`, `expires_at`, `consumed_at`; indexes on `user_id` and `expires_at`). A ticket is single use: it is consumed with one conditional update. Expired rows older than a day are purged whenever a new ticket is issued; a new password step deletes the earlier tickets of the same account.
+- **V68**: data migration `UPDATE users SET must_change_password = FALSE WHERE global_role = 'ADMIN'`. The flag was only ever set by `User.bootstrapAdmin`, so no other account is affected; the column and the forced-change mechanism stay.

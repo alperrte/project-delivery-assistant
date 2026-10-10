@@ -31,6 +31,23 @@ public class UserSessionService implements UserSessions {
 
     @Override
     @Transactional
+    public UUID openAdminVerified(UUID userId, String refreshToken, Instant expiresAt, String userAgent, Instant now) {
+        return sessions.saveAndFlush(UserSession.openAdminVerified(userId, refreshToken, expiresAt, userAgent, now))
+                .getId();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isAdminVerified(UUID sessionId, UUID userId, Instant now) {
+        return sessions.findById(sessionId)
+                .filter(session -> session.getUserId().equals(userId))
+                .filter(session -> session.isActive(now))
+                .filter(UserSession::isAdminVerified)
+                .isPresent();
+    }
+
+    @Override
+    @Transactional
     public Optional<UUID> rotate(UUID userId, String currentRefreshToken, String nextRefreshToken,
                                  Instant nextExpiresAt, Instant now) {
         String currentHash = UserSession.hashRefreshToken(currentRefreshToken);

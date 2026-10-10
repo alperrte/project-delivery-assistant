@@ -49,6 +49,10 @@ public class UserSession {
     @Column(name = "last_used_at")
     private Instant lastUsedAt;
 
+    /** Set only when the session was opened by the administrator sign-in (password plus authenticator code). */
+    @Column(name = "admin_verified_at", updatable = false)
+    private Instant adminVerifiedAt;
+
     protected UserSession() {
         // JPA
     }
@@ -65,6 +69,14 @@ public class UserSession {
         session.refreshTokenHash = hashRefreshToken(refreshToken);
         session.expiresAt = expiresAt;
         session.userAgent = sanitizeUserAgent(userAgent);
+        return session;
+    }
+
+    /** A session opened by the administrator sign-in; only such a session may use the administrator API. */
+    public static UserSession openAdminVerified(UUID userId, String refreshToken, Instant expiresAt, String userAgent,
+                                                Instant verifiedAt) {
+        UserSession session = open(userId, refreshToken, expiresAt, userAgent);
+        session.adminVerifiedAt = Objects.requireNonNull(verifiedAt, "verifiedAt");
         return session;
     }
 
@@ -143,4 +155,5 @@ public class UserSession {
     public Instant getExpiresAt() { return expiresAt; }
     public Instant getRevokedAt() { return revokedAt; }
     public Instant getLastUsedAt() { return lastUsedAt; }
+    public boolean isAdminVerified() { return adminVerifiedAt != null; }
 }

@@ -1,5 +1,6 @@
 package com.pda.auth.api;
 
+import com.pda.auth.application.service.AdminTicketException;
 import com.pda.auth.application.service.VerificationMailUnavailableException;
 import com.pda.auth.application.service.EmailNotVerifiedException;
 import com.pda.auth.application.service.InvalidCredentialsException;
@@ -69,6 +70,14 @@ public class AuthApiErrorHandler {
                 "Two-factor authentication is not available");
         body.setProperty("code", "two_factor_unavailable");
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).header("Cache-Control", "no-store").body(body);
+    }
+
+    @ExceptionHandler(AdminTicketException.class)
+    ResponseEntity<ProblemDetail> adminTicketInvalid() {
+        ProblemDetail body = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED,
+                "The sign-in step expired; sign in again");
+        body.setProperty("code", "two_factor_session_expired");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).header("Cache-Control", "no-store").body(body);
     }
 
     @ExceptionHandler(EmailNotVerifiedException.class)

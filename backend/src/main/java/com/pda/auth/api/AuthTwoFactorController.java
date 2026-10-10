@@ -100,10 +100,16 @@ public class AuthTwoFactorController {
             description = "Requires a valid access cookie and CSRF, the account password (when it has one) and a current authenticator or backup code.")
     @ApiResponse(responseCode = "200", description = "Two-factor is off; secret and backup codes were deleted")
     @ApiResponse(responseCode = "400", description = "current_password_incorrect or two_factor_code_invalid")
+    @ApiResponse(responseCode = "403", description = "admin_two_factor_required: two-factor is mandatory for administrator accounts")
     @ApiResponse(responseCode = "429", description = "two_factor_locked")
     public ResponseEntity<Object> disable(@Valid @RequestBody DisableTwoFactorRequest request,
                                           @AuthenticationPrincipal UserAccounts.AuthenticatedUser principal) {
         UUID userId = principal.id();
+        if (users.isAdministrator(userId)) {
+            // Two-factor is mandatory for every administrator account; recovery is by backup codes (see SECURITY.md).
+            return problem(HttpStatus.FORBIDDEN, "admin_two_factor_required",
+                    "Two-factor cannot be switched off for an administrator account");
+        }
         if (users.hasPassword(userId)
                 && (request.password() == null || !users.passwordMatches(userId, request.password()))) {
             return problem(HttpStatus.BAD_REQUEST, "current_password_incorrect", "Current password is incorrect");

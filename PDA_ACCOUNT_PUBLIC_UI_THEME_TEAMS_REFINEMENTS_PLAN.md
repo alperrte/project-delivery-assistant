@@ -14,8 +14,8 @@ Kodlama: Sonnet 5.5 (high) alt-ajanları; orkestrasyon/inceleme/test/dokümantas
 - [x] Phase 1 — `general-features`
 - [x] Transition Gate 1 — user commit/push confirmation
 - [x] Phase 2 — `squad-service-backend`
-- [ ] Transition Gate 2 — user commit/push confirmation
-- [ ] Phase 3 — Final integrated verification
+- [x] Transition Gate 2 — user commit/push confirmation
+- [x] Phase 3 — Final integrated verification (kayıtlı test istisnasıyla; bkz. final completion)
 
 ---
 
@@ -351,7 +351,7 @@ Task 6–7 DoD.
 - [x] 8.1 Backend verify. (hedefli 31/31; tam `verify` Phase 3'te)
 - [x] 8.2 lint/type/build. (lint + tsc; `next build` Phase 3'te)
 - [x] 8.3 Playwright (team-*, teams-view-toggle, team-member-preview).
-- [ ] 8.4 pre-push. (kullanıcı kararı: Phase 3'te)
+- [x] 8.4 pre-push. (kullanıcı kararı: Phase 3'te koşuldu)
 - [x] 8.5 Docs + completion.
 
 ### Definition of Done (Branch completion)
@@ -363,15 +363,15 @@ STOP → `BRANCH COMPLETE — squad-service-backend`
 
 ## Transition Gate 2
 
-- [ ] Kullanıcı commit/push'u doğruladı.
+- [x] Kullanıcı commit/push'u doğruladı (PR #138, `90f7c7c`).
 
 ---
 
 ## Phase 3 — Final integrated verification
 
-- [ ] Her iki faz main'de birleşik (ortak commit doğrulaması).
-- [ ] Backend `mvnw clean verify`.
-- [ ] Frontend lint / TypeScript / production build.
-- [ ] Hedefli Playwright paketleri + full Chromium + public paket.
-- [ ] `.\pre-push\pre-push.cmd` (Docker build/start/health dahil).
-- [ ] Ayrı final completion dokümanı (md'deki başlıklarla).
+- [x] Her iki faz main'de birleşik (`90f7c7c`).
+- [x] Backend `mvnw clean verify`. (827/0)
+- [x] Frontend lint / TypeScript / production build.
+- [x] Hedefli Playwright paketleri + full Chromium + public paket. (814 + temiz yeniden koşu 60/61; kalan: palet testi yarışı)
+- [ ] `.\pre-push\pre-push.cmd` (Docker build/start/health dahil). — katı PASS değil: koşu branch geçişiyle kirlendi; bkz. final completion
+- [x] Ayrı final completion dokümanı: `docs/compliation/2026-10-10-account-public-ui-theme-teams-refinements.md`.

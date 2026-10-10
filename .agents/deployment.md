@@ -53,7 +53,7 @@ Backend profilleri `application-dev.yml`, `application-test.yml`, `application-p
 2. Cookie `Secure=true`, uygun `SameSite`/`Domain`/`Path`, CSRF akışı ve açık CORS origin listesini gerçek topolojiyle birlikte doğrulayın.
 3. Production PostgreSQL bağlantısını (varsayılan Neon) en az yetkili kullanıcıyla kurun; bağlantı secret'larını secret store/ENV içinde tutun. Flyway migration'larını çalıştırın ve Hibernate şema doğrulamasını `ddl-auto=validate` ile yapın.
 4. Veritabanı backup/restore beklentisini ve uygulama sürümüyle migration uyumluluğunu belirleyin; bir restore denemesi yapın.
-5. `ADMIN_EMAIL` ve güçlü `ADMIN_INITIAL_PASSWORD` ile ilk admin oluşturma, ilk girişte şifre değiştirme ve tekrar başlatmada hesabın değişmemesini doğrulayın.
+5. `ADMIN_EMAIL` ve güçlü `ADMIN_INITIAL_PASSWORD` ile ilk admin oluşturma, `/pd-admin` girişinde zorunlu şifre değişimi olmadan ilk Authenticator kaydı (QR) ve tekrar başlatmada hesabın değişmemesini doğrulayın; ayrıntı `.agents/SECURITY.md` son bölüm.
 6. `/actuator/health`, liveness/readiness ve uygun Docker health check'lerini kontrol edin. Loglarda password, cookie, JWT veya secret olmadığını doğrulayın.
 7. GitHub Actions üzerinden backend test/build, frontend build/lint/type-check, JaCoCo, SonarQube Cloud ve Docker build kontrollerini geçirin. Gerçek deploy workflow'u hosting kararı verilince eklenir.
 
