@@ -29,10 +29,6 @@ class BackendApplicationTests {
 	}
 
 	@Test
-	void contextLoads() {
-	}
-
-	@Test
 	void disabledApiDocsCannotBeReached() throws Exception {
 		mvc.perform(get("/swagger-ui/index.html")).andExpect(status().isForbidden());
 		mvc.perform(get("/swagger-ui/swagger-ui.css")).andExpect(status().isForbidden());

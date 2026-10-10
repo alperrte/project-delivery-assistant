@@ -240,20 +240,20 @@
 
 ### Kimlik doğrulama ve hesap işlemleri
 
-- [ ] Güvenli kayıt ve giriş
-- [ ] Parola hashleme
-- [ ] Parola sıfırlama
-- [ ] E-posta doğrulama
-- [ ] Oturum süresi ve çıkış
-- [ ] Güvenli cookie ayarları
+- [X] Güvenli kayıt ve giriş
+- [X] Parola hashleme
+- [X] Parola sıfırlama
+- [X] E-posta doğrulama
+- [X] Oturum süresi ve çıkış
+- [X] Güvenli cookie ayarları
 - [ ] Giriş hızı sınırı
-- [ ] MFA / 2FA
+- [X] MFA / 2FA
 
 ### Erişim ve hesap güvenliği
 
-- [ ] Rol tabanlı yetkilendirme
+- [] Rol tabanlı yetkilendirme
 - [ ] Sunucu tarafı nesne yetkilendirmesi
-- [ ] Hesap silme ve veri talepleri
+- [X] Hesap silme ve veri talepleri
 - [ ] Kritik değişiklikte yeniden doğrulama
 - [ ] Oturum zaman aşımı mesajı
 - [ ] Open redirect ve yetki yükseltme koruması
