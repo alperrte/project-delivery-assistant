@@ -1,6 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { MANAGER_STORAGE } from "./global-setup";
-import { api, createProject } from "./helpers";
+import { readFileSync } from "node:fs";
+import { MANAGER_STORAGE, MANAGER_USER_FILE } from "./global-setup";
+import { api, createProject, openPasswordChangeForm } from "./helpers";
 import tr from "../src/i18n/messages/tr.json";
 
 test.use({ storageState: MANAGER_STORAGE });
@@ -172,8 +173,8 @@ test.describe.serial("Yükleniyor durumu: giriş gerektiren formlar", () => {
 
   test("şifre değiştirme (hesap sayfası)", async () => {
     const seen = await hold(page, { method: "POST", url: /\/auth\/password\/change$/ });
-    await page.goto("/account");
-    await page.waitForLoadState("networkidle");
+    // The form is behind a code mailed to the account.
+    await openPasswordChangeForm(page, (JSON.parse(readFileSync(MANAGER_USER_FILE, "utf-8")) as { email: string }).email);
     await page.getByLabel(tr.changePassword.currentPassword, { exact: true }).fill("Gecerli-Parola-1");
     await page.getByLabel(tr.changePassword.newPassword, { exact: true }).fill("Yeni-Parola-12345");
     await page.getByLabel(tr.changePassword.confirmNewPassword, { exact: true }).fill("Yeni-Parola-12345");

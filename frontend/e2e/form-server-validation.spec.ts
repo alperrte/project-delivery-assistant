@@ -73,6 +73,10 @@ test.describe.serial("Sunucu tarafı doğrulama: tarayıcı denetimi atlansa da 
   test("şifre değiştirme: kısa yeni şifre ve eşleşmeyen tekrar reddedilir", async () => {
     const short = await api(page, "POST", "/auth/password/change", { currentPassword: "x", newPassword: "kisa", confirmNewPassword: "kisa" });
     expect(short.status, JSON.stringify(short.json)).toBe(400);
+    // Eight characters are not enough any more: an uppercase letter, a digit and a special character are required too.
+    const weak = await api(page, "POST", "/auth/password/change", { currentPassword: "x", newPassword: "aaaaaaaa", confirmNewPassword: "aaaaaaaa" });
+    expect(weak.status, JSON.stringify(weak.json)).toBe(400);
+    expect(short.status, JSON.stringify(short.json)).toBe(400);
     const mismatch = await api(page, "POST", "/auth/password/change", { currentPassword: "x", newPassword: "Yeni-Parola-12345", confirmNewPassword: "Baska-Parola-12345" });
     expect(mismatch.status, JSON.stringify(mismatch.json)).toBe(400);
   });

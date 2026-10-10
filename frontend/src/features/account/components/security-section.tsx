@@ -1,80 +1,39 @@
 "use client";
 
-import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "sonner";
-import { FormField } from "@/components/common/form-field";
 import { SettingsSection } from "@/components/common/settings-section";
-import { SubmitButton } from "@/components/common/submit-button";
-import { errorKey } from "@/lib/api/error-message";
 import { authApi } from "@/features/auth/api";
-import { changePasswordSchema, type ChangePasswordValues } from "@/features/auth/schemas";
+import { useSession } from "@/features/auth/hooks/use-session";
+import { DeleteAccountPanel } from "./delete-account-panel";
+import { PasswordChangePanel } from "./password-change-panel";
+import { statusKey, TwoFactorPanel } from "./two-factor-panel";
 
+/** Password (behind a mailed code), two-step verification and account deletion. */
 export function SecuritySection() {
   const t = useTranslations("preferences.security");
-  const tp = useTranslations("changePassword");
-  const tv = useTranslations("validation");
-  const te = useTranslations("errors");
-  const [formError, setFormError] = useState<string | null>(null);
+  const tf = useTranslations("securityFlow");
+  const { data: user } = useSession();
+  const { data: status, isLoading } = useQuery({ queryKey: statusKey, queryFn: authApi.twoFactorStatus });
+  if (!user) return null;
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors, isSubmitting },
-  } = useForm<ChangePasswordValues>({ resolver: zodResolver(changePasswordSchema) });
-
-  async function onSubmit(values: ChangePasswordValues) {
-    setFormError(null);
-    try {
-      await authApi.changePassword(values);
-      toast.success(tp("success"));
-      reset();
-    } catch (err) {
-      setFormError(te(errorKey(err)));
-    }
-  }
+  // Accounts that only sign in with Google/GitHub have no password to change. Held back until the answer is known so
+  // the card does not flash and vanish; if the status cannot be read, the card stays (the server still guards it).
+  const showPassword = !isLoading && status?.passwordRequired !== false;
 
   return (
-    <SettingsSection title={t("title")} description={t("description")}>
-      <form onSubmit={handleSubmit(onSubmit)} noValidate className="max-w-md">
-        <fieldset disabled={isSubmitting} className="min-w-0 space-y-4">
-          <FormField
-            label={tp("currentPassword")}
-            placeholder={tp("currentPasswordPlaceholder")}
-            password
-            autoComplete="current-password"
-            error={errors.currentPassword && tv(errors.currentPassword.message!)}
-            {...register("currentPassword")}
-          />
-          <FormField
-            label={tp("newPassword")}
-            placeholder={tp("newPasswordPlaceholder")}
-            password
-            autoComplete="new-password"
-            error={errors.newPassword && tv(errors.newPassword.message!)}
-            {...register("newPassword")}
-          />
-          <FormField
-            label={tp("confirmNewPassword")}
-            placeholder={tp("confirmNewPasswordPlaceholder")}
-            password
-            autoComplete="new-password"
-            error={errors.confirmNewPassword && tv(errors.confirmNewPassword.message!)}
-            {...register("confirmNewPassword")}
-          />
-
-          {formError && (
-            <p role="alert" className="text-sm text-destructive">
-              {formError}
-            </p>
-          )}
-
-          <SubmitButton pending={isSubmitting}>{isSubmitting ? tp("submitting") : tp("submit")}</SubmitButton>
-        </fieldset>
-      </form>
-    </SettingsSection>
+    <>
+      {showPassword && (
+        <SettingsSection title={t("title")} description={t("description")}>
+          <PasswordChangePanel email={user.email} />
+        </SettingsSection>
+      )}
+      <SettingsSection title={tf("twoFactor.title")} description={tf("twoFactor.description")}>
+        <TwoFactorPanel />
+      </SettingsSection>
+      <SettingsSection title={tf("deleteAccount.title")} description={tf("deleteAccount.description")}>
+        <DeleteAccountPanel email={user.email} />
+      </SettingsSection>
+    </>
   );
 }

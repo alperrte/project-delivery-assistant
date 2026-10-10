@@ -1,6 +1,9 @@
 import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { matchPath } from "../src/i18n/routing";
+import tr from "../src/i18n/messages/tr.json";
+import { psql } from "./db";
+import { mailsTo, waitForCode } from "./mailpit";
 
 const PASSWORD = "E2ePassword1!";
 
@@ -20,9 +23,31 @@ export async function registerUser(page: Page, user: { email: string; nickname: 
   await page.locator('input[name="password"]').fill(user.password);
   await page.locator('input[name="confirmPassword"]').fill(user.password);
   await page.getByRole("button", { name: /^Kayıt ol$/ }).click();
-  // Registration signs the new account in and opens the app. The auth pages have their own navigation, so wait for
-  // the app shell's main region: it only exists once the session cookies are set.
+  // The account starts unverified: the mailed code (read from the e2e stack's Mailpit) activates it and the page
+  // signs the person in with the password just typed. The auth pages have their own navigation, so wait for the app
+  // shell's main region: it only exists once the session cookies are set.
+  await expect(page).toHaveURL(url => matchPath(url.pathname)?.route === "/verify-email", { timeout: 15_000 });
+  await page.getByLabel(tr.codeEntry.label, { exact: true }).fill(await waitForCode(user.email));
+  await page.getByRole("button", { name: tr.verifyEmail.verify, exact: true }).click();
   await expect(page.locator("#main-content")).toBeVisible({ timeout: 15_000 });
+}
+
+/**
+ * Account settings → password: the form sits behind a mailed code. Requests the code, enters it, and leaves the page
+ * on the open current/new/confirm form.
+ */
+export async function openPasswordChangeForm(page: Page, email: string) {
+  // The server mails at most one code a minute per account; several tests share one account, so start each from a
+  // clean slate (test-only database access, like the other helpers in db.ts).
+  if (!/^[\w.+-]+@[\w.-]+$/.test(email)) throw new Error("Unexpected e-mail address in a test");
+  psql(`DELETE FROM password_change_challenges WHERE user_id = (SELECT id FROM users WHERE email = '${email}')`);
+  await page.goto("/account");
+  await page.waitForLoadState("networkidle");
+  const mailsBefore = (await mailsTo(email)).length;
+  await page.getByRole("button", { name: tr.securityFlow.password.start, exact: true }).click();
+  await page.getByLabel(tr.codeEntry.label, { exact: true }).fill(await waitForCode(email, mailsBefore));
+  await page.getByRole("button", { name: tr.securityFlow.password.verify, exact: true }).click();
+  await expect(page.getByLabel(tr.changePassword.currentPassword, { exact: true })).toBeVisible();
 }
 
 /** Calls the backend with the page's own session and the CSRF dance, for setup and for asserting server-side rules. */

@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
-import { MANAGER_STORAGE } from "./global-setup";
-import { api, chooseDate, chooseTime, createProject } from "./helpers";
+import { readFileSync } from "node:fs";
+import { MANAGER_STORAGE, MANAGER_USER_FILE } from "./global-setup";
+import { api, chooseDate, chooseTime, createProject, openPasswordChangeForm } from "./helpers";
 import tr from "../src/i18n/messages/tr.json";
 
 test.use({ storageState: MANAGER_STORAGE });
@@ -9,6 +10,9 @@ test.use({ storageState: MANAGER_STORAGE });
 // The submit button is clicked (so focus starts on the button) with the leading field left empty.
 
 const alertWith = (page: Page, text: string) => page.getByRole("alert").filter({ hasText: text }).first();
+
+/** The shared manager's address: the account password form sits behind a code mailed to it. */
+const managerEmail = () => (JSON.parse(readFileSync(MANAGER_USER_FILE, "utf-8")) as { email: string }).email;
 
 /** Same three fields on the account page and on /change-password: current → new → confirmation. */
 async function expectPasswordFocusOrder(page: Page) {
@@ -24,7 +28,12 @@ async function expectPasswordFocusOrder(page: Page) {
 
   await current.fill("Gecerli-Parola-1");
   await submit.click();
-  await expect(alertWith(page, tr.validation.passwordMin)).toBeVisible();
+  await expect(alertWith(page, tr.validation.required)).toBeVisible();
+  await expect(next).toBeFocused();
+
+  await next.fill("zayifparola");
+  await submit.click();
+  await expect(alertWith(page, tr.validation.passwordWeak)).toBeVisible();
   await expect(next).toBeFocused();
 
   await next.fill("Yeni-Parola-12345");
@@ -171,7 +180,7 @@ test.describe.serial("İlk hataya yönlendirme: giriş gerektiren formlar", () =
   });
 
   test("hesap sayfası, güvenlik: şifre alanları sırayla odaklanır", async () => {
-    await page.goto("/account");
+    await openPasswordChangeForm(page, managerEmail());
     await expectPasswordFocusOrder(page);
   });
 

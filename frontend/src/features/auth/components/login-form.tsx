@@ -6,21 +6,17 @@ import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight, Check, EnvelopeSimple, LockSimple } from "@phosphor-icons/react";
 import { SubmitButton } from "@/components/common/submit-button";
 import { HomeLink } from "@/components/common/home-link";
 import { FormField } from "@/components/common/form-field";
+import { ApiError } from "@/lib/api/client";
 import { errorKey } from "@/lib/api/error-message";
 import { authApi } from "../api";
 import { loginSchema, type LoginValues } from "../schemas";
-import { sessionQueryKey } from "../hooks/use-session";
-import { clearPrivateInvitations } from "@/features/invitations/query-keys";
-import { clearPrivateNotifications } from "@/features/notifications/query-keys";
-import { clearPrivateTeams } from "@/features/squads/cache";
-import { clearPrivateAdmin } from "@/features/admin/query-keys";
-import { matchPath } from "@/i18n/routing";
 import { authCtaClass } from "./auth-card";
+import { holdCredentialsForVerification, writePendingVerification } from "./pending-verification";
+import { useCompleteLogin } from "./use-complete-login";
 import { useShake } from "./use-shake";
 
 /**
@@ -47,19 +43,21 @@ function writeRememberedEmail(email: string | null) {
   }
 }
 
-export function LoginForm({ children }: { children?: ReactNode }) {
+export function LoginForm({ children, onTwoFactor }: { children?: ReactNode; onTwoFactor: () => void }) {
   const t = useTranslations("login");
   const tv = useTranslations("validation");
   const te = useTranslations("errors");
   const router = useRouter();
-  const queryClient = useQueryClient();
+  const completeLogin = useCompleteLogin();
   const [formError, setFormError] = useState<string | null>(null);
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
   const [scope, shake] = useShake<HTMLFormElement>();
 
   const {
     register,
     handleSubmit,
     setValue,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -75,33 +73,28 @@ export function LoginForm({ children }: { children?: ReactNode }) {
 
   async function onSubmit({ remember, ...credentials }: LoginValues) {
     setFormError(null);
+    setUnverifiedEmail(null);
     try {
-      await authApi.login(credentials);
+      const response = await authApi.login(credentials);
       writeRememberedEmail(remember ? credentials.email : null);
-      const me = await authApi.me();
-      clearPrivateInvitations(queryClient);
-      clearPrivateNotifications(queryClient);
-      clearPrivateTeams(queryClient);
-      clearPrivateAdmin(queryClient);
-      queryClient.setQueryData(sessionQueryKey, me);
-      const invitation = new URLSearchParams(window.location.hash.slice(1)).get("invitation");
-      const requested = new URLSearchParams(window.location.search).get("next");
-      let returnPath: string | null = null;
-      if (requested?.startsWith("/") && !requested.startsWith("//")) {
-        const target = new URL(requested, window.location.origin);
-        const matched = matchPath(target.pathname);
-        if (target.origin === window.location.origin && matched &&
-            !["/login", "/register", "/forgot-password", "/change-password"].includes(matched.route) &&
-            !matched.route.startsWith("/errors/") && !matched.route.startsWith("/dev/")) {
-          returnPath = `${matched.internalPath}${target.search}${target.hash}`;
-        }
+      if (response?.status === "TWO_FACTOR_REQUIRED") {
+        onTwoFactor();
+        return;
       }
-      router.replace(me.mustChangePassword ? "/change-password" : invitation
-        ? `/register#invitation=${encodeURIComponent(invitation)}` : returnPath ?? "/dashboard");
+      await completeLogin();
     } catch (err) {
       setFormError(te(errorKey(err)));
+      if (err instanceof ApiError && err.code === "email_not_verified") setUnverifiedEmail(credentials.email);
       shake();
     }
+  }
+
+  // The account exists but its address was never confirmed: the verify page mails a fresh code on arrival.
+  function goVerify(email: string) {
+    writePendingVerification({ email, sendOnOpen: true });
+    const password = getValues("password");
+    if (password) holdCredentialsForVerification(email, password);
+    router.push("/verify-email");
   }
 
   return (
@@ -158,9 +151,18 @@ export function LoginForm({ children }: { children?: ReactNode }) {
           </div>
 
           {formError && (
-            <p role="alert" className="text-sm text-destructive">
-              {formError}
-            </p>
+            <div role="alert" className="space-y-2 text-sm text-destructive">
+              <p>{formError}</p>
+              {unverifiedEmail && (
+                <button
+                  type="button"
+                  onClick={() => goVerify(unverifiedEmail)}
+                  className="font-semibold underline underline-offset-4 outline-none hover:no-underline focus-visible:ring-2 focus-visible:ring-(--glow)"
+                >
+                  {t("verifyNow")}
+                </button>
+              )}
+            </div>
           )}
 
           <SubmitButton pending={isSubmitting} className={authCtaClass}>
