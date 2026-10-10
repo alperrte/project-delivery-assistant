@@ -169,6 +169,12 @@ Backend: `com.pda.analytics` (public `AnalyticsReporting`; `api` ingest controll
 
 Frontend: `features/consent/` (contract, store, banner, dialog, provider, manage button), `features/analytics/` (identifiers, route template, transport, tracker), `features/contact/` (api, schema, form, page), `features/admin/` (api, query keys, guard, users page, analytics page, charts), routes `(public)/cookies`, `(public)/contact`, `(app)/admin/{users,analytics}`. E2E: `consent-state.ts` (default visitor who already decided), `db.ts`, `mailpit.ts`, `cookie-consent`, `analytics-collection`, `contact-form`, `contact-delivery`, `admin-users`, `admin-analytics`, `privacy-regression` specs. Root: `docker-compose.e2e.yml` (Mailpit + relaxed limits), `PDA_COOKIE_ANALYTICS_ADMIN_CONTACT_PLAN.md` (plan and progress).
 
+## Bildirim geçmişi silme (2026-10-10)
+
+- Backend `notification/{api/NotificationController,application/NotificationService,infrastructure/NotificationRepository}` silme yolları; test `notification/NotificationDeletionIntegrationTest`.
+- Frontend `features/notifications/{api.ts,hooks/use-notification-read.ts,components/notification-center.tsx}`; `components/common/confirm-dialog.tsx` `finalFocus`.
+- E2E `notification-history-delete.spec.ts`.
+
 ## Ekipler / üye daveti / yanıt rozeti (2026-10-10)
 
 - `features/squads/components/team-table.tsx` (tablo görünümü), `teams-page.tsx` (Kart | Tablo | Şema).

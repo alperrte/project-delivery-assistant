@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef, useState, type ReactNode } from "react";
+import { useId, useRef, useState, type ComponentProps, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { errorKey } from "@/lib/api/error-message";
 import { CircleNotch } from "@phosphor-icons/react";
@@ -31,6 +31,8 @@ type ConfirmDialogProps = {
    * (case and surrounding spaces included). `label` is the sentence above the field.
    */
   requireText?: { value: string; label: ReactNode };
+  /** Where focus goes when the dialog closes (default: the trigger). Use it when the trigger is gone or disabled afterwards. */
+  finalFocus?: ComponentProps<typeof DialogContent>["finalFocus"];
 };
 
 export function ConfirmDialog({
@@ -43,6 +45,7 @@ export function ConfirmDialog({
   onConfirm,
   formatError,
   requireText,
+  finalFocus,
 }: ConfirmDialogProps) {
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
@@ -72,7 +75,7 @@ export function ConfirmDialog({
   return (
     <Dialog open={open} onOpenChange={next => { if (!inFlight.current) { setOpen(next); setFailure(null); setTyped(""); } }}>
       <DialogTrigger render={trigger as React.ReactElement} />
-      <DialogContent>
+      <DialogContent finalFocus={finalFocus}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}

@@ -3,11 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "@/i18n/navigation";
 import { Popover } from "@base-ui/react/popover";
-import { Bell, Check, Checks, CaretLeft, CaretRight } from "@phosphor-icons/react";
+import { Bell, Check, Checks, CaretLeft, CaretRight, CircleNotch, Trash } from "@phosphor-icons/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -17,7 +18,7 @@ import { notificationsApi } from "../api";
 import { notificationKeys, reconcileNotificationRead } from "../query-keys";
 import { useNotificationOwner } from "../notification-owner";
 import type { Notification } from "../types";
-import { useNotificationRead, type ReadAction } from "../hooks/use-notification-read";
+import { isDeleteAction, useNotificationRead, type ReadAction } from "../hooks/use-notification-read";
 import { useTaskFormat } from "@/features/tasks/format";
 import { projectsApi } from "@/features/projects/api";
 
@@ -35,6 +36,11 @@ export function NotificationCenter({ expectedUserId, disabled = false }: { expec
   const navigatingTask = useRef(false);
   const popupRef = useRef<HTMLDivElement>(null);
   const focusPlan = useRef<{ origin: HTMLElement; next?: string; view: "new" | "history"; action: ReadAction } | null>(null);
+  /** Row whose inline "delete?" confirmation is open (History only); `deleting` is the synchronous in-flight guard. */
+  const [confirming, setConfirming] = useState<string | null>(null);
+  const deleting = useRef(false);
+  const focusEmptyAfterDeleteAll = useRef(false);
+  const restoreTrashFocus = useRef<string | null>(null);
   const userId = owner?.userId;
   const t = useTranslations("notifications");
   const tw = useTranslations("workspace");
@@ -47,7 +53,7 @@ export function NotificationCenter({ expectedUserId, disabled = false }: { expec
   const [view, setView] = useState<"new" | "history">("new");
   const [pages, setPages] = useState({ new: 0, history: 0 });
   const page = pages[view], filter = { read: view === "history" };
-  const setPage = (next: number) => setPages(previous => ({ ...previous, [view]: next }));
+  const setPage = (next: number) => { setConfirming(null); setPages(previous => ({ ...previous, [view]: next })); };
   const open = owner ? owner.open : demoOpen;
   const count = useQuery({
     queryKey: notificationKeys.count(userId), queryFn: ({ signal }) => notificationsApi.count(signal),
@@ -62,27 +68,40 @@ export function NotificationCenter({ expectedUserId, disabled = false }: { expec
   const totalPages = list.data?.totalPages;
   if (list.isSuccess && totalPages !== undefined && page > 0 && page >= totalPages)
     setPages(previous => ({ ...previous, [view]: Math.max(0, totalPages - 1) }));
-  const read = useNotificationRead(owner, error => toast.error(te(errorKey(error))));
+  // Delete failures are shown inline (row) or in the confirm dialog, never as a second toast.
+  const read = useNotificationRead(owner, (error, action) => { if (!isDeleteAction(action)) toast.error(te(errorKey(error))); });
+  const failedKind = read.isError ? read.variables?.action.kind : undefined;
   useEffect(() => {
     const plan = focusPlan.current;
     if (!plan || !open || read.isPending || !read.isSuccess || list.isFetching || !owner?.current()) return;
     focusPlan.current = null;
     if (view !== plan.view || !read.data || read.data.action.kind !== plan.action.kind) return;
     const active = document.activeElement;
-    if (active !== document.body && !plan.origin.contains(active)) return;
+    // Focus parked on <body> or on the popup itself (its row was removed) means the user has not moved on.
+    if (active !== document.body && active !== popupRef.current && !plan.origin.contains(active)) return;
     const panel = popupRef.current;
-    const next = plan.next ? panel?.querySelector<HTMLElement>(`[data-notification-read-id="${CSS.escape(plan.next)}"]`) : null;
+    const next = plan.next ? panel?.querySelector<HTMLElement>(`[data-notification-read-id="${CSS.escape(plan.next)}"],[data-notification-delete-id="${CSS.escape(plan.next)}"]`) : null;
     const fallback = list.isError ? panel?.querySelector<HTMLElement>("[data-notification-retry]")
-      : panel?.querySelector<HTMLElement>("[data-notification-read-id]")
+      : panel?.querySelector<HTMLElement>("[data-notification-read-id],[data-notification-delete-id]")
         ?? panel?.querySelector<HTMLElement>("[data-notification-empty]")
         ?? panel?.querySelector<HTMLElement>("[data-notification-panel-heading]");
     (next ?? fallback)?.focus({ preventScroll: true });
   }, [open, read.isPending, read.isSuccess, read.data, list.isFetching, list.isError, view, owner]);
+  useEffect(() => {
+    const id = restoreTrashFocus.current;
+    if (confirming || read.isPending || !id) return;
+    restoreTrashFocus.current = null;
+    popupRef.current?.querySelector<HTMLElement>(`[data-notification-delete-id="${CSS.escape(id)}"]`)?.focus({ preventScroll: true });
+  }, [confirming, read.isPending]);
+  useEffect(() => {
+    if (confirming) popupRef.current?.querySelector<HTMLElement>("[data-notification-delete-cancel]")?.focus({ preventScroll: true });
+  }, [confirming]);
   const date = new Intl.DateTimeFormat(locale, { dateStyle: "short", timeStyle: "short" });
   const message = (error: unknown) => error instanceof ApiError && error.status >= 500 ? t("unavailable") : te(errorKey(error));
-  function resetView() { setView("new"); setPages({ new: 0, history: 0 }); }
+  function resetView() { setView("new"); setPages({ new: 0, history: 0 }); setConfirming(null); }
   function setOpen(next: boolean) {
     focusPlan.current = null;
+    if (isDeleteAction(read.variables?.action) && !read.isPending && !deleting.current) read.reset();
     resetView();
     if (owner) owner.setOpen(next); else setDemoOpen(next);
     if (next) navigatingTask.current = false;
@@ -96,6 +115,34 @@ export function NotificationCenter({ expectedUserId, disabled = false }: { expec
     }
     return true;
   }
+  /** Closes the inline confirmation; focus returns to that row's trash button once it is enabled again (see effect). */
+  function closeConfirmation(id: string) {
+    restoreTrashFocus.current = id;
+    setConfirming(null);
+  }
+  /** Permanent single delete after the inline confirmation; the row is removed only once the server confirmed it. */
+  async function deleteOne(n: Notification, row: HTMLElement) {
+    if (deleting.current) return;
+    const rows = list.data?.content ?? [], index = rows.findIndex(item => item.id === n.id);
+    const action: ReadAction = { kind: "delete", id: n.id };
+    deleting.current = true;
+    focusPlan.current = row.contains(document.activeElement) ? { origin: row, view, action, next: (rows[index + 1] ?? rows[index - 1])?.id } : null;
+    try {
+      const result = await read.executeAsync(action);
+      if (!result) focusPlan.current = null;
+      setConfirming(null);
+    } catch {
+      focusPlan.current = null;
+      closeConfirmation(n.id);
+    } finally { deleting.current = false; }
+  }
+  /** After delete-all the trigger is disabled (empty history), so focus lands on the History empty-state section. */
+  const deleteAllFinalFocus = () => {
+    if (!focusEmptyAfterDeleteAll.current) return true;
+    focusEmptyAfterDeleteAll.current = false;
+    const panel = popupRef.current;
+    return panel?.querySelector<HTMLElement>("[data-notification-empty]") ?? panel?.querySelector<HTMLElement>("[data-notification-panel-heading]") ?? true;
+  };
   async function retryRefresh() {
     if (!userId || !owner?.current()) return;
     try { await reconcileNotificationRead(client, userId); if (owner.current()) read.reset(); }
@@ -145,19 +192,31 @@ ${c.headAuthor ? t("repositoryCommitsHeadBy", { message: c.headMessage, author: 
             finalFocus={() => !navigatingTask.current}
             aria-label={t("title")}
             onPointerDownCapture={() => { focusPlan.current = null; }} onKeyDownCapture={() => { focusPlan.current = null; }}
-            onKeyDown={event => { if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); setOpen(false); } }}>
+            onKeyDown={event => { if (event.key === "Escape" && event.currentTarget.contains(event.target as Node)) { event.preventDefault(); event.stopPropagation(); setOpen(false); } }}>
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <h2 className="text-base font-semibold">{t("title")}</h2>
               {!!userId && <Button variant="ghost" size="sm" className="h-auto min-h-11 max-w-full whitespace-normal text-left" disabled={read.isPending || !count.isSuccess || !count.data.count} onClick={event => executeRead({ kind: "all" }, event.currentTarget)}><Checks size={16} aria-hidden="true" />{t("readAll")}</Button>}
             </div>
-            {read.isError && <p role="alert" className="mb-3 text-sm text-destructive">{t("readFailed")}</p>}
-            {!!read.data?.refreshError && <div className="mb-3 space-y-2"><p role="alert" className="text-sm text-destructive">{t("refreshFailed")}</p><Button variant="outline" className="min-h-11" data-notification-retry onClick={() => void retryRefresh()}>{t("retry")}</Button></div>}
-            <Tabs value={view} onValueChange={value => { if (value === "new" || value === "history") setView(value); }}>
+            {failedKind && failedKind !== "deleteAll" && <p role="alert" className="mb-3 text-sm text-destructive">{t(failedKind === "delete" ? "deleteFailed" : "readFailed")}</p>}
+            {!!read.data?.refreshError && <div className="mb-3 space-y-2"><p role="alert" className="text-sm text-destructive">{t(isDeleteAction(read.data.action) ? "deleteRefreshFailed" : "refreshFailed")}</p><Button variant="outline" className="min-h-11" data-notification-retry onClick={() => void retryRefresh()}>{t("retry")}</Button></div>}
+            <Tabs value={view} onValueChange={value => { if (value === "new" || value === "history") { setConfirming(null); setView(value); } }}>
               <TabsList className="mb-3 w-full min-h-11 group-data-horizontal/tabs:h-auto" aria-label={t("sections")}>
                 <TabsTrigger value="new" disabled={!userId} className="min-h-11">{t("newLabel")}</TabsTrigger>
                 <TabsTrigger value="history" disabled={!userId} className="min-h-11">{t("historyLabel")}</TabsTrigger>
               </TabsList>
               <TabsContent value={view}>
+            {view === "history" && !!userId && <div className="mb-3 flex justify-end" data-notification-history-actions>
+              <ConfirmDialog
+                trigger={<Button variant="ghost" size="sm" className="h-auto min-h-11 max-w-full whitespace-normal text-destructive hover:bg-destructive/10 hover:text-destructive" disabled={read.isPending || !list.isSuccess || list.data.totalElements === 0}><Trash size={16} aria-hidden="true" />{t("deleteAll")}</Button>}
+                title={t("deleteAllTitle")} description={t("deleteAllDescription")} confirmLabel={t("deleteAll")} cancelLabel={t("cancel")} destructive
+                formatError={() => t("deleteFailed")} finalFocus={deleteAllFinalFocus}
+                onConfirm={async () => {
+                  const result = await read.executeAsync({ kind: "deleteAll" });
+                  if (!result) throw new Error("notification_delete_unavailable");
+                  focusEmptyAfterDeleteAll.current = true;
+                  toast.success(t("deletedCount", { count: "count" in result.data ? result.data.count : 0 }));
+                }} />
+            </div>}
             <h3 className="sr-only" tabIndex={-1} data-notification-panel-heading>{t(view === "new" ? "newListLabel" : "historyListLabel")}</h3>
             {list.isLoading && <div role="status" aria-label={t("loading")} className="space-y-2"><Skeleton className="h-16" /><Skeleton className="h-16" /></div>}
             {count.isError && <p role="status" className="mb-2 text-xs text-muted-foreground">{t("countUnavailable")}</p>}
@@ -165,7 +224,14 @@ ${c.headAuthor ? t("repositoryCommitsHeadBy", { message: c.headMessage, author: 
             {!userId && <p className="text-sm text-muted-foreground">{tw("noNotifications")}</p>}
             {list.data && !list.isError && list.data.content.length === 0 && <p role="status" tabIndex={-1} data-notification-empty className="text-sm text-muted-foreground">{t(view === "new" ? "newEmpty" : "historyEmpty")}</p>}
             {list.data && !list.isError && <ul className="space-y-2" aria-label={t(view === "new" ? "newListLabel" : "historyListLabel")}>
-              {list.data.content.map(n => <li key={n.id} data-notification-id={n.id} className={`rounded-lg border p-3 ${n.read ? "bg-popover" : "bg-muted/40"}`}>
+              {list.data.content.map(n => <li key={n.id} data-notification-id={n.id} className={`rounded-lg border p-3 ${n.read ? "bg-popover" : "bg-muted/40"}`}
+                onKeyDown={confirming === n.id ? event => {
+                  if (event.key !== "Escape" || deleting.current) return;
+                  event.preventDefault(); event.stopPropagation(); closeConfirmation(n.id);
+                } : undefined}
+                onBlur={confirming === n.id ? event => {
+                  if (!deleting.current && !event.currentTarget.contains(event.relatedTarget as Node | null)) setConfirming(null);
+                } : undefined}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0"><h3 id={`notification-title-${n.id}`} className="break-words text-sm font-medium">{title(n)}</h3><p className="mt-1 whitespace-pre-wrap break-words text-sm text-muted-foreground">{body(n)}</p>
                     <p className="mt-2 text-xs text-muted-foreground"><time dateTime={n.createdAt} title={Number.isFinite(Date.parse(n.createdAt)) ? date.format(new Date(n.createdAt)) : undefined}>{Number.isFinite(Date.parse(n.createdAt)) ? format.relative(n.createdAt) : ""}</time> · {n.read ? t("read") : t("unread")}</p>
@@ -188,7 +254,13 @@ ${c.headAuthor ? t("repositoryCommitsHeadBy", { message: c.headMessage, author: 
                       }} />}
                   </div>
                   {!n.read && <Tooltip><TooltipTrigger render={<Button variant="ghost" size="icon" className="min-h-11 min-w-11 shrink-0" aria-label={t("markRead")} aria-describedby={`notification-title-${n.id}`} data-notification-read-id={n.id} disabled={read.isPending} onClick={event => executeRead({ kind: "read", id: n.id }, event.currentTarget)}><Check size={16} aria-hidden="true" /></Button>} /><TooltipContent>{t("markRead")}</TooltipContent></Tooltip>}
+                  {view === "history" && n.read && <Tooltip><TooltipTrigger render={<Button variant="ghost" size="icon" className="min-h-11 min-w-11 shrink-0 text-destructive hover:bg-destructive/10 hover:text-destructive" aria-label={t("deleteNamed", { title: title(n) })} aria-expanded={confirming === n.id} data-notification-delete-id={n.id} disabled={read.isPending} onClick={() => setConfirming(n.id)}><Trash size={16} aria-hidden="true" /></Button>} /><TooltipContent>{t("delete")}</TooltipContent></Tooltip>}
                 </div>
+                {view === "history" && confirming === n.id && <div role="group" aria-label={t("confirmQuestion")} className="mt-3 flex flex-wrap items-center justify-end gap-2 border-t pt-3">
+                  <span className="mr-auto text-sm font-medium">{t("confirmQuestion")}</span>
+                  <Button variant="outline" className="min-h-11" data-notification-delete-cancel disabled={read.isPending} onClick={() => closeConfirmation(n.id)}>{t("cancel")}</Button>
+                  <Button variant="destructive" className="min-h-11" data-notification-delete-confirm disabled={read.isPending} onClick={event => void deleteOne(n, event.currentTarget.closest("li") as HTMLElement)}>{read.isPending && <CircleNotch size={16} className="animate-spin" aria-hidden="true" />}{t("confirmYes")}</Button>
+                </div>}
               </li>)}
             </ul>}
             {list.isSuccess && list.data.totalPages > 1 && <div className="mt-3 flex items-center justify-between gap-2">

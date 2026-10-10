@@ -31,5 +31,9 @@ export const notificationsApi = {
   },
   read: (id: string, signal?: AbortSignal) => apiRequest<Notification>(`/notifications/${id}/read`, { method: "PATCH", signal }),
   readAll: (signal?: AbortSignal) => apiRequest<{ count: number }>("/notifications/read-all", { method: "PATCH", signal }),
+  /** Permanently deletes one of the caller's own READ notifications (204); unknown, foreign or unread ids answer 404. */
+  deleteOne: (id: string, signal?: AbortSignal) => apiRequest<void>(`/notifications/${encodeURIComponent(id)}`, { method: "DELETE", signal }),
+  /** Permanently deletes every READ notification of the caller; unread ones are never touched. */
+  deleteAllRead: (signal?: AbortSignal) => apiRequest<{ count: number }>("/notifications?read=true", { method: "DELETE", signal }),
   claim: (signal?: AbortSignal) => apiRequest<Notification | undefined>("/notifications/team-deletions/claim", { method: "POST", signal }),
 };

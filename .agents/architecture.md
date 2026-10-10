@@ -98,6 +98,10 @@ The existing Notification module/API/owner handles both unread and read server p
 
 Public Created/Accepted/Rejected events carry nullable immutable event-time projectName; compatible constructors/old JSON retained. Notification module consumes public events through existing AFTER_COMMIT/REQUIRES_NEW writer, without importing Project entities/repositories. Recipient private count and manager project count are distinct actor-scoped query families; sidebar/heading observers share each total. Foreground30s/focus/reconnect freshness and existing mutation-prefix invalidation/abort cleanup used; no new provider/socket/count API. Organization invitation implementation is deferred. Banner create preview reuses picker/card/usePickedImage, with opt-in local decode/generation guard only for create-banner and unchanged POST-then-PUT persistence.
 
+## Bildirim geçmişi silme (2026-10-10)
+
+Notification modülü kendi okunmuş (geçmiş) kayıtlarını fiziksel siler: `DELETE /notifications/{id}` (yalnız principal + `read = true`; aksi 404) ve `DELETE /notifications?read=true` (tümü). Okunmamış kayıtlar bu yollarla silinemez; şema, event ve modül yönü değişmez; `notifications`'a FK yoktur. Frontend silmeleri mevcut okundu hook'unun tek uçuş/aktör korumasıyla yapar, sunucu onayından sonra liste/sayıları uzlaştırır ve boş kalan sayfayı önceki geçerli sayfaya kaydırır.
+
 ## Ekipler görünümü, üye davet sayfası, davet yanıt rozeti (2026-10-10)
 
 Ekipler sayfası aynı `["projects", id, "squads", "all"]` sorgusundan Kart | Tablo | Şema sunar; görünüm `?view=` ve kullanıcıya özel `pda:teams-view:v1:<userId>` anahtarındadır. "Üye davet et" dialog değil `team-invitations/new` sayfasıdır; proje/ekip bağlamı URL'den gelir, yetki sunucudadır. Notification modülü mevcut liste ve unread-count uçlarına opsiyonel `projectId` + çoklu `type` filtresi ekler (şema, event, modül yönü değişmez); sidebar "Ekip Davetleri" bekleyen davet sayısından ayrı olarak seçili projenin okunmamış davet yanıtı bildirimlerini "+N" gösterir (yalnız davet eden yönetici alıcıdır). Okundu yalnız bildirim merkezi veya Ekip Davetleri şeridindeki açık eylemle olur; sayfayı açmak okundu yapmaz.

@@ -82,4 +82,12 @@ public class NotificationService {
     }
     @Transactional
     public int markAllRead(UUID user) { return repository.markAllRead(user, Instant.now()); }
+    /** Deletes one own READ (history) notification. Unknown, foreign and unread ids are indistinguishable (404). */
+    @Transactional
+    public void deleteRead(UUID user, UUID id) {
+        if (repository.deleteReadOwn(id, user) == 0) throw new NoSuchElementException("Notification not found");
+    }
+    /** Deletes all own READ (history) notifications; unread ones are never touched. Returns the deleted count. */
+    @Transactional
+    public int deleteAllRead(UUID user) { return repository.deleteAllReadOwn(user); }
 }

@@ -63,6 +63,21 @@ public class NotificationController {
     public CountResponse readAll(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal) {
         return new CountResponse(service.markAllRead(actor(principal)));
     }
+    @DeleteMapping("/{notificationId}")
+    @Operation(summary = "Delete own history notification", description = "CSRF header required; physical delete of one own READ notification. Unknown, foreign or unread ids all answer 404.")
+    public ResponseEntity<Void> deleteOne(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
+                                          @PathVariable UUID notificationId) {
+        service.deleteRead(actor(principal), notificationId);
+        return ResponseEntity.noContent().header("Cache-Control", "private, no-store").build();
+    }
+    @DeleteMapping
+    @Operation(summary = "Delete all own history notifications", description = "CSRF header required; read=true is required and deletes only own READ notifications (unread are never deleted). Returns the deleted count.")
+    public CountResponse deleteAllRead(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
+                                       @RequestParam(required = false) Boolean read) {
+        UUID user = actor(principal);
+        if (!Boolean.TRUE.equals(read)) throw new IllegalArgumentException("read=true is required");
+        return new CountResponse(service.deleteAllRead(user));
+    }
     private static UUID actor(UserAccounts.AuthenticatedUser principal) {
         if (principal == null || principal.id() == null) throw new AccessDeniedException("Authentication required");
         return principal.id();
