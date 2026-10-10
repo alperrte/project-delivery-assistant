@@ -39,12 +39,13 @@ Backend profilleri `application-dev.yml`, `application-test.yml`, `application-p
 | JWT | `JWT_SECRET`, `JWT_ACCESS_TOKEN_EXPIRATION`, `JWT_REFRESH_TOKEN_EXPIRATION` |
 | API dokümantasyonu | `API_DOCS_ENABLED` |
 | Frontend ve CORS | `FRONTEND_URL`, `ALLOWED_ORIGINS` |
-| Mail | `MAIL_ENABLED`, `MAIL_PROVIDER` |
-| SMTP | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM_ADDRESS` |
-| Brevo | `BREVO_API_KEY` |
+| Mail | `MAIL_ENABLED`, `MAIL_PROVIDER` (yalnız `smtp`), `MAIL_FROM` |
+| SMTP | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_AUTH`, `SMTP_STARTTLS` |
+| İletişim formu | `CONTACT_RECIPIENT`, `CONTACT_MIN_FILL_TIME`, `CONTACT_MAX_FORM_AGE`, `CONTACT_REQUIRE_STARTED_AT`, `CONTACT_RATE_LIMIT_MAX_REQUESTS` |
+| Saklama süreleri | `RETENTION_CRON`, `RETENTION_BATCH_SIZE`, `RETENTION_ANALYTICS_MONTHS`, `RETENTION_USER_SESSIONS_DAYS`, `RETENTION_CONTACT_MONTHS`, `RETENTION_AUDIT_MONTHS` |
 | Log ve bootstrap | `LOG_LEVEL`, `ADMIN_EMAIL`, `ADMIN_INITIAL_PASSWORD` |
 
-`MAIL_ENABLED=false` iken uygulama çalışmaya devam eder. Mail açıksa `MAIL_PROVIDER=smtp` veya `brevo` seçilir; otomatik SMTP → Brevo fallback V1 kapsamında değildir. Development/test ortamında Swagger açık, production'da varsayılan kapalıdır; `API_DOCS_ENABLED` ile yönetilir.
+`MAIL_ENABLED=false` iken uygulama çalışmaya devam eder. Mail açıksa `MAIL_PROVIDER=smtp` olmalıdır: kodda yalnız SMTP adaptörleri vardır (kayıt/şifre/hesap silme, proje daveti ve iletişim formu) ve başka bir `MAIL_PROVIDER` değeri açılışta reddedilir. Brevo/Resend gibi sağlayıcılar kendi SMTP röle bilgileriyle `SMTP_*` üzerinden kullanılır; ayrı bir Brevo API adaptörü (`BREVO_API_KEY`) yoktur ve otomatik sağlayıcı fallback'i V1 kapsamında değildir. Development/test ortamında Swagger açık, production'da varsayılan kapalıdır; `API_DOCS_ENABLED` ile yönetilir.
 
 ## Production'a çıkmadan önce
 
@@ -77,11 +78,20 @@ Seçim ölçütleri: ücretsiz veya düşük maliyet, Spring Boot + Docker uyumu
 
 `docker-compose.e2e.yml` (Mailpit mail sink and raised rate limits for local browser tests) was removed on 2026-10-10. The Playwright specs that read mail from Mailpit need an equivalent override before they can run again. The stack now always uses the real `MAIL_*`/`SMTP_*` settings.
 
-New optional settings (defaults are the production values; names only in `.env.example`): `CONTACT_RECIPIENT` (fixed contact inbox, default `pdassistant@gmail.com`), `ANALYTICS_RATE_LIMIT_MAX_REQUESTS` (600), `CONTACT_RATE_LIMIT_MAX_REQUESTS` (5). Contact mail uses the existing `MAIL_*`/`SMTP_*` settings; without `MAIL_ENABLED=true` the contact form answers `503 CONTACT_UNAVAILABLE`. Behind a reverse proxy set `TRUSTED_PROXY_CIDRS`, otherwise all visitors share one rate-limit bucket.
+New optional settings (defaults are the production values; names only in `.env.example`): `CONTACT_RECIPIENT` (fixed contact inbox, default `pdassistant.info@gmail.com` since 2026-10-10), `ANALYTICS_RATE_LIMIT_MAX_REQUESTS` (600), `CONTACT_RATE_LIMIT_MAX_REQUESTS` (5). Contact mail uses the existing `MAIL_*`/`SMTP_*` settings; without `MAIL_ENABLED=true` the contact form answers `503 CONTACT_UNAVAILABLE`. Behind a reverse proxy set `TRUSTED_PROXY_CIDRS`, otherwise all visitors share one rate-limit bucket.
 
 ## Canonical smoke and long serial browser suites ? 2026-10-09
 
 Pre-push frontend smoke targets canonical `/tr/ana-sayfa`; legacy `/tr` still redirects308 and Windows PowerShell treats that redirect as an error. The working page must still answer200. Browser suite shared test accounts renew their saved sessions every5min through the existing real CSRF/login API without mounting app UI; snapshot replacement is atomic and timer/browser/pending cleanup belongs to global-setup teardown. This affects ignored QA artifacts only, not token lifetimes or deployment ENV. Final merged gate:649 backend0 failure/error/skip +555 Chromium/1 expected skip, lint/type/build/Docker PASS. See `docs/compliation/2026-10-09-auth-frontend-main-conflict-resolution.md`.
+
+## Retention, contact traps and audit (2026-10-10)
+
+All optional; the defaults are the published retention periods and need no `.env` change (names only in `.env.example`).
+
+- `RETENTION_CRON` (default `0 30 3 * * *`, UTC, Spring six-field cron; `-` switches every purge off), `RETENTION_BATCH_SIZE` (1000 rows per delete statement), `RETENTION_ANALYTICS_MONTHS` (12; sessions by last activity, page views, CTA clicks and client errors follow by `ON DELETE CASCADE`), `RETENTION_USER_SESSIONS_DAYS` (30; revoked or expired sessions only), `RETENTION_CONTACT_MONTHS` (12; `contact_requests` and stored `support_requests`), `RETENTION_AUDIT_MONTHS` (24; `admin_audit_events`). Each purge is its own job (`retention.analytics`, `retention.user-sessions`, `retention.contact`, `retention.audit`), idempotent and logs counts only. With several backend instances every instance runs the purge; this is harmless (the deletes only remove expired rows).
+- Contact form bot traps: `CONTACT_MIN_FILL_TIME` (`PT3S`), `CONTACT_MAX_FORM_AGE` (`PT24H`) and `CONTACT_REQUIRE_STARTED_AT` (`false` while the deployed frontend does not send the form timestamp yet; set `true` afterwards so a submission without it is treated as a bot).
+- The administrator system status (`GET /api/v1/admin/system/status`) lists every background job with its last run and outcome, the active session count, 4xx/5xx counts of the last 24 hours and whether `TOTP_ENCRYPTION_KEY` is set. Job runs and error counters live in memory of the process (a restart empties them; with several instances each reports its own).
+- The audit trail needs no setting; it is written to `admin_audit_events` (V70).
 
 ## Auth hardening settings (2026-10-10)
 

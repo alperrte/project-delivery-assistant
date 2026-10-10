@@ -25,7 +25,7 @@ class SmtpContactMailAdapterTest {
 
     private static MimeMessage compose(ContactMessage message) throws Exception {
         MimeMessage mime = new MimeMessage(Session.getInstance(new Properties()));
-        SmtpContactMailAdapter.compose(mime, "pda-noreply@example.test", "pdassistant@gmail.com", message);
+        SmtpContactMailAdapter.compose(mime, "pda-noreply@example.test", "pdassistant.info@gmail.com", message);
         mime.saveChanges();
         return mime;
     }
@@ -34,18 +34,37 @@ class SmtpContactMailAdapterTest {
     void fromIsThePdaSenderToIsTheFixedRecipientAndReplyToIsTheVisitor() throws Exception {
         MimeMessage mime = compose(MESSAGE);
         assertArrayEquals(new InternetAddress[] {new InternetAddress("pda-noreply@example.test")}, mime.getFrom());
-        assertArrayEquals(new InternetAddress[] {new InternetAddress("pdassistant@gmail.com")},
+        assertArrayEquals(new InternetAddress[] {new InternetAddress("pdassistant.info@gmail.com")},
                 mime.getRecipients(Message.RecipientType.TO));
         assertArrayEquals(new InternetAddress[] {new InternetAddress("ece@example.com")}, mime.getReplyTo());
         assertNull(mime.getRecipients(Message.RecipientType.CC));
         assertNull(mime.getRecipients(Message.RecipientType.BCC));
-        assertEquals("Yeni PDA İletişim Talebi", mime.getSubject());
+        assertEquals("Yeni PDA İletişim Talebi [Genel]", mime.getSubject());
+    }
+
+    @Test
+    void theSubjectAndBodyNameTheCategoryFromAFixedList() throws Exception {
+        for (var entry : java.util.Map.of(com.pda.contact.SupportCategory.GENERAL, "Genel",
+                com.pda.contact.SupportCategory.BUG, "Hata bildirimi",
+                com.pda.contact.SupportCategory.DATA_REQUEST, "KVKK/GDPR veri talebi",
+                com.pda.contact.SupportCategory.ACCESSIBILITY, "Erişilebilirlik").entrySet()) {
+            ContactMessage message = ContactMessage.validated("Ece", null, "ece@example.com",
+                    "Merhaba, bir sorum var.", entry.getKey());
+            assertEquals("Yeni PDA İletişim Talebi [" + entry.getValue() + "]", compose(message).getSubject());
+            assertTrue(SmtpContactMailAdapter.body(message).contains("Kategori:\n" + entry.getValue() + "\n"));
+        }
+    }
+
+    @Test
+    void anAbsentLastNameLeavesTheNameLineWithTheFirstNameOnly() {
+        ContactMessage message = ContactMessage.validated("Ece", null, "ece@example.com", "Merhaba, bir sorum var.");
+        assertTrue(SmtpContactMailAdapter.body(message).contains("Ad Soyad:\nEce\n"), SmtpContactMailAdapter.body(message));
     }
 
     @Test
     void theBodyIsReadablePlainText() throws Exception {
         String body = SmtpContactMailAdapter.body(MESSAGE);
-        assertEquals("Yeni PDA İletişim Talebi\n\nAd Soyad:\nEce Yıldız\n\nE-posta:\nece@example.com\n\n"
+        assertEquals("Yeni PDA İletişim Talebi\n\nKategori:\nGenel\n\nAd Soyad:\nEce Yıldız\n\nE-posta:\nece@example.com\n\n"
                 + "Mesaj:\nMerhaba,\nuygulama hakkında bir sorum var.\n", body);
         assertTrue(compose(MESSAGE).getContentType().startsWith("text/plain"));
     }
@@ -88,7 +107,7 @@ class SmtpContactMailAdapterTest {
     void enabledMailNeedsAHostASenderAndAValidFixedRecipient() {
         MockEnvironment valid = new MockEnvironment().withProperty("MAIL_ENABLED", "true")
                 .withProperty("SMTP_HOST", "localhost").withProperty("MAIL_FROM", "pda@example.test")
-                .withProperty("SMTP_AUTH", "false").withProperty("pda.contact.recipient", "pdassistant@gmail.com");
+                .withProperty("SMTP_AUTH", "false").withProperty("pda.contact.recipient", "pdassistant.info@gmail.com");
         assertTrue(new SmtpContactMailAdapter(valid).available());
         for (String recipient : new String[] {"", "not-an-address", "a@b.co, c@d.co", "Name <a@b.co>"}) {
             MockEnvironment bad = new MockEnvironment().withProperty("MAIL_ENABLED", "true")
@@ -98,6 +117,6 @@ class SmtpContactMailAdapterTest {
         }
         assertThrows(IllegalStateException.class, () -> new SmtpContactMailAdapter(new MockEnvironment()
                 .withProperty("MAIL_ENABLED", "true").withProperty("MAIL_FROM", "pda@example.test")
-                .withProperty("pda.contact.recipient", "pdassistant@gmail.com")));
+                .withProperty("pda.contact.recipient", "pdassistant.info@gmail.com")));
     }
 }

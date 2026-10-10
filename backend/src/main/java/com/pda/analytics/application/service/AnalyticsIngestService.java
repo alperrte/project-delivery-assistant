@@ -1,8 +1,14 @@
 package com.pda.analytics.application.service;
 
+import com.pda.analytics.domain.entity.AnalyticsClientError;
+import com.pda.analytics.domain.entity.AnalyticsCtaClick;
 import com.pda.analytics.domain.entity.AnalyticsPageView;
 import com.pda.analytics.domain.entity.AnalyticsSession;
+import com.pda.analytics.domain.enums.AnalyticsCtaId;
+import com.pda.analytics.domain.enums.AnalyticsErrorKind;
 import com.pda.analytics.domain.enums.AnalyticsEventType;
+import com.pda.analytics.infrastructure.repository.AnalyticsClientErrorRepository;
+import com.pda.analytics.infrastructure.repository.AnalyticsCtaClickRepository;
 import com.pda.analytics.infrastructure.repository.AnalyticsPageViewRepository;
 import com.pda.analytics.infrastructure.repository.AnalyticsSessionRepository;
 import java.net.URI;
@@ -16,32 +22,46 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Applies one validated browser event. The server is the authority: it uses its own clock, derives the traffic source
  * from the first page of a session only, and credits active time only as far as elapsed time allows. Nothing here
- * knows who the visitor is.
+ * knows who the visitor is. CTA clicks and client errors are accepted only for a session the server already knows (it
+ * inherits that session consent version), only with an id from a fixed list, and only up to a per-session limit.
  */
 @Service
 public class AnalyticsIngestService {
 
     /** The most active time one ENGAGEMENT event may add. The browser reports about every 15 seconds. */
     static final int MAX_ENGAGEMENT_PER_EVENT = 120;
-    /** Slack for the browser's coarse timers when comparing reported time with elapsed time. */
+    /** Slack for the browser coarse timers when comparing reported time with elapsed time. */
     static final int ENGAGEMENT_TOLERANCE_SECONDS = 5;
+    /** Call-to-action clicks kept per session; further ones are dropped. */
+    public static final int MAX_CTA_CLICKS_PER_SESSION = 100;
+    /** Client errors kept per session; further ones are dropped (an error loop must not fill the table). */
+    public static final int MAX_CLIENT_ERRORS_PER_SESSION = 50;
 
     private final AnalyticsSessionRepository sessions;
     private final AnalyticsPageViewRepository pageViews;
+    private final AnalyticsCtaClickRepository ctaClicks;
+    private final AnalyticsClientErrorRepository clientErrors;
     private final Clock clock;
     private final String ownHost;
 
     public AnalyticsIngestService(AnalyticsSessionRepository sessions, AnalyticsPageViewRepository pageViews,
+                                  AnalyticsCtaClickRepository ctaClicks, AnalyticsClientErrorRepository clientErrors,
                                   Clock clock, @Value("${FRONTEND_URL:}") String frontendUrl) {
         this.sessions = sessions;
         this.pageViews = pageViews;
+        this.ctaClicks = ctaClicks;
+        this.clientErrors = clientErrors;
         this.clock = clock;
         this.ownHost = hostOf(frontendUrl);
     }
 
+    /**
+     * @param ctaId     CTA_CLICK only, the wire id (checked against {@link AnalyticsCtaId})
+     * @param errorKind CLIENT_ERROR only, the wire id (checked against {@link AnalyticsErrorKind})
+     */
     public record Event(AnalyticsEventType type, UUID visitorId, UUID sessionId, String path, String referrerHost,
                         String utmSource, String utmMedium, String utmCampaign, Integer engagedSeconds,
-                        int consentVersion) {}
+                        int consentVersion, String ctaId, String errorKind) {}
 
     /** The browser sent an engagement event for a session this server never opened (or that was dropped). */
     public static class UnknownSessionException extends RuntimeException {
@@ -60,10 +80,11 @@ public class AnalyticsIngestService {
     @Transactional
     public void record(Event event) {
         Instant now = clock.instant();
-        if (event.type() == AnalyticsEventType.PAGE_VIEW) {
-            recordPageView(event, now);
-        } else {
-            recordEngagement(event, now);
+        switch (event.type()) {
+            case PAGE_VIEW -> recordPageView(event, now);
+            case ENGAGEMENT -> recordEngagement(event, now);
+            case CTA_CLICK -> recordCtaClick(event, now);
+            case CLIENT_ERROR -> recordClientError(event, now);
         }
     }
 
@@ -86,11 +107,35 @@ public class AnalyticsIngestService {
         if (event.engagedSeconds() == null) {
             throw new IllegalArgumentException("engagedSeconds is required for ENGAGEMENT");
         }
+        AnalyticsSession session = lockedSessionOf(event);
+        session.addEngagement(event.engagedSeconds(), now, MAX_ENGAGEMENT_PER_EVENT, ENGAGEMENT_TOLERANCE_SECONDS);
+    }
+
+    private void recordCtaClick(Event event, Instant now) {
+        AnalyticsCtaId cta = AnalyticsCtaId.parse(event.ctaId())
+                .orElseThrow(() -> new IllegalArgumentException("Unknown call-to-action id"));
+        AnalyticsSession session = lockedSessionOf(event);
+        if (ctaClicks.countBySessionId(session.getId()) < MAX_CTA_CLICKS_PER_SESSION) {
+            ctaClicks.save(AnalyticsCtaClick.of(session.getId(), cta.id(), now));
+        }
+    }
+
+    private void recordClientError(Event event, Instant now) {
+        AnalyticsErrorKind kind = AnalyticsErrorKind.parse(event.errorKind())
+                .orElseThrow(() -> new IllegalArgumentException("Unknown client error kind"));
+        AnalyticsSession session = lockedSessionOf(event);
+        if (clientErrors.countBySessionId(session.getId()) < MAX_CLIENT_ERRORS_PER_SESSION) {
+            clientErrors.save(AnalyticsClientError.of(session.getId(), event.path(), kind, now));
+        }
+    }
+
+    /** The row-locked session of the event; concurrent events of one session are applied one after the other. */
+    private AnalyticsSession lockedSessionOf(Event event) {
         AnalyticsSession session = sessions.lockById(event.sessionId()).orElseThrow(UnknownSessionException::new);
         if (!session.belongsTo(event.visitorId())) {
             throw new VisitorMismatchException();
         }
-        session.addEngagement(event.engagedSeconds(), now, MAX_ENGAGEMENT_PER_EVENT, ENGAGEMENT_TOLERANCE_SECONDS);
+        return session;
     }
 
     private static String hostOf(String url) {

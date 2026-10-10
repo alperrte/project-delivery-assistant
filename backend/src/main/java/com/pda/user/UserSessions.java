@@ -41,5 +41,8 @@ public interface UserSessions {
 
     long countActive(UUID userId, Instant now);
 
+    /** Active (not revoked, not expired) sessions of every account; for the administrator system status. */
+    long countAllActive(Instant now);
+
     record SessionView(UUID id, Instant createdAt, Instant lastUsedAt, Instant expiresAt, String userAgent) {}
 }

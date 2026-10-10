@@ -4,7 +4,9 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -32,8 +34,14 @@ public interface UserAdministration {
     /** Disables the account and revokes all its sessions. An administrator cannot disable self or the last active one. */
     StatusOutcome disable(UUID actorId, UUID targetId, Instant now);
 
-    /** Re-enables a DISABLED account; idempotent for other statuses. */
-    StatusOutcome enable(UUID targetId);
+    /** Re-enables a DISABLED account; idempotent for other statuses. {@code actorId} is only used for the log line. */
+    StatusOutcome enable(UUID actorId, UUID targetId);
+
+    /**
+     * Nicknames of the given accounts for display in the administration (audit trail): any account that still exists and
+     * has not been anonymised, whatever its status. Unknown and deleted accounts are simply absent. Never returns an email.
+     */
+    Map<UUID, String> nicknames(Set<UUID> userIds);
 
     UserCounts counts();
 
