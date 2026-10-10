@@ -1,6 +1,27 @@
 import { z } from "zod";
 
+/**
+ * The same rule the backend enforces (StrongPasswordValidator): 8-128 characters with at least one uppercase
+ * letter, one digit and one special character (anything that is not a letter, digit or whitespace).
+ */
+export const PASSWORD_RULES = [
+  { key: "length", test: (value: string) => value.length >= 8 },
+  { key: "upper", test: (value: string) => /\p{Lu}/u.test(value) },
+  { key: "digit", test: (value: string) => /\p{Nd}/u.test(value) },
+  { key: "special", test: (value: string) => /[^\p{L}\p{N}\s]/u.test(value) },
+] as const;
+
 /** Messages are i18n keys under `validation`; forms translate them on render. */
+const strongPassword = z
+  .string()
+  .min(1, "required")
+  .max(128, "passwordMax")
+  .superRefine((value, ctx) => {
+    if (!PASSWORD_RULES.every((rule) => rule.test(value))) ctx.addIssue({ code: "custom", message: "passwordWeak" });
+  });
+
+const code = z.string().regex(/^[0-9]{6}$/, "code");
+
 export const loginSchema = z.object({
   email: z.string().min(1, "required").email("email"),
   password: z.string().min(1, "required"),
@@ -12,7 +33,7 @@ export const registerSchema = z
   .object({
     email: z.string().min(1, "required").email("email"),
     nickname: z.string().regex(/^[\p{L}\p{N}_]{3,32}$/u, "nickname"),
-    password: z.string().min(8, "passwordMin").max(128, "passwordMax"),
+    password: strongPassword,
     confirmPassword: z.string().min(1, "required"),
   })
   .refine((v) => v.password === v.confirmPassword, {
@@ -24,10 +45,12 @@ export const forgotPasswordSchema = z.object({
   email: z.string().min(1, "required").email("email"),
 });
 
+export const verificationCodeSchema = z.object({ code });
+
+/** Third step of "forgot password": the code was already exchanged for a ticket cookie, so only the passwords remain. */
 export const resetPasswordSchema = z
   .object({
-    code: z.string().regex(/^[0-9]{6}$/, "code"),
-    newPassword: z.string().min(8, "passwordMin").max(128, "passwordMax"),
+    newPassword: strongPassword,
     confirmPassword: z.string().min(1, "required"),
   })
   .refine((v) => v.newPassword === v.confirmPassword, {
@@ -38,7 +61,7 @@ export const resetPasswordSchema = z
 export const changePasswordSchema = z
   .object({
     currentPassword: z.string().min(1, "required"),
-    newPassword: z.string().min(8, "passwordMin").max(128, "passwordMax"),
+    newPassword: strongPassword,
     confirmNewPassword: z.string().min(1, "required"),
   })
   .refine((v) => v.newPassword === v.confirmNewPassword, {
@@ -46,8 +69,29 @@ export const changePasswordSchema = z
     message: "passwordMatch",
   });
 
+/** Authenticator code (6 digits) or one of the single-use backup codes (xxxxx-xxxxx style, case-insensitive). */
+export const secondFactorSchema = z.object({
+  code: z.string().trim().min(6, "code").max(32, "code"),
+});
+
+/** Turning two-step verification off: the password (empty for accounts without one) plus an authenticator or backup code. */
+export const disableTwoFactorSchema = z.object({
+  password: z.string().max(128, "passwordMax"),
+  code: z.string().trim().min(6, "code").max(32, "code"),
+});
+
+export const deleteAccountSchema = z.object({
+  email: z.string().min(1, "required").email("email"),
+  password: z.string().max(128, "passwordMax"),
+  code: z.string().max(32, "code"),
+});
+
 export type LoginValues = z.infer<typeof loginSchema>;
 export type RegisterValues = z.infer<typeof registerSchema>;
 export type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
+export type VerificationCodeValues = z.infer<typeof verificationCodeSchema>;
 export type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
 export type ChangePasswordValues = z.infer<typeof changePasswordSchema>;
+export type SecondFactorValues = z.infer<typeof secondFactorSchema>;
+export type DisableTwoFactorValues = z.infer<typeof disableTwoFactorSchema>;
+export type DeleteAccountValues = z.infer<typeof deleteAccountSchema>;

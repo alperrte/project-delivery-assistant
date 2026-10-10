@@ -103,7 +103,8 @@ test("session service 503 shows availability screen and recovers after retry", a
 test("expired session still redirects to login instead of a 403 screen", async ({ page }) => {
   await mockApi(page, path => path.endsWith("/auth/me") ? 401 : path.endsWith("/auth/refresh") ? 403 : 200);
   await page.goto("/settings");
-  await expect(page).toHaveURL(/\/tr\/giris$/);
+  // The login page also says why (?reason=session-expired) and where to return to (?next=).
+  await expect(page).toHaveURL(/\/tr\/giris\?reason=session-expired&next=%2Ftr%2Fayarlar$/);
   await expect(page.locator('[data-error-code="403"]')).toHaveCount(0);
 });
 

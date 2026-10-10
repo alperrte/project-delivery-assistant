@@ -31,6 +31,28 @@ export async function mailsContaining(marker: string): Promise<MailpitMessage[]>
   return Promise.all(found.messages.map((summary) => json<MailpitMessage>(`/api/v1/message/${summary.ID}`)));
 }
 
+/** Every message addressed to one recipient, newest first. */
+export async function mailsTo(address: string): Promise<MailpitMessage[]> {
+  return mailsContaining(`to:"${address}"`);
+}
+
+/**
+ * The 6-digit code of the newest mail to `address`, once more than `alreadySeen` mails have arrived there. Pass the
+ * count from before triggering a new mail, so an earlier code is never picked up by mistake.
+ */
+export async function waitForCode(address: string, alreadySeen = 0, timeoutMs = 20_000): Promise<string> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const mails = await mailsTo(address);
+    if (mails.length > alreadySeen) {
+      const code = /\b(\d{6})\b/.exec(mails[0].Text)?.[1];
+      if (code) return code;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 400));
+  }
+  throw new Error(`No code mail for ${address} within ${timeoutMs} ms`);
+}
+
 export async function mailpitAvailable(): Promise<boolean> {
   try {
     return (await fetch(`${MAILPIT}/livez`)).ok;

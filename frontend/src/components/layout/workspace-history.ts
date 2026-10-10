@@ -48,10 +48,15 @@ export function currentHistorySnapshot(ready=true){
 export function subscribeHistory(notify:()=>void) {
   const native=nativeHistory();
   if(!native||typeof native.addEventListener!=="function")return ()=>{};
+  // Next's router calls history.pushState inside an insertion effect and the Navigation API reports it synchronously;
+  // React forbids scheduling an update from there ("useInsertionEffect must not schedule updates"), so the store is
+  // told once the running commit is over. Events of the same turn collapse into one notification.
+  let active=true,queued=false;
+  const deferred=()=>{if(queued)return;queued=true;queueMicrotask(()=>{queued=false;if(active)notify();});};
   const events=["currententrychange","navigatesuccess","navigateerror"];
-  for(const event of events)native.addEventListener(event,notify);
-  window.addEventListener("pageshow",notify);window.addEventListener("popstate",notify);
-  return ()=>{for(const event of events)native.removeEventListener(event,notify);window.removeEventListener("pageshow",notify);window.removeEventListener("popstate",notify);};
+  for(const event of events)native.addEventListener(event,deferred);
+  window.addEventListener("pageshow",deferred);window.addEventListener("popstate",deferred);
+  return ()=>{active=false;for(const event of events)native.removeEventListener(event,deferred);window.removeEventListener("pageshow",deferred);window.removeEventListener("popstate",deferred);};
 }
 export function attemptHistoryTraversal(direction:typeof HISTORY_BACK|typeof HISTORY_FORWARD,action:()=>void,ready=true) {
   const snapshot=currentHistorySnapshot(ready);

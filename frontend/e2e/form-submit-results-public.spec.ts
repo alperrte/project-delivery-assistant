@@ -164,7 +164,7 @@ test.describe("Gönderim sonuçları (herkese açık): başarı", () => {
     await page.getByLabel(tr.forgotPassword.email, { exact: true }).fill("kisi@example.test");
     await submit(page).click();
     await expect(page.getByText(tr.forgotPassword.codeSentTitle)).toBeVisible();
-    await expect(page.getByLabel(tr.forgotPassword.code, { exact: true })).toBeVisible();
+    await expect(page.getByLabel(tr.codeEntry.label, { exact: true })).toBeVisible();
     expect(seen.count).toBe(1);
   });
 

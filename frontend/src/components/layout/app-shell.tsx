@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode, type ComponentProps, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type ReactNode, type ComponentProps, type CSSProperties } from "react";
 import Link from "./workspace-link";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
@@ -56,15 +56,23 @@ export function AppShell({ children }: { children: ReactNode }) {
   // the real preference (if collapsed) applies a frame later, same pattern as
   // the last-selected-project memory in project-sidebar-nav.tsx.
   const collapsed = useSidebarCollapsed();
+  // A deliberate sign-out also ends the session, but without the "your session ended" notice.
+  const signingOut = useRef(false);
+
+  // Back to the login screen with the notice, and the page the person was on so the sign-in returns there.
+  const leaveExpiredSession = () => {
+    const here = `${window.location.pathname}${window.location.search}`;
+    router.replace(`/login?reason=session-expired&next=${encodeURIComponent(here)}`);
+  };
 
   useEffect(() => {
-    if (!sessionExpired) return;
+    if (!sessionExpired || signingOut.current) return;
     clearPrivateInvitations(queryClient);
     clearPrivateNotifications(queryClient);
     clearPrivateTeams(queryClient);
     clearPrivateAdmin(queryClient);
     restoreBaseline();
-    router.replace("/login");
+    leaveExpiredSession();
     // `restoreBaseline` is recreated every render; the session ending is the only trigger that matters.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionExpired, router]);
@@ -78,7 +86,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       clearPrivateAdmin(queryClient);
       restoreBaseline();
       queryClient.removeQueries({ queryKey: sessionQueryKey });
-      router.replace("/login");
+      if (signingOut.current) return;
+      leaveExpiredSession();
     };
     window.addEventListener(SESSION_EXPIRED_EVENT, sessionEnded);
     return () => window.removeEventListener(SESSION_EXPIRED_EVENT, sessionEnded);
@@ -86,6 +95,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, [queryClient, router]);
 
   async function handleLogout() {
+    signingOut.current = true;
     clearPrivateInvitations(queryClient);
     clearPrivateNotifications(queryClient);
     clearPrivateTeams(queryClient);

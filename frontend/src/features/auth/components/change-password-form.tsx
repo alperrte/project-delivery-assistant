@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -14,6 +14,7 @@ import { errorKey } from "@/lib/api/error-message";
 import { authApi } from "../api";
 import { useSession, sessionQueryKey } from "../hooks/use-session";
 import { changePasswordSchema, type ChangePasswordValues } from "../schemas";
+import { PasswordRules } from "./password-rules";
 import { useShake } from "./use-shake";
 
 /**
@@ -34,8 +35,10 @@ export function ChangePasswordForm() {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<ChangePasswordValues>({ resolver: zodResolver(changePasswordSchema) });
+  const newPassword = useWatch({ control, name: "newPassword" }) ?? "";
 
   useEffect(() => {
     if (!isLoading && (isError || !user)) router.replace("/login");
@@ -77,6 +80,7 @@ export function ChangePasswordForm() {
             error={errors.newPassword && tv(errors.newPassword.message!)}
             {...register("newPassword")}
           />
+          <PasswordRules value={newPassword} />
           <FormField
             label={t("confirmNewPassword")}
             placeholder={t("confirmNewPasswordPlaceholder")}

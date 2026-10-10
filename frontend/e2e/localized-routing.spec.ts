@@ -335,3 +335,30 @@ test("public canonical, hreflang, sitemap and robots agree on localized paths", 
   await page.goto("/tr/sifremi-unuttum");
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
 });
+
+test("the mail-code and account-deletion pages have a named URL per language, are noindex and stay out of the sitemap", async ({ request }) => {
+  for (const [path, locale] of [
+    ["/tr/e-posta-dogrula", "tr"], ["/en/verify-email", "en"], ["/de/email-bestaetigen", "de"],
+    ["/tr/hesap-sil", "tr"], ["/en/delete-account", "en"], ["/de/konto-loeschen", "de"],
+  ]) {
+    const response = await request.get(path);
+    expect(response.status(), path).toBe(200);
+    const html = await response.text();
+    expect(html, path).toContain(`<html lang="${locale}"`);
+    expect(html, path).toMatch(/<meta name="robots" content="[^"]*noindex/);
+  }
+  // The unprefixed English slug picks the visitor's language instead of serving a second copy.
+  const redirect = await request.get("/verify-email", { maxRedirects: 0, headers: { Cookie: "NEXT_LOCALE=tr" } });
+  expect([307, 308]).toContain(redirect.status());
+  expect(redirect.headers()["location"]).toContain("/tr/e-posta-dogrula");
+
+  const sitemap = await (await request.get("/sitemap.xml")).text();
+  for (const slug of ["e-posta-dogrula", "verify-email", "email-bestaetigen", "hesap-sil", "delete-account", "konto-loeschen"]) {
+    expect(sitemap).not.toContain(slug);
+  }
+  // `noindex` is only read when crawlers may fetch the page, so robots.txt leaves both open.
+  const robots = await (await request.get("/robots.txt")).text();
+  for (const slug of ["e-posta-dogrula", "verify-email", "hesap-sil", "delete-account"]) {
+    expect(robots).not.toContain(slug);
+  }
+});

@@ -1,7 +1,7 @@
 import { test,expect } from "@playwright/test";
 import { historySnapshot,subscribeHistory,attemptHistoryTraversal,HISTORY_BACK,HISTORY_FORWARD } from "../src/components/layout/workspace-history";
 
-test("native adapter distinguishes unknown/no-entry, rechecks capabilities and cleans subscriptions",()=>{
+test("native adapter distinguishes unknown/no-entry, rechecks capabilities and cleans subscriptions",async()=>{
  expect(historySnapshot(undefined)).toBe(0);expect(historySnapshot({currentEntry:null,canGoBack:false,canGoForward:false})).toBe(0);
  expect(historySnapshot({currentEntry:{index:0},canGoBack:false,canGoForward:false})).toBe(1);
  const native=Object.assign(new EventTarget(),{currentEntry:{index:1},canGoBack:true,canGoForward:false,entries:()=>[{index:0,url:"https://pda.test/tr/genel-bakis"},{index:1,url:"https://pda.test/tr/projeler"}]});
@@ -9,10 +9,13 @@ test("native adapter distinguishes unknown/no-entry, rechecks capabilities and c
  Object.defineProperty(globalThis,"window",{configurable:true,value:fake});
  try {
   let notifications=0,calls=0;const cleanup=subscribeHistory(()=>notifications++);
-  native.dispatchEvent(new Event("currententrychange"));fake.dispatchEvent(new Event("pageshow"));fake.dispatchEvent(new Event("popstate"));expect(notifications).toBe(3);
+  // Notifications are deferred past the running commit (Next calls pushState inside an insertion effect) and collapse per turn.
+  native.dispatchEvent(new Event("currententrychange"));expect(notifications).toBe(0);await Promise.resolve();expect(notifications).toBe(1);
+  fake.dispatchEvent(new Event("pageshow"));fake.dispatchEvent(new Event("popstate"));await Promise.resolve();expect(notifications).toBe(2);
   expect(attemptHistoryTraversal(HISTORY_BACK,()=>calls++)).toBe(true);native.canGoBack=false;
   expect(attemptHistoryTraversal(HISTORY_BACK,()=>calls++)).toBe(false);expect(attemptHistoryTraversal(HISTORY_FORWARD,()=>calls++)).toBe(false);expect(calls).toBe(1);
-  cleanup();native.dispatchEvent(new Event("navigateerror"));native.dispatchEvent(new Event("currententrychange"));fake.dispatchEvent(new Event("pageshow"));expect(notifications).toBe(3);
+  native.dispatchEvent(new Event("currententrychange"));cleanup();await Promise.resolve();expect(notifications).toBe(2);
+  native.dispatchEvent(new Event("navigateerror"));native.dispatchEvent(new Event("currententrychange"));fake.dispatchEvent(new Event("pageshow"));await Promise.resolve();expect(notifications).toBe(2);
  }finally{if(descriptor)Object.defineProperty(globalThis,"window",descriptor);else Reflect.deleteProperty(globalThis,"window");}
 });
 
