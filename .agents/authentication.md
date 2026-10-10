@@ -63,6 +63,7 @@ Tarayıcı ile backend farklı origin'lerdeyse izinli origin'leri açıkça tan�
 - **Admin-doğrulanmış oturum.** `/api/v1/admin/**` yalnız `user_sessions.admin_verified_at` dolu oturumla çalışır (yalnız yukarıdaki iki başarı yolu doldurur; refresh aynı satırı döndürdüğü için korunur). Eski admin oturumu `403 admin_reauthentication_required` alır; admin `/pd-admin`'den yeniden girer. Ayrıntı ve tablo: `.agents/SECURITY.md` son bölüm, uç nokta özeti: `.agents/api.md`.
 - **2FA tüm adminler için zorunludur**: `POST /auth/2fa/disable` ADMIN için `403 admin_two_factor_required` döner; yedek kod yenileme kalır. `TOTP_ENCRYPTION_KEY` yok ya da değişmişse admin girişi ve tüm ikinci adım yolları `503 two_factor_unavailable` verir (500 değil).
 - **Kurtarma.** 10 yedek kod (kurulumda bir kez gösterilir). Hepsi kaybolursa operasyon, ilgili adminin `totp_credentials` ve `totp_recovery_codes` satırlarını siler; sonraki `/pd-admin` girişi yeniden kurulum ister. ENV ile tetiklenen sıfırlama **FOLLOW-UP SECURITY FEATURE** olarak uygulanmadı.
+- **Frontend (2026-10-10).** `/pd-admin` ayrı rota/özelliktir (`app/pd-admin/`, `features/admin-auth/`); normal Login'de admin arayüzü yoktur ve `/pd-admin` hiçbir public yüzeyde bağlanmaz. Başarılı girişte panele (`/admin/users`) gidilir; `AdminArea` yalnız `adminVerified` oturumda içerik çizer, değilse `/pd-admin`'e yönlendirir. Ayrıntı: `.agents/frontend-design-rules.md`.
 
 ## Güvenlik kontrolleri ve testler
 

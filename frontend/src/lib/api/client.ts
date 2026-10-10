@@ -161,6 +161,10 @@ export async function renewAccessSession(): Promise<boolean> {
 const NO_REFRESH = [
   "/auth/login",
   "/auth/login/2fa",
+  "/auth/admin/login",
+  "/auth/admin/login/2fa",
+  "/auth/admin/2fa/setup",
+  "/auth/admin/2fa/enable",
   "/auth/register",
   "/auth/register/invitation",
   "/auth/register/verify",

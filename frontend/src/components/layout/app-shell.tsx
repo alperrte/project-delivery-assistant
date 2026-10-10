@@ -30,6 +30,8 @@ import { clearPrivateInvitations } from "@/features/invitations/query-keys";
 import { clearPrivateNotifications } from "@/features/notifications/query-keys";
 import { clearPrivateTeams } from "@/features/squads/cache";
 import { clearPrivateAdmin } from "@/features/admin/query-keys";
+import { clearPrivateAuth } from "@/features/auth/query-keys";
+import { ADMIN_ENTRY_PATH, matchPath } from "@/i18n/routing";
 import { useApplySavedPreferences, useRestoreSessionBaseline } from "@/features/settings/session-preferences";
 
 import { useIncomingInvitationCount } from "@/features/invitations/hooks";
@@ -60,9 +62,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   const signingOut = useRef(false);
 
   // Back to the login screen with the notice, and the page the person was on so the sign-in returns there.
+  // An administrator cannot sign in through the regular login (it answers them like a wrong password), so a session that
+  // ends inside the administration area goes back to the administrator sign-in instead.
   const leaveExpiredSession = () => {
     const here = `${window.location.pathname}${window.location.search}`;
-    router.replace(`/login?reason=session-expired&next=${encodeURIComponent(here)}`);
+    const inAdminArea = !!matchPath(window.location.pathname)?.route.startsWith("/admin");
+    router.replace(`${inAdminArea ? ADMIN_ENTRY_PATH : "/login"}?reason=session-expired&next=${encodeURIComponent(here)}`);
   };
 
   useEffect(() => {
@@ -71,6 +76,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     clearPrivateNotifications(queryClient);
     clearPrivateTeams(queryClient);
     clearPrivateAdmin(queryClient);
+    clearPrivateAuth(queryClient);
     restoreBaseline();
     leaveExpiredSession();
     // `restoreBaseline` is recreated every render; the session ending is the only trigger that matters.
@@ -84,6 +90,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       clearPrivateNotifications(queryClient);
       clearPrivateTeams(queryClient);
       clearPrivateAdmin(queryClient);
+      clearPrivateAuth(queryClient);
       restoreBaseline();
       queryClient.removeQueries({ queryKey: sessionQueryKey });
       if (signingOut.current) return;
@@ -100,6 +107,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     clearPrivateNotifications(queryClient);
     clearPrivateTeams(queryClient);
     clearPrivateAdmin(queryClient);
+    clearPrivateAuth(queryClient);
     try {
       await authApi.logout();
     } finally {
@@ -107,6 +115,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       clearPrivateNotifications(queryClient);
       clearPrivateTeams(queryClient);
       clearPrivateAdmin(queryClient);
+      clearPrivateAuth(queryClient);
       restoreBaseline();
       queryClient.removeQueries({ queryKey: sessionQueryKey });
       router.replace("/login");
@@ -212,7 +221,7 @@ export function AppShellView({ children, pathname, user, collapsed = false, onLo
           </Link>
         </nav>
         <div className={cn("space-y-1 p-3", narrow && "px-2")}>
-          {user?.globalRole === "ADMIN" && (
+          {user?.globalRole === "ADMIN" && user.adminVerified && (
             <Link
               href="/admin/users"
               onClick={() => setMenuOpen(false)}

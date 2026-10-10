@@ -211,6 +211,7 @@ test("landing follows live changes to the global semantic palette", async ({ pag
     document.documentElement.style.setProperty("--foreground", "#302718");
     document.documentElement.style.setProperty("--primary", "#34613d");
   });
-  expect(await page.locator("#landing-main").evaluate(el => getComputedStyle(el.parentElement!).backgroundColor)).toBe("rgb(245, 235, 219)");
+  // Auto-waiting: a one-shot read right after setProperty can still see the first frame of the (0.01ms) transition.
+  await expect(page.locator("#landing-main").locator("xpath=..")).toHaveCSS("background-color", "rgb(245, 235, 219)");
   await expect(page.locator('main a[href="/tr/kayit"]')).toHaveCSS("background-color", "rgb(52, 97, 61)");
 });

@@ -25,7 +25,7 @@ import { useAutoHide } from "./use-auto-hide";
 import { WorkspaceHistoryControls } from "./workspace-history-controls";
 import { NotificationsMenu } from "@/features/notifications/notifications-menu";
 
-type SessionUser = { id?: string; nickname?: string; email?: string; globalRole?: string; profilePhotoVersion?: number | null } | null | undefined;
+type SessionUser = { id?: string; nickname?: string; email?: string; globalRole?: string; adminVerified?: boolean; profilePhotoVersion?: number | null } | null | undefined;
 
 /**
  * Glass navbar centered on the physical viewport, independent of sidebar
@@ -109,7 +109,7 @@ export function AppHeader({
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem render={<Link href="/account" />}>{tw("accountSettings")}</DropdownMenuItem>
-              {user?.globalRole === "ADMIN" && (
+              {user?.globalRole === "ADMIN" && user.adminVerified && (
                 <DropdownMenuItem render={<Link href="/admin/users" />}>{ta("nav.label")}</DropdownMenuItem>
               )}
               <DropdownMenuSeparator />

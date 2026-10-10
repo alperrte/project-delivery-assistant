@@ -1,7 +1,7 @@
 import { test, expect, type Browser, type Page } from "@playwright/test";
 import { FRESH_VISITOR } from "./consent-state";
 import { promoteToAdmin } from "./db";
-import { chooseDate, registerUser, uniqueUser } from "./helpers";
+import { adminSignIn, chooseDate, registerUser, uniqueUser } from "./helpers";
 
 // The administration analytics dashboard. Counts that must move are proven on the real stack; presentation cases
 // (language, duration format, empty/error states) use a simulated API answer ONLY for what the screen shows.
@@ -15,6 +15,8 @@ async function newAdmin(browser: Browser, options: { timezoneId?: string; locale
   const user = uniqueUser("dash");
   await registerUser(page, user);
   promoteToAdmin(user.email);
+  // The administrator sign-in (password + authenticator) is the only way into the panel; the page language is still Turkish here.
+  await adminSignIn(page, user);
   return { context, page, user };
 }
 

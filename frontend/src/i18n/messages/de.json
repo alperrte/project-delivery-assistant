@@ -156,7 +156,9 @@
     "deletionLinkExpired": "Der Löschlink ist abgelaufen. Fordern Sie in den Kontoeinstellungen einen neuen an.",
     "deletionCredentialsInvalid": "E-Mail oder Passwort ist falsch.",
     "ownsResources": "Übertragen oder löschen Sie zuerst die Projekte und Organisationen, die Ihnen gehören.",
-    "administratorCannotDelete": "Administratorkonten können hier nicht gelöscht werden."
+    "administratorCannotDelete": "Administratorkonten können hier nicht gelöscht werden.",
+    "adminReauthenticationRequired": "Der Verwaltungsbereich erfordert die separate Administratoranmeldung. Bitte melden Sie sich dort erneut an.",
+    "adminTwoFactorRequired": "Die Zwei-Schritt-Bestätigung ist für Administratorkonten verpflichtend und kann nicht ausgeschaltet werden."
   },
   "app": {
     "nav": {
@@ -1288,6 +1290,63 @@
     "useBackupCode": "Backup-Code verwenden",
     "useAppCode": "Authenticator-Code verwenden",
     "twoFactorBack": "Zurück zur Anmeldung"
+  },
+  "adminLogin": {
+    "metaTitle": "Administratoranmeldung",
+    "metaDescription": "Die separate Administratoranmeldung für den PDA-Verwaltungsbereich.",
+    "eyebrow": "Administratorbereich",
+    "title": "PDA-Administratoranmeldung",
+    "subtitle": "Dieser Bereich ist nur für Administratoren. Zum Fortfahren benötigen Sie E-Mail, Passwort und Ihren Authenticator-Code.",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "emailPlaceholder": "admin@beispiel.de",
+    "passwordPlaceholder": "Passwort eingeben",
+    "submit": "Weiter",
+    "submitting": "Wird geprüft...",
+    "checking": "Sitzung wird geprüft",
+    "notices": {
+      "sessionExpired": "Ihre Administratorsitzung ist abgelaufen. Melden Sie sich erneut an, um fortzufahren.",
+      "reauthenticate": "Der Verwaltungsbereich erfordert die Administratoranmeldung. Bitte melden Sie sich hier erneut an.",
+      "ticketExpired": "Die Bestätigung ist abgelaufen. Bitte beginnen Sie erneut mit E-Mail und Passwort."
+    },
+    "totp": {
+      "title": "Zwei-Schritt-Bestätigung",
+      "subtitle": "Geben Sie den 6-stelligen Code aus Ihrer Authenticator-App ein.",
+      "backupSubtitle": "Geben Sie einen Ihrer Backup-Codes ein. Jeder Code funktioniert nur einmal.",
+      "code": "Bestätigungscode",
+      "backupCode": "Backup-Code",
+      "backupPlaceholder": "xxxxx-xxxxx",
+      "submit": "Bestätigen und anmelden",
+      "submitting": "Wird geprüft...",
+      "useBackup": "Backup-Code verwenden",
+      "useApp": "Authenticator-Code verwenden",
+      "back": "Zurück zu E-Mail und Passwort"
+    },
+    "enroll": {
+      "title": "Authenticator verbinden",
+      "subtitle": "Die Zwei-Schritt-Bestätigung ist für Administratorkonten verpflichtend. Diese Einrichtung erfolgt nur bei der ersten Anmeldung.",
+      "step1": "Öffnen Sie Google Authenticator oder eine andere TOTP-App auf Ihrem Telefon.",
+      "step2": "Fügen Sie in der App ein neues Konto hinzu und scannen Sie den QR-Code unten.",
+      "qrLabel": "QR-Code für die Authenticator-Einrichtung",
+      "manualKey": "Wenn Sie den QR-Code nicht scannen können, geben Sie diesen Schlüssel in der App ein (zeitbasierter Schlüssel):",
+      "copy": "Schlüssel kopieren",
+      "copied": "Kopiert",
+      "copyFailed": "Kopieren nicht möglich. Geben Sie den Schlüssel von Hand ein.",
+      "step3": "Geben Sie den 6-stelligen Code ein, den die App anzeigt.",
+      "code": "Bestätigungscode",
+      "submit": "Bestätigen und aktivieren",
+      "submitting": "Wird geprüft...",
+      "back": "Zurück zu E-Mail und Passwort"
+    },
+    "codes": {
+      "title": "Backup-Codes speichern",
+      "warning": "Wenn Sie keinen Zugriff auf Ihr Telefon haben, können Sie sich mit diesen Codes anmelden. Jeder Code funktioniert nur einmal und wird nicht erneut angezeigt; speichern Sie sie sicher, bevor Sie diese Seite verlassen.",
+      "listLabel": "Backup-Codes",
+      "copy": "Codes kopieren",
+      "copied": "Kopiert",
+      "copyFailed": "Kopieren nicht möglich. Notieren Sie die Codes.",
+      "saved": "Gespeichert, Verwaltung öffnen"
+    }
   },
   "register": {
     "metaDescription": "Erstellen Sie ein PDA-Konto, richten Sie Ihr Projekt ein, laden Sie Ihr Team ein und liefern Sie gemeinsam.",
@@ -3505,6 +3564,7 @@
       "on": "Aktiv",
       "off": "Aus",
       "unavailable": "Die Zwei-Schritt-Bestätigung ist auf diesem Server noch nicht eingerichtet.",
+      "adminRequired": "Die Zwei-Schritt-Bestätigung ist für Administratorkonten verpflichtend und kann nicht ausgeschaltet werden.",
       "enable": "Zwei-Schritt-Bestätigung aktivieren",
       "preparing": "Wird vorbereitet...",
       "scanTitle": "1. QR-Code scannen",

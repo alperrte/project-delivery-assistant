@@ -278,3 +278,7 @@ Kapsam yalnız aşağıdaki değişikliklerdir; hiçbir global madde `[x]` yapı
 ## Ekip üyesi kartı scoped verification - 2026-10-10 (squad-service-backend)
 
 Kapsam yalnız Ekipler kart görünümündeki üye kutusudur (avatar, tam ad, ana rol + "+N"); hiçbir global madde `[x]` yapılmadı. Kullanıcı geri bildirimiyle ad/rol kısaltılmaz (wrap); 320/390/768/1024/1440 x light/dark yatay taşma ve kırpılma yok, tooltip + `aria-label` tüm rolleri verir, üye başına ek istek yok (Responsive/Dark Mode/Accessibility maddeleri yalnız bu yüzey için kanıtlandı). Ayrıntı: `docs/compliation/2026-10-10-squad-service-teams-member-cards.md`.
+
+## Ayrı yönetici girişi `/pd-admin` scoped verification - 2026-10-10 (auth-service-frontend)
+
+Kapsam yalnız `/pd-admin` yüzeyidir; hiçbir global madde `[x]` yapılmadı. Etkilenen maddeler: **robots.txt / sitemap** (`[x]` kalır: `/pd-admin` robots, sitemap ve `llms.txt` içinde yoktur, hiçbir public sayfa ona bağlanmaz, sayfa `noindex` meta + `X-Robots-Tag` taşır; gizlilik güvenlik değildir, yetki backend'dedir), **Unique Page Title** (`[ ]` kalır: yalnız bu sayfanın başlığı "Yönetici girişi · PDA" TR/EN/DE doğrulandı), **Keyboard Navigation / Focus State** (`[ ]` kalır: yalnız bu sayfanın adımları Tab/Enter/Shift+Tab ile tamamlanır, adım başlığına odak taşınır, 44 px hedefler). 320/390/768/1024/1440 px light/dark yatay taşma yok. Sonuçlar: `docs/compliation/2026-10-10-auth-service-frontend-admin-login.md`.

@@ -66,6 +66,13 @@ export const PAGE_ROUTES = [
 
 export type PageRoute = (typeof PAGE_ROUTES)[number];
 
+/**
+ * The separate administrator sign-in. Deliberately NOT a page route: it is one unprefixed address (no `/tr`, no
+ * translated segment), its language comes from the NEXT_LOCALE cookie or Accept-Language, and no public surface links
+ * to it. Hiding it is not a security control; the backend authorizes every admin request on its own.
+ */
+export const ADMIN_ENTRY_PATH = "/pd-admin";
+
 /** The English keys are the physical App Router segments. Dynamic values never pass through this table. */
 const SEGMENTS: Record<Locale, Record<string, string>> = {
   en: {},
@@ -259,6 +266,8 @@ export function localizeHref(href: string, locale: Locale): string {
 }
 
 export function switchLocale(pathname: string, search: string, target: Locale, hash = ""): string {
+  // The administrator sign-in has no localized form: stay on it, the cookie carries the language.
+  if (pathname === ADMIN_ENTRY_PATH) return `${pathname}${search}${hash}`;
   const current = matchPath(pathname, target);
   return current
     ? `${buildPath(current.route, current.params, target)}${search}${hash}`
