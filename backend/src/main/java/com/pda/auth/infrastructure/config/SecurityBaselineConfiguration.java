@@ -178,6 +178,7 @@ public class SecurityBaselineConfiguration {
                             .requestMatchers(HttpMethod.DELETE, "/api/v1/projects/*/chat/conversations/*/messages/*/reactions/*").authenticated()
                             .requestMatchers(HttpMethod.PATCH, "/api/v1/notifications/read-all",
                                     "/api/v1/notifications/*/read").authenticated()
+                            .requestMatchers(HttpMethod.DELETE, "/api/v1/notifications/*", "/api/v1/notifications").authenticated()
                             // Platform administration: ADMIN only; the services re-check the platform permission.
                             .requestMatchers(HttpMethod.GET, "/api/v1/admin/**").hasRole("ADMIN")
                             .requestMatchers(HttpMethod.POST, "/api/v1/admin/**").hasRole("ADMIN")

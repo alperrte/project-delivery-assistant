@@ -31,6 +31,14 @@ public interface NotificationRepository extends JpaRepository<Notification, UUID
     @Modifying
     @Query("update Notification n set n.read = true, n.readAt = :now where n.recipientUserId = :userId and n.read = false")
     int markAllRead(UUID userId, Instant now);
+    /** Physically deletes one own READ notification; unread, foreign or unknown ids match nothing. */
+    @Modifying
+    @Query("delete from Notification n where n.id = :id and n.recipientUserId = :recipient and n.read = true")
+    int deleteReadOwn(UUID id, UUID recipient);
+    /** Physically deletes every own READ notification; unread rows are never matched. */
+    @Modifying
+    @Query("delete from Notification n where n.recipientUserId = :recipient and n.read = true")
+    int deleteAllReadOwn(UUID recipient);
     @Modifying
     @Query("delete from Notification n where n.projectId = :projectId")
     int deleteByProjectId(UUID projectId);

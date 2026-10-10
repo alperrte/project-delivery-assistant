@@ -287,6 +287,10 @@ Swagger check path: `/swagger-ui/index.html` with `API_DOCS_ENABLED=true`; call 
 | `GET /api/v1/notifications/unread-count` | Authenticated, own records | None | `200 {"count": 5}` | `401` |
 | `PATCH /api/v1/notifications/{notificationId}/read` | Authenticated, own record + CSRF | UUID path, no body | `200` updated notification | `400` bad UUID, `401`, `403` CSRF, `404` missing or other user's record |
 | `PATCH /api/v1/notifications/read-all` | Authenticated, own records + CSRF | No body | `200 {"count": 2}` (number changed) | `401`, `403` CSRF |
+| `DELETE /api/v1/notifications/{notificationId}` (2026-10-10) | Authenticated, own READ record + CSRF | UUID path, no body | `204`, `Cache-Control: private, no-store`; physical delete | `400` bad UUID, `401`, `403` CSRF, `404` unknown, other user's, or own UNREAD record (indistinguishable) |
+| `DELETE /api/v1/notifications?read=true` (2026-10-10) | Authenticated, own READ records + CSRF | `read` required and must be `true`; body ignored | `200 {"count": n}`; deletes only the principal's read (history) rows, unread never touched | `400` missing/false/invalid `read`, `401`, `403` CSRF |
+
+Deletion (2026-10-10): one new matcher line `DELETE /api/v1/notifications/*` and `/api/v1/notifications` (`authenticated`), deny-by-default kept; parameterized JPQL scoped to `recipientUserId = principal AND read = true`. No table references `notifications` (physical delete safe, no migration). `TeamDeletionPublicationRecovery` replays only incomplete publications, so a deleted read `SQUAD_DELETED` row is not recreated; the popup claim works only on unread rows. Covered by `NotificationDeletionIntegrationTest`.
 
 
 

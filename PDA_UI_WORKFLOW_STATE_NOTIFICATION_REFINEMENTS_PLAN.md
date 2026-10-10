@@ -18,8 +18,8 @@ Kullanıcı kararı (2026-10-10): staging (`git add`), branch değiştirme ve `g
 - [x] Phase 3 — `project-service-frontend` (2026-10-10)
 - [x] Transition Gate 3 — user commit/push confirmation (2026-10-10)
 - [x] Phase 4 — `squad-service-backend` (2026-10-10)
-- [ ] Transition Gate 4 — user commit/push confirmation
-- [ ] Phase 5 — `notification-service`
+- [x] Transition Gate 4 — user commit/push confirmation (2026-10-10)
+- [x] Phase 5 — `notification-service` (2026-10-10)
 - [ ] Transition Gate 5 — user commit/push confirmation
 - [ ] Phase 6 — Cross-branch final verification / completion
 
@@ -892,8 +892,8 @@ STOP → `BRANCH COMPLETE — squad-service-backend`
 
 ## Transition Gate 4
 
-- [ ] Kullanıcı commit/push'u doğruladı.
-- [ ] `notification-service` güncel prerequisite tabanını içeriyor.
+- [x] Kullanıcı commit/push'u doğruladı (`d9b9197`; main'e PR #129 `13a5c0c`).
+- [x] `notification-service` güncel prerequisite tabanını içeriyor (`pull --ff-only origin main` → `13a5c0c`; Phase 1–4 commitleri erişilebilir; Phase 4 bildirim filtresi mevcut).
 
 ---
 
@@ -928,14 +928,14 @@ Transition Gate 4.
 
 ### Checklist
 
-- [ ] 21.1 Repository/service.
-- [ ] 21.2 Controller + matcher.
-- [ ] 21.3 Integration testleri.
-- [ ] 21.4 SECURITY.md.
+- [x] 21.1 Repository `deleteReadOwn`/`deleteAllReadOwn` (`@Modifying`, parametreli JPQL, yalnız `read = true` ve principal) + service (0 satır → 404).
+- [x] 21.2 `DELETE /api/v1/notifications/{id}` → 204; `DELETE /api/v1/notifications?read=true` → 200 `{count}` (`read` zorunlu ve `true`, aksi 400); CSRF zorunlu; tek DELETE matcher satırı (onaylı). FK yok, `TeamDeletionPublicationRecovery` yalnız incomplete publication'ları işler (silinen read satır geri gelmez).
+- [x] 21.3 `NotificationDeletionIntegrationTest` 5 test (T11/T12, unread silinemez, yabancı id 404, 401/403/400, team-deletion claim etkilenmez); tam verify 664/0/0/0; backend container e2e ayarlarıyla yeniden build.
+- [x] 21.4 SECURITY.md bildirim tablosuna iki DELETE satırı + matcher/FK/recovery notu eklendi.
 
 ### Definition of Done
 
-- [ ] Single delete persistent; delete-all yalnız read; IDOR kapalı.
+- [x] Single delete persistent; delete-all yalnız read; IDOR kapalı.
 
 ## Task 22 — Bildirim geçmişi silme frontend
 
@@ -966,14 +966,14 @@ Task 21.
 
 ### Checklist
 
-- [ ] 22.1 Tekli silme.
-- [ ] 22.2 Tümünü sil + onay.
-- [ ] 22.3 Metinler.
-- [ ] 22.4 E2E.
+- [x] 22.1 Tekli silme: Geçmiş satırında çöp kutusu (44px, tooltip, aria-label) + satır içi iki adımlı onay ("Silinsin mi? · Vazgeç · Evet, sil"; odak Vazgeç'te, Escape/blur iptal); hata satır içi `role=alert`, satır kalır.
+- [x] 22.2 "Tümünü sil": Geçmiş başlığında sağda, destructive `ConfirmDialog` ("Geçmiş bildirimlerin tamamı silinecek. Bu işlem geri alınamaz."), başarıda sayılı toast; New sekmesi ve okunmamış sayısı etkilenmez; sunucu onaylı uzlaştırma, son sayfa boşalınca önceki sayfa.
+- [x] 22.3 TR/EN/DE metinleri (ICU plural `deletedCount`, DE `Sie`).
+- [x] 22.4 E2E `notification-history-delete.spec.ts` 9/9 (T11a/T11b DB doğrulamalı, sayfa clamp, 500 hata, klavye/odak, 320/390 TR/EN/DE light/dark, hesap izolasyonu); mevcut bildirim spec'leri dahil 34/34.
 
 ### Definition of Done
 
-- [ ] Hard reload olmadan reconcile; New korunuyor.
+- [x] Hard reload olmadan reconcile; New korunuyor.
 
 ## Task 23 — Phase 5 regresyon
 
@@ -995,21 +995,21 @@ Task 21–22 DoD.
 
 ### Checklist
 
-- [ ] 23.1 Backend verify.
-- [ ] 23.2 lint/type/build.
-- [ ] 23.3 Playwright.
-- [ ] 23.4 pre-push PASS.
-- [ ] 23.5 Docs + completion.
+- [x] 23.1 Backend verify (664/0/0/0).
+- [x] 23.2 lint/type/build (temiz).
+- [x] 23.3 Playwright (task batch'leri 34/34; pre-push içinde 776/778).
+- [x] 23.4 pre-push: 776/778; tek hata aralıklı `team-member-preview` 401'i — kullanıcı kararıyla istisna kaydedildi.
+- [x] 23.5 Docs (SECURITY.md, architecture, folder-structure, design rules) + `docs/compliation/2026-10-10-notification-history-delete.md`.
 
 ### Definition of Done (Branch completion)
 
-- [ ] Single History delete persistent.
-- [ ] Delete All yalnız read/history kayıtlarını siliyor.
-- [ ] New/unread kayıtlar korunuyor.
-- [ ] Foreign recipient delete IDOR kapalı.
-- [ ] Pagination/cache hard reload olmadan reconciled.
-- [ ] Targeted backend/frontend notification tests geçti.
-- [ ] Commit/push/staging yapılmadı.
+- [x] Single History delete persistent.
+- [x] Delete All yalnız read/history kayıtlarını siliyor.
+- [x] New/unread kayıtlar korunuyor.
+- [x] Foreign recipient delete IDOR kapalı.
+- [x] Pagination/cache hard reload olmadan reconciled.
+- [x] Targeted backend/frontend notification tests geçti.
+- [x] Commit/push yapılmadı (staging kullanıcı kararıyla ajan tarafından yapıldı).
 
 STOP → `BRANCH COMPLETE — notification-service`
 
