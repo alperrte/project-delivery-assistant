@@ -17,11 +17,14 @@ function Avatar({
   name,
   src,
   tint = 0,
+  title,
   className,
 }: {
   name: string
   src?: string | null
   tint?: number
+  /** Native tooltip; defaults to the name. Pass `false` when a richer tooltip already wraps the avatar. */
+  title?: string | false
   className?: string
 }) {
   // Remember which source failed instead of a boolean, so a new photo URL gets its own chance to load.
@@ -38,7 +41,7 @@ function Avatar({
   return (
     <span
       data-slot="avatar"
-      title={name}
+      title={title === false ? undefined : (title ?? name)}
       className={cn(
         "relative inline-flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full text-xs font-semibold ring-2 ring-card",
         TINTS[tint % TINTS.length],

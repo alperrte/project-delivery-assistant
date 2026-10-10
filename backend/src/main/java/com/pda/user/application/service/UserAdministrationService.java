@@ -149,9 +149,16 @@ public class UserAdministrationService implements UserAdministration {
         return new RegistrationReport(inRange, daily);
     }
 
-    /** Server-side filter: an optional status and a literal (wildcards escaped) substring of email or nickname. */
+    /**
+     * Server-side filter: an optional status and a literal (wildcards escaped) substring of email or nickname. DELETED
+     * (anonymised accounts) is not a listable status: like an unknown value it is an {@link IllegalArgumentException},
+     * which the API answers with the same 400 problem body.
+     */
     private static Specification<User> filter(String search, String status) {
         AccountStatus wanted = status == null || status.isBlank() ? null : AccountStatus.valueOf(status.strip());
+        if (wanted == AccountStatus.DELETED) {
+            throw new IllegalArgumentException("Unsupported status filter");
+        }
         String term = search == null ? "" : search.strip().toLowerCase(Locale.ROOT);
         return (root, query, builder) -> {
             List<Predicate> predicates = new ArrayList<>();

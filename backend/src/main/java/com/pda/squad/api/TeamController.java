@@ -6,6 +6,7 @@ import com.pda.squad.application.service.TeamView;
 import com.pda.squad.api.dto.response.PageResponse;
 import com.pda.squad.api.dto.response.SquadMemberResponse;
 import com.pda.squad.domain.entity.Squad;
+import com.pda.user.ProjectRole;
 import com.pda.user.UserAccounts;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -139,7 +140,8 @@ public class TeamController {
     public record MemberRequest(@NotNull UUID userId) {}
     public record CandidateResponse(UUID userId, String nickname, TeamCandidate.Status status) {}
     public record UserRefResponse(UUID userId, String nickname, Long profilePhotoVersion) {}
-    public record MemberPreviewResponse(UUID userId, String nickname, Long profilePhotoVersion, String firstName, String lastName) {}
+    public record MemberPreviewResponse(UUID userId, String nickname, Long profilePhotoVersion, String firstName, String lastName,
+                                        List<ProjectRole> roles) {}
     public record LastJoinedResponse(UUID userId, String nickname, Instant joinedAt) {}
     public record TeamResponse(UUID id, UUID projectId, String name, String description, UUID parentTeamId,
                                long memberCount, UUID createdBy, Instant createdAt, Instant updatedAt,
@@ -152,7 +154,7 @@ public class TeamController {
                     team.getUpdatedAt(), new UserRefResponse(view.updatedBy().userId(), view.updatedBy().nickname(),
                             view.updatedBy().profilePhotoVersion()),
                     view.memberPreview().stream()
-                            .map(user -> new MemberPreviewResponse(user.userId(), user.nickname(), user.profilePhotoVersion(), user.firstName(), user.lastName())).toList(),
+                            .map(user -> new MemberPreviewResponse(user.userId(), user.nickname(), user.profilePhotoVersion(), user.firstName(), user.lastName(), user.roles())).toList(),
                     view.lastJoined() == null ? null : new LastJoinedResponse(view.lastJoined().userId(),
                             view.lastJoined().nickname(), view.lastJoined().joinedAt()));
         }

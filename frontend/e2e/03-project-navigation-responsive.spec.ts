@@ -26,7 +26,7 @@ const team = {
   id: "backend-team", projectId: "responsive-project", name: "Backend", description: null, parentTeamId: null,
   memberCount: 1, createdBy: "responsive-user", createdAt: "2026-09-28T00:00:00Z", updatedAt: "2026-09-28T00:00:00Z",
   updatedBy: { userId: "responsive-user", nickname: "testuser" },
-  memberPreview: [{ userId: "responsive-user", nickname: "testuser" }],
+  memberPreview: [{ userId: "responsive-user", nickname: "testuser", roles: ["PROJECT_MANAGER"] }],
   lastJoined: { userId: "responsive-user", nickname: "testuser", joinedAt: "2026-09-28T00:00:00Z" },
 };
 

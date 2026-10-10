@@ -28,7 +28,7 @@ export function demoData(text: { projectName: string; projectAbout: string; team
   const team: Team = {
     id: "pda-demo-team", projectId: project.id, name: text.teamName, description: text.teamAbout,
     parentTeamId: null, memberCount: 3, createdBy: DEMO_USER.id, createdAt: date, updatedAt: date,
-    updatedBy: people[0], memberPreview: people, lastJoined: null,
+    updatedBy: people[0], memberPreview: members.map(m => ({ userId: m.userId, nickname: m.nickname!, roles: m.roles })), lastJoined: null,
   };
   const roster: TeamMember[] = members.map(m => ({ ...m, email: `${m.nickname!.toLowerCase()}@example.com`, addedBy: DEMO_USER.id, addedAt: date, otherTeams: [] }));
   const task: Task = {

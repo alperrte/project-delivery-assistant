@@ -369,6 +369,7 @@ class AdminIntegrationTest {
                 .andExpect(jsonPath("$.items[0].accountStatus").value("ACTIVE"));
         mvc.perform(get("/api/v1/admin/users?status=TERMINATED").cookie(admin)).andExpect(status().isBadRequest());
         mvc.perform(get("/api/v1/admin/users?status=DELETED").cookie(admin)).andExpect(status().isBadRequest());
+        mvc.perform(get("/api/v1/admin/users?status=PENDING_VERIFICATION").cookie(admin)).andExpect(status().isOk());
 
         // Disabling is reversible, never a delete, and keeps the row.
         assertTrue(users.findById(wanted.getId()).isPresent());

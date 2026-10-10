@@ -66,7 +66,7 @@ export function TeamCard({
         {team.memberCount === 0 ? (
           <p className="flex min-h-8 items-center text-sm text-muted-foreground">{t("noMembers")}</p>
         ) : (
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex min-w-0 flex-col gap-2">
             <TeamMemberPreview people={team.memberPreview} total={team.memberCount} />
             <span className="text-sm text-muted-foreground">{t("memberCount", { count: team.memberCount })}</span>
           </div>

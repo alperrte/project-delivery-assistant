@@ -311,6 +311,33 @@ class SquadApiIntegrationTest {
     }
 
     @Test
+    void teamListPreviewCarriesEnumOrderedProjectRolesWithoutEmails() throws Exception {
+        Cookie csrf = csrfCookie();
+        Account manager = account("rolemanager");
+        Account contributor = account("rolecontrib");
+        UUID projectId = createProject(manager, csrf, "Team roles project");
+        memberships.addMember(manager.id(), projectId, contributor.id(), Set.of(ProjectRole.TESTER, ProjectRole.BACKEND_DEVELOPER));
+        UUID teamId = squadService.create(manager.id(), projectId, "Role team", null, null, true).getId();
+        squadService.addMember(manager.id(), projectId, teamId, contributor.id());
+        String list = "/api/v1/projects/" + projectId + "/teams";
+
+        // An ordinary member sees the newest member first with every role in enum order, and never an address.
+        mvc.perform(get(list).cookie(contributor.access())).andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].memberPreview.length()").value(2))
+                .andExpect(jsonPath("$.content[0].memberPreview[0].userId").value(contributor.id().toString()))
+                .andExpect(jsonPath("$.content[0].memberPreview[0].roles[0]").value("BACKEND_DEVELOPER"))
+                .andExpect(jsonPath("$.content[0].memberPreview[0].roles[1]").value("TESTER"))
+                .andExpect(jsonPath("$.content[0].memberPreview[0].roles.length()").value(2))
+                .andExpect(jsonPath("$.content[0].memberPreview[1].roles").isNotEmpty())
+                .andExpect(jsonPath("$.content[0].memberPreview[*].roles[*]", org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.in(
+                        java.util.Arrays.stream(ProjectRole.values()).map(Enum::name).toList()))))
+                .andExpect(jsonPath("$.content[0].memberPreview[*].email").isEmpty());
+        mvc.perform(get(list + "/" + teamId).cookie(manager.access())).andExpect(status().isOk())
+                .andExpect(jsonPath("$.memberPreview[0].roles[0]").value("BACKEND_DEVELOPER"))
+                .andExpect(jsonPath("$.memberPreview[0].email").doesNotExist());
+    }
+
+    @Test
     void teamRoutesNeverReachATeamOfAnotherProjectEvenForSomeoneWhoManagesBoth() throws Exception {
         Cookie csrf = csrfCookie();
         Account manager = account("teamscopemanager");
