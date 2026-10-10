@@ -376,6 +376,7 @@ class AdminIntegrationTest {
                 .andExpect(jsonPath("$.size").value(1)).andExpect(jsonPath("$.items.length()").value(1))
                 .andExpect(jsonPath("$.items[0].accountStatus").value("ACTIVE"));
         mvc.perform(get("/api/v1/admin/users?status=TERMINATED").cookie(admin)).andExpect(status().isBadRequest());
+        mvc.perform(get("/api/v1/admin/users?status=NOT_A_STATUS").cookie(admin)).andExpect(status().isBadRequest());
         mvc.perform(get("/api/v1/admin/users?status=DELETED").cookie(admin)).andExpect(status().isBadRequest());
         mvc.perform(get("/api/v1/admin/users?status=PENDING_VERIFICATION").cookie(admin)).andExpect(status().isOk());
 
