@@ -127,6 +127,17 @@ export async function chooseDate(page: Page, id: string, date: string) {
   await expect(calendar).toHaveCount(0);
 }
 
+/** Picks an "HH:mm" time in a `TimePicker` through its hour and minute columns, then closes the popup. */
+export async function chooseTime(page: Page, id: string, time: string) {
+  const [hour, minute] = time.split(":");
+  await page.locator(`#${id}`).click();
+  const panel = page.locator(`#${id}-time`);
+  await panel.locator(`[data-hour="${hour}"]`).click();
+  await panel.locator(`[data-minute="${minute}"]`).click();
+  await page.keyboard.press("Escape");
+  await expect(panel).toHaveCount(0);
+}
+
 /** Finds this project's card even when a reused E2E account has several pages of projects. */
 export async function openProjectListPage(page: Page, slug: string) {
   const project = (await api(page, "GET", `/projects/by-slug/${slug}`)).json as { id: string };

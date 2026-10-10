@@ -238,10 +238,12 @@ test.describe.serial("Silme ve kritik eylem onayı", () => {
       await page.getByRole("dialog").getByRole("textbox").fill(name);
       await page.getByRole("dialog").getByRole("button", { name: tr.projects.settings.deleteConfirm, exact: true }).dblclick();
       await expect.poll(() => deletes).toBe(1);
-      await expect(page).not.toHaveURL(/\/edit/, { timeout: 15_000 });
+      // The settings URL is localized (/tr/projeler/<slug>/duzenle), so wait for the real redirect to the project list;
+      // a plain /\/edit/ check never matched and raced the deliberately delayed DELETE.
+      await expect(page).toHaveURL(/\/projeler(\?.*)?$/, { timeout: 15_000 });
       expect(deletes).toBe(1);
-      await page.unrouteAll({ behavior: "ignoreErrors" });
-      expect((await api(page, "GET", `/projects/by-slug/${slug}`)).status).toBe(404);
+      await page.unrouteAll({ behavior: "wait" });
+      await expect.poll(async () => (await api(page, "GET", `/projects/by-slug/${slug}`)).status, { timeout: 10_000 }).toBe(404);
     } finally {
       await page.unrouteAll({ behavior: "ignoreErrors" });
       await api(page, "DELETE", `/projects/${projectId}`);

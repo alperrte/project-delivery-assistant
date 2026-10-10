@@ -29,6 +29,15 @@
     "close": "Kapat",
     "breadcrumb": "Konum"
   },
+  "forms": {
+    "summary": {
+      "projectTitle": "Proje oluşturulamadı.",
+      "organizationCreateTitle": "Organizasyon oluşturulamadı.",
+      "organizationEditTitle": "Değişiklikler kaydedilemedi.",
+      "description": "Lütfen eksik veya hatalı alanları kontrol edin.",
+      "sectionsLabel": "Eksik bölümler:"
+    }
+  },
   "errors": {
     "network": "Sunucuya ulaşılamadı. Bağlantınızı kontrol edip tekrar deneyin.",
     "generic": "Bir şeyler ters gitti. Lütfen tekrar deneyin.",
@@ -1923,7 +1932,8 @@
         "composer": {
           "label": "Yorum",
           "placeholder": "Yorum yazın. Birini anmak için @ yazın.",
-          "hint": "Göndermek için Ctrl+Enter",
+          "hint": "Enter ile gönder · Ctrl+Enter ile yeni satır",
+          "hintTouch": "Göndermek için Gönder düğmesini kullanın",
           "submit": "Yorum yap",
           "suggestions": "Üye önerileri"
         },
@@ -3016,7 +3026,16 @@
     "year": "Yıl",
     "today": "Bugün",
     "clear": "Temizle",
-    "close": "Takvimi kapat"
+    "close": "Takvimi kapat",
+    "outOfRange": "Seçilemez tarih"
+  },
+  "timePicker": {
+    "placeholder": "Saat seçin",
+    "hour": "Saat",
+    "minute": "Dakika",
+    "now": "Şimdi",
+    "clear": "Temizle",
+    "close": "Kapat"
   },
   "notifications": {
     "invitationContext": {

@@ -10,7 +10,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CircleNotch, Eye } from "@phosphor-icons/react";
 import { toast } from "sonner";
+import { FormErrorSummary, focusFormSection, type FormErrorSection } from "@/components/common/form-error-summary";
 import { PageHeader } from "@/components/common/page-header";
+import { StickyFormActions } from "@/components/common/sticky-form-actions";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -66,6 +68,7 @@ function Section({ id, title, description, children }: { id: string; title: stri
 export function ProjectCreatePage({ presentationValues }: { presentationValues?: CreateProjectValues } = {}) {
   const t = useTranslations("projects.newPage");
   const tv = useTranslations("validation");
+  const tfs = useTranslations("forms.summary");
   const te = useTranslations("errors");
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -85,9 +88,11 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
     handleSubmit,
     control,
     setValue,
-    formState: { errors, isDirty },
+    formState: { errors, isDirty, submitCount },
   } = useForm<CreateProjectValues>({
     resolver: zodResolver(createProjectSchema),
+    // Focus moves to the first invalid field in page order after a failed submit (see the effect below).
+    shouldFocusError: false,
     defaultValues: { name: "", tagline: "", techStack: [], description: "" },
     values: presentationValues,
   });
@@ -188,29 +193,60 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
   const taglineLength = values.tagline?.length ?? 0;
   const typeLabelId = `${ids}-type`;
 
+  /** Validates the optional repository URL (not part of the zod schema) and reports whether it is invalid. */
+  function checkRepositoryUrl() {
+    const invalid = repositoryUrl.trim() !== "" && !GITHUB_REPOSITORY_URL.test(repositoryUrl.trim());
+    setRepositoryUrlInvalid(invalid);
+    return invalid;
+  }
+
+  // Sections with errors, in page order. Only errors that exist after a submit attempt can appear here.
+  const summaryId = `${ids}-summary`;
+  const sectionHeadingIds = {
+    identity: `${ids}-identity`,
+    type: typeLabelId,
+    technology: `${ids}-technology`,
+    details: `${ids}-details`,
+    repository: `${ids}-repository`,
+  } as const;
+  const failedSections: Record<keyof typeof sectionHeadingIds, boolean> = {
+    identity: !!(errors.name || errors.tagline),
+    type: !!errors.projectType,
+    technology: !!errors.techStack,
+    details: !!(errors.organizationId || errors.description),
+    repository: repositoryUrlInvalid,
+  };
+  const summarySections: FormErrorSection[] = (Object.keys(sectionHeadingIds) as (keyof typeof sectionHeadingIds)[])
+    .filter((key) => failedSections[key])
+    .map((key) => ({ id: key, label: t(`sections.${key}.title`), focus: () => focusFormSection(sectionHeadingIds[key]) }));
+
+  // react-hook-form bumps `submitCount` together with the final errors state, so by the time this effect runs `aria-invalid` is
+  // rendered and the first failed section (page order) can focus its first invalid field. A valid submit has no failed sections,
+  // and typing between submits never changes `submitCount`, so focus is never moved at other times.
+  useEffect(() => {
+    summarySections[0]?.focus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [submitCount]);
+
   return (
     <div>
       <PageHeader title={t("title")} description={t("description")} />
 
       <form
-        onSubmit={handleSubmit((form) => {
-          const invalid = repositoryUrl.trim() !== "" && !GITHUB_REPOSITORY_URL.test(repositoryUrl.trim());
-          setRepositoryUrlInvalid(invalid);
-          if (!invalid) mutation.mutate(form);
-        }, (invalid) => {
-          // react-hook-form focuses the first invalid text field itself; the type cards are a Controller without a ref,
-          // so when the type is the only thing missing, focus has to be moved by hand or nothing seems to happen.
-          if (Object.keys(invalid).every((key) => key === "projectType")) {
-            const card = document.getElementById(`${ids}-type-picker`)?.querySelector<HTMLElement>('[role="radio"]');
-            card?.focus();
-            card?.scrollIntoView({ block: "center" });
-          }
-        })}
+        onSubmit={handleSubmit(
+          (form) => {
+            if (!checkRepositoryUrl()) mutation.mutate(form);
+          },
+          () => {
+            // The repository URL lives outside react-hook-form, so it is checked on this path too and both errors show together.
+            checkRepositoryUrl();
+          },
+        )}
         noValidate
       >
         <div className="grid gap-10 lg:grid-cols-12 lg:gap-12">
           <div className="space-y-8 lg:col-span-7">
-            <Section id={`${ids}-identity`} title={t("sections.identity.title")} description={t("sections.identity.description")}>
+            <Section id={sectionHeadingIds.identity} title={t("sections.identity.title")} description={t("sections.identity.description")}>
               <LogoField name={name} previewUrl={logoUrl} onChange={changeLogo} />
               <BannerPickField previewUrl={bannerUrl} onChange={changeBanner} />
 
@@ -272,7 +308,7 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
             </Section>
 
             <Section
-              id={`${ids}-technology`}
+              id={sectionHeadingIds.technology}
               title={t("sections.technology.title")}
               description={t("sections.technology.description", { max: MAX_TECH_SELECTION })}
             >
@@ -283,7 +319,7 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
               />
             </Section>
 
-            <Section id={`${ids}-details`} title={t("sections.details.title")} description={t("sections.details.description")}>
+            <Section id={sectionHeadingIds.details} title={t("sections.details.title")} description={t("sections.details.description")}>
               {(
                 <div className="space-y-1.5">
                   <Label>{t("details.organization")}</Label>
@@ -328,7 +364,7 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
               </div>
             </Section>
 
-            <Section id={`${ids}-repository`} title={t("sections.repository.title")} description={t("sections.repository.description")}>
+            <Section id={sectionHeadingIds.repository} title={t("sections.repository.title")} description={t("sections.repository.description")}>
               <div className="space-y-1.5">
                 <div className="flex items-baseline justify-between gap-3">
                   <Label htmlFor="project-repository-url">{t("repository.label")}</Label>
@@ -371,7 +407,16 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
           />
         </div>
 
-        <div data-sticky-actions className="sticky bottom-0 z-20 -mx-4 -mb-6 mt-10 sm:-mb-8 border-t bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:-mx-8 sm:px-8">
+        <FormErrorSummary
+          key={submitCount}
+          id={summaryId}
+          title={tfs("projectTitle")}
+          description={tfs("description")}
+          sectionsLabel={tfs("sectionsLabel")}
+          sections={summarySections}
+        />
+
+        <StickyFormActions className={summarySections.length > 0 ? "mt-4" : undefined}>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <Link href="/projects" className={buttonVariants({ variant: "outline" })}>
               {t("actions.cancel")}
@@ -381,13 +426,13 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
                 <Eye size={16} data-icon="inline-start" aria-hidden="true" />
                 <span className="sr-only min-[440px]:not-sr-only">{t("preview.show")}</span>
               </a>
-              <Button type="submit" disabled={mutation.isPending}>
+              <Button type="submit" disabled={mutation.isPending} aria-describedby={summarySections.length > 0 ? summaryId : undefined}>
                 {mutation.isPending && <CircleNotch size={16} className="animate-spin" aria-hidden="true" />}
                 {t("actions.submit")}
               </Button>
             </div>
           </div>
-        </div>
+        </StickyFormActions>
       </form>
 
       <Dialog open={teamPromptSlug !== null} onOpenChange={(open) => { if (!open && teamPromptSlug) router.push(`/projects/${teamPromptSlug}`); }}>

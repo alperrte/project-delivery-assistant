@@ -7,10 +7,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Plus } from "@phosphor-icons/react";
 import { PageHeader } from "@/components/common/page-header";
 import { EmptyState } from "@/components/common/empty-state";
-import { EntityGrid } from "@/components/common/entity-card";
+import { EntityCardSkeleton, EntityGrid } from "@/components/common/entity-card";
 import { PaginationBar } from "@/components/common/pagination-bar";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { errorKey } from "@/lib/api/error-message";
 import { PROJECT_PAGE_SIZE, projectsApi } from "../api";
 import { ProjectCard } from "./project-card";
@@ -19,20 +18,6 @@ import { ProjectCard } from "./project-card";
 function pageFromParam(value: string | null): number {
   const parsed = Number.parseInt(value ?? "", 10);
   return Number.isFinite(parsed) && parsed > 1 ? parsed - 1 : 0;
-}
-
-function ProjectCardSkeleton() {
-  return (
-    <div className="w-full rounded-xl border bg-card p-2" aria-hidden="true">
-      <Skeleton className="h-36 w-full rounded-lg" />
-      <div className="space-y-4 px-2 pt-4 pb-2">
-        <Skeleton className="h-8 w-3/4" />
-        <Skeleton className="h-8 w-1/2" />
-        <Skeleton className="h-5 w-2/3" />
-        <Skeleton className="h-9 w-full" />
-      </div>
-    </div>
-  );
 }
 
 export function ProjectList() {
@@ -67,7 +52,7 @@ export function ProjectList() {
 
       {isLoading && (
         <EntityGrid>
-          {Array.from({ length: 6 }, (_, key) => <li key={key} className="flex"><ProjectCardSkeleton /></li>)}
+          {Array.from({ length: 6 }, (_, key) => <li key={key} className="flex"><EntityCardSkeleton /></li>)}
         </EntityGrid>
       )}
 

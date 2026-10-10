@@ -9,8 +9,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, CircleNotch, Eye, Buildings, ImageSquare, LinkSimple, FileText, Globe, Envelope, MapPin, Lightbulb } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
+import { FormErrorSummary, focusFormSection, type FormErrorSection } from "@/components/common/form-error-summary";
 import { PageContainer } from "@/components/common/page-container";
 import { PageHeader } from "@/components/common/page-header";
+import { StickyFormActions } from "@/components/common/sticky-form-actions";
 import { BreadcrumbLabel } from "@/components/layout/breadcrumb-labels";
 import { ImagePicker } from "@/components/common/image-picker";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -56,14 +58,14 @@ export function OrganizationFormPage({ organizationId }: { organizationId?: stri
 
 function OrganizationEditor({ initial }: { initial?: Organization }) {
  const t = useTranslations("organizations"); const tf = useTranslations("organizations.form"); const tp = useTranslations("organizations.profile");
- const tv = useTranslations("validation"); const te = useTranslations("errors"); const router = useRouter(); const queryClient = useQueryClient();
+ const tv = useTranslations("validation"); const tfs = useTranslations("forms.summary"); const te = useTranslations("errors"); const router = useRouter(); const queryClient = useQueryClient();
  const editing = !!initial; const [saved, setSaved] = useState(initial);
  const [signature, setSignature] = useState(initial ? JSON.stringify(formValues(initial)) : null);
  const [failures, setFailures] = useState<string[]>([]);
  const submitted = useRef(false); const busy = useRef(false);
  const logo = useMediaDraft(saved ? organizationImageSource(saved, "logo") : null);
  const cover = useMediaDraft(saved ? organizationImageSource(saved, "cover") : null);
- const { register, handleSubmit, setFocus, control, reset, formState: { errors, isDirty } } = useForm<OrganizationFormValues>({ resolver: zodResolver(organizationFormSchema), defaultValues: formValues(initial) });
+ const { register, handleSubmit, control, reset, formState: { errors, isDirty, submitCount } } = useForm<OrganizationFormValues>({ resolver: zodResolver(organizationFormSchema), shouldFocusError: false, defaultValues: formValues(initial) });
  const values = useWatch({ control });
  const dirty = isDirty || ((!logo.applied) && (!!logo.file || logo.removed)) || ((!cover.applied) && (!!cover.file || cover.removed));
  useEffect(() => {
@@ -99,8 +101,20 @@ function OrganizationEditor({ initial }: { initial?: Organization }) {
   onError: (err) => toast.error(te(errorKey(err))),
  });
  const saving = mutation.isPending;
+ const failedSections: [string, string, boolean][] = [
+  ["general", tf("sections.general.title"), !!(errors.name || errors.description)],
+  ["contact", tp("contactTitle"), !!(errors.website || errors.contactEmail || errors.location)],
+  ["details", tp("detailsTitle"), !!errors.notes],
+ ];
+ const summarySections: FormErrorSection[] = failedSections.filter(([, , failed]) => failed).map(([key, label]) => ({ id: key, label, focus: () => focusFormSection(`org-${key}`) }));
+ // react-hook-form bumps `submitCount` together with the final errors state, so `aria-invalid` is rendered when this runs and the
+ // first failed section (page order) focuses its first invalid field. Valid submits have no failed sections; typing never changes it.
+ useEffect(() => {
+  summarySections[0]?.focus();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, [submitCount]);
  const backHref = editing ? `/organizations/${initial!.id}` : "/organizations";
- const draft: OrganizationCardData = { id: saved?.id ?? "preview", name: values.name ?? "", description: values.description ?? null, status: saved?.status ?? "ACTIVE", updatedAt: saved?.updatedAt ?? "" };
+ const draft: OrganizationCardData = { id: saved?.id ?? "preview", name: values.name ?? "", description: values.description ?? null, status: saved?.status ?? "ACTIVE", updatedAt: saved?.updatedAt ?? "", website: values.website ?? null, location: values.location ?? null };
  const labels = (kind: "logo" | "cover") => ({ label: tp(kind), choose: tp(kind === "logo" ? "uploadLogo" : "uploadCover"), change: tp("change"), remove: tp("remove"), hint: tp(kind === "logo" ? "logoHint" : "coverHint"), invalidType: tp("invalidType"), tooLarge: tp("tooLarge"), empty: tp("empty"), detail: tp(kind === "logo" ? "logoFallbackHint" : "coverPlacementHint") });
  return <PageContainer width="wide">
   <Link href={backHref} className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground"><ArrowLeft size={16} aria-hidden="true" />{editing ? tf("backToOrganization") : t("backToOrganizations")}</Link>
@@ -112,9 +126,7 @@ function OrganizationEditor({ initial }: { initial?: Organization }) {
   </section>}
   <form noValidate aria-busy={saving} onSubmit={(event) => {
    if (busy.current) { event.preventDefault(); return; } busy.current = true;
-   void handleSubmit(async (form) => { try { await mutation.mutateAsync(form); } catch { /* onError reports it. */ } },
-    (invalid) => { const key = (Object.keys(invalid) as (keyof OrganizationFormValues)[])[0]; if (key) setFocus(key); }
-   )(event).finally(() => { busy.current = false; });
+   void handleSubmit(async (form) => { try { await mutation.mutateAsync(form); } catch { /* onError reports it. */ } })(event).finally(() => { busy.current = false; });
   }}>
    <div className="grid items-start gap-5 lg:grid-cols-12">
     <fieldset disabled={saving} className="min-w-0 space-y-4 rounded-xl border bg-surface-2/60 p-4 sm:p-5 lg:col-span-7">
@@ -151,12 +163,13 @@ function OrganizationEditor({ initial }: { initial?: Organization }) {
      <section className="flex items-start gap-4 rounded-xl border border-label-blue/15 bg-label-blue/5 p-4"><span aria-hidden="true" className="grid size-9 shrink-0 place-items-center rounded-lg bg-label-amber/10 text-label-amber"><Lightbulb size={22}/></span><div><h2 className="text-sm font-semibold text-label-blue">{tp("helpTitle")}</h2><p className="mt-2 text-xs leading-5 text-muted-foreground">{tp("helpDescription")}</p></div></section>
     </div></aside>
    </div>
-   <div data-sticky-actions className="sticky bottom-0 z-20 -mx-4 -mb-6 mt-10 border-t bg-background/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:-mx-8 sm:-mb-8 sm:px-8">
+   <FormErrorSummary key={submitCount} id="org-form-summary" title={editing ? tfs("organizationEditTitle") : tfs("organizationCreateTitle")} description={tfs("description")} sectionsLabel={tfs("sectionsLabel")} sections={summarySections} />
+   <StickyFormActions className={summarySections.length > 0 ? "mt-4" : undefined}>
     <div className="flex items-center justify-between gap-2"><Link href={backHref} className={buttonVariants({ variant: "outline" })}>{tf("cancel")}</Link><div className="flex min-w-0 flex-1 items-center justify-end gap-2">
      <a href="#organization-preview" className={buttonVariants({ variant: "ghost", className: "lg:hidden" })}><Eye size={16} aria-hidden="true" /><span className="sr-only min-[440px]:not-sr-only">{tf("preview.show")}</span></a>
-     <Button type="submit" className="h-auto min-h-9 min-w-0 whitespace-normal bg-label-blue px-5 py-1 text-white shadow-sm hover:bg-label-blue/90 dark:bg-label-blue/65 dark:hover:bg-label-blue/65 dark:saturate-150" disabled={saving}>{saving && <CircleNotch size={16} className="animate-spin" aria-hidden="true" />}{failures.length ? tp("retry") : editing ? tf("save") : tf("create")}</Button>
+     <Button type="submit" aria-describedby={summarySections.length > 0 ? "org-form-summary" : undefined} className="h-auto min-h-9 min-w-0 whitespace-normal bg-label-blue px-5 py-1 text-white shadow-sm hover:bg-label-blue/90 dark:bg-label-blue/65 dark:hover:bg-label-blue/65 dark:saturate-150" disabled={saving}>{saving && <CircleNotch size={16} className="animate-spin" aria-hidden="true" />}{failures.length ? tp("retry") : editing ? tf("save") : tf("create")}</Button>
     </div></div>
-   </div>
+   </StickyFormActions>
   </form>
  </PageContainer>;
 }

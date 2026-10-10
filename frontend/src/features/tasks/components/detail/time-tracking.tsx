@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { useForm, useWatch } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CircleNotch, Plus, Trash } from "@phosphor-icons/react";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -89,9 +90,27 @@ function WorklogDialog({ ctx, open, onOpenChange }: { ctx: DetailContext; open: 
 
           <div className="space-y-1.5">
             <Label htmlFor="worklog-date">{t("date")}</Label>
-            <Input id="worklog-date" type="date" max={today} aria-invalid={!!errors.workDate} className="w-44" {...register("workDate")} />
+            <div className="w-52 max-w-full">
+              <Controller
+                control={control}
+                name="workDate"
+                render={({ field }) => (
+                  <DatePicker
+                    id="worklog-date"
+                    label={t("date")}
+                    value={field.value}
+                    ref={field.ref}
+                    onBlur={field.onBlur}
+                    onChange={field.onChange}
+                    invalid={!!errors.workDate}
+                    describedBy={errors.workDate ? "worklog-date-error" : undefined}
+                    max={today}
+                  />
+                )}
+              />
+            </div>
             {errors.workDate && (
-              <p role="alert" className="text-sm text-destructive">
+              <p id="worklog-date-error" role="alert" className="text-sm text-destructive">
                 {tv(errors.workDate.message!)}
               </p>
             )}

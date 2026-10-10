@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useTranslations } from "next-intl";
 import { CircleNotch, PaperPlaneRight, PencilSimple, Trash } from "@phosphor-icons/react";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { Avatar } from "@/components/ui/avatar";
 import { profilePhotoSrc } from "@/features/account/api";
 import { Button } from "@/components/ui/button";
+import { useTouchPrimaryInput } from "@/hooks/use-touch-primary-input";
 import { cn } from "@/lib/utils";
 import { tasksApi } from "../../api";
 import { useTaskFormat } from "../../format";
@@ -42,10 +43,22 @@ function CommentBody({ comment }: { comment: Comment }) {
   );
 }
 
+/** The keyboard contract of a comment box: Enter sends on desktop; on touch devices the button sends. */
+function ComposerHint({ id }: { id: string }) {
+  const t = useTranslations("tasks.detail.activity.composer");
+  const touch = useTouchPrimaryInput();
+  return (
+    <p id={id} className="text-xs text-muted-foreground">
+      {touch ? t("hintTouch") : t("hint")}
+    </p>
+  );
+}
+
 function CommentRow({ comment, ctx }: { comment: Comment; ctx: DetailContext }) {
   const { projectId, task, userId, isManager } = ctx;
   const t = useTranslations("tasks.detail.activity");
   const format = useTaskFormat();
+  const hintId = useId();
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState("");
   const [picked, setPicked] = useState<PersonRef[]>([]);
@@ -68,7 +81,7 @@ function CommentRow({ comment, ctx }: { comment: Comment; ctx: DetailContext }) 
   }
 
   function save() {
-    if (trimmed) edit.mutate(encodeMentions(trimmed, picked));
+    if (trimmed && !edit.isPending) edit.mutate(encodeMentions(trimmed, picked));
   }
 
   return (
@@ -121,19 +134,23 @@ function CommentRow({ comment, ctx }: { comment: Comment; ctx: DetailContext }) 
               onChange={setText}
               onPick={(person) => setPicked((current) => (current.some((p) => p.userId === person.userId) ? current : [...current, person]))}
               onSubmit={save}
+              describedBy={hintId}
               label={t("editComment")}
               maxLength={COMMENT_MAX}
               rows={3}
               autoFocus
             />
-            <div className="flex justify-end gap-2">
-              <Button variant="ghost" size="lg" disabled={edit.isPending} onClick={() => setEditing(false)}>
-                {t("cancel")}
-              </Button>
-              <Button size="lg" disabled={!trimmed || edit.isPending} onClick={save}>
-                {edit.isPending && <CircleNotch className="animate-spin" aria-hidden="true" />}
-                {t("save")}
-              </Button>
+            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+              <ComposerHint id={hintId} />
+              <div className="ml-auto flex gap-2">
+                <Button variant="ghost" size="lg" disabled={edit.isPending} onClick={() => setEditing(false)}>
+                  {t("cancel")}
+                </Button>
+                <Button size="lg" disabled={!trimmed || edit.isPending} onClick={save}>
+                  {edit.isPending && <CircleNotch className="animate-spin" aria-hidden="true" />}
+                  {t("save")}
+                </Button>
+              </div>
             </div>
           </div>
         ) : (
@@ -166,6 +183,7 @@ function EventRow({ event, text }: { event: TaskEvent; text: string }) {
 export function ActivitySection(ctx: DetailContext & { focusComments?: boolean }) {
   const { task, projectId } = ctx;
   const t = useTranslations("tasks.detail.activity");
+  const hintId = useId();
   const [filter, setFilter] = useState<TimelineFilter>(ctx.focusComments ? "COMMENTS" : "ALL");
   const [text, setText] = useState("");
   const [picked, setPicked] = useState<PersonRef[]>([]);
@@ -224,6 +242,7 @@ export function ActivitySection(ctx: DetailContext & { focusComments?: boolean }
             onChange={setText}
             onPick={(person) => setPicked((current) => (current.some((p) => p.userId === person.userId) ? current : [...current, person]))}
             onSubmit={submit}
+            describedBy={hintId}
             autoFocus={ctx.focusComments}
             label={t("composer.label")}
             placeholder={t("composer.placeholder")}
@@ -231,7 +250,7 @@ export function ActivitySection(ctx: DetailContext & { focusComments?: boolean }
             rows={3}
           />
           <div className="flex items-center justify-between gap-3">
-            <p className="text-xs text-muted-foreground">{t("composer.hint")}</p>
+            <ComposerHint id={hintId} />
             <Button type="submit" size="lg" disabled={!trimmed || add.isPending}>
               {add.isPending ? <CircleNotch className="animate-spin" aria-hidden="true" /> : <PaperPlaneRight aria-hidden="true" />}
               {t("composer.submit")}
