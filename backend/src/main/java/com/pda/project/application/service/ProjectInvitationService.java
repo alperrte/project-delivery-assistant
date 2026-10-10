@@ -109,14 +109,15 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
                 .orElseThrow(() -> new NoSuchElementException("Active user not found"));
         if (memberships.findByProjectIdAndUserIdAndStatus(projectId, targetUserId, MembershipStatus.ACTIVE)
                 .isPresent()) {
-            throw new InvitationConflictException("User is already a project member");
+            throw new InvitationConflictException("User is already a project member",
+                    InvitationConflictException.TARGET_ALREADY_MEMBER);
         }
         expireOrReject(invitations.lockPendingUser(projectId, targetUserId));
         expireOrReject(invitations.lockPendingEmail(projectId, target.email().strip().toLowerCase(java.util.Locale.ROOT)));
         String rawToken = generateToken();
         ProjectInvitation invitation = ProjectInvitation.forRegisteredUser(projectId, targetUserId, actorId,
                 roles, message, rawToken, clock.instant().plus(INVITATION_TTL)).inTeam(teamId);
-        ProjectInvitation saved = invitations.saveAndFlush(invitation);
+        ProjectInvitation saved = insertPending(invitation);
         events.publishEvent(new ProjectInvitationEvents.Created(saved.getId(), projectId, targetUserId, actorId,
                 project.getName()));
         sendInvitationMailSafely(target.email(), project.getName(), teamName, saved, rawToken, false);
@@ -148,7 +149,7 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
         String rawToken = generateToken();
         ProjectInvitation invitation = ProjectInvitation.forEmail(projectId, normalizedEmail, firstName, lastName,
                 actorId, roles, message, rawToken, clock.instant().plus(INVITATION_TTL)).inTeam(teamId);
-        ProjectInvitation saved = invitations.saveAndFlush(invitation);
+        ProjectInvitation saved = insertPending(invitation);
         sendInvitationMailSafely(normalizedEmail, project.getName(), teamName, saved, rawToken, true);
         return new CreatedInvitation(saved, rawToken);
     }
@@ -344,7 +345,8 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
         requireInviterStillManages(invitation);
         if (invitation.getTeamId() != null) requireActiveTeam(projectId, invitation.getTeamId());
         if (memberships.findByProjectIdAndUserIdAndStatus(projectId, userId, MembershipStatus.ACTIVE).isPresent()) {
-            throw new InvitationConflictException("User is already a project member");
+            throw new InvitationConflictException("User is already a project member",
+                    InvitationConflictException.TARGET_ALREADY_MEMBER);
         }
         UserAccounts.AuthenticatedUser account = users.findActiveById(userId)
                 .orElseThrow(() -> new NoSuchElementException("Account not found"));
@@ -397,7 +399,7 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
                 : ProjectInvitation.forRegisteredUser(projectId, current.getInvitedUserId(), actorId,
                         current.getInitialRoles(), current.getMessage(), rawToken, clock.instant().plus(INVITATION_TTL));
         if (current.getTeamId() != null) next.inTeam(current.getTeamId());
-        ProjectInvitation saved = invitations.saveAndFlush(next);
+        ProjectInvitation saved = insertPending(next);
         if (saved.getInvitedUserId() != null) events.publishEvent(new ProjectInvitationEvents.Created(
                 saved.getId(), projectId, saved.getInvitedUserId(), actorId, project.getName()));
 
@@ -472,7 +474,8 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
         ProjectMembership membership = memberships.findByProjectIdAndUserId(projectId, actorId)
                 .map(existing -> {
                     if (existing.getStatus() == MembershipStatus.ACTIVE) {
-                        throw new InvitationConflictException("User is already a project member");
+                        throw new InvitationConflictException("User is already a project member",
+                            InvitationConflictException.TARGET_ALREADY_MEMBER);
                     }
                     existing.reactivate(invitation.getInitialRoles());
                     return existing;
@@ -494,7 +497,8 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
     private void requireInviterStillManages(ProjectInvitation invitation) {
         boolean stillManages = RolePolicy.allows(memberships.activeRoles(invitation.getProjectId(),
                 invitation.getInvitedBy()), ProjectPermission.MEMBER_MANAGE);
-        if (!stillManages) throw new InvitationConflictException("Invitation is no longer valid");
+        if (!stillManages) throw new InvitationConflictException("Invitation is no longer valid",
+                InvitationConflictException.NOT_PENDING);
     }
 
     private ProjectInvitation ownPending(UUID actorId, UUID invitationId) {
@@ -504,7 +508,8 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
         ProjectInvitation invitation = fresh(invitations.lockById(invitationId))
                 .filter(candidate -> actorId.equals(candidate.getInvitedUserId()))
                 .orElseThrow(() -> new NoSuchElementException("Invitation not found"));
-        if (!invitation.isPending(clock.instant())) throw new InvitationConflictException("Invitation is not pending");
+        if (!invitation.isPending(clock.instant())) throw new InvitationConflictException("Invitation is not pending",
+                InvitationConflictException.NOT_PENDING);
         return invitation;
     }
 
@@ -521,7 +526,7 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
                         && candidate.getId().equals(invitationId))
                 .orElseThrow(() -> new NoSuchElementException("Invitation not found"));
         if (!invitation.isPending(clock.instant())) {
-            throw new IllegalStateException("Invitation is not pending");
+            throw new InvitationConflictException("Invitation is not pending", InvitationConflictException.NOT_PENDING);
         }
         return invitation;
     }
@@ -533,16 +538,33 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
                 .filter(candidate -> candidate.getProjectId().equals(projectId))
                 .orElseThrow(() -> new NoSuchElementException("Invitation not found"));
         if (invitation.getStatus()!=InvitationStatus.PENDING&&invitation.getStatus()!=InvitationStatus.EXPIRED) {
-            throw new IllegalStateException("Invitation is not pending");
+            throw new InvitationConflictException("Invitation is not pending", InvitationConflictException.NOT_PENDING);
         }
         return invitation;
+    }
+
+    /**
+     * Inserts a new pending invitation. The per-target partial unique indexes are the last line of defence behind the
+     * project lock, so a violation of one of them is reported like the duplicate it is, not as a generic conflict.
+     */
+    private ProjectInvitation insertPending(ProjectInvitation invitation) {
+        try {
+            return invitations.saveAndFlush(invitation);
+        } catch (org.springframework.dao.DataIntegrityViolationException violation) {
+            String cause = org.springframework.core.NestedExceptionUtils.getMostSpecificCause(violation).getMessage();
+            if (cause != null && cause.contains("uk_project_invitations_pending")) {
+                throw new InvitationConflictException("An invitation is already pending for this target",
+                        InvitationConflictException.ALREADY_PENDING);
+            }
+            throw violation;
+        }
     }
 
     /** Existing target row is locked; flush frees the existing partial unique constraint before a new INSERT. */
     private void expireOrReject(java.util.Optional<ProjectInvitation> pending) {
         pending.ifPresent(invitation -> {
             Instant now=clock.instant();
-            if(invitation.isPending(now))throw new InvitationConflictException("An invitation is already pending for this target");
+            if(invitation.isPending(now))throw new InvitationConflictException("An invitation is already pending for this target",InvitationConflictException.ALREADY_PENDING);
             invitation.expire(now);
             invitations.saveAndFlush(invitation);
         });

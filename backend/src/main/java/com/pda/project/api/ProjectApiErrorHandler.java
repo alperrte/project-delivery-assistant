@@ -126,8 +126,11 @@ public class ProjectApiErrorHandler {
     }
 
     @ExceptionHandler(InvitationConflictException.class)
-    ResponseEntity<ProblemDetail> invitationConflict() {
-        return problem(HttpStatus.CONFLICT, "Invitation conflicts with existing project rules");
+    ResponseEntity<ProblemDetail> invitationConflict(InvitationConflictException exception) {
+        ProblemDetail body = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,
+                "Invitation conflicts with existing project rules");
+        if (exception.code() != null) body.setProperty("code", exception.code());
+        return ResponseEntity.status(HttpStatus.CONFLICT).header("Cache-Control", "no-store").body(body);
     }
 
     /** Never forwards GitHub's own response body/message; only the safe, pre-classified reason. */

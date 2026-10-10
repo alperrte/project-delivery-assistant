@@ -102,8 +102,8 @@ class ProjectInvitationServiceTest {
         ProjectInvitation stored = invitations.findById(invitationId).orElseThrow();
         assertEquals(InvitationStatus.REJECTED, stored.getStatus());
         assertNotNull(stored.getRejectedAt());
-        assertThrows(IllegalStateException.class, () -> invitationService.reject(target, projectId, invitationId,
-                created.rawToken()));
+        assertEquals(InvitationConflictException.NOT_PENDING, assertThrows(InvitationConflictException.class, () -> invitationService.reject(target, projectId, invitationId,
+                created.rawToken())).code());
     }
 
     @Test
@@ -113,11 +113,11 @@ class ProjectInvitationServiceTest {
         UUID projectId = projectService.create(manager, "Duplicate invite project", null, null).getId();
 
         invitationService.inviteRegisteredUser(manager, projectId, target, Set.of(ProjectRole.TESTER), null, team(projectId));
-        assertThrows(InvitationConflictException.class, () -> invitationService.inviteRegisteredUser(manager, projectId, target, Set.of(ProjectRole.ANALYST), null, team(projectId)));
+        assertEquals(InvitationConflictException.ALREADY_PENDING, assertThrows(InvitationConflictException.class, () -> invitationService.inviteRegisteredUser(manager, projectId, target, Set.of(ProjectRole.ANALYST), null, team(projectId))).code());
 
         UUID alreadyMember = registerUser("alreadymember");
         membershipService.addMember(manager, projectId, alreadyMember, Set.of(ProjectRole.TESTER));
-        assertThrows(InvitationConflictException.class, () -> invitationService.inviteRegisteredUser(manager, projectId, alreadyMember, Set.of(ProjectRole.ANALYST), null, team(projectId)));
+        assertEquals(InvitationConflictException.TARGET_ALREADY_MEMBER, assertThrows(InvitationConflictException.class, () -> invitationService.inviteRegisteredUser(manager, projectId, alreadyMember, Set.of(ProjectRole.ANALYST), null, team(projectId))).code());
     }
 
     @Test
@@ -145,8 +145,8 @@ class ProjectInvitationServiceTest {
         invitationService.cancel(manager, projectId, resent.invitation().getId());
         assertEquals(InvitationStatus.CANCELLED,
                 invitations.findById(resent.invitation().getId()).orElseThrow().getStatus());
-        assertThrows(IllegalStateException.class, () -> invitationService.cancel(manager, projectId,
-                resent.invitation().getId()));
+        assertEquals(InvitationConflictException.NOT_PENDING, assertThrows(InvitationConflictException.class, () -> invitationService.cancel(manager, projectId,
+                resent.invitation().getId())).code());
     }
 
     @Test
@@ -160,7 +160,7 @@ class ProjectInvitationServiceTest {
         CreatedInvitation created = invitationService.inviteByEmail(manager, projectId, email, null, null, Set.of(ProjectRole.ANALYST), null, team(projectId));
         assertEquals(target, created.invitation().getInvitedUserId());
 
-        assertThrows(InvitationConflictException.class, () -> invitationService.inviteByEmail(manager, projectId, email, null, null, Set.of(ProjectRole.TESTER), null, team(projectId)));
+        assertEquals(InvitationConflictException.ALREADY_PENDING, assertThrows(InvitationConflictException.class, () -> invitationService.inviteByEmail(manager, projectId, email, null, null, Set.of(ProjectRole.TESTER), null, team(projectId))).code());
 
         UUID anyLoggedInUser = registerUser("bystander4");
         assertThrows(AccessDeniedException.class, () -> invitationService.reject(anyLoggedInUser, projectId,
@@ -433,7 +433,7 @@ class ProjectInvitationServiceTest {
         assertNotEquals(old.invitation().getId(),next.invitation().getId());
         assertEquals("EXPIRED",storedStatus(old));assertEquals("PENDING",storedStatus(next));
         assertEquals(1L,jdbc.queryForObject("SELECT count(*) FROM project_invitations WHERE project_id=? AND invited_user_id=? AND status='PENDING'",Long.class,project,target));
-        assertThrows(InvitationConflictException.class,()->invitationService.inviteRegisteredUser(manager,project,target,Set.of(ProjectRole.TESTER),null,team));
+        assertEquals(InvitationConflictException.ALREADY_PENDING,assertThrows(InvitationConflictException.class,()->invitationService.inviteRegisteredUser(manager,project,target,Set.of(ProjectRole.TESTER),null,team)).code());
     }
 
     @Test
@@ -443,7 +443,7 @@ class ProjectInvitationServiceTest {
         CreatedInvitation old=invitationService.inviteByEmail(manager,project,email,"Audit","Guest",Set.of(ProjectRole.TESTER),null,team);age(old);
         CreatedInvitation next=invitationService.inviteByEmail(manager,project,email.toUpperCase(java.util.Locale.ROOT),"Audit","Guest",Set.of(ProjectRole.TESTER),null,team);
         assertEquals("EXPIRED",storedStatus(old));assertEquals(email,next.invitation().getEmail());
-        assertThrows(InvitationConflictException.class,()->invitationService.inviteByEmail(manager,project,email,"Audit","Guest",Set.of(ProjectRole.TESTER),null,team));
+        assertEquals(InvitationConflictException.ALREADY_PENDING,assertThrows(InvitationConflictException.class,()->invitationService.inviteByEmail(manager,project,email,"Audit","Guest",Set.of(ProjectRole.TESTER),null,team)).code());
     }
 
     @Test

@@ -149,15 +149,15 @@ Faz kayıtlarında ve plan dosyasında listelendi. Faz 6'da yapılan değişikli
 
 ## Remaining issues
 
-- **`ui-ux-app.spec.ts` uyarlaması commit edilmedi.** Main'de bu test, düzeltme commit'lenene kadar düşmeye devam eder. Bu doküman ve plan güncellemesi de commit'lenmeli.
+- ~~`ui-ux-app.spec.ts` uyarlaması commit edilmedi.~~ **Kapandı:** uyarlama, bu doküman ve plan PR #133 ile main'e girdi (`1ba8509`).
 - **`team-member-preview` aralıklı 401:** `team-deletion-notifications` kayıtlı oturumu iki tarayıcı bağlamında paylaşıyor. Uzun koşularda refresh-token yeniden kullanımı oturumu iptal ediyor. Test altyapısı düzeltmesi önerilir.
 - **`next start` aralıklı `ERR_CONNECTION_REFUSED`:** Pre-push'un frontend sunucusu kaynaklı; birkaç koşuda tek test etkilendi.
 - **Pre-push ortam tuzağı:** Son adım backend'i `docker-compose.e2e.yml` olmadan yeniden başlatıyor. Sonraki E2E öncesi override ile başlatılması gerekiyor.
-- **Yerel `main`:** Eski ve `origin/main` ile ortak geçmişi yok. `git switch -C main origin/main` ile eşitlenmeli; istenirse önce yedek alınmalı.
-- **Davet 409:** Genel `errors.conflict` metni gösteriliyor (backend ayrı kod döndürmüyor).
+- ~~Yerel `main` eski ve ilişkisiz.~~ **Kapandı:** eski hâl `main-old-backup` olarak yedeklendi, yerel `main` `origin/main`'e eşitlendi.
+- ~~Davet 409 genel metin.~~ **Kapandı (kullanıcı kararı):** `project-service-backend` takibinde özel `INVITATION_ALREADY_PENDING`, `INVITATION_TARGET_ALREADY_MEMBER` ve `INVITATION_NOT_PENDING` kodları ile TR/EN/DE mesajlar eklendi. Ayrıntı [2026-10-10-invitation-conflict-codes.md](2026-10-10-invitation-conflict-codes.md).
 
 ## Pending product decisions
 
 - E-posta doğrulama ve davetin e-posta ile eşleştirilmesi (önceki oturumlardan açık).
-- "+N" yanıt rozetinin yalnız daveti gönderen yöneticiye mi, tüm yöneticilere mi gösterileceği. Şu an yalnız davet eden görüyor.
-- BASIC depo modunda commit özetine sayfalama eklenip eklenmeyeceği.
+- BASIC depo modunda commit özetine sayfalama: kullanıcı "şimdilik kalsın, sonra hatırlat" dedi (2026-10-10).
+- **Karara bağlandı (2026-10-10):** "+N" yanıt rozeti yalnız daveti gönderen yöneticide kalır.

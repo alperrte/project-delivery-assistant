@@ -35,6 +35,9 @@ const CODE_KEYS: Record<string, string> = {
   TEAM_ARCHIVE_WOULD_ORPHAN: "TEAM_ARCHIVE_WOULD_ORPHAN",
   PROJECT_OWNER_PROTECTED: "PROJECT_OWNER_PROTECTED",
   LAST_PROJECT_MANAGER: "LAST_PROJECT_MANAGER",
+  INVITATION_ALREADY_PENDING: "invitationAlreadyPending",
+  INVITATION_TARGET_ALREADY_MEMBER: "invitationTargetAlreadyMember",
+  INVITATION_NOT_PENDING: "invitationNotPending",
   ...Object.fromEntries(
     [
       "PROJECT_TASK_MODE_NOT_CONFIGURED",
@@ -97,6 +100,15 @@ const CODE_KEYS: Record<string, string> = {
     ].map((code) => [code, code]),
   ),
 };
+
+/**
+ * Same as `errorKey`, for the invitee's own accept action: "the target is already a member" is about the signed-in
+ * user there, so it is phrased in the second person instead of the manager-facing "this person".
+ */
+export function inviteeErrorKey(err: unknown): string {
+  if (err instanceof ApiError && err.code === "INVITATION_TARGET_ALREADY_MEMBER") return "invitationSelfAlreadyMember";
+  return errorKey(err);
+}
 
 /** Maps an API failure to a key under the `errors` i18n namespace. */
 export function errorKey(err: unknown): string {
