@@ -20,8 +20,8 @@ Kullanıcı kararı (2026-10-10): staging (`git add`), branch değiştirme ve `g
 - [x] Phase 4 — `squad-service-backend` (2026-10-10)
 - [x] Transition Gate 4 — user commit/push confirmation (2026-10-10)
 - [x] Phase 5 — `notification-service` (2026-10-10)
-- [ ] Transition Gate 5 — user commit/push confirmation
-- [ ] Phase 6 — Cross-branch final verification / completion
+- [x] Transition Gate 5 — user commit/push confirmation (2026-10-10)
+- [x] Phase 6 — Cross-branch final verification / completion (2026-10-10; kayıtlı istisnayla, bkz. Phase 6 bölümü)
 
 ---
 
@@ -1015,25 +1015,27 @@ STOP → `BRANCH COMPLETE — notification-service`
 
 ## Transition Gate 5
 
-- [ ] Kullanıcı commit/push'u doğruladı.
+- [x] Kullanıcı commit/push'u doğruladı (`f6f2657`; main'e PR #131 `85f784d`).
 
 ---
 
 ## Phase 6 — Final cross-branch verification / completion
 
-- [ ] Tüm branch'lerin ortak integration graph'ında birleştiği kullanıcıyla teyit edildi.
-- [ ] Backend `mvnw clean verify`.
-- [ ] Frontend lint / TypeScript / production build.
-- [ ] Tüm hedefli Playwright paketleri + full Chromium.
-- [ ] `.\pre-push\pre-push.cmd` (Docker build/start/health dahil).
-- [ ] Ayrı completion dokümanı (`docs/compliation/`), md'deki final başlıklarla.
+- [x] Tüm branch'lerin ortak integration graph'ında birleştiği teyit edildi: `origin/main` `85f784d` beş fazın commitlerini içeriyor (detached HEAD'de doğrulandı; yerel `main` eski/ilişkisiz geçmiş, dokunulmadı).
+- [x] Backend `mvnw clean verify`: 664/0/0/0.
+- [x] Frontend lint / TypeScript / production build: temiz.
+- [x] Tüm hedefli Playwright paketleri + full Chromium: 811/814 (aralıklı `team-member-preview`; paralel merge edilen `ui-ux-app.spec.ts` kriter testi entegrasyon çakışması → sayfa akışına uyarlandı, dosya 23/23); public paket 277/278 (aralıklı a11y → 36/36).
+- [x] `.\pre-push\pre-push.cmd`: E2E adımında FAILED (yukarıdaki iki hata); Docker build/start/health ayrıca koşuldu ve geçti.
+- [x] Ayrı completion dokümanı: `docs/compliation/2026-10-10-ui-workflow-state-notification-refinements.md`.
 
 ### Final DoD
 
-- [ ] Tüm branch phase checkbox'ları `[x]`.
-- [ ] Tüm transition gate'ler kullanıcı tarafından doğrulandı.
-- [ ] Cross-branch integration gerçekten mevcut.
-- [ ] Full regression PASS.
-- [ ] Canonical pre-push PASS.
-- [ ] Separate implementation completion hazır.
-- [ ] Agent commit/push/staging yapmadı.
+- [x] Tüm branch phase checkbox'ları `[x]` (Phase 6 hariç; bu bölüm).
+- [x] Tüm transition gate'ler kullanıcı tarafından doğrulandı.
+- [x] Cross-branch integration gerçekten mevcut.
+- [ ] Full regression PASS — katı olarak hayır: aralıklı `team-member-preview` (kullanıcı kararıyla kayıtlı istisna); `ui-ux-app` uyarlaması commit bekliyor.
+- [ ] Canonical pre-push PASS — aynı nedenle hayır.
+- [x] Separate implementation completion hazır.
+- [x] Agent commit/push yapmadı (staging kullanıcı kararıyla ajan tarafından yapıldı).
+
+Global durum: 15 talep uygulandı ve doğrulandı; md'nin "global COMPLETED" şartı (full regression + canonical pre-push PASS) aralıklı test-altyapısı hatası nedeniyle katı biçimde sağlanmadı — kayıtlı istisna.

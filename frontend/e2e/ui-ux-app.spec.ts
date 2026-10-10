@@ -574,15 +574,19 @@ test.describe("Ana CTA ve başarı durumu (giriş sonrası)", () => {
     await page.setViewportSize({ width: 1280, height: 720 });
     await settle(page, `/projects/${slug}/criteria`);
     const title = `Başarı ${Date.now()}`;
-    await page.getByRole("button", { name: tr.criteria.create }).first().click();
-    const field = page.getByRole("dialog").locator("#criterion-title");
+    // Criteria create is a full page since 2026-10-10 (no dialog): the list's "Yeni kriter" link opens it and a
+    // successful save returns to the list, which must already show the new record.
+    await page.getByRole("link", { name: tr.criteria.create }).first().click();
+    await expect(page).toHaveURL(/\/kriterler\/yeni$/);
+    const field = page.locator("#criterion-title");
     if (await field.isVisible().catch(() => false)) {
       await field.fill(title);
-      await page.getByRole("dialog").getByRole("button", { name: /kaydet|ekle|oluştur/i }).first().click();
+      await page.getByRole("button", { name: tr.criteria.form.create, exact: true }).click();
+      await expect(page).toHaveURL(/\/kriterler$/, { timeout: 8000 });
       await expect(page.getByText(title).first()).toBeVisible({ timeout: 8000 });
       f.check("yeni kayıt listede hemen görünüyor", true);
-      await expect(page.getByRole("dialog")).toHaveCount(0, { timeout: 5000 });
-      f.check("başarı sonrası pencere kapanıyor", true);
+      await expect(page.locator("#criterion-title")).toHaveCount(0);
+      f.check("başarı sonrası form kapanıp listeye dönülüyor", true);
     } else {
       f.warn("kriter formu bulunamadı", "başarı durumu form-submit-results.spec.ts ile test edildi");
     }
