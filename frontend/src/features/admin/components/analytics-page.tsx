@@ -56,8 +56,10 @@ function Stat({ label, value, hint }: { label: string; value: ReactNode; hint?: 
   return (
     <div className="rounded-2xl border bg-card p-4">
       <dt className="text-sm text-muted-foreground">{label}</dt>
-      <dd className="mt-1 text-2xl font-semibold tabular-nums tracking-tight">{value}</dd>
-      {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
+      <dd className="mt-1 text-2xl font-semibold tabular-nums tracking-tight">
+        <span data-stat-value>{value}</span>
+        {hint && <p className="mt-1 text-xs font-normal tracking-normal text-muted-foreground">{hint}</p>}
+      </dd>
     </div>
   );
 }

@@ -164,7 +164,7 @@ function DisableForm({ passwordRequired, onDone, onCancel }: { passwordRequired:
           </p>
         )}
         <div className="flex flex-wrap items-center gap-3">
-          <SubmitButton pending={isSubmitting} className="w-auto bg-destructive px-5 text-white hover:bg-destructive/90">
+          <SubmitButton pending={isSubmitting} className="w-auto bg-destructive px-5 text-white dark:text-background hover:bg-destructive/90">
             {t("disableConfirm")}
           </SubmitButton>
           <Button type="button" variant="ghost" onClick={onCancel}>

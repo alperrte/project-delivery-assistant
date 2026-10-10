@@ -2,7 +2,7 @@
 
 import Link from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
-import { EnvelopeSimple, ArrowUpRight } from "@phosphor-icons/react";
+import { EnvelopeSimple, ArrowUpRight, Scales } from "@phosphor-icons/react";
 import { GitHubIcon } from "@/components/common/brand-icons";
 import { APP_VERSION, CONTACT_EMAIL, CONTACT_HREF, CONTRIBUTORS, INFO_LINKS, REPOSITORY_URL } from "@/features/public-info/site-info";
 import { openConsentPreferences } from "@/features/consent/consent-store";
@@ -26,7 +26,7 @@ export function SiteFooter({ tone = "default" }: { tone?: "default" | "auth" }) 
       <div className="mx-auto w-full max-w-[1560px] px-4 py-2 sm:px-8">
         <nav aria-label={t("information")}>
           <ul className="flex flex-wrap justify-center gap-x-5">
-            {INFO_LINKS.map(({ key, href }) => (
+            {INFO_LINKS.filter(({ key }) => key !== "license").map(({ key, href }) => (
               <li key={key}><Link href={href} className={linkClass}>{t(key)}</Link></li>
             ))}
             <li><button type="button" onClick={openConsentPreferences} className={cn(linkClass, "cursor-pointer")}>{t("manageCookies")}</button></li>
@@ -47,9 +47,14 @@ export function SiteFooter({ tone = "default" }: { tone?: "default" | "auth" }) 
             <EnvelopeSimple size={17} aria-hidden="true" className="shrink-0" />{t("contact")}
           </Link>
           <a href={`mailto:${CONTACT_EMAIL}`} className={cn(linkClass, "max-w-full break-all")}>{CONTACT_EMAIL}</a>
-          <a href={REPOSITORY_URL} onClick={() => trackCta("github_repo")} className={linkClass}>
-            <GitHubIcon className="size-4 shrink-0" />{t("source")}<ArrowUpRight size={14} aria-hidden="true" />
-          </a>
+          <div className="flex items-center gap-x-5">
+            <a href={REPOSITORY_URL} onClick={() => trackCta("github_repo")} className={linkClass}>
+              <GitHubIcon className="size-4 shrink-0" />{t("source")}<ArrowUpRight size={14} aria-hidden="true" />
+            </a>
+            <Link href="/license" className={linkClass}>
+              <Scales size={17} aria-hidden="true" className="shrink-0" />{t("license")}
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

@@ -71,7 +71,7 @@ export async function PublicInfoPage({ page }: { page: InfoPage }) {
       {page === "faq" && <FaqJsonLd questions={groups.flatMap((group) => group.questions)} />}
       <header className="max-w-3xl">
         <p className="text-sm font-medium text-muted-foreground">PDA · Project Delivery Assistant</p>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">{t("title")}</h1>
+        <h1 className="mt-3 text-3xl font-semibold tracking-tight [overflow-wrap:anywhere] sm:text-4xl">{t("title")}</h1>
         <p className="mt-4 text-base leading-7 text-muted-foreground">{t("description")}</p>
         {!isLicense && <p className="mt-4 text-sm text-muted-foreground">{common("updated", { date })}</p>}
       </header>

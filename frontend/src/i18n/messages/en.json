@@ -1531,7 +1531,7 @@
       "description": "These preferences are saved to your account and apply every time you sign in.",
       "ui": {
         "label": "Interface animations",
-        "hint": "Animations are on by default. Turn off animations for dialogs, menus, the sidebar and language changes here.",
+        "hint": "Animations are on by default. Your device’s reduced-motion preference is always respected. Turn off animations for dialogs, menus, the sidebar and language changes here.",
         "on": "On",
         "off": "Off"
       },
@@ -1585,6 +1585,7 @@
   },
   "workspace": {
     "navigation": "Navigation menu",
+    "showNavigation": "Show navigation bar",
     "offline": "You are offline. Data refreshes by itself when the connection returns.",
     "search": "Search",
     "searchPlaceholder": "Search pages, projects, or organizations…",
@@ -2660,7 +2661,7 @@
             },
             {
               "question": "Can I run PDA on my own computer or server?",
-              "answer": "Yes. PDA is open source and can run on your own infrastructure. The backend and database start with Docker, and the interface runs with Node.js. The steps are in the README file in the GitHub repository. On your own installation, storing and backing up the data is your responsibility."
+              "answer": "Yes. PDA is open source and can run on your own infrastructure. The backend and database start with Docker, and the interface runs with Next.js. The steps are in the README file in the GitHub repository. On your own installation, storing and backing up the data is your responsibility."
             },
             {
               "question": "Which license is PDA released under?",

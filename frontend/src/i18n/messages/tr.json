@@ -1555,7 +1555,7 @@
       "description": "Bu tercihler hesabınıza kaydedilir ve her girişinizde uygulanır.",
       "ui": {
         "label": "Arayüz animasyonları",
-        "hint": "Animasyonlar varsayılan olarak açıktır. Açılır pencereler, menüler, kenar çubuğu ve dil geçişi animasyonlarını buradan kapatabilirsiniz.",
+        "hint": "Animasyonlar varsayılan olarak açıktır. Cihazınızın hareket azaltma tercihi her zaman dikkate alınır. Açılır pencereler, menüler, kenar çubuğu ve dil geçişi animasyonlarını buradan kapatabilirsiniz.",
         "on": "Açık",
         "off": "Kapalı"
       },
@@ -1609,6 +1609,7 @@
   },
   "workspace": {
     "navigation": "Gezinme menüsü",
+    "showNavigation": "Gezinme çubuğunu göster",
     "offline": "Çevrimdışısınız. Bağlantı gelince bilgiler kendiliğinden yenilenir.",
     "search": "Ara",
     "searchPlaceholder": "Sayfa, proje veya organizasyon ara…",
@@ -2684,7 +2685,7 @@
             },
             {
               "question": "PDA'yı kendi bilgisayarımda veya sunucumda çalıştırabilir miyim?",
-              "answer": "Evet, PDA açık kaynaktır ve kendi altyapınızda çalıştırabilirsiniz. Backend ve veritabanı Docker ile, arayüz ise Node.js ile ayağa kalkar. Adımlar GitHub deposundaki README dosyasında anlatılıyor. Kendi kurulumunuzda verilerin saklanması ve yedeklenmesi sizin sorumluluğunuzdadır."
+              "answer": "Evet, PDA açık kaynaktır ve kendi altyapınızda çalıştırabilirsiniz. Backend ve veritabanı Docker ile, arayüz ise Next.js ile ayağa kalkar. Adımlar GitHub deposundaki README dosyasında anlatılıyor. Kendi kurulumunuzda verilerin saklanması ve yedeklenmesi sizin sorumluluğunuzdadır."
             },
             {
               "question": "PDA hangi lisansla yayınlanıyor?",

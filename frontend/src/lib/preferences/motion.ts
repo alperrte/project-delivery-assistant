@@ -4,7 +4,7 @@ import { useSyncExternalStore } from "react";
 
 /**
  * How much the interface may move, chosen on the Settings page and kept on this device only.
- * - `on`: animate by default, independently of the device setting;
+ * - `on`: animate unless the device asks for reduced motion;
  * - `off`: never animate, whatever the device says.
  */
 export type MotionPreference = "on" | "off";
@@ -80,10 +80,28 @@ export function useThemeTransitionPreference() {
   return [enabled, (next: boolean) => write(THEME_TRANSITION_KEY, next ? "on" : "off")] as const;
 }
 
-/** Every animation follows the same explicit on/off preference. */
+const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
+
+function subscribeToReducedMotion(onChange: () => void) {
+  const query = window.matchMedia(REDUCED_MOTION_QUERY);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+}
+
+/** Whether the operating system asks this browser to reduce motion. */
+export function useDeviceReducedMotion(): boolean {
+  return useSyncExternalStore(
+    subscribeToReducedMotion,
+    () => window.matchMedia(REDUCED_MOTION_QUERY).matches,
+    () => false,
+  );
+}
+
+/** The device accessibility preference and the explicit off choice both stop motion. */
 export function useReducedMotionPreference(): boolean {
   const [preference] = useMotionPreference();
-  return preference === "off";
+  const deviceReducesMotion = useDeviceReducedMotion();
+  return preference === "off" || deviceReducesMotion;
 }
 
 /** Mirrors the choice onto `<html data-motion>`, which the global stylesheet reads. */

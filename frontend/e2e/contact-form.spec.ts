@@ -138,7 +138,7 @@ for (const width of [320, 390, 768, 1024, 1440]) {
         expect(box.x + box.width).toBeLessThanOrEqual(width);
       }
     }
-    // Tab order: first name, last name, e-mail, category, message, then Send. The bot trap is never reached.
+    // Tab order: visible fields, both privacy notice links, then Send. The bot trap is never reached.
     await page.goto("/contact");
     await page.getByLabel("Ad", { exact: true }).focus();
     for (const label of ["Soyad", "E-posta"]) {
@@ -149,6 +149,12 @@ for (const width of [320, 390, 768, 1024, 1440]) {
     await expect(page.getByRole("combobox", { name: "Kategori" })).toBeFocused();
     await page.keyboard.press("Tab");
     await expect(page.getByLabel("Mesaj", { exact: true })).toBeFocused();
+    const noticeLinks = page.locator("form").getByRole("link");
+    await expect(noticeLinks).toHaveCount(2);
+    for (let index = 0; index < 2; index++) {
+      await page.keyboard.press("Tab");
+      await expect(noticeLinks.nth(index)).toBeFocused();
+    }
     await page.keyboard.press("Tab");
     await expect(page.getByRole("button", { name: "Gönder" })).toBeFocused();
   });

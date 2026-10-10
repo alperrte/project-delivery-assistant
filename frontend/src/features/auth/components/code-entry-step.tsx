@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,13 +13,13 @@ import { cn } from "@/lib/utils";
 import { verificationCodeSchema, type VerificationCodeValues } from "../schemas";
 import { useShake } from "./use-shake";
 
-/** The screen timer: after this the field locks and a new code must be requested (the code itself lives 15 minutes). */
-const COUNTDOWN_SECONDS = 180;
+/** Match the server’s 15-minute code lifetime; do not impose a shorter UI deadline. */
+const COUNTDOWN_SECONDS = 15 * 60;
 
 const clock = (seconds: number) => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 
 /**
- * One mailed 6-digit code: a numeric field, the 3-minute countdown, and, once it runs out, "send a new code".
+ * One mailed 6-digit code: a numeric field, the 15-minute countdown, and, once it runs out, "send a new code".
  * Registration, password reset and the account password change all use it; the caller only says what verifying and
  * resending do. Failures thrown by `onVerify` are shown with the usual error mapping.
  */
@@ -41,7 +41,8 @@ export function CodeEntryStep({
   const te = useTranslations("errors");
   const [formError, setFormError] = useState<string | null>(null);
   const [resending, setResending] = useState(false);
-  // The countdown starts when the step first renders; both clocks begin equal, so the first paint reads a full 3:00.
+  const focusAfterResend = useRef(false);
+  // The countdown starts when the step first renders; both clocks begin equal, so the first paint reads a full 15:00.
   const [deadline, setDeadline] = useState(() => Date.now() + COUNTDOWN_SECONDS * 1000);
   const [now, setNow] = useState(() => Date.now());
   const [scope, shake] = useShake<HTMLFormElement>();
@@ -57,6 +58,13 @@ export function CodeEntryStep({
 
   const remaining = Math.min(COUNTDOWN_SECONDS, Math.max(0, Math.ceil((deadline - now) / 1000)));
   const expired = remaining === 0;
+
+  useEffect(() => {
+    if (!expired && focusAfterResend.current) {
+      focusAfterResend.current = false;
+      setFocus("code");
+    }
+  }, [expired, setFocus]);
 
   async function submit({ code }: VerificationCodeValues) {
     setFormError(null);
@@ -74,12 +82,12 @@ export function CodeEntryStep({
     setFormError(null);
     try {
       await onResend();
+      focusAfterResend.current = true;
       const start = Date.now();
       setDeadline(start + COUNTDOWN_SECONDS * 1000);
       setNow(start);
       reset({ code: "" });
       toast.success(t("resent"));
-      setFocus("code");
     } catch (err) {
       setFormError(te(errorKey(err)));
     } finally {

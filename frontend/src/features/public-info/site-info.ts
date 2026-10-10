@@ -16,7 +16,7 @@ export const CONTRIBUTORS = [
   {
     name: "Hamza Taşbay",
     github: "https://github.com/HmzT270",
-    linkedin: "https://www.linkedin.com/in/hamza-ta%C5%9Fbay-3b7b94304/",
+    linkedin: "https://www.linkedin.com/in/hamza-tasbay",
     email: "tasbayh@gmail.com",
     cv: "/cv/hamza-tasbay-cv.pdf",
     photo: "/images/team/hamza-tasbay.webp",

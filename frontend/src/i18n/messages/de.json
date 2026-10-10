@@ -1555,7 +1555,7 @@
       "description": "Diese Einstellungen werden in Ihrem Konto gespeichert und gelten bei jeder Anmeldung.",
       "ui": {
         "label": "Oberflächenanimationen",
-        "hint": "Animationen sind standardmäßig an. Hier können Sie Animationen für Dialoge, Menüs, die Seitenleiste und den Sprachwechsel ausschalten.",
+        "hint": "Animationen sind standardmäßig an. Die Geräteeinstellung für reduzierte Bewegung wird immer berücksichtigt. Hier können Sie Animationen für Dialoge, Menüs, die Seitenleiste und den Sprachwechsel ausschalten.",
         "on": "An",
         "off": "Aus"
       },
@@ -1609,6 +1609,7 @@
   },
   "workspace": {
     "navigation": "Navigationsmenü",
+    "showNavigation": "Navigationsleiste anzeigen",
     "offline": "Sie sind offline. Die Daten werden automatisch aktualisiert, sobald die Verbindung zurück ist.",
     "search": "Suche",
     "searchPlaceholder": "Seiten, Projekte oder Organisationen suchen…",
@@ -2684,7 +2685,7 @@
             },
             {
               "question": "Kann ich PDA auf meinem eigenen Computer oder Server betreiben?",
-              "answer": "Ja. PDA ist Open Source und läuft auf Ihrer eigenen Infrastruktur. Backend und Datenbank starten mit Docker, die Oberfläche läuft mit Node.js. Die Schritte stehen in der README-Datei im GitHub-Repository. Bei einer eigenen Installation sind Sie selbst für Speicherung und Sicherung der Daten verantwortlich."
+              "answer": "Ja. PDA ist Open Source und läuft auf Ihrer eigenen Infrastruktur. Backend und Datenbank starten mit Docker, die Oberfläche läuft mit Next.js. Die Schritte stehen in der README-Datei im GitHub-Repository. Bei einer eigenen Installation sind Sie selbst für Speicherung und Sicherung der Daten verantwortlich."
             },
             {
               "question": "Unter welcher Lizenz wird PDA veröffentlicht?",
