@@ -18,6 +18,15 @@ public class AnalyticsReportingService implements AnalyticsReporting {
 
     @Override
     @Transactional(readOnly = true)
+    public BehaviorReport behavior(Instant from, Instant toExclusive) {
+        return new BehaviorReport(queries.topPages(from, toExclusive), queries.entryPages(from, toExclusive),
+                queries.exitPages(from, toExclusive), queries.flows(from, toExclusive),
+                queries.notFound(from, toExclusive), queries.ctas(from, toExclusive),
+                queries.conversions(from, toExclusive), queries.clientErrors(from, toExclusive));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public TrafficReport traffic(Instant from, Instant toExclusive, ZoneId zone) {
         return new TrafficReport(queries.visits(from, toExclusive), queries.uniqueSessions(from, toExclusive),
                 queries.uniqueVisitors(from, toExclusive), queries.averageEngagedSeconds(from, toExclusive),

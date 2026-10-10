@@ -614,6 +614,55 @@ class AdminAuthIntegrationTest {
                 .andExpect(status().isServiceUnavailable()).andExpect(jsonPath("$.code").value("two_factor_unavailable"));
     }
 
+    // ---- the persistent audit trail ---------------------------------------------------------------------
+
+    @Test
+    void everySignInResultIsWrittenToTheAuditTrailWithAnActorOnlyWhenKnownAndNeverAnEmailOrCode() throws Exception {
+        Integer unknownBefore = jdbc.queryForObject("SELECT count(*) FROM admin_audit_events WHERE actor_user_id IS NULL"
+                + " AND action = 'ADMIN_SIGN_IN' AND outcome = 'FAILURE' AND target_type = 'SYSTEM'", Integer.class);
+        Account admin = newAdmin();
+
+        // A wrong password: the account is not known to the trail (the answer must not reveal it either).
+        adminLogin(admin.email, "Wrong-Pass1").andExpect(status().isUnauthorized());
+        assertEquals(unknownBefore + 1, jdbc.queryForObject("SELECT count(*) FROM admin_audit_events"
+                + " WHERE actor_user_id IS NULL AND action = 'ADMIN_SIGN_IN' AND outcome = 'FAILURE'"
+                + " AND target_type = 'SYSTEM'", Integer.class));
+        assertTrue(auditOutcomes(admin.id).isEmpty());
+
+        // The first right code of the enrolment opens the session: SUCCESS, the account is actor and target.
+        Enrolment enrolled = enrol(admin);
+        assertEquals(java.util.Map.of("SUCCESS", 1), auditOutcomes(admin.id));
+        assertEquals(1, jdbc.queryForObject("SELECT count(*) FROM admin_audit_events WHERE actor_user_id = ?"
+                + " AND target_type = 'USER' AND target_id = ?", Integer.class, admin.id, admin.id));
+
+        // Four wrong codes are FAILURE, the fifth locks the factor (DENIED), and a right code while locked is DENIED too.
+        clock.advance(Duration.ofSeconds(30));
+        Cookie ticket = mfaTicket(admin);
+        for (int attempt = 1; attempt <= 4; attempt++) {
+            postJson("/api/v1/auth/admin/login/2fa", "{\"code\":\"000000\"}", ticket).andExpect(status().isBadRequest());
+        }
+        postJson("/api/v1/auth/admin/login/2fa", "{\"code\":\"000000\"}", ticket).andExpect(status().isTooManyRequests());
+        postJson("/api/v1/auth/admin/login/2fa", "{\"code\":\"" + code(enrolled.secret) + "\"}", ticket)
+                .andExpect(status().isTooManyRequests());
+        assertEquals(java.util.Map.of("SUCCESS", 1, "FAILURE", 4, "DENIED", 2), auditOutcomes(admin.id));
+
+        // Nothing but ids, codes and times: no column could hold free text, and no row mentions an address.
+        assertEquals(java.util.List.of("action", "actor_user_id", "id", "occurred_at", "outcome", "target_id", "target_type"),
+                jdbc.queryForList("SELECT column_name FROM information_schema.columns WHERE table_name = 'admin_audit_events'"
+                        + " ORDER BY column_name", String.class));
+        assertEquals(0, jdbc.queryForObject("SELECT count(*) FROM admin_audit_events WHERE action || target_type || outcome"
+                + " || coalesce(actor_user_id::text, '') || coalesce(target_id::text, '') LIKE '%@%'", Integer.class));
+    }
+
+    private java.util.Map<String, Integer> auditOutcomes(UUID actor) {
+        java.util.Map<String, Integer> outcomes = new java.util.TreeMap<>();
+        jdbc.query("SELECT outcome, count(*) AS total FROM admin_audit_events WHERE actor_user_id = ?"
+                + " AND action = 'ADMIN_SIGN_IN' GROUP BY outcome", rs -> {
+            outcomes.put(rs.getString("outcome"), rs.getInt("total"));
+        }, actor);
+        return outcomes;
+    }
+
     // ---- helpers ---------------------------------------------------------------------------------------
 
     private record Account(UUID id, String email, String password) {}
