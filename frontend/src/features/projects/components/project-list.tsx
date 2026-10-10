@@ -9,7 +9,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { EmptyState } from "@/components/common/empty-state";
 import { EntityCardSkeleton, EntityGrid } from "@/components/common/entity-card";
 import { PaginationBar } from "@/components/common/pagination-bar";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { errorKey } from "@/lib/api/error-message";
 import { PROJECT_PAGE_SIZE, projectsApi } from "../api";
 import { ProjectCard } from "./project-card";
@@ -23,12 +23,13 @@ function pageFromParam(value: string | null): number {
 export function ProjectList() {
   const t = useTranslations("projects");
   const te = useTranslations("errors");
+  const tw = useTranslations("workspace");
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const page = pageFromParam(searchParams.get("page"));
 
-  const { data, isLoading, isError, error } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["projects", page],
     queryFn: () => projectsApi.list(page),
   });
@@ -55,7 +56,12 @@ export function ProjectList() {
         </EntityGrid>
       )}
 
-      {isError && <p className="text-sm text-destructive">{te(errorKey(error))}</p>}
+      {isError && (
+        <div className="flex flex-wrap items-center gap-3">
+          <p role="alert" className="text-sm text-destructive">{te(errorKey(error))}</p>
+          <Button variant="outline" size="sm" onClick={() => void refetch()}>{tw("retry")}</Button>
+        </div>
+      )}
 
       {data && data.content.length === 0 && (
         <EmptyState

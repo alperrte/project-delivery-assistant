@@ -45,7 +45,7 @@ export function FormField({ label, error, hint, password, icon, hideLabel, class
           aria-describedby={describedBy}
           {...props}
           type={password ? (visible ? "text" : "password") : props.type}
-          className={cn("h-11 rounded-lg bg-card px-3.5 text-sm transition-[border-color,box-shadow] duration-200 hover:border-ring/50 focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20 dark:bg-input/30", icon && "pl-11", password && "pr-11", className)}
+          className={cn("h-11 rounded-lg bg-card px-3.5 text-base md:text-sm transition-[border-color,box-shadow] duration-200 hover:border-ring/50 focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20 dark:bg-input/30", icon && "pl-11", password && "pr-11", className)}
         />
         {password && (
           <button

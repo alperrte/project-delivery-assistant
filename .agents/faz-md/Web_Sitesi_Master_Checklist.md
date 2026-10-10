@@ -207,34 +207,34 @@
 
 ### Görsel tasarım ve cihaz uyumu
 
-- [ ] Responsive düzen
-- [ ] Taşma ve kırılma kontrolü
-- [ ] Tutarlı tasarım sistemi
-- [ ] Light / Dark tema
-- [ ] Tema tercihi
-- [ ] Favicon ve uygulama ikonları
-- [ ] Dokunmatik kullanılabilirlik
+- [X] Responsive düzen
+- [X] Taşma ve kırılma kontrolü
+- [X] Tutarlı tasarım sistemi
+- [X] Light / Dark tema
+- [X] Tema tercihi
+- [X] Favicon ve uygulama ikonları
+- [X] Dokunmatik kullanılabilirlik
 
 ### Navigasyon ve eylem yönlendirmeleri
 
-- [ ] Ana CTA
-- [ ] Aktif menü durumu
-- [ ] Logo ile ana sayfaya dönüş
-- [ ] Breadcrumb ve site hiyerarşisi
-- [ ] Geçişlerde başlık ve odak güncellemesi
+- [X] Ana CTA
+- [X] Aktif menü durumu
+- [X] Logo ile ana sayfaya dönüş
+- [X] Breadcrumb ve site hiyerarşisi
+- [X] Geçişlerde başlık ve odak güncellemesi
 
 ### Bütün arayüz durumları
 
-- [ ] Loading / Skeleton
-- [ ] Empty State
-- [ ] Success State
-- [ ] Error State
-- [ ] Disabled State
-- [ ] Hover / Focus / Active State
-- [ ] Toast ve uyarılar
-- [ ] Confirmation Dialog
-- [ ] Offline ve yeniden deneme
-- [ ] HTTP hata ekranları
+- [X] Loading / Skeleton
+- [X] Empty State
+- [X] Success State
+- [X] Error State
+- [X] Disabled State
+- [X] Hover / Focus / Active State
+- [X] Toast ve uyarılar
+- [X] Confirmation Dialog
+- [X] Offline ve yeniden deneme
+- [X] HTTP hata ekranları
 
 ## 7. Üyelik, oturum ve yetkilendirme
 

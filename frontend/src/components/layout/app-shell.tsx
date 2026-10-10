@@ -8,6 +8,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Buildings, SquaresFour, House, GearSix, CalendarBlank, SidebarSimple, EnvelopeSimple, ShieldCheck } from "@phosphor-icons/react";
 import { AppHeader } from "./app-header";
 import { AppBreadcrumb } from "./app-breadcrumb";
+import { OfflineNotice } from "./offline-notice";
 import { BreadcrumbLabelsProvider } from "./breadcrumb-labels";
 import { NotificationOwner } from "@/features/notifications/notification-owner";
 import { ProjectSidebarNav } from "./project-sidebar-nav";
@@ -260,6 +261,7 @@ export function AppShellView({ children, pathname, user, collapsed = false, onLo
       <div className="flex min-w-0 flex-1 flex-col">
         <AppHeader contained={contained} user={user} mobileMenuOpen={menuOpen} onOpenMobileMenu={() => setMenuOpen(true)} onLogout={onLogout} />
         <main id={contained ? undefined : "main-content"} style={contained ? { height: "var(--demo-height)", overflowY: "auto" } : undefined} tabIndex={-1} className={cn("w-full min-w-0 flex-1 pt-(--workspace-header-reserve)", pathname === "/dashboard" ? "" : "mx-auto max-w-[1560px] px-4 pb-6 sm:px-8 sm:pb-8")}>{children}</main>
+        {!contained && <OfflineNotice />}
       </div>
     </div>
   );

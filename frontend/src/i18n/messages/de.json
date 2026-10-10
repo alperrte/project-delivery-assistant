@@ -25,6 +25,8 @@
     },
     "showPassword": "Passwort anzeigen",
     "hidePassword": "Passwort verbergen",
+
+    "close": "Schließen",
     "breadcrumb": "Brotkrumen"
   },
   "forms": {
@@ -1514,6 +1516,8 @@
   },
   "workspace": {
     "navigation": "Navigationsmenü",
+
+    "offline": "Sie sind offline. Die Daten werden automatisch aktualisiert, sobald die Verbindung zurück ist.",
     "search": "Suche",
     "searchPlaceholder": "Seiten, Projekte oder Organisationen suchen…",
     "searchGroups": {
