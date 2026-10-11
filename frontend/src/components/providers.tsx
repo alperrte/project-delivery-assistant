@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeTransitionOverlay } from "@/components/layout/theme-transition";
+import { queryRetryDelay, shouldRetryQuery } from "@/lib/api/query-retry";
 import { applyMotionPreference, useMotionPreference, useReducedMotionPreference } from "@/lib/preferences/motion";
 import { ConsentProvider } from "@/features/consent/consent-provider";
 import { AnalyticsTracker } from "@/features/analytics/tracker";
@@ -16,8 +17,9 @@ import { AnalyticsTracker } from "@/features/analytics/tracker";
  * which still runs correctly through the SSR HTML but triggers a React 19
  * false-positive dev warning. No upstream fix exists (library unmaintained
  * since March 2025): https://github.com/pacocoursey/next-themes/issues/397
+ * The warning only exists in development, so the patch is not installed in production builds.
  */
-if (typeof window !== "undefined" && !("__themeScriptWarningPatched" in window)) {
+if (process.env.NODE_ENV !== "production" && typeof window !== "undefined" && !("__themeScriptWarningPatched" in window)) {
   Object.assign(window, { __themeScriptWarningPatched: true });
   const originalError = console.error;
   console.error = (...args: unknown[]) => {
@@ -48,10 +50,12 @@ export function Providers({ children }: { children: ReactNode }) {
     () =>
       new QueryClient({
         defaultOptions: {
-          queries: { retry: false, refetchOnWindowFocus: false, staleTime: 30_000 },
+          // Reads retry twice on network errors / 502 / 503 / 504 with back-off; 4xx never (src/lib/api/query-retry.ts).
+          queries: { retry: shouldRetryQuery, retryDelay: queryRetryDelay, refetchOnWindowFocus: false, staleTime: 30_000 },
           // Without this a save sent while the browser is offline is paused, not failed: the button stays disabled with no
           // message and the request fires by itself when the connection returns. Failing right away shows the network error.
-          mutations: { networkMode: "always" },
+          // Mutations are never retried: a repeated POST could run twice.
+          mutations: { networkMode: "always", retry: false },
         },
       }),
   );

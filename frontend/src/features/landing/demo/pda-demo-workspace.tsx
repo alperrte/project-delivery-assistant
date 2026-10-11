@@ -11,12 +11,11 @@ import { TeamDetailPage } from "@/features/squads/components/team-detail-page";
 import { TaskFormBody } from "@/features/tasks/components/task-form-page";
 import { TasksPage } from "@/features/tasks/components/tasks-page";
 import { emptyTaskForm } from "@/features/tasks/schemas";
-import { TASK_STATUSES } from "@/features/tasks/types";
 import { demoData, DEMO_USER, demoPage, type DemoData } from "./demo-data";
+import { DELIVERY_STATUSES } from "./delivery-statuses";
 import { LandingPdaDemoProvider } from "./landing-pda-demo-provider";
 
 export type DemoStage = "project" | "team" | "task" | "delivery";
-export const DELIVERY_STATUSES = TASK_STATUSES.filter(status => status !== "BACKLOG");
 const STATIC_PROGRESS = { project: 0.16, team: 0.4, task: 0.61, delivery: 0.96 };
 const noop = () => {};
 const fraction = (value: number, start: number, duration: number) => Math.max(0, Math.min(1, (value - start) / duration));

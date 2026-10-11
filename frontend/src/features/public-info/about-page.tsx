@@ -52,7 +52,7 @@ export async function AboutPage() {
               {CONTRIBUTORS.map(({ name, github, linkedin, email, cv, photo }) => (
                 <li key={github} className="overflow-hidden rounded-xl border border-border bg-card">
                   <div className="flex flex-col items-center bg-linear-to-br from-primary/15 via-primary/5 to-transparent px-6 pb-5 pt-6 text-center">
-                    <Image src={photo} alt={t("team.photoAlt", { name })} width={240} height={240} className="size-28 rounded-full border-4 border-background object-cover shadow-sm" />
+                    <Image src={photo} alt={t("team.photoAlt", { name })} width={240} height={240} sizes="112px" className="size-28 rounded-full border-4 border-background object-cover shadow-sm" />
                     <h3 className="mt-4 text-xl font-semibold">{name}</h3>
                     <p className="mt-2 inline-flex rounded-full border border-border bg-background px-3 py-1 text-xs font-medium text-muted-foreground">{t("role")}</p>
                   </div>

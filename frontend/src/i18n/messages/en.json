@@ -40,6 +40,7 @@
   },
   "errors": {
     "network": "Could not reach the server. Check your connection and try again.",
+    "timeout": "The request timed out. Please try again.",
     "generic": "Something went wrong. Please try again.",
     "tooManyRequests": "Too many attempts. Please wait a moment and try again.",
     "invalidCredentials": "Incorrect email or password.",
@@ -2827,7 +2828,7 @@
           "title": "Service providers and transfers abroad",
           "paragraphs": [
             "E-mails are sent through Gmail SMTP (Google, USA). The optional Google/GitHub sign-in and the GitHub repository features connect to the respective providers (USA). The hosting provider has not been chosen yet; this policy will be updated once it is.",
-            "Details of these transfers and their legal basis are in the “Recipients and transfers abroad” section of the KVKK Privacy Notice and in the GDPR sections below."
+            "Details of these transfers (recipients, country, which data goes where) and their current status under Article 9 of the Law are in the “Recipients and transfers abroad” section of the KVKK Privacy Notice and in the GDPR sections below; the controllers track compliance of these transfers."
           ]
         },
         {
@@ -2857,7 +2858,7 @@
               [
                 "Contact-form status records and stored support messages (name, e-mail, category, message)",
                 "12 months",
-                "Deleted automatically. The e-mail copy sent to the PDA inbox is not covered by this automatic deletion; you can ask for it to be deleted as a data-subject request."
+                "Deleted automatically. The e-mail copies delivered to the PDA inbox (Gmail) are cleaned up manually by the controllers at least once a year: messages older than 12 months are deleted at the latest in the yearly cleanup, and immediately on request (data request via the contact-form category “KVKK / data request” or by e-mail)."
               ],
               [
                 "Visit analytics (sessions, page views, button clicks and error events)",
@@ -2884,7 +2885,7 @@
           "id": "children",
           "title": "Children",
           "paragraphs": [
-            "PDA is not intended for children under 16 and does not verify age. If you are under 16, do not create an account without the knowledge of your parent or legal guardian. If you notice an account that belongs to a child, tell us and we will delete it."
+            "PDA is not directed at children. Minors should use PDA with the knowledge of their legal representative."
           ]
         },
         {
@@ -2915,7 +2916,7 @@
           "title": "GDPR: recipients and international transfers (Chapter V)",
           "paragraphs": [
             "Recipients are the project members you work with, Google (Gmail SMTP for e-mail; optional Google sign-in), GitHub (optional sign-in; repository features) and, once chosen, the hosting provider. The controllers themselves are located in Türkiye, a third country without a European Commission adequacy decision.",
-            "Google and GitHub may process data in the USA. Where they transfer personal data to third countries, they rely on the transfer mechanisms they provide, for example an adequacy decision (Art. 45) or standard contractual clauses (Art. 46); which mechanism applies is set out in the providers' own documentation. Sign-in with Google/GitHub is optional."
+            "Personal data is transferred to the USA, to Google LLC (Gmail SMTP; optional Google sign-in) and GitHub, Inc. (GitHub API; optional GitHub sign-in). Verification and reset codes and notifications about contact-form messages are sent through Gmail; sign-in identifiers go to Google or GitHub only if you choose that sign-in; repository metadata requests go to GitHub when you use the repository feature. The optional sign-ins and the repository feature can be avoided; you can also register with e-mail and password. The controllers track the compliance of these transfers with Chapter V GDPR and Art. 9 KVKK (appropriate safeguards such as standard contractual clauses under Art. 46) and will update this text as such safeguards are put in place. This text does not claim that any specific safeguard or contract is already in place."
           ]
         },
         {
@@ -3047,7 +3048,8 @@
             "Authorities: public bodies and authorities, where a legal obligation arises."
           ],
           "closing": [
-            "Transfers abroad (Art. 9): Google and GitHub may process data in the USA. These transfers rely on the transfer mechanisms the providers use under Article 9 of the Law; which mechanism applies is stated in the providers' own privacy and data-processing documents. E-mail sending is necessary for the service to work; sign-in with Google/GitHub is optional and you can also register with e-mail and password."
+            "Transfers abroad (Art. 9): personal data is transferred to the following recipients in the USA: Google LLC (Gmail SMTP and optional Google sign-in) and GitHub, Inc. (GitHub API and optional GitHub sign-in). Verification and reset codes and notifications about contact-form messages are sent through Gmail; your sign-in identifiers go to Google or GitHub only if you choose that sign-in; repository metadata requests go to GitHub when you use the repository feature.",
+            "The optional Google/GitHub sign-in and the repository features can be avoided; you can also register with e-mail and password. Sending e-mail, however, is necessary for the service to work. The controllers track compliance of these transfers with Article 9 of the Law (appropriate safeguards such as standard contracts and the notification to the Board) and will update this text as these safeguards are put in place. This text does not state that any specific safeguard or contract is already in place."
           ]
         },
         {
@@ -3077,7 +3079,7 @@
               [
                 "Contact-form status records and stored support messages (name, e-mail, category, message)",
                 "12 months",
-                "Deleted automatically. The e-mail copy sent to the PDA inbox is not covered by this automatic deletion; you can ask for it to be deleted as a data-subject request."
+                "Deleted automatically. The e-mail copies delivered to the PDA inbox (Gmail) are cleaned up manually by the controllers at least once a year: messages older than 12 months are deleted at the latest in the yearly cleanup, and immediately on request (data request via the contact-form category “KVKK / data request” or by e-mail)."
               ],
               [
                 "Visit analytics (sessions, page views, button clicks and error events)",
@@ -3134,10 +3136,10 @@
         },
         {
           "id": "verbis",
-          "title": "VERBİS assessment",
+          "title": "VERBİS registration",
           "paragraphs": [
-            "The data controllers are natural persons and run PDA as a non-commercial open-source project. Whether they must register in the Data Controllers' Registry (VERBİS) is being assessed against the exemption criteria set by the Personal Data Protection Board (annual number of employees, annual financial balance-sheet total and main field of activity).",
-            "Because this assessment has not concluded, there is no VERBİS registration number. This notice will be updated if the outcome changes."
+            "The data controllers are natural persons and run PDA as a non-commercial open-source project. The controllers (Hamza Taşbay and Alper Temiz) have no employees and no company or commercial revenue, so they are below the thresholds set by the Personal Data Protection Board for registration (fewer than 50 employees per year and an annual financial balance-sheet total below the amount set by the Board).",
+            "Accordingly, there is currently no obligation to register in the Data Controllers' Registry (VERBİS), and there is no VERBİS registration number. If the obligation arises, it will be fulfilled within the legal period and this notice will be updated."
           ]
         },
         {
@@ -3530,7 +3532,7 @@
           "title": "Account rules",
           "paragraphs": [
             "You must give correct information when registering, use your account only yourself and keep your password secret. You are responsible for actions taken with your account; if you suspect unauthorised use, change your password and tell us. We recommend enabling two-factor authentication.",
-            "PDA is not intended for children under 16. Do not create an account in someone else's name without their permission."
+            "PDA is not directed at children; minors should use it with the knowledge of their legal representative. Do not create an account in someone else's name without their permission."
           ]
         },
         {
@@ -4407,7 +4409,7 @@
     },
     "notice": {
       "title": "Before you send",
-      "text": "The data controllers are Hamza Taşbay and Alper Temiz. Your message is processed to reply to you; it is kept for 12 months and delivered by email to the PDA inbox (Gmail). Do not write your password, verification code or the secret parts of an invitation link.",
+      "text": "The data controllers are Hamza Taşbay and Alper Temiz. Your message is processed to reply to you; it is kept for 12 months and delivered by email to the PDA inbox (Gmail); the copies in the inbox are cleaned up manually at least once a year (messages older than 12 months are deleted at the latest in the yearly cleanup, and immediately on request). Do not write your password, verification code or the secret parts of an invitation link.",
       "privacy": "Privacy Policy",
       "more": "Details:",
       "kvkk": "KVKK Privacy Notice"

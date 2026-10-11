@@ -40,6 +40,7 @@
   },
   "errors": {
     "network": "Sunucuya ulaşılamadı. Bağlantınızı kontrol edip tekrar deneyin.",
+    "timeout": "İstek zaman aşımına uğradı. Lütfen tekrar deneyin.",
     "generic": "Bir şeyler ters gitti. Lütfen tekrar deneyin.",
     "tooManyRequests": "Çok fazla deneme yaptınız. Biraz bekleyip tekrar deneyin.",
     "invalidCredentials": "E-posta veya şifre hatalı.",
@@ -2851,7 +2852,7 @@
           "title": "Hizmet sağlayıcılar ve yurt dışı aktarım",
           "paragraphs": [
             "E-postalar Gmail SMTP (Google, ABD) üzerinden gönderilir. İsteğe bağlı Google/GitHub girişi ve GitHub depo özellikleri ilgili sağlayıcılara (ABD) bağlanır. Barındırma sağlayıcısı henüz belirlenmemiştir; belirlendiğinde bu politika güncellenecektir.",
-            "Bu aktarımların ayrıntıları ve hukuki dayanağı KVKK Aydınlatma Metni'nin “Alıcılar ve yurt dışına aktarım” bölümünde anlatılır."
+            "Bu aktarımların ayrıntıları (alıcılar, ülke, hangi verinin nereye gittiği) ve Kanun'un 9. maddesi bakımından mevcut durum KVKK Aydınlatma Metni'nin “Alıcılar ve yurt dışına aktarım” bölümünde anlatılır."
           ]
         },
         {
@@ -2881,7 +2882,7 @@
               [
                 "İletişim formu durum kayıtları ve saklanan destek mesajları (ad, e-posta, kategori, mesaj)",
                 "12 ay",
-                "Otomatik silinir. PDA gelen kutusuna e-posta olarak iletilen kopya bu otomatik silmeye dahil değildir; silinmesini hak talebi olarak isteyebilirsiniz."
+                "Otomatik silinir. PDA gelen kutusuna (Gmail) e-posta olarak iletilen kopyalar veri sorumluları tarafından en az yılda bir elle temizlenir: 12 aydan eski mesajlar en geç yıllık temizlikte silinir; talebiniz üzerine (iletişim formunda “KVKK / veri talebi” kategorisi veya e-posta) hemen silinir."
               ],
               [
                 "Ziyaret analitiği (oturum, sayfa görüntüleme, düğme tıklaması ve hata olayları)",
@@ -2908,7 +2909,7 @@
           "id": "children",
           "title": "Çocuklar",
           "paragraphs": [
-            "PDA 16 yaşın altındaki çocuklara yönelik değildir ve yaş doğrulaması yapılmaz. 16 yaşın altındaysanız ebeveyninizin veya yasal temsilcinizin bilgisi olmadan hesap açmayın. Bir çocuğa ait hesap olduğunu fark ederseniz bize bildirin; hesabı sileriz."
+            "PDA çocuklara yönelik değildir. Reşit olmayanlar PDA'yı yasal temsilcilerinin bilgisi dahilinde kullanmalıdır."
           ]
         },
         {
@@ -3025,7 +3026,8 @@
             "Yetkili kurumlar: yasal bir yükümlülük doğduğunda ilgili kamu kurum ve kuruluşları."
           ],
           "closing": [
-            "Yurt dışına aktarım (m.9): Google ve GitHub hizmetleri verileri ABD'de işleyebilir. Bu aktarımlar, ilgili sağlayıcıların Kanun'un 9. maddesine göre kullandığı aktarım mekanizmalarına dayanır; hangi mekanizmanın kullanıldığı sağlayıcıların kendi gizlilik ve veri işleme belgelerinde belirtilir. E-posta gönderimi hizmetin çalışması için gereklidir; Google/GitHub ile giriş ise isteğe bağlıdır, e-posta ve şifreyle de kayıt olabilirsiniz."
+            "Yurt dışına aktarım (m.9): Kişisel veriler ABD'deki şu alıcılara aktarılır: Google LLC (Gmail SMTP ve isteğe bağlı Google ile giriş) ve GitHub, Inc. (GitHub API ve isteğe bağlı GitHub ile giriş). Doğrulama ve sıfırlama kodları ile iletişim mesajı bildirimleri Gmail üzerinden gönderilir; Google veya GitHub'a giriş tanımlayıcılarınız yalnızca bu giriş yolunu seçtiğinizde gider; depo özelliği kullanıldığında GitHub'a depo bilgisi istekleri gönderilir.",
+            "İsteğe bağlı Google/GitHub girişi ve depo özellikleri kullanılmayarak bu aktarımlardan kaçınılabilir; e-posta ve şifreyle de kayıt olabilirsiniz. E-posta gönderimi ise hizmetin çalışması için gereklidir. Veri sorumluları bu aktarımların Kanun'un 9. maddesine uyumunu (standart sözleşmeler ve Kurula bildirim gibi uygun güvenceler) takip etmektedir ve bu güvenceler sağlandıkça bu metni güncelleyecektir. Belirli bir güvencenin veya sözleşmenin hâlihazırda tamamlandığı beyan edilmemektedir."
           ]
         },
         {
@@ -3055,7 +3057,7 @@
               [
                 "İletişim formu durum kayıtları ve saklanan destek mesajları (ad, e-posta, kategori, mesaj)",
                 "12 ay",
-                "Otomatik silinir. PDA gelen kutusuna e-posta olarak iletilen kopya bu otomatik silmeye dahil değildir; silinmesini hak talebi olarak isteyebilirsiniz."
+                "Otomatik silinir. PDA gelen kutusuna (Gmail) e-posta olarak iletilen kopyalar veri sorumluları tarafından en az yılda bir elle temizlenir: 12 aydan eski mesajlar en geç yıllık temizlikte silinir; talebiniz üzerine (iletişim formunda “KVKK / veri talebi” kategorisi veya e-posta) hemen silinir."
               ],
               [
                 "Ziyaret analitiği (oturum, sayfa görüntüleme, düğme tıklaması ve hata olayları)",
@@ -3112,10 +3114,10 @@
         },
         {
           "id": "verbis",
-          "title": "VERBİS değerlendirmesi",
+          "title": "VERBİS kayıt yükümlülüğü",
           "paragraphs": [
-            "Veri sorumluları gerçek kişidir ve PDA'yı ticari amaç gütmeden, açık kaynaklı bir proje olarak yürütmektedir. Veri Sorumluları Siciline (VERBİS) kayıt yükümlülüğü, Kişisel Verileri Koruma Kurulu'nun sicile kayıt yükümlülüğüne getirdiği istisna kriterleri (yıllık çalışan sayısı, yıllık mali bilanço toplamı ve asıl faaliyet konusu) çerçevesinde değerlendirilmektedir.",
-            "Bu değerlendirme sonuçlanmadığı için bir VERBİS kayıt numarası bulunmamaktadır. Sonuç değiştirirse bu metin güncellenecektir."
+            "Veri sorumluları gerçek kişidir ve PDA'yı ticari amaç gütmeden, açık kaynaklı bir proje olarak yürütmektedir. Veri sorumlularının (Hamza Taşbay ve Alper Temiz) çalışanı ve şirketi ya da ticari geliri bulunmamaktadır; bu nedenle Kişisel Verileri Koruma Kurulu'nun sicile kayıt için belirlediği eşiklerin (yıllık çalışan sayısı 50'den az ve yıllık mali bilanço toplamı Kurul'un belirlediği tutarın altında) altındadırlar.",
+            "Dolayısıyla şu anda Veri Sorumluları Siciline (VERBİS) kayıt yükümlülüğü bulunmamaktadır ve bir VERBİS kayıt numarası yoktur. Yükümlülük doğarsa yasal süre içinde yerine getirilecek ve bu metin güncellenecektir."
           ]
         },
         {
@@ -3508,7 +3510,7 @@
           "title": "Hesap kuralları",
           "paragraphs": [
             "Kayıt sırasında doğru bilgi vermeli, hesabınızı yalnız kendiniz kullanmalı ve şifrenizi gizli tutmalısınız. Hesabınızla yapılan işlemlerden siz sorumlusunuz; hesabınızın izinsiz kullanıldığından şüphelenirseniz şifrenizi değiştirin ve bize bildirin. İki adımlı doğrulamayı etkinleştirmenizi öneririz.",
-            "PDA 16 yaşın altındaki çocuklara yönelik değildir. Başkası adına, onun izni olmadan hesap açmayın."
+            "PDA çocuklara yönelik değildir; reşit olmayanlar yasal temsilcilerinin bilgisi dahilinde kullanmalıdır. Başkası adına, onun izni olmadan hesap açmayın."
           ]
         },
         {
@@ -4385,7 +4387,7 @@
     },
     "notice": {
       "title": "Göndermeden önce",
-      "text": "Veri sorumluları Hamza Taşbay ve Alper Temiz'dir. Mesajınız size yanıt vermek için işlenir; 12 ay saklanır ve PDA gelen kutusuna (Gmail) e-posta olarak iletilir. Şifrenizi, doğrulama kodunuzu veya davet bağlantınızdaki gizli bilgileri yazmayın.",
+      "text": "Veri sorumluları Hamza Taşbay ve Alper Temiz'dir. Mesajınız size yanıt vermek için işlenir; 12 ay saklanır ve PDA gelen kutusuna (Gmail) e-posta olarak iletilir; gelen kutusundaki kopyalar en az yılda bir elle temizlenir (12 aydan eski mesajlar en geç yıllık temizlikte, talebiniz üzerine hemen silinir). Şifrenizi, doğrulama kodunuzu veya davet bağlantınızdaki gizli bilgileri yazmayın.",
       "privacy": "Gizlilik Politikası",
       "more": "Ayrıntılar:",
       "kvkk": "KVKK Aydınlatma Metni"

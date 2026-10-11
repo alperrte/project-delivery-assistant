@@ -40,7 +40,7 @@ for (const locale of locales) {
 test("KVKK notice (TR): controllers, legal bases, recipients, retention table, rights, application route and VERBİS", async ({ page }) => {
   const text = await articleText(page, "/kvkk", "tr");
   await expect(page.locator("h1")).toHaveText("KVKK Aydınlatma Metni");
-  for (const fact of ["Hamza Taşbay", "Alper Temiz", "gerçek kişi", "MERSİS", "KEP", "m.5/2(c)", "m.5/2(f)", "m.5/2(ç)", "m.5/2(e)", "m.5/1", "Gmail SMTP", "Google", "GitHub", "ABD", "barındırma sağlayıcısı henüz belirlenmemiştir", "VERBİS", "30 gün", "KVKK / veri talebi", "Kişisel Verileri Koruma Kurulu", "dışa aktarılması henüz uygulama içinden", "açık rıza talebi değildir"]) {
+  for (const fact of ["Hamza Taşbay", "Alper Temiz", "gerçek kişi", "MERSİS", "KEP", "m.5/2(c)", "m.5/2(f)", "m.5/2(ç)", "m.5/2(e)", "m.5/1", "Gmail SMTP", "Google", "GitHub", "ABD", "barındırma sağlayıcısı henüz belirlenmemiştir", "VERBİS", "Google LLC", "GitHub, Inc.", "30 gün", "KVKK / veri talebi", "Kişisel Verileri Koruma Kurulu", "dışa aktarılması henüz uygulama içinden", "açık rıza talebi değildir"]) {
     expect(text, fact).toContain(fact);
   }
   // Purposes and bases are a real table with a header row; the retention periods are one too.
@@ -58,12 +58,101 @@ test("KVKK notice (TR): controllers, legal bases, recipients, retention table, r
 test("privacy policy (TR): categories, account deletion and anonymisation, retention, children, GDPR note", async ({ page }) => {
   const text = await articleText(page, "/privacy", "tr");
   await expect(page.locator("h1")).toHaveText("Gizlilik Politikası");
-  for (const fact of ["profil fotoğrafı", "İki adımlı doğrulama", "sohbet", "bildirim", "organizasyon", "takvim", "hatırlatıcı", "Destek mesajları", "anonimleştirilir", "sahipliği devretmeli", "Yönetici hesabı kendini silemez", "16 yaş", "GDPR"]) {
+  for (const fact of ["profil fotoğrafı", "İki adımlı doğrulama", "sohbet", "bildirim", "organizasyon", "takvim", "hatırlatıcı", "Destek mesajları", "anonimleştirilir", "sahipliği devretmeli", "Yönetici hesabı kendini silemez", "yasal temsilcilerinin bilgisi dahilinde", "GDPR"]) {
     expect(text, fact).toContain(fact);
   }
   expect(text).not.toContain("otomatik hesap silme ekranı bulunmaz");
   expect(text).not.toContain("Mevcut sürümde otomatik hesap silme");
   await expect(page.locator("article table")).toHaveCount(1);
+});
+
+// Corrections of 2026-10-11 (user decisions): VERBİS is final, no age threshold, yearly mailbox cleanup, honest Art. 9 / Chapter V wording.
+const AGE_CLAIM = /\b16\s*(yaş|years?|Jahre)|under 16|unter 16|16 yaşın/i;
+const OLD_WORDING = /aktarım mekanizmalarına dayanır|providers' own|own privacy and data-processing documents|eigenen Datenschutz- und Datenverarbeitungsunterlagen|bu otomatik silmeye dahil değildir|is not covered by this automatic deletion|von dieser automatischen Löschung nicht erfasst|değerlendirilmektedir|is being assessed against|wird anhand der vom Datenschutzrat|hesabı sileriz|we will delete it|wir löschen es/;
+
+for (const locale of locales) {
+  test(`no age threshold, no deletion claim and none of the replaced wording on any legal page: ${locale}`, async ({ page }) => {
+    test.slow(); // six pages in one test; the dev server compiles them on first visit
+    for (const route of pages) {
+      const text = await articleText(page, route, locale);
+      expect(text, `${locale} ${route}`).not.toMatch(AGE_CLAIM);
+      expect(text, `${locale} ${route}`).not.toMatch(OLD_WORDING);
+    }
+    // The FAQ (answers sit in closed <details>) too.
+    await articleText(page, "/faq", locale);
+    const faq = ((await page.locator("article").textContent()) ?? "").replace(/\s+/g, " ");
+    expect(faq).not.toMatch(AGE_CLAIM);
+    expect(faq).not.toMatch(OLD_WORDING);
+  });
+}
+
+test("minors: neutral wording (not directed at children, with the legal representative's knowledge) in the terms and the privacy policy", async ({ page }) => {
+  const expected = {
+    tr: ["çocuklara yönelik değildir", "yasal temsilcilerinin bilgisi dahilinde"],
+    en: ["not directed at children", "knowledge of their legal representative"],
+    de: ["nicht an Kinder", "Wissen ihres gesetzlichen Vertreters"],
+  } as const;
+  for (const locale of locales) {
+    for (const route of ["/terms", "/privacy"] as const) {
+      const text = await articleText(page, route, locale);
+      for (const fact of expected[locale]) expect(text, `${locale} ${route}`).toContain(fact);
+    }
+  }
+});
+
+test("VERBİS: the final statement (no registration obligation at present) is on the KVKK notice in all three languages", async ({ page }) => {
+  const expected = {
+    tr: ["kayıt yükümlülüğü bulunmamaktadır", "yasal süre içinde yerine getirilecek", "çalışanı ve şirketi ya da ticari geliri bulunmamaktadır", "50'den az"],
+    en: ["no obligation to register in the Data Controllers' Registry (VERBİS)", "fulfilled within the legal period", "no employees and no company or commercial revenue", "fewer than 50 employees"],
+    de: ["keine Pflicht zur Eintragung in das Register der Verantwortlichen (VERBİS)", "innerhalb der gesetzlichen Frist erfüllt", "keine Beschäftigten und kein Unternehmen und keine kommerziellen Einnahmen", "weniger als 50 Beschäftigte"],
+  } as const;
+  for (const locale of locales) {
+    const text = await articleText(page, "/kvkk", locale);
+    for (const fact of expected[locale]) expect(text, `${locale} ${fact}`).toContain(fact);
+    // No specific amount or Board decision number is cited.
+    expect(text, locale).not.toMatch(/\b\d[\d.,]*\s*(TL|TRY|₺|Mio|million|milyon)/i);
+    expect(text, locale).not.toMatch(/Karar(ı)? (No|Sayı)|Board Decision (No|\d)|Beschluss Nr|\b20\d\d\/\d+\b/i);
+  }
+});
+
+test("mailbox copies of contact messages: the yearly manual cleanup and the immediate deletion on request are stated consistently", async ({ page }) => {
+  const expected = {
+    tr: ["en az yılda bir elle temizlenir", "12 aydan eski mesajlar en geç yıllık temizlikte silinir", "hemen silinir"],
+    en: ["cleaned up manually by the controllers at least once a year", "messages older than 12 months are deleted at the latest in the yearly cleanup", "immediately on request"],
+    de: ["mindestens einmal jährlich manuell bereinigt", "älter als 12 Monate sind, werden spätestens bei der jährlichen Bereinigung gelöscht", "auf Anfrage sofort"],
+  } as const;
+  for (const locale of locales) {
+    for (const route of ["/kvkk", "/privacy"] as const) {
+      const text = await articleText(page, route, locale);
+      for (const fact of expected[locale]) expect(text, `${locale} ${route}`).toContain(fact);
+    }
+  }
+});
+
+test("cross-border transfers: recipients, country and data are named, the safeguards are not claimed to be in place, and KVKK m.9 is tracked", async ({ page }) => {
+  const expected = {
+    tr: ["Google LLC", "GitHub, Inc.", "ABD", "takip etmektedir", "güvenceler sağlandıkça bu metni güncelleyecektir", "tamamlandığı beyan edilmemektedir", "kullanılmayarak bu aktarımlardan kaçınılabilir"],
+    en: ["Google LLC", "GitHub, Inc.", "USA", "track compliance", "will update this text as these safeguards are put in place", "does not state that any specific safeguard or contract is already in place", "can be avoided"],
+    de: ["Google LLC", "GitHub, Inc.", "USA", "verfolgen die Einhaltung", "sobald diese Garantien geschaffen sind", "gibt nicht an, dass bereits eine bestimmte Garantie oder ein bestimmter Vertrag besteht", "lassen sich vermeiden"],
+  } as const;
+  for (const locale of locales) {
+    const text = await articleText(page, "/kvkk", locale);
+    for (const fact of expected[locale]) expect(text, `${locale} ${fact}`).toContain(fact);
+    // The hosting provider is still undecided.
+    expect(text, locale).toMatch(/barındırma sağlayıcısı henüz belirlenmemiştir|hosting provider for PDA's production environment has not been chosen yet|Hosting-Anbieter für die Produktivumgebung von PDA ist noch nicht ausgewählt/);
+  }
+  // The GDPR section of the English and German policies reflects the same honest status, in the Chapter V section.
+  for (const [locale, facts] of [["en", ["Chapter V GDPR", "does not claim that any specific safeguard or contract is already in place"]], ["de", ["Kapitel V DSGVO", "behauptet nicht, dass bereits eine bestimmte Garantie oder ein bestimmter Vertrag besteht"]]] as const) {
+    const text = await articleText(page, "/privacy", locale);
+    for (const fact of facts) expect(text, `${locale} ${fact}`).toContain(fact);
+  }
+});
+
+test("GDPR Art. 27: the 'being assessed, no representative appointed' wording is unchanged", async ({ page }) => {
+  const en = await articleText(page, "/privacy", "en");
+  expect(en).toContain("Whether Article 3(2) GDPR applies to PDA, and therefore whether a representative in the Union must be appointed under Article 27, is being assessed. No representative has been appointed at present; this section will be updated when the assessment concludes.");
+  const de = await articleText(page, "/privacy", "de");
+  expect(de).toContain("wird derzeit geprüft. Derzeit ist kein Vertreter benannt; dieser Abschnitt wird aktualisiert, sobald die Prüfung abgeschlossen ist.");
 });
 
 test("terms of use: the route is localized, final, linked from the footer and covers the agreed subjects", async ({ page }) => {

@@ -14,7 +14,7 @@ export function EntityCover({ src, className, fallback }: { src: string | null; 
   return (
     <div aria-hidden="true" className={cn("relative aspect-[3/1] w-full overflow-hidden bg-muted sm:aspect-[4/1]", className)}>
       {showImage ? (
-        <img src={src} alt="" className="size-full object-cover" onError={() => setFailedSrc(src)} />
+        <img src={src} alt="" loading="lazy" decoding="async" className="size-full object-cover" onError={() => setFailedSrc(src)} />
       ) : (
         fallback ?? <div className="size-full bg-[radial-gradient(circle,var(--border)_1px,transparent_1px)] bg-[length:14px_14px]" />
       )}

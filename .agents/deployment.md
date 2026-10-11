@@ -107,3 +107,12 @@ All optional; the defaults are the published retention periods and need no `.env
 - `EMAIL_VERIFICATION_HMAC_KEY` — now required for registration too (it hashes the mailed codes).
 - `MAIL_ENABLED=true` with working `SMTP_*` is required: registration, password reset/change and account deletion all send mail, and registration answers `503` without creating an account when mail is off. Gmail needs an app password (2-step verification on).
 - To try real mail locally, run plain `docker compose up -d` with the `SMTP_*` values in `.env`.
+
+
+## Performans, sıkıştırma ve hata yüzeyi (2026-10-11)
+
+- **Sıkıştırma.** Backend `server.compression.enabled=true` (`application/json`, `application/problem+json`, metin türleri; 1 KB altı yanıtlar sıkıştırılmaz). Frontend (Next.js) sayfalarını ve varlıklarını kendisi sıkıştırır; ters vekil (reverse proxy) varsa çift sıkıştırmamak için yalnız birinde açık tutun.
+- **Önbellek başlıkları.** `/images/*` ve `/icons/*` için `max-age=86400, stale-while-revalidate=604800`; `/_next/static/*` immutable. Ters vekil bu başlıkları ezmemeli.
+- **Hata ve actuator.** `server.error.include-stacktrace`, `include-message`, `include-binding-errors` = `never`, `include-exception=false`; actuator HTTP'de yalnız `health` açık (`management.endpoints.web.exposure.include=health`). Yeni env adı eklenmedi.
+- **`APP_ENV` notu.** `spring.profiles.active=${APP_ENV:dev}`: `APP_ENV` verilmezse profil `dev` olur. Bugün repoda `application-dev*` dosyası, `@Profile` veya profil okuyan kod yoktur, yani `dev` hiçbir davranışı değiştirmez. Risk, gelecekte eklenecek dev-özel ayarların (gevşek log, Swagger, seed vb.) unutulmuş bir `APP_ENV` yüzünden üretimde açılmasıdır. Öneri: üretimde `APP_ENV=prod` zorunlu tutulsun (üretim şablonunda varsayılansız) ve profil-özel ayar eklenirse varsayılan `prod`'a çevrilsin. Varsayılan bu görevde DEĞİŞTİRİLMEDİ.
+- **Kaynak haritası.** `productionBrowserSourceMaps` kapalıdır; üretim imajında `.map` dosyası yayımlanmaz.

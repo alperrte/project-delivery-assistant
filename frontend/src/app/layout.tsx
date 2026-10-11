@@ -2,9 +2,11 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { Exo_2, Inter, JetBrains_Mono } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
-import { getLocale } from "next-intl/server";
+import { getLocale, getMessages } from "next-intl/server";
 import { Providers } from "@/components/providers";
+import { WebVitalsDebug } from "@/features/analytics/web-vitals-debug";
 import type { Locale } from "@/i18n/config";
+import { clientMessages } from "@/i18n/client-messages";
 import { RENDERER_BOOT_SCRIPT } from "@/lib/rendering";
 import { OG_IMAGE, openGraphLocale } from "@/lib/seo/alternates";
 import "./globals.css";
@@ -59,6 +61,7 @@ export const viewport: Viewport = {
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const locale = await getLocale();
+  const messages = clientMessages(await getMessages());
 
   return (
     <html
@@ -71,8 +74,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: RENDERER_BOOT_SCRIPT }} />
       </head>
       <body className="min-h-[100dvh]">
-        <NextIntlClientProvider>
+        <NextIntlClientProvider messages={messages}>
           <Providers>{children}</Providers>
+          {process.env.NODE_ENV !== "production" && <WebVitalsDebug />}
         </NextIntlClientProvider>
       </body>
     </html>

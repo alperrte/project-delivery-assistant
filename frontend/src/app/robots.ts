@@ -2,10 +2,10 @@ import type { MetadataRoute } from "next";
 import { locales } from "@/i18n/config";
 import { buildPath, type PageRoute } from "@/i18n/routing";
 
-/** Public content is crawlable. Workspace, API and preview paths stay excluded. */
+/** Public content is crawlable. Workspace, API and preview paths stay excluded. `/_next/` is deliberately not blocked: crawlers must fetch the page scripts and styles to render the page. */
 export default function robots(): MetadataRoute.Robots {
   const privateRoutes: PageRoute[] = ["/dashboard", "/projects", "/organizations", "/account", "/settings", "/calendar", "/tasks", "/invitations", "/admin", "/change-password", "/errors/[code]", "/dev/error-test"];
-  const disallow = ["/api/", "/_next/", ...locales.flatMap((locale) => privateRoutes.map((route) =>
+  const disallow = ["/api/", ...locales.flatMap((locale) => privateRoutes.map((route) =>
     route === "/errors/[code]" ? buildPath(route, { code: "placeholder" }, locale).replace("placeholder", "") : buildPath(route, {}, locale)))];
   return {
     rules: [

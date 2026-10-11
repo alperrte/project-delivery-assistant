@@ -31,7 +31,7 @@ export function GroupAvatar({ logoSrc, className }: { logoSrc?: string | null; c
     >
       {showLogo ? (
         // eslint-disable-next-line @next/next/no-img-element -- authenticated, versioned API image; next/image cannot proxy it
-        <img src={logoSrc!} alt="" className="size-full object-cover" onError={() => setFailedSrc(logoSrc ?? null)} />
+        <img src={logoSrc!} alt="" loading="lazy" decoding="async" className="size-full object-cover" onError={() => setFailedSrc(logoSrc ?? null)} />
       ) : (
         <UsersThree size={16} weight="fill" />
       )}

@@ -9,7 +9,7 @@ export function EntityMark({ name, src }: { name: string; src: string | null }) 
   const locale = useLocale();
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
   if (src && failedSrc !== src) {
-    return <img src={src} alt="" className="size-full rounded-[inherit] object-cover" onError={() => setFailedSrc(src)} />;
+    return <img src={src} alt="" loading="lazy" decoding="async" className="size-full rounded-[inherit] object-cover" onError={() => setFailedSrc(src)} />;
   }
   return <>{(name.trim().slice(0, 1) || "?").toLocaleUpperCase(locale)}</>;
 }

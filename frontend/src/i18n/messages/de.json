@@ -40,6 +40,7 @@
   },
   "errors": {
     "network": "Der Server ist nicht erreichbar. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
+    "timeout": "Die Anfrage hat zu lange gedauert. Bitte versuchen Sie es erneut.",
     "generic": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
     "tooManyRequests": "Zu viele Versuche. Bitte warten Sie einen Moment und versuchen Sie es erneut.",
     "invalidCredentials": "E-Mail oder Passwort ist falsch.",
@@ -2851,7 +2852,7 @@
           "title": "Dienstleister und Übermittlung ins Ausland",
           "paragraphs": [
             "E-Mails werden über Gmail SMTP (Google, USA) versendet. Die optionale Anmeldung mit Google/GitHub und die GitHub-Repository-Funktionen verbinden mit den jeweiligen Anbietern (USA). Der Hosting-Anbieter ist noch nicht ausgewählt; diese Erklärung wird aktualisiert, sobald er feststeht.",
-            "Einzelheiten zu diesen Übermittlungen und ihrer Rechtsgrundlage stehen im Abschnitt „Empfänger und Übermittlung ins Ausland“ des KVKK-Datenschutzhinweises und in den DSGVO-Abschnitten unten."
+            "Einzelheiten zu diesen Übermittlungen (Empfänger, Land, welche Daten wohin gelangen) und ihr aktueller Stand nach Art. 9 KVKK stehen im Abschnitt „Empfänger und Übermittlung ins Ausland“ des KVKK-Datenschutzhinweises und in den DSGVO-Abschnitten unten; die Verantwortlichen verfolgen die Einhaltung dieser Anforderungen."
           ]
         },
         {
@@ -2881,7 +2882,7 @@
               [
                 "Statusdatensätze des Kontaktformulars und gespeicherte Support-Nachrichten (Name, E-Mail, Kategorie, Nachricht)",
                 "12 Monate",
-                "Werden automatisch gelöscht. Die an das PDA-Postfach gesendete E-Mail-Kopie ist von dieser automatischen Löschung nicht erfasst; Sie können ihre Löschung als Betroffenenanfrage verlangen."
+                "Werden automatisch gelöscht. Die an das PDA-Postfach (Gmail) zugestellten E-Mail-Kopien werden von den Verantwortlichen mindestens einmal jährlich manuell bereinigt: Nachrichten, die älter als 12 Monate sind, werden spätestens bei der jährlichen Bereinigung gelöscht, auf Anfrage sofort (Datenanfrage über die Kategorie „KVKK / Datenanfrage“ im Kontaktformular oder per E-Mail)."
               ],
               [
                 "Besuchsanalyse (Sitzungen, Seitenaufrufe, Schaltflächenklicks und Fehlerereignisse)",
@@ -2908,7 +2909,7 @@
           "id": "children",
           "title": "Kinder",
           "paragraphs": [
-            "PDA richtet sich nicht an Kinder unter 16 Jahren und prüft das Alter nicht. Wenn Sie unter 16 sind, legen Sie kein Konto ohne Wissen Ihrer Eltern oder gesetzlichen Vertreter an. Wenn Sie ein Konto eines Kindes bemerken, teilen Sie es uns mit; wir löschen es."
+            "PDA richtet sich nicht an Kinder. Minderjährige sollten PDA nur mit Wissen ihres gesetzlichen Vertreters nutzen."
           ]
         },
         {
@@ -2939,7 +2940,7 @@
           "title": "DSGVO: Empfänger und Drittlandübermittlung (Kapitel V)",
           "paragraphs": [
             "Empfänger sind die Projektmitglieder, mit denen Sie zusammenarbeiten, Google (Gmail SMTP für E-Mails; optionale Anmeldung mit Google), GitHub (optionale Anmeldung; Repository-Funktionen) und, sobald ausgewählt, der Hosting-Anbieter. Die Verantwortlichen selbst befinden sich in der Türkei, einem Drittland ohne Angemessenheitsbeschluss der Europäischen Kommission.",
-            "Google und GitHub können Daten in den USA verarbeiten. Soweit sie personenbezogene Daten in Drittländer übermitteln, stützen sie sich auf die von ihnen bereitgestellten Übermittlungsmechanismen, etwa einen Angemessenheitsbeschluss (Art. 45) oder Standardvertragsklauseln (Art. 46); welcher Mechanismus gilt, ergibt sich aus der Dokumentation der Anbieter. Die Anmeldung mit Google/GitHub ist optional."
+            "Personenbezogene Daten werden in die USA übermittelt, an Google LLC (Gmail SMTP; optionale Anmeldung mit Google) und GitHub, Inc. (GitHub-API; optionale Anmeldung mit GitHub). Bestätigungs- und Rücksetzcodes sowie Benachrichtigungen über Kontaktformular-Nachrichten werden über Gmail versendet; Anmeldekennungen gehen nur dann an Google oder GitHub, wenn Sie diese Anmeldung wählen; Anfragen zu Repository-Metadaten gehen an GitHub, wenn Sie die Repository-Funktion nutzen. Die optionalen Anmeldungen und die Repository-Funktion lassen sich vermeiden; Sie können sich auch mit E-Mail und Passwort registrieren. Die Verantwortlichen verfolgen die Einhaltung von Kapitel V DSGVO und Art. 9 KVKK bei diesen Übermittlungen (geeignete Garantien wie Standardvertragsklauseln nach Art. 46) und aktualisieren diesen Text, sobald solche Garantien geschaffen sind. Dieser Text behauptet nicht, dass bereits eine bestimmte Garantie oder ein bestimmter Vertrag besteht."
           ]
         },
         {
@@ -3071,7 +3072,8 @@
             "Behörden: Behörden und öffentliche Stellen, soweit eine rechtliche Verpflichtung besteht."
           ],
           "closing": [
-            "Übermittlung ins Ausland (Art. 9): Google und GitHub können Daten in den USA verarbeiten. Diese Übermittlungen beruhen auf den Übermittlungsmechanismen, die die Anbieter nach Art. 9 KVKK verwenden; welcher Mechanismus gilt, steht in den eigenen Datenschutz- und Datenverarbeitungsunterlagen der Anbieter. Der E-Mail-Versand ist für den Betrieb des Dienstes erforderlich; die Anmeldung mit Google/GitHub ist optional, Sie können sich auch mit E-Mail und Passwort registrieren."
+            "Übermittlung ins Ausland (Art. 9): Personenbezogene Daten werden an folgende Empfänger in den USA übermittelt: Google LLC (Gmail SMTP und optionale Anmeldung mit Google) und GitHub, Inc. (GitHub-API und optionale Anmeldung mit GitHub). Bestätigungs- und Rücksetzcodes sowie Benachrichtigungen über Kontaktformular-Nachrichten werden über Gmail versendet; Ihre Anmeldekennungen gehen nur dann an Google oder GitHub, wenn Sie diese Anmeldung wählen; Anfragen zu Repository-Metadaten gehen an GitHub, wenn Sie die Repository-Funktion nutzen.",
+            "Die optionale Anmeldung mit Google/GitHub und die Repository-Funktionen lassen sich vermeiden; Sie können sich auch mit E-Mail und Passwort registrieren. Der E-Mail-Versand ist dagegen für den Betrieb des Dienstes erforderlich. Die Verantwortlichen verfolgen die Einhaltung von Art. 9 KVKK bei diesen Übermittlungen (geeignete Garantien wie Standardverträge und die Meldung an den Datenschutzrat) und aktualisieren diesen Text, sobald diese Garantien geschaffen sind. Dieser Text gibt nicht an, dass bereits eine bestimmte Garantie oder ein bestimmter Vertrag besteht."
           ]
         },
         {
@@ -3101,7 +3103,7 @@
               [
                 "Statusdatensätze des Kontaktformulars und gespeicherte Support-Nachrichten (Name, E-Mail, Kategorie, Nachricht)",
                 "12 Monate",
-                "Werden automatisch gelöscht. Die an das PDA-Postfach gesendete E-Mail-Kopie ist von dieser automatischen Löschung nicht erfasst; Sie können ihre Löschung als Betroffenenanfrage verlangen."
+                "Werden automatisch gelöscht. Die an das PDA-Postfach (Gmail) zugestellten E-Mail-Kopien werden von den Verantwortlichen mindestens einmal jährlich manuell bereinigt: Nachrichten, die älter als 12 Monate sind, werden spätestens bei der jährlichen Bereinigung gelöscht, auf Anfrage sofort (Datenanfrage über die Kategorie „KVKK / Datenanfrage“ im Kontaktformular oder per E-Mail)."
               ],
               [
                 "Besuchsanalyse (Sitzungen, Seitenaufrufe, Schaltflächenklicks und Fehlerereignisse)",
@@ -3158,10 +3160,10 @@
         },
         {
           "id": "verbis",
-          "title": "VERBİS-Bewertung",
+          "title": "VERBİS-Registrierung",
           "paragraphs": [
-            "Die Verantwortlichen sind natürliche Personen und betreiben PDA als nichtkommerzielles Open-Source-Projekt. Ob sie sich im Register der Verantwortlichen (VERBİS) eintragen müssen, wird anhand der vom Datenschutzrat festgelegten Ausnahmekriterien (jährliche Beschäftigtenzahl, jährliche Bilanzsumme und Haupttätigkeit) geprüft.",
-            "Da diese Prüfung nicht abgeschlossen ist, gibt es keine VERBİS-Registernummer. Dieser Hinweis wird aktualisiert, wenn sich das Ergebnis ändert."
+            "Die Verantwortlichen sind natürliche Personen und betreiben PDA als nichtkommerzielles Open-Source-Projekt. Die Verantwortlichen (Hamza Taşbay und Alper Temiz) haben keine Beschäftigten und kein Unternehmen und keine kommerziellen Einnahmen; sie liegen daher unterhalb der vom Datenschutzrat für die Registrierung festgelegten Schwellenwerte (weniger als 50 Beschäftigte im Jahr und eine jährliche Bilanzsumme unterhalb des vom Rat festgelegten Betrags).",
+            "Daher besteht derzeit keine Pflicht zur Eintragung in das Register der Verantwortlichen (VERBİS), und es gibt keine VERBİS-Registernummer. Entsteht die Pflicht, wird sie innerhalb der gesetzlichen Frist erfüllt und dieser Hinweis aktualisiert."
           ]
         },
         {
@@ -3554,7 +3556,7 @@
           "title": "Kontoregeln",
           "paragraphs": [
             "Sie müssen bei der Registrierung richtige Angaben machen, Ihr Konto nur selbst nutzen und Ihr Passwort geheim halten. Sie sind für Handlungen mit Ihrem Konto verantwortlich; bei Verdacht auf unbefugte Nutzung ändern Sie Ihr Passwort und informieren uns. Wir empfehlen, die Zwei-Faktor-Authentifizierung zu aktivieren.",
-            "PDA richtet sich nicht an Kinder unter 16 Jahren. Legen Sie kein Konto im Namen einer anderen Person ohne deren Erlaubnis an."
+            "PDA richtet sich nicht an Kinder; Minderjährige sollten es nur mit Wissen ihres gesetzlichen Vertreters nutzen. Legen Sie kein Konto im Namen einer anderen Person ohne deren Erlaubnis an."
           ]
         },
         {
@@ -4431,7 +4433,7 @@
     },
     "notice": {
       "title": "Bevor Sie senden",
-      "text": "Verantwortliche sind Hamza Taşbay und Alper Temiz. Ihre Nachricht wird verarbeitet, um Ihnen zu antworten; sie wird 12 Monate gespeichert und per E-Mail an das PDA-Postfach (Gmail) zugestellt. Schreiben Sie weder Ihr Passwort noch Bestätigungscodes oder die geheimen Teile eines Einladungslinks.",
+      "text": "Verantwortliche sind Hamza Taşbay und Alper Temiz. Ihre Nachricht wird verarbeitet, um Ihnen zu antworten; sie wird 12 Monate gespeichert und per E-Mail an das PDA-Postfach (Gmail) zugestellt; die Kopien im Postfach werden mindestens einmal jährlich manuell bereinigt (Nachrichten älter als 12 Monate werden spätestens bei der jährlichen Bereinigung gelöscht, auf Anfrage sofort). Schreiben Sie weder Ihr Passwort noch Bestätigungscodes oder die geheimen Teile eines Einladungslinks.",
       "privacy": "Datenschutzerklärung",
       "more": "Einzelheiten:",
       "kvkk": "KVKK-Datenschutzhinweis"
