@@ -144,7 +144,7 @@ html::-webkit-scrollbar-thumb:hover,
    */
   --glow: #3fd3f2;
   --auth-ink: #0d1219;
-  --auth-muted: #525c69;
+  --auth-muted: #363f4b;
   --auth-link: #075c83;
   --auth-link-hover: #06476a;
   --auth-accent-from: #09a8cf;
@@ -208,7 +208,7 @@ html::-webkit-scrollbar-thumb:hover,
 
   --glow: #2fd0f5;
   --auth-ink: #eef2f7;
-  --auth-muted: #a3adbb;
+  --auth-muted: #c0c8d3;
   --auth-link: #5cd8f5;
   --auth-link-hover: #8fe5f9;
   --auth-accent-from: #3fd7f5;
@@ -695,6 +695,11 @@ html[data-motion="off"] .auth-neon-band {
   animation: none !important;
 }
 html[data-motion="off"] .logo-current {
+  display: none;
+}
+
+/* The banner is server-rendered for everybody; a visitor who already decided never sees it (see CONSENT_BOOT_SCRIPT). */
+html[data-consent="decided"] [data-cookie-banner] {
   display: none;
 }
 

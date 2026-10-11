@@ -1,0 +1,22 @@
+# Reverse proxy of docker-compose.prod.yml. Caddy obtains and renews the TLS certificate by itself (Let's Encrypt / ZeroSSL) for a
+# public SITE_ADDRESS, redirects http:// to https:// and speaks HTTP/2 and HTTP/3. For `localhost` it uses its own local CA.
+#
+# Security headers are NOT added here: Next.js sends HSTS, CSP (nonce per request), nosniff, frame and referrer headers for pages
+# and the backend sends its own for the API, so the proxy must pass them through untouched. Compression is not done here either
+# (Next.js and the backend compress their own responses; compressing twice would only cost CPU).
+{$SITE_ADDRESS:localhost} {
+	# The API (including the chat WebSocket at /api/v1/ws, which Caddy upgrades by itself) and everything else on one origin.
+	@api path /api/*
+	handle @api {
+		reverse_proxy backend:8080
+	}
+	handle {
+		reverse_proxy frontend:3000
+	}
+
+	# Never let a client choose how the backend sees it: Caddy sets X-Forwarded-For/-Proto/-Host itself.
+	log {
+		output stdout
+		format console
+	}
+}

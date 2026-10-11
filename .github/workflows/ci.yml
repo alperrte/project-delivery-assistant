@@ -1,0 +1,102 @@
+# Continuous integration: the same gates as pre-push/pre-push.ps1, minus Docker smoke and the long browser suites.
+# No secret is read: every value below is a throw-away CI value, and mail is switched off (MAIL_ENABLED=false), so no
+# e-mail is ever sent from CI. Deploy is intentionally absent until the hosting decision is made (.agents/deployment.md).
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npx tsc --noEmit
+      - run: npm run build
+      - name: Bundle budgets
+        run: npm run check:bundle
+      - name: Dependency audit (production dependencies)
+        run: npm audit --omit=dev --audit-level=high
+
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: pda
+          POSTGRES_USER: pda
+          POSTGRES_PASSWORD: ci_only_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U pda -d pda"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      APP_ENV: dev
+      DB_NAME: pda
+      DB_PORT: 5432
+      DB_USERNAME: pda
+      DB_PASSWORD: ci_only_password
+      DB_URL: jdbc:postgresql://localhost:5432/pda
+      FRONTEND_URL: http://localhost:3000
+      ALLOWED_ORIGINS: http://localhost:3000
+      MAIL_ENABLED: "false"
+      ADMIN_EMAIL: admin@example.com
+      ADMIN_INITIAL_PASSWORD: ci_only_Admin_password_1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: maven
+      - name: Throw-away signing and encryption keys
+        run: |
+          echo "JWT_SECRET=$(openssl rand -hex 48)" >> "$GITHUB_ENV"
+          echo "EMAIL_VERIFICATION_HMAC_KEY=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+          echo "TOTP_ENCRYPTION_KEY=$(openssl rand -base64 32)" >> "$GITHUB_ENV"
+      - name: Maven verify
+        working-directory: backend
+        run: bash ./mvnw -B -ntp clean verify
+
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Gitleaks (repository and history, project allowlist in .gitleaksignore)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Backend image builds
+        run: docker build -t pda-backend:ci backend
+      - name: Frontend image builds
+        run: docker build -t pda-frontend:ci --build-arg NEXT_PUBLIC_API_URL=http://localhost:8080/api/v1 frontend

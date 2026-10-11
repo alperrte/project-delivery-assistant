@@ -1,16 +1,17 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
-import createBundleAnalyzer from "@next/bundle-analyzer";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
-// `npm run analyze` (webpack build + treemap report). Off in every normal build. The Turbopack build has its own viewer:
-// `npx next experimental-analyze`.
-const withBundleAnalyzer = createBundleAnalyzer({ enabled: process.env.ANALYZE === "1" });
-
-// Baseline response headers for every page. A Content-Security-Policy is deliberately not set here: Next.js
-// needs a per-request nonce for its inline scripts, which belongs in the proxy and is tracked as a follow-up.
+// Baseline response headers for every page. The Content-Security-Policy is NOT set here: it carries a per-request nonce
+// and is built in the proxy (src/proxy.ts, src/lib/security/csp.ts).
+// HSTS is sent by production builds only; browsers ignore it on plain http, so it is harmless behind a TLS-terminating
+// proxy and never pins http://localhost during development. `preload` is deliberately left out (a hard-to-undo commitment).
+const hsts = process.env.NODE_ENV === "production"
+  ? [{ key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" }]
+  : [];
 const securityHeaders = [
+  ...hsts,
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
@@ -26,10 +27,22 @@ const publicAssetCache = [{ key: "Cache-Control", value: "public, max-age=86400,
 const nextConfig: NextConfig = {
   // Production source maps are never shipped to browsers: they would expose the original source and comments to anyone.
   // (This is also Next's default; it is spelled out so a later change is a visible decision.)
+  // No `X-Powered-By: Next.js` header: it tells a scanner which framework to attack and serves no purpose.
+  poweredByHeader: false,
   productionBrowserSourceMaps: false,
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
+      // The service worker file must never be served from a cache, or an update would not reach returning visitors. The
+      // narrow policy applies to the worker script itself (the pages it controls get their policy from the proxy).
+      {
+        source: "/sw.js",
+        headers: [
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+          { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+          { key: "Content-Security-Policy", value: "default-src 'self'; script-src 'self'" },
+        ],
+      },
       { source: "/images/:path*", headers: publicAssetCache },
       { source: "/icons/:path*", headers: publicAssetCache },
     ];
@@ -46,4 +59,11 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withBundleAnalyzer(withNextIntl(nextConfig));
+// `npm run analyze` (webpack build + treemap report) loads the analyzer. It is a devDependency: the production image installs
+// without devDependencies, so it must never be imported on a normal start (a static import crashed the container).
+export default async function config() {
+  const withIntl = withNextIntl(nextConfig);
+  if (process.env.ANALYZE !== "1") return withIntl;
+  const { default: createBundleAnalyzer } = await import("@next/bundle-analyzer");
+  return createBundleAnalyzer({ enabled: true })(withIntl);
+}

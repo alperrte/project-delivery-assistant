@@ -1,0 +1,58 @@
+# Uptime and expiry watch of the PUBLIC site. It does nothing until the repository has the variable SITE_URL
+# (Settings > Secrets and variables > Actions > Variables), e.g. https://pda.example.org. A failed run is the alarm: GitHub notifies
+# the people watching the repository (and whoever last edited this schedule) by its normal notification channels, so the
+# project's own mail account is never used for alerts.
+#
+# Every 30 minutes (GitHub may delay scheduled runs by a few minutes):
+#   1. ops/smoke-test.mjs: redirect, security headers, API and cookie flags, WebSocket route, public pages and links.
+#   2. The TLS certificate must stay valid for at least 14 more days (Caddy renews well before that; failing here means the
+#      automatic renewal is broken).
+# Daily, when the variable DOMAIN is set (the registrable domain, e.g. example.org): the domain registration (RDAP) must run for
+# at least 30 more days.
+name: Uptime watch
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  site:
+    if: ${{ vars.SITE_URL != '' }}
+    runs-on: ubuntu-latest
+    env:
+      SITE_URL: ${{ vars.SITE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Smoke test
+        run: node ops/smoke-test.mjs "$SITE_URL"
+      - name: Certificate has at least 14 days left
+        run: |
+          host=$(printf '%s' "$SITE_URL" | sed -E 's#^https://([^/:]+).*#\1#')
+          end=$(echo | openssl s_client -servername "$host" -connect "$host:443" 2>/dev/null | openssl x509 -noout -enddate | cut -d= -f2)
+          days=$(( ( $(date -d "$end" +%s) - $(date +%s) ) / 86400 ))
+          echo "The certificate of $host is valid for $days more day(s)."
+          [ "$days" -ge 14 ]
+
+  domain:
+    # Once a day (the 06:00 UTC run of the schedule above), and only when DOMAIN is configured.
+    if: ${{ vars.DOMAIN != '' && (github.event_name == 'workflow_dispatch' || github.event.schedule == '*/30 * * * *') }}
+    runs-on: ubuntu-latest
+    env:
+      DOMAIN: ${{ vars.DOMAIN }}
+    steps:
+      - name: Domain registration has at least 30 days left
+        run: |
+          now_hour=$(date -u +%H); now_min=$(date -u +%M)
+          if [ "${{ github.event_name }}" = "schedule" ] && { [ "$now_hour" != "06" ] || [ "$now_min" -ge 30 ]; }; then echo "Not the daily slot; skipping."; exit 0; fi
+          expiry=$(curl -fsS "https://rdap.org/domain/$DOMAIN" | jq -r '.events[] | select(.eventAction=="expiration") | .eventDate' | head -1)
+          [ -n "$expiry" ] || { echo "No expiration date in the RDAP answer for $DOMAIN"; exit 1; }
+          days=$(( ( $(date -d "$expiry" +%s) - $(date +%s) ) / 86400 ))
+          echo "$DOMAIN is registered for $days more day(s) (until $expiry)."
+          [ "$days" -ge 30 ]

@@ -1,5 +1,9 @@
 ﻿# Klasör yapısı kısa rehberi
 
+## İşletme betikleri, CI ve çevrimdışı sayfa (2026-10-11)
+
+`docker-compose.prod.yml` + `ops/Caddyfile` (Caddy ile production bileşimi) ve `ops/smoke-test.mjs` (yayın sonrası smoke test). `ops/backup.ps1` ve `ops/restore.ps1` DB + medya yedeği ve geri yükleme tatbikatı içindir (kullanım: `.agents/operations.md`). `.github/workflows/ci.yml` (frontend lint/tsc/build/bundle/audit, backend `mvnw verify`, Gitleaks, Docker build) ve `.github/dependabot.yml` bağımlılık güncellemeleri içindir. `frontend/src/lib/security/csp.ts` CSP üretimini, `frontend/src/components/service-worker-registration.tsx` ile `frontend/public/{sw.js,offline.html}` çevrimdışı sayfayı, `frontend/scripts/check-site.mjs` site taramasını tutar.
+
 ## Migration yeniden numaralandırma — 2026-10-11
 
 Runtime db/migration dosyaları kullanıcı isteğiyle kesintisiz V1–V40 oldu; SQL içerikleri aynı. Legacy ZIP fixture özgün isimlerle kalır. Root PDA_MIGRATION_CONSOLIDATION_PLAN.md historical→current filename mapping içerir. Daha eski migration numarası/path atıfları historical kayıt olarak okunmalıdır.

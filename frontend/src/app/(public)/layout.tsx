@@ -28,7 +28,7 @@ export default async function PublicLayout({ children }: { children: ReactNode }
             <Link href="/about" className={navLink}>{footer("about")}</Link>
             <Link href="/contact" className={navLink}>{footer("contact")}</Link>
             <TrackedLink ctaId="header_login" href="/login" className={navLink}>{landing("login")}</TrackedLink>
-            <TrackedLink ctaId="header_register" href="/register" className={cn(buttonVariants(), "auth-cta min-h-11 gap-2 rounded-full px-4 text-sm font-semibold hover:brightness-110")}>{landing("register")}<ArrowUpRight size={15} aria-hidden="true" className="max-sm:hidden" /></TrackedLink>
+            <TrackedLink ctaId="header_register" href="/register" className={cn(buttonVariants(), "auth-cta text-(--auth-cta-ink) min-h-11 gap-2 rounded-full px-4 text-sm font-semibold hover:brightness-110")}>{landing("register")}<ArrowUpRight size={15} aria-hidden="true" className="max-sm:hidden" /></TrackedLink>
           </nav>
         </div>
       </header>

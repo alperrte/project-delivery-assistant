@@ -26,6 +26,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CsrfFilter;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy;
 import org.springframework.security.web.savedrequest.NullRequestCache;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -94,6 +95,16 @@ public class SecurityBaselineConfiguration {
         return http
                 .cors(cors -> cors.configurationSource(corsSource))
                 .csrf(csrf -> csrf.spa())
+                // Spring's secure defaults stay (nosniff, frame DENY, no-store cache control, HSTS on HTTPS requests).
+                // The API serves JSON and a few downloads, never a page: nothing may load or run from it. A route that sets
+                // its own policy (the sandboxing one on user images) keeps it, because header writers never overwrite.
+                // Swagger UI (development only) needs its own scripts, so it keeps the default headers.
+                .headers(headers -> {
+                    headers.referrerPolicy(referrer -> referrer.policy(ReferrerPolicy.NO_REFERRER));
+                    if (!apiDocsEnabled) {
+                        headers.contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'none'; frame-ancestors 'none'"));
+                    }
+                })
                 // A 401 must not remember the request in an HttpSession: every anonymous probe would otherwise
                 // allocate a server-side session (JSESSIONID) that lives for 30 minutes. OAuth keeps its own session use.
                 .requestCache(cache -> cache.requestCache(new NullRequestCache()))

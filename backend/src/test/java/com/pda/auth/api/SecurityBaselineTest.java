@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.pda.auth.infrastructure.config.SecurityBaselineConfiguration;
@@ -25,7 +26,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @WebMvcTest(AuthRegistrationController.class)
 @Import(SecurityBaselineConfiguration.class)
-@TestPropertySource(properties = "FRONTEND_URL=http://localhost:3000")
+@TestPropertySource(properties = {"FRONTEND_URL=http://localhost:3000", "API_DOCS_ENABLED=false"})
 class SecurityBaselineTest {
 
     @Autowired MockMvc mvc;
@@ -42,6 +43,15 @@ class SecurityBaselineTest {
         assertTrue(filterChain.getFilters().stream().anyMatch(CsrfFilter.class::isInstance));
         mvc.perform(get("/api/v1/users")).andExpect(status().isForbidden());
         mvc.perform(post("/api/v1/users")).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void everyApiResponseCarriesTheRestrictiveBrowserHeaders() throws Exception {
+        mvc.perform(get("/api/v1/projects"))
+                .andExpect(header().string("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'"))
+                .andExpect(header().string("Referrer-Policy", "no-referrer"))
+                .andExpect(header().string("X-Content-Type-Options", "nosniff"))
+                .andExpect(header().string("X-Frame-Options", "DENY"));
     }
 
     @Test

@@ -1,5 +1,9 @@
 # Kurulum ve deployment
 
+## CI, yedekleme ve yayın kontrolü (2026-10-11)
+
+CI: `.github/workflows/ci.yml` (PR ve `main`): frontend lint/tsc/build/`check:bundle`/`npm audit --omit=dev --audit-level=high`, backend `mvnw verify` (geçici Postgres servisi, `MAIL_ENABLED=false`, atılabilir CI anahtarları), Gitleaks, Docker imaj derlemesi. Deploy workflow'u hosting kararına kadar yoktur. Yedekleme ve geri yükleme betikleri `ops/`, yayın öncesi ENV kontrol listesi, smoke test, rollback ve bakım planı `.agents/operations.md` içindedir. Frontend `NEXT_PUBLIC_API_URL` derlemeden önce verilmelidir: CSP `connect-src`/`img-src` bundan türetilir. Production biçimli bileşim: `docker-compose.prod.yml` (Caddy otomatik HTTPS, tek origin; `SITE_ADDRESS`, `SITE_URL` adlarıyla; `frontend/Dockerfile` `NEXT_PUBLIC_SITE_URL` argümanını da alır) ve yayın sonrası `ops/smoke-test.mjs`; ayrıntı `.agents/operations.md` §6a.
+
 ## Merge öncesi devam ve migration sırası — 2026-10-11
 
 Son kullanıcı kararı: bütün test fazları cleanup üzerinde, push/merge öncesinde tamamlanır; numaralandırma V1–V40 olur. Kullanıcı tam pre-push tekrarını istemedi; başarılı backend sınıfları korunarak kalan sınıflar ve canonical frontend/full-Chromium/Docker adımları devam ettirilir. Sonuçta kesintisiz pre-push.cmd PASS veya main üzerinde koşulmuş test sonucu varsayılmamalıdır; gerçek adım kanıtları final kayıt içindedir. Maven aşaması yalnız operatörden gelen MAIL_ENABLED ayarını false yapar; mail testleri kendi GreenMail ayarlarını sağlar, Docker öncesi özgün değer geri yüklenir. ENV dosyası/runtime mail politikası değişmez. Eski normal DB/media volume korunur; yeni V1–V40 imajı ayrı boş DB gerektirir.

@@ -15,6 +15,11 @@ export function CookieBanner() {
   const consent = useConsent();
   const panel = useRef<HTMLElement>(null);
   const open = consent.ready && !consent.decided;
+  // Before the browser has been read (server render and hydration) the banner is drawn for everybody so a new visitor sees it in the
+  // very first paint instead of after hydration (it is the largest element of the page, so a late banner is the LCP). A visitor who
+  // has already decided never sees it: the boot script in <head> hides it with CSS before the first frame, and React removes it.
+  // The buttons stay disabled until hydration, when a click could not be handled yet (it would be silently lost).
+  const visible = !consent.ready || !consent.decided;
 
   // While the banner is up the page gets the same amount of room below its content (see `body` in globals.css), so
   // the last controls of any page can always be scrolled above the banner and never stay hidden under it. The room is
@@ -38,7 +43,7 @@ export function CookieBanner() {
     };
   }, [open]);
 
-  if (!open) return null;
+  if (!visible) return null;
 
   return (
     <section
@@ -56,9 +61,9 @@ export function CookieBanner() {
         </Link>
       </p>
       <div className="mt-4 flex flex-wrap gap-2">
-        <Button variant="outline" className="min-h-11 flex-1 basis-36" onClick={() => saveConsent(false)}>{t("rejectAll")}</Button>
-        <Button variant="outline" className="min-h-11 flex-1 basis-36" onClick={openConsentPreferences}>{t("manage")}</Button>
-        <Button variant="outline" className="min-h-11 flex-1 basis-36" onClick={() => saveConsent(true)}>{t("acceptAll")}</Button>
+        <Button variant="outline" className="min-h-11 flex-1 basis-36" disabled={!consent.ready} onClick={() => saveConsent(false)}>{t("rejectAll")}</Button>
+        <Button variant="outline" className="min-h-11 flex-1 basis-36" disabled={!consent.ready} onClick={openConsentPreferences}>{t("manage")}</Button>
+        <Button variant="outline" className="min-h-11 flex-1 basis-36" disabled={!consent.ready} onClick={() => saveConsent(true)}>{t("acceptAll")}</Button>
       </div>
     </section>
   );

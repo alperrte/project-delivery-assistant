@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { defaultLocale, isLocale, LOCALE_COOKIE, type Locale } from "./i18n/config";
 import { ADMIN_ENTRY_PATH, buildPath, matchPath, normalizeProjectSection } from "./i18n/routing";
+import { buildCsp, createNonce } from "./lib/security/csp";
 
 /**
  * Edge-level defense-in-depth for route access. This never replaces backend
@@ -24,20 +25,37 @@ import { ADMIN_ENTRY_PATH, buildPath, matchPath, normalizeProjectSection } from 
  */
 const PROTECTED_PATHS = ["/dashboard", "/projects", "/organizations", "/settings", "/account", "/calendar", "/invitations", "/change-password", "/tasks", "/admin"];
 
+/**
+ * Passes a page request on (optionally rewritten) with a fresh Content-Security-Policy. Next.js finds the nonce in the
+ * request's own CSP header and stamps it on its scripts; the layout reads `x-nonce` for the scripts it writes itself.
+ * Redirects carry no document, so they skip this.
+ */
+function withCsp(request: NextRequest, options: { rewriteTo?: URL; headers?: Headers } = {}) {
+  const nonce = createNonce();
+  const policy = buildCsp(nonce);
+  const requestHeaders = new Headers(options.headers ?? request.headers);
+  requestHeaders.set("x-nonce", nonce);
+  requestHeaders.set("Content-Security-Policy", policy);
+  const init = { request: { headers: requestHeaders } };
+  const response = options.rewriteTo ? NextResponse.rewrite(options.rewriteTo, init) : NextResponse.next(init);
+  response.headers.set("Content-Security-Policy", policy);
+  return response;
+}
+
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   // The administrator sign-in is one unprefixed address with no locale rewrite and no session hint check: it must be
   // reachable while signed out, and an admin with an unverified session still has to see it. Passing it through is
   // deliberate (not just "no route matched"); the page sets noindex itself and the header repeats it.
   if (pathname.replace(/\/+$/, "") === ADMIN_ENTRY_PATH) {
-    const response = NextResponse.next();
+    const response = withCsp(request);
     response.headers.set("X-Robots-Tag", "noindex, nofollow");
     return response;
   }
   const stored = request.cookies.get(LOCALE_COOKIE)?.value;
   const preferred: Locale = isLocale(stored) ? stored : defaultLocale;
   const page = matchPath(pathname, preferred);
-  if (!page) return NextResponse.next();
+  if (!page) return withCsp(request);
   // Old forms (unprefixed, other language, `?section=`) all have one canonical destination.
   const normalized = normalizeProjectSection(page.route, request.nextUrl.search);
   const canonicalPath = normalized.route === page.route ? page.canonicalPath : buildPath(normalized.route, page.params, page.locale);
@@ -65,8 +83,8 @@ export function proxy(request: NextRequest) {
   if (page.section) destination.searchParams.set("section", page.section);
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-pda-locale", page.locale);
-  const response = NextResponse.rewrite(destination, { request: { headers: requestHeaders } });
-  if (stored !== page.locale) response.cookies.set(LOCALE_COOKIE, page.locale, { path: "/", sameSite: "lax", maxAge: 31_536_000 });
+  const response = withCsp(request, { rewriteTo: destination, headers: requestHeaders });
+  if (stored !== page.locale) response.cookies.set(LOCALE_COOKIE, page.locale, { path: "/", sameSite: "lax", maxAge: 31_536_000, secure: (process.env.NEXT_PUBLIC_SITE_URL ?? "").startsWith("https://") });
   return response;
 }
 

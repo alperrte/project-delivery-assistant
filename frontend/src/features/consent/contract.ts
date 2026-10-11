@@ -9,6 +9,14 @@ export const CONSENT_VERSION = 1;
 export const CONSENT_STORAGE_KEY = "pda:cookie-consent";
 export const CONSENT_CHANGE_EVENT = "pda:cookie-consent-changed";
 
+/**
+ * Runs in <head> before the first paint: marks `<html data-consent="decided">` when storage holds a current decision, so the
+ * server-rendered banner (drawn for everybody because the server cannot read this browser) is hidden by CSS from the very first
+ * frame for returning visitors. It must stay in step with `parseConsent` below (same key, version, field types), tiny,
+ * dependency-free and silent; it only ever hides the banner, the React banner still decides what is really shown.
+ */
+export const CONSENT_BOOT_SCRIPT = `try{var c=JSON.parse(localStorage.getItem("pda:cookie-consent"));if(c&&c.version===1&&typeof c.analytics==="boolean"&&typeof c.updatedAt==="string")document.documentElement.dataset.consent="decided"}catch(e){}`;
+
 /** The categories a person can decide on. "necessary" is always on and cannot be switched off. */
 export const CONSENT_CATEGORIES = ["necessary", "analytics"] as const;
 export type ConsentCategory = (typeof CONSENT_CATEGORIES)[number];
