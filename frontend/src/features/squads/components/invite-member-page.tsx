@@ -215,7 +215,7 @@ function InviteMemberBody({ slug, projectId, lockedTeamId }: { slug: string; pro
   const backHref = lockedTeamId ? `/projects/${slug}/teams/${lockedTeamId}` : listHref;
 
   return (
-    <div>
+    <PageContainer width="centered">
       <Link href={backHref} className="mb-5 inline-flex min-h-11 items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground">
         <ArrowLeft size={16} aria-hidden="true" />
         {t(lockedTeamId ? "backToTeam" : "backToInvitations")}
@@ -223,8 +223,7 @@ function InviteMemberBody({ slug, projectId, lockedTeamId }: { slug: string; pro
       <PageHeader title={t("title")} description={t("description")} />
 
       <form onSubmit={submit} noValidate>
-        <PageContainer width="form">
-          <div className="max-w-2xl space-y-8">
+        <div className="space-y-8">
             <Section id={teamHeading} title={t("sections.team.title")} description={t(lockedTeamId ? "sections.team.lockedDescription" : "sections.team.description")}>
               {lockedTeamId ? (
                 <div className="space-y-1.5">
@@ -401,11 +400,10 @@ function InviteMemberBody({ slug, projectId, lockedTeamId }: { slug: string; pro
                 <MessageField value={message} onChange={setMessage} />
               </div>
             </Section>
-          </div>
-        </PageContainer>
+        </div>
 
         {formError && (
-          <div ref={errorRef} id={`${ids}-form-error`} role="alert" className="mt-8 max-w-2xl scroll-mb-24 rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
+          <div ref={errorRef} id={`${ids}-form-error`} role="alert" className="mt-8 scroll-mb-24 rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
             {formError}
           </div>
         )}
@@ -433,7 +431,7 @@ function InviteMemberBody({ slug, projectId, lockedTeamId }: { slug: string; pro
           </div>
         </StickyFormActions>
       </form>
-    </div>
+    </PageContainer>
   );
 }
 
