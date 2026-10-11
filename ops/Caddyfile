@@ -4,6 +4,13 @@
 # Security headers are NOT added here: Next.js sends HSTS, CSP (nonce per request), nosniff, frame and referrer headers for pages
 # and the backend sends its own for the API, so the proxy must pass them through untouched. Compression is not done here either
 # (Next.js and the backend compress their own responses; compressing twice would only cost CPU).
+
+# The www name is only a door to the main address: one canonical origin keeps cookies, OAuth redirects, CSP and mail links
+# on a single host. WWW_ADDRESS is set in .env.prod (www.<domain>); the default below only serves the local trial.
+{$WWW_ADDRESS:www.localhost} {
+	redir https://{$SITE_ADDRESS:localhost}{uri} 308
+}
+
 {$SITE_ADDRESS:localhost} {
 	# The API (including the chat WebSocket at /api/v1/ws, which Caddy upgrades by itself) and everything else on one origin.
 	@api path /api/*
@@ -14,7 +21,7 @@
 		reverse_proxy frontend:3000
 	}
 
-	# Never let a client choose how the backend sees it: Caddy sets X-Forwarded-For/-Proto/-Host itself.
+	# Caddy sets X-Forwarded-For/-Proto/-Host itself and drops any value a client sends, so the backend only trusts what Caddy says.
 	log {
 		output stdout
 		format console

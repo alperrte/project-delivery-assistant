@@ -1,6 +1,6 @@
 # İşletme ve süreklilik rehberi (runbook)
 
-Bu belge yayın ortamında ve yerel kurulumda uygulanacak işletme adımlarını toplar: yedekleme, olay müdahalesi, geri dönüş, migration, bakım, izleme, sertifika ve yayın sonrası kontrol. **Production hosting henüz seçilmedi** (`deployment.md` açık karar kaydı); sağlayıcıya bağlı adımlar bu yüzden "hosting seçilince" diye işaretlidir ve uygulanmış sayılmaz. Güvenlik kuralları için `SECURITY.md` esastır.
+Bu belge yayın ortamında ve yerel kurulumda uygulanacak işletme adımlarını toplar: yedekleme, olay müdahalesi, geri dönüş, migration, bakım, izleme, sertifika ve yayın sonrası kontrol. Production tek bir Hostinger KVM 2 VPS'tir (`deployment.md` "Production kararı"); sunucuda yapılacak adımlar §6b'dedir ve gerçek sunucuda uygulanana kadar uygulanmış sayılmaz. Güvenlik kuralları için `SECURITY.md` esastır.
 
 ## 1. Yedekleme ve geri yükleme
 
@@ -19,11 +19,21 @@ Araçlar: `ops/backup.ps1` (DB + medya, varsayılan çıktı `.local/backups`, s
 .\ops\restore.ps1 -DumpFile .local\backups\pda-db-<tarih>.dump   # geri yükleme tatbikatı
 ```
 
+Linux sunucuda (production compose, `.env.prod`) aynı işi `ops/backup.sh` ve `ops/restore.sh` yapar (varsayılan çıktı `/var/backups/pda`, son 14 kopya, dosya izni `600`; `OUT_DIR`, `KEEP_LAST`, `ENV_FILE`, geri yüklemede `TARGET` ve `CONFIRM_OVERWRITE=yes` ortam değişkenleriyle ayarlanır):
+
+```sh
+./ops/backup.sh                                          # yedek al
+./ops/restore.sh /var/backups/pda/pda-db-<tarih>.dump    # geri yükleme tatbikatı (geçici DB)
+# günlük 03:15 (crontab -e):  15 3 * * * /home/deploy/project-delivery-assistant/ops/backup.sh >> /var/log/pda-backup.log 2>&1
+```
+
+Sunucu dışı kopya: yedek klasörü, makine kaybında birlikte gideceği için ayrıca başka bir yere taşınmalıdır (ör. `rclone` ile nesne depolama veya bilgisayarınıza `scp`/`rsync`). Hedef depo henüz seçilmedi (`deployment.md` açık karar kaydı).
+
 Kurallar:
 
 - `TOTP_ENCRYPTION_KEY` yedeği olmadan alınan veritabanı yedeği 2FA sırlarını okunamaz bırakır; anahtar yedeği ayrıca tutulur.
 - Yedek, verinin bulunduğu makinede kalmaz: haftalık en az bir kopya başka bir diske/depoya taşınır. Yedek dosyaları kişisel veri içerir ve şifreli/erişimi kısıtlı bir yerde durmalıdır; betiğin varsayılanı son 14 kopyayı (günlük yedekle yaklaşık 14 gün) tutmaktır. Yayın öncesi, yedeklerin saklama süresinin yayımlanan KVKK saklama metniyle uyumu veri sorumlularınca doğrulanmalıdır (silinen hesapların yedeklerde bir süre daha kalabileceği metinde belirtilmelidir).
-- Hedefler (V1): en fazla 24 saatlik veri kaybı (günlük yedek), 4 saat içinde geri dönüş. Production'da sağlayıcının otomatik yedeği (ör. Neon point-in-time) varsa bu betikler ek güvencedir.
+- Hedefler (V1): en fazla 24 saatlik veri kaybı (günlük yedek), 4 saat içinde geri dönüş. Production'da sağlayıcının anlık görüntüsü (Hostinger snapshot) bu betiklere ek güvencedir; veritabanı konteynerde olduğu için tek başına yeterli sayılmaz.
 - Canlı veritabanına geri yükleme yalnız felaket durumunda: önce `docker compose stop backend`, sonra `restore.ps1 -Target <canlı-db> -ConfirmOverwrite`, ardından backend başlatılıp `/actuator/health` ve giriş denenir. `docker compose down -v` hiçbir zaman kullanılmaz (volume'leri siler).
 - **Durum:** betikler çalışan yığında denendi (aşağıdaki "Doğrulama kaydı"). Aylık tatbikat bölüm 5'tedir.
 
@@ -93,18 +103,40 @@ Hosting seçilince yapılacaklar (henüz uygulanmadı; yukarıdaki iş bir kısm
 `docker-compose.prod.yml` + `ops/Caddyfile`: tek genel origin; Caddy `/` isteklerini Next.js'e, `/api/*` isteklerini (sohbet WebSocket'i `/api/v1/ws` dahil) backend'e iletir, sertifikayı kendisi alır/yeniler (genel bir `SITE_ADDRESS` için Let's Encrypt/ZeroSSL) ve `http://` → `https://` (308) yönlendirir. Güvenlik başlıklarını Caddy eklemez; Next.js (HSTS, nonce'lu CSP, nosniff, çerçeve, referrer) ve backend kendi başlıklarını gönderir. Aynı origin olduğu için CORS devreye girmez.
 
 ```powershell
-# .env.prod: gerçek değerler Git dışında. Adlar: SITE_ADDRESS, SITE_URL (=https://<SITE_ADDRESS>), DB_NAME, DB_USERNAME, DB_PASSWORD,
-# JWT_SECRET, EMAIL_VERIFICATION_HMAC_KEY, TOTP_ENCRYPTION_KEY, ADMIN_EMAIL, ADMIN_INITIAL_PASSWORD, MAIL_*/SMTP_* (isteğe bağlı: HTTP_PORT, HTTPS_PORT, ENV_FILE)
+# .env.prod: production profili (açıklamalar dosyanın içinde; chmod 600); gerçek değerler Git dışında. Adlar: SITE_ADDRESS,
+# WWW_ADDRESS, SITE_URL (=https://<SITE_ADDRESS>), DB_NAME, DB_USERNAME, DB_PASSWORD, JWT_SECRET, EMAIL_VERIFICATION_HMAC_KEY,
+# TOTP_ENCRYPTION_KEY, ADMIN_EMAIL, ADMIN_INITIAL_PASSWORD, MAIL_*/SMTP_*, OAuth ve CONTACT_* (isteğe bağlı: HTTP_PORT, HTTPS_PORT, ENV_FILE)
 docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
 node ops/smoke-test.mjs https://<SITE_ADDRESS>
 ```
 
+- `www.<alan adı>` (`WWW_ADDRESS`) Caddy'de ana adrese 308 ile yönlendirilir: çerez, OAuth yönlendirmesi, CSP ve mail bağlantıları tek host'ta kalır. Caddy 443'te UDP (HTTP/3) de yayımlar.
+- Her servisin bellek sınırı ve log döndürmesi vardır (postgres 1,5 GB, backend 2 GB ve JVM heap `-XX:MaxRAMPercentage=70`, frontend 1 GB, caddy 256 MB; log 5×10 MB). Frontend ve backend sağlık kontrolüyle (`healthcheck`) izlenir; Caddy ikisi `healthy` olmadan başlamaz. Frontend `node` kullanıcısıyla, backend `10001` kullanıcısıyla çalışır.
 - `APP_ENV=prod` (Secure çerezler) ve `API_DOCS_ENABLED=false` bileşimde sabittir; veritabanı dışarıya port açmaz; `TRUSTED_PROXY_CIDRS` Docker köprü aralığına ayarlıdır (rate limit gerçek ziyaretçiyi sayar).
 - Frontend imajı genel adresleri **derleme anında** gömer (`NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_SITE_URL`; CSP bunlardan türer): `SITE_URL` değişirse frontend imajı yeniden derlenmelidir.
 - Caddy `caddy_data` volume'ünde sertifika ve ACME hesabını tutar; silinirse yeni sertifika istenir (Let's Encrypt hız sınırı). Yedek listesine eklenebilir.
 - Yerelde denemek için `SITE_ADDRESS=localhost` (Caddy kendi CA'sını kullanır); `smoke-test.mjs`, kök sertifikaya `NODE_EXTRA_CA_CERTS` ile güvenilerek çalıştırılır (TLS doğrulaması kapatılmaz). Service worker, tarayıcı yerel CA'ya güvenmediği sürece o adreste kayıt olmaz; gerçek domain'de olur.
 - **Doğrulama (2026-10-11, yerel CA, `localhost`):** `smoke-test.mjs` 25/25 PASS: 308 yönlendirme, HSTS, nonce'lu CSP (https/wss kaynakları, `upgrade-insecure-requests`), API başlıkları ve Secure çerez, Swagger/actuator kapalı, WebSocket yolu backend'e ulaşıyor (401), sitemap/robots/manifest/sw/offline, 36 sayfa/753 bağlantı. Tarayıcıda 8 sayfa: karışık içerik ve CSP ihlali 0, düz-http istek 0; iletişim formu Caddy üzerinden CSRF ile çalışıyor. Ölçüm sırasında bulunup giderilenler: production imajında `@next/bundle-analyzer` (devDependency) import'u yüzünden frontend çöküyordu; `X-Powered-By: Next.js` sızıyordu; dil çerezi https'te `Secure` değildi.
-- **Gerçek domain'de hâlâ yapılacak:** DNS A/AAAA kaydı, 80/443 erişimi, sertifikanın gerçekten alınması (`smoke-test.mjs` bunu zaten sınar), izleme/alarm, yedek taşıma.
+- **Gerçek domain'de hâlâ yapılacak:** DNS A/AAAA kaydı, 80/443 erişimi, sertifikanın gerçekten alınması (`smoke-test.mjs` bunu zaten sınar), izleme/alarm, yedek taşıma. Adımlar §6b'dedir.
+
+## 6b. VPS ilk kurulum (Hostinger KVM 2, Ubuntu 24.04, `pd-assistant.com`)
+
+Hazır panelli/Docker'lı şablon değil, düz Ubuntu 24.04 seçilir. İlk girişi `root` ile yapıp sırayla:
+
+1. **DNS.** `pd-assistant.com` ve `www` için A kaydı (IPv6 verilirse AAAA) VPS IP'sine. `dig +short pd-assistant.com` IP'yi döndürmeden Caddy'yi başlatma (sertifika alınamaz, Let's Encrypt hız sınırına takılınabilir).
+2. **Kullanıcı ve SSH.** `adduser deploy`, `usermod -aG sudo deploy`; açık anahtarını `/home/deploy/.ssh/authorized_keys` içine koy; **ikinci bir terminalde** `deploy` ile girişi dene; ardından `PermitRootLogin no` ve `PasswordAuthentication no` (`/etc/ssh/sshd_config.d/`), `systemctl restart ssh`.
+3. **Güvenlik duvarı.** `ufw default deny incoming`, `ufw allow OpenSSH`, `ufw allow 80/tcp`, `ufw allow 443/tcp`, `ufw allow 443/udp`, `ufw enable`; Hostinger panelindeki güvenlik duvarında da aynı portlar. Docker yayımlanan portlar için ufw'yu atlar, bu yüzden compose'ta yalnız Caddy port yayımlar; başka servise `ports:` eklenmez.
+4. **Koruma ve güncelleme.** `apt install fail2ban unattended-upgrades` (otomatik güvenlik güncellemeleri açık); 2 GB swap (`fallocate -l 2G /swapfile`, `chmod 600`, `mkswap`, `swapon`, `/etc/fstab` satırı).
+5. **Docker.** Docker'ın resmi apt deposundan Engine + Compose eklentisi; `usermod -aG docker deploy`.
+6. **Kod.** `git clone https://github.com/alperrte/project-delivery-assistant.git`; `main` dalının etiketli sürümü (§3).
+7. **OAuth.** Google ve GitHub konsollarında yetkili yönlendirme adresleri: `https://pd-assistant.com/api/v1/auth/oauth2/callback/google` ve `.../github`; istemci kimlik/secret'ları `.env.prod` içine.
+8. **Ortam dosyası.** Yerelde hazırlanan `.env.prod` sunucuya `scp .env.prod deploy@<IP>:~/project-delivery-assistant/.env.prod` ile kopyalanır (Git'e girmez), sunucuda `chmod 600 .env.prod`; yerel kopya makinede kalır ve yedeklenir. Dosyadaki secret'lar (`JWT_SECRET`, `EMAIL_VERIFICATION_HMAC_KEY`, `TOTP_ENCRYPTION_KEY`, `DB_PASSWORD`, `ADMIN_INITIAL_PASSWORD`) geliştirme değerlerinden bağımsız üretilmiştir; yeniden üretmek gerekirse `openssl rand -base64 32` (parola için `-base64 18`). `TOTP_ENCRYPTION_KEY` bir şifre yöneticisine de kaydedilir (kaybolursa kullanıcıların 2FA'sı sıfırlanır). `GITHUB_CLIENT_ID/SECRET` production için ayrı bir GitHub OAuth App açılana kadar boştur (GitHub girişi kapalı).
+9. **İlk başlatma.** `docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build` (ilk derleme birkaç dakika sürer; DB ilk kez boş olmalıdır, Flyway V1–V40 uygular). `docker compose -f docker-compose.prod.yml --env-file .env.prod ps` hepsi `healthy`, `logs caddy` sertifikanın alındığını gösterir.
+10. **Doğrulama.** `node ops/smoke-test.mjs https://pd-assistant.com` (sunucuda Node yoksa kendi bilgisayarından çalıştır) ve §7 listesi; `/pd-admin` ile ilk admin girişi ve Authenticator kaydı.
+11. **Yedek.** `chmod +x ops/*.sh`; `sudo mkdir -p /var/backups/pda && sudo chown deploy /var/backups/pda`; cron satırı (§1); bir kez elle `./ops/backup.sh` ve `./ops/restore.sh <dump>` tatbikatı; Hostinger panelinde haftalık anlık görüntü (snapshot) açık.
+12. **İzleme.** GitHub'da `SITE_URL=https://pd-assistant.com` ve `DOMAIN=pd-assistant.com` değişkenleri (uptime iş akışı, §6).
+
+Güncelleme: `./ops/backup.sh`, `git pull`, `docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build`, ardından smoke test. `docker compose down -v` hiçbir zaman kullanılmaz (veritabanı, medya ve Caddy sertifikası volume'lerini siler).
 
 ## 7. Yayın öncesi/sonrası kontrol listesi
 
@@ -142,3 +174,7 @@ Bunlar kod değil, depo/hesap ayarıdır; yapılmadan ilgili checklist maddeleri
 | --- | --- | --- |
 | 2026-10-11 | `ops/backup.ps1` ve `ops/restore.ps1` PowerShell sözdizimi | Hata yok |
 | 2026-10-11 | Yedek alma (`backup.ps1`) ve geçici DB'ye geri yükleme tatbikatı (`restore.ps1`) | Başarılı: DB dump ve medya arşivi alındı; geçici DB'ye açıldı (56 tablo, Flyway kayıtları, 1836 kullanıcı), sonra silindi; canlı DB'ye dokunulmadı |
+| 2026-10-12 | Sertleştirilmiş production bileşimi yerelde (`SITE_ADDRESS=localhost`, ayrı `pda-prod` projesi): backend `uid 10001`, frontend `uid 1000`, medya dizini yazılabilir, JVM `MaxRAMPercentage=70`, dört servis `healthy`; `www` → ana adres 308; http → https 308; `smoke-test.mjs` 25/25 PASS | Başarılı; deneme yığını ve yalnız `pda-prod_*` volume'leri silindi |
+| 2026-10-12 | OAuth `redirect_uri` Caddy arkasında (sahte istemci kimliğiyle) | `https://<host>/api/v1/auth/oauth2/callback/google`: `https` doğru üretiliyor |
+| 2026-10-12 | `ops/backup.sh` + `ops/restore.sh` (production compose) | `bash -n` temiz; yedek alındı (DB dump + medya arşivi); geçici DB'ye açıldı (56 tablo, 40 Flyway kaydı, 1 kullanıcı) ve silindi. Gerçek Linux sunucuda ve cron ile henüz denenmedi |
+| 2026-10-12 | `ops/env.ps1` profil geçişi (`.env.dev` ↔ `.env.prod` → etkin `.env`) | `status`, `use dev` ve `use prod` çalıştı; elle düzenlenmiş `.env` reddedildi, `-Force` `.env.bak` yedeği aldı; `docker compose -f docker-compose.prod.yml --env-file .env.prod config --quiet` temiz; test artıkları silindi |

@@ -169,7 +169,7 @@ Son mesajda kullanıcıya completion kaydını incelemesini açıkça söyle ve 
 
 Özellikle:
 
-- `.env`
+- `.env`, `.env.dev`, `.env.prod` (iki profil; `.env` etkin kopyadır, `ops/env.ps1` ile değişir)
 - `.env.example`
 - Secret yönetimi
 - Authentication

@@ -46,6 +46,11 @@ COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/next.config.* ./
 
+# The server runs as the unprivileged `node` account of the base image. Next.js writes its optimized-image cache under
+# .next/cache at runtime, so that directory must belong to it.
+RUN mkdir -p .next/cache && chown -R node:node .next/cache
+USER node
+
 EXPOSE 3000
 
 CMD ["npm", "start"]
