@@ -166,21 +166,18 @@ test("authenticated app shell has no footer and information links work from the 
   await page.getByRole("button", { name: /Hesap menüsü/ }).click();
   const menu = page.getByRole("menu");
   await expect(menu).toBeVisible();
-  for (const path of infoPaths) {
-    await expect(menu.locator('a[href="' + buildPath(path, {}, "tr") + '"]')).toBeVisible();
-  }
+  // The menu keeps only the FAQ, the contact page and the cookie preferences; the policy pages live in the public footer.
+  await expect(menu.locator('a[href="/tr/sss"]')).toHaveText("Sıkça Sorulan Sorular");
   await expect(menu.locator('a[href="/tr/iletisim"]')).toBeVisible();
-  await expect(menu.locator('a[href="/tr/kullanim-kosullari"]')).toHaveText("Kullanım Koşulları");
-  await expect(menu.locator('a[href="/tr/kvkk"]')).toHaveText("KVKK Aydınlatma Metni");
+  await expect(menu.getByRole("menuitem")).toHaveText(["Hesap ayarları", "Sıkça Sorulan Sorular", "Çerez tercihlerini yönet", "İletişim", "Çıkış yap"]);
   await expect(menu.locator('a[href^="mailto:"]')).toHaveCount(0);
-  // The cookie policy is listed with the other policies and the preferences can be reopened from the same group.
   await expect(menu.getByRole("menuitem", { name: "Çerez tercihlerini yönet" })).toBeVisible();
   await menu.getByRole("menuitem", { name: "Çerez tercihlerini yönet" }).click();
   await expect(page.getByRole("dialog")).toContainText("Çerez tercihleri");
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await page.getByRole("button", { name: /Hesap menüsü/ }).click();
-  await menu.locator('a[href="/tr/gizlilik"]').click();
-  await expect(page).toHaveURL(/\/tr\/gizlilik$/);
-  await expect(page.locator("h1")).toHaveText("Gizlilik Politikası");
+  await menu.locator('a[href="/tr/sss"]').click();
+  await expect(page).toHaveURL(/\/tr\/sss$/);
+  await expect(page.locator("h1")).toHaveText("Sıkça Sorulan Sorular");
 });

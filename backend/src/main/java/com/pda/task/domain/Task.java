@@ -115,11 +115,11 @@ public class Task {
             case BACKLOG -> next == TaskStatus.TODO
                     || (creationMode == TaskCreationMode.SIMPLE && next == TaskStatus.IN_PROGRESS);
             case TODO -> next == TaskStatus.BACKLOG || next == TaskStatus.IN_PROGRESS;
+            // Once work has started, the four working statuses move freely among themselves in both modes.
             case IN_PROGRESS -> next == TaskStatus.TODO || next == TaskStatus.IN_REVIEW
-                    || (creationMode == TaskCreationMode.SIMPLE && next == TaskStatus.DONE);
-            case IN_REVIEW -> next == TaskStatus.IN_PROGRESS || next == TaskStatus.TESTING;
-            case TESTING -> next == TaskStatus.IN_REVIEW || next == TaskStatus.DONE;
-            case DONE -> next == TaskStatus.IN_PROGRESS;
+                    || next == TaskStatus.TESTING || next == TaskStatus.DONE;
+            case IN_REVIEW, TESTING, DONE -> next == TaskStatus.IN_PROGRESS || next == TaskStatus.IN_REVIEW
+                    || next == TaskStatus.TESTING || next == TaskStatus.DONE;
         };
         if (!allowed) throw new TaskConflictException("TASK_INVALID_TRANSITION", "Invalid task status transition");
         status = next;

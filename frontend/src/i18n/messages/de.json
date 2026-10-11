@@ -1404,6 +1404,7 @@
     "tooMany": "Sie haben zu viele Einträge gewählt.",
     "timeNeedsDate": "Wählen Sie zuerst ein Datum, bevor Sie eine Uhrzeit eingeben.",
     "taskDateOrder": "Die Frist darf nicht vor dem Startdatum liegen.",
+    "taskDatePast": "Ein Datum in der Vergangenheit kann nicht gewählt werden.",
     "timeEstimateRange": "Die Zeitschätzung muss zwischen 1 und 100000 Minuten liegen.",
     "worklogRange": "Die Zeit muss zwischen 1 und 1440 Minuten liegen.",
     "sprintDateOrder": "Das Enddatum darf nicht vor dem Startdatum liegen.",
@@ -1779,15 +1780,11 @@
       "searchShort": "Mindestens {min} Zeichen eingeben",
       "status": "Status",
       "priority": "Priorität",
-      "assignee": "Zugewiesen",
-      "anyone": "Alle",
-      "me": "Ich",
       "labels": "Labels",
       "sprint": "Sprint",
       "anySprint": "Alle Sprints",
       "backlog": "Backlog",
       "overdue": "Überfällig",
-      "blocked": "Blockiert",
       "clear": "Zurücksetzen",
       "sortBy": "Sortierung: {field}",
       "sortLabel": "Sortieren nach",
@@ -2234,10 +2231,9 @@
     },
     "my": {
       "title": "Meine Aufgaben",
-      "description": "Ihnen zugewiesene Aufgaben aus allen Projekten und Pool-Aufgaben, die Sie übernehmen können.",
+      "description": "Ihnen zugewiesene Aufgaben aus allen Projekten.",
       "retry": "Erneut versuchen",
       "count": "{count, plural, one {{count} Aufgabe} other {{count} Aufgaben}}",
-      "poolCount": "{count, plural, one {{count} Aufgabe wartet auf Übernahme} other {{count} Aufgaben warten auf Übernahme}}",
       "bucketLabel": "{bucket}, {count} Aufgaben",
       "noMatchTitle": "Keine passenden Aufgaben",
       "noMatchDescription": "Keine Aufgabe passt zu den gewählten Filtern. Setzen Sie die Filter zurück und versuchen Sie es erneut.",
@@ -2253,16 +2249,13 @@
         "label": "Aufgabenübersicht",
         "open": "Offen",
         "overdue": "Überfällig",
-        "dueSoon": "Fällig in 24 Stunden",
-        "blocked": "Blockiert",
-        "pool": "Im Pool"
+        "dueSoon": "Fällig in 24 Stunden"
       },
       "tabs": {
         "label": "Aufgabenansicht",
-        "open": "Offen",
-        "done": "Erledigt",
         "all": "Alle",
-        "pool": "Pool"
+        "open": "Offen",
+        "done": "Erledigt"
       },
       "filters": {
         "label": "Aufgabenfilter",
@@ -2282,7 +2275,7 @@
       "empty": {
         "open": {
           "title": "Keine offenen Aufgaben",
-          "description": "Ihnen ist nichts Offenes zugewiesen. Übernehmen Sie im Reiter Pool eine neue Aufgabe."
+          "description": "Ihnen ist nichts Offenes zugewiesen."
         },
         "done": {
           "title": "Keine erledigten Aufgaben",
@@ -2291,10 +2284,6 @@
         "all": {
           "title": "Noch keine Aufgaben",
           "description": "Aufgaben erscheinen hier, sobald Ihnen ein Projekt eine zuweist."
-        },
-        "pool": {
-          "title": "Der Pool ist leer",
-          "description": "Derzeit gibt es nichts zu übernehmen. Aufgaben erscheinen hier, sobald Projektleitungen sie in den Pool stellen."
         }
       },
       "cards": {
@@ -2302,11 +2291,25 @@
         "comment": "Aufgabe {key} kommentieren",
         "start": "Starten",
         "complete": "Abschließen",
-        "noDescription": "Noch keine Beschreibung.",
         "detailTitle": "Aufgabendetails",
         "detailDescription": "Aufgabe ansehen, Status ändern und Kommentare hinzufügen.",
         "close": "Aufgabendetails schließen"
       }
+    },
+    "view": {
+      "label": "Ansicht",
+      "grid": "Karten",
+      "table": "Tabelle"
+    },
+    "table": {
+      "task": "Aufgabe",
+      "status": "Status",
+      "priority": "Priorität",
+      "assignees": "Zuständig",
+      "deadline": "Frist",
+      "comments": "Kommentare",
+      "actions": "Aktion",
+      "noDeadline": "Keine Frist"
     }
   },
   "sprints": {

@@ -155,7 +155,7 @@ test.describe("Responsive düzen, taşma ve gezinme", () => {
     await settle(page, "/dashboard");
     const seen = new Set<string>([await page.title()]);
     const steps: [string, string][] = [[tr.app.nav.projects, "projeler"], [tr.app.nav.organizations, "organizasyonlar"], [tr.app.nav.invitations, "davetler"], [tr.workspace.calendar, "takvim"], [tr.workspace.settings, "ayarlar"]];
-    for (const [label, hint] of steps) {
+    for (const [label] of steps) {
       const before = await page.title();
       await page.getByRole("link", { name: label, exact: true }).first().click();
       await expect.poll(() => page.title(), { timeout: 8000 }).not.toBe(before);

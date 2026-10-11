@@ -23,7 +23,7 @@ export default function LoginPage() {
             <OAuthErrorNotice />
           </Suspense>
         }
-        oauth={<OAuthButtons divider="or" />}
+        oauth={<OAuthButtons />}
       />
     </div>
   );

@@ -242,7 +242,6 @@ test.describe("Ana CTA ve Geçişlerde başlık (herkese açık)", () => {
     await page.setViewportSize({ width: 1280, height: 720 });
     await open(page, "/");
     const primary = await page.evaluate(() => {
-      const root = getComputedStyle(document.documentElement);
       const sample = document.createElement("span");
       sample.style.color = "var(--primary)";
       document.body.append(sample);

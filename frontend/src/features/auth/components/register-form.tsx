@@ -41,6 +41,8 @@ export function RegisterForm() {
   } = useForm<RegisterValues>({ resolver: zodResolver(registerSchema), defaultValues: { acceptTerms: false } });
   const password = useWatch({ control, name: "password" }) ?? "";
 
+  // The terms checkbox is only validated in the browser; it is not part of the register request.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async function onSubmit({ acceptTerms: _acceptTerms, ...values }: RegisterValues) {
     setFormError(null);
     try {

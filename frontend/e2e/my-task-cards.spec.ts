@@ -16,13 +16,13 @@ async function openList(page: Page, projectId: string) { await page.goto(`/tasks
 const taskDialog = (page: Page) => page.getByRole("dialog", { name: "Görev detayı", exact: true });
 const confirmDialog = (page: Page) => page.getByRole("dialog", { name: /görevinin durumu değiştirilsin mi/ });
 
-test("square personal cards open on the same page with keyboard, comments and refresh", async ({ page }) => {
+test("compact personal cards open on the same page with keyboard, comments and refresh", async ({ page }) => {
   const f = await fixture(page);
   await openList(page, f.projectId);
   await expect(page.getByRole("heading", { name: "Görevlerim", exact: true })).toBeVisible();
   const card = page.locator(`[data-task-card="${f.task.id}"]`);
   const box = await card.boundingBox();
-  expect(Math.abs(box!.width - box!.height)).toBeLessThan(2);
+  expect(box!.height).toBeLessThan(300);
   await expect(card.locator('[data-priority-alert]')).toBeVisible();
   const open = card.getByRole("button", { name: `${f.task.title}, ${f.task.taskKey} görevini aç`, exact: true });
   await open.focus(); await page.keyboard.press("Enter");
@@ -175,7 +175,7 @@ test("completing the final row of page two returns to page one and keeps its det
 });
 
 test("cards and dialog fit small screens in TR/EN/DE and both themes without runtime errors", async ({ page }) => {
-  const f = await fixture(page, "SIMPLE", "Responsive with a deliberately long task title to check the square card and readable dialog layout on a narrow mobile screen");
+  const f = await fixture(page, "SIMPLE", "Responsive with a deliberately long task title to check the compact card and readable dialog layout on a narrow mobile screen");
   const errors: string[] = []; page.on("pageerror", e => errors.push(e.message));
   for (const [locale, route, heading, open, close] of [
     ["tr", "/tr/gorevler", "Görevlerim", `${f.task.title}, ${f.task.taskKey} görevini aç`, "Görev detayını kapat"],
@@ -195,7 +195,7 @@ test("cards and dialog fit small screens in TR/EN/DE and both themes without run
         await expect(page.locator("html")).not.toHaveClass(/theme-close-in|theme-reveal/);
         const card = page.locator(`[data-task-card="${f.task.id}"]`);
         await expect(card).toBeVisible();
-        const box = await card.boundingBox(); expect(Math.abs(box!.width - box!.height)).toBeLessThan(2);
+        const box = await card.boundingBox(); expect(box!.height).toBeLessThan(320);
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
         if ((width === 390 || width === 1440) && locale === "tr") await page.screenshot({ path: `../.local/my-task-cards-${dark ? "dark" : "light"}-${width}.png`, fullPage: true });
         await card.getByRole("button", { name: open, exact: true }).click();

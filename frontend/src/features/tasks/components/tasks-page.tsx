@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { CaretDown, Plus } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/common/empty-state";
 import { PageHeader } from "@/components/common/page-header";
+import { EntityGrid } from "@/components/common/entity-card";
 import { PaginationBar } from "@/components/common/pagination-bar";
 import { Avatar } from "@/components/ui/avatar";
 import { profilePhotoSrc } from "@/features/account/api";
@@ -20,9 +21,12 @@ import { useAllTasks, useTaskList } from "../hooks";
 import { taskPermissions } from "../permissions";
 import { allowsAdvanced } from "../task-model";
 import type { Task } from "../types";
+import { useTaskView } from "../use-task-view";
+import { MyTaskCard } from "./my-task-card";
 import { ProjectGate, type ProjectGateContext } from "./project-gate";
 import { TaskFilterBar } from "./task-filter-bar";
-import { TaskRow } from "./task-row";
+import { TaskTable } from "./task-table";
+import { TaskViewToggle } from "./task-view-toggle";
 import { StatusBadge } from "./task-badges";
 
 export function TaskListSkeleton({ rows = 6 }: { rows?: number }) {
@@ -61,7 +65,7 @@ function GroupHeading({ group }: { group: TaskGroup }) {
   );
 }
 
-function GroupedList({ groups, row }: { groups: TaskGroup[]; row: (task: Task, group: TaskGroup) => ReactNode }) {
+function GroupedList({ groups, body }: { groups: TaskGroup[]; body: (tasks: Task[]) => ReactNode }) {
   const t = useTranslations("tasks.list");
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
 
@@ -78,20 +82,20 @@ function GroupedList({ groups, row }: { groups: TaskGroup[]; row: (task: Task, g
       {groups.map((group) => {
         const open = !collapsed.has(group.id);
         return (
-          <section key={group.id} aria-label={t("groupCount", { count: group.tasks.length })} className="overflow-hidden rounded-xl border bg-card">
+          <section key={group.id} aria-label={t("groupCount", { count: group.tasks.length })} className="space-y-3">
             <h2 className="m-0">
               <button
                 type="button"
                 aria-expanded={open}
                 onClick={() => toggleGroup(group.id)}
-                className="flex w-full items-center gap-2 bg-muted/40 px-3 py-2 text-left outline-none transition-colors hover:bg-muted/70 focus-visible:ring-3 focus-visible:ring-ring/50"
+                className="flex w-full items-center gap-2 rounded-xl border bg-muted/40 px-3 py-2 text-left outline-none transition-colors hover:bg-muted/70 focus-visible:ring-3 focus-visible:ring-ring/50"
               >
                 <CaretDown size={12} weight="bold" aria-hidden="true" className={cn("text-muted-foreground transition-transform duration-200 motion-reduce:transition-none", !open && "-rotate-90")} />
                 <GroupHeading group={group} />
                 <span className="text-xs tabular-nums text-muted-foreground">{group.tasks.length}</span>
               </button>
             </h2>
-            {open && <ul className="divide-y border-t">{group.tasks.map((task) => row(task, group))}</ul>}
+            {open && body(group.tasks)}
           </section>
         );
       })}
@@ -104,7 +108,8 @@ function TasksView({ slug, project, projectId, isManager, userId }: ProjectGateC
   const te = useTranslations("errors");
   const { filters, update, reset } = useTaskFilters();
   const grouped = filters.group !== "none";
-  const params = toListParams(filters, userId);
+  const { view, setView } = useTaskView("tasks", "table");
+  const params = toListParams(filters);
   const filtered = activeFilterCount(filters) > 0;
 
   // Grouping needs every match at once; the flat list pages on the server.
@@ -116,13 +121,14 @@ function TasksView({ slug, project, projectId, isManager, userId }: ProjectGateC
   const total = grouped ? tasks.length : (paged.data?.totalElements ?? 0);
   const totalPages = paged.data?.totalPages ?? 1;
 
-  const renderRow = (task: Task, group?: TaskGroup) => (
-    <TaskRow
-      key={group ? `${group.id}:${task.id}` : task.id}
-      task={task}
-      href={`/projects/${slug}/tasks/${task.id}`}
-      canChangeStatus={taskPermissions(task, userId, isManager).work}
-    />
+  const hrefOf = (task: Task) => `/projects/${slug}/tasks/${task.id}`;
+  const canChange = (task: Task) => taskPermissions(task, userId, isManager).work;
+  const list = (items: Task[]) => view === "grid" ? (
+    <EntityGrid>
+      {items.map((task) => <MyTaskCard key={task.id} task={task} canChange={canChange(task)} href={hrefOf(task)} showProject={false} progress={false} />)}
+    </EntityGrid>
+  ) : (
+    <TaskTable tasks={items} label={t("title")} canChange={canChange} hrefOf={hrefOf} />
   );
 
   const createLink = isManager && (
@@ -135,7 +141,7 @@ function TasksView({ slug, project, projectId, isManager, userId }: ProjectGateC
   return (
     <div>
       <PageHeader title={t("title")} description={t("description")} action={createLink || undefined} />
-      <TaskFilterBar advanced={allowsAdvanced(project.taskManagementMode)} projectId={projectId} filters={filters} onChange={update} onReset={reset} />
+      <TaskFilterBar advanced={allowsAdvanced(project.taskManagementMode)} projectId={projectId} filters={filters} onChange={update} onReset={reset} trailing={<TaskViewToggle view={view} onChange={setView} />} />
 
       {query.isError && (
         <div role="alert" className="space-y-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4">
@@ -169,12 +175,10 @@ function TasksView({ slug, project, projectId, isManager, userId }: ProjectGateC
               <EmptyState title={t("emptyTitle")} description={isManager ? t("emptyDescription") : t("emptyViewerDescription")} action={createLink || undefined} />
             )
           ) : grouped ? (
-            <GroupedList groups={groupTasks(tasks, filters.group as Exclude<typeof filters.group, "none">)} row={renderRow} />
+            <GroupedList groups={groupTasks(tasks, filters.group as Exclude<typeof filters.group, "none">)} body={list} />
           ) : (
             <>
-              <ul className={cn("divide-y overflow-hidden rounded-xl border bg-card transition-opacity", query.isFetching && "opacity-70")}>
-                {tasks.map((task) => renderRow(task))}
-              </ul>
+              <div className={cn("transition-opacity", query.isFetching && "opacity-70")}>{list(tasks)}</div>
               <PaginationBar
                 page={Math.min(filters.page, totalPages - 1)}
                 totalPages={totalPages}

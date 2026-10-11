@@ -1404,6 +1404,7 @@
     "tooMany": "Çok fazla öğe seçtiniz.",
     "timeNeedsDate": "Saat girmek için önce bir tarih seçin.",
     "taskDateOrder": "Deadline başlangıç tarihinden önce olamaz.",
+    "taskDatePast": "Geçmiş bir tarih seçilemez.",
     "timeEstimateRange": "Süre tahmini 1 dakika ile 100000 dakika arasında olmalı.",
     "worklogRange": "Süre 1 ile 1440 dakika arasında olmalı.",
     "sprintDateOrder": "Bitiş tarihi başlangıç tarihinden önce olamaz.",
@@ -1779,15 +1780,11 @@
       "searchShort": "En az {min} karakter yazın",
       "status": "Durum",
       "priority": "Öncelik",
-      "assignee": "Atanan",
-      "anyone": "Herkes",
-      "me": "Ben",
       "labels": "Etiketler",
       "sprint": "Sprint",
       "anySprint": "Tüm sprintler",
       "backlog": "Bekleyen işler",
       "overdue": "Gecikmiş",
-      "blocked": "Engelli",
       "clear": "Temizle",
       "sortBy": "Sırala: {field}",
       "sortLabel": "Sıralama",
@@ -2234,10 +2231,9 @@
     },
     "my": {
       "title": "Görevlerim",
-      "description": "Tüm projelerde size atanan görevler ve üstlenebileceğiniz havuz görevleri.",
+      "description": "Tüm projelerde size atanan görevler.",
       "retry": "Tekrar dene",
       "count": "{count} görev",
-      "poolCount": "{count} görev üstlenilmeyi bekliyor",
       "bucketLabel": "{bucket}, {count} görev",
       "noMatchTitle": "Eşleşen görev yok",
       "noMatchDescription": "Seçili filtrelere uyan görev bulunamadı. Filtreleri temizleyip yeniden deneyin.",
@@ -2253,16 +2249,13 @@
         "label": "Görev özeti",
         "open": "Açık",
         "overdue": "Gecikmiş",
-        "dueSoon": "24 saat içinde",
-        "blocked": "Engelli",
-        "pool": "Havuzda"
+        "dueSoon": "24 saat içinde"
       },
       "tabs": {
         "label": "Görev görünümü",
-        "open": "Açık",
-        "done": "Tamamlanan",
         "all": "Tümü",
-        "pool": "Havuz"
+        "open": "Açık",
+        "done": "Tamamlanan"
       },
       "filters": {
         "label": "Görev filtreleri",
@@ -2282,7 +2275,7 @@
       "empty": {
         "open": {
           "title": "Açık göreviniz yok",
-          "description": "Size atanan açık görev kalmadı. Havuz sekmesinden yeni bir görev üstlenebilirsiniz."
+          "description": "Size atanan açık görev kalmadı."
         },
         "done": {
           "title": "Tamamlanan görev yok",
@@ -2291,10 +2284,6 @@
         "all": {
           "title": "Henüz göreviniz yok",
           "description": "Bir projede size görev atandığında burada görünür."
-        },
-        "pool": {
-          "title": "Havuzda görev yok",
-          "description": "Üstlenebileceğiniz bir görev şu an yok. Proje yöneticileri görevleri havuza koyduğunda burada görünür."
         }
       },
       "cards": {
@@ -2302,11 +2291,25 @@
         "comment": "{key} görevine yorum yap",
         "start": "Başla",
         "complete": "Tamamla",
-        "noDescription": "Açıklama eklenmemiş.",
         "detailTitle": "Görev detayı",
         "detailDescription": "Görevi inceleyin, durumunu güncelleyin ve yorum yapın.",
         "close": "Görev detayını kapat"
       }
+    },
+    "view": {
+      "label": "Görünüm",
+      "grid": "Kart",
+      "table": "Tablo"
+    },
+    "table": {
+      "task": "Görev",
+      "status": "Durum",
+      "priority": "Öncelik",
+      "assignees": "Atanan",
+      "deadline": "Termin",
+      "comments": "Yorum",
+      "actions": "İşlem",
+      "noDeadline": "Termin yok"
     }
   },
   "sprints": {

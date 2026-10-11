@@ -1380,6 +1380,7 @@
     "tooMany": "You selected too many items.",
     "timeNeedsDate": "Pick a date before entering a time.",
     "taskDateOrder": "The deadline cannot be before the start date.",
+    "taskDatePast": "You cannot pick a date in the past.",
     "timeEstimateRange": "The time estimate must be between 1 and 100000 minutes.",
     "worklogRange": "Time must be between 1 and 1440 minutes.",
     "sprintDateOrder": "The end date cannot be before the start date.",
@@ -1755,15 +1756,11 @@
       "searchShort": "Type at least {min} characters",
       "status": "Status",
       "priority": "Priority",
-      "assignee": "Assignee",
-      "anyone": "Anyone",
-      "me": "Me",
       "labels": "Labels",
       "sprint": "Sprint",
       "anySprint": "Any sprint",
       "backlog": "Backlog",
       "overdue": "Overdue",
-      "blocked": "Blocked",
       "clear": "Clear",
       "sortBy": "Sort: {field}",
       "sortLabel": "Sort by",
@@ -2210,10 +2207,9 @@
     },
     "my": {
       "title": "My tasks",
-      "description": "Tasks assigned to you across all projects, plus pool tasks you can pick up.",
+      "description": "Tasks assigned to you across all projects.",
       "retry": "Try again",
       "count": "{count, plural, one {{count} task} other {{count} tasks}}",
-      "poolCount": "{count, plural, one {{count} task waiting to be picked up} other {{count} tasks waiting to be picked up}}",
       "bucketLabel": "{bucket}, {count} tasks",
       "noMatchTitle": "No matching tasks",
       "noMatchDescription": "No task matches the selected filters. Clear them and try again.",
@@ -2229,16 +2225,13 @@
         "label": "Task summary",
         "open": "Open",
         "overdue": "Overdue",
-        "dueSoon": "Due within 24 hours",
-        "blocked": "Blocked",
-        "pool": "In the pool"
+        "dueSoon": "Due within 24 hours"
       },
       "tabs": {
         "label": "Task view",
-        "open": "Open",
-        "done": "Completed",
         "all": "All",
-        "pool": "Pool"
+        "open": "Open",
+        "done": "Completed"
       },
       "filters": {
         "label": "Task filters",
@@ -2258,7 +2251,7 @@
       "empty": {
         "open": {
           "title": "No open tasks",
-          "description": "Nothing open is assigned to you. Pick up a new task from the Pool tab."
+          "description": "Nothing open is assigned to you."
         },
         "done": {
           "title": "No completed tasks",
@@ -2267,10 +2260,6 @@
         "all": {
           "title": "No tasks yet",
           "description": "Tasks show up here once a project assigns one to you."
-        },
-        "pool": {
-          "title": "The pool is empty",
-          "description": "There is nothing you can pick up right now. Tasks appear here when project managers put them in the pool."
         }
       },
       "cards": {
@@ -2278,11 +2267,25 @@
         "comment": "Comment on task {key}",
         "start": "Start",
         "complete": "Complete",
-        "noDescription": "No description yet.",
         "detailTitle": "Task details",
         "detailDescription": "Review the task, update its status and add comments.",
         "close": "Close task details"
       }
+    },
+    "view": {
+      "label": "View",
+      "grid": "Cards",
+      "table": "Table"
+    },
+    "table": {
+      "task": "Task",
+      "status": "Status",
+      "priority": "Priority",
+      "assignees": "Assignee",
+      "deadline": "Deadline",
+      "comments": "Comments",
+      "actions": "Action",
+      "noDeadline": "No deadline"
     }
   },
   "sprints": {

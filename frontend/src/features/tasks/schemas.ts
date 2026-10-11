@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { todayKey } from "@/features/reminders/dates";
 import { fromDeadlineIso, toDeadlineIso } from "./deadline";
 import { ESTIMATE_POINTS, TASK_PRIORITIES, type PoolInput, type Task, type TaskPriority, type TaskCreationMode } from "./types";
 
@@ -17,8 +18,12 @@ export const MAX_MENTIONS = 20;
 
 const digits = /^\d{0,5}$/;
 
+/** Dates a task being edited already carries; a past date is refused only when it is newly chosen, never when it is kept. */
+export type KeptDates = { startDate: string; deadlineDate: string };
+
 /** Error messages are keys under the `validation` i18n namespace, like every other form. */
-export const taskFormSchema = z
+export function createTaskFormSchema(kept: KeptDates = { startDate: "", deadlineDate: "" }) {
+  return z
   .object({
     creationMode: z.enum(["SIMPLE", "ADVANCED"]),
     title: z.string().trim().min(1, "required").max(TASK_TITLE_MAX, "maxLength"),
@@ -44,8 +49,14 @@ export const taskFormSchema = z
     if (values.creationMode === "ADVANCED" && values.deadlineTime && !values.deadlineDate) {
       ctx.addIssue({ code: "custom", path: ["deadlineDate"], message: "timeNeedsDate" });
     }
+    const today = todayKey();
+    if (values.startDate && values.startDate < today && values.startDate !== kept.startDate) {
+      ctx.addIssue({ code: "custom", path: ["startDate"], message: "taskDatePast" });
+    }
     if (values.startDate && values.deadlineDate && values.deadlineDate < values.startDate) {
       ctx.addIssue({ code: "custom", path: ["deadlineDate"], message: "taskDateOrder" });
+    } else if (values.deadlineDate && values.deadlineDate < today && values.deadlineDate !== kept.deadlineDate) {
+      ctx.addIssue({ code: "custom", path: ["deadlineDate"], message: "taskDatePast" });
     }
     if (values.creationMode === "ADVANCED") {
       if (values.estimatePoints !== null && !(ESTIMATE_POINTS as readonly number[]).includes(values.estimatePoints)) ctx.addIssue({ code: "custom", path: ["estimatePoints"], message: "required" });
@@ -58,7 +69,9 @@ export const taskFormSchema = z
       ctx.addIssue({ code: "custom", path: ["estimateHours"], message: "timeEstimateRange" });
     }
   });
+}
 
+export const taskFormSchema = createTaskFormSchema();
 export type TaskFormValues = z.infer<typeof taskFormSchema>;
 
 export const emptyTaskForm: TaskFormValues = {

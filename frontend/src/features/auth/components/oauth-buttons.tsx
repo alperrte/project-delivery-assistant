@@ -10,7 +10,7 @@ import { oauthStartUrl } from "../api";
  * Secondary sign-in routes. The backend starts the flow, so these are plain
  * navigations. Shown on the login screen only, below the email form, behind an "or" rule.
  */
-export function OAuthButtons({ divider = "or" }: { divider?: "or" } = {}) {
+export function OAuthButtons() {
   const t = useTranslations("oauth");
   const cls = cn(
     buttonVariants({ variant: "outline" }),

@@ -96,7 +96,7 @@ Project POST optional organizationId→null; full PUT omitted/null clears, same 
 
 ## Task progress and manager notifications (2026-10-06, backend)
 
-Existing PATCH /api/v1/projects/{projectId}/tasks/{taskId}/status keeps TASK_MANAGE or assigned TASK_WORK, active-project membership, cookie and CSRF requirements. SIMPLE additionally allows BACKLOG -> IN_PROGRESS and IN_PROGRESS -> DONE; TODO -> IN_PROGRESS and DONE -> IN_PROGRESS remain supported. ADVANCED retains the review/testing workflow. Repeating the current status is a no-op with no extra history, activity or notification.
+Existing PATCH /api/v1/projects/{projectId}/tasks/{taskId}/status keeps TASK_MANAGE or assigned TASK_WORK, active-project membership, cookie and CSRF requirements. Since 2026-10-12, IN_PROGRESS, IN_REVIEW, TESTING and DONE move freely among themselves in both modes (no more IN_REVIEW -> TESTING chain); IN_PROGRESS -> TODO stays, BACKLOG -> TODO -> IN_PROGRESS stays, and SIMPLE additionally allows BACKLOG -> IN_PROGRESS. Repeating the current status is a no-op with no extra history, activity or notification.
 
 A successful IN_PROGRESS or DONE transition adds this project's active PROJECT_MANAGER memberships to the existing assignee/watcher recipients, deduplicated and excluding the actor. Other transitions retain follower-only delivery. Events publish in the status transaction and notifications are written AFTER_COMMIT. The public event carries status names as strings and immutable task/nickname display snapshots; consumers do not import Task persistence types or internal enums.
 

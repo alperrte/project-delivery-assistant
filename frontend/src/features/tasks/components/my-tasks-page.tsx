@@ -1,15 +1,16 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, type ReactNode } from "react";
 import { usePathname, useRouter, useSearchParams } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import { X } from "@phosphor-icons/react";
+import { EntityGrid } from "@/components/common/entity-card";
 import { EmptyState } from "@/components/common/empty-state";
 import { PageHeader } from "@/components/common/page-header";
 import { PaginationBar } from "@/components/common/pagination-bar";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { DropdownMenuCheckboxItem, DropdownMenuRadioGroup, DropdownMenuRadioItem } from "@/components/ui/dropdown-menu";
+import { DropdownMenuCheckboxItem, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSession } from "@/features/auth/hooks/use-session";
@@ -18,18 +19,19 @@ import { errorKey } from "@/lib/api/error-message";
 import { cn } from "@/lib/utils";
 import { TASK_PAGE_SIZE } from "../api";
 import { deadlineBucket, type DeadlineBucket } from "../deadline";
-import { useMyTaskCounts, useMyTasks, usePoolTasks } from "../hooks";
+import { useMyTaskCounts, useMyTasks } from "../hooks";
 import { activeMyFilterCount, MY_TABS, toMyTasksParams, useMyTaskFilters, type MyTab } from "../my-filters";
 import { taskPermissions } from "../permissions";
 import { TASK_STATUSES, type MyTaskCounts, type Task, type TaskStatus } from "../types";
-import { PoolCard } from "./pool-card";
 import { FilterButton, toggle } from "./task-filter-bar";
 import { StatusDot } from "./task-badges";
 import { MyTaskCard } from "./my-task-card";
 import { MyTaskDialog } from "./my-task-dialog";
+import { TaskTable } from "./task-table";
+import { TaskViewToggle } from "./task-view-toggle";
+import { useTaskView, type TaskView } from "../use-task-view";
 
 const BUCKETS: DeadlineBucket[] = ["overdue", "today", "week", "later", "none"];
-const TRIGGER = buttonVariants({ variant: "outline", size: "sm", className: "max-md:h-9" });
 
 function Stat({ label, value, tone }: { label: string; value: number | undefined; tone?: "danger" | "warning" }) {
   return (
@@ -42,16 +44,14 @@ function Stat({ label, value, tone }: { label: string; value: number | undefined
   );
 }
 
-/** The five numbers the backend keeps for the signed-in user; `dueSoon` is the 24 hour reminder window. */
+/** Three of the numbers the backend keeps for the signed-in user; `dueSoon` is the 24 hour reminder window. */
 function Summary({ counts }: { counts: MyTaskCounts | undefined }) {
   const t = useTranslations("tasks.my.summary");
   return (
-    <dl aria-label={t("label")} className="mb-5 grid grid-cols-2 divide-x divide-y overflow-hidden rounded-xl border bg-card sm:grid-cols-3 lg:grid-cols-5 lg:divide-y-0">
+    <dl aria-label={t("label")} className="mb-5 grid grid-cols-3 divide-x overflow-hidden rounded-xl border bg-card">
       <Stat label={t("open")} value={counts?.open} />
       <Stat label={t("overdue")} value={counts?.overdue} tone="danger" />
       <Stat label={t("dueSoon")} value={counts?.dueSoon} />
-      <Stat label={t("blocked")} value={counts?.blocked} />
-      <Stat label={t("pool")} value={counts?.poolAvailable} />
     </dl>
   );
 }
@@ -68,8 +68,8 @@ function useProjectOptions() {
 function ListSkeleton() {
   return (
     <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3" aria-hidden="true">
-      {[0, 1, 2, 3, 4].map((key) => (
-        <li key={key}><Skeleton className="aspect-square min-h-72 rounded-xl" /></li>
+      {[0, 1, 2, 3, 4, 5].map((key) => (
+        <li key={key}><Skeleton className="h-44 rounded-xl" /></li>
       ))}
     </ul>
   );
@@ -88,13 +88,19 @@ function ErrorPanel({ error, onRetry }: { error: unknown; onRetry: () => void })
   );
 }
 
-function taskHref(task: Task): string {
-  return `/projects/${task.project?.slug ?? ""}/tasks/${task.id}`;
-}
-
 type OpenTask = (task: Task, comments?: boolean) => void;
 
-function BucketedList({ tasks, userId, onOpen }: { tasks: Task[]; userId: string; onOpen: OpenTask }) {
+function TaskCards({ tasks, userId, onOpen }: { tasks: Task[]; userId: string; onOpen: OpenTask }) {
+  return (
+    <EntityGrid>
+      {tasks.map((task) => (
+        <MyTaskCard key={task.id} task={task} onOpen={(comments) => onOpen(task, comments)} canChange={taskPermissions(task, userId, false).work} />
+      ))}
+    </EntityGrid>
+  );
+}
+
+function BucketedList({ tasks, render }: { tasks: Task[]; render: (items: Task[]) => ReactNode }) {
   const t = useTranslations("tasks.my");
   const groups = useMemo(() => {
     const now = new Date();
@@ -109,28 +115,14 @@ function BucketedList({ tasks, userId, onOpen }: { tasks: Task[]; userId: string
             {t(`buckets.${bucket}`)}
             <span className="text-xs font-normal tabular-nums text-muted-foreground">{items.length}</span>
           </h2>
-          <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {items.map((task) => (
-              <MyTaskCard key={task.id} task={task} onOpen={(comments) => onOpen(task, comments)} canChange={taskPermissions(task, userId, false).work} />
-            ))}
-          </ul>
+          {render(items)}
         </section>
       ))}
     </div>
   );
 }
 
-function FlatList({ tasks, userId, fetching, onOpen }: { tasks: Task[]; userId: string; fetching: boolean; onOpen: OpenTask }) {
-  return (
-    <ul className={cn("grid gap-4 transition-opacity md:grid-cols-2 xl:grid-cols-3", fetching && "opacity-70")}>
-      {tasks.map((task) => (
-        <MyTaskCard key={task.id} task={task} onOpen={(comments) => onOpen(task, comments)} canChange={taskPermissions(task, userId, false).work} />
-      ))}
-    </ul>
-  );
-}
-
-function TasksPanel({ tab, userId, onClear, filtered, onOpen }: { tab: Exclude<MyTab, "pool">; userId: string; onClear: () => void; filtered: boolean; onOpen: OpenTask }) {
+function TasksPanel({ tab, view, userId, onClear, filtered, onOpen }: { tab: MyTab; view: TaskView; userId: string; onClear: () => void; filtered: boolean; onOpen: OpenTask }) {
   const t = useTranslations("tasks.my");
   const { filters, update } = useMyTaskFilters();
   const query = useMyTasks(toMyTasksParams(filters));
@@ -144,6 +136,18 @@ function TasksPanel({ tab, userId, onClear, filtered, onOpen }: { tab: Exclude<M
   if (query.isPending) return <ListSkeleton />;
 
   const { content, totalElements, totalPages } = query.data;
+  const render = (items: Task[]) => view === "grid" ? (
+    <TaskCards tasks={items} userId={userId} onOpen={onOpen} />
+  ) : (
+    <TaskTable
+      tasks={items}
+      label={t("title")}
+      canChange={(task) => taskPermissions(task, userId, false).work}
+      onOpen={onOpen}
+      showProject
+      progress
+    />
+  );
   if (content.length === 0) {
     return filtered ? (
       <EmptyState
@@ -165,66 +169,7 @@ function TasksPanel({ tab, userId, onClear, filtered, onOpen }: { tab: Exclude<M
       <p aria-live="polite" className="mb-2 text-xs tabular-nums text-muted-foreground">
         {t("count", { count: totalElements })}
       </p>
-      {tab === "open" ? <BucketedList tasks={content} userId={userId} onOpen={onOpen} /> : <FlatList tasks={content} userId={userId} fetching={query.isFetching} onOpen={onOpen} />}
-      <PaginationBar
-        page={Math.min(filters.page, totalPages - 1)}
-        totalPages={totalPages}
-        totalElements={totalElements}
-        pageSize={TASK_PAGE_SIZE}
-        onPageChange={(page) => {
-          update({ page });
-          window.scrollTo({ top: 0 });
-        }}
-      />
-    </>
-  );
-}
-
-function PoolPanel({ onClear, filtered }: { onClear: () => void; filtered: boolean }) {
-  const t = useTranslations("tasks.my");
-  const { filters, update } = useMyTaskFilters();
-  const query = usePoolTasks({ projectId: filters.project || undefined, page: filters.page });
-
-  if (query.isError) return <ErrorPanel error={query.error} onRetry={() => void query.refetch()} />;
-  if (query.isPending) {
-    return (
-      <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" aria-hidden="true">
-        {[0, 1, 2].map((key) => (
-          <li key={key}>
-            <Skeleton className="h-44 w-full rounded-xl" />
-          </li>
-        ))}
-      </ul>
-    );
-  }
-
-  const { content, totalElements, totalPages } = query.data;
-  if (content.length === 0) {
-    return filtered ? (
-      <EmptyState
-        title={t("noMatchTitle")}
-        description={t("noMatchDescription")}
-        action={
-          <Button variant="outline" onClick={onClear}>
-            {t("clearFilters")}
-          </Button>
-        }
-      />
-    ) : (
-      <EmptyState title={t("empty.pool.title")} description={t("empty.pool.description")} />
-    );
-  }
-
-  return (
-    <>
-      <p aria-live="polite" className="mb-2 text-xs tabular-nums text-muted-foreground">
-        {t("poolCount", { count: totalElements })}
-      </p>
-      <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        {content.map((task) => (
-          <PoolCard key={task.id} task={task} href={taskHref(task)} showProject />
-        ))}
-      </ul>
+      {tab === "open" ? <BucketedList tasks={content} render={render} /> : <div className={cn("transition-opacity", query.isFetching && "opacity-70")}>{render(content)}</div>}
       <PaginationBar
         page={Math.min(filters.page, totalPages - 1)}
         totalPages={totalPages}
@@ -247,7 +192,7 @@ export function MyTasksPage() {
   const counts = useMyTaskCounts();
   const projects = useProjectOptions();
   const filtered = activeMyFilterCount(filters) > 0;
-  const poolTab = filters.tab === "pool";
+  const { view, setView } = useTaskView("my-tasks", "grid");
   const router = useRouter();
   const pathname = usePathname();
   const search = useSearchParams();
@@ -284,9 +229,6 @@ export function MyTasksPage() {
           {MY_TABS.map((tab) => (
             <TabsTrigger key={tab} value={tab}>
               {t(`tabs.${tab}`)}
-              {tab === "pool" && !!counts.data?.poolAvailable && (
-                <span className="rounded-full bg-primary px-1.5 text-[10px] font-semibold tabular-nums text-primary-foreground">{counts.data.poolAvailable}</span>
-              )}
             </TabsTrigger>
           ))}
         </TabsList>
@@ -304,26 +246,19 @@ export function MyTasksPage() {
           </DropdownMenuRadioGroup>
         </FilterButton>
 
-        {!poolTab && (
-          <>
-            <FilterButton label={t("filters.status")} count={filters.status.length}>
-              {TASK_STATUSES.map((status: TaskStatus) => (
-                <DropdownMenuCheckboxItem key={status} checked={filters.status.includes(status)} onCheckedChange={() => update({ status: toggle(filters.status, status) })}>
-                  <StatusDot status={status} />
-                  {tc(`status.${status}`)}
-                </DropdownMenuCheckboxItem>
-              ))}
-            </FilterButton>
-            <button
-              type="button"
-              aria-pressed={filters.overdue}
-              onClick={() => update({ overdue: !filters.overdue })}
-              className={cn(TRIGGER, filters.overdue && "border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/15")}
-            >
-              {t("filters.overdue")}
-            </button>
-          </>
-        )}
+        <FilterButton label={t("filters.status")} count={filters.status.length + (filters.overdue ? 1 : 0)}>
+          {TASK_STATUSES.map((status: TaskStatus) => (
+            <DropdownMenuCheckboxItem key={status} checked={filters.status.includes(status)} onCheckedChange={() => update({ status: toggle(filters.status, status) })}>
+              <StatusDot status={status} />
+              {tc(`status.${status}`)}
+            </DropdownMenuCheckboxItem>
+          ))}
+          <DropdownMenuSeparator />
+          <DropdownMenuCheckboxItem checked={filters.overdue} onCheckedChange={(checked) => update({ overdue: checked })}>
+            <span aria-hidden="true" className="size-2 shrink-0 rounded-full bg-destructive" />
+            {t("filters.overdue")}
+          </DropdownMenuCheckboxItem>
+        </FilterButton>
 
         {filtered && (
           <button type="button" onClick={reset} className={buttonVariants({ variant: "ghost", size: "sm", className: "text-muted-foreground max-md:h-9" })}>
@@ -331,14 +266,14 @@ export function MyTasksPage() {
             {t("filters.clear")}
           </button>
         )}
+
+        <div className="ml-auto"><TaskViewToggle view={view} onChange={setView} /></div>
       </div>
 
       {!user ? (
         <ListSkeleton />
-      ) : poolTab ? (
-        <PoolPanel onClear={reset} filtered={filtered} />
       ) : (
-        <TasksPanel tab={filters.tab as Exclude<MyTab, "pool">} userId={user.id} onClear={reset} filtered={filtered} onOpen={openTask} />
+        <TasksPanel tab={filters.tab} view={view} userId={user.id} onClear={reset} filtered={filtered} onOpen={openTask} />
       )}
       <MyTaskDialog selection={selection} onClose={closeTask} />
     </div>
