@@ -38,6 +38,8 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -96,7 +98,7 @@ class ProjectHomeApiIntegrationTest {
     }
 
     @Test
-    void archivedOrganizationRetainsAssociationWithoutPoisoningHomeTransaction() throws Exception {
+    void deletedOrganizationLeavesItsProjectsStandaloneWithoutPoisoningHomeTransaction() throws Exception {
         Cookie csrf=csrfCookie(); Account owner=account("archivedhome"), outsider=account("archivedoutsider");
         var org=mvc.perform(post("/api/v1/organizations").cookie(csrf,owner.access())
                 .header("X-XSRF-TOKEN",csrf.getValue()).contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Retained org\"}"))
@@ -106,15 +108,13 @@ class ProjectHomeApiIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Retained project\",\"organizationId\":\""+oid+"\"}"))
                 .andExpect(status().isCreated()).andReturn().getResponse();
         String pid=JsonPath.read(created.getContentAsString(),"$.id");
-        mvc.perform(post("/api/v1/organizations/"+oid+"/archive").cookie(csrf,owner.access()).header("X-XSRF-TOKEN",csrf.getValue()))
+        mvc.perform(delete("/api/v1/organizations/"+oid).cookie(csrf,owner.access()).header("X-XSRF-TOKEN",csrf.getValue()))
                 .andExpect(status().isNoContent());
         mvc.perform(get("/api/v1/projects/"+pid+"/home").cookie(owner.access())).andExpect(status().isOk()).andExpect(jsonPath("$.organization").doesNotExist());
-        mvc.perform(get("/api/v1/projects/"+pid).cookie(owner.access())).andExpect(status().isOk()).andExpect(jsonPath("$.organizationId").value(oid));
-        assertEquals(UUID.fromString(oid),jdbc.queryForObject("select organization_id from projects where id=?",UUID.class,UUID.fromString(pid)));
+        mvc.perform(get("/api/v1/projects/"+pid).cookie(owner.access())).andExpect(status().isOk()).andExpect(jsonPath("$.organizationId").doesNotExist());
+        assertNull(jdbc.queryForObject("select organization_id from projects where id=?",UUID.class,UUID.fromString(pid)));
+        assertEquals(0,jdbc.queryForObject("select count(*) from organizations where id=?",Integer.class,UUID.fromString(oid)));
         mvc.perform(get("/api/v1/projects/"+pid+"/home").cookie(outsider.access())).andExpect(status().isForbidden());
-        mvc.perform(put("/api/v1/projects/"+pid).cookie(csrf,owner.access()).header("X-XSRF-TOKEN",csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
-                .content("{\"name\":\"Edited\",\"priority\":\"HIGH\",\"status\":\"PLANNING\",\"organizationId\":\""+oid+"\"}"))
-                .andExpect(status().isOk());
         mvc.perform(put("/api/v1/projects/"+pid).cookie(csrf,owner.access()).header("X-XSRF-TOKEN",csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
                 .content("{\"name\":\"Edited\",\"priority\":\"HIGH\",\"status\":\"PLANNING\",\"organizationId\":null}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.organizationId").doesNotExist());

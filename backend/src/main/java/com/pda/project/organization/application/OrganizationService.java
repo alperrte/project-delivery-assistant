@@ -1,14 +1,23 @@
 package com.pda.project.organization.application;
 
 import com.pda.project.application.service.SlugGenerator;
+import com.pda.project.infrastructure.repository.ProjectRepository;
 import com.pda.project.organization.domain.Organization;
+import com.pda.project.organization.infrastructure.OrganizationMediaRepository;
 import com.pda.project.organization.infrastructure.OrganizationRepository;
+import com.pda.shared.MediaStorage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import java.io.IOException;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.UUID;
@@ -17,10 +26,19 @@ import java.util.Optional;
 @Service
 public class OrganizationService {
 
-    private final OrganizationRepository organizations;
+    private static final Logger log = LoggerFactory.getLogger(OrganizationService.class);
 
-    public OrganizationService(OrganizationRepository organizations) {
+    private final OrganizationRepository organizations;
+    private final ProjectRepository projects;
+    private final OrganizationMediaRepository mediaObjects;
+    private final MediaStorage storage;
+
+    public OrganizationService(OrganizationRepository organizations, ProjectRepository projects,
+                               OrganizationMediaRepository mediaObjects, MediaStorage storage) {
         this.organizations = organizations;
+        this.projects = projects;
+        this.mediaObjects = mediaObjects;
+        this.storage = storage;
     }
 
     @Transactional
@@ -70,11 +88,39 @@ public class OrganizationService {
         return organizations.save(organization);
     }
 
+    /**
+     * Permanent and irreversible. The projects keep living: they are only unlinked from the organization (they may
+     * belong to other people), and the organization's logo/cover rows and files are removed with it.
+     */
     @Transactional
-    public void archive(UUID actorId, UUID organizationId) {
+    public void delete(UUID actorId, UUID organizationId) {
         Organization organization = lockedOwned(actorId, organizationId);
-        organization.archive();
-        organizations.save(organization);
+        projects.detachFromOrganization(organizationId);
+        List<String> mediaKeys = mediaObjects.keysOf(organizationId);
+        mediaObjects.deleteAllOf(organizationId);
+        organizations.delete(organization);
+        organizations.flush();
+        removeFilesAfterCommit(mediaKeys);
+    }
+
+    /** The files go only once the database rows are really gone; a failed delete leaves an orphan file, never a dangling row. */
+    private void removeFilesAfterCommit(List<String> keys) {
+        if (keys.isEmpty()) return;
+        Runnable remove = () -> keys.forEach(key -> {
+            try {
+                storage.delete(key);
+            } catch (IOException | RuntimeException failed) {
+                log.warn("Organization media file {} could not be deleted", key, failed);
+            }
+        });
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() { remove.run(); }
+            });
+        } else {
+            remove.run();
+        }
     }
 
     @Transactional(readOnly = true)

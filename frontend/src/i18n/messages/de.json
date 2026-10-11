@@ -186,7 +186,9 @@
   "organizations": {
     "card": {
       "lastUpdate": "Letzte Änderung",
-      "openNamed": "Organisation {name} öffnen"
+      "openNamed": "Organisation {name} öffnen",
+      "edit": "Organisation bearbeiten",
+      "editNamed": "{name} bearbeiten"
     },
     "cardLabel": "ORGANISATION",
     "cardNoDescription": "Noch keine Beschreibung hinzugefügt.",
@@ -202,11 +204,12 @@
     "description": "Gruppieren Sie Ihre Projekte unter einer Organisation oder lassen Sie sie eigenständig.",
     "create": "Neue Organisation",
     "edit": "Bearbeiten",
-    "archive": "Archivieren",
+    "delete": "Löschen",
+    "deleteConfirmTitle": "Diese Organisation endgültig löschen?",
+    "deleteConfirmDescription": "Die Organisation, ihr Logo und ihr Titelbild werden endgültig gelöscht. Ihre Projekte werden nicht gelöscht; sie werden nur von dieser Organisation getrennt und bleiben eigenständig. Dies kann nicht rückgängig gemacht werden.",
+    "deleteTypeName": "Geben Sie zur Bestätigung den Namen der Organisation ein: <strong>{name}</strong>",
+    "deleteConfirm": "Organisation löschen",
     "cancel": "Abbrechen",
-    "archiveConfirmTitle": "Diese Organisation archivieren?",
-    "archiveConfirmDescription": "Archivierte Organisationen akzeptieren keine neuen Projekte mehr. Dies kann nicht rückgängig gemacht werden.",
-    "archivedBadge": "Archiviert",
     "projectsHeading": "Projekte",
     "noProjects": "In dieser Organisation gibt es keine aktiven Projekte, auf die Sie zugreifen können.",
     "emptyTitle": "Noch keine Organisationen",
@@ -288,7 +291,8 @@
       "detailsDescription": "Ergänzen Sie weitere Informationen und Notizen.",
       "notes": "Weitere Notizen",
       "notesPlaceholder": "Weitere Informationen zu dieser Organisation… (optional)",
-      "cardPreview": "Kartenansicht"
+      "cardPreview": "Kartenansicht",
+      "created": "Erstellt"
     }
   },
   "projects": {
@@ -324,6 +328,7 @@
       "name": "Name",
       "status": "Status",
       "priority": "Priorität",
+      "type": "Art",
       "techStack": "Technologie",
       "updatedAt": "Aktualisiert"
     },

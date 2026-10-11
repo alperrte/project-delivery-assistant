@@ -21,5 +21,7 @@ public class OrganizationMediaRepository {
     public List<String> cleanupCandidates(){return jdbc.queryForList("SELECT object_key FROM organization_media_objects WHERE state='DELETE_PENDING' OR (state='PENDING' AND lease_until<now()) ORDER BY created_at LIMIT 50",String.class);}
     public boolean claimCleanup(String key){return !jdbc.queryForList("SELECT object_key FROM organization_media_objects WHERE object_key=? AND (state='DELETE_PENDING' OR (state='PENDING' AND lease_until<now())) FOR UPDATE SKIP LOCKED",String.class,key).isEmpty();}
     public boolean referenced(String key){return Boolean.TRUE.equals(jdbc.queryForObject("SELECT EXISTS(SELECT 1 FROM organizations WHERE logo_key=? OR cover_image_key=?)",Boolean.class,key,key));}
+    public List<String> keysOf(UUID id){return jdbc.queryForList("SELECT object_key FROM organization_media_objects WHERE organization_id=?",String.class,id);}
+    public void deleteAllOf(UUID id){jdbc.update("DELETE FROM organization_media_objects WHERE organization_id=?",id);}
     public void deleted(String key){jdbc.update("DELETE FROM organization_media_objects WHERE object_key=?",key);}
 }

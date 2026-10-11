@@ -33,7 +33,7 @@ test("explicit standalone selection and assign/move/remove persist real UI reque
     await page.reload();await expect(page.locator("#settings-organization")).toContainText("Organizasyon yok");
   } finally {
     if(project)await api(page,"POST",`/projects/${project.id}/archive`);
-    for(const org of [a,b])await api(page,"POST",`/organizations/${org.id}/archive`);
+    for(const org of [a,b])await api(page,"DELETE",`/organizations/${org.id}`);
   }
 });
 
@@ -48,7 +48,7 @@ test("101 linked projects remain accessible through real server pagination",asyn
   for(let index=1;index<=5;index++){await page.getByRole("button",{name:"Sonraki",exact:true}).click();await expect(page.locator("#main-content").getByRole("link",{name:`${prefix} ${String(index*20).padStart(3,"0")}`,exact:true})).toBeVisible();}
   await expect(page.getByRole("button",{name:"Sonraki",exact:true})).toBeDisabled();expect([...pages].sort()).toEqual(["0","1","2","3","4","5"]);
   const last=await api(page,"GET",`/organizations/${org.id}/projects?page=1&size=100`);expect(last.status).toBe(200);expect((last.json as {content:{id:string}[];totalElements:number}).totalElements).toBe(101);expect((last.json as {content:{id:string}[]}).content[0].id).toBe(projects[100].id);
- }finally{for(const p of projects)await api(page,"POST",`/projects/${p.id}/archive`);await api(page,"POST",`/organizations/${org.id}/archive`);}
+ }finally{for(const p of projects)await api(page,"POST",`/projects/${p.id}/archive`);await api(page,"DELETE",`/organizations/${org.id}`);}
 });
 
 test("organization projects retry clamps an emptied last page to the remaining real page",async({page})=>{
@@ -64,7 +64,7 @@ test("organization projects retry clamps an emptied last page to the remaining r
   await page.getByTestId("organization-projects-error").getByRole("button").first().click();
   await expect(page.locator("#main-content").getByRole("link",{name:name+" 000",exact:true})).toBeVisible();
   await expect(page.getByRole("button",{name:"Sonraki",exact:true})).toBeDisabled();await expect(page.getByTestId("organization-projects-error")).toHaveCount(0);
- }finally{for(const id of ids)await api(page,"POST",`/projects/${id}/archive`);await api(page,"POST",`/organizations/${org.id}/archive`);}
+ }finally{for(const id of ids)await api(page,"POST",`/projects/${id}/archive`);await api(page,"DELETE",`/organizations/${org.id}`);}
 });
 
 test("organization projects have independent loading/error/retry and membership-filtered empty states",async({page})=>{
@@ -84,7 +84,7 @@ test("organization projects have independent loading/error/retry and membership-
   await page.unroute(`**/organizations/${org.id}/projects?*`);
   await page.getByTestId("organization-projects-error").getByRole("button").first().click();
   await expect(page.getByText("Bu organizasyonda erişebildiğiniz aktif proje yok.",{exact:true})).toBeVisible();await expect(page.getByTestId("organization-projects-error")).toHaveCount(0);
- }finally{release?.();await page.unroute(`**/organizations/${org.id}/projects?*`);await api(page,"POST",`/organizations/${org.id}/archive`);}
+ }finally{release?.();await page.unroute(`**/organizations/${org.id}/projects?*`);await api(page,"DELETE",`/organizations/${org.id}`);}
 });
 
 test("warm old/new organization lists refresh after move/remove/assign/rename/create/archive without reload",async({page})=>{
@@ -127,7 +127,7 @@ test("warm old/new organization lists refresh after move/remove/assign/rename/cr
   await orgPage(a);await expect(page.locator(`#main-content a[href="/tr/projeler/${second.slug}/genel-bakis"]`)).toBeVisible();
   await settings();await page.getByRole("button",{name:"Projeyi sil",exact:true}).click();await page.getByRole("dialog").getByLabel(/Onaylamak için proje adını yazın/).fill(prefix+" renamed");await page.getByRole("dialog").getByRole("button",{name:"Bu projeyi sil",exact:true}).click();
   await expect(page).toHaveURL(/\/tr\/projeler$/);await orgPage(a);await expect(page.locator(`#main-content a[href="/tr/projeler/${p.slug}/genel-bakis"]`)).toHaveCount(0);await expect(page.locator(`#main-content a[href="/tr/projeler/${second.slug}/genel-bakis"]`)).toBeVisible();
- }finally{for(const p of created)await api(page,"POST",`/projects/${p.id}/archive`);for(const org of [a,b])await api(page,"POST",`/organizations/${org.id}/archive`);}
+ }finally{for(const p of created)await api(page,"POST",`/projects/${p.id}/archive`);for(const org of [a,b])await api(page,"DELETE",`/organizations/${org.id}`);}
 });
 
 test("standalone selectors retain keyboard, locale, viewport and theme behavior",async({page})=>{
@@ -148,7 +148,7 @@ test("standalone selectors retain keyboard, locale, viewport and theme behavior"
   }finally{await api(page,"POST",`/projects/${project.id}/archive`);}
 });
 
-test("co-manager keeps current organization label and gets plain text; archived association remains removable",async({page,browser})=>{
+test("co-manager keeps current organization label and gets plain text; deleting the organization leaves the project standalone",async({page,browser})=>{
  await page.goto("/tr/projeler");const prefix=`Co org ${Date.now()}`;
  const org=(await api(page,"POST","/organizations",{name:prefix})).json as {id:string};
  const p=(await api(page,"POST","/projects",{name:prefix+" project",projectType:"WEB",organizationId:org.id})).json as {id:string;slug:string};
@@ -166,11 +166,9 @@ test("co-manager keeps current organization label and gets plain text; archived 
   await co.goto(`/tr/projeler/${p.slug}`);await expect(co.locator("#main-content").getByText(prefix,{exact:true})).toBeVisible();
   await expect(co.locator(`#main-content a[href="/tr/organizasyonlar/${org.id}"]`)).toHaveCount(0);
   expect((await api(co,"GET",`/organizations/${org.id}`)).status).toBe(403);
-  await api(page,"POST",`/organizations/${org.id}/archive`);
-  await co.goto(`/tr/projeler/${p.slug}?section=settings`);await expect(co.locator("#settings-organization")).toContainText("arşivlenmiş");
-  expect(projectOrganizationInDatabase(p.id)).toBe(org.id);
+  await api(page,"DELETE",`/organizations/${org.id}`);
+  await co.goto(`/tr/projeler/${p.slug}?section=settings`);await expect(co.locator("#settings-organization")).not.toContainText(prefix);
+  await expect.poll(()=>projectOrganizationInDatabase(p.id)).toBeNull();
   expect((await api(co,"GET",`/projects/${p.id}/home`)).status).toBe(200);
-  await co.locator("#settings-organization").click();await co.getByRole("option",{name:"Organizasyon yok",exact:true}).click();
-  const [response]=await Promise.all([co.waitForResponse(r=>r.request().method()==="PUT"&&r.url().endsWith(`/projects/${p.id}`)),co.locator('form button[type="submit"]').click()]);expect(response.status()).toBe(200);expect(projectOrganizationInDatabase(p.id)).toBeNull();
- }finally{await api(page,"POST",`/projects/${p.id}/archive`);await api(page,"POST",`/organizations/${org.id}/archive`);await context.close();}
+ }finally{await api(page,"POST",`/projects/${p.id}/archive`);await api(page,"DELETE",`/organizations/${org.id}`);await context.close();}
 });

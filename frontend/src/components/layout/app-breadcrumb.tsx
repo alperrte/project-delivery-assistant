@@ -83,11 +83,14 @@ export function AppBreadcrumb() {
       items.push({ label: nav("labels") });
     }
   } else if (root === "organizations" && first) {
-    items.push({ label: titles("organizations"), href: "/organizations" });
-    if (first === "new") items.push({ label: titles("organizationNew") });
-    else {
-      items.push({ label: organization?.label ?? titles("organization"), href: `/organizations/${first}` });
-      if (second === "edit") items.push({ label: titles("organizationEdit") });
+    // The organization page itself carries no trail; only the create and edit forms below it do.
+    if (first === "new") items.push({ label: titles("organizations"), href: "/organizations" }, { label: titles("organizationNew") });
+    else if (second === "edit") {
+      items.push(
+        { label: titles("organizations"), href: "/organizations" },
+        { label: organization?.label ?? titles("organization"), href: `/organizations/${first}` },
+        { label: titles("organizationEdit") },
+      );
     }
   } else if (root === "calendar" && first) {
     items.push({ label: titles("calendar"), href: "/calendar" }, { label: titles(first === "new" ? "reminderNew" : "reminderEdit") });
