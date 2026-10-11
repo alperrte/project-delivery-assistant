@@ -473,3 +473,7 @@ Proje kenar çubuğundaki sayfalar (Genel Bakış, Kriterler, Ekipler, Ekip Dave
 
 Kriter listesinde durum onay kutusuyla değil, satırın sağındaki durum hapıyla (pill) değiştirilir (`CriterionStatus`, `criteria-list.tsx`). Yönetici hapa tıklayınca lucide ikonlu (`CircleDashed` / `CircleCheck`, `ChevronDown`) bir `DropdownMenuRadioGroup` açılır: Devam ediyor / Tamamlandı. Seçenekler `closeOnClick` ile menüyü kapatır; mevcut durum yeniden seçilirse istek atılmaz. Yönetici olmayanlar aynı hapı yalnızca okunur görür. Erişilebilir ad `criteria.status.change` anahtarıyla “{kriter} durumu: {durum}. Değiştirmek için aç” biçimindedir; e2e testleri `getByRole("button", { name: /^Kriter durumu: Devam ediyor/ })` ve `menuitemradio` ile çalışır. Backend durumu ikilidir (`completed`); yeni durum eklemek `ProjectCriterion`, API ve ilerleme hesabını da değiştirir.
 
+## Daraltılmış kenar çubuğunda Ekipler (2026-10-11)
+
+Kenar çubuğu daraltıldığında Ekipler simgesinin alt sayfaları (Tüm Ekipler, Ekip Davetleri) fare simgenin veya açılır kutunun üzerindeyken sağa doğru açılır; fare ikisinden de ayrılınca (120 ms gecikmeyle) kapanır. Fareyle simgeye basmak kutuyu açmaz, açıksa kapatır. Klavye (Enter/Space) ve dokunmatik basış hâlâ açar, çünkü bunlar hover yapamaz; klavyeyle açılınca odak kutuya geçer, hover ile açılınca odak çalınmaz. Native `title` tooltip'i kutuyla çakıştığı için kaldırıldı, erişilebilir ad `aria-label` ile sürer (`teams-sidebar-menu.tsx`).
+

@@ -116,6 +116,37 @@ test("the sidebar has no project settings item, and its own Ayarlar link stays i
   await expect(page.getByText("Çalışma alanın")).toHaveCount(0);
 });
 
+test("the collapsed sidebar shows the team pages on hover, not on a mouse press", async ({ page }) => {
+  await mockResponsiveProject(page);
+  await page.goto("/projects/responsive-project");
+  await page.getByRole("button", { name: "Kenar çubuğunu daralt" }).click();
+  const teams = page.getByRole("button", { name: "Ekipler", exact: true });
+  const flyout = page.getByRole("dialog", { name: "Ekipler" });
+  await expect(flyout).toHaveCount(0);
+
+  await teams.hover();
+  await expect(flyout.getByRole("link", { name: "Tüm Ekipler", exact: true })).toBeVisible();
+  // Moving onto the flyout keeps it open; leaving both closes it.
+  await flyout.getByRole("link", { name: "Tüm Ekipler", exact: true }).hover();
+  await expect(flyout).toBeVisible();
+  await page.mouse.move(900, 600);
+  await expect(flyout).toHaveCount(0);
+
+  // A mouse press hides it again instead of opening it.
+  await teams.hover();
+  await expect(flyout).toBeVisible();
+  await teams.click();
+  await expect(flyout).toHaveCount(0);
+  await page.mouse.move(900, 600);
+
+  // The keyboard cannot hover, so Enter still opens it.
+  await teams.focus();
+  await teams.press("Enter");
+  await expect(flyout).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(flyout).toHaveCount(0);
+});
+
 test("Projeler stays highlighted on the list and the create page, not inside a project", async ({ page }) => {
   await page.goto("/projects");
   const nav = page.getByRole("navigation", { name: "Gezinme menüsü" });

@@ -1,5 +1,5 @@
 "use client";
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Popover } from "@base-ui/react/popover";
 import { CaretDown, UsersThree, EnvelopeSimple } from "@phosphor-icons/react";
 import { useTranslations } from "next-intl";
@@ -26,6 +26,24 @@ export function TeamsSidebarMenu({ projectPath, active, isInvitationRoute, isMan
   const id = useId();
   const countId = useId();
   const navigating = useRef(false);
+  // Collapsed rail: the sub pages fly out to the right while the pointer rests on the icon (or on the flyout) and go away
+  // when it leaves or the icon is pressed. A keyboard or touch press still opens it, since neither can hover.
+  const mousePressed = useRef(false);
+  const keyboardOpened = useRef(false);
+  const closeTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => () => clearTimeout(closeTimer.current), []);
+  const hoverIn = (event: { pointerType: string }) => {
+    if (event.pointerType !== "mouse") return;
+    clearTimeout(closeTimer.current);
+    navigating.current = false;
+    keyboardOpened.current = false;
+    setOpen(true);
+  };
+  const hoverOut = (event: { pointerType: string }) => {
+    if (event.pointerType !== "mouse") return;
+    clearTimeout(closeTimer.current);
+    closeTimer.current = setTimeout(() => setOpen(false), 120);
+  };
   const children = <div id={id} className="space-y-0.5">
     <Link href={`${projectPath}?section=teams`} onClick={() => { navigating.current = true; setOpen(false); onNavigate(); }}
       aria-current={active && !isInvitationRoute ? "page" : undefined}
@@ -38,14 +56,26 @@ export function TeamsSidebarMenu({ projectPath, active, isInvitationRoute, isMan
       <EnvelopeSimple size={17} aria-hidden="true" /><span>{t("tabs.invitations")}</span><PendingInvitationBadge count={count} /><InvitationResponseBadge count={responseCount} afterPending={pendingShown} />
     </Link>}
   </div>;
-  if (collapsed) return <Popover.Root modal={false} open={open} onOpenChange={value => { navigating.current = false; setOpen(value); }}>
+  if (collapsed) return <Popover.Root modal={false} open={open} onOpenChange={value => {
+    clearTimeout(closeTimer.current);
+    if (!value) { setOpen(false); return; }
+    // A mouse press on the icon never opens the flyout (hover does that); keyboard and touch presses do.
+    if (mousePressed.current) return;
+    navigating.current = false;
+    keyboardOpened.current = true;
+    setOpen(true);
+  }}>
     <Popover.Trigger className={navItemClass(active, "flex min-h-11 w-full items-center justify-center rounded-md hover:bg-muted")}
-      aria-label={t("tabs.teams")} aria-describedby={description ? countId : undefined} title={t("tabs.teams")}>
+      aria-label={t("tabs.teams")} aria-describedby={description ? countId : undefined}
+      onPointerDown={event => { mousePressed.current = event.pointerType === "mouse"; }}
+      onKeyDown={() => { mousePressed.current = false; }}
+      onPointerEnter={hoverIn} onPointerLeave={hoverOut}>
       {description && <span id={countId} className="sr-only">{description}</span>}
       <span className="relative"><UsersThree size={17} aria-hidden="true" /><PendingInvitationBadge compact count={count} /><InvitationResponseBadge compact count={responseCount} /></span>
     </Popover.Trigger>
     <Popover.Portal><Popover.Positioner side="right" align="start" sideOffset={8} className="z-50">
-      <Popover.Popup finalFocus={() => !navigating.current} aria-label={t("tabs.teams")} aria-description={description}
+      <Popover.Popup initialFocus={() => keyboardOpened.current} finalFocus={() => !navigating.current} aria-label={t("tabs.teams")} aria-description={description}
+        onPointerEnter={hoverIn} onPointerLeave={hoverOut}
         className="w-60 max-w-[calc(100vw-1.5rem)] rounded-lg border bg-popover p-2 text-popover-foreground shadow-lg outline-none">
         {children}
       </Popover.Popup>
