@@ -256,6 +256,13 @@ Run-Step "Frontend - Next.js production build" {
     npm run build
 }
 
+# Bundle budgets: per-route client JS against frontend/bundle-budgets.json. Warning only - it prints the table and flags routes
+# above their budget, but never fails the gate (use "npm run check:bundle" for the failing variant).
+Write-Host ""
+Write-Host "Frontend - bundle size budgets (warn only)" -ForegroundColor Cyan
+node scripts/check-bundle-size.mjs --warn
+$global:LASTEXITCODE = 0
+
 # Serve the build made above. A pre-existing Next process can hold stale files
 # after the build and make browser tests fail with HTTP 500.
 $FrontendPort = if ($env:FRONTEND_PORT) { $env:FRONTEND_PORT } else { "3000" }

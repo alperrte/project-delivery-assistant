@@ -1,9 +1,14 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useLayoutEffect } from "react";
 import { useChat } from "../chat-provider";
-import { ChatDock } from "./chat-dock";
-import { ChatPanel } from "./chat-panel";
+
+// The dock and the full panel (message list, composer, member picker, emoji/reaction UI) are only needed once a chat is
+// opened, which is a user action after the page has loaded; their code is fetched then instead of with every workspace page.
+// Client-only is fine: both start closed, so there is nothing to server-render.
+const ChatDock = dynamic(() => import("./chat-dock").then(module => module.ChatDock), { ssr: false });
+const ChatPanel = dynamic(() => import("./chat-panel").then(module => module.ChatPanel), { ssr: false });
 
 /**
  * Renders whichever of the chat's three visible states is current. While the full panel covers the page, the page

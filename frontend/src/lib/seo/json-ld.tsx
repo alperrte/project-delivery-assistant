@@ -4,7 +4,7 @@ import type { Locale } from "@/i18n/config";
 import { CONTACT_EMAIL, REPOSITORY_URL } from "@/features/public-info/site-info";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-const LOGO_PATH = "/images/branding/pda-full.png";
+const LOGO_PATH = "/images/branding/pda-logo-512.png";
 const APACHE_2_URL = "https://www.apache.org/licenses/LICENSE-2.0";
 
 /** `<` is escaped so a value can never close the script element. */

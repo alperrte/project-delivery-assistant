@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
@@ -26,7 +27,17 @@ final class GitHubOAuth2UserService implements OAuth2UserService<OAuth2UserReque
     private static final String EMAILS_URI = "https://api.github.com/user/emails";
 
     private final OAuth2UserService<OAuth2UserRequest, OAuth2User> delegate = new DefaultOAuth2UserService();
-    private final RestClient http = RestClient.create();
+    /** Connect and read limit of the emails lookup: a stalled GitHub must not hold a login request thread. */
+    private static final int TIMEOUT_MILLIS = 5_000;
+
+    private final RestClient http = RestClient.builder().requestFactory(requestFactory()).build();
+
+    private static SimpleClientHttpRequestFactory requestFactory() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(TIMEOUT_MILLIS);
+        factory.setReadTimeout(TIMEOUT_MILLIS);
+        return factory;
+    }
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest request) {

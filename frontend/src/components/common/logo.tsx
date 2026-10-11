@@ -2,9 +2,10 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 type LogoProps = {
-  variant?: "emblem" | "wordmark" | "full";
+  variant?: "emblem" | "wordmark";
   size?: number;
   className?: string;
+  /** Above the fold: the emblem is preloaded; the wordmark (one file per theme) just loads eagerly, without a preload. */
   priority?: boolean;
   /** Wordmark only: crop to just the "PDA" letters, dropping the tagline — for tight spots like the sidebar header where the tagline would render too small to read. */
   compact?: boolean;
@@ -12,7 +13,7 @@ type LogoProps = {
   plain?: boolean;
 };
 
-// One wordmark file per theme, used as delivered; CSS shows the matching one.
+// One wordmark file per theme (WebP with alpha, 1000 px wide, resized from the 2172 / 1672 px originals); CSS shows the matching one.
 // `box` (x0, y0, x1, y1, in file pixels) spans the "PDA" letters horizontally
 // and runs from their top to the tagline's bottom; glow and the tagline's side
 // lines fall outside it and simply overflow. The light box is measured, the
@@ -20,15 +21,15 @@ type LogoProps = {
 // render the logo at the same size and place (no jump on theme change) and the
 // files' transparent margins never push the layout around.
 const WORDMARKS = [
-  { src: "/images/branding/yazi-light.png", width: 2172, height: 724, box: [115, 98, 2064, 635], theme: "dark:hidden" },
-  { src: "/images/branding/yazi-dark.png", width: 1672, height: 941, box: [105, 276, 1587, 684], theme: "hidden dark:block" },
+  { src: "/images/branding/yazi-light.webp", width: 1000, height: 333, box: [52.95, 45.12, 950.28, 292.36], theme: "dark:hidden" },
+  { src: "/images/branding/yazi-dark.webp", width: 1000, height: 563, box: [62.8, 165.07, 949.16, 409.09], theme: "hidden dark:block" },
 ] as const;
 
 // Same idea, boxed tighter around just the "PDA" letters (measured off each
 // file's alpha channel) — the tagline sits just below and is cropped out.
 const WORDMARKS_COMPACT = [
-  { src: "/images/branding/yazi-light.png", width: 2172, height: 724, box: [114, 89, 2063, 553], theme: "dark:hidden" },
-  { src: "/images/branding/yazi-dark.png", width: 1672, height: 941, box: [107, 272, 1597, 622], theme: "hidden dark:block" },
+  { src: "/images/branding/yazi-light.webp", width: 1000, height: 333, box: [52.49, 40.98, 949.82, 254.6], theme: "dark:hidden" },
+  { src: "/images/branding/yazi-dark.webp", width: 1000, height: 563, box: [64, 162.68, 955.14, 372.01], theme: "hidden dark:block" },
 ] as const;
 
 export function Logo({ variant = "emblem", size = 72, className, priority, compact, plain }: LogoProps) {
@@ -45,19 +46,6 @@ export function Logo({ variant = "emblem", size = 72, className, priority, compa
     );
   }
 
-  if (variant === "full") {
-    return (
-      <Image
-        src="/images/branding/pda-full.png"
-        alt="PDA · Project Delivery Assistant"
-        width={size}
-        height={size}
-        priority={priority}
-        className={cn("object-contain", className)}
-      />
-    );
-  }
-
   // `size` caps the width of the visible artwork; the height follows it.
   const marks = compact ? WORDMARKS_COMPACT : WORDMARKS;
   return (
@@ -70,7 +58,9 @@ export function Logo({ variant = "emblem", size = 72, className, priority, compa
           src,
           width,
           height,
-          priority,
+          // Not Next's `priority`: that preloads the file of the theme that is hidden too. Eager keeps both themes' files
+          // ready for the first switch without the extra high-priority preload.
+          loading: priority ? ("eager" as const) : undefined,
           sizes: `${Math.ceil((size * width) / boxW)}px`,
           className: "absolute h-auto max-w-none",
           style: {

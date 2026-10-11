@@ -248,3 +248,15 @@ Public routes now include `(public)/about` and `(public)/license` beside cookies
 - `features/analytics/`: `cta.ts` (`trackCta`, `reportClientError`, `renderErrorKind`, `isChunkLoadError`), `tracked-link.tsx` (`TrackedLink`), `transport.ts` (CTA/hata türleri, oturum açıcı, tekilleştirme), `identifiers.ts` (12 aylık ziyaretçi yenileme), `tracker.tsx` (hata dinleyicileri). `lib/api/client.ts` ağ hatasında `pda:network-failure` olayı yayınlar.
 - `features/auth/components/registration-notice.tsx` (kayıt/OAuth/davetli kayıt bildirimi). `features/contact/`: `schemas.ts` (kategori, honeypot), `api.ts`, `contact-form.tsx`, `contact-page.tsx` (görünür e-posta).
 - E2E: yeni `legal-pages.spec.ts` (public paketi), `analytics-events.spec.ts`; `db.ts` içinde `analyticsCtaClicks`, `analyticsClientErrors`.
+
+
+## Performans ve teknik kalite (2026-10-11)
+
+- `frontend/bundle-budgets.json`, `frontend/scripts/check-bundle-size.mjs` (`npm run check:bundle`), `frontend/scripts/analyze.mjs` (`npm run analyze`): rota başına JS bütçesi ve analiz.
+- `frontend/src/lib/api/query-retry.ts`: GET sorguları için retry/gecikme; `client.ts` zaman aşımını içerir.
+- `frontend/src/i18n/client-messages.ts`: istemci sağlayıcısına verilmeyen, yalnız sunucuda okunan namespace listesi.
+- `frontend/src/features/analytics/web-vitals-debug.tsx`: yalnız geliştirmede Web Vitals konsol çıktısı.
+- `frontend/src/features/landing/demo/delivery-statuses.ts`: demo çalışma alanından ayrı, hafif sabit.
+- `frontend/src/app/(app)/{dashboard,tasks,organizations}/loading.tsx`: iskelet ekranlar.
+- `frontend/e2e/slow-network.spec.ts`: `SLOW_NET=1` ile açılan yavaş ağ kontrolü.
+- `public/images/background/bg-*.webp`, `public/images/branding/yazi-*.webp`, `pda-logo-512.png` (JSON-LD logosu); `pda-full.png` ve `yazı.jpeg` silindi.

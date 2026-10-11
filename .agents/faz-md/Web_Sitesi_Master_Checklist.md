@@ -46,8 +46,8 @@
 - [X] İlgili kişi başvuruları
 - [X] Açık rıza yönetimi
 - [X] Aydınlatma ile açık rızanın ayrılığı
-- [X] Yurt dışına veri aktarımı
-- [ ] VERBİS değerlendirmesi
+- [ ] Yurt dışına veri aktarımı
+- [X] VERBİS değerlendirmesi
 - [X] Veri ihlali hazırlığı
 ### HAMZA
 ### Çerez kullanımı ve seçimler
@@ -317,18 +317,18 @@
 ### Hız ve teknik verimlilik
 
 - [ ] Core Web Vitals
-- [ ] Lighthouse analizi
-- [ ] Görsel sıkıştırma ve format
-- [ ] Lazy loading
+- [X] Lighthouse analizi
+- [X] Görsel sıkıştırma ve format
+- [X] Lazy loading
 - [ ] Font optimizasyonu
 - [ ] Gereksiz kodun azaltılması
-- [ ] Code splitting
-- [ ] Cache stratejisi
+- [X] Code splitting
+- [X] Cache stratejisi
 - [ ] Yavaş ağ testleri
-- [ ] Bundle boyutu takibi
-- [ ] API timeout / retry
-- [ ] Responsive görseller
-- [ ] Kaynak haritası ve debug yönetimi
+- [X] Bundle boyutu takibi
+- [X] API timeout / retry
+- [X] Responsive görseller
+- [X] Kaynak haritası ve debug yönetimi
 
 ## 11. Çoklu dil, PWA ve platform özellikleri
 

@@ -11,6 +11,14 @@ function reportNetworkFailure(path: string) {
   if (typeof window !== "undefined" && !path.startsWith("/analytics")) window.dispatchEvent(new Event(NETWORK_FAILURE_EVENT));
 }
 
+/** `ApiError.code` of a request that got no response within its time limit (see `REQUEST_TIMEOUT_MS`). */
+export const TIMEOUT_CODE = "timeout";
+
+/** How long a request may wait for the server's response headers. Reading a body that has started arriving is not limited. */
+const REQUEST_TIMEOUT_MS = 15_000;
+/** Uploads (task attachments up to 10 MB, project logos) legitimately need longer on a slow uplink. */
+const UPLOAD_TIMEOUT_MS = 60_000;
+
 export class ApiError extends Error {
   constructor(
     public readonly status: number,
@@ -23,9 +31,55 @@ export class ApiError extends Error {
     this.name = "ApiError";
   }
 
+  /** The request never got a response: offline, refused connection, or a timeout. */
   get isNetwork() {
     return this.status === 0;
   }
+
+  /** A network failure caused by the time limit, not by a lost connection: the server may simply be slow. */
+  get isTimeout() {
+    return this.status === 0 && this.code === TIMEOUT_CODE;
+  }
+}
+
+/**
+ * The caller's cancellation (React Query unmount, route change) combined with the time limit. `AbortSignal.any` where it
+ * exists; older browsers get an equivalent controller that forwards the caller's abort. `settled()` must be called as soon as
+ * the response headers arrive (or the request fails): it stops the timer and drops the listener.
+ */
+function requestSignal(caller: AbortSignal | null | undefined, timeoutMs: number) {
+  const timer = new AbortController();
+  let timedOut = false;
+  const timeoutId = setTimeout(() => {
+    timedOut = true;
+    timer.abort();
+  }, timeoutMs);
+  let forward: (() => void) | undefined;
+  let signal: AbortSignal;
+  if (!caller) {
+    signal = timer.signal;
+  } else if (typeof AbortSignal.any === "function") {
+    signal = AbortSignal.any([caller, timer.signal]);
+  } else {
+    const combined = new AbortController();
+    forward = () => combined.abort();
+    if (caller.aborted) combined.abort();
+    caller.addEventListener("abort", forward, { once: true });
+    timer.signal.addEventListener("abort", forward, { once: true });
+    signal = combined.signal;
+  }
+  return {
+    signal,
+    /** True when the limit, not the caller, ended the request. */
+    timedOut: () => timedOut && !caller?.aborted,
+    settled: () => {
+      clearTimeout(timeoutId);
+      if (forward) {
+        caller?.removeEventListener("abort", forward);
+        timer.signal.removeEventListener("abort", forward);
+      }
+    },
+  };
 }
 
 type CsrfState = { headerName: string } | null;
@@ -85,7 +139,7 @@ async function toApiError(res: Response): Promise<ApiError> {
   return new ApiError(res.status, body.code, fields, body);
 }
 
-async function send(path: string, init: RequestInit, method: string, guard?: () => boolean): Promise<Response> {
+async function send(path: string, init: RequestInit, method: string, guard?: () => boolean, timeoutMs?: number): Promise<Response> {
   const headers = new Headers(init.headers);
   // FormData must keep the browser-generated multipart boundary, so only JSON bodies get a Content-Type.
   if (init.body && !(init.body instanceof FormData)) headers.set("Content-Type", "application/json");
@@ -96,15 +150,19 @@ async function send(path: string, init: RequestInit, method: string, guard?: () 
   // Checked last, right before the request leaves: the CSRF fetch above is asynchronous, and a caller whose permission
   // can be withdrawn meanwhile (analytics consent) must still be able to stop.
   if (guard && !guard()) throw new ApiError(0, "request_not_allowed");
+  const limit = requestSignal(init.signal, timeoutMs ?? (init.body instanceof FormData ? UPLOAD_TIMEOUT_MS : REQUEST_TIMEOUT_MS));
   try {
-    const res = await fetch(`${API_URL}${path}`, { ...init, method, headers, credentials: "include" });
+    const res = await fetch(`${API_URL}${path}`, { ...init, signal: limit.signal, method, headers, credentials: "include" });
+    limit.settled();
     const header = res.headers.get(ACCESS_EXPIRES_IN_HEADER);
     const remaining = header === null ? NaN : Number(header);
     if (Number.isFinite(remaining) && remaining >= 0) accessExpiresAt = Date.now() + remaining;
     return res;
   } catch {
+    const timedOut = limit.timedOut();
+    limit.settled();
     reportNetworkFailure(path);
-    throw new ApiError(0);
+    throw timedOut ? new ApiError(0, TIMEOUT_CODE) : new ApiError(0);
   }
 }
 
@@ -194,6 +252,8 @@ type ApiRequestOptions = {
   signal?: AbortSignal;
   /** Lets the request finish while the page unloads (analytics flush on pagehide). */
   keepalive?: boolean;
+  /** Overrides the default time limit for the response headers (15 s; 60 s for FormData uploads). */
+  timeoutMs?: number;
   /** Asked immediately before the request is sent; returning false cancels it with an `ApiError` (status 0). */
   guard?: () => boolean;
 };
@@ -213,20 +273,20 @@ export async function apiRequestWithHeaders<T = void>(
       ? { signal: options.signal, keepalive: options.keepalive }
       : { signal: options.signal, keepalive: options.keepalive, body: options.body instanceof FormData ? options.body : JSON.stringify(options.body) };
 
-  let res = await send(path, init, method, options.guard);
+  let res = await send(path, init, method, options.guard, options.timeoutMs);
 
   if (res.status === 403 && method !== "GET") {
     const err = await toApiError(res.clone());
     if (!err.code) {
       // Most likely a stale CSRF token; fetch a new one and retry once.
       await ensureCsrf(true);
-      res = await send(path, init, method, options.guard);
+      res = await send(path, init, method, options.guard, options.timeoutMs);
     }
   }
 
   if (res.status === 401 && !NO_REFRESH.includes(path)) {
     if (await refreshSession()) {
-      res = await send(path, init, method, options.guard);
+      res = await send(path, init, method, options.guard, options.timeoutMs);
     }
     // Still unauthenticated after a renewal attempt: the session is really over (refresh cookie expired or
     // revoked). Tell the app so it can send the user to the login page instead of showing an unrelated error.

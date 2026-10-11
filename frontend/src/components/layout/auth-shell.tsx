@@ -15,7 +15,8 @@ import { cn } from "@/lib/utils";
 // enlargement, which applies first), and both are enlarged just enough that the
 // moved edge never shows (20.7px of bleed per edge vs a 20.4px move);
 // the scene no longer jumps on theme change. Served at quality 95 (see
-// next.config.ts): the default 75 visibly softens the brushed-metal detail.
+// next.config.ts): the default 75 visibly softens the brushed-metal detail. The sources are WebP (≈110 KB each, down from
+// 1.7 MB PNGs); Next serves AVIF/WebP of them.
 const BG_PX = "max(100vw / 1672, 100vh / 941)";
 const BG_QUALITY = 95;
 const BG_SCALE = 1.044;
@@ -24,8 +25,8 @@ const bgShift = (x: number, y: number) => ({
 });
 
 const SCENES = [
-  { src: "/images/background/bg-light.png", shift: bgShift(2.25, -19.5), theme: "dark:invisible" },
-  { src: "/images/background/bg-dark.png", shift: bgShift(-2.25, 19.5), theme: "invisible dark:visible" },
+  { src: "/images/background/bg-light.webp", shift: bgShift(2.25, -19.5), theme: "dark:invisible" },
+  { src: "/images/background/bg-dark.webp", shift: bgShift(-2.25, 19.5), theme: "invisible dark:visible" },
 ] as const;
 
 const NEON_FILTER_ID = "pda-scene-neon";
@@ -33,8 +34,9 @@ const NEON_FILTER_ID = "pda-scene-neon";
 /**
  * One centred column over a full-bleed background photo (one per theme; CSS
  * shows the matching one; the other is only made invisible, so it keeps its
- * full-screen box, and both load eagerly so the first theme switch crossfades
- * into a ready image instead of an empty frame): wordmark on
+ * full-screen box, and both load eagerly, at low fetch priority — they are decoration, and
+ * which theme is active is only known in the browser, so the page cannot single one out on the server — so the first
+ * theme switch crossfades into a ready image instead of an empty frame): wordmark on
  * top, then whatever the page brings (the login page adds its headline above
  * the card). Language and theme sit in the top corners, out of the reading line.
  *
@@ -62,6 +64,7 @@ export async function AuthShell({ children }: { children: ReactNode }) {
               sizes="100vw"
               quality={BG_QUALITY}
               loading="eager"
+              fetchPriority="low"
               className="object-cover"
               style={shift}
             />
@@ -73,6 +76,7 @@ export async function AuthShell({ children }: { children: ReactNode }) {
                 sizes="100vw"
                 quality={BG_QUALITY}
                 loading="eager"
+                fetchPriority="low"
                 className="object-cover"
                 style={{ ...shift, filter: `url(#${NEON_FILTER_ID})` }}
               />

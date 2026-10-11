@@ -136,6 +136,7 @@ export function inviteeErrorKey(err: unknown): string {
 /** Maps an API failure to a key under the `errors` i18n namespace. */
 export function errorKey(err: unknown): string {
   if (!(err instanceof ApiError)) return "generic";
+  if (err.isTimeout) return "timeout";
   if (err.isNetwork) return "network";
   if (err.code && CODE_KEYS[err.code]) return CODE_KEYS[err.code];
   switch (err.status) {

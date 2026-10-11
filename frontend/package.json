@@ -6,6 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "analyze": "node scripts/analyze.mjs",
+    "check:bundle": "node scripts/check-bundle-size.mjs",
     "preview:project": "node scripts/preview-project.cjs",
     "lint": "eslint",
     "test:e2e": "playwright test"
@@ -36,6 +38,7 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
+    "@next/bundle-analyzer": "^16.3.8",
     "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
