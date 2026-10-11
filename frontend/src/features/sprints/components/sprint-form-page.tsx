@@ -101,13 +101,12 @@ function SprintFormBody({ slug, projectId, sprint }: { slug: string; projectId: 
   }, [leaving]);
 
   return (
-    <div>
+    <PageContainer width="centered">
       {sprint && <BreadcrumbLabel kind="sprint" label={sprint.name} />}
       <PageHeader title={t(editing ? "editTitle" : "createTitle")} description={t("description")} />
 
       <form onSubmit={handleSubmit((values) => save.mutate(values))} noValidate>
-        <PageContainer width="form">
-          <div className="max-w-2xl space-y-6">
+        <div className="space-y-6">
             <div className="space-y-1.5">
               <Label htmlFor="sprint-name">{t("name")}</Label>
               <Input
@@ -213,8 +212,7 @@ function SprintFormBody({ slug, projectId, sprint }: { slug: string; projectId: 
                 )}
               </div>
             </div>
-          </div>
-        </PageContainer>
+        </div>
 
         <StickyFormActions>
           <div className="flex items-center justify-between gap-2">
@@ -228,7 +226,7 @@ function SprintFormBody({ slug, projectId, sprint }: { slug: string; projectId: 
           </div>
         </StickyFormActions>
       </form>
-    </div>
+    </PageContainer>
   );
 }
 
@@ -255,9 +253,9 @@ function SprintFormView({ slug, projectId, project, isManager, sprintId }: Proje
   }
   if (editing && sprint.isPending) {
     return (
-      <div className="space-y-5" aria-hidden="true">
+      <div className="mx-auto w-full max-w-2xl space-y-5" aria-hidden="true">
         <Skeleton className="h-16 w-2/3 rounded-xl" />
-        <Skeleton className="h-80 w-full max-w-2xl rounded-xl" />
+        <Skeleton className="h-80 w-full rounded-xl" />
       </div>
     );
   }
