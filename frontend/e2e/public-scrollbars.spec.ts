@@ -1,4 +1,7 @@
 import { test, expect } from "@playwright/test";
+import tr from "../src/i18n/messages/tr.json";
+import en from "../src/i18n/messages/en.json";
+import de from "../src/i18n/messages/de.json";
 
 // Real scrollbar paint must be visible in this visual acceptance case.
 test.use({ launchOptions: { ignoreDefaultArgs: ["--hide-scrollbars"] } });
@@ -6,6 +9,7 @@ test.use({ launchOptions: { ignoreDefaultArgs: ["--hide-scrollbars"] } });
 // The signed-in workspace scrollbar (see workspace-scrollbars.spec.ts) is the reference: the same label-blue thumb on a
 // transparent track, thin. Unauthenticated pages must use that very rule on their document, nothing new.
 const PAGES = ["/", "/login", "/register", "/forgot-password", "/cookies"];
+const THEME_LABELS = { tr: tr.common.theme, en: en.common.theme, de: de.common.theme };
 
 for (const locale of ["tr", "en", "de"] as const) {
   test(`unauthenticated pages use the workspace scrollbar on the document and keep inner scrollers native: ${locale}`, async ({ page, context }) => {
@@ -16,7 +20,14 @@ for (const locale of ["tr", "en", "de"] as const) {
       await page.goto(route);
       await expect(page.locator("footer")).toBeAttached();
       for (const dark of [false, true]) {
-        await page.evaluate((value) => document.documentElement.classList.toggle("dark", value), dark);
+        const labels = THEME_LABELS[locale];
+        const toggle = page.getByRole("group", { name: labels.label, exact: true }).first();
+        await expect(toggle.locator('[aria-pressed="true"]')).toBeVisible();
+        const choice = toggle.getByRole("button", { name: dark ? labels.dark : labels.light, exact: true });
+        await choice.click();
+        await expect(choice).toHaveAttribute("aria-pressed", "true");
+        if (dark) await expect(page.locator("html")).toHaveClass(/\bdark\b/);
+        else await expect(page.locator("html")).not.toHaveClass(/\bdark\b/);
         for (const width of [320, 1440]) {
           await page.setViewportSize({ width, height: 600 });
           const style = await page.evaluate(() => {

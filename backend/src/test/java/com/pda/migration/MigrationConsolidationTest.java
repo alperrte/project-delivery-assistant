@@ -9,6 +9,8 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Arrays;
+import java.util.stream.IntStream;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.exception.FlywayValidateException;
 import org.junit.jupiter.api.io.TempDir;
@@ -33,6 +35,11 @@ class MigrationConsolidationTest {
             assertEquals(40, consolidated.migrate().migrationsExecuted);
             legacy.validate();
             consolidated.validate();
+            assertEquals(IntStream.rangeClosed(1, 40).mapToObj(String::valueOf).toList(),
+                    Arrays.stream(consolidated.info().applied())
+                            .filter(migration -> migration.getScript().endsWith(".sql"))
+                            .map(migration -> migration.getVersion().toString()).toList(),
+                    "fresh-install versions must be contiguous V1 through V40");
             assertEquals(0, consolidated.migrate().migrationsExecuted, "second startup is idempotent");
             try (var connection = DriverManager.getConnection(postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword())) {
                 List<String> expected = snapshot(connection, "legacy");

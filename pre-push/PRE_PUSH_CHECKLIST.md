@@ -30,6 +30,7 @@ Herhangi bir adım başarısız olursa script `exit 1` ile durur ve push yapılm
    - `backend\mvnw.cmd clean verify`
    - Mevcut ve gelecekte eklenecek JUnit, Spring, Security, repository, integration, Spring Modulith ve Testcontainers testleri Maven lifecycle üzerinden çalışır.
    - JaCoCo `verify` aşamasında rapor üretir.
+   - Maven aşamasında operatörün OAuth kimlik bilgileri geçici olarak temizlenir ve `MAIL_ENABLED=false` olur. Mail testleri kendi GreenMail ayarlarını açıkça sağlar; Docker/E2E öncesinde özgün mail/OAuth ayarları geri yüklenir. `.env` dosyası değişmez.
 
 5. Frontend
    - Gerekirse `npm ci`

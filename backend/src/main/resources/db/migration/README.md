@@ -1,11 +1,11 @@
 # Consolidated fresh-install history
 
-The 2026-10-11 consolidation is authorized for disposable development/test databases only. There are 40 versioned SQL files creating the same 55 application tables as the previous 59-file history. Original CREATE-owner versions and filenames are retained; gaps in numbering are intentional. Future migrations must use a version greater than V71.
+The 2026-10-11 consolidation is authorized for disposable development/test databases only. There are 40 versioned SQL files creating the same 55 application tables as the previous 59-file history. At the user's explicit request, versions are contiguous V1–V40; table creation order and SQL contents are preserved. The next migration must be V41.
 
 Final columns, defaults, nullability, named constraints, indexes and cascade rules are declared with their table's CREATE. Two forward references remain:
 
-- V25 adds `project_invitations.team_id`'s foreign key after `squads` exists.
-- V45 adds `tasks.sprint_id`'s foreign key after `sprints` exists.
+- V9 adds `project_invitations.team_id`'s foreign key after `squads` exists.
+- V24 adds `tasks.sprint_id`'s foreign key after `sprints` exists.
 
 Self-referencing task/team/chat constraints are declared inline. The production history has no data backfills: it starts with an empty database. Historical data transforms are preserved in `src/test/resources/migration-reference/pre-consolidation.zip`; that fixture is not packaged in the application JAR or scanned by production Flyway.
 

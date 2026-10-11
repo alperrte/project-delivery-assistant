@@ -1,5 +1,9 @@
 # Veritabanı ve kalıcılık
 
+## Ardışık migration numaraları — 2026-10-11
+
+Kullanıcı mevcut runtime dosyalarının V1–V40 olarak ardışık numaralanmasını istedi. SQL byte içerikleri ve CREATE sırası değişmedi; yeni migration V41 olmalıdır. İleri FK konumları V9 (invitation→squad) ve V24 (task→sprint). Eski V1–V71 test-only ZIP fixture numaraları değişmedi. Aşağıdaki eski V25/V45 ve version koruma notları tarihsel ilk consolidation aşamasını anlatır; güncel 40 dosyalık old→new mapping root persistent plandadır. Önceki history uygulanmış normal DB/volume korunur ve yeni sete repair edilmez.
+
 ## Migration consolidation — 2026-10-11
 
 Kullanıcı yalnız disposable geliştirme/test DB olduğunu doğrulayarak historical rewrite onayladı (`cleanup`). Runtime Flyway history 59→40 dosya; 55 tablonun final column/default/nullability/PK/FK/UNIQUE/CHECK/index ve cascade kuralları ilk CREATE owner'larında tanımlanır. V25 invitation→squad ve V45 task→sprint ileri FK'leri dışında ALTER yoktur. Versionlar yeniden numaralanmadı. Eski V4/V32/V34/V36/V37/V40/V54/V68 veri dönüşümleri yalnız immutable test archive içindedir; fresh DB'de backfill gerekmez. Yeni project policy nullable, manual_watch FALSE ve creation_mode ADVANCED defaultları korunur.

@@ -11,19 +11,19 @@
 - [x] Task 6 — Fresh database migration verification
 - [x] Task 7 — Existing database upgrade verification — new-history upgrade N/A, disposable DB decision
 - [x] Task 8 — `cleanup` branch regression
-- [ ] Transition Gate — user commit/push/merge confirmation
-- [ ] Phase 2 — `main` — integrated final verification
+- [x] Transition Gate — user commit confirmation; push/merge deferred until all gates pass
+- [x] Phase 2 — `cleanup` — integrated pre-merge verification resumed per user request; literal uninterrupted full pre-push / main parity not claimed
 
 ## Accepted decisions — 2026-10-11
 
-The user explicitly selected `cleanup` instead of `general-features` and confirmed that only disposable development/test databases exist; rewriting historical migrations is authorized. Commit/staging/push/merge/branch switching remain the user's responsibility. Phase 2 must wait for explicit merge/main confirmation.
+The user explicitly selected `cleanup` instead of `general-features` and confirmed that only disposable development/test databases exist; rewriting historical migrations is authorized. Commit/staging/push/merge/branch switching remain the user's responsibility. Latest user decision: commit now, push/merge after all phases; Phase 2 runs on cleanup before merge. Main has not been verified.
 
 The running local database has all 59 original migrations applied successfully. Its named volume and data are retained. The consolidated history is for an **empty database**; it cannot upgrade that old database. No `repair`, `baseline-on-migrate`, validation bypass, default migration-location change or ENV-contract change is allowed. All isolated QA databases must be distinguished from the current application DB.
 
 ## Implementation strategy
 
 1. Execute the original 59 migrations on separate PostgreSQL 18 audit database `pda_migration_reference_20261011` and capture its final catalog.
-2. Keep existing CREATE-owning filenames/version numbers; move final columns, constraints, defaults, indexes and cascade rules into their table's CREATE. Production SQL files: **59 → 40**, tables: **55**. Version gaps are intentional.
+2. Preserve CREATE ownership and table order (later user request renumbers runtime files to V1–V40); move final columns, constraints, defaults, indexes and cascade rules into their table's CREATE. Production SQL files: **59 → 40**, tables: **55**. Current runtime versions are contiguous V1–V40; the inventory below uses original historical versions for traceability.
 3. Retain only two forward-reference ALTERs: invitation team FK after squads in V25, task sprint FK after sprints in V45. Self-references are inline; no business behavior changes.
 4. Preserve the original SQL bytes in a compressed **test-only** archive. Original historical upgrade tests use that archive. A new independent PostgreSQL 17/18 test compares the complete final schema and rejects use of consolidated SQL against old history.
 5. Run targeted migration tests, full backend verify (JPA validation and actual API fixtures), frontend lint/type/build, critical Chromium workflows and isolated Docker startup/health.
@@ -45,7 +45,7 @@ Historical deployed upgrade support is deliberately N/A under the user's disposa
 
 ## Deferred verification
 
-Phase 2 on `main` includes full Chromium and the **full** canonical `pre-push/pre-push.cmd`. Phase 1 cannot be called globally complete until that later gate passes. No completion mark may stand for a skipped/failed check.
+Phase 2 on `cleanup` before merge includes full Chromium and the **full** canonical `pre-push/pre-push.cmd`. Phase 1 cannot be called globally complete until that later gate passes. No completion mark may stand for a skipped/failed check.
 
 ## Migration inventory and classification
 
@@ -191,7 +191,7 @@ For each file below, operations identify touched objects; UPDATE/INSERT/DELETE e
 - `V61__repository_tracking_mode.sql`
 - `V68__bootstrap_admin_without_forced_password_change.sql`
 
-## Preserved CREATE owners
+## Original CREATE owners — historical pre-renumber mapping
 
 - `V1__spring_modulith_event_publication.sql`
 - `V2__auth_user_session.sql`
@@ -255,3 +255,114 @@ All 59 archive entries match the source commit after only Git line-ending normal
 ## Next user action
 
 Review `docs/compliation/2026-10-11-migration-consolidation-cleanup.md` and the SQL/test diff. Commit/push/merge the `cleanup` changes yourself, switch to `main`, and explicitly confirm completion before Phase 2. A new application image requires a separate empty DB; do not rebuild/start against the old local history or repair it. Full Chromium, full canonical pre-push and `PDA_MIGRATION_CONSOLIDATION_COMPLETION.md` are reserved for Phase 2 and remain pending.
+
+## Phase 2 started — 2026-10-11
+
+User confirmed commit and continuation after explicitly deferring push/merge until all phases finish. Branch cleanup, committed implementation 0b38a75, working tree clean before this documentation update. Full canonical pre-push will run against a separate temporary QA Compose project with an empty PostgreSQL18 database and Mailpit sink. The normal PostgreSQL/media volumes remain untouched. Original backend is temporarily stopped for the fixed 8080 E2E address and will be restored afterwards. All canonical steps run; COMPOSE_FILE/project isolation changes the target, not the gate logic. Main/post-merge parity remains a later manual gate.
+
+## User-requested contiguous numbering — 2026-10-11
+
+Production migration files are renamed to V1–V40 without any SQL-byte change. Legacy archive versions remain untouched. New forward-reference locations: V9 invitation→squad and V24 task→sprint. The next production migration is V41. Previously applied pre-renumber disposable schemas cannot reuse this history; only the temporary QA DB is recreated, normal DB/media volumes remain untouched. User requests resuming remaining tests rather than restarting the full pre-push. Completed backend class results are preserved; missing classes and the updated migration test will run before the remaining canonical frontend/Chromium/Docker steps. No uninterrupted full-script PASS will be claimed.
+
+- `V1__spring_modulith_event_publication.sql` → `V1__spring_modulith_event_publication.sql`
+- `V2__auth_user_session.sql` → `V2__auth_user_session.sql`
+- `V3__email_verification_challenges.sql` → `V3__email_verification_challenges.sql`
+- `V6__user_oauth_identities.sql` → `V4__user_oauth_identities.sql`
+- `V8__password_reset_challenges.sql` → `V5__password_reset_challenges.sql`
+- `V21__project_organization_initial.sql` → `V6__project_organization_initial.sql`
+- `V22__project_initial_membership.sql` → `V7__project_initial_membership.sql`
+- `V24__project_invitations.sql` → `V8__project_invitations.sql`
+- `V25__squads.sql` → `V9__squads.sql`
+- `V26__project_criteria.sql` → `V10__project_criteria.sql`
+- `V27__project_repository_connections.sql` → `V11__project_repository_connections.sql`
+- `V28__task_core.sql` → `V12__task_core.sql`
+- `V29__task_assignments.sql` → `V13__task_assignments.sql`
+- `V30__task_status_history.sql` → `V14__task_status_history.sql`
+- `V31__notifications.sql` → `V15__notifications.sql`
+- `V34__project_identity.sql` → `V16__project_identity.sql`
+- `V35__project_reminders.sql` → `V17__project_reminders.sql`
+- `V39__task_subtasks_checklist.sql` → `V18__task_subtasks_checklist.sql`
+- `V40__task_comments_activity.sql` → `V19__task_comments_activity.sql`
+- `V41__task_labels_estimates.sql` → `V20__task_labels_estimates.sql`
+- `V42__task_relations.sql` → `V21__task_relations.sql`
+- `V43__task_watchers.sql` → `V22__task_watchers.sql`
+- `V44__task_attachments.sql` → `V23__task_attachments.sql`
+- `V45__sprints.sql` → `V24__sprints.sql`
+- `V46__task_worklogs.sql` → `V25__task_worklogs.sql`
+- `V47__project_banners.sql` → `V26__project_banners.sql`
+- `V48__user_preferences.sql` → `V27__user_preferences.sql`
+- `V49__user_profile_photos.sql` → `V28__user_profile_photos.sql`
+- `V51__project_chat.sql` → `V29__project_chat.sql`
+- `V52__organization_profile_and_media.sql` → `V30__organization_profile_and_media.sql`
+- `V55__chat_replies_and_reactions.sql` → `V31__chat_replies_and_reactions.sql`
+- `V62__analytics_sessions_and_page_views.sql` → `V32__analytics_sessions_and_page_views.sql`
+- `V63__contact_requests.sql` → `V33__contact_requests.sql`
+- `V64__password_reset_completion.sql` → `V34__password_reset_completion.sql`
+- `V65__totp_two_factor.sql` → `V35__totp_two_factor.sql`
+- `V66__account_deletion.sql` → `V36__account_deletion.sql`
+- `V67__admin_verified_sessions_and_tickets.sql` → `V37__admin_verified_sessions_and_tickets.sql`
+- `V69__support_requests.sql` → `V38__support_requests.sql`
+- `V70__admin_audit_events.sql` → `V39__admin_audit_events.sql`
+- `V71__analytics_cta_clicks_and_client_errors.sql` → `V40__analytics_cta_clicks_and_client_errors.sql`
+
+## Final pre-merge verification result — user-approved resumed workflow
+
+V1–V40, all 40 SQL byte contents unchanged. Combined backend113 classes/894 tests/0fail/0error/0skip. Chromium current collection1012:992passed/0failed/20expectedskip/0missing, full run plus affected-package reruns. Lint/type/build/Docker health PASS. Canonical steps resumed; no uninterrupted full pre-push.cmd PASS or main execution claimed. New source/test/report changes are uncommitted. Completion: docs/compliation/2026-10-11-migration-renumbering-integrated-verification.md.
+
+## Current CREATE owners
+
+- `account_deletion_requests` → `V36__account_deletion.sql`
+- `admin_audit_events` → `V39__admin_audit_events.sql`
+- `admin_auth_tickets` → `V37__admin_verified_sessions_and_tickets.sql`
+- `analytics_client_errors` → `V40__analytics_cta_clicks_and_client_errors.sql`
+- `analytics_cta_clicks` → `V40__analytics_cta_clicks_and_client_errors.sql`
+- `analytics_page_views` → `V32__analytics_sessions_and_page_views.sql`
+- `analytics_sessions` → `V32__analytics_sessions_and_page_views.sql`
+- `chat_conversations` → `V29__project_chat.sql`
+- `chat_message_reactions` → `V31__chat_replies_and_reactions.sql`
+- `chat_messages` → `V29__project_chat.sql`
+- `chat_read_states` → `V29__project_chat.sql`
+- `contact_requests` → `V33__contact_requests.sql`
+- `email_verification_challenges` → `V3__email_verification_challenges.sql`
+- `event_publication` → `V1__spring_modulith_event_publication.sql`
+- `notifications` → `V15__notifications.sql`
+- `organization_media_objects` → `V30__organization_profile_and_media.sql`
+- `organizations` → `V6__project_organization_initial.sql`
+- `password_change_challenges` → `V34__password_reset_completion.sql`
+- `password_reset_challenges` → `V5__password_reset_challenges.sql`
+- `project_banners` → `V26__project_banners.sql`
+- `project_criteria` → `V10__project_criteria.sql`
+- `project_invitation_roles` → `V8__project_invitations.sql`
+- `project_invitations` → `V8__project_invitations.sql`
+- `project_labels` → `V20__task_labels_estimates.sql`
+- `project_logos` → `V16__project_identity.sql`
+- `project_membership_roles` → `V7__project_initial_membership.sql`
+- `project_memberships` → `V7__project_initial_membership.sql`
+- `project_reminders` → `V17__project_reminders.sql`
+- `project_repository_connections` → `V11__project_repository_connections.sql`
+- `project_task_counters` → `V12__task_core.sql`
+- `projects` → `V6__project_organization_initial.sql`
+- `sprints` → `V24__sprints.sql`
+- `squad_members` → `V9__squads.sql`
+- `squads` → `V9__squads.sql`
+- `support_requests` → `V38__support_requests.sql`
+- `task_activities` → `V19__task_comments_activity.sql`
+- `task_assignments` → `V13__task_assignments.sql`
+- `task_attachment_data` → `V23__task_attachments.sql`
+- `task_attachments` → `V23__task_attachments.sql`
+- `task_checklist_items` → `V18__task_subtasks_checklist.sql`
+- `task_comment_mentions` → `V19__task_comments_activity.sql`
+- `task_comments` → `V19__task_comments_activity.sql`
+- `task_labels` → `V20__task_labels_estimates.sql`
+- `task_relations` → `V21__task_relations.sql`
+- `task_status_history` → `V14__task_status_history.sql`
+- `task_watchers` → `V22__task_watchers.sql`
+- `task_worklogs` → `V25__task_worklogs.sql`
+- `tasks` → `V12__task_core.sql`
+- `totp_credentials` → `V35__totp_two_factor.sql`
+- `totp_recovery_codes` → `V35__totp_two_factor.sql`
+- `user_oauth_identities` → `V4__user_oauth_identities.sql`
+- `user_preferences` → `V27__user_preferences.sql`
+- `user_profile_photos` → `V28__user_profile_photos.sql`
+- `user_sessions` → `V2__auth_user_session.sql`
+- `users` → `V2__auth_user_session.sql`

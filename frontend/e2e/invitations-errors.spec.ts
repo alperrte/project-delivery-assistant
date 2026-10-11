@@ -39,7 +39,8 @@ test("INV-004 real backend429 is rate limit, never expired; retry retains the en
  const ac=await browser.newContext({storageState:MANAGER_STORAGE}),gc=await browser.newContext();const a=await ac.newPage(),g=await gc.newPage();let pid:string|undefined;
  try{
   await a.goto("/tr/projeler");await g.goto("/tr/giris");const p=(await api(a,"POST","/projects",{name:`INV rate limit ${Date.now()}`,projectType:"WEB"})).json as {id:string};pid=p.id;const team=(await api(a,"POST",`/projects/${pid}/teams`,{name:"Rate team",includeCreator:true})).json as {id:string};const inv=(await api(a,"POST",`/projects/${pid}/invitations`,{email:`inv-rate-${Date.now()}@example.test`,firstName:"Audit",lastName:"Guest",roles:["TESTER"],teamId:team.id})).json as {token:string};
-  let status=0;for(let n=0;n<220&&status!==429;n++)status=(await api(g,"POST","/project-invitations/external/preview",{token:inv.token})).status;expect(status).toBe(429);
+  const probeLimit=Math.max(220,Number(process.env.AUTH_RATE_LIMIT_SENSITIVE_MAX_REQUESTS??5)+1);
+  let status=0;for(let n=0;n<probeLimit&&status!==429;n++)status=(await api(g,"POST","/project-invitations/external/preview",{token:inv.token})).status;expect(status).toBe(429);
   await g.goto(`/tr/kayit#invitation=${inv.token}`);await expect(g.getByRole("alert").filter({hasText:messages.errors.tooManyRequests})).toBeVisible();await expect(g.getByText(messages.invitations.externalExpired,{exact:true})).toHaveCount(0);
   await g.getByRole("button",{name:messages.invitations.retry,exact:true}).click();await expect(g.getByRole("alert").filter({hasText:messages.errors.tooManyRequests})).toBeVisible();
  }finally{if(pid)await api(a,"POST",`/projects/${pid}/archive`);await ac.close();await gc.close();}

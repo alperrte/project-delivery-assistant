@@ -210,6 +210,11 @@ foreach ($key in @("GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GITHUB_CLIENT_ID
     [Environment]::SetEnvironmentVariable($key, "", "Process")
 }
 
+# Generic integration tests must not inherit the operator's SMTP delivery setting.
+# Mail-specific tests enable their own GreenMail sink through DynamicPropertySource.
+$SavedMailEnabled = [Environment]::GetEnvironmentVariable("MAIL_ENABLED", "Process")
+[Environment]::SetEnvironmentVariable("MAIL_ENABLED", "false", "Process")
+
 Run-Step "Backend - Maven clean verify" {
     .\mvnw.cmd clean verify
 }
@@ -219,6 +224,7 @@ Pop-Location
 foreach ($key in $SavedOAuth.Keys) {
     [Environment]::SetEnvironmentVariable($key, $SavedOAuth[$key], "Process")
 }
+[Environment]::SetEnvironmentVariable("MAIL_ENABLED", $SavedMailEnabled, "Process")
 
 $env:DB_URL = $OriginalDbUrl
 
