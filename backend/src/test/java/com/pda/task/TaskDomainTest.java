@@ -50,12 +50,31 @@ class TaskDomainTest {
     }
 
     @Test
-    void advancedTasksStillRequireReviewAndTesting() {
+    void startedTasksMoveFreelyAmongWorkingStatuses() {
+        for (TaskCreationMode mode : TaskCreationMode.values()) {
+            Task task = create("Started " + mode);
+            task.changeCreationMode(mode, actor);
+            assertThrows(TaskConflictException.class, () -> task.changeStatus(TaskStatus.DONE, actor));
+            task.changeStatus(TaskStatus.TODO, actor);
+            assertThrows(TaskConflictException.class, () -> task.changeStatus(TaskStatus.TESTING, actor));
+            task.changeStatus(TaskStatus.IN_PROGRESS, actor);
+            TaskStatus[] working = {TaskStatus.IN_PROGRESS, TaskStatus.IN_REVIEW, TaskStatus.TESTING, TaskStatus.DONE};
+            for (TaskStatus from : working) {
+                for (TaskStatus to : working) {
+                    if (from == to) continue;
+                    task.changeStatus(from, actor);
+                    assertTrue(task.changeStatus(to, actor), mode + " " + from + " -> " + to);
+                }
+            }
+        }
+    }
+
+    @Test
+    void advancedTasksCannotSkipTheBacklogAndTodoSteps() {
         Task task = create("Advanced");
         assertThrows(TaskConflictException.class, () -> task.changeStatus(TaskStatus.IN_PROGRESS, actor));
         task.changeStatus(TaskStatus.TODO, actor);
-        task.changeStatus(TaskStatus.IN_PROGRESS, actor);
-        assertThrows(TaskConflictException.class, () -> task.changeStatus(TaskStatus.DONE, actor));
+        assertThrows(TaskConflictException.class, () -> task.changeStatus(TaskStatus.IN_REVIEW, actor));
     }
 
     @Test

@@ -18,13 +18,11 @@ export type TaskFilters = {
   q: string;
   status: TaskStatus[];
   priority: TaskPriority[];
-  /** A user id, `me` (resolved with the session) or `none` for unassigned; empty means everyone. */
-  assignee: string;
   label: string[];
   /** A sprint id, `backlog`, or empty for any. */
   sprint: string;
+  /** Narrows to late open tasks; it is picked inside the status filter. */
   overdue: boolean;
-  blocked: boolean;
   sort: TaskSortField;
   dir: SortDirection;
   /** Zero based; the URL carries it one based. */
@@ -37,11 +35,9 @@ const DEFAULTS: TaskFilters = {
   q: "",
   status: [],
   priority: [],
-  assignee: "",
   label: [],
   sprint: "",
   overdue: false,
-  blocked: false,
   sort: "updatedAt",
   dir: "desc",
   page: 0,
@@ -64,11 +60,9 @@ function parse(search: URLSearchParams): TaskFilters {
     q: search.get("q") ?? "",
     status: list(search.get("status")).filter((value): value is TaskStatus => (TASK_STATUSES as readonly string[]).includes(value)),
     priority: list(search.get("priority")).filter((value): value is TaskPriority => (TASK_PRIORITIES as readonly string[]).includes(value)),
-    assignee: search.get("assignee") ?? "",
     label: list(search.get("label")),
     sprint: search.get("sprint") ?? "",
     overdue: search.get("overdue") === "1",
-    blocked: search.get("blocked") === "1",
     sort,
     dir: requestedDir === "asc" || requestedDir === "desc" ? requestedDir : defaultDirection(sort),
     page: Number.isFinite(page) && page > 1 ? page - 1 : 0,
@@ -82,11 +76,9 @@ function serialize(filters: TaskFilters): string {
   if (filters.q) search.set("q", filters.q);
   if (filters.status.length) search.set("status", filters.status.join(","));
   if (filters.priority.length) search.set("priority", filters.priority.join(","));
-  if (filters.assignee) search.set("assignee", filters.assignee);
   if (filters.label.length) search.set("label", filters.label.join(","));
   if (filters.sprint) search.set("sprint", filters.sprint);
   if (filters.overdue) search.set("overdue", "1");
-  if (filters.blocked) search.set("blocked", "1");
   if (filters.sort !== DEFAULTS.sort) search.set("sort", filters.sort);
   if (filters.dir !== DEFAULTS.dir) search.set("dir", filters.dir);
   if (filters.page > 0) search.set("page", String(filters.page + 1));
@@ -101,29 +93,24 @@ export function activeFilterCount(filters: TaskFilters): number {
     (filters.q.trim() ? 1 : 0) +
     (filters.status.length ? 1 : 0) +
     (filters.priority.length ? 1 : 0) +
-    (filters.assignee ? 1 : 0) +
     (filters.label.length ? 1 : 0) +
     (filters.sprint ? 1 : 0) +
-    (filters.overdue ? 1 : 0) +
-    (filters.blocked ? 1 : 0)
+    (filters.overdue ? 1 : 0)
   );
 }
 
 /** The server query for the current filters. `page` and `size` are left to the caller. */
-export function toListParams(filters: TaskFilters, userId: string): TaskListParams {
+export function toListParams(filters: TaskFilters): TaskListParams {
   const q = filters.q.trim();
   return {
     creationMode: filters.creationMode || undefined,
     q: q.length >= MIN_SEARCH ? q : undefined,
     status: filters.status.length ? filters.status : undefined,
     priority: filters.priority.length ? filters.priority : undefined,
-    assigneeId: filters.assignee && filters.assignee !== "none" ? (filters.assignee === "me" ? userId : filters.assignee) : undefined,
-    unassigned: filters.assignee === "none" || undefined,
     labelId: filters.label.length ? filters.label : undefined,
     sprintId: filters.sprint && filters.sprint !== "backlog" ? filters.sprint : undefined,
     backlog: filters.sprint === "backlog" || undefined,
     overdue: filters.overdue || undefined,
-    blocked: filters.blocked || undefined,
     sort: filters.sort,
     direction: filters.dir,
   };

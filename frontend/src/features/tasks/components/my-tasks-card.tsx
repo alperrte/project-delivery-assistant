@@ -44,11 +44,10 @@ export function MyTasksCard() {
         )}
         {counts.data && (
           <>
-            <dl aria-label={t("summary.label")} className="grid grid-cols-2 gap-x-4 gap-y-4">
+            <dl aria-label={t("summary.label")} className="grid grid-cols-3 gap-x-4 gap-y-4">
               <Figure label={t("summary.open")} value={counts.data.open} />
               <Figure label={t("summary.overdue")} value={counts.data.overdue} danger />
               <Figure label={t("summary.dueSoon")} value={counts.data.dueSoon} />
-              <Figure label={t("summary.pool")} value={counts.data.poolAvailable} />
             </dl>
             <Link href="/tasks" className="mt-4 inline-flex items-center gap-1 border-t pt-3 text-[11px] font-medium text-primary hover:underline">
               {t("card.open")}

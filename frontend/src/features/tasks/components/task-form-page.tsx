@@ -19,6 +19,7 @@ import { TimePicker } from "@/components/ui/time-picker";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { todayKey } from "@/features/reminders/dates";
 import { useSprints } from "@/features/sprints/hooks";
 import { ApiError } from "@/lib/api/client";
 import { TaskModelSetting } from "@/features/projects/components/task-model-setting";
@@ -37,7 +38,7 @@ import {
   TASK_DESCRIPTION_MAX,
   TASK_LABELS_MAX,
   TASK_TITLE_MAX,
-  taskFormSchema,
+  createTaskFormSchema,
   toTaskPayload,
   type TaskFormValues,
 } from "../schemas";
@@ -103,7 +104,7 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
     formState: { errors, isDirty },
   } = useForm<TaskFormValues>({
     resolver: async (form, context, options) => {
-      const result = await zodResolver(taskFormSchema)(
+      const result = await zodResolver(createTaskFormSchema({ startDate: task?.startDate ?? "", deadlineDate: fromDeadlineIso(task?.deadlineAt ?? null).date }))(
         form.creationMode === "ADVANCED" && !allowsAdvanced(project.taskManagementMode) ? { ...form, creationMode: "SIMPLE" } : form,
         context,
         options,
@@ -189,6 +190,11 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
 
   const known: PersonRef[] = task?.assignees ?? [];
   const totalMinutes = estimateMinutes(values.estimateHours ?? "", values.estimateMinutes ?? "");
+
+  // Nothing can start or end in the past; the deadline also cannot precede the chosen start.
+  const today = todayKey();
+  const minStart = today;
+  const minDeadline = values.startDate && values.startDate > today ? values.startDate : today;
 
   function applyQuick(kind: QuickDeadline) {
     const next = quickDeadline(kind);
@@ -364,15 +370,17 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
                   <Label htmlFor="task-start">{t("start.label")}</Label>
                   <Controller control={control} name="startDate" render={({ field }) => (
                     <DatePicker id="task-start" label={t("start.label")} value={field.value} ref={field.ref} onBlur={field.onBlur}
-                      invalid={!!errors.startDate} onChange={next => setValue("startDate", next, { shouldDirty: true, shouldValidate: true })} />
+                      min={minStart} invalid={!!errors.startDate} describedBy={errors.startDate ? `${ids}-start-note` : undefined}
+                      onChange={next => setValue("startDate", next, { shouldDirty: true, shouldValidate: true })} />
                   )} />
+                  {errors.startDate && <p id={`${ids}-start-note`} role="alert" className="text-sm text-destructive">{tv(errors.startDate.message!)}</p>}
                 </div>
                 <div className="min-w-0 space-y-1.5">
                   <Label htmlFor="task-deadline-date">{t("deadline.label")}</Label>
                   <div className="flex gap-2">
                     <Controller control={control} name="deadlineDate" render={({ field }) => (
                       <DatePicker id="task-deadline-date" label={t("deadline.label")} value={field.value} ref={field.ref} onBlur={field.onBlur}
-                        invalid={!!errors.deadlineDate} describedBy={`${ids}-deadline-note`} onChange={next => {
+                        min={minDeadline} invalid={!!errors.deadlineDate} describedBy={`${ids}-deadline-note`} onChange={next => {
                           if (!next) setValue("deadlineTime", "", { shouldDirty: true });
                           setValue("deadlineDate", next, { shouldDirty: true, shouldValidate: true });
                         }} />

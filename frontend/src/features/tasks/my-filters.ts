@@ -5,7 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "@/i18n/navigation";
 import { TASK_STATUSES } from "./types";
 import type { MyTasksParams, TaskStatus } from "./types";
 
-export const MY_TABS = ["open", "done", "all", "pool"] as const;
+export const MY_TABS = ["all", "open", "done"] as const;
 export type MyTab = (typeof MY_TABS)[number];
 
 export type MyTaskFilters = {
@@ -42,10 +42,9 @@ function serialize(filters: MyTaskFilters): string {
   return search.toString();
 }
 
-/** Status and overdue only narrow the task tabs; the pool lists claimable tasks, which have no status of their own to pick. */
+/** Project, status and overdue narrow the list; the tab is a scope of its own. */
 export function activeMyFilterCount(filters: MyTaskFilters): number {
-  const narrowing = filters.tab !== "pool";
-  return (filters.project ? 1 : 0) + (narrowing && filters.status.length ? 1 : 0) + (narrowing && filters.overdue ? 1 : 0);
+  return (filters.project ? 1 : 0) + (filters.status.length ? 1 : 0) + (filters.overdue ? 1 : 0);
 }
 
 /** The open tab is a worklist ordered by deadline; the others read best newest first. */

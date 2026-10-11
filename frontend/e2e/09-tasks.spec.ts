@@ -140,7 +140,7 @@ test.describe.serial("Task management", () => {
     poolTask = created.json as TaskJson;
     expect(poolTask.pool.open).toBe(true);
 
-    // The member sees it in the pool and in "Görevlerim > Havuz".
+    // The member sees it in the project pool.
     await memberPage.goto(`/projects/${slug}/tasks/pool`);
     await expect(memberPage.getByRole("link", { name: poolTitle })).toBeVisible();
 

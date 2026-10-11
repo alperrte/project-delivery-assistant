@@ -19,7 +19,6 @@ import { useLabels } from "@/features/labels/hooks";
 import { useSprints } from "@/features/sprints/hooks";
 import { cn } from "@/lib/utils";
 import { activeFilterCount, defaultDirection, GROUPINGS, MIN_SEARCH, SORT_FIELDS, type Grouping, type TaskFilters } from "../filters";
-import { useProjectMembers } from "../hooks";
 import { TASK_STATUSES, type TaskPriority, type TaskSortField, type TaskStatus } from "../types";
 import { labelDotClass, PRIORITY_DESC } from "../workflow";
 import { PriorityIndicator, StatusDot } from "./task-badges";
@@ -100,20 +99,18 @@ type Props = {
   onReset: () => void;
   /** The board shows one sprint and fixed columns, so it hides status, sprint, sort and grouping. */
   hide?: ("status" | "sprint" | "sort" | "group")[];
+  /** Extra controls (the card/table switch) placed before sort and grouping. */
+  trailing?: ReactNode;
 };
 
-export function TaskFilterBar({ projectId, filters, onChange, onReset, hide = [], advanced = true }: Props) {
+export function TaskFilterBar({ projectId, filters, onChange, onReset, hide = [], advanced = true, trailing }: Props) {
   const t = useTranslations("tasks.filters");
   const tc = useTranslations("tasks.common");
   const tm = useTranslations("taskModels");
-  const members = useProjectMembers(projectId);
   const labels = useLabels(projectId, advanced);
   const sprints = useSprints(projectId, undefined, advanced);
   const [resetKey, setResetKey] = useState(0);
   const count = activeFilterCount(filters);
-
-  const memberName = (id: string) => members.data?.find((member) => member.userId === id)?.nickname ?? "?";
-  const assigneeCount = filters.assignee ? 1 : 0;
 
   return (
     <div role="search" aria-label={t("label")} className="mb-4 flex flex-wrap items-center gap-2">
@@ -128,7 +125,7 @@ export function TaskFilterBar({ projectId, filters, onChange, onReset, hide = []
       </FilterButton>
 
       {!hide.includes("status") && (
-        <FilterButton label={t("status")} count={filters.status.length}>
+        <FilterButton label={t("status")} count={filters.status.length + (filters.overdue ? 1 : 0)}>
           {TASK_STATUSES.map((status: TaskStatus) => (
             <DropdownMenuCheckboxItem
               key={status}
@@ -139,6 +136,11 @@ export function TaskFilterBar({ projectId, filters, onChange, onReset, hide = []
               {tc(`status.${status}`)}
             </DropdownMenuCheckboxItem>
           ))}
+          <DropdownMenuSeparator />
+          <DropdownMenuCheckboxItem checked={filters.overdue} onCheckedChange={(checked) => onChange({ overdue: checked })}>
+            <span aria-hidden="true" className="size-2 shrink-0 rounded-full bg-destructive" />
+            {t("overdue")}
+          </DropdownMenuCheckboxItem>
         </FilterButton>
       )}
 
@@ -153,20 +155,6 @@ export function TaskFilterBar({ projectId, filters, onChange, onReset, hide = []
             {tc(`priority.${priority}`)}
           </DropdownMenuCheckboxItem>
         ))}
-      </FilterButton>
-
-      <FilterButton label={filters.assignee && filters.assignee !== "me" && filters.assignee !== "none" ? memberName(filters.assignee) : t("assignee")} count={assigneeCount}>
-        <DropdownMenuRadioGroup value={filters.assignee || "any"} onValueChange={(value) => onChange({ assignee: value === "any" ? "" : String(value) })}>
-          <DropdownMenuRadioItem value="any">{t("anyone")}</DropdownMenuRadioItem>
-          <DropdownMenuRadioItem value="me">{t("me")}</DropdownMenuRadioItem>
-          <DropdownMenuRadioItem value="none">{tc("unassigned")}</DropdownMenuRadioItem>
-          {!!members.data?.length && <DropdownMenuSeparator />}
-          {members.data?.map((member) => (
-            <DropdownMenuRadioItem key={member.userId} value={member.userId}>
-              {member.nickname ?? "?"}
-            </DropdownMenuRadioItem>
-          ))}
-        </DropdownMenuRadioGroup>
       </FilterButton>
 
       {advanced && !!labels.data?.length && (
@@ -199,22 +187,16 @@ export function TaskFilterBar({ projectId, filters, onChange, onReset, hide = []
         </FilterButton>
       )}
 
-      <button
-        type="button"
-        aria-pressed={filters.overdue}
-        onClick={() => onChange({ overdue: !filters.overdue })}
-        className={cn(TRIGGER, filters.overdue && "border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/15")}
-      >
-        {t("overdue")}
-      </button>
-      <button
-        type="button"
-        aria-pressed={filters.blocked}
-        onClick={() => onChange({ blocked: !filters.blocked })}
-        className={cn(TRIGGER, filters.blocked && "border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/15")}
-      >
-        {t("blocked")}
-      </button>
+      {hide.includes("status") && (
+        <button
+          type="button"
+          aria-pressed={filters.overdue}
+          onClick={() => onChange({ overdue: !filters.overdue })}
+          className={cn(TRIGGER, filters.overdue && "border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/15")}
+        >
+          {t("overdue")}
+        </button>
+      )}
 
       {count > 0 && (
         <button
@@ -230,7 +212,8 @@ export function TaskFilterBar({ projectId, filters, onChange, onReset, hide = []
         </button>
       )}
 
-      <div className="ml-auto flex items-center gap-2">
+      <div className="ml-auto flex flex-wrap items-center gap-2">
+        {trailing}
         {!hide.includes("sort") && (
           <FilterButton label={t("sortBy", { field: t(`sort.${filters.sort}`) })} width="min-w-52">
             <DropdownMenuRadioGroup

@@ -87,9 +87,9 @@ class TaskProgressNotificationApiIntegrationTest extends TaskTestBase {
         UUID task = assigned(project, owner, worker, "ADVANCED");
         change(project, task, worker, "TODO");
         assertEquals(0, statusCount(task, manager));
-        change(project, task, worker, "IN_PROGRESS");
         send(patch(statusUrl(project, task)), worker, "{\"status\":\"DONE\"}")
                 .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("TASK_INVALID_TRANSITION"));
+        change(project, task, worker, "IN_PROGRESS");
         change(project, task, worker, "IN_REVIEW");
         change(project, task, worker, "TESTING");
         assertEquals(1, statusCount(task, manager));

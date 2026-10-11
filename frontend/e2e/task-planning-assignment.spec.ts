@@ -83,7 +83,7 @@ test("priority indicators use shared colors in both themes, previews, lists and 
   await page.getByRole("option", { name: "Düşük", exact: true }).click();
   await expect(page.locator('#detail-priority [data-priority="LOW"]')).toHaveCount(1);
   await page.goto(`/projects/${project.slug}/tasks`);
-  const row = page.getByRole("listitem").filter({ has: page.getByRole("link", { name: "Critical priority appearance", exact: true }) });
+  const row = page.getByRole("row").filter({ has: page.getByRole("link", { name: "Critical priority appearance", exact: true }) });
   await expect(row.locator('[data-priority="LOW"]')).toBeVisible();
   expect(errors).toEqual([]);
 });

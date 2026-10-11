@@ -2,8 +2,8 @@
 
 import Link from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
-import { CaretDown, Cookie, EnvelopeSimple, List, SignOut } from "@phosphor-icons/react";
-import { CONTACT_HREF, INFO_LINKS } from "@/features/public-info/site-info";
+import { CaretDown, Cookie, EnvelopeSimple, List, Question, ShieldCheck, SignOut, UserCircle } from "@phosphor-icons/react";
+import { CONTACT_HREF } from "@/features/public-info/site-info";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -118,16 +118,23 @@ export function AppHeader({
                 <p className="break-all text-xs text-muted-foreground">{user?.email}</p>
               </div>
               <DropdownMenuSeparator />
-              <DropdownMenuItem render={<Link href="/account" />}>{tw("accountSettings")}</DropdownMenuItem>
+              <DropdownMenuItem render={<Link href="/account" />}>
+                <UserCircle data-icon="inline-start" size={16} aria-hidden="true" />
+                {tw("accountSettings")}
+              </DropdownMenuItem>
               {user?.globalRole === "ADMIN" && user.adminVerified && (
-                <DropdownMenuItem render={<Link href="/admin/users" />}>{ta("nav.label")}</DropdownMenuItem>
+                <DropdownMenuItem render={<Link href="/admin/users" />}>
+                  <ShieldCheck data-icon="inline-start" size={16} aria-hidden="true" />
+                  {ta("nav.label")}
+                </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
                 <DropdownMenuLabel>{tf("information")}</DropdownMenuLabel>
-                {INFO_LINKS.map(({ key, href }) => (
-                  <DropdownMenuItem key={key} className="min-h-11" render={<Link href={href} />}>{tf(key)}</DropdownMenuItem>
-                ))}
+                <DropdownMenuItem className="min-h-11" render={<Link href="/faq" />}>
+                  <Question data-icon="inline-start" size={16} aria-hidden="true" />
+                  {tf("faq")}
+                </DropdownMenuItem>
                 <DropdownMenuItem className="min-h-11" onClick={openConsentPreferences}>
                   <Cookie data-icon="inline-start" size={16} aria-hidden="true" />
                   {tf("manageCookies")}

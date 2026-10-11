@@ -7,21 +7,21 @@ import { TASK_PRIORITIES, TASK_STATUSES, type LabelColor, type TaskCreationMode,
 const TRANSITIONS: Record<TaskStatus, readonly TaskStatus[]> = {
   BACKLOG: ["TODO"],
   TODO: ["BACKLOG", "IN_PROGRESS"],
-  IN_PROGRESS: ["TODO", "IN_REVIEW"],
-  IN_REVIEW: ["IN_PROGRESS", "TESTING"],
-  TESTING: ["IN_REVIEW", "DONE"],
-  DONE: ["IN_PROGRESS"],
+  // Once work has started, the four working statuses move freely among themselves.
+  IN_PROGRESS: ["TODO", "IN_REVIEW", "TESTING", "DONE"],
+  IN_REVIEW: ["IN_PROGRESS", "TESTING", "DONE"],
+  TESTING: ["IN_PROGRESS", "IN_REVIEW", "DONE"],
+  DONE: ["IN_PROGRESS", "IN_REVIEW", "TESTING"],
 };
 
 export function allowedTransitions(status: TaskStatus, mode: TaskCreationMode = "ADVANCED"): readonly TaskStatus[] {
+  // A simple task may also start straight from the backlog.
   if (mode === "SIMPLE" && status === "BACKLOG") return ["TODO", "IN_PROGRESS"];
-  if (mode === "SIMPLE" && status === "IN_PROGRESS") return ["TODO", "DONE"];
   return TRANSITIONS[status];
 }
 
 export function canTransition(from: TaskStatus, to: TaskStatus, mode: TaskCreationMode = "ADVANCED"): boolean {
-  // Retained simple tasks already in review/testing may finish the legacy workflow.
-  return TRANSITIONS[from].includes(to) || allowedTransitions(from, mode).includes(to);
+  return allowedTransitions(from, mode).includes(to);
 }
 
 /** Board and filter order. */
