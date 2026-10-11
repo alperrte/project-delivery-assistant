@@ -143,6 +143,7 @@
     "ADMIN_SELF_DENIED": "Kendi hesabınızı sonlandıramazsınız.",
     "ADMIN_LAST_ADMIN": "Son aktif yönetici sonlandırılamaz.",
     "USER_NOT_FOUND": "Kullanıcı bulunamadı.",
+    "SUPPORT_REQUEST_NOT_FOUND": "Destek talebi bulunamadı.",
     "emailNotVerified": "E-posta adresiniz henüz doğrulanmadı.",
     "resetTicketInvalid": "Doğrulamanın süresi doldu. Lütfen baştan başlayın.",
     "verificationRequired": "Önce e-postanıza gelen kodu doğrulamalısınız.",
@@ -1365,7 +1366,10 @@
     "nicknamePlaceholder": "pda_assistant",
     "passwordPlaceholder": "Şifrenizi oluşturun",
     "confirmPasswordPlaceholder": "Şifrenizi tekrar girin",
-    "codeSent": "Doğrulama kodunu e-postanıza gönderdik."
+    "codeSent": "Doğrulama kodunu e-postanıza gönderdik.",
+    "notice": "Kayıt olarak <terms>Kullanım Koşulları</terms>'nı kabul etmiş, <kvkk>KVKK Aydınlatma Metni</kvkk>'ni ve <privacy>Gizlilik Politikası</privacy>'nı okuduğunuzu bildirmiş olursunuz. Bunlar bilgilendirme metinleridir; açık rıza talebi değildir.",
+    "noticeOauth": "Google veya GitHub ile devam ederek <terms>Kullanım Koşulları</terms>'nı kabul etmiş, <kvkk>KVKK Aydınlatma Metni</kvkk>'ni ve <privacy>Gizlilik Politikası</privacy>'nı okuduğunuzu bildirmiş olursunuz.",
+    "newTab": "(yeni sekmede açılır)"
   },
   "validation": {
     "rolesRequired": "En az bir rol seçin.",
@@ -2583,6 +2587,11 @@
     "changePassword": "Şifre değiştir",
     "adminUsers": "Kullanıcılar · Yönetim",
     "adminAnalytics": "Analitik · Yönetim",
+    "adminUser": "Kullanıcı ayrıntısı · Yönetim",
+    "adminSystem": "Sistem · Yönetim",
+    "adminAudit": "Denetim kaydı · Yönetim",
+    "adminSupport": "Destek talepleri · Yönetim",
+    "adminSupportRequest": "Destek talebi · Yönetim",
     "memberInvite": "Üye davet et"
   },
   "siteFooter": {
@@ -2590,7 +2599,7 @@
     "information": "Bilgi ve destek",
     "about": "Hakkımızda",
     "faq": "Sıkça Sorulan Sorular",
-    "kvkk": "KVKK",
+    "kvkk": "KVKK Aydınlatma Metni",
     "privacy": "Gizlilik Politikası",
     "accessibility": "Erişilebilirlik",
     "license": "Lisans",
@@ -2602,7 +2611,8 @@
     "version": "Sürüm {version}",
     "source": "Kaynak kod",
     "cookies": "Çerez Politikası",
-    "manageCookies": "Çerez tercihlerini yönet"
+    "manageCookies": "Çerez tercihlerini yönet",
+    "terms": "Kullanım Koşulları"
   },
   "publicPages": {
     "common": {
@@ -2612,9 +2622,7 @@
       "contents": "Bu sayfada",
       "contactTitle": "Bize ulaşın",
       "contactAction": "İletişim formunu aç",
-      "contactText": "Sorunuz, veri talebiniz veya erişilebilirlik geri bildiriminiz için iletişim formunu kullanabilirsiniz. Şifrenizi, doğrulama kodunuzu ve davet bağlantınızdaki gizli bilgileri paylaşmayın.",
-      "reviewTitle": "Yayın öncesi inceleme",
-      "reviewNotice": "Bu metin mevcut PDA işlevlerine göre hazırlanmış bir bilgilendirme taslağıdır. Veri sorumlusunun kimliği, hosting ve e-posta sağlayıcıları, veri konumları ve saklama süreleri yayın öncesinde kesinleştirilmelidir. Metin açık rıza talebi değildir ve tek başına tamamlanmış bir KVKK uyum süreci anlamına gelmez.",
+      "contactText": "Sorunuz, kişisel veri (KVKK/GDPR) talebiniz veya erişilebilirlik geri bildiriminiz için iletişim formunu ya da aşağıdaki e-posta adresini kullanabilirsiniz. Şifrenizi, doğrulama kodunuzu ve davet bağlantınızdaki gizli bilgileri paylaşmayın.",
       "references": "Resmî kaynaklar",
       "noticeReference": "KVKK: Aydınlatma yükümlülüğü",
       "cookieReference": "KVKK: Çerez uygulamaları rehberi"
@@ -2685,7 +2693,7 @@
             },
             {
               "question": "Nasıl hesap oluşturabilirim?",
-              "answer": "Giriş ekranındaki kayıt bağlantısını açıp e-posta, kullanıcı adı ve şifre alanlarını doldurun. Kayıt başarılı olduğunda uygulama oturum açmayı dener; giriş tamamlanamazsa giriş ekranına yönlendirilirsiniz."
+              "answer": "Giriş ekranındaki kayıt bağlantısını açıp e-posta, kullanıcı adı ve şifre alanlarını doldurun. E-posta adresinize altı haneli bir doğrulama kodu gönderilir; kodu girdiğinizde hesabınız etkinleşir ve oturum açılır. Kayıt formunda KVKK Aydınlatma Metni ve Gizlilik Politikası bağlantıları yer alır; bunlar bir bilgilendirmedir, ayrı bir onay kutusu yoktur."
             },
             {
               "question": "Google veya GitHub ile giriş yapabilir miyim?",
@@ -2741,15 +2749,15 @@
           "questions": [
             {
               "question": "Şifremi unuttum, ne yapmalıyım?",
-              "answer": "Giriş ekranında Şifremi unuttum bağlantısını kullanın. Şifre sıfırlama e-postası hizmetin e-posta yapılandırmasına bağlıdır; gelen kutunuzu ve spam klasörünü kontrol edin. Google veya GitHub hesabınızın şifresi için ilgili sağlayıcının kurtarma akışını kullanın."
+              "answer": "Giriş ekranında Şifremi unuttum bağlantısını kullanın. E-posta adresinize bir kod gönderilir; kodu girip yeni şifrenizi belirlersiniz. E-posta hizmetin yapılandırmasına bağlıdır; gelen kutunuzu ve spam klasörünü kontrol edin. Google veya GitHub hesabınızın şifresi için ilgili sağlayıcının kurtarma akışını kullanın."
             },
             {
               "question": "Beni hatırla seçeneği neyi saklar?",
               "answer": "Bu seçenek yalnız e-posta adresinizi kullandığınız tarayıcıda hatırlar. Şifrenizi saklamaz ve oturum süresini uzatmaz. Ortak bir cihazda kullanmamanız önerilir; sonraki girişte seçeneği kapatarak kayıtlı e-postayı temizleyebilirsiniz."
             },
             {
-              "question": "Verilerimi incelemek veya silinmesini istemek için ne yapabilirim?",
-              "answer": "KVKK ve Gizlilik Politikası sayfalarında veri işleme bilgilerini okuyabilirsiniz. Hesap ayarlarından hesap silme işlemini başlatıp e-postanıza gönderilen bağlantı üzerinden gerekli doğrulamaları tamamlayabilirsiniz. Diğer hesap veya veri taleplerinizi iletişim e-postasına iletebilirsiniz; talebin kapsamı ve kimlik doğrulaması ayrıca değerlendirilir."
+              "question": "Hesabımı nasıl silerim, verilerime nasıl erişirim?",
+              "answer": "Hesabınızı hesap ekranından kendiniz silebilirsiniz: e-postanıza gelen tek kullanımlık bağlantı ve kendi giriş bilgilerinizle onaylarsınız; hesap anında anonimleştirilir. Bir proje veya organizasyonun sahibiyseniz önce sahipliği devretmeniz ya da silmeniz gerekir. Verilerinize erişme, düzeltme veya dışa aktarım gibi talepleriniz için iletişim formunda “KVKK / veri talebi” kategorisini seçin ya da pdassistant.info@gmail.com adresine yazın; en geç 30 gün içinde yanıtlarız. Ayrıntılar KVKK Aydınlatma Metni ve Gizlilik Politikası'ndadır."
             }
           ]
         },
@@ -2775,165 +2783,369 @@
     },
     "privacy": {
       "title": "Gizlilik Politikası",
-      "description": "PDA'da hangi bilgilerin kullanıldığını, ekip içindeki görünürlüğü ve tarayıcıda tutulan tercihleri açıklıyoruz.",
+      "description": "PDA'da hangi bilgilerin neden kullanıldığını, kimlerin görebildiğini, ne kadar süre saklandığını ve hesabınızı nasıl silebileceğinizi açıklıyoruz.",
       "sections": [
         {
           "id": "scope",
-          "title": "Kapsam ve iletişim",
+          "title": "Kapsam ve sorumlular",
           "paragraphs": [
-            "Bu politika PDA web uygulamasının hesap, proje, ekip, görev ve takvim işlevlerini kapsar. Harici GitHub veya Google sayfalarına geçtiğinizde ilgili hizmetin kendi gizlilik koşulları uygulanır.",
-            "PDA geliştiricileri README'de Alper Temiz ve Hamza Taşbay olarak listelenir. Hizmetin veri sorumlusu kimliği yayın öncesinde ayrıca belirlenecektir; geliştirme ekibinin adı tek başına bu kimliği belirlemez. İletişim için İletişim sayfasındaki form kullanılır."
+            "Bu politika PDA web uygulamasının hesap, proje, ekip, görev, sohbet, takvim ve diğer işlevlerini kapsar. Harici GitHub veya Google sayfalarına geçtiğinizde ilgili hizmetin kendi gizlilik koşulları uygulanır.",
+            "Veri sorumluları, açık kaynaklı PDA projesinin sürdürücüleri ve gerçek kişiler olan Hamza Taşbay ve Alper Temiz'dir. Bize iletişim formundan veya pdassistant.info@gmail.com adresinden ulaşabilirsiniz.",
+            "6698 sayılı Kanun kapsamındaki ayrıntılı bilgilendirme (hukuki sebepler, aktarımlar, haklarınız) KVKK Aydınlatma Metni'nde yer alır; bu politika aynı bilgilerin kullanıcı odaklı özetidir."
           ]
         },
         {
           "id": "data",
-          "title": "Kullanılan bilgiler",
+          "title": "Hangi bilgiler kullanılır?",
           "paragraphs": [
-            "Kullandığınız işlemlere göre hesap ve çalışma alanı bilgileri uygulamada tutulur. Şifreler düz metin olarak saklanmaz; yerel hesap şifreleri tek yönlü şifre özetiyle korunur."
+            "Kullandığınız işlevlere göre aşağıdaki bilgiler tutulur. Şifreler düz metin olarak saklanmaz; tek yönlü şifre özetiyle korunur."
           ],
           "items": [
-            "Hesap: e-posta, kullanıcı adı, hesap durumu, kayıt zamanları ve varsa harici giriş sağlayıcısı kimliği.",
-            "Proje ve ekip: proje bilgileri, üyelikler, roller, davetler, kabul veya ret yanıtları ve yüklediğiniz proje logosu.",
-            "Çalışma içeriği: görevler, yorumlar, dosya ekleri, zaman kayıtları, başarı kriterleri ve hatırlatıcılar; yalnız kullandığınız işlevlerde.",
-            "Oturum: oturum zamanları, tarayıcı/cihaz bilgisi ve güvenli oturum doğrulama kayıtları. IP adresi isteklerin hız sınırı kontrolünde kullanılır.",
-            "İletişim: bize gönderdiğiniz mesajın içeriği ve yanıt verebilmek için e-posta adresiniz."
+            "Hesap: e-posta, kullanıcı adı, hesap durumu, kayıt zamanları, varsa harici giriş sağlayıcısı kimliği; ad ve soyad (davet üzerine açılan hesaplarda); isteğe bağlı profil fotoğrafı.",
+            "İki adımlı doğrulama (isteğe bağlı): doğrulayıcı uygulama sırrı şifrelenerek, yedek kodlar özet olarak saklanır.",
+            "Proje ve ekip: projeler, üyelikler, roller, davetler, kabul veya ret yanıtları, proje logosu ve banner'ı, organizasyonlar ve görselleri.",
+            "Çalışma içeriği: görevler, yorumlar, dosya ekleri, zaman kayıtları, başarı kriterleri, takvim ve hatırlatıcılar, proje sohbeti mesajları (yanıt ve tepkilerle), uygulama içi bildirimler ve bildirim geçmişi; yalnız kullandığınız işlevlerde.",
+            "Oturum: oturum zamanları, tarayıcı/cihaz bilgisi ve güvenli oturum doğrulama kayıtları. Ağ adresi isteklerin hız sınırı kontrolünde kullanılır.",
+            "Destek mesajları: iletişim formuna yazdığınız ad, (varsa) soyad, e-posta adresi, kategori ve mesaj.",
+            "Ziyaret analitiği (yalnız onayınızla): anonim ziyaretçi ve oturum kimliği, sayfa türü, ziyaret kaynağı, etkin süre, belirli düğmelere tıklanıp tıklanmadığı ve hata türü."
           ]
         },
         {
           "id": "purposes",
           "title": "Bilgilerin kullanım amacı",
           "paragraphs": [
-            "Hesap bilgileri giriş yapmanız ve hesabınızın korunması için; proje, ekip ve görev verileri ortak çalışma alanınızı sunmak için kullanılır. Davetler ve bildirimler ilgili kişiye ulaştırılır. Oturum ve istek kontrolleri yetkisiz erişimi ve kötüye kullanımı azaltmaya yöneliktir.",
-            "Özel nitelikli kişisel veri, şifre veya başka kişilere ait gereksiz bilgileri proje açıklamalarına, yorumlara ve dosyalara eklemeyin."
+            "Hesap bilgileri giriş yapmanız ve hesabınızın korunması için; proje, ekip ve görev verileri ortak çalışma alanınızı sunmak için kullanılır. Davetler ve bildirimler ilgili kişiye ulaştırılır. Oturum, hız sınırı ve bot tuzağı gibi kontroller yetkisiz erişimi ve kötüye kullanımı azaltmaya yöneliktir. Destek mesajları size yanıt vermek için kullanılır.",
+            "Ziyaret analitiği yalnız sizin onayınızla, sitenin nasıl kullanıldığını ve nerelerde hata oluştuğunu anonim olarak anlamak için kullanılır. Hesabınızla ilişkilendirilmez.",
+            "Özel nitelikli kişisel veri, şifre veya başka kişilere ait gereksiz bilgileri proje açıklamalarına, yorumlara, sohbete ve dosyalara eklemeyin."
           ]
         },
         {
           "id": "visibility",
           "title": "Kimler görebilir?",
           "paragraphs": [
-            "Çalışma alanı içerikleri proje üyeliği ve rol izinleriyle sınırlanır. Yetkili proje üyeleri, ekip listelerinde e-posta ve kullanıcı adınızı görebilir. İlgili davetin alıcısı kendisine sunulan davet önizlemesini görebilir.",
-            "Google/GitHub girişini seçtiğinizde ilgili sağlayıcıyla kimlik doğrulama yapılır. Depo bağlantısı GitHub'ın herkese açık depo bilgilerini okur. Hosting, veritabanı ve e-posta hizmet sağlayıcılarının isimleri ve veri konumları yayın öncesi veri işleme envanterinde kesinleştirilecektir; bu taslak belirli bir ülkede saklama veya aktarım yapılmadığı garantisi vermez."
+            "Çalışma alanı içerikleri proje üyeliği ve rol izinleriyle sınırlanır. Yetkili proje üyeleri, ekip listelerinde e-posta ve kullanıcı adınızı görebilir; proje sohbetini projenin üyeleri görür. İlgili davetin alıcısı kendisine sunulan davet önizlemesini görebilir.",
+            "Destek mesajlarınızı yalnız PDA yöneticisi görebilir. Yönetici hesabı; hesap listesini (e-posta, kullanıcı adı, durum), oturum kayıtlarını ve destek taleplerini görebilir, hesapları devre dışı bırakabilir. Yönetici işlemleri yönetim işlem günlüğüne yazılır.",
+            "Google/GitHub girişini seçtiğinizde kimlik doğrulama ilgili sağlayıcıyla yapılır; depo bağlantısı GitHub'ın herkese açık depo bilgilerini okur. Verileriniz satılmaz ve reklam amacıyla paylaşılmaz."
+          ]
+        },
+        {
+          "id": "deletion",
+          "title": "Hesap silme ve anonimleştirme",
+          "paragraphs": [
+            "Hesabınızı hesap ekranından kendiniz silebilirsiniz. İşlem, e-postanıza gönderilen kısa süreli tek kullanımlık bir bağlantı ve kendi giriş bilgilerinizle onaylanır.",
+            "Silme anında hesap anonimleştirilir: e-posta adresi, ad, kullanıcı adı ve şifre özeti silinir, tüm oturumlar kapatılır, proje üyelikleri sonlandırılır. İşlem geri alınamaz.",
+            "Bir proje veya organizasyonun sahibiyseniz hesabınızı silmeden önce sahipliği devretmeli ya da projeyi/organizasyonu silmelisiniz. Yönetici hesabı kendini silemez. Hesabınız silindikten sonra diğer kullanıcıların proje kayıtlarında (örneğin görev geçmişinde) anonimleştirilmiş bir kimlikle görünebilir.",
+            "Bir yönetici, kurallara aykırı kullanım veya güvenlik gerekçesiyle hesabı devre dışı bırakabilir; bu durumda oturumlar kapatılır ve giriş engellenir, hiçbir veri silinmez."
           ]
         },
         {
           "id": "browser-storage",
           "title": "Çerezler ve tarayıcı tercihleri",
           "paragraphs": [
-            "PDA reklam çerezi veya üçüncü taraf takip aracı kullanmaz. Oturum ve güvenlik çerezleri uygulamanın çalışması için zorunludur. Ziyaret analitiği yalnız sizin açık seçiminizle çalışır ve varsayılan olarak kapalıdır; ayrıntılar ve tercihleriniz için Çerez Politikası sayfasına bakın."
-          ],
-          "items": [
-            "PDA_ACCESS, PDA_REFRESH ve PDA_SESSION: giriş ve oturum akışı. Süreleri hizmetin oturum yapılandırmasına bağlıdır; çıkışta temizlenirler.",
-            "XSRF-TOKEN: işlem isteklerini sahte isteklerden korumak için kullanılan güvenlik çerezi.",
-            "NEXT_LOCALE: seçtiğiniz dili hatırlayan, bir yıl süreli dil çerezi.",
-            "Yerel tarayıcı depolaması: tema, menü/ekip görünümü ve isterseniz hatırlanan e-posta. Tarayıcı verileri temizlenene veya ilgili tercih değiştirilene kadar kalabilir.",
-            "Oturum depolaması: kullanıcıya özgü son seçilen proje bilgisi. Tarayıcı oturumu boyunca tutulur.",
-            "Çerez tercihi: pda:cookie-consent anahtarı kararınızı bu tarayıcıda saklar.",
-            "Analitik (isteğe bağlı, varsayılan kapalı): izin verirseniz anonim ziyaretçi ve oturum kimliğiyle sayfa türü, ziyaret kaynağı ve etkin kullanım süresi ölçülür; hesabınızla ilişkilendirilmez. İzni geri çektiğinizde yeni ölçüm durur ve bu kimlikler silinir."
+            "PDA reklam çerezi veya üçüncü taraf takip aracı kullanmaz; yazı tipleri PDA'nın kendi sunucusundan yüklenir. Oturum ve güvenlik çerezleri uygulamanın çalışması için zorunludur. Ziyaret analitiği yalnız sizin açık seçiminizle çalışır ve varsayılan olarak kapalıdır.",
+            "Kullanılan her çerez ve depolama kaydı, amacı ve süresiyle birlikte Çerez Politikası'nda listelenir; tercihinizi oradan veya sayfa altındaki “Çerez tercihlerini yönet” bağlantısından değiştirebilirsiniz."
+          ]
+        },
+        {
+          "id": "transfers",
+          "title": "Hizmet sağlayıcılar ve yurt dışı aktarım",
+          "paragraphs": [
+            "E-postalar Gmail SMTP (Google, ABD) üzerinden gönderilir. İsteğe bağlı Google/GitHub girişi ve GitHub depo özellikleri ilgili sağlayıcılara (ABD) bağlanır. Barındırma sağlayıcısı henüz belirlenmemiştir; belirlendiğinde bu politika güncellenecektir.",
+            "Bu aktarımların ayrıntıları ve hukuki dayanağı KVKK Aydınlatma Metni'nin “Alıcılar ve yurt dışına aktarım” bölümünde anlatılır."
           ]
         },
         {
           "id": "retention",
-          "title": "Saklama ve veri talepleri",
+          "title": "Saklama süreleri",
           "paragraphs": [
-            "Aktif hesap ve proje kayıtları hizmetin işlevleri için veritabanında tutulur. Oturum geçerlilik süresinin bitmesi tüm geçmiş kayıtların otomatik silindiği anlamına gelmez.",
-            "Kategori bazında saklama, yedekleme ve silme takvimi yayın öncesinde belirlenecektir. Hesap ayarlarından hesap silme işlemini başlatıp e-postanıza gönderilen bağlantı üzerinden gerekli doğrulamaları tamamlayabilirsiniz. Diğer erişim, düzeltme veya silme taleplerinizi iletişim adresine iletebilirsiniz; talepler, hesabın size ait olduğu doğrulanarak ve diğer kişilerin hakları dikkate alınarak değerlendirilmelidir."
-          ]
+            "Aşağıdaki süreler sonunda veriler otomatik olarak silinir veya anonimleştirilir."
+          ],
+          "table": {
+            "caption": "Saklama süreleri",
+            "headers": [
+              "Veri",
+              "Süre",
+              "Süre sonunda"
+            ],
+            "rows": [
+              [
+                "Hesap bilgileri ve çalışma alanı içerikleri",
+                "Hesabı siz silene kadar",
+                "Hesap silindiği anda anonimleştirilir: e-posta, ad, kullanıcı adı ve şifre özeti silinir, oturumlar kapatılır, proje ve organizasyon üyelikleri sonlandırılır. Proje veya organizasyon sahibi, hesabını silmeden önce sahipliği devretmeli ya da projeyi/organizasyonu silmelidir."
+              ],
+              [
+                "İptal edilen veya süresi dolan oturum kayıtları",
+                "30 gün",
+                "Otomatik silinir."
+              ],
+              [
+                "İletişim formu durum kayıtları ve saklanan destek mesajları (ad, e-posta, kategori, mesaj)",
+                "12 ay",
+                "Otomatik silinir. PDA gelen kutusuna e-posta olarak iletilen kopya bu otomatik silmeye dahil değildir; silinmesini hak talebi olarak isteyebilirsiniz."
+              ],
+              [
+                "Ziyaret analitiği (oturum, sayfa görüntüleme, düğme tıklaması ve hata olayları)",
+                "12 ay",
+                "Otomatik silinir. Anonim ziyaretçi kimliği tarayıcınızda 12 ayda bir yenilenir; analitik iznini geri çektiğinizde hemen silinir."
+              ],
+              [
+                "Yönetim işlem günlüğü (yalnız hesap kimlikleri, işlem türü, zaman ve sonuç)",
+                "24 ay",
+                "Otomatik silinir."
+              ]
+            ]
+          }
         },
         {
           "id": "security",
-          "title": "Güvenlik ve güncellemeler",
+          "title": "Güvenlik",
           "paragraphs": [
-            "PDA oturum belirteçlerini HttpOnly çerezlerde tutar, şifreleri tek yönlü özetle saklar ve proje yetkilerini sunucuda denetler. Bu önlemler mutlak güvenlik garantisi değildir. Ortak cihazlarda işiniz bittiğinde çıkış yapın.",
-            "İşlevler veya veri işleme koşulları değiştiğinde bu politika ve son güncelleme tarihi gözden geçirilir. KVKK hakları ve işleme şartları ayrı KVKK sayfasında açıklanır."
+            "PDA oturum belirteçlerini HttpOnly çerezlerde tutar, şifreleri tek yönlü özetle saklar, iki adımlı doğrulama sırlarını şifreler, proje yetkilerini sunucuda denetler ve yönetici erişimini ayrı bir iki adımlı girişle korur. İletişim formunda CAPTCHA yerine üçüncü tarafa veri göndermeyen bot tuzakları kullanılır.",
+            "Bu önlemler mutlak güvenlik garantisi değildir. Ortak cihazlarda işiniz bittiğinde çıkış yapın ve iki adımlı doğrulamayı etkinleştirmeyi düşünün."
+          ]
+        },
+        {
+          "id": "children",
+          "title": "Çocuklar",
+          "paragraphs": [
+            "PDA 16 yaşın altındaki çocuklara yönelik değildir ve yaş doğrulaması yapılmaz. 16 yaşın altındaysanız ebeveyninizin veya yasal temsilcinizin bilgisi olmadan hesap açmayın. Bir çocuğa ait hesap olduğunu fark ederseniz bize bildirin; hesabı sileriz."
+          ]
+        },
+        {
+          "id": "requests",
+          "title": "Haklarınız ve talepler",
+          "paragraphs": [
+            "Verilerinize erişme, düzeltme, silme veya diğer hak taleplerinizi iletişim formunda “KVKK / veri talebi” kategorisini seçerek ya da pdassistant.info@gmail.com adresine yazarak iletebilirsiniz. Taleplerinizi en geç 30 gün içinde yanıtlarız. Veri dışa aktarımı henüz uygulama içinden yapılmaz; talep üzerine sağlanır.",
+            "Avrupa Birliği veya Avrupa Ekonomik Alanı'ndaysanız GDPR kapsamındaki bilgiler (hukuki dayanaklar, aktarımlar, itiraz ve taşınabilirlik hakkı, denetim makamına şikâyet) bu politikanın İngilizce ve Almanca sürümlerinde ayrıntılı olarak yer alır; haklarınızı aynı kanaldan kullanabilirsiniz."
+          ]
+        },
+        {
+          "id": "changes",
+          "title": "Güncellemeler",
+          "paragraphs": [
+            "İşlevler veya veri işleme koşulları değiştiğinde bu politika güncellenir ve sayfanın başındaki “Son güncelleme” tarihi değişir. Önemli değişiklikleri bu sayfada yayımlarız."
           ]
         }
       ]
     },
     "kvkk": {
-      "title": "KVKK Bilgilendirmesi",
-      "description": "PDA'nın mevcut veri akışları ve 6698 sayılı Kanun kapsamında ilgili kişi hakları hakkında yayın öncesi bilgilendirme.",
+      "title": "KVKK Aydınlatma Metni",
+      "description": "6698 sayılı Kanun'un 10. maddesi kapsamında PDA'da işlenen kişisel veriler, işleme amaçları ve hukuki sebepleri, aktarımlar, saklama süreleri ve haklarınız.",
       "sections": [
         {
           "id": "controller",
           "title": "Veri sorumlusu ve kapsam",
           "paragraphs": [
-            "Bu sayfa hesap açma, giriş, proje/ekip çalışmaları, davet ve destek iletişimi sırasında kullanılan verileri açıklayan yayın öncesi taslaktır. Hizmetin veri sorumlusu gerçek kişi veya tüzel kişi olarak henüz teyit edilmemiştir; bu nedenle tamamlanmış bir aydınlatma metni olarak sunulmaz.",
-            "PDA proje ekibiyle iletişim için İletişim sayfasındaki form kullanılır. Veri sorumlusunun kimliği ve uygun başvuru kanalları kesinleştirilince metin güncellenecektir."
+            "Bu metin, 6698 sayılı Kişisel Verilerin Korunması Kanunu'nun (KVKK) 10. maddesi uyarınca, PDA · Project Delivery Assistant'ı (PDA) kullanırken işlenen kişisel verilerinize ilişkin sizi bilgilendirmek için hazırlanmış aydınlatma metnidir.",
+            "Veri sorumluları, açık kaynaklı PDA projesinin sürdürücüleri Hamza Taşbay ve Alper Temiz'dir. İkisi de gerçek kişidir; PDA bir şirket veya ticari işletme adına işletilmemektedir, bu nedenle ticaret unvanı, MERSİS numarası ya da KEP adresi bulunmamaktadır.",
+            "Veri sorumlularına sitedeki iletişim formundan veya pdassistant.info@gmail.com adresinden ulaşabilirsiniz. Kişisel veri başvurularının nasıl yapılacağı “Başvuru yolu” bölümünde anlatılır.",
+            "Bu metin bir açık rıza talebi değildir. Açık rızaya dayanan tek işleme faaliyeti isteğe bağlı ziyaret analitiğidir; bu konudaki kararınızı çerez katmanında ayrıca ve serbestçe verirsiniz (bkz. Çerez Politikası)."
           ]
         },
         {
           "id": "collection",
-          "title": "Veriler nasıl elde edilir?",
+          "title": "İşlenen veriler ve elde etme yöntemi",
           "paragraphs": [
-            "Bilgiler kayıt/giriş formlarına, proje ve görev ekranlarına girdiğiniz içeriklerden; proje yöneticisinin gönderdiği davetlerden; seçtiğiniz harici giriş sağlayıcısından ve bize ilettiğiniz destek mesajından elektronik olarak elde edilir.",
-            "E-posta ve kullanıcı adı, üyelik/rol bilgileri, proje ve görev içerikleri, davet yanıtları, oturum zamanları ve tarayıcı bilgisi bu akışlarda işlenebilir. Bir davet e-posta adresinizin proje yöneticisi tarafından girilmesiyle de oluşabilir."
+            "Veriler; kayıt ve giriş formları, uygulamadaki ekran ve formlar, iletişim formu, çerez katmanı, sizi davet eden proje üyeleri ve tercih ederseniz Google veya GitHub ile giriş aracılığıyla, elektronik ortamda ve kısmen otomatik yollarla elde edilir."
+          ],
+          "items": [
+            "Kimlik ve iletişim: e-posta adresi ve kullanıcı adı; ad ve soyad (yalnız proje daveti üzerine açılan hesaplarda davet eden tarafından girilen ya da iletişim formuna yazdığınız); isteğe bağlı profil fotoğrafı.",
+            "Hesap güvenliği: şifrenin tek yönlü özeti (şifrenin kendisi saklanmaz); doğrulama ve sıfırlama kodlarının özetleri; etkinleştirdiyseniz iki adımlı doğrulama verisi (sır şifrelenerek, yedek kodlar özet olarak saklanır); bağlı Google/GitHub hesabının kimliği; oturum kayıtları (oturum zamanları, tarayıcı/cihaz bilgisi). Yönetici işlemleri için yönetim işlem günlüğü tutulur; günlükte yalnız hesap kimlikleri, işlem türü, zaman ve sonuç yer alır.",
+            "Çalışma alanı içeriği: projeler, ekipler, organizasyonlar, görevler, yorumlar, dosya ekleri, proje sohbeti mesajları, uygulama içi bildirimler, davetler, takvim ve hatırlatıcılar; yalnız kullandığınız işlevlerde.",
+            "Destek talebi: iletişim formuna yazdığınız ad, (varsa) soyad, e-posta adresi, kategori ve mesaj.",
+            "İşlem güvenliği: isteklerin hız sınırı kontrolünde kullanılan ağ adresi bilgisi ve iletişim formundaki bot tuzağı alanları.",
+            "Ziyaret analitiği (yalnız açık rızanızla): rastgele üretilmiş anonim ziyaretçi ve oturum kimliği, ziyaret edilen sayfanın türü, ziyaretin kaynağı, etkin kullanım süresi, belirli düğmelere (kayıt, giriş, iletişim gönderimi, kaynak kod bağlantısı) tıklanıp tıklanmadığı ve uygulamada oluşan hatanın türü. Analitik için IP adresi ve tarayıcı bilgisi saklanmaz; sayfa adresi yerine yalnız sayfa türü kaydedilir."
+          ],
+          "closing": [
+            "Sağlık, din, ırk, biyometrik veri gibi özel nitelikli kişisel verileri PDA'ya yazmayın; PDA bu verileri işlemek için tasarlanmamıştır."
           ]
         },
         {
           "id": "basis",
           "title": "Amaçlar ve hukuki sebepler",
           "paragraphs": [
-            "Yayın öncesi hukuki değerlendirmede her işleme faaliyeti için geçerli şart ayrıca belirlenmelidir. Aşağıdaki eşleştirmeler hizmetin mevcut işlevlerini açıklayan değerlendirme çerçevesidir; bütün faaliyetlerin otomatik olarak aynı hukuki sebebe dayandığı kabul edilmez."
+            "Verileriniz aşağıdaki amaçlarla ve Kanun'un 5. maddesindeki şartlara dayanarak işlenir."
           ],
-          "items": [
-            "Hesap ve çalışma alanının sunulması: kayıt, kimlik doğrulama, proje/ekip üyeliği ve görev takibi. Hizmet ilişkisinin kurulması veya ifası için gereklilik yönünden Kanun m.5/2(c) değerlendirilir.",
-            "Hesap ve sistem güvenliği: oturum yönetimi, yetki denetimi ve istek hız sınırı. Gereklilik ve hakların dengelenmesiyle m.5/2(f) kapsamındaki meşru menfaat değerlendirilir.",
-            "Veri taleplerinin ve hukuki yükümlülüklerin yerine getirilmesi: ilgili yükümlülük veya hakkın varlığına göre m.5/2(ç) ve m.5/2(e) değerlendirilir.",
-            "Açık rıza gereken ek bir işleme faaliyeti varsa, amacı ve kapsamı ayrıca açıklanmalı ve rıza ayrı alınmalıdır. Bu sayfayı görüntülemek açık rıza sayılmaz."
+          "table": {
+            "caption": "İşleme amaçları, veri kategorileri ve hukuki sebepler",
+            "headers": [
+              "Amaç",
+              "Veri kategorileri",
+              "Hukuki sebep"
+            ],
+            "rows": [
+              [
+                "Hesap açma, kimlik doğrulama ve çalışma alanının sunulması",
+                "Kimlik ve iletişim, hesap güvenliği, çalışma alanı içeriği",
+                "m.5/2(c): sözleşmenin (Kullanım Koşulları) kurulması veya ifası için gerekli olması"
+              ],
+              [
+                "Hesap ve sistem güvenliği, kötüye kullanımın önlenmesi (oturum yönetimi, yetki denetimi, hız sınırı, bot tuzağı, yönetim işlem günlüğü)",
+                "Oturum kayıtları, ağ adresi, yönetim işlem günlüğü, bot tuzağı alanları",
+                "m.5/2(f): meşru menfaat (temel hak ve özgürlüklerinize zarar vermemek kaydıyla)"
+              ],
+              [
+                "İletişim formu ve destek taleplerinin yanıtlanması",
+                "Destek talebi",
+                "m.5/2(f): meşru menfaat; talebiniz kişisel veri başvurusuysa ayrıca m.5/2(ç)"
+              ],
+              [
+                "Kişisel veri başvurularının yanıtlanması ve hukuki yükümlülüklerin yerine getirilmesi",
+                "Başvuruda yer alan bilgiler, kimlik doğrulama için gerekli bilgiler",
+                "m.5/2(ç): veri sorumlusunun hukuki yükümlülüğü"
+              ],
+              [
+                "Olası uyuşmazlıklarda hakkın tesisi, kullanılması veya korunması için kayıtların saklanması",
+                "Destek talebi, yönetim işlem günlüğü, hesap ve işlem kayıtları",
+                "m.5/2(e): bir hakkın tesisi, kullanılması veya korunması"
+              ],
+              [
+                "Sitenin nasıl kullanıldığının, kayıt akışının ve hataların anonim ölçümü",
+                "Ziyaret analitiği verileri",
+                "m.5/1: açık rıza (çerez katmanında verilir, istediğiniz zaman geri çekilebilir)"
+              ]
+            ]
+          },
+          "closing": [
+            "Aydınlatma ile rıza birbirinden ayrıdır: bu metni okumanız ya da kayıt olmanız analitik için açık rıza verdiğiniz anlamına gelmez. Analitiği reddetmeniz PDA'yı kullanmanızı etkilemez."
           ]
         },
         {
           "id": "recipients",
-          "title": "Alıcılar ve aktarım",
+          "title": "Alıcılar ve yurt dışına aktarım",
           "paragraphs": [
-            "Proje içerikleri ve üyelik bilgileri, ilgili projenin yetkili üyelerine çalışma amacıyla gösterilir; davet önizlemesi ilgili davetin alıcısına sunulur. Seçilen Google/GitHub girişinde kimlik doğrulama bilgileri ilgili sağlayıcıyla işlenir; herkese açık depo bağlantısında GitHub'a depo bilgi isteği gönderilir.",
-            "Hosting, veritabanı ve e-posta sağlayıcıları, veri konumları ve yurt dışı aktarım koşulları yayın öncesinde netleştirilmelidir. Aktarımın varlığı ve hukuki mekanizması bilinmeden bu taslak bir aktarım güvencesi vermez."
+            "Kişisel verileriniz satılmaz ve reklam amacıyla paylaşılmaz. Aşağıdaki alıcılara, belirtilen amaçla ve gerektiği ölçüde aktarılır."
+          ],
+          "items": [
+            "Proje üyeleri: çalışma alanı içeriği ve üyelik bilgileri (e-posta, kullanıcı adı, profil fotoğrafı) ilgili projenin yetkili üyelerine çalışma amacıyla gösterilir; davet önizlemesi davetin alıcısına sunulur.",
+            "E-posta hizmeti (Google, ABD): doğrulama kodları, şifre sıfırlama, davet ve bildirim e-postaları ile iletişim formu mesajları Gmail SMTP üzerinden gönderilir. İletişim formu mesajları ayrıca PDA gelen kutusuna (pdassistant.info@gmail.com, Gmail) iletilir.",
+            "Google ve GitHub ile giriş (isteğe bağlı): bu yolu seçerseniz kimlik doğrulama ilgili sağlayıcıda (ABD) yapılır; PDA sağlayıcıdan giriş için gerekli temel hesap bilgilerini (hesap kimliği, e-posta adresi, ad) alır.",
+            "GitHub API (depo özellikleri): bir projeye herkese açık bir depo bağladığınızda depo bilgileri ve son commitler GitHub API'sinden (ABD) okunur.",
+            "Barındırma sağlayıcısı: PDA'nın yayın ortamı için barındırma sağlayıcısı henüz belirlenmemiştir. Belirlendiğinde sağlayıcının adı, veri konumu ve varsa yurt dışı aktarım bilgisi bu metne eklenecektir.",
+            "Yetkili kurumlar: yasal bir yükümlülük doğduğunda ilgili kamu kurum ve kuruluşları."
+          ],
+          "closing": [
+            "Yurt dışına aktarım (m.9): Google ve GitHub hizmetleri verileri ABD'de işleyebilir. Bu aktarımlar, ilgili sağlayıcıların Kanun'un 9. maddesine göre kullandığı aktarım mekanizmalarına dayanır; hangi mekanizmanın kullanıldığı sağlayıcıların kendi gizlilik ve veri işleme belgelerinde belirtilir. E-posta gönderimi hizmetin çalışması için gereklidir; Google/GitHub ile giriş ise isteğe bağlıdır, e-posta ve şifreyle de kayıt olabilirsiniz."
           ]
         },
         {
           "id": "storage",
-          "title": "Saklama ve silme",
+          "title": "Saklama süreleri",
           "paragraphs": [
-            "Veriler hesap, proje ve güvenlik işlevlerinde kullanılır. Saklama süreleri her veri kategorisi, işleme amacı ve ilgili yasal gereklilik bakımından belirlenmelidir; yayın ortamının silme ve yedekleme takvimi henüz teyit edilmemiştir.",
-            "İşleme şartları ortadan kalktığında silme, yok etme veya anonimleştirme süreci değerlendirilir. Hesap silme talebi diğer kullanıcıların proje kayıtlarını veya yasal sebeple tutulması gereken bilgileri kendiliğinden ortadan kaldırmaz."
+            "Veriler işleme amacının gerektirdiği süre boyunca saklanır; süre dolduğunda silinir veya anonimleştirilir. Silme işlemleri otomatik çalışır."
+          ],
+          "table": {
+            "caption": "Saklama süreleri",
+            "headers": [
+              "Veri",
+              "Süre",
+              "Süre sonunda"
+            ],
+            "rows": [
+              [
+                "Hesap bilgileri ve çalışma alanı içerikleri",
+                "Hesabı siz silene kadar",
+                "Hesap silindiği anda anonimleştirilir: e-posta, ad, kullanıcı adı ve şifre özeti silinir, oturumlar kapatılır, proje ve organizasyon üyelikleri sonlandırılır. Proje veya organizasyon sahibi, hesabını silmeden önce sahipliği devretmeli ya da projeyi/organizasyonu silmelidir."
+              ],
+              [
+                "İptal edilen veya süresi dolan oturum kayıtları",
+                "30 gün",
+                "Otomatik silinir."
+              ],
+              [
+                "İletişim formu durum kayıtları ve saklanan destek mesajları (ad, e-posta, kategori, mesaj)",
+                "12 ay",
+                "Otomatik silinir. PDA gelen kutusuna e-posta olarak iletilen kopya bu otomatik silmeye dahil değildir; silinmesini hak talebi olarak isteyebilirsiniz."
+              ],
+              [
+                "Ziyaret analitiği (oturum, sayfa görüntüleme, düğme tıklaması ve hata olayları)",
+                "12 ay",
+                "Otomatik silinir. Anonim ziyaretçi kimliği tarayıcınızda 12 ayda bir yenilenir; analitik iznini geri çektiğinizde hemen silinir."
+              ],
+              [
+                "Yönetim işlem günlüğü (yalnız hesap kimlikleri, işlem türü, zaman ve sonuç)",
+                "24 ay",
+                "Otomatik silinir."
+              ]
+            ]
+          },
+          "closing": [
+            "Hesabınızın silinmesi, diğer kullanıcıların proje kayıtlarını (örneğin görev geçmişini) kendiliğinden ortadan kaldırmaz; bu kayıtlar anonimleştirilmiş hesap kimliğiyle kalabilir. Yasal bir saklama yükümlülüğü doğarsa ilgili bilgi o süre boyunca tutulur. Yedekleme ve barındırma düzeni, barındırma sağlayıcısı belirlendiğinde bu metne eklenecektir."
           ]
         },
         {
           "id": "rights",
           "title": "Kanun kapsamındaki haklarınız",
           "paragraphs": [
-            "Kanunun 11. maddesi kapsamındaki haklarınızı veri sorumlusuna başvurarak kullanabilirsiniz."
+            "Kanunun 11. maddesi kapsamında veri sorumlusuna başvurarak aşağıdaki haklarınızı kullanabilirsiniz."
           ],
           "items": [
             "Kişisel verilerinizin işlenip işlenmediğini öğrenme; işlenmişse bilgi isteme.",
             "İşleme amacını ve verilerin bu amaca uygun kullanılıp kullanılmadığını öğrenme.",
             "Yurt içinde veya yurt dışında verilerin aktarıldığı üçüncü kişileri bilme.",
             "Eksik ya da yanlış işlenen verilerin düzeltilmesini isteme.",
-            "Kanundaki şartlar çerçevesinde silme veya yok edilmesini isteme; düzeltme ve silme işlemlerinin alıcılara bildirilmesini isteme.",
+            "Kanundaki şartlar çerçevesinde silinmesini veya yok edilmesini isteme; düzeltme ve silme işlemlerinin alıcılara bildirilmesini isteme.",
             "Yalnız otomatik sistemlerle yapılan analiz sonucunda aleyhinize bir sonuç oluşmasına itiraz etme.",
             "Kanuna aykırı işleme nedeniyle zarar oluşursa zararın giderilmesini talep etme."
+          ],
+          "closing": [
+            "Profil bilgilerinizi hesap ekranından kendiniz güncelleyebilir, hesabınızı yine hesap ekranından silebilirsiniz. Verilerinizin dışa aktarılması henüz uygulama içinden yapılan bir özellik değildir; talep üzerine sağlanır."
           ]
         },
         {
           "id": "requests",
-          "title": "Başvuru ve iletişim",
+          "title": "Başvuru yolu",
           "paragraphs": [
-            "Sorularınız ve veri talepleriniz için İletişim sayfasındaki formu kullanabilirsiniz. Talebinizin konusunu, hesabınızla ilişkili e-posta adresini ve istediğiniz işlemi belirtin; şifre, doğrulama kodu veya davet belirteci göndermeyin.",
-            "Bu genel iletişim adresi, mevzuattaki başvuru usullerinin tümünü tek başına karşılıyor sayılmaz. Veri sorumlusu ve resmi başvuru kanalları yayın öncesinde kesinleştirilecektir. Kimlik doğrulaması gerekli olduğunda talebinizle orantılı bilgi istenmelidir."
+            "Haklarınızı kullanmak için iki yoldan birini seçebilirsiniz: iletişim formunda “KVKK / veri talebi” kategorisini seçmek ya da pdassistant.info@gmail.com adresine e-posta göndermek.",
+            "Başvurunuzda adınızı, hesabınızla ilişkili e-posta adresini ve talebinizi açıkça yazın. Başvurunun size ait olduğunu doğrulamak için hesabınızla ilişkili e-posta adresinden göndermeniz çoğu zaman yeterlidir; gerekirse orantılı bir ek doğrulama isteyebiliriz. Şifre, doğrulama kodu veya davet bağlantısı göndermeyin.",
+            "Başvurunuzu talebin niteliğine göre en kısa sürede ve en geç 30 gün içinde ücretsiz olarak sonuçlandırırız. İşlemin ayrıca bir maliyet gerektirmesi halinde Kurulca belirlenen tarifedeki ücret istenebilir.",
+            "Cevabı yetersiz bulursanız, cevabı öğrendiğiniz tarihten itibaren 30 gün ve her hâlde başvuru tarihinden itibaren 60 gün içinde Kişisel Verileri Koruma Kurulu'na şikâyette bulunabilirsiniz."
+          ]
+        },
+        {
+          "id": "security",
+          "title": "Veri güvenliği ve ihlal bildirimi",
+          "paragraphs": [
+            "Şifreler tek yönlü özetle saklanır, oturum belirteçleri HttpOnly çerezlerde tutulur, iki adımlı doğrulama sırları şifrelenir, proje yetkileri sunucuda denetlenir ve yönetici erişimi ayrı bir iki adımlı girişle korunur. Bu önlemler mutlak güvenlik garantisi değildir.",
+            "Kişisel verilerin hukuka aykırı biçimde ele geçirilmesi halinde durumu Kanun'un 12. maddesi uyarınca en kısa sürede (Kurul kararı gereği 72 saat içinde) Kurul'a ve etkilenen ilgili kişilere bildiririz."
+          ]
+        },
+        {
+          "id": "verbis",
+          "title": "VERBİS değerlendirmesi",
+          "paragraphs": [
+            "Veri sorumluları gerçek kişidir ve PDA'yı ticari amaç gütmeden, açık kaynaklı bir proje olarak yürütmektedir. Veri Sorumluları Siciline (VERBİS) kayıt yükümlülüğü, Kişisel Verileri Koruma Kurulu'nun sicile kayıt yükümlülüğüne getirdiği istisna kriterleri (yıllık çalışan sayısı, yıllık mali bilanço toplamı ve asıl faaliyet konusu) çerçevesinde değerlendirilmektedir.",
+            "Bu değerlendirme sonuçlanmadığı için bir VERBİS kayıt numarası bulunmamaktadır. Sonuç değiştirirse bu metin güncellenecektir."
+          ]
+        },
+        {
+          "id": "updates",
+          "title": "Güncellemeler ve AB/AEA bilgisi",
+          "paragraphs": [
+            "İşleme koşulları değiştiğinde bu metin güncellenir ve sayfanın başındaki “Son güncelleme” tarihi değişir.",
+            "Avrupa Birliği veya Avrupa Ekonomik Alanı'nda bulunuyorsanız GDPR kapsamındaki bilgiler için Gizlilik Politikası'nın İngilizce veya Almanca sürümündeki GDPR bölümlerine bakın."
           ]
         }
       ]
     },
     "accessibility": {
-      "title": "Erişilebilirlik",
-      "description": "PDA'nın erişilebilirlik yaklaşımı, kullanabileceğiniz kontroller ve sorun bildirme yolu.",
+      "title": "Erişilebilirlik Bildirimi",
+      "description": "PDA'nın erişilebilirlik hedefi, mevcut durumu, bilinen sınırlamalar, değerlendirme yöntemi ve bir engeli nasıl bildireceğiniz.",
       "sections": [
         {
           "id": "approach",
-          "title": "Yaklaşımımız",
+          "title": "Hedefimiz",
           "paragraphs": [
-            "PDA'yı farklı ekran boyutları ve kullanım ihtiyaçları için erişilebilir olacak şekilde geliştiriyoruz. Klavye kullanımı, form etiketleri, odak görünürlüğü, yakınlaştırma ve hareket azaltma davranışları için erişilebilirlik kontrolleri yapıldı.",
-            "Ürün geliştikçe erişilebilirliği iyileştirmeye devam ediyoruz. Kullanım sırasında ek bir sorun veya erişim engeliyle karşılaşırsanız İletişim sayfasındaki form üzerinden bize ulaşabilirsiniz."
+            "PDA'nın farklı ekran boyutlarında ve farklı kullanım ihtiyaçlarında erişilebilir olmasını hedefliyoruz. Hedef standardımız WCAG 2.2 AA düzeyidir. Erişilebilirlik, ürün geliştikçe yeniden kontrol edilmesi gereken sürekli bir çalışmadır."
+          ]
+        },
+        {
+          "id": "status",
+          "title": "Mevcut durum ve değerlendirme",
+          "paragraphs": [
+            "Bu bildirim 10 Ekim 2026 tarihli değerlendirmeye dayanır. PDA için bağımsız bir kuruluşun yaptığı resmî bir WCAG denetimi yoktur; bu nedenle tam uygunluk beyan etmiyoruz ve bu sayfa bir sertifika değildir.",
+            "Kendi yöntemlerimiz: Herkese açık sayfalar (açılış, giriş, kayıt, şifre sıfırlama, hakkımızda, SSS, hukuki bilgilendirme sayfaları, erişilebilirlik ve lisans) üç dilde, açık ve koyu temada, telefon ve masaüstü genişliğinde WCAG 2.0, 2.1 ve 2.2 A/AA kurallarına karşı axe ile otomatik olarak taranır (uçtan uca test paketindeki a11y-public testi). Ayrıca formlar, menüler, iletişim ve bilgi sayfaları klavye ile kullanım, odak halkası ve ekran genişliği için otomatik testlerle denetlenir.",
+            "Otomatik araçlar sorunların yalnız bir bölümünü yakalar; gerçek ekran okuyucu ve farklı tarayıcı kombinasyonlarıyla elle doğrulama devam eden bir ihtiyaçtır."
           ]
         },
         {
@@ -2956,16 +3168,28 @@
           "id": "screen-readers",
           "title": "Anlamlı içerik ve yardımcı teknolojiler",
           "paragraphs": [
-            "Başlıklar, ana içerik ve gezinme alanları anlamlı HTML öğeleriyle düzenlenir. Form alanlarında etiketler, düğmelerde erişilebilir adlar ve hata mesajlarında metin açıklamaları kullanılır. Dekoratif simgeler ekran okuyuculardan gizlenir.",
-            "Yardımcı teknoloji kullanırken okumakta veya bir işlemi tamamlamakta zorlandığınız bir alan olursa bize bildirin. Geri bildirimlerinizi erişilebilirlik iyileştirmelerinde değerlendiriyoruz."
+            "Bilgi sayfalarında başlıklar, ana içerik, tablolar ve gezinme alanları anlamlı HTML öğeleriyle düzenlenir. Footer'daki GitHub bağlantıları kişi adını içeren erişilebilir ad taşır; dekoratif simgeler ekran okuyuculardan gizlenir. Form hataları ilgili alanla ilişkilendirilir."
+          ]
+        },
+        {
+          "id": "limitations",
+          "title": "Bilinen sınırlamalar",
+          "paragraphs": [
+            "Aşağıdaki alanlar henüz tam erişilebilir değildir veya doğrulanmamıştır."
+          ],
+          "items": [
+            "Yönetim panelindeki analitik grafikleri ve görsel özetler ekran okuyucuyla doğrulanmamıştır; bu alan yalnız yöneticiye açıktır.",
+            "Google ve GitHub giriş sayfaları ilgili sağlayıcılara aittir; erişilebilirlikleri PDA'nın denetiminde değildir.",
+            "Hakkımızda sayfasından indirilen özgeçmiş PDF dosyalarının erişilebilirlik etiketleri doğrulanmamıştır.",
+            "Uygulamanın giriş yapılmış ekranlarının (proje panoları, sürükle-bırak, takvim) ekran okuyucu ve farklı tarayıcı kombinasyonlarıyla kapsamlı doğrulaması yapılmamıştır."
           ]
         },
         {
           "id": "feedback",
           "title": "Bir engel bildirin",
           "paragraphs": [
-            "Erişilebilirlikle ilgili bir sorun, hata veya öneriniz varsa İletişim sayfasındaki form üzerinden bizimle iletişime geçin. Sayfa adresini, yapmak istediğiniz işlemi, karşılaştığınız sorunu, tarayıcı/cihazınızı ve varsa kullandığınız yardımcı teknolojiyi belirtin.",
-            "Şifrenizi, doğrulama kodunuzu veya diğer gizli bilgilerinizi paylaşmayın. Bildirimde bulunmak için tıbbi durumunuzu açıklamanız gerekmez."
+            "Bir sayfayı veya işlemi kullanamıyorsanız iletişim formunda “Erişilebilirlik” kategorisini seçerek ya da pdassistant.info@gmail.com adresine yazarak bize bildirin. Sayfa adresini, yapmak istediğiniz işlemi, tarayıcı/cihazınızı ve varsa kullandığınız yardımcı teknolojiyi belirtin.",
+            "Bildirimlere en geç 30 gün içinde yanıt veririz ve mümkün olduğunda içeriği alternatif bir biçimde sunarız. Ekran görüntüsü paylaşıyorsanız kişisel verileri ve gizli bilgileri kapatın. Bildirimde bulunmak için tıbbi durumunuzu açıklamanız gerekmez."
           ]
         }
       ]
@@ -3022,7 +3246,7 @@
     },
     "cookies": {
       "title": "Çerez Politikası",
-      "description": "PDA'nın hangi çerezleri ve tarayıcı depolamasını neden kullandığını, analitiğin varsayılan olarak kapalı olduğunu ve tercihinizi nasıl değiştireceğinizi açıklıyoruz.",
+      "description": "PDA'nın hangi çerezleri ve tarayıcı depolamasını neden kullandığı, ne kadar süre tuttuğu, analitiğin varsayılan olarak kapalı olduğu ve tercihinizi nasıl değiştireceğiniz.",
       "manageTitle": "Tercihlerinizi yönetin",
       "manageText": "Analitik tercihinizi istediğiniz zaman açabilir veya kapatabilirsiniz. Kapattığınızda yeni ölçüm gönderilmez ve bu tarayıcıdaki analitik tanımlayıcıları silinir.",
       "sections": [
@@ -3030,19 +3254,20 @@
           "id": "what",
           "title": "Çerez nedir?",
           "paragraphs": [
-            "Çerezler, bir web sitesinin tarayıcınızda sakladığı küçük kayıtlardır. Bu sayfada \"çerez\" ifadesi, aynı amaçla kullanılan tarayıcı yerel depolamasını (localStorage) ve oturum depolamasını (sessionStorage) da kapsar.",
-            "PDA reklam çerezi, kullanıcı profili çıkarma, üçüncü taraf takip aracı veya tarayıcı parmak izi yöntemi kullanmaz."
+            "Çerezler, bir web sitesinin tarayıcınızda sakladığı küçük kayıtlardır. Bu sayfada “çerez” ifadesi, aynı amaçla kullanılan tarayıcı yerel depolamasını (localStorage) ve oturum depolamasını (sessionStorage) da kapsar.",
+            "PDA reklam çerezi, kullanıcı profili çıkarma, üçüncü taraf takip aracı veya tarayıcı parmak izi yöntemi kullanmaz. Yazı tipleri PDA'nın kendi sunucusundan yüklenir."
           ]
         },
         {
           "id": "categories",
           "title": "Kategoriler",
           "paragraphs": [
-            "PDA iki onay kategorisi kullanır. Zorunlu kategori her zaman açıktır ve kapatılamaz. Analitik kategori yalnız sizin açık seçiminizle çalışır ve varsayılan olarak kapalıdır."
+            "PDA iki onay kategorisi kullanır. Zorunlu kategori her zaman açıktır ve kapatılamaz; görünüm ve kullanım tercihleri de bu kategorinin işlevsel kısmı sayılır (aşağıdaki gerekçeye bakın). Analitik kategori yalnız sizin açık seçiminizle çalışır ve varsayılan olarak kapalıdır."
           ],
           "items": [
-            "Zorunlu: giriş, oturum güvenliği, sahte istek koruması, dil seçimi ve bu tercihin kaydı.",
-            "Analitik: sayfa türü, ziyaret kaynağı ve etkin kullanım süresinin anonim ölçümü."
+            "Zorunlu: giriş, oturum güvenliği, sahte istek koruması, dil seçimi, geçici doğrulama adımları ve bu tercihin kaydı.",
+            "İşlevsel tercihler: yalnız sizin yaptığınız bir ayarı (tema, görünüm, hatırlanan e-posta) bu tarayıcıda hatırlar.",
+            "Analitik: sayfa türü, ziyaret kaynağı, etkin kullanım süresi, belirli düğmelere tıklama ve hata türünün anonim ölçümü."
           ]
         },
         {
@@ -3051,46 +3276,192 @@
           "paragraphs": [
             "Aşağıdaki kayıtlar hizmetin çalışması için gereklidir ve analitik tercihinizden bağımsız kullanılır. Hepsini PDA (birinci taraf) yönetir. Süreler hizmetin yapılandırmasına bağlıdır; verilenler varsayılan değerlerdir. Tarayıcı ayarlarınızdan engellerseniz giriş ve oturum işlevleri çalışmaz."
           ],
-          "items": [
-            "PDA_ACCESS: kısa ömürlü erişim belirteci. HttpOnly; yalnız /api yoluna gönderilir. Varsayılan süre 15 dakikadır.",
-            "PDA_REFRESH: oturumu yenileyen belirteç. HttpOnly; yalnız /api/v1/auth yoluna gönderilir. Varsayılan süre 7 gündür; çıkışta silinir.",
-            "PDA_SESSION: belirteç taşımayan, bir oturum olup olmadığını gösteren işaret. HttpOnly; yenileme belirteciyle aynı süre; çıkışta silinir.",
-            "XSRF-TOKEN: sahte istek (CSRF) koruması. İşlem isteklerine eklenmek üzere sayfa tarafından okunur; tarayıcı oturumu boyunca tutulur.",
-            "JSESSIONID: yalnız Google veya GitHub ile giriş akışı sırasında kullanılır. HttpOnly; yaklaşık 30 dakikalık kısa ömürlüdür.",
-            "NEXT_LOCALE: seçtiğiniz dil; bir yıl.",
-            "pda:cookie-consent (localStorage): bu çerez tercihinizin kaydı (sürüm, analitik izni, tarih); siz silene kadar.",
-            "pda:last-session-refresh (localStorage): sekmelerin oturumu aynı anda yenilemesini önleyen zaman damgası."
-          ]
+          "table": {
+            "caption": "Zorunlu çerezler ve depolama kayıtları",
+            "headers": [
+              "Ad",
+              "Tür",
+              "Amaç",
+              "Süre"
+            ],
+            "rows": [
+              [
+                "PDA_ACCESS",
+                "Çerez, HttpOnly; yalnız /api yoluna gönderilir",
+                "Kısa ömürlü erişim belirteci",
+                "15 dakika"
+              ],
+              [
+                "PDA_REFRESH",
+                "Çerez, HttpOnly; yalnız /api/v1/auth yoluna gönderilir",
+                "Oturumu yenileyen belirteç",
+                "7 gün; çıkışta silinir"
+              ],
+              [
+                "PDA_SESSION",
+                "Çerez, HttpOnly",
+                "Belirteç taşımayan, bir oturum olup olmadığını gösteren işaret",
+                "Yenileme belirteciyle aynı; çıkışta silinir"
+              ],
+              [
+                "PDA_MFA",
+                "Çerez, HttpOnly; yalnız iki adımlı doğrulama yoluna gönderilir",
+                "Şifre adımı geçildikten sonra iki adımlı doğrulama kodunu girmeniz için geçici kanıt",
+                "5 dakika; kullanılınca silinir"
+              ],
+              [
+                "PDA_ADMIN_MFA",
+                "Çerez, HttpOnly; yalnız yönetici doğrulama yoluna gönderilir",
+                "Yönetici girişinde ikinci adım için geçici kanıt",
+                "5 dakika; kullanılınca silinir"
+              ],
+              [
+                "PDA_ADMIN_ENROLL",
+                "Çerez, HttpOnly; yalnız yönetici kurulum yoluna gönderilir",
+                "Yöneticinin ilk doğrulayıcı uygulama kurulumu için geçici kanıt",
+                "10 dakika; kullanılınca silinir"
+              ],
+              [
+                "PDA_RESET",
+                "Çerez, HttpOnly; dar bir yola gönderilir",
+                "Şifre sıfırlama adımını sürdürmek için geçici kanıt",
+                "10 dakika; kullanılınca silinir"
+              ],
+              [
+                "PDA_PWCHANGE",
+                "Çerez, HttpOnly; dar bir yola gönderilir",
+                "Oturum içi şifre değiştirme adımını sürdürmek için geçici kanıt",
+                "10 dakika; kullanılınca silinir"
+              ],
+              [
+                "XSRF-TOKEN",
+                "Çerez; sayfa tarafından okunur",
+                "Sahte istek (CSRF) koruması",
+                "Tarayıcı oturumu boyunca"
+              ],
+              [
+                "JSESSIONID",
+                "Çerez, HttpOnly",
+                "Yalnız Google veya GitHub ile giriş akışı sırasında kullanılır",
+                "Yaklaşık 30 dakika"
+              ],
+              [
+                "NEXT_LOCALE",
+                "Çerez",
+                "Seçtiğiniz dil",
+                "1 yıl"
+              ],
+              [
+                "pda:cookie-consent",
+                "localStorage",
+                "Bu çerez tercihinizin kaydı (sürüm, analitik izni, tarih)",
+                "Siz silene kadar"
+              ],
+              [
+                "pda:last-session-refresh",
+                "localStorage",
+                "Sekmelerin oturumu aynı anda yenilemesini önleyen zaman damgası",
+                "Üzerine yazılır; siz silene kadar"
+              ],
+              [
+                "pda.pendingVerification",
+                "sessionStorage",
+                "Kayıt veya giriş sonrası doğrulanacak e-posta adresini doğrulama sayfasına taşır (adres URL'de taşınmaz)",
+                "Doğrulama bitince ya da sekme kapanınca"
+              ],
+              [
+                "pda:renderer",
+                "sessionStorage",
+                "Tarayıcının animasyonları yazılımla mı donanımla mı çizdiğinin sonucu; arayüzü buna göre uyarlar",
+                "Sekme kapanana kadar"
+              ]
+            ]
+          }
         },
         {
           "id": "preferences",
           "title": "Görünüm ve kullanım tercihleri",
           "paragraphs": [
-            "Aşağıdaki kayıtlar yalnız sizin yaptığınız ayarları bu tarayıcıda hatırlar. Ziyaretinizi ölçmez ve analitik olarak sunucuya gönderilmez. Bu kayıtların hukuki kategorisi yayın öncesi hukuki incelemede teyit edilmelidir."
+            "Aşağıdaki kayıtlar yalnız sizin yaptığınız ayarları bu tarayıcıda hatırlar. Ziyaretinizi ölçmez, sunucuya gönderilmez ve izleme amacı taşımaz. Bu kayıtlar olmadan seçtiğiniz görünümü ve ayarları sonraki ziyarette sunamayız; bu nedenle onları, talep ettiğiniz hizmetin sunulması için gerekli işlevsel kayıtlar olarak değerlendiriyor ve ayrı onay istemiyoruz. Dilerseniz tarayıcı ayarlarınızdan silebilirsiniz; ayarlarınız varsayılana döner."
           ],
-          "items": [
-            "theme: açık, koyu veya sistem teması.",
-            "pda:motion ve pda:theme-transition: animasyon tercihleri.",
-            "pda:sidebar-collapsed: kenar çubuğunun daraltılması.",
-            "pda.teams.view: ekipler sayfasındaki görünüm.",
-            "pda:task-mode-help:v1:<kullanıcı kimliği>: görev türü yardımını gizleme tercihi.",
-            "pda.rememberedEmail: yalnız giriş ekranında \"Beni hatırla\"yı siz seçerseniz e-posta adresiniz.",
-            "pda:last-project:<kullanıcı kimliği> ve pda:session-baseline (sessionStorage): oturum boyunca son seçilen proje ile oturum başındaki dil ve tema; sekme kapanınca silinir."
+          "table": {
+            "caption": "Görünüm ve kullanım tercihi kayıtları",
+            "headers": [
+              "Ad",
+              "Tür",
+              "Amaç",
+              "Süre"
+            ],
+            "rows": [
+              [
+                "theme",
+                "localStorage",
+                "Açık, koyu veya sistem teması",
+                "Siz silene kadar"
+              ],
+              [
+                "pda:motion, pda:theme-transition",
+                "localStorage",
+                "Animasyon tercihleri",
+                "Siz silene kadar"
+              ],
+              [
+                "pda:sidebar-collapsed",
+                "localStorage",
+                "Kenar çubuğunun daraltılması",
+                "Siz silene kadar"
+              ],
+              [
+                "pda:teams-view:v1:<kullanıcı kimliği>",
+                "localStorage",
+                "Ekipler sayfasındaki görünüm (eski pda.teams.view anahtarının yerine geçer)",
+                "Siz silene kadar"
+              ],
+              [
+                "pda:task-mode-help:v1:<kullanıcı kimliği>",
+                "localStorage",
+                "Görev türü yardımını gizleme tercihi",
+                "Siz silene kadar"
+              ],
+              [
+                "pda.rememberedEmail",
+                "localStorage",
+                "Yalnız giriş ekranında “Beni hatırla”yı siz seçerseniz e-posta adresiniz",
+                "Seçeneği kapatana kadar"
+              ],
+              [
+                "pda:last-project:<kullanıcı kimliği>",
+                "sessionStorage",
+                "Oturum boyunca son seçilen proje",
+                "Sekme kapanana kadar"
+              ],
+              [
+                "pda:session-baseline",
+                "sessionStorage",
+                "Oturum başındaki dil ve tema",
+                "Sekme kapanana kadar"
+              ]
+            ]
+          },
+          "closing": [
+            "<kullanıcı kimliği>, hesabınıza ait rastgele iç kimliktir; e-posta adresiniz veya adınız değildir."
           ]
         },
         {
           "id": "analytics",
           "title": "Analitik (varsayılan olarak kapalı)",
           "paragraphs": [
-            "Analitik, siz \"Tümünü kabul et\" demeden veya tercih penceresinde Analitik'i açmadan hiçbir veri toplamaz ve hiçbir tanımlayıcı oluşturmaz. Karar vermediğiniz sürece de kapalıdır. Açtığınızda ölçüm PDA'nın kendi sunucusunda tutulur; üçüncü taraf analitik aracı yoktur.",
-            "Ad, e-posta, mesaj içeriği, belirteç, şifre, hesap kimliği veya tarayıcı parmak izi toplanmaz. Giriş yapmış olsanız da ölçüm hesabınızla ilişkilendirilmez.",
-            "Analitik verilerinin saklama süresi henüz belirlenmemiştir (HUKUKİ İÇERİK GEREKLİ); bu süre ve silme esasları yayın öncesinde kesinleştirilecektir.",
+            "Analitik, siz “Tümünü kabul et” demeden veya tercih penceresinde Analitik'i açmadan hiçbir veri toplamaz ve hiçbir tanımlayıcı oluşturmaz. Karar vermediğiniz sürece de kapalıdır. Açtığınızda ölçüm PDA'nın kendi sunucusunda tutulur; üçüncü taraf analitik aracı yoktur.",
+            "Ad, e-posta, mesaj içeriği, belirteç, şifre, hesap kimliği, IP adresi, tarayıcı bilgisi veya tarayıcı parmak izi toplanmaz. Giriş yapmış olsanız da ölçüm hesabınızla ilişkilendirilmez.",
+            "Toplanan analitik kayıtları 12 ay sonra otomatik silinir. Anonim ziyaretçi kimliği tarayıcınızda 12 ayda bir yenilenir; eski kimlikle yeni kayıt ilişkilendirilmez.",
             "Hesap sayısı, aktif ve sonlandırılmış hesap sayısı ve gönderilen iletişim formu sayısı gibi işletme sayıları analitik izninize bağlı değildir; bunlar hizmetin kendi kayıtlarından hesaplanır."
           ],
           "items": [
-            "Ziyaret edilen sayfanın türü (örneğin \"proje sayfası\"); proje adı, kullanıcı kimliği veya adres sorgusu kaydedilmez.",
+            "Ziyaret edilen sayfanın türü (örneğin “proje sayfası”); proje adı, kullanıcı kimliği veya adres sorgusu kaydedilmez.",
             "Ziyaretin kaynağı: doğrudan giriş, arama motoru, başka bir site (yalnız alan adı) veya kampanya bağlantısı (utm_source, utm_medium, utm_campaign).",
             "Sitede etkin geçirilen süre; sekme arka plandayken veya pencere odak dışındayken sayılmaz.",
+            "Düğme tıklamaları: yalnız sabit bir listedeki düğmelere (açılış sayfasındaki ve üst bölümdeki kayıt ve giriş düğmeleri, kayıt formunun ve iletişim formunun gönderimi, kaynak kod bağlantısı) tıklanıp tıklanmadığı; hangi kişinin tıkladığı veya yazdığınız hiçbir şey kaydedilmez.",
+            "Hata olayları: uygulamada bir hata oluştuğunda yalnız hata türü (ekran çizimi, dosya yükleme, yakalanmayan söz hatası veya ağ hatası) ve sayfa türü kaydedilir. Hata iletisi, ayrıntısı, adres veya kimlik kaydedilmez. Aynı hata aynı oturumda bir kez bildirilir.",
             "Rastgele üretilmiş anonim ziyaretçi ve oturum kimliği: pda:analytics-visitor ve pda:analytics-session (localStorage). Oturum kimliği 30 dakika hareketsizlikten sonra yenilenir. İzni geri çektiğinizde ikisi de silinir."
           ]
         },
@@ -3098,7 +3469,8 @@
           "id": "manage",
           "title": "Tercihi değiştirme ve geri çekme",
           "paragraphs": [
-            "Sayfa altındaki \"Çerez tercihlerini yönet\" bağlantısıyla veya bu sayfadaki düğmeyle tercih penceresini istediğiniz zaman açabilirsiniz. Analitiği kapattığınızda yeni ölçüm hemen durur ve bu tarayıcıdaki analitik tanımlayıcıları silinir. Daha önce toplanmış toplulaştırılmış verilerin silinmesi için ayrı bir otomatik süreç yoktur; bu konu yayın öncesinde belirlenecektir.",
+            "Sayfa altındaki “Çerez tercihlerini yönet” bağlantısıyla veya bu sayfadaki düğmeyle tercih penceresini istediğiniz zaman açabilirsiniz. Analitiği kapattığınızda yeni ölçüm hemen durur, düğme tıklaması ve hata olayları da gönderilmez ve bu tarayıcıdaki analitik tanımlayıcıları silinir. Tanımlayıcı silindiği için daha önce toplanmış kayıtlar sizinle ilişkilendirilemez; bu kayıtlar 12 ay sonunda otomatik silinir.",
+            "Geri çekmenin etkisi: Zorunlu çerezler çalışmaya devam eder; analitik dışında hiçbir özellik kısıtlanmaz. Geri çekme, daha önce verilen rızaya dayanan işlemlerin hukuka uygunluğunu etkilemez.",
             "Tercih bu tarayıcıya aittir ve hesabınıza bağlı değildir: başka bir tarayıcıda veya cihazda ayrıca seçim yapmanız gerekir. Çerez uygulaması anlamlı biçimde değiştiğinde onay sürümü yükseltilir ve tercihiniz yeniden sorulur."
           ]
         },
@@ -3111,10 +3483,104 @@
         },
         {
           "id": "legal",
-          "title": "İletişim ve hukuki bilgiler",
+          "title": "Hukuki dayanak ve iletişim",
           "paragraphs": [
-            "Çerezler hakkındaki sorularınızı İletişim sayfasındaki form üzerinden iletebilirsiniz.",
-            "Veri sorumlusunun unvanı ve adresi, VERBİS kaydı, hukuki dayanak metni ve saklama süreleri henüz belirlenmediği için bu alanlar HUKUKİ İÇERİK GEREKLİ olarak işaretlidir ve uydurulmamıştır."
+            "Zorunlu ve işlevsel kayıtlar, talep ettiğiniz hizmetin sunulması için gerekli olduğundan Kanun'un 5/2(c) ve 5/2(f) maddelerine; analitik ise yalnız 5/1 maddesindeki açık rızanıza dayanır. Çerezler hakkındaki Kurul rehberine sayfanın altındaki resmî kaynaklardan ulaşabilirsiniz.",
+            "Çerezlerle ilgili sorularınızı iletişim formundan veya pdassistant.info@gmail.com adresinden iletebilirsiniz. Veri sorumluları, Hamza Taşbay ve Alper Temiz'dir (ayrıntılar KVKK Aydınlatma Metni'nde)."
+          ]
+        }
+      ]
+    },
+    "terms": {
+      "title": "Kullanım Koşulları",
+      "description": "PDA'yı kullanırken geçerli olan hesap kuralları, kabul edilebilir kullanım, sorumluluklar, hesap askıya alma ve silme ile uygulanacak hukuk.",
+      "sections": [
+        {
+          "id": "scope",
+          "title": "Kapsam ve kabul",
+          "paragraphs": [
+            "Bu koşullar, PDA · Project Delivery Assistant'ın (PDA) proje sürdürücüleri Hamza Taşbay ve Alper Temiz tarafından sunulan çevrimiçi sürümünü kullanmanız için geçerlidir. PDA; proje, ekip, görev, takvim ve sohbet gibi işlevlerle proje tesliminin ortak bir çalışma alanında yönetilmesini sağlayan açık kaynaklı bir yazılımdır.",
+            "Hesap açarak veya PDA'yı kullanarak bu koşulları kabul etmiş olursunuz. Kabul etmiyorsanız PDA'yı kullanmayın. Kendi altyapınızda çalıştırdığınız kurulumlarda bu koşullar değil, kurulumu işleten kişinin koşulları geçerlidir."
+          ]
+        },
+        {
+          "id": "account",
+          "title": "Hesap kuralları",
+          "paragraphs": [
+            "Kayıt sırasında doğru bilgi vermeli, hesabınızı yalnız kendiniz kullanmalı ve şifrenizi gizli tutmalısınız. Hesabınızla yapılan işlemlerden siz sorumlusunuz; hesabınızın izinsiz kullanıldığından şüphelenirseniz şifrenizi değiştirin ve bize bildirin. İki adımlı doğrulamayı etkinleştirmenizi öneririz.",
+            "PDA 16 yaşın altındaki çocuklara yönelik değildir. Başkası adına, onun izni olmadan hesap açmayın."
+          ]
+        },
+        {
+          "id": "acceptable-use",
+          "title": "Kabul edilebilir kullanım",
+          "paragraphs": [
+            "PDA'yı kullanırken aşağıdakileri yapmamayı kabul edersiniz."
+          ],
+          "items": [
+            "Hukuka aykırı, başkalarının haklarını (telif, kişilik, gizlilik) ihlal eden, tehdit, taciz, nefret veya yanıltıcı içerik paylaşmak.",
+            "PDA'ya, diğer kullanıcılara veya altyapıya zarar verecek yazılım, istek yoğunluğu veya yöntem kullanmak; hız sınırlarını, yetki denetimlerini ya da bot tuzaklarını aşmaya çalışmak.",
+            "İzin almadan güvenlik testi, zafiyet taraması veya yetkisiz erişim denemesi yapmak. Bir güvenlik açığı bulduysanız iletişim formunda “Hata bildirimi” kategorisini seçerek ya da e-postayla bize bildirin; ayrıntıları herkese açık yerlerde yayımlamayın.",
+            "Toplu veya otomatik hesap oluşturmak, iletişim formunu istenmeyen ileti göndermek için kullanmak.",
+            "Başkalarına ait kişisel verileri, şifreleri veya özel nitelikli kişisel verileri hukuka aykırı biçimde PDA'ya yüklemek."
+          ]
+        },
+        {
+          "id": "content",
+          "title": "Kullanıcı içeriği ve sorumluluk",
+          "paragraphs": [
+            "Projelere, görevlere, yorumlara, sohbete ve dosyalara eklediğiniz içeriğin sahibi siz veya hak sahibi olan kişidir. PDA'ya, bu içeriği hizmeti sunmak için (saklamak ve yetkili proje üyelerine göstermek) kullanma izni vermiş olursunuz; başka bir amaçla kullanım hakkı talep etmeyiz.",
+            "İçeriğin hukuka uygunluğundan ve paylaşmak için gerekli haklara sahip olmanızdan siz sorumlusunuz. Proje üyeleri ve yöneticileri, projelerindeki içeriği kendi yetkileri dahilinde yönetir. Hukuka aykırı içeriği bildirmek için iletişim formunu kullanabilirsiniz."
+          ]
+        },
+        {
+          "id": "availability",
+          "title": "Hizmetin sunumu ve garanti",
+          "paragraphs": [
+            "PDA ücretsiz sunulan, aktif geliştirme aşamasındaki açık kaynaklı bir yazılımdır. Hizmet “olduğu gibi” ve “mevcut haliyle” sunulur; kesintisiz, hatasız veya belirli bir amaca uygun olacağı yönünde bir garanti verilmez. Özellikler önceden haber verilmeden değişebilir, kesintiler ve bakım çalışmaları olabilir.",
+            "Önemli verilerinizin kopyasını ayrıca saklamanız önerilir. Dışa aktarma henüz uygulama içinden yapılan bir özellik değildir; talep üzerine sağlanır."
+          ]
+        },
+        {
+          "id": "suspension",
+          "title": "Hesabın askıya alınması",
+          "paragraphs": [
+            "Bu koşullara veya güvenliğe aykırı kullanım halinde yönetici hesabı devre dışı bırakabilir. Devre dışı bırakılan hesabın oturumları kapatılır ve girişi engellenir; hesapta hiçbir veri silinmez ve işlem geri alınabilir. Yönetici işlemleri kayıt altına alınır. Karara itiraz etmek için iletişim formunu veya e-posta adresini kullanabilirsiniz."
+          ]
+        },
+        {
+          "id": "deletion",
+          "title": "Hesabı silme",
+          "paragraphs": [
+            "Hesabınızı istediğiniz zaman hesap ekranından silebilirsiniz. Silme anında hesap anonimleştirilir ve tüm oturumlar kapatılır. Bir proje veya organizasyonun sahibiyseniz önce sahipliği devretmeli ya da silmelisiniz; yönetici hesabı kendini silemez. Ayrıntılar Gizlilik Politikası'nda yer alır."
+          ]
+        },
+        {
+          "id": "license",
+          "title": "Açık kaynak lisansıyla ilişki",
+          "paragraphs": [
+            "PDA'nın kaynak kodu Apache License 2.0 ile yayımlanır; kodu bu lisansın koşullarına göre kullanabilir, değiştirebilir ve dağıtabilirsiniz. Bu Kullanım Koşulları kaynak kodun lisansını değiştirmez; yalnız PDA'nın çevrimiçi sürümünün kullanımını düzenler. Lisansın özeti ve tam metni Lisans sayfasındadır."
+          ]
+        },
+        {
+          "id": "liability",
+          "title": "Sorumluluğun sınırı",
+          "paragraphs": [
+            "Zorunlu hukuki sorumluluklar saklı kalmak üzere, PDA'nın sürdürücüleri, hizmetin kullanımından veya kullanılamamasından doğan dolaylı zararlardan, veri veya kâr kaybından sorumlu tutulamaz. Kullanıcıların birbirine karşı eylemlerinden ve kullanıcı içeriğinden ilgili kullanıcı sorumludur."
+          ]
+        },
+        {
+          "id": "law",
+          "title": "Uygulanacak hukuk",
+          "paragraphs": [
+            "Bu koşullara Türkiye Cumhuriyeti hukuku uygulanır. Tüketici mevzuatından doğan zorunlu hükümler ve yetki kuralları saklıdır."
+          ]
+        },
+        {
+          "id": "changes",
+          "title": "Değişiklikler",
+          "paragraphs": [
+            "Bu koşulları gerektiğinde güncelleriz. Güncel metin bu sayfada yayımlanır ve “Son güncelleme” tarihi değişir; değişiklikten sonra PDA'yı kullanmaya devam etmeniz güncel koşulları kabul ettiğiniz anlamına gelir."
           ]
         }
       ]
@@ -3304,7 +3770,11 @@
       "label": "Yönetim",
       "section": "Yönetim bölümleri",
       "users": "Kullanıcılar",
-      "analytics": "Analitik"
+      "analytics": "Analitik",
+      "support": "Destek talepleri",
+      "audit": "Denetim kaydı",
+      "system": "Sistem",
+      "newRequests": ", {count} yeni talep"
     },
     "checking": "Yetki denetleniyor…",
     "users": {
@@ -3355,7 +3825,8 @@
         "confirm": "Yeniden etkinleştir",
         "cancel": "Vazgeç",
         "done": "{name} yeniden etkinleştirildi."
-      }
+      },
+      "openDetail": "{name} ayrıntılarını aç"
     },
     "analytics": {
       "title": "Analitik",
@@ -3442,6 +3913,409 @@
       },
       "duration": {
         "zero": "0 sn"
+      },
+      "behavior": {
+        "sections": {
+          "pages": "Sayfalar",
+          "flows": "Akışlar",
+          "notFound": "Bulunamayan sayfalar (404)",
+          "ctas": "CTA tıklamaları",
+          "conversion": "Dönüşüm",
+          "errors": "İstemci hataları"
+        },
+        "empty": "Bu aralıkta kayıt yok.",
+        "columns": {
+          "page": "Sayfa",
+          "views": "Görüntüleme",
+          "sessions": "Oturum"
+        },
+        "pages": {
+          "note": "Sayfalar rota şablonu olarak görünür (ör. /projects/[slug]); kimlik ve sorgu metni kaydedilmez. Yalnız çerez izni verenlerden.",
+          "top": "En çok görüntülenen sayfalar",
+          "entry": "Giriş sayfaları",
+          "exit": "Çıkış sayfaları"
+        },
+        "flows": {
+          "note": "Bir oturumun ilk sayfası ve ardından açtığı ikinci sayfa.",
+          "title": "Sayfa akışları",
+          "from": "Giriş sayfası",
+          "to": "Sonraki sayfa"
+        },
+        "notFound": {
+          "note": "Var olmayan bir adrese yapılan ziyaretler.",
+          "views": "404 görüntüleme",
+          "sessions": "Etkilenen oturum"
+        },
+        "ctas": {
+          "note": "Çağrı düğmelerine ve bağlantılarına tıklamalar; her tıklama yalnız sabit bir düğme kimliği taşır.",
+          "title": "CTA tıklamaları",
+          "cta": "Düğme",
+          "clicks": "Tıklama"
+        },
+        "ctaNames": {
+          "landing_register": "Ana sayfa: Kayıt ol",
+          "landing_login": "Ana sayfa: Giriş yap",
+          "header_register": "Üst menü: Kayıt ol",
+          "header_login": "Üst menü: Giriş yap",
+          "register_submit": "Kayıt formu gönderildi",
+          "contact_submit": "İletişim formu gönderildi",
+          "github_repo": "GitHub deposu bağlantısı"
+        },
+        "conversion": {
+          "note": "Dönüşüm, kayıt formunu gönderen oturumdur. Oran, aralıkta başlayan oturumlar içindeki paydır.",
+          "sessions": "Oturum",
+          "converted": "Dönüşen",
+          "rate": "Dönüşüm oranı",
+          "bySource": "Trafik kaynağına göre",
+          "byCampaign": "Kampanyaya göre"
+        },
+        "errors": {
+          "note": "Yalnız çerez izni verenlerin tarayıcısından gelir. Hata metni, kullanıcı veya adres ayrıntısı toplanmaz; yalnız hata türü ve sayfa şablonu vardır.",
+          "total": "Toplam istemci hatası",
+          "byKind": "Hata türüne göre",
+          "byRoute": "Sayfaya göre",
+          "kind": "Tür",
+          "count": "Sayı"
+        },
+        "errorKinds": {
+          "render": "Ekran çizimi hatası",
+          "chunk_load": "Dosya yüklenemedi",
+          "unhandled_rejection": "Yakalanmayan hata",
+          "network": "Ağ hatası"
+        }
+      }
+    },
+    "userDetail": {
+      "title": "Kullanıcı ayrıntısı",
+      "breadcrumb": "Yönetim yolu",
+      "breadcrumbFallback": "Kullanıcı",
+      "description": "Hesap bilgileri, rolün verdiği yetkiler, bağlı giriş yöntemleri ve açık oturumlar.",
+      "loading": "Kullanıcı yükleniyor",
+      "error": "Kullanıcı bilgileri yüklenemedi.",
+      "backToUsers": "Kullanıcılara dön",
+      "notFound": {
+        "title": "Kullanıcı bulunamadı",
+        "description": "Bu kullanıcı yok ya da kaldırılmış olabilir."
+      },
+      "profile": {
+        "title": "Profil",
+        "nickname": "Kullanıcı adı",
+        "email": "E-posta",
+        "status": "Hesap durumu",
+        "verification": "E-posta doğrulaması",
+        "verified": "Doğrulandı",
+        "unverified": "Doğrulama bekliyor",
+        "created": "Kayıt tarihi",
+        "mustChangePassword": "Şifre değişikliği gerekli",
+        "yes": "Evet",
+        "no": "Hayır",
+        "providers": "Bağlı giriş yöntemleri",
+        "noProviders": "Bağlı hesap yok; yalnız e-posta ve şifre."
+      },
+      "providers": {
+        "GOOGLE": "Google",
+        "GITHUB": "GitHub"
+      },
+      "access": {
+        "title": "Rol ve izinler",
+        "role": "Rol",
+        "permissions": "Platform izinleri",
+        "noPermissions": "Bu rolün platform izni yoktur.",
+        "singleAdminNote": "Bu kurulumda tek yönetici vardır: ortam değişkenleriyle oluşturulan hesap. Roller değiştirilemez."
+      },
+      "permissions": {
+        "USER_MANAGE": "Kullanıcıları yönetme (üyeliği sonlandırma, yeniden etkinleştirme) ve destek taleplerini işleme",
+        "SESSION_MANAGE": "Kullanıcı oturumlarını görüntüleme ve kapatma",
+        "AUDIT_VIEW": "Denetim kaydını görüntüleme",
+        "SYSTEM_VIEW": "Sistem durumunu, sayıları ve analitiği görüntüleme"
+      },
+      "sessions": {
+        "title": "Açık oturumlar",
+        "description": "Bu hesabın şu an açık olan oturumları. Bir oturumu kapatmak kullanıcıyı o cihazda çıkışa zorlar.",
+        "loading": "Oturumlar yükleniyor",
+        "error": "Oturumlar yüklenemedi.",
+        "tableLabel": "Açık oturum listesi",
+        "columns": {
+          "device": "Cihaz",
+          "created": "Başladı",
+          "lastUsed": "Son kullanım",
+          "expires": "Bitiş"
+        },
+        "unknownDevice": "Bilinmeyen cihaz",
+        "neverUsed": "Kullanılmadı",
+        "revoke": "Oturumu kapat",
+        "revokeTitle": "Oturumu kapat: {device}",
+        "revokeDescription": "{name}, bu cihazda hemen oturumdan çıkarılır ve yeniden giriş yapması gerekir. Hesap ve diğer cihazlardaki oturumlar etkilenmez.",
+        "revokeDescriptionSelf": "Bu sizin kendi hesabınız. Kapattığınız oturum şu an kullandığınız oturum olabilir; öyleyse yönetici girişine geri döndürülürsünüz.",
+        "revokeConfirm": "Oturumu kapat",
+        "revokeDone": "Oturum kapatıldı.",
+        "gone": "Bu oturum artık açık değil. Liste yenilendi.",
+        "cancel": "Vazgeç",
+        "revokeAll": "Tüm oturumları kapat",
+        "revokeAllTitle": "{name} için tüm oturumları kapat",
+        "revokeAllDescription": "{count, plural, one {# açık oturum kapatılır} other {# açık oturum kapatılır}}: {name} tüm cihazlarda hemen oturumdan çıkar ve yeniden giriş yapması gerekir. Hesap silinmez.",
+        "revokeAllDescriptionSelf": "Bu sizin kendi hesabınız. Tüm oturumlarınız, şu an kullandığınız oturum dahil, kapatılır ve yönetici girişine geri döndürülürsünüz.",
+        "revokeAllConfirm": "Tüm oturumları kapat",
+        "revokeAllDone": "{count, plural, one {# oturum kapatıldı.} other {# oturum kapatıldı.}}",
+        "empty": {
+          "title": "Açık oturum yok",
+          "description": "Bu hesabın şu an açık bir oturumu bulunmuyor.",
+          "disabled": "Hesabın üyeliği sonlandırıldığı için açık oturumu bulunmuyor."
+        }
+      }
+    },
+    "system": {
+      "title": "Sistem",
+      "description": "Hizmetin sağlığı, yapılandırılmış özellikler, zamanlanmış işler ve platform sayıları. Gizli değerler hiçbir zaman gösterilmez; yalnız \"ayarlı mı\" bilgisi vardır.",
+      "refresh": "Yenile",
+      "retry": "Yeniden dene",
+      "loading": "Sistem bilgisi yükleniyor",
+      "sections": {
+        "health": "Sağlık ve yapılandırma",
+        "operations": "İşletim sayıları",
+        "jobs": "Zamanlanmış işler",
+        "counts": "Platform sayıları",
+        "projects": "Projeler"
+      },
+      "health": {
+        "status": {
+          "label": "Hizmet durumu",
+          "hint": "Sunucunun genel durumu."
+        },
+        "database": {
+          "label": "Veritabanı",
+          "hint": "Sunucunun veritabanına ulaşabilmesi."
+        },
+        "mail": {
+          "label": "E-posta gönderimi",
+          "hint": "Kapalıyken kod ve bildirim e-postaları gönderilmez."
+        },
+        "google": {
+          "label": "Google ile giriş",
+          "hint": "Kimlik bilgileri tanımlıysa düğme çalışır."
+        },
+        "github": {
+          "label": "GitHub ile giriş",
+          "hint": "Kimlik bilgileri tanımlıysa düğme çalışır."
+        },
+        "apiDocs": {
+          "label": "API belgeleri",
+          "hint": "Açıkken Swagger arayüzü erişilebilir; canlı ortamda kapalı olmalıdır."
+        },
+        "totpKey": {
+          "label": "İki adımlı doğrulama anahtarı",
+          "hint": "Yönetici girişi için gereklidir; anahtarın kendisi gösterilmez."
+        }
+      },
+      "states": {
+        "up": "Çalışıyor",
+        "down": "Çalışmıyor",
+        "reachable": "Erişilebilir",
+        "unreachable": "Erişilemiyor",
+        "on": "Açık",
+        "off": "Kapalı",
+        "configured": "Yapılandırıldı",
+        "notConfigured": "Yapılandırılmadı"
+      },
+      "operations": {
+        "note": "Bu sayılar ve işler yalnız bu sunucu sürecinin belleğindedir: yeniden başlatmada sıfırlanır, birden fazla örnekte her örnek kendi değerini bildirir.",
+        "activeSessions": "Açık oturum",
+        "activeSessionsHint": "Tüm hesapların süresi dolmamış, kapatılmamış oturumları.",
+        "clientErrors": "İstemci hataları (4xx)",
+        "clientErrorsHint": "Son 24 saat.",
+        "serverErrors": "Sunucu hataları (5xx)",
+        "serverErrorsHint": "Son 24 saat."
+      },
+      "jobs": {
+        "description": "Arka planda düzenli çalışan işler, son çalışma zamanı ve etkilenen kayıt sayısı.",
+        "tableLabel": "Zamanlanmış işler",
+        "columns": {
+          "job": "İş",
+          "lastRun": "Son çalışma",
+          "outcome": "Sonuç",
+          "affected": "Etkilenen kayıt"
+        },
+        "notRun": "Henüz çalışmadı",
+        "outcomes": {
+          "SUCCESS": "Başarılı",
+          "FAILURE": "Başarısız"
+        },
+        "affectedCount": "{count, plural, one {# kayıt} other {# kayıt}}",
+        "names": {
+          "retentionAnalytics": "Analitik saklama temizliği",
+          "retentionAudit": "Denetim kaydı saklama temizliği",
+          "retentionContact": "İletişim ve destek saklama temizliği",
+          "retentionUserSessions": "Eski oturum temizliği",
+          "pendingRegistrationCleanup": "Doğrulanmamış kayıt temizliği",
+          "repositoryCommitScan": "Depo commit taraması",
+          "taskDeadlineScan": "Görev son tarih taraması"
+        },
+        "empty": {
+          "title": "Zamanlanmış iş yok",
+          "description": "Bu süreç henüz bir iş bildirmedi."
+        }
+      },
+      "counts": {
+        "users": "Kullanıcı hesapları",
+        "projects": "Projeler",
+        "total": "Toplam",
+        "active": "Aktif",
+        "disabled": "Sonlandırılmış",
+        "pending": "Doğrulama bekleyen",
+        "admins": "Yönetici",
+        "archived": "Arşivlenmiş"
+      },
+      "projects": {
+        "description": "Yalnız ad, durum ve aktif üye sayısı. Proje içeriği ve projeye erişim yolu yoktur.",
+        "tableLabel": "Proje listesi",
+        "columns": {
+          "name": "Proje",
+          "status": "Durum",
+          "members": "Aktif üye",
+          "created": "Oluşturulma"
+        },
+        "membersCount": "{count, plural, one {# aktif üye} other {# aktif üye}}",
+        "statuses": {
+          "PLANNING": "Planlama",
+          "ACTIVE": "Aktif",
+          "ON_HOLD": "Beklemede",
+          "COMPLETED": "Tamamlandı",
+          "ARCHIVED": "Arşivlendi"
+        },
+        "empty": {
+          "title": "Henüz proje yok",
+          "description": "Kullanıcılar proje oluşturduğunda burada listelenir."
+        }
+      },
+      "errors": {
+        "status": "Sistem durumu yüklenemedi.",
+        "overview": "Platform sayıları yüklenemedi.",
+        "projects": "Projeler yüklenemedi."
+      }
+    },
+    "audit": {
+      "title": "Denetim kaydı",
+      "description": "Yönetici işlemlerinin kalıcı kaydı: giriş, üyelik sonlandırma, oturum kapatma ve destek talebi durumu. Kayıtta yalnız işlem, hedef ve sonuç vardır; e-posta ve serbest metin yoktur.",
+      "loading": "Denetim kaydı yükleniyor",
+      "error": "Denetim kaydı yüklenemedi.",
+      "retry": "Yeniden dene",
+      "tableLabel": "Denetim olayları",
+      "unknownAccount": "Bilinmeyen hesap",
+      "removedAccount": "Silinmiş hesap",
+      "supportRequest": "Destek talebi {id}",
+      "filters": {
+        "action": "İşlem",
+        "allActions": "Tüm işlemler",
+        "from": "Başlangıç",
+        "to": "Bitiş",
+        "clear": "Filtreleri temizle",
+        "invalid": "Başlangıç tarihi bitişten sonra olamaz ve aralık en fazla 800 gün olabilir.",
+        "zone": "Gün sınırları bu saat diliminde hesaplanır: {zone}"
+      },
+      "columns": {
+        "time": "Zaman",
+        "actor": "Yapan",
+        "action": "İşlem",
+        "target": "Hedef",
+        "outcome": "Sonuç"
+      },
+      "actions": {
+        "ADMIN_SIGN_IN": "Yönetici girişi",
+        "USER_DISABLE": "Üyelik sonlandırıldı",
+        "USER_ENABLE": "Hesap yeniden etkinleştirildi",
+        "SESSION_REVOKE": "Oturum kapatıldı",
+        "SESSION_REVOKE_ALL": "Tüm oturumlar kapatıldı",
+        "SUPPORT_REQUEST_STATUS_CHANGE": "Destek talebi durumu değişti"
+      },
+      "outcomes": {
+        "SUCCESS": "Başarılı",
+        "FAILURE": "Başarısız",
+        "DENIED": "Reddedildi"
+      },
+      "targets": {
+        "SYSTEM": "—"
+      },
+      "empty": {
+        "title": "Henüz kayıt yok",
+        "description": "Yönetici işlemleri yapıldıkça burada görünür.",
+        "filteredTitle": "Bu filtreyle kayıt yok",
+        "filteredDescription": "İşlemi veya tarih aralığını değiştirin."
+      }
+    },
+    "support": {
+      "title": "Destek talepleri",
+      "description": "İletişim formundan gelen mesajlar. Mesajlar 12 ay saklanır; yalnız durumları değiştirebilirsiniz.",
+      "loading": "Destek talepleri yükleniyor",
+      "error": "Destek talepleri yüklenemedi.",
+      "retry": "Yeniden dene",
+      "tableLabel": "Destek talepleri listesi",
+      "filters": {
+        "status": "Durum",
+        "category": "Kategori",
+        "allStatuses": "Tüm durumlar",
+        "allCategories": "Tüm kategoriler",
+        "clear": "Filtreleri temizle"
+      },
+      "columns": {
+        "date": "Tarih",
+        "category": "Kategori",
+        "name": "Ad soyad",
+        "email": "E-posta",
+        "message": "Mesaj",
+        "status": "Durum",
+        "delivery": "Bildirim e-postası"
+      },
+      "statuses": {
+        "NEW": "Yeni",
+        "IN_PROGRESS": "İşlemde",
+        "CLOSED": "Kapandı"
+      },
+      "categories": {
+        "GENERAL": "Genel",
+        "BUG": "Hata bildirimi",
+        "DATA_REQUEST": "KVKK / veri talebi",
+        "ACCESSIBILITY": "Erişilebilirlik"
+      },
+      "delivery": {
+        "SENT": "İletildi",
+        "FAILED": "İletilemedi"
+      },
+      "empty": {
+        "title": "Henüz destek talebi yok",
+        "description": "İletişim formu kullanıldığında mesajlar burada görünür.",
+        "filteredTitle": "Bu filtreyle talep yok",
+        "filteredDescription": "Durum veya kategori filtresini değiştirin."
+      },
+      "detail": {
+        "title": "Destek talebi",
+        "breadcrumb": "Yönetim yolu",
+        "breadcrumbFallback": "Talep",
+        "description": "Ziyaretçinin yazdığı mesaj düz metin olarak gösterilir.",
+        "back": "Destek taleplerine dön",
+        "loading": "Destek talebi yükleniyor",
+        "error": "Destek talebi yüklenemedi.",
+        "notFound": {
+          "title": "Destek talebi bulunamadı",
+          "description": "Bu talep yok ya da saklama süresi dolduğu için silinmiş olabilir."
+        },
+        "message": "Mesaj",
+        "details": "Ayrıntılar",
+        "received": "Alındı",
+        "statusChanged": "Durum değişikliği",
+        "reply": "E-postayla yanıtla",
+        "replySubject": "PDA iletişim: {category}",
+        "statusTitle": "Durum",
+        "statusHelp": "Yanıtladıktan sonra talebi kapatın. Kapanan talep istendiğinde yeniden açılabilir.",
+        "actions": {
+          "NEW": "Yeni olarak işaretle",
+          "IN_PROGRESS": "İşleme al",
+          "CLOSED": "Talebi kapat"
+        },
+        "closeTitle": "Talebi kapat",
+        "closeDescription": "Talep \"Kapandı\" olarak işaretlenir ve denetim kaydına yazılır. İstediğiniz zaman yeniden açabilirsiniz; mesaj silinmez.",
+        "closeConfirm": "Talebi kapat",
+        "cancel": "Vazgeç",
+        "changed": "Talep durumu \"{status}\" olarak güncellendi."
       }
     }
   },
@@ -3466,7 +4340,7 @@
       },
       "analytics": {
         "title": "Analitik",
-        "description": "Ziyaret edilen sayfa türünü, ziyaretin geldiği kaynağı ve sitede etkin geçirilen süreyi anonim olarak ölçer. Hesabınızla ilişkilendirilmez; ad, e-posta veya içerik toplamaz. Varsayılan olarak kapalıdır."
+        "description": "Ziyaret edilen sayfa türünü, ziyaretin geldiği kaynağı, sitede etkin geçirilen süreyi, belirli düğmelere tıklanıp tıklanmadığını ve oluşan hata türünü anonim olarak ölçer. Hesabınızla ilişkilendirilmez; ad, e-posta veya içerik toplamaz. Varsayılan olarak kapalıdır."
       },
       "rejectAll": "Tümünü reddet",
       "acceptAll": "Tümünü kabul et",
@@ -3485,7 +4359,16 @@
       "messageHint": "En az 10, en fazla 5000 karakter.",
       "counter": "{count} / 5000",
       "submit": "Gönder",
-      "submitting": "Gönderiliyor…"
+      "submitting": "Gönderiliyor…",
+      "category": "Kategori",
+      "categories": {
+        "general": "Genel",
+        "bug": "Hata bildirimi",
+        "dataRequest": "KVKK veya veri talebi",
+        "accessibility": "Erişilebilirlik"
+      },
+      "optional": "İsteğe bağlı.",
+      "honeypot": "Web sitesi"
     },
     "validation": {
       "required": "Bu alan zorunlu.",
@@ -3502,9 +4385,13 @@
     },
     "notice": {
       "title": "Göndermeden önce",
-      "text": "Mesajınız e-posta olarak PDA ekibine iletilir ve sitede saklanmaz. Şifrenizi, doğrulama kodunuzu veya davet bağlantınızdaki gizli bilgileri yazmayın.",
-      "privacy": "Gizlilik Politikası"
-    }
+      "text": "Veri sorumluları Hamza Taşbay ve Alper Temiz'dir. Mesajınız size yanıt vermek için işlenir; 12 ay saklanır ve PDA gelen kutusuna (Gmail) e-posta olarak iletilir. Şifrenizi, doğrulama kodunuzu veya davet bağlantınızdaki gizli bilgileri yazmayın.",
+      "privacy": "Gizlilik Politikası",
+      "more": "Ayrıntılar:",
+      "kvkk": "KVKK Aydınlatma Metni"
+    },
+    "emailAlt": "Dilerseniz doğrudan e-posta da gönderebilirsiniz:",
+    "stale": "Form uzun süre açık kaldığı ya da cihaz saatiniz yanlış olduğu için doğrulanamadı. Mesajınız korundu; lütfen tekrar gönderin."
   },
   "passwordRules": {
     "title": "Şifre şunları içermeli:",

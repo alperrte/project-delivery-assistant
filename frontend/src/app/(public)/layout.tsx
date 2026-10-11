@@ -8,6 +8,7 @@ import { Logo } from "@/components/common/logo";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { TrackedLink } from "@/features/analytics/tracked-link";
 
 const navLink = "inline-flex min-h-11 items-center whitespace-nowrap rounded-md px-3 text-sm font-medium hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring";
 
@@ -26,8 +27,8 @@ export default async function PublicLayout({ children }: { children: ReactNode }
             <ThemeToggle />
             <Link href="/about" className={navLink}>{footer("about")}</Link>
             <Link href="/contact" className={navLink}>{footer("contact")}</Link>
-            <Link href="/login" className={navLink}>{landing("login")}</Link>
-            <Link href="/register" className={cn(buttonVariants(), "auth-cta min-h-11 gap-2 rounded-full px-4 text-sm font-semibold hover:brightness-110")}>{landing("register")}<ArrowUpRight size={15} aria-hidden="true" className="max-sm:hidden" /></Link>
+            <TrackedLink ctaId="header_login" href="/login" className={navLink}>{landing("login")}</TrackedLink>
+            <TrackedLink ctaId="header_register" href="/register" className={cn(buttonVariants(), "auth-cta min-h-11 gap-2 rounded-full px-4 text-sm font-semibold hover:brightness-110")}>{landing("register")}<ArrowUpRight size={15} aria-hidden="true" className="max-sm:hidden" /></TrackedLink>
           </nav>
         </div>
       </header>

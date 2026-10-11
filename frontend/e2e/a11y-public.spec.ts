@@ -4,7 +4,7 @@ import AxeBuilder from "@axe-core/playwright";
 // Every case uses its own browser context and only reads public content.
 test.describe.configure({ mode: "parallel" });
 
-const paths = ["/", "/login", "/register", "/forgot-password", "/verify-email", "/delete-account", "/cookies", "/contact", "/about", "/faq", "/kvkk", "/privacy", "/accessibility", "/license"] as const;
+const paths = ["/", "/login", "/register", "/forgot-password", "/verify-email", "/delete-account", "/about", "/faq", "/kvkk", "/privacy", "/terms", "/cookies", "/contact", "/accessibility", "/license"] as const;
 const locales = ["tr", "en", "de"] as const;
 const themes = ["light", "dark"] as const;
 const viewports = [{ name: "mobile", width: 320, height: 844 }, { name: "desktop", width: 1440, height: 900 }] as const;

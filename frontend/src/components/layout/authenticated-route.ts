@@ -10,7 +10,7 @@ export const AUTHENTICATED_ROUTES = [
   "/organizations", "/organizations/new", "/organizations/[organizationId]", "/organizations/[organizationId]/edit",
   "/settings", "/account", "/tasks", "/calendar", "/calendar/new", "/calendar/reminders/[reminderId]/edit",
   "/invitations", "/invitations/[projectId]/[invitationId]",
-  "/admin", "/admin/users", "/admin/analytics",
+  "/admin", "/admin/users", "/admin/users/[userId]", "/admin/analytics", "/admin/system", "/admin/audit", "/admin/support", "/admin/support/[requestId]",
 ] as const satisfies readonly PageRoute[];
 const privateRoutes = new Set<PageRoute>(AUTHENTICATED_ROUTES);
 export function authenticatedRoute(pathname: string) {

@@ -13,7 +13,9 @@ import { ApiError } from "@/lib/api/client";
 import { errorKey } from "@/lib/api/error-message";
 import { authApi } from "../api";
 import { registerSchema, type RegisterValues } from "../schemas";
+import { trackCta } from "@/features/analytics/cta";
 import { authCtaClass } from "./auth-card";
+import { RegistrationNotice } from "./registration-notice";
 import { PasswordRules } from "./password-rules";
 import { holdCredentialsForVerification, writePendingVerification } from "./pending-verification";
 import { useShake } from "./use-shake";
@@ -54,6 +56,7 @@ export function RegisterForm() {
       return;
     }
 
+    trackCta("register_submit");
     // The account stays unusable until the mailed code is entered; the code was just sent, so the verify page
     // must not mail another one on arrival.
     writePendingVerification({ email: values.email, sendOnOpen: false });
@@ -106,6 +109,7 @@ export function RegisterForm() {
         )}
 
         <SubmitButton pending={isSubmitting} className={authCtaClass}>{isSubmitting ? t("submitting") : t("submit")}</SubmitButton>
+        <RegistrationNotice />
       </form>
 
       <p className="mt-6 text-center text-sm text-muted-foreground">

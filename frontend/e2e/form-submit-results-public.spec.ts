@@ -107,7 +107,8 @@ for (const f of forms) {
       const seen = await simulate(page, f.endpoint, { kind: "hold" });
       await f.fill(page);
       await submit(page).dblclick();
-      await expect(submit(page)).toBeEnabled({ timeout: HOLD_MS * 5 });
+      // The contact form first waits out the server's minimum fill time (about 3 s) before it sends.
+      await expect(submit(page)).toBeEnabled({ timeout: HOLD_MS * 5 + 4_000 });
       expect(seen.count).toBe(1);
 
       // Same with the keyboard: two Enter presses in quick succession on the last field.

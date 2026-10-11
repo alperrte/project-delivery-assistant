@@ -11,6 +11,10 @@ const PAGES: { route: PageRoute; title: string; note: string }[] = [
   { route: "/faq", title: "FAQ", note: "Answers about accounts, projects, teams, privacy and support" },
   { route: "/contact", title: "Contact", note: "Send a message to the PDA team" },
   { route: "/license", title: "License", note: "Apache License 2.0 summary and full text" },
+  { route: "/kvkk", title: "KVKK Privacy Notice", note: "Information notice under the Turkish data protection law (KVKK)" },
+  { route: "/privacy", title: "Privacy Policy", note: "What data PDA uses, retention, your rights and GDPR information" },
+  { route: "/terms", title: "Terms of Use", note: "Rules for using PDA" },
+  { route: "/cookies", title: "Cookie Policy", note: "Cookies, browser storage and analytics choices" },
   { route: "/accessibility", title: "Accessibility", note: "Accessibility statement" },
 ];
 

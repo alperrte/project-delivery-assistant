@@ -28,9 +28,19 @@ export const INFO_LINKS = [
   { key: "faq", href: "/faq" },
   { key: "kvkk", href: "/kvkk" },
   { key: "privacy", href: "/privacy" },
+  { key: "terms", href: "/terms" },
   { key: "cookies", href: "/cookies" },
   { key: "accessibility", href: "/accessibility" },
   { key: "license", href: "/license" },
 ] as const;
+
+/**
+ * When each information page last changed in substance (ISO date, Istanbul time). Pages not listed use the earlier
+ * default. Update the entry when the text of a page changes; the legal pages show it as "Last updated".
+ */
+export const PAGE_UPDATED: Partial<Record<InfoPage, string>> = {
+  kvkk: "2026-10-11", privacy: "2026-10-11", terms: "2026-10-11", cookies: "2026-10-11", accessibility: "2026-10-11", faq: "2026-10-11",
+};
+export const DEFAULT_PAGE_UPDATED = "2026-10-09";
 
 export type InfoPage = (typeof INFO_LINKS)[number]["key"];

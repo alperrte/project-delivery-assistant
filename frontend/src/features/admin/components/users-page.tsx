@@ -17,6 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { OptionGroup } from "@/features/settings/components/option-group";
 import { useSession } from "@/features/auth/hooks/use-session";
+import Link from "@/i18n/navigation";
 import { errorKey } from "@/lib/api/error-message";
 import { adminApi, type AccountStatus, type AdminUser } from "../api";
 import { adminKeys } from "../query-keys";
@@ -111,6 +112,17 @@ export function AdminUsersPage() {
     );
   }
 
+  const detailLink = (user: AdminUser) => (
+    <Link
+      href={`/admin/users/${user.id}`}
+      data-user-link
+      aria-label={t("openDetail", { name: user.nickname })}
+      className="inline-flex min-h-11 max-w-full items-center rounded-sm font-medium underline-offset-4 outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
+    >
+      <span className="truncate">{user.nickname}</span>
+    </Link>
+  );
+
   const statusBadge = (user: AdminUser) => (
     <Badge variant={user.accountStatus === "DISABLED" ? "destructive" : user.accountStatus === "ACTIVE" ? "secondary" : "outline"}>
       {statusLabel(user.accountStatus)}
@@ -178,7 +190,7 @@ export function AdminUsersPage() {
               <TableBody>
                 {items.map((user) => (
                   <TableRow key={user.id} data-user-row={user.nickname}>
-                    <TableCell className="max-w-48 truncate font-medium" title={user.nickname}>{user.nickname}</TableCell>
+                    <TableCell className="max-w-48 font-medium" title={user.nickname}>{detailLink(user)}</TableCell>
                     <TableCell className="max-w-64 truncate" title={user.email}>{user.email}</TableCell>
                     <TableCell>{statusBadge(user)}</TableCell>
                     <TableCell>{t(`roles.${user.globalRole}`)}</TableCell>
@@ -194,7 +206,7 @@ export function AdminUsersPage() {
             {items.map((user) => (
               <li key={user.id} data-user-row={user.nickname} className="space-y-2 p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="min-w-0 truncate font-medium">{user.nickname}</p>
+                  <div className="min-w-0">{detailLink(user)}</div>
                   {statusBadge(user)}
                 </div>
                 <p className="text-sm break-all text-muted-foreground">{user.email}</p>

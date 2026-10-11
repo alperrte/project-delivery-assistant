@@ -4,8 +4,9 @@ import Link from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { EnvelopeSimple, ArrowUpRight, Scales } from "@phosphor-icons/react";
 import { GitHubIcon } from "@/components/common/brand-icons";
-import { APP_VERSION, CONTACT_HREF, CONTRIBUTORS, INFO_LINKS, REPOSITORY_URL } from "@/features/public-info/site-info";
+import { APP_VERSION, CONTACT_EMAIL, CONTACT_HREF, CONTRIBUTORS, INFO_LINKS, REPOSITORY_URL } from "@/features/public-info/site-info";
 import { openConsentPreferences } from "@/features/consent/consent-store";
+import { trackCta } from "@/features/analytics/cta";
 import { cn } from "@/lib/utils";
 
 const linkClass = "inline-flex min-h-11 items-center gap-2 rounded-md py-2 text-sm underline-offset-4 outline-hidden hover:text-foreground hover:underline focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring";
@@ -45,8 +46,9 @@ export function SiteFooter({ tone = "default" }: { tone?: "default" | "auth" }) 
           <Link href={CONTACT_HREF} className={cn(linkClass, "max-w-full")}>
             <EnvelopeSimple size={17} aria-hidden="true" className="shrink-0" />{t("contact")}
           </Link>
+          <a href={`mailto:${CONTACT_EMAIL}`} className={cn(linkClass, "max-w-full break-all")}>{CONTACT_EMAIL}</a>
           <div className="flex items-center gap-x-5">
-            <a href={REPOSITORY_URL} className={linkClass}>
+            <a href={REPOSITORY_URL} onClick={() => trackCta("github_repo")} className={linkClass}>
               <GitHubIcon className="size-4 shrink-0" />{t("source")}<ArrowUpRight size={14} aria-hidden="true" />
             </a>
             <Link href="/license" className={linkClass}>

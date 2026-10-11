@@ -13,6 +13,7 @@ import { useSession } from "@/features/auth/hooks/use-session";
 import { cn } from "@/lib/utils";
 import { adminApi, type AnalyticsDashboard, type TrafficSource } from "../api";
 import { adminKeys } from "../query-keys";
+import { BehaviorSections } from "./behavior-sections";
 import { DailyChart } from "./charts";
 
 type Preset = "7" | "30" | "90" | "custom";
@@ -250,6 +251,8 @@ export function AdminAnalyticsPage() {
               )}
             </div>
           </Block>
+
+          {data.behavior && <BehaviorSections behavior={data.behavior} idPrefix={ids} />}
 
           <Block id={`${ids}-registrations`} title={t("sections.registrations")}>
             <div className="rounded-2xl border bg-card p-4">

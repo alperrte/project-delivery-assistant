@@ -65,7 +65,7 @@ test("preferences can be saved with analytics on and later withdrawn from the fo
 
   // Stand-in identifiers: withdrawing must remove whatever the analytics category created.
   await page.evaluate(() => {
-    localStorage.setItem("pda:analytics-visitor", "11111111-1111-4111-8111-111111111111");
+    localStorage.setItem("pda:analytics-visitor", JSON.stringify({ id: "11111111-1111-4111-8111-111111111111", createdAt: new Date().toISOString() }));
     localStorage.setItem("pda:analytics-session", "{\"id\":\"22222222-2222-4222-8222-222222222222\",\"lastActive\":1}");
   });
   await page.locator("footer").getByRole("button", { name: "Çerez tercihlerini yönet" }).click();
@@ -117,9 +117,9 @@ for (const [locale, policyTitle, manageLabel] of [
     await page.goto("/cookies");
     await expect(page).toHaveURL(new RegExp(`${buildPath("/cookies", {}, locale)}$`));
     await expect(page.locator("h1")).toHaveText(policyTitle);
-    await expect(page.locator("meta[name=\"robots\"]")).toHaveAttribute("content", "noindex, follow");
+    await expect(page.locator("meta[name=\"robots\"]")).toHaveCount(0);
     // The real inventory is named on the page.
-    for (const name of ["PDA_ACCESS", "PDA_REFRESH", "PDA_SESSION", "XSRF-TOKEN", "NEXT_LOCALE", "pda:cookie-consent", "pda:analytics-visitor"]) {
+    for (const name of ["PDA_ACCESS", "PDA_REFRESH", "PDA_SESSION", "PDA_MFA", "PDA_ADMIN_MFA", "PDA_ADMIN_ENROLL", "PDA_RESET", "PDA_PWCHANGE", "XSRF-TOKEN", "NEXT_LOCALE", "pda:cookie-consent", "pda:analytics-visitor", "pda:renderer", "pda.pendingVerification", "pda:teams-view:v1:"]) {
       await expect(page.locator("article")).toContainText(name);
     }
     expect(await page.locator("article section").count()).toBeGreaterThanOrEqual(5);

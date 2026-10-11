@@ -4,6 +4,7 @@ import { type Locale } from "@/i18n/config";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo/alternates";
 import { PageJsonLd } from "@/lib/seo/json-ld";
 import { Breadcrumb } from "@/components/common/breadcrumb";
+import { CONTACT_EMAIL } from "@/features/public-info/site-info";
 import { ContactForm } from "./contact-form";
 
 export async function contactMetadata(): Promise<Metadata> {
@@ -29,6 +30,10 @@ export async function ContactPage() {
       <header>
         <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{t("title")}</h1>
         <p className="mt-4 text-base leading-7 text-muted-foreground">{t("description")}</p>
+        <p className="mt-2 text-base leading-7 text-muted-foreground">
+          {t("emailAlt")}{" "}
+          <a href={`mailto:${CONTACT_EMAIL}`} className="inline-flex min-h-11 items-center rounded-md font-medium text-primary underline underline-offset-4 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring">{CONTACT_EMAIL}</a>
+        </p>
       </header>
       <div className="mt-8">
         <ContactForm />
