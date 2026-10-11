@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import { headers } from "next/headers";
 import { Exo_2, Inter, JetBrains_Mono } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
@@ -7,6 +8,7 @@ import { Providers } from "@/components/providers";
 import { WebVitalsDebug } from "@/features/analytics/web-vitals-debug";
 import type { Locale } from "@/i18n/config";
 import { clientMessages } from "@/i18n/client-messages";
+import { CONSENT_BOOT_SCRIPT } from "@/features/consent/contract";
 import { RENDERER_BOOT_SCRIPT } from "@/lib/rendering";
 import { OG_IMAGE, openGraphLocale } from "@/lib/seo/alternates";
 import "./globals.css";
@@ -17,7 +19,6 @@ const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin", "latin-ext"],
   display: "swap",
-  preload: false,
 });
 
 const exo2 = Exo_2({
@@ -62,6 +63,8 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const locale = await getLocale();
   const messages = clientMessages(await getMessages());
+  // Per-request CSP nonce set by the proxy (src/proxy.ts); undefined when a request bypassed it (e.g. dotted paths).
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
 
   return (
     <html
@@ -71,11 +74,12 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       suppressHydrationWarning
     >
       <head>
-        <script dangerouslySetInnerHTML={{ __html: RENDERER_BOOT_SCRIPT }} />
+        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: RENDERER_BOOT_SCRIPT }} />
+        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: CONSENT_BOOT_SCRIPT }} />
       </head>
       <body className="min-h-[100dvh]">
         <NextIntlClientProvider messages={messages}>
-          <Providers>{children}</Providers>
+          <Providers nonce={nonce}>{children}</Providers>
           {process.env.NODE_ENV !== "production" && <WebVitalsDebug />}
         </NextIntlClientProvider>
       </body>

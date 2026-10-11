@@ -1,0 +1,99 @@
+# Production-shaped stack behind Caddy (automatic HTTPS). Provider independent: it runs on any machine with Docker and a public
+# DNS name; hosting is still an open decision (.agents/deployment.md), so nothing here is tied to a vendor.
+#
+#   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+#
+# One public origin: Caddy serves the site (Next.js) on `/` and the API on `/api/*` (including the chat WebSocket at
+# /api/v1/ws) from the SAME host name, so there is no cross-origin traffic: FRONTEND_URL, NEXT_PUBLIC_SITE_URL and the API
+# base all share the origin and CORS never comes into play.
+#
+# Variables (a production env file; real values stay out of Git; names only):
+#   SITE_ADDRESS               public host name, e.g. pda.example.org (Caddy gets and renews its certificate by itself).
+#                              `localhost` makes Caddy use its own local CA, which is how the stack is tried on one machine.
+#   SITE_URL                   https://<SITE_ADDRESS> (no trailing slash). Used for FRONTEND_URL and NEXT_PUBLIC_SITE_URL.
+#   DB_NAME, DB_USERNAME, DB_PASSWORD, JWT_SECRET, EMAIL_VERIFICATION_HMAC_KEY, TOTP_ENCRYPTION_KEY,
+#   ADMIN_EMAIL, ADMIN_INITIAL_PASSWORD, MAIL_* / SMTP_*   as in .env.example.
+# APP_ENV is forced to `prod` (Secure cookies) and API docs are forced off.
+# The frontend image bakes the public URLs in at BUILD time (CSP connect-src/img-src are derived from them): change SITE_URL
+# and rebuild the frontend image.
+name: pda-prod
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    # No published port: only the backend reaches the database, over the compose network.
+    volumes:
+      - pda_postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    env_file:
+      - ${ENV_FILE:-.env.prod}
+    environment:
+      APP_ENV: prod
+      API_DOCS_ENABLED: "false"
+      HIBERNATE_DDL_AUTO: validate
+      FLYWAY_ENABLED: "true"
+      DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME}
+      FRONTEND_URL: ${SITE_URL}
+      # Caddy is the only client the backend sees; trust X-Forwarded-For from the compose network (Docker bridge ranges), so
+      # the rate limits count real visitors instead of one shared address.
+      TRUSTED_PROXY_CIDRS: ${TRUSTED_PROXY_CIDRS:-172\.(1[6-9]|2[0-9]|3[0-1])\.[0-9]+\.[0-9]+}
+      ORGANIZATION_MEDIA_STORAGE_PATH: /app/organization-media
+    volumes:
+      - pda_organization_media:/app/organization-media
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health | grep -q UP"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: ${SITE_URL}/api/v1
+        NEXT_PUBLIC_SITE_URL: ${SITE_URL}
+    restart: unless-stopped
+    depends_on:
+      - backend
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS}
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    volumes:
+      - ./ops/Caddyfile:/etc/caddy/Caddyfile:ro
+      # The certificate, its key and the ACME account live here: losing this volume means a new certificate request.
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - frontend
+      - backend
+
+volumes:
+  pda_postgres_data:
+  pda_organization_media:
+  caddy_data:
+  caddy_config:

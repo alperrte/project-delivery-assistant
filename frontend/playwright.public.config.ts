@@ -17,5 +17,22 @@ export default defineConfig({
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
+    // Cross-browser run of the same public checks: `E2E_CROSS_BROWSER=1 npx playwright test -c playwright.public.config.ts`
+    // (needs `npx playwright install firefox webkit` once). Off by default so the normal gate stays Chromium-only.
+    ...(process.env.E2E_CROSS_BROWSER === "1"
+      ? [
+          { name: "firefox", use: { ...devices["Desktop Firefox"] } },
+          { name: "webkit", use: { ...devices["Desktop Safari"] } },
+          // The installed, branded Chromium browsers (Blink): Chrome and Edge by channel, Opera (or any other Blink browser) by
+          // `E2E_OPERA_PATH=<path to opera.exe>`.
+          { name: "chrome", use: { ...devices["Desktop Chrome"], channel: "chrome" } },
+          { name: "edge", use: { ...devices["Desktop Edge"], channel: "msedge" } },
+          ...(process.env.E2E_OPERA_PATH
+            ? [{ name: "opera", use: { ...devices["Desktop Chrome"], launchOptions: { executablePath: process.env.E2E_OPERA_PATH } } }]
+            : []),
+        ]
+      : []),
+  ],
 });

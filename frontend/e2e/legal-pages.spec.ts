@@ -12,6 +12,9 @@ const locales = ["tr", "en", "de"] as const;
 const pages = ["/kvkk", "/privacy", "/terms", "/cookies", "/accessibility"] as const;
 
 async function articleText(page: Page, route: string, locale: (typeof locales)[number]) {
+  // Let the previous page's background fetches (link prefetches answer with Set-Cookie for their own language) finish first,
+  // or one of them can overwrite the language cookie set below and the redirect lands in the previous language.
+  await page.waitForLoadState("networkidle");
   await page.context().addCookies([{ name: "NEXT_LOCALE", value: locale, url: "http://localhost:3000" }]);
   const response = await page.goto(route);
   expect(response?.status(), route).toBe(200);
@@ -267,6 +270,7 @@ test("registration shows a notice (not a consent box) with links to the terms, t
 
 test("the footer shows the single public address next to the contact link on public pages, in every language", async ({ page, context }) => {
   for (const locale of locales) {
+    await page.waitForLoadState("networkidle"); // previous page's prefetches must not overwrite the cookie set below
     await context.addCookies([{ name: "NEXT_LOCALE", value: locale, url: "http://localhost:3000" }]);
     await page.goto("/about");
     const footer = page.locator("footer");

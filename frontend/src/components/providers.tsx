@@ -4,6 +4,8 @@ import { useEffect, useState, type ReactNode } from "react";
 import { ThemeProvider } from "next-themes";
 import { MotionConfig } from "motion/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { config as zodConfig } from "zod/v4/core";
+import { ServiceWorkerRegistration } from "@/components/service-worker-registration";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeTransitionOverlay } from "@/components/layout/theme-transition";
@@ -30,6 +32,11 @@ if (process.env.NODE_ENV !== "production" && typeof window !== "undefined" && !(
   };
 }
 
+// The strict Content-Security-Policy forbids eval. Zod would otherwise probe `Function("")` to decide whether it may compile
+// validators (it falls back by itself), which the browser reports as a policy violation on every page load. Only the tiny
+// core entry is imported here: the full `zod` package (~88 KB gzip) must not reach pages that have no form.
+zodConfig({ jitless: true });
+
 /**
  * Applies the user's motion choice everywhere: the stylesheet reads `<html data-motion>` (CSS animations and
  * transitions), and `MotionConfig` tells every `motion` component to skip transforms when it is off.
@@ -45,7 +52,7 @@ function MotionPreference({ children }: { children: ReactNode }) {
   );
 }
 
-export function Providers({ children }: { children: ReactNode }) {
+export function Providers({ children, nonce }: { children: ReactNode; nonce?: string }) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -61,12 +68,13 @@ export function Providers({ children }: { children: ReactNode }) {
   );
 
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange nonce={nonce}>
       <QueryClientProvider client={queryClient}>
         <MotionPreference>
           <TooltipProvider delay={150}><ConsentProvider>{children}</ConsentProvider><AnalyticsTracker /></TooltipProvider>
           <Toaster position="top-center" />
           <ThemeTransitionOverlay />
+          <ServiceWorkerRegistration />
         </MotionPreference>
       </QueryClientProvider>
     </ThemeProvider>

@@ -22,6 +22,7 @@ Bu dört dosya temel bağlamdır.
 - Veri modeli veya migration: `.agents/database.md`, gerekirse `.agents/er-diagram.md` ve `.agents/decisions/0002-postgresql.md`
 - Modül sınırları: `.agents/decisions/0001-modular-monolith.md`
 - Kurulum veya dağıtım: `.agents/deployment.md`
+- Yedekleme, olay müdahale, rollback, migration ve bakım: `.agents/operations.md`
 - Frontend standardı: `.agents/FRONTEND_WORKFLOW.md`
 - Görsel tasarım kuralları: `.agents/frontend-design-rules.md`
 - Web standartları: `.agents/web-rules/`

@@ -92,6 +92,8 @@ test("a decision from an older consent version asks again and stays denied meanw
 test("keyboard: banner reachable, dialog traps focus, Escape closes without saving", async ({ page }) => {
   await page.goto("/login");
   const manage = banner(page).getByRole("button", { name: "Tercihleri yönet" });
+  // The server-rendered banner's buttons stay disabled until hydration; a disabled button cannot take focus.
+  await expect(manage).toBeEnabled();
   await manage.focus();
   await page.keyboard.press("Enter");
   await expect(dialog(page)).toBeVisible();
