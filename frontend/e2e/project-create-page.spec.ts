@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { MANAGER_STORAGE } from "./global-setup";
-import { createdProjectSlug, api, createProject, declineTeamPrompt, openProjectListPage } from "./helpers";
+import { createdProjectSlug, api, chooseDate, createProject, declineTeamPrompt, openProjectListPage } from "./helpers";
 
 test.use({ storageState: MANAGER_STORAGE });
 
@@ -137,6 +137,59 @@ test.describe("Yeni proje sayfası", () => {
     await expect(page.locator("#project-preview").locator('img[src^="blob:"]')).toHaveCount(1);
     await page.getByRole("button", { name: "Kaldır" }).click();
     await expect(page.locator("#project-preview img")).toHaveCount(0);
+  });
+
+  test("ayarlar sayfasındaki planlama ve görev tercihi oluştururken de sorulur ve kaydedilir", async ({ page }) => {
+    await page.goto("/projects/new");
+    await page.locator("#project-name").fill(`Planlı Proje ${Date.now()}`);
+    await page.getByRole("radio", { name: /^Web/ }).click();
+    await expect(page.getByRole("heading", { name: "Planlama" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Görev oluşturma tercihi" })).toBeVisible();
+    // The same defaults the settings page shows for a fresh project.
+    await expect(page.locator("#create-status")).toContainText("Planlama");
+    await expect(page.locator("#create-priority")).toContainText("Orta");
+    await expect(page.getByRole("radio", { name: /Her ikisi/ })).toBeChecked();
+
+    await page.locator("#create-status").click();
+    await page.getByRole("option", { name: "Aktif", exact: true }).click();
+    await page.locator("#create-priority").click();
+    await page.getByRole("option", { name: "Yüksek", exact: true }).click();
+    await chooseDate(page, "create-start", "2030-03-10");
+    await chooseDate(page, "create-end", "2030-06-20");
+    await page.getByRole("radio", { name: /Yalnız gelişmiş/ }).check();
+
+    const [created] = await Promise.all([
+      page.waitForResponse((res) => new URL(res.url()).pathname === "/api/v1/projects" && res.request().method() === "POST"),
+      page.getByRole("button", { name: /^Projeyi oluştur$/ }).click(),
+    ]);
+    expect(created.status()).toBe(201);
+    await declineTeamPrompt(page);
+    const slug = await createdProjectSlug(page);
+
+    const project = (await api(page, "GET", `/projects/by-slug/${slug}`)).json as {
+      status: string; priority: string; startDate: string; targetEndDate: string; taskManagementMode: string;
+    };
+    expect(project).toMatchObject({
+      status: "ACTIVE", priority: "HIGH", startDate: "2030-03-10", targetEndDate: "2030-06-20", taskManagementMode: "ADVANCED",
+    });
+
+    // The settings page reads back exactly what was chosen while creating.
+    await page.goto(`/projects/${slug}?section=settings`);
+    await expect(page.locator("#settings-status")).toContainText("Aktif");
+    await expect(page.locator("#settings-priority")).toContainText("Yüksek");
+    await expect(page.getByRole("radio", { name: /Yalnız gelişmiş/ })).toBeChecked();
+  });
+
+  test("hedef bitiş tarihi başlangıçtan önce olamaz", async ({ page }) => {
+    await page.goto("/projects/new");
+    await page.locator("#project-name").fill(`Tarih Sırası ${Date.now()}`);
+    await page.getByRole("radio", { name: /^Web/ }).click();
+    await chooseDate(page, "create-start", "2030-06-20");
+    await chooseDate(page, "create-end", "2030-03-10");
+    await expect(page.locator("#create-end-error")).toBeVisible();
+    await page.getByRole("button", { name: /^Projeyi oluştur$/ }).click();
+    await expect(page.getByRole("alert").filter({ hasText: /tarih/i }).first()).toBeVisible();
+    await expect(page).toHaveURL(/\/projeler\/yeni$/);
   });
 
   test("alt çubuk kaydırırken yerinde durur, sayfanın sonunda bile yukarı zıplamaz", async ({ page }) => {

@@ -348,9 +348,15 @@
           "title": "GitHub-Repository",
           "description": "Optional. Verbinden Sie jetzt ein öffentliches Repository oder fügen Sie es später in den Projekteinstellungen hinzu."
         },
+        "planning": {
+          "title": "Planung"
+        },
+        "taskModel": {
+          "title": "Aufgabenerstellung"
+        },
         "details": {
           "title": "Details",
-          "description": "Organisation und Beschreibung sind optional."
+          "description": "Die Beschreibung ist optional."
         }
       },
       "logo": {
@@ -410,8 +416,6 @@
         }
       },
       "details": {
-        "organization": "Organisation",
-        "organizationNone": "Keine Organisation",
         "description": "Beschreibung",
         "descriptionPlaceholder": "Was macht dieses Projekt und für wen?"
       },
@@ -439,6 +443,8 @@
         "cancel": "Abbrechen",
         "submit": "Projekt erstellen",
         "created": "Projekt erstellt.",
+        "planningFailed": "Die Planungsangaben konnten nicht gespeichert werden. Sie können es in den Projekteinstellungen erneut versuchen.",
+        "taskModeFailed": "Die Einstellung zur Aufgabenerstellung konnte nicht gespeichert werden. Sie können es in den Projekteinstellungen erneut versuchen.",
         "logoFailed": "Das Logo konnte nicht hochgeladen werden. Sie können es in den Projekteinstellungen erneut versuchen.",
         "bannerFailed": "Das Titelbild konnte nicht hochgeladen werden. Sie können es in den Projekteinstellungen erneut versuchen.",
         "repositoryFailed": "Das Repository konnte nicht verbunden werden. Sie können es in den Projekteinstellungen erneut versuchen."

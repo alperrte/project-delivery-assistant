@@ -15,6 +15,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { StickyFormActions } from "@/components/common/sticky-form-actions";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -28,7 +29,7 @@ import type { RepositorySettings } from "@/features/repository/types";
 import { errorKey } from "@/lib/api/error-message";
 import { projectsApi } from "../api";
 import { invalidateProjectMutation } from "../query-invalidation";
-import { createProjectSchema, TAGLINE_MAX, type CreateProjectValues } from "../schemas";
+import { createProjectSchema, projectPriorities, projectStatuses, TAGLINE_MAX, type CreateProjectValues } from "../schemas";
 import { MAX_TECH_SELECTION } from "../tech-catalog";
 import { formatTechStack } from "../tech-stack";
 import type { UserRef } from "../types";
@@ -38,6 +39,20 @@ import { TechPicker } from "./create/tech-picker";
 import { TypePicker } from "./create/type-picker";
 import type { ProjectCardData } from "./project-card";
 import { ProjectPreviewPanel } from "./project-preview-panel";
+import { TaskModelOptions } from "./task-model-setting";
+
+/** What a new project starts with: the same values the server would pick, and the settings page's "both" task policy. */
+const DEFAULT_VALUES = {
+  name: "",
+  tagline: "",
+  techStack: [],
+  description: "",
+  status: "PLANNING",
+  priority: "MEDIUM",
+  startDate: "",
+  targetEndDate: "",
+  taskManagementMode: "BOTH",
+} satisfies Partial<CreateProjectValues>;
 
 /** Mirrors the server's slug rules closely enough for a hint; the server appends a random suffix. */
 function slugHint(name: string): string {
@@ -65,8 +80,10 @@ function Section({ id, title, description, children }: { id: string; title: stri
   );
 }
 
-export function ProjectCreatePage({ presentationValues }: { presentationValues?: CreateProjectValues } = {}) {
+export function ProjectCreatePage({ presentationValues }: { presentationValues?: Partial<CreateProjectValues> } = {}) {
   const t = useTranslations("projects.newPage");
+  const ts = useTranslations("projects.settings");
+  const tm = useTranslations("taskModels");
   const tv = useTranslations("validation");
   const tfs = useTranslations("forms.summary");
   const te = useTranslations("errors");
@@ -88,13 +105,14 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
     handleSubmit,
     control,
     setValue,
+    trigger,
     formState: { errors, isDirty, submitCount },
   } = useForm<CreateProjectValues>({
     resolver: zodResolver(createProjectSchema),
     // Focus moves to the first invalid field in page order after a failed submit (see the effect below).
     shouldFocusError: false,
-    defaultValues: { name: "", tagline: "", techStack: [], description: "" },
-    values: presentationValues,
+    defaultValues: DEFAULT_VALUES,
+    values: presentationValues ? ({ ...DEFAULT_VALUES, ...presentationValues } as CreateProjectValues) : undefined,
   });
 
   const values = useWatch({ control });
@@ -114,6 +132,35 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
         organizationId: form.organizationId || undefined,
         techStack: formatTechStack(form.techStack) || undefined,
       });
+      // The create endpoint only takes the identity fields; planning and the task policy go through the same calls the
+      // settings page uses, so a project created here ends up exactly as if it had been edited there.
+      let planningFailed = false;
+      const planned = form.status !== "PLANNING" || form.priority !== "MEDIUM" || !!form.startDate || !!form.targetEndDate;
+      if (planned) {
+        try {
+          await projectsApi.update(project.id, {
+            name: project.name,
+            description: project.description ?? undefined,
+            priority: form.priority,
+            status: form.status,
+            startDate: form.startDate || null,
+            targetEndDate: form.targetEndDate || null,
+            projectGoal: project.projectGoal,
+            techStack: project.techStack,
+            organizationId: project.organizationId,
+            projectType: project.projectType,
+            tagline: project.tagline,
+          });
+        } catch {
+          planningFailed = true;
+        }
+      }
+      let taskModeFailed = false;
+      try {
+        await projectsApi.setTaskManagementMode(project.id, form.taskManagementMode);
+      } catch {
+        taskModeFailed = true;
+      }
       let logoFailed = false;
       if (logoFile) {
         try {
@@ -139,12 +186,14 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
           repositoryFailed = true;
         }
       }
-      return { project, logoFailed, bannerFailed, repositoryFailed };
+      return { project, planningFailed, taskModeFailed, logoFailed, bannerFailed, repositoryFailed };
     },
-    onSuccess: async ({ project, logoFailed, bannerFailed, repositoryFailed }) => {
+    onSuccess: async ({ project, planningFailed, taskModeFailed, logoFailed, bannerFailed, repositoryFailed }) => {
       created.current = true;
       await invalidateProjectMutation(queryClient, project.organizationId);
       toast.success(t("actions.created"));
+      if (planningFailed) toast.warning(t("actions.planningFailed"));
+      if (taskModeFailed) toast.warning(t("actions.taskModeFailed"));
       if (logoFailed) toast.warning(t("actions.logoFailed"));
       if (bannerFailed) toast.warning(t("actions.bannerFailed"));
       if (repositoryFailed) toast.warning(t("actions.repositoryFailed"));
@@ -178,7 +227,8 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
       tagline: values.tagline?.trim() || t("preview.taglinePlaceholder"),
       description: values.description?.trim() || null,
       projectGoal: null,
-      status: "PLANNING",
+      status: values.status ?? "PLANNING",
+      priority: values.priority ?? "MEDIUM",
       projectType: values.projectType ?? null,
       techStack: formatTechStack((values.techStack ?? []).filter((item): item is string => typeof item === "string")) || null,
       logoVersion: null,
@@ -188,11 +238,12 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
     }),
     // `author` is derived from the session; keying on its fields keeps the memo stable.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [name, values.tagline, values.description, values.projectType, values.techStack, author.userId, author.nickname, t],
+    [name, values.tagline, values.description, values.status, values.priority, values.projectType, values.techStack, author.userId, author.nickname, t],
   );
 
   const taglineLength = values.tagline?.length ?? 0;
   const typeLabelId = `${ids}-type`;
+  const taskModelId = `${ids}-task-model`;
 
   /** Validates the optional repository URL (not part of the zod schema) and reports whether it is invalid. */
   function checkRepositoryUrl() {
@@ -207,6 +258,7 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
     identity: `${ids}-identity`,
     type: typeLabelId,
     technology: `${ids}-technology`,
+    planning: `${ids}-planning`,
     details: `${ids}-details`,
     repository: `${ids}-repository`,
   } as const;
@@ -214,7 +266,8 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
     identity: !!(errors.name || errors.tagline),
     type: !!errors.projectType,
     technology: !!errors.techStack,
-    details: !!(errors.organizationId || errors.description),
+    planning: !!(errors.targetEndDate || errors.organizationId),
+    details: !!errors.description,
     repository: repositoryUrlInvalid,
   };
   const summarySections: FormErrorSection[] = (Object.keys(sectionHeadingIds) as (keyof typeof sectionHeadingIds)[])
@@ -320,22 +373,109 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
               />
             </Section>
 
-            <Section id={sectionHeadingIds.details} title={t("sections.details.title")} description={t("sections.details.description")}>
-              {(
+            <Section id={sectionHeadingIds.planning} title={ts("sections.planning.title")} description={ts("sections.planning.description")}>
+              <div className="grid gap-5 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label htmlFor="create-organization">{t("details.organization")}</Label>
+                  <Label htmlFor="create-status">{ts("status")}</Label>
+                  <Controller
+                    control={control}
+                    name="status"
+                    render={({ field }) => (
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger id="create-status" className="w-full">
+                          <SelectValue>{(value: (typeof projectStatuses)[number]) => ts(`statusValues.${value}`)}</SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {projectStatuses.map((status) => (
+                            <SelectItem key={status} value={status}>{ts(`statusValues.${status}`)}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="create-priority">{ts("priority")}</Label>
+                  <Controller
+                    control={control}
+                    name="priority"
+                    render={({ field }) => (
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger id="create-priority" className="w-full">
+                          <SelectValue>{(value: (typeof projectPriorities)[number]) => ts(`priorityValues.${value}`)}</SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {projectPriorities.map((priority) => (
+                            <SelectItem key={priority} value={priority}>{ts(`priorityValues.${priority}`)}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="create-start">{ts("startDate")}</Label>
+                  <Controller
+                    control={control}
+                    name="startDate"
+                    render={({ field }) => (
+                      <DatePicker
+                        id="create-start"
+                        label={ts("startDate")}
+                        value={field.value ?? ""}
+                        ref={field.ref}
+                        onBlur={field.onBlur}
+                        onChange={(next) => {
+                          setValue("startDate", next, { shouldDirty: true, shouldValidate: true });
+                          // The end date's order check depends on this one.
+                          void trigger("targetEndDate");
+                        }}
+                      />
+                    )}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="create-end">{ts("targetEndDate")}</Label>
+                  <Controller
+                    control={control}
+                    name="targetEndDate"
+                    render={({ field }) => (
+                      <DatePicker
+                        id="create-end"
+                        label={ts("targetEndDate")}
+                        value={field.value ?? ""}
+                        ref={field.ref}
+                        onBlur={field.onBlur}
+                        invalid={!!errors.targetEndDate}
+                        describedBy={errors.targetEndDate ? "create-end-error" : undefined}
+                        onChange={(next) => setValue("targetEndDate", next, { shouldDirty: true, shouldValidate: true })}
+                      />
+                    )}
+                  />
+                  {errors.targetEndDate && (
+                    <p id="create-end-error" role="alert" className="text-sm text-destructive">
+                      {tv(errors.targetEndDate.message!)}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-1.5 sm:col-span-2">
+                  <Label htmlFor="create-organization">{ts("organization")}</Label>
                   <Controller
                     control={control}
                     name="organizationId"
                     render={({ field }) => (
                       <Select value={field.value ?? "__standalone__"} disabled={!organizations} onValueChange={(next) => setValue("organizationId", next === "__standalone__" ? undefined : next || undefined, { shouldDirty: true })}>
                         <SelectTrigger id="create-organization" className="w-full">
-                          <SelectValue placeholder={t("details.organizationNone")}>
-                            {(value: string) => organizations?.content.find((org) => org.id === value)?.name ?? t("details.organizationNone")}
+                          <SelectValue placeholder={ts("organizationNone")}>
+                            {(value: string) => organizations?.content.find((org) => org.id === value)?.name ?? ts("organizationNone")}
                           </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="__standalone__">{t("details.organizationNone")}</SelectItem>
+                          <SelectItem value="__standalone__">{ts("organizationNone")}</SelectItem>
                           {(organizations?.content ?? []).map((org) => (
                             <SelectItem key={org.id} value={org.id}>
                               {org.name}
@@ -346,8 +486,10 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
                     )}
                   />
                 </div>
-              )}
+              </div>
+            </Section>
 
+            <Section id={sectionHeadingIds.details} title={t("sections.details.title")} description={t("sections.details.description")}>
               <div className="space-y-1.5">
                 <Label htmlFor="project-description">{t("details.description")}</Label>
                 <Textarea
@@ -363,6 +505,18 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
                   </p>
                 )}
               </div>
+            </Section>
+
+            <Section id={taskModelId} title={tm("settingTitle")} description={tm("settingDescription")}>
+              <fieldset className="@container min-w-0 space-y-4">
+                <legend className="sr-only">{tm("settingTitle")}</legend>
+                <Controller
+                  control={control}
+                  name="taskManagementMode"
+                  render={({ field }) => <TaskModelOptions value={field.value} onChange={field.onChange} />}
+                />
+              </fieldset>
+              <p className="text-sm text-muted-foreground">{tm("changeLater")}</p>
             </Section>
 
             <Section id={sectionHeadingIds.repository} title={t("sections.repository.title")} description={t("sections.repository.description")}>

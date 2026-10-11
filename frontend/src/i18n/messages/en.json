@@ -348,9 +348,15 @@
           "title": "GitHub repository",
           "description": "Optional. Connect a public repository now, or add it later from the project settings."
         },
+        "planning": {
+          "title": "Planning"
+        },
+        "taskModel": {
+          "title": "Task creation preference"
+        },
         "details": {
           "title": "Details",
-          "description": "Organization and description are optional."
+          "description": "The description is optional."
         }
       },
       "logo": {
@@ -410,8 +416,6 @@
         }
       },
       "details": {
-        "organization": "Organization",
-        "organizationNone": "No organization",
         "description": "Description",
         "descriptionPlaceholder": "What does this project do, and for whom?"
       },
@@ -439,6 +443,8 @@
         "cancel": "Cancel",
         "submit": "Create project",
         "created": "Project created.",
+        "planningFailed": "The planning details could not be saved. You can try again from the project settings.",
+        "taskModeFailed": "The task creation preference could not be saved. You can try again from the project settings.",
         "logoFailed": "The logo could not be uploaded. You can try again from the project settings.",
         "bannerFailed": "The cover image could not be uploaded. You can try again from the project settings.",
         "repositoryFailed": "The repository could not be connected. You can try again from the project settings."
