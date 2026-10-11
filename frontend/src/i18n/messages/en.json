@@ -4245,7 +4245,7 @@
   },
   "contact": {
     "title": "Contact",
-    "description": "Write to the PDA team with questions, suggestions or feedback. You do not need to sign in.",
+    "description": "Send us your questions, suggestions and feedback without signing in.",
     "form": {
       "label": "Contact form",
       "firstName": "First name",

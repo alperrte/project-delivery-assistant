@@ -4223,7 +4223,7 @@
   },
   "contact": {
     "title": "İletişim",
-    "description": "Sorularınız, önerileriniz veya geri bildirimleriniz için PDA ekibine yazın. Giriş yapmanız gerekmez.",
+    "description": "Soru, öneri ve geri bildirimlerinizi giriş yapmadan bize iletebilirsiniz.",
     "form": {
       "label": "İletişim formu",
       "firstName": "Ad",
