@@ -59,7 +59,7 @@ export function RegisterForm() {
     trackCta("register_submit");
     // The account stays unusable until the mailed code is entered; the code was just sent, so the verify page
     // must not mail another one on arrival.
-    writePendingVerification({ email: values.email, sendOnOpen: false });
+    writePendingVerification({ email: values.email, sendOnOpen: false }, "registration");
     holdCredentialsForVerification(values.email, values.password);
     toast.success(t("codeSent"));
     router.replace("/verify-email");

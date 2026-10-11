@@ -4277,6 +4277,9 @@
     "unmet": "karşılanmadı"
   },
   "codeEntry": {
+    "resendTimeLeft": "Yeni kod istemek için: {time}",
+    "registrationValidity": "Kaydınızı 15 dakika içinde doğrulayın. Yeni kod istemek bu süreyi uzatmaz.",
+    "registrationExpired": "15 dakika içinde doğrulanmadığı için kaydınızın süresi doldu. Lütfen yeniden kayıt olun.",
     "label": "Doğrulama kodu",
     "placeholder": "000000",
     "timeLeft": "Kalan süre: {time}",
@@ -4288,6 +4291,7 @@
     "resent": "Yeni kod gönderildi."
   },
   "verifyEmail": {
+    "restartRegistration": "Yeniden kayıt ol",
     "metaTitle": "E-postanızı doğrulayın",
     "metaDescription": "Hesabınızı etkinleştirmek için e-posta adresinize gönderilen 6 haneli kodu girin.",
     "title": "E-postanızı doğrulayın",

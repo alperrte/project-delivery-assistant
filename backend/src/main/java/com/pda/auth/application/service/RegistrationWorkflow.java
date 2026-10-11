@@ -63,11 +63,11 @@ public class RegistrationWorkflow {
         mail.getObject().sendVerificationCode(address, code, locale);
     }
 
-    /** Deletes registrations whose last code ran out unused, freeing their email and nickname. Returns how many. */
+    /** Deletes registrations whose verification window ran out, freeing their email and nickname. Returns how many. */
     @Transactional
     public int purgeExpiredPending() {
         int removed = 0;
-        for (EmailVerificationChallenge challenge : challenges.findByExpiresAtBeforeAndConsumedAtIsNull(now())) {
+        for (EmailVerificationChallenge challenge : challenges.findByExpiresAtLessThanEqualAndConsumedAtIsNull(now())) {
             if (discardPending(challenge.getUserId())) {
                 removed++;
             }
@@ -121,6 +121,9 @@ public class RegistrationWorkflow {
             }
             return VerificationResult.VERIFIED;
         }
+        if (result == AttemptResult.EXPIRED) {
+            discardPending(userId.get());
+        }
         return switch (result) {
             case WRONG, CONSUMED -> VerificationResult.INVALID;
             case EXPIRED -> VerificationResult.EXPIRED;
@@ -138,17 +141,18 @@ public class RegistrationWorkflow {
         }
         Instant now = now();
         Optional<EmailVerificationChallenge> found = challenges.findByUserId(userId.get());
-        if (found.isPresent() && !found.get().canResend(now)) {
+        if (found.isEmpty() || !found.get().getExpiresAt().isAfter(now)) {
+            discardPending(userId.get());
+            return;
+        }
+        EmailVerificationChallenge challenge = found.get();
+        if (!challenge.canResend(now)) {
             return;
         }
         String code = codes.newCode();
         String hash = codes.hash(userId.get(), code);
-        if (found.isPresent()) {
-            found.get().resend(hash, now);
-            challenges.saveAndFlush(found.get());
-        } else {
-            challenges.saveAndFlush(EmailVerificationChallenge.issue(userId.get(), hash, now));
-        }
+        challenge.resend(hash, now);
+        challenges.saveAndFlush(challenge);
         mail.getObject().sendVerificationCode(email.strip(), code, locale);
     }
 

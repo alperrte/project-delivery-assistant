@@ -13,5 +13,5 @@ public interface EmailVerificationChallengeRepository extends JpaRepository<Emai
     void deleteByUserId(UUID userId);
 
     /** Challenges nobody used before they ran out: their accounts never proved the mailbox. */
-    List<EmailVerificationChallenge> findByExpiresAtBeforeAndConsumedAtIsNull(Instant now);
+    List<EmailVerificationChallenge> findByExpiresAtLessThanEqualAndConsumedAtIsNull(Instant now);
 }

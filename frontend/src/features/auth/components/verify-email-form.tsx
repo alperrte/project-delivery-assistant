@@ -39,7 +39,8 @@ export function VerifyEmailForm() {
   const mounted = useMounted();
   // sessionStorage is client-only: read it once the page is mounted, so the server markup and first render agree.
   const pending = useMemo(() => (mounted ? readPendingVerification() : null), [mounted]);
-  const [chosen, setChosen] = useState<{ step: "email" | "code"; email: string } | null>(null);
+  const [openedAt] = useState(() => Date.now());
+  const [chosen, setChosen] = useState<{ step: "email" | "code"; email: string; issuedAt?: number; lastSentAt?: number } | null>(null);
   const step = chosen?.step ?? (!mounted ? "loading" : pending ? "code" : "email");
   const email = chosen?.email ?? pending?.email ?? "";
   const [formError, setFormError] = useState<string | null>(null);
@@ -52,7 +53,7 @@ export function VerifyEmailForm() {
     // Effects run twice in development; a second run must not mail a second code.
     if (!pending?.sendOnOpen || started.current) return;
     started.current = true;
-    writePendingVerification({ email: pending.email, sendOnOpen: false });
+    writePendingVerification({ ...pending, sendOnOpen: false });
     authApi.resendVerification({ email: pending.email, locale }).then(
       () => toast.success(t("resentNotice")),
       (err) => toast.error(te(errorKey(err))),
@@ -63,8 +64,8 @@ export function VerifyEmailForm() {
     setFormError(null);
     try {
       await authApi.resendVerification({ email: values.email, locale });
-      writePendingVerification({ email: values.email, sendOnOpen: false });
-      setChosen({ step: "code", email: values.email });
+      const timing = writePendingVerification({ email: values.email, sendOnOpen: false }, "resend");
+      setChosen({ ...timing, step: "code" });
     } catch (err) {
       setFormError(te(errorKey(err)));
       shake();
@@ -136,8 +137,19 @@ export function VerifyEmailForm() {
   return (
     <AuthCard title={t("title")} subtitle={t("subtitle", { email })}>
       <CodeEntryStep
+        key={email}
         onVerify={onVerify}
-        onResend={() => authApi.resendVerification({ email, locale })}
+        onResend={async () => {
+          await authApi.resendVerification({ email, locale });
+          writePendingVerification({ email, sendOnOpen: false }, "resend");
+        }}
+        resendCooldownSeconds={3 * 60}
+        registrationTiming={{
+          issuedAt: chosen?.issuedAt ?? pending?.issuedAt ?? openedAt,
+          lastSentAt: chosen?.lastSentAt ?? pending?.lastSentAt ?? openedAt,
+        }}
+        expiredAction={<Link href="/register" onClick={clearPendingVerification}
+          className="font-medium text-primary underline-offset-4 hover:underline">{t("restartRegistration")}</Link>}
         submitLabel={t("verify")}
         submittingLabel={t("verifying")}
         ctaClassName={authCtaClass}

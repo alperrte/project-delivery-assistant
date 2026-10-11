@@ -19,7 +19,7 @@ import java.util.UUID;
 public class EmailVerificationChallenge {
 
     private static final Duration CODE_LIFETIME = Duration.ofMinutes(15);
-    private static final Duration RESEND_COOLDOWN = Duration.ofSeconds(60);
+    private static final Duration RESEND_COOLDOWN = Duration.ofMinutes(3);
     private static final int MAX_ATTEMPTS = 5;
 
     @Id
@@ -66,7 +66,8 @@ public class EmailVerificationChallenge {
     }
 
     public boolean canResend(Instant now) {
-        return consumedAt == null && !lastSentAt.plus(RESEND_COOLDOWN).isAfter(now);
+        return consumedAt == null && expiresAt.isAfter(now)
+                && !lastSentAt.plus(RESEND_COOLDOWN).isAfter(now);
     }
 
     public void resend(String replacementHash, Instant now) {
@@ -74,8 +75,7 @@ public class EmailVerificationChallenge {
             throw new IllegalStateException("Verification resend is unavailable");
         }
         codeHash = requireHash(replacementHash);
-        issuedAt = now;
-        expiresAt = now.plus(CODE_LIFETIME);
+        // A replacement code must not extend the original registration's 15-minute window.
         lastSentAt = now;
         attemptCount = 0;
     }

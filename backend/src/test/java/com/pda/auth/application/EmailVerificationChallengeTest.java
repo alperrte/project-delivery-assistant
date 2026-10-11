@@ -42,17 +42,35 @@ class EmailVerificationChallengeTest {
         String original = hasher.newCode();
         EmailVerificationChallenge challenge = EmailVerificationChallenge.issue(userId, hasher.hash(userId, original), now);
 
-        assertFalse(challenge.canResend(now.plusSeconds(59)));
-        assertTrue(challenge.canResend(now.plusSeconds(60)));
+        assertFalse(challenge.canResend(now.plusSeconds(179)));
+        assertTrue(challenge.canResend(now.plusSeconds(180)));
         String replacement = differentCode(original);
-        challenge.resend(hasher.hash(userId, replacement), now.plusSeconds(60));
+        challenge.resend(hasher.hash(userId, replacement), now.plusSeconds(180));
         for (int i = 0; i < 5; i++) {
-            assertEquals(AttemptResult.WRONG, challenge.attempt(hasher.hash(userId, original), now.plusSeconds(61)));
+            assertEquals(AttemptResult.WRONG, challenge.attempt(hasher.hash(userId, original), now.plusSeconds(181)));
         }
         assertEquals(AttemptResult.TOO_MANY_ATTEMPTS,
-                challenge.attempt(hasher.hash(userId, replacement), now.plusSeconds(61)));
+                challenge.attempt(hasher.hash(userId, replacement), now.plusSeconds(181)));
         assertEquals(AttemptResult.EXPIRED,
                 challenge.attempt(hasher.hash(userId, replacement), now.plusSeconds(16 * 60)));
+    }
+
+    @Test
+    void resendingKeepsTheOriginalDeadlineAndCannotReviveExpiredRegistration() {
+        UUID userId = UUID.randomUUID();
+        Instant now = Instant.parse("2026-10-11T12:00:00Z");
+        String original = hasher.hash(userId, "123456");
+        String replacement = hasher.hash(userId, "654321");
+        EmailVerificationChallenge challenge = EmailVerificationChallenge.issue(userId, original, now);
+        challenge.resend(replacement, now.plusSeconds(180));
+        assertEquals(now, challenge.getIssuedAt());
+        assertEquals(now.plusSeconds(900), challenge.getExpiresAt());
+        assertFalse(challenge.canResend(now.plusSeconds(359)));
+        assertTrue(challenge.canResend(now.plusSeconds(360)));
+        assertEquals(AttemptResult.WRONG, challenge.attempt(original, now.plusSeconds(181)));
+        assertFalse(challenge.canResend(now.plusSeconds(900)));
+        assertThrows(IllegalStateException.class, () -> challenge.resend(original, now.plusSeconds(900)));
+        assertEquals(AttemptResult.EXPIRED, challenge.attempt(replacement, now.plusSeconds(900)));
     }
 
     @Test

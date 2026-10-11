@@ -122,7 +122,7 @@ class RegistrationVerificationIntegrationTest {
 
         verify(email, code).andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("verification_code_expired"));
-        assertEquals(AccountStatus.PENDING_VERIFICATION, users.findByEmail(email).orElseThrow().getAccountStatus());
+        assertTrue(users.findByEmail(email).isEmpty());
     }
 
     @Test
@@ -160,7 +160,7 @@ class RegistrationVerificationIntegrationTest {
         resend(unknown).andExpect(status().isAccepted());
         assertEquals(0, mail.countFor(unknown));
 
-        // Inside the 60 second cooldown nothing new is mailed, yet the answer stays 202.
+        // Inside the 3-minute cooldown nothing new is mailed, yet the answer stays 202.
         resend(email).andExpect(status().isAccepted());
         assertEquals(1, mail.countFor(email));
 
@@ -168,7 +168,16 @@ class RegistrationVerificationIntegrationTest {
         jdbc.update("UPDATE email_verification_challenges SET last_sent_at = now() - interval '2 minutes' "
                 + "WHERE user_id = ?", users.findByEmail(email).orElseThrow().getId());
         resend(email).andExpect(status().isAccepted());
+        assertEquals(1, mail.countFor(email));
+        var userId = users.findByEmail(email).orElseThrow().getId();
+        var expiry = jdbc.queryForObject("SELECT expires_at FROM email_verification_challenges WHERE user_id = ?",
+                java.sql.Timestamp.class, userId);
+        jdbc.update("UPDATE email_verification_challenges SET last_sent_at = now() - interval '3 minutes' "
+                + "WHERE user_id = ?", userId);
+        resend(email).andExpect(status().isAccepted());
         assertEquals(2, mail.countFor(email));
+        assertEquals(expiry, jdbc.queryForObject("SELECT expires_at FROM email_verification_challenges WHERE user_id = ?",
+                java.sql.Timestamp.class, userId));
         String secondCode = mail.lastSecretFor(email);
 
         if (!firstCode.equals(secondCode)) {
@@ -176,6 +185,22 @@ class RegistrationVerificationIntegrationTest {
             verify(email, firstCode).andExpect(status().isBadRequest());
         }
         verify(email, secondCode).andExpect(status().isOk());
+    }
+
+    @Test
+    void resendDiscardsAnExpiredRegistrationInsteadOfExtendingIt() throws Exception {
+        String email = newEmail();
+        String nickname = newNickname();
+        register(email, nickname).andExpect(status().isOk());
+        String oldCode = mail.lastSecretFor(email);
+        jdbc.update("UPDATE email_verification_challenges SET expires_at = now() - interval '1 second', "
+                + "last_sent_at = now() - interval '4 minutes' WHERE user_id = ?",
+                users.findByEmail(email).orElseThrow().getId());
+        resend(email).andExpect(status().isAccepted());
+        assertEquals(1, mail.countFor(email));
+        assertTrue(users.findByEmail(email).isEmpty());
+        verify(email, oldCode).andExpect(status().isBadRequest());
+        register(email, nickname).andExpect(status().isOk());
     }
 
     @Test

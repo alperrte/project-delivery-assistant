@@ -5,25 +5,35 @@
  */
 const KEY = "pda.pendingVerification";
 
-export type PendingVerification = { email: string; sendOnOpen: boolean };
+export type PendingVerification = { email: string; sendOnOpen: boolean; issuedAt?: number; lastSentAt?: number };
 
 export function readPendingVerification(): PendingVerification | null {
   try {
     const raw = window.sessionStorage.getItem(KEY);
     if (!raw) return null;
     const value = JSON.parse(raw) as Partial<PendingVerification>;
-    return typeof value.email === "string" && value.email ? { email: value.email, sendOnOpen: value.sendOnOpen === true } : null;
+    if (typeof value.email !== "string" || !value.email) return null;
+    const issuedAt = typeof value.issuedAt === "number" && Number.isFinite(value.issuedAt) ? value.issuedAt : Date.now();
+    const lastSentAt = typeof value.lastSentAt === "number" && Number.isFinite(value.lastSentAt) ? value.lastSentAt : issuedAt;
+    return { email: value.email, sendOnOpen: value.sendOnOpen === true, issuedAt, lastSentAt };
   } catch {
     return null;
   }
 }
 
-export function writePendingVerification(value: PendingVerification) {
+export function writePendingVerification(value: PendingVerification, timing: "preserve" | "registration" | "resend" = "preserve") {
+  const previous = readPendingVerification();
+  const now = Date.now();
+  const issuedAt = timing === "registration" ? now
+    : value.issuedAt ?? (previous?.email === value.email ? previous.issuedAt : undefined) ?? now;
+  const lastSentAt = timing !== "preserve" ? now
+    : value.lastSentAt ?? (previous?.email === value.email ? previous.lastSentAt : undefined) ?? issuedAt;
   try {
-    window.sessionStorage.setItem(KEY, JSON.stringify(value));
+    window.sessionStorage.setItem(KEY, JSON.stringify({ ...value, issuedAt, lastSentAt }));
   } catch {
     // storage blocked: the verify page then asks for the address itself
   }
+  return { ...value, issuedAt, lastSentAt };
 }
 
 /**

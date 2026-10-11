@@ -77,7 +77,7 @@ final class VerificationMailTemplate {
             case TR -> switch (kind) {
                 case REGISTER -> new Copy("PDA e-posta doğrulama kodunuz",
                         "PDA'ya hoş geldiniz! Kaydınızı tamamlamak için aşağıdaki kodu girin.",
-                        "Bu kod 15 dakika geçerlidir ve yalnızca bir kez kullanılabilir. Bu süre içinde kullanılmazsa kaydınız iptal edilir.",
+                        "Kaydınızı ilk kod gönderildikten sonra 15 dakika içinde doğrulayın; aksi halde kaydınız iptal edilir. Kod tek kullanımlıktır. Yeni kod istemek bu süreyi uzatmaz.",
                         "Kaydı siz başlatmadıysanız bu e-postayı yok sayabilirsiniz.",
                         "Projelerinizi birlikte, zamanında ve sorunsuz teslim etmeniz dileğiyle.\nPDA Ekibi", null);
                 case PASSWORD_RESET -> new Copy("PDA şifre sıfırlama kodunuz",
@@ -99,7 +99,7 @@ final class VerificationMailTemplate {
             case EN -> switch (kind) {
                 case REGISTER -> new Copy("Your PDA verification code",
                         "Welcome to PDA! Enter the code below to finish your registration.",
-                        "This code is valid for 15 minutes and can be used only once. If it is not used in that time, your registration is cancelled.",
+                        "Verify within 15 minutes of the first code being sent or your registration will be cancelled. The code is single use. Requesting a new code does not extend this time.",
                         "If you did not start this registration, you can ignore this email.",
                         "Wishing you smooth, on-time delivery of your projects.\nThe PDA Team", null);
                 case PASSWORD_RESET -> new Copy("Your PDA password reset code",
@@ -121,7 +121,7 @@ final class VerificationMailTemplate {
             case DE -> switch (kind) {
                 case REGISTER -> new Copy("Ihr PDA-Bestätigungscode",
                         "Willkommen bei PDA! Geben Sie den folgenden Code ein, um Ihre Registrierung abzuschließen.",
-                        "Dieser Code ist 15 Minuten gültig und kann nur einmal verwendet werden. Wird er in dieser Zeit nicht verwendet, wird Ihre Registrierung abgebrochen.",
+                        "Bestätigen Sie Ihre Registrierung innerhalb von 15 Minuten nach dem ersten Code, sonst wird sie abgebrochen. Der Code ist einmalig verwendbar. Ein neuer Code verlängert diese Frist nicht.",
                         "Wenn Sie die Registrierung nicht gestartet haben, können Sie diese E-Mail ignorieren.",
                         "Wir wünschen Ihnen eine reibungslose und pünktliche Lieferung Ihrer Projekte.\nIhr PDA-Team", null);
                 case PASSWORD_RESET -> new Copy("Ihr PDA-Code zum Zurücksetzen des Passworts",

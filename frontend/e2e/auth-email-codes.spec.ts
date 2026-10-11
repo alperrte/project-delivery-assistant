@@ -74,15 +74,21 @@ test.describe("Kayıt: e-posta doğrulama", () => {
     expect(replay.status, JSON.stringify(replay.json)).toBeGreaterThanOrEqual(400);
   });
 
-  test("15 dakikalık sayaç dolunca kod alanı kilitlenir ve yeni kod istenebilir", async ({ page }) => {
+  test("yeni kod 3 dakikada açılır; kayıt 15 dakikada sona erer", async ({ page }) => {
     await page.clock.install();
     await fillRegistration(page, uniqueUser("timer"));
     await page.getByRole("button", { name: /^Kayıt ol$/ }).click();
     await expect(page).toHaveURL((url) => matchPath(url.pathname)?.route === "/verify-email");
-    await expect(page.getByRole("timer")).toContainText("15:00");
+    await expect(page.getByRole("timer").first()).toContainText("15:00");
+    const resend = page.getByRole("button", { name: tr.codeEntry.resend, exact: true });
+    await expect(resend).toBeDisabled();
+    await page.clock.fastForward("03:01");
+    await expect(resend).toBeEnabled();
+    await expect(codeField(page)).toBeEnabled();
 
-    await page.clock.fastForward("15:01");
-    await expect(page.getByRole("button", { name: tr.codeEntry.resend, exact: true })).toBeVisible();
+    await page.clock.fastForward("12:00");
+    await expect(resend).toHaveCount(0);
+    await expect(page.getByRole("link", { name: tr.verifyEmail.restartRegistration })).toBeVisible();
     await expect(codeField(page)).toBeDisabled();
   });
 });

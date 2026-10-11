@@ -31,7 +31,8 @@ class VerificationMailTemplateTest {
     void registrationMailSaysTheCodeExpiresAndTheRegistrationIsCancelled() {
         var tr = VerificationMailTemplate.render(Kind.REGISTER, MailLocale.TR, "654321");
         assertTrue(tr.text().contains("Merhaba"));
-        assertTrue(tr.text().contains("15 dakika geçerlidir"));
+        assertTrue(tr.text().contains("15 dakika içinde doğrulayın"));
+        assertTrue(tr.text().contains("Yeni kod istemek bu süreyi uzatmaz"));
         assertTrue(tr.text().contains("kaydınız iptal edilir"));
         // The closing message sits above the signature, and "Hoş geldiniz" is said once, at the top.
         assertTrue(tr.text().contains("teslim etmeniz dileğiyle.\nPDA Ekibi"));
