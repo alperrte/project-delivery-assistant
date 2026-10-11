@@ -1,5 +1,13 @@
 ﻿# Klasör yapısı kısa rehberi
 
+## Migration yeniden numaralandırma — 2026-10-11
+
+Runtime db/migration dosyaları kullanıcı isteğiyle kesintisiz V1–V40 oldu; SQL içerikleri aynı. Legacy ZIP fixture özgün isimlerle kalır. Root PDA_MIGRATION_CONSOLIDATION_PLAN.md historical→current filename mapping içerir. Daha eski migration numarası/path atıfları historical kayıt olarak okunmalıdır.
+
+## Migration consolidation yolları — 2026-10-11
+
+Production SQL yalnız `backend/src/main/resources/db/migration/` içindeki 40 CREATE-owner dosyasındadır. `backend/src/test/resources/migration-reference/pre-consolidation.zip` özgün 59 SQL dosyasını tutan test-only fixture'dır; runtime JAR/location'a girmez. `backend/src/test/java/com/pda/migration/{LegacyMigrations,MigrationConsolidationTest}.java` archive extraction, PG17/18 schema equality ve old-history rejection doğrular. Root `PDA_MIGRATION_CONSOLIDATION_PLAN.md` güncel ownership/dependency/durum kaydıdır. Aşağıdaki eski migration yolları historical atıflardır; mevcut dosya durumunu root planından kontrol et.
+
 ## Invitations remediation — 2026-10-06
 
 Frontend `features/invitations/query-keys.ts`, `invalidation.ts`, `external-preview-error.ts`; protected scopes, successful legacy membership refresh ve status-aware public preview error ayrımı. Tests `e2e/invitation-remediation.spec.ts`, `invitation-db.ts` (QA prepared UUID read/expiry fixture), `invitations-cache.spec.ts`, `invitations-errors.spec.ts`. Backend existing invitation repository/service ve ProjectAccessService etkin expiry filtrelerini taşır; ProjectInvitationServiceTest fresh SQL ve deterministic two-reinvite barrier kapsar. Private artifacts `.local/invitations-remediation/`.

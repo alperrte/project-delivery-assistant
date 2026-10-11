@@ -1,5 +1,15 @@
 # Veritabanı ve kalıcılık
 
+## Ardışık migration numaraları — 2026-10-11
+
+Kullanıcı mevcut runtime dosyalarının V1–V40 olarak ardışık numaralanmasını istedi. SQL byte içerikleri ve CREATE sırası değişmedi; yeni migration V41 olmalıdır. İleri FK konumları V9 (invitation→squad) ve V24 (task→sprint). Eski V1–V71 test-only ZIP fixture numaraları değişmedi. Aşağıdaki eski V25/V45 ve version koruma notları tarihsel ilk consolidation aşamasını anlatır; güncel 40 dosyalık old→new mapping root persistent plandadır. Önceki history uygulanmış normal DB/volume korunur ve yeni sete repair edilmez.
+
+## Migration consolidation — 2026-10-11
+
+Kullanıcı yalnız disposable geliştirme/test DB olduğunu doğrulayarak historical rewrite onayladı (`cleanup`). Runtime Flyway history 59→40 dosya; 55 tablonun final column/default/nullability/PK/FK/UNIQUE/CHECK/index ve cascade kuralları ilk CREATE owner'larında tanımlanır. V25 invitation→squad ve V45 task→sprint ileri FK'leri dışında ALTER yoktur. Versionlar yeniden numaralanmadı. Eski V4/V32/V34/V36/V37/V40/V54/V68 veri dönüşümleri yalnız immutable test archive içindedir; fresh DB'de backfill gerekmez. Yeni project policy nullable, manual_watch FALSE ve creation_mode ADVANCED defaultları korunur.
+
+Bu tarihten önceki V1–V71 history uygulanan DB yeni sete upgrade edilemez; checksum/removed-migration validation hatası beklenir. `repair`, baseline veya validation bypass kullanılmaz. Mevcut volume silinmedi; yeniden kurulum ayrı boş DB gerektirir. Eski migration numaralarına aşağıdaki atıflar historical kayıtlardır; güncel mapping ve sınıflandırma `PDA_MIGRATION_CONSOLIDATION_PLAN.md` içindedir. PostgreSQL 17/18 schema equality ve old-history rejection için `MigrationConsolidationTest`; legacy V66/V68 upgrade testleri test-only archive kullanır.
+
 ## Invitations remediation — 2026-10-06
 
 Migration/entity/cardinality değişmedi. Existing physical PENDING+past expiry target row mutation sırasında pessimistic lock ile EXPIRED yapılıp flush edilir; unique partial index bypass/drop edilmez. Reads effective expiry representation/filter kullanır, GET DB state mutation yapmaz. Resend expired row retained EXPIRED ve new pending row; expired cancel acknowledges204 without membership grant. PostgreSQL barrier iki create'i aynı expired row üzerinde bekletti; yalnız biri yeni pending commit etti, other conflict. Current module model/roles/team membership transaction unchanged.

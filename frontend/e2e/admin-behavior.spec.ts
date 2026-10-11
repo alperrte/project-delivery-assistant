@@ -208,6 +208,8 @@ for (const [locale, code, expectations] of [
     const admin = await newAdmin(browser);
     try {
       const page = admin.page;
+      // Let the account's saved sign-in language settle before choosing this session's test language.
+      await expect.poll(() => page.evaluate(() => sessionStorage.getItem("pda:session-baseline"))).not.toBeNull();
       await admin.context.addCookies([{ name: "NEXT_LOCALE", value: code, url: "http://localhost:3000" }]);
       await simulate(page, simulated());
       await page.goto("/admin/analytics");

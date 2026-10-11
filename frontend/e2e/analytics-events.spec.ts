@@ -37,7 +37,18 @@ async function firstView(page: Page, sent: Sent[]) {
 test("without a decision, after a rejection or after withdrawal: no click, error or rejection is ever sent", async ({ page }) => {
   const sent = watch(page);
   const crash = async () => {
-    await page.goto("/dev/error-test");
+    const response = await page.goto("/dev/error-test");
+    if (response?.status() === 404) {
+      // Production intentionally has no crash button. Exercise its actual browser error listeners instead.
+      await expect(page.locator('[data-error-code="404"]')).toBeVisible();
+      await page.evaluate(() => {
+        window.dispatchEvent(new Event("pda:network-failure"));
+        const script = document.createElement("script");
+        script.src = "/_next/static/chunks/does-not-exist-e2e.js";
+        document.head.appendChild(script);
+      });
+      return;
+    }
     await page.getByRole("button", { name: "Test hatası oluştur", exact: true }).click();
     await expect(page.locator('[data-error-code="500"]')).toBeVisible();
   };
@@ -172,9 +183,10 @@ test("a submitted registration and a sent contact message are counted as convers
   await expect.poll(() => analyticsCtaClicks(id)).toEqual(["register_submit", "contact_submit"]);
 });
 
-test("client errors: a render crash, an unhandled promise, a missing script and a dead connection are reported by kind only, once per session and route", async ({ page }) => {
+test("controlled render crashes are reported by kind only, once per session and route", async ({ page }) => {
   const sent = watch(page);
-  await page.goto("/dev/error-test");
+  const response = await page.goto("/dev/error-test");
+  test.skip(response?.status() === 404, "The controlled render-crash route is intentionally disabled in production.");
   await accept(page);
   const id = await firstView(page, sent);
 
@@ -186,6 +198,17 @@ test("client errors: a render crash, an unhandled promise, a missing script and 
     await expect(page.getByRole("button", { name: "Test hatası oluştur", exact: true })).toBeVisible();
   }
   await expect.poll(() => analyticsClientErrors(id)).toEqual([{ path: "/dev/error-test", error_kind: "RENDER" }]);
+  const errorBodies = sent.filter(({ body }) => body.type === "CLIENT_ERROR").map(({ body }) => body);
+  expect(errorBodies).toHaveLength(1);
+  expect(Object.keys(errorBodies[0]).sort()).toEqual(["consentVersion", "errorKind", "path", "sessionId", "type", "visitorId"]);
+  expect(JSON.stringify(errorBodies)).not.toMatch(/PDA controlled error|stack|localhost/);
+});
+
+test("client errors: an unhandled promise, a missing script and a dead connection are reported by kind only, once per session and route", async ({ page }) => {
+  const sent = watch(page);
+  await page.goto("/faq");
+  await accept(page);
+  const id = await firstView(page, sent);
 
   // Unhandled promise rejection (twice, with a secret in the message that must not travel), then a script of the
   // application that does not load.
@@ -195,7 +218,8 @@ test("client errors: a render crash, an unhandled promise, a missing script and 
     script.src = "/_next/static/chunks/does-not-exist-e2e.js";
     document.head.appendChild(script);
   });
-  await expect.poll(() => analyticsClientErrors(id).map((error) => error.error_kind).sort()).toEqual(["CHUNK_LOAD", "RENDER", "UNHANDLED_REJECTION"]);
+  for (let i = 0; i < 2; i++) await page.evaluate(() => window.dispatchEvent(new Event("pda:network-failure")));
+  await expect.poll(() => analyticsClientErrors(id).map((error) => error.error_kind).sort()).toEqual(["CHUNK_LOAD", "NETWORK", "UNHANDLED_REJECTION"]);
   await page.waitForTimeout(800);
   expect(analyticsClientErrors(id)).toHaveLength(3);
 

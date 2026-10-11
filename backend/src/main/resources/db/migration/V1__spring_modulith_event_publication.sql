@@ -1,18 +1,19 @@
--- Spring Modulith event publication registry (spring-modulith-starter-jpa)
-CREATE TABLE IF NOT EXISTS event_publication (
-    id                     UUID                     NOT NULL,
-    listener_id            TEXT                     NOT NULL,
-    event_type             TEXT                     NOT NULL,
-    serialized_event       TEXT                     NOT NULL,
-    publication_date       TIMESTAMP WITH TIME ZONE NOT NULL,
-    completion_date        TIMESTAMP WITH TIME ZONE,
-    status                 TEXT,
-    completion_attempts    INT,
-    last_resubmission_date TIMESTAMP WITH TIME ZONE,
-    PRIMARY KEY (id)
+-- Consolidated fresh-install schema; legacy transformations are retained in the test reference archive.
+-- This history replaces disposable pre-consolidation databases; do not repair an old database into it.
+
+CREATE TABLE event_publication (
+    id uuid NOT NULL,
+    listener_id text NOT NULL,
+    event_type text NOT NULL,
+    serialized_event text NOT NULL,
+    publication_date TIMESTAMPTZ NOT NULL,
+    completion_date TIMESTAMPTZ,
+    status text,
+    completion_attempts integer,
+    last_resubmission_date TIMESTAMPTZ,
+    CONSTRAINT event_publication_pkey PRIMARY KEY (id)
 );
 
-CREATE INDEX IF NOT EXISTS event_publication_serialized_event_hash_idx
-    ON event_publication USING hash (serialized_event);
-CREATE INDEX IF NOT EXISTS event_publication_by_completion_date_idx
-    ON event_publication (completion_date);
+CREATE INDEX event_publication_by_completion_date_idx ON event_publication USING btree (completion_date);
+
+CREATE INDEX event_publication_serialized_event_hash_idx ON event_publication USING hash (serialized_event);

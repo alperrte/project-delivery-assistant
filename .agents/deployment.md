@@ -1,5 +1,13 @@
 # Kurulum ve deployment
 
+## Merge öncesi devam ve migration sırası — 2026-10-11
+
+Son kullanıcı kararı: bütün test fazları cleanup üzerinde, push/merge öncesinde tamamlanır; numaralandırma V1–V40 olur. Kullanıcı tam pre-push tekrarını istemedi; başarılı backend sınıfları korunarak kalan sınıflar ve canonical frontend/full-Chromium/Docker adımları devam ettirilir. Sonuçta kesintisiz pre-push.cmd PASS veya main üzerinde koşulmuş test sonucu varsayılmamalıdır; gerçek adım kanıtları final kayıt içindedir. Maven aşaması yalnız operatörden gelen MAIL_ENABLED ayarını false yapar; mail testleri kendi GreenMail ayarlarını sağlar, Docker öncesi özgün değer geri yüklenir. ENV dosyası/runtime mail politikası değişmez. Eski normal DB/media volume korunur; yeni V1–V40 imajı ayrı boş DB gerektirir.
+
+## Disposable history consolidation — 2026-10-11
+
+Kullanıcı `cleanup` branch'inde yalnız disposable development/test DB'ler için Flyway history rewrite onayladı. Runtime migrations 59→40'tır. Daha önce eski V1–V71 history uygulanan bir DB ile yeni imaj başlatılmaz: Flyway validation fail beklenir. `flyway repair`, `baseline-on-migrate`, validation bypass veya mevcut volume'ü otomatik silme yoktur. Yeni kurulum ayrı boş DB gerektirir; existing local PostgreSQL/media volume korundu. ENV contract, auth, CSRF ve API değişmedi. Schema/legacy mapping `PDA_MIGRATION_CONSOLIDATION_PLAN.md` içindedir. Phase 2 main + full canonical pre-push kullanıcı merge teyidinden sonra yürütülür.
+
 ## Organization görselleri (2026-10-04)
 
 Organization logo/cover dosyaları private filesystem storage kullanır. `ORGANIZATION_MEDIA_STORAGE_PATH` Compose içinde `/app/organization-media` varsayılanına sahiptir; `pda_organization_media` named volume aynı yola bağlanır. Host Java çalıştırmada property varsayılanı `.local/organization-media`; testler ayrı geçici kök kullanır. Container kullanırken ENV mutlak container yolu olmalıdır. `down -v` bu görselleri de siler. DB metadata/reference ve volume birlikte yedeklenip geri yüklenmelidir; tek başına DB restore yeterli değildir. Bu adapter tek backend host içindir; çok host kurulumda ortak kalıcı storage adapter gerekir. Yeni S3/MinIO servisi eklenmez. Arşiv reference ve dosyayı korur, endpoint erişimini kapatır; replace/remove temizliği kalıcı lifecycle kayıtlarıyla tekrar denenir.
