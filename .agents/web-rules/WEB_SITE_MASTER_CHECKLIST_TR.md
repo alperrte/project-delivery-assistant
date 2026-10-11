@@ -1,5 +1,13 @@
 # Web Sitesi Kesinlikle Olması Gerekenler — Master Checklist
 
+## Frontend başarısız test düzeltmeleri — 2026-10-11
+
+İletişim sayfasına ortak `Breadcrumb` eklendi; görünür iki öğe mevcut `PageJsonLd` ile TR/EN/DE eşleşir. Navbar testleri üst kenarda navbar'ın yatay merkezinden açılma ve sidebar etkileşimi sonrası yeniden açılarak ölçüm yapma standardını kullanır. Cihaz reduced-motion tercihi testlerde korunur. Önceki 18 başarısız ve seri admin grubunda çalışmayan 6 senaryo hedefli koşumlarla doğrulandı: 39 senaryo, ilk koşum 38 başarılı/1 ölçüm hazırlığı hatası; son kalan test düzeltmeden sonra başarılı. Lint/TypeScript/build geçti. Breadcrumb/structured-data/keyboard global kutuları bu sınırlı kapsamla değiştirilmedi; 945 testlik paket yeniden çalıştırılmadı. Kayıt: `docs/compliation/2026-10-11-frontend-failed-tests-fixes.md`.
+
+## Frontend başarısız test düzeltmeleri — 2026-10-11
+
+İletişim sayfasına ortak `Breadcrumb` eklendi; görünür iki öğe mevcut `PageJsonLd` ile TR/EN/DE eşleşir. Navbar testleri üst kenarda navbar'ın yatay merkezinden açılma ve sidebar etkileşimi sonrası yeniden açılarak ölçüm yapma standardını kullanır. Cihaz reduced-motion tercihi testlerde korunur. Önceki 18 başarısız ve seri admin grubunda çalışmayan 6 senaryo hedefli koşumlarla doğrulandı: 39 senaryo, ilk koşum 38 başarılı/1 ölçüm hazırlığı hatası; son kalan test düzeltmeden sonra başarılı. Lint/TypeScript/build geçti. Breadcrumb/structured-data/keyboard global kutuları bu sınırlı kapsamla değiştirilmedi; 945 testlik paket yeniden çalıştırılmadı. Kayıt: `docs/compliation/2026-10-11-frontend-failed-tests-fixes.md`.
+
 ## Navbar scroll düzeltmesi — 2026-10-11
 
 Yalnız oturum içi navbar etkileşimi kontrol edildi: masaüstünde navbar dışında yukarı scroll ve scrollbar kenarında yukarı çıkma görünürlüğü tetiklemez; hover/focus/açık bildirim popup'ı/Ctrl-K/dokunmatik drawer ve dokunmatik scroll-up erişimi korunur. Dört hedefli Chromium testi, TypeScript ve hedefli ESLint başarılıdır. Keyboard/Focus/Responsive global kutuları bu sınırlı kontrolle değiştirilmedi. Kayıt: `docs/compliation/2026-10-11-navbar-scroll-reveal-fix.md`.
@@ -278,3 +286,11 @@ Cookie/contact/admin and main About/License/version/focus/JSON-LD/canonical name
 ## Hesap / oturumsuz sayfa UI ve tema performansı scoped verification - 2026-10-10 (general-features)
 
 Kapsam yalnız aşağıdaki değişikliklerdir; hiçbir global madde `[x]` yapılmadı. Kullanıcı adı sözleşmesi (Unicode harf/rakam, `_`, `-`, tek boşluk, 3-32, baş/son boşluk kırpma, art arda boşluk için ayrı hata; kayıt, davetli kayıt ve profil aynı kural; tek kaynak `com.pda.user.NicknameRules`), tüm oturumsuz sayfalarda ortak document-root scrollbar standardı, alt-orta cookie banner (Login `h-dvh` kilidi banner açıkken kalkar) ve tema geçişi performansı (Login döngü duraklatma + yazılım render tespiti) uygulandı. "Form Validation" global maddesi yalnız kayıt/davetli kayıt/profil kullanıcı adı alanını kapsar. "Core Web Vitals" maddesi `[ ]` kalır: tema geçişi ölçümü yalnız Login/Landing tema geçişi içindir, LCP/CLS/INP üretim ölçümü değildir. Klavye ve ekran okuyucu maddeleri bu işte yeniden denetlenmedi (tema düğmesi odak/route koruması `theme-switch-performance.spec.ts` ile doğrulandı). Test sonuçları: `docs/compliation/2026-10-10-general-features-account-public-ui-theme.md`.
+
+## Ekip üyesi kartı scoped verification - 2026-10-10 (squad-service-backend)
+
+Kapsam yalnız Ekipler kart görünümündeki üye kutusudur (avatar, tam ad, ana rol + "+N"); hiçbir global madde `[x]` yapılmadı. Kullanıcı geri bildirimiyle ad/rol kısaltılmaz (wrap); 320/390/768/1024/1440 x light/dark yatay taşma ve kırpılma yok, tooltip + `aria-label` tüm rolleri verir, üye başına ek istek yok (Responsive/Dark Mode/Accessibility maddeleri yalnız bu yüzey için kanıtlandı). Ayrıntı: `docs/compliation/2026-10-10-squad-service-teams-member-cards.md`.
+
+## Ayrı yönetici girişi `/pd-admin` scoped verification - 2026-10-10 (auth-service-frontend)
+
+Kapsam yalnız `/pd-admin` yüzeyidir; hiçbir global madde `[x]` yapılmadı. Etkilenen maddeler: **robots.txt / sitemap** (`[x]` kalır: `/pd-admin` robots, sitemap ve `llms.txt` içinde yoktur, hiçbir public sayfa ona bağlanmaz, sayfa `noindex` meta + `X-Robots-Tag` taşır; gizlilik güvenlik değildir, yetki backend'dedir), **Unique Page Title** (`[ ]` kalır: yalnız bu sayfanın başlığı "Yönetici girişi · PDA" TR/EN/DE doğrulandı), **Keyboard Navigation / Focus State** (`[ ]` kalır: yalnız bu sayfanın adımları Tab/Enter/Shift+Tab ile tamamlanır, adım başlığına odak taşınır, 44 px hedefler). 320/390/768/1024/1440 px light/dark yatay taşma yok. Sonuçlar: `docs/compliation/2026-10-10-auth-service-frontend-admin-login.md`.

@@ -238,8 +238,9 @@ class AccountDeletionIntegrationTest {
 
     @Test
     void anAdministratorAccountCannotBeDeletedByItsOwner() throws Exception {
-        jdbc.update("UPDATE users SET global_role = 'ADMIN' WHERE email = ?", email);
+        // Administrators cannot use the regular login any more: the session exists before the promotion.
         Cookie adminAccess = login(email);
+        jdbc.update("UPDATE users SET global_role = 'ADMIN' WHERE email = ?", email);
 
         requestDeletion(adminAccess, "tr").andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value("administrator_cannot_delete"));

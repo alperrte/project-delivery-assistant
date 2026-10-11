@@ -22,7 +22,7 @@ for (const [locale, url, title, intro] of [
     await expect(page.locator('#team a[href="mailto:alpertemiz15@gmail.com"]')).toBeVisible();
     await expect(page.locator('#team a[href="mailto:tasbayh@gmail.com"]')).toBeVisible();
     await expect(page.locator('#team a[href="https://www.linkedin.com/in/alpertemizz/"]')).toBeVisible();
-    await expect(page.locator('#team a[href="https://www.linkedin.com/in/hamza-ta%C5%9Fbay-3b7b94304/"]')).toBeVisible();
+    await expect(page.locator('#team a[href="https://www.linkedin.com/in/hamza-tasbay"]')).toBeVisible();
     for (const [index, name, cv] of [[0, "Alper Temiz", "/cv/alper-temiz-cv.pdf"], [1, "Hamza Taşbay", "/cv/hamza-tasbay-cv.pdf"]] as const) {
       const card = cards.nth(index);
       const link = card.locator('a[href="' + cv + '"]');

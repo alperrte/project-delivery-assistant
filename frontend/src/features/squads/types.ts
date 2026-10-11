@@ -1,7 +1,15 @@
 import type { ProjectRole, UserRef } from "@/features/projects/types";
 
 export type TeamLastJoined = { userId: string; nickname: string | null; joinedAt: string };
-export type TeamMemberPreview = { userId: string; nickname: string | null; profilePhotoVersion?: number | null; firstName?: string | null; lastName?: string | null };
+export type TeamMemberPreview = {
+  userId: string;
+  nickname: string | null;
+  profilePhotoVersion?: number | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  /** Project roles in enum order; the first is the primary role shown on the card. */
+  roles: ProjectRole[];
+};
 
 export type Team = {
   id: string;

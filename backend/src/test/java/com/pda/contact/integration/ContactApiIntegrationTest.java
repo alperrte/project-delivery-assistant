@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -130,12 +131,12 @@ class ContactApiIntegrationTest {
         MimeMessage[] received = GREEN_MAIL.getReceivedMessages();
         assertEquals(1, received.length);
         MimeMessage mail = received[0];
-        assertEquals(List.of(new InternetAddress("pdassistant@gmail.com")), List.of(mail.getRecipients(Message.RecipientType.TO)));
+        assertEquals(List.of(new InternetAddress("pdassistant.info@gmail.com")), List.of(mail.getRecipients(Message.RecipientType.TO)));
         assertEquals(List.of(new InternetAddress(SENDER)), List.of(mail.getFrom()));
         assertEquals(List.of(new InternetAddress("ece@example.com")), List.of(mail.getReplyTo()));
         assertNull(mail.getRecipients(Message.RecipientType.CC));
         assertNull(mail.getRecipients(Message.RecipientType.BCC));
-        assertEquals("Yeni PDA İletişim Talebi", mail.getSubject());
+        assertEquals("Yeni PDA İletişim Talebi [Genel]", mail.getSubject());
         String body = mail.getContent().toString();
         assertTrue(body.contains("Ece Yıldız"), body);
         assertTrue(body.contains("ece@example.com"), body);
@@ -164,12 +165,12 @@ class ContactApiIntegrationTest {
         assertTrue(GREEN_MAIL.waitForIncomingEmail(5_000, 1));
         assertEquals(1, GREEN_MAIL.getReceivedMessages().length);
         MimeMessage mail = GREEN_MAIL.getReceivedMessages()[0];
-        assertEquals(List.of(new InternetAddress("pdassistant@gmail.com")), List.of(mail.getRecipients(Message.RecipientType.TO)));
+        assertEquals(List.of(new InternetAddress("pdassistant.info@gmail.com")), List.of(mail.getRecipients(Message.RecipientType.TO)));
         assertNull(mail.getRecipients(Message.RecipientType.CC));
         assertNull(mail.getRecipients(Message.RecipientType.BCC));
         assertEquals(List.of(new InternetAddress(SENDER)), List.of(mail.getFrom()));
         assertEquals(List.of(new InternetAddress("eve@example.com")), List.of(mail.getReplyTo()));
-        assertEquals("Yeni PDA İletişim Talebi", mail.getSubject());
+        assertEquals("Yeni PDA İletişim Talebi [Genel]", mail.getSubject());
         // The envelope: exactly one recipient was ever offered to the server.
         assertEquals(1, GREEN_MAIL.getReceivedMessages().length);
     }
@@ -204,13 +205,14 @@ class ContactApiIntegrationTest {
         String address = address();
         send(address, form("Ece", "Y", "not-an-email", "Merhaba, bir sorum var."))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.invalidFields[0]").value("email"));
+        // The last name is optional, so blank is fine there; the first name and the message are not.
         send(address, form("   ", "   ", "a@b.co", "          ")).andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.invalidFields.length()").value(3));
+                .andExpect(jsonPath("$.invalidFields.length()").value(2));
         send(address, form("Ece", "Y", "a@b.co", "kısa")).andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.invalidFields[0]").value("message"));
         send(address, form("Ece", "Y", "a@b.co", "x".repeat(5_001))).andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.invalidFields[0]").value("message"));
-        send(address, "{}").andExpect(status().isBadRequest()).andExpect(jsonPath("$.invalidFields.length()").value(4));
+        send(address, "{}").andExpect(status().isBadRequest()).andExpect(jsonPath("$.invalidFields.length()").value(3));
         send(address, "not json").andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("CONTACT_INVALID"));
         // Larger than the body limit: refused before parsing.
         send(address(), form("Ece", "Y", "a@b.co", "y".repeat(17_000))).andExpect(status().is(413))
@@ -255,10 +257,117 @@ class ContactApiIntegrationTest {
         send(address(), form("E", "Y", "bad", "x")).andExpect(status().isBadRequest());
     }
 
+    private static String json(String first, String last, String email, String message, String extra) {
+        return "{\"firstName\":" + quote(first) + (last == null ? "" : ",\"lastName\":" + quote(last))
+                + ",\"email\":" + quote(email) + ",\"message\":" + quote(message) + (extra.isEmpty() ? "" : "," + extra) + "}";
+    }
+
+    private int supportRows() {
+        return jdbc.queryForObject("SELECT count(*) FROM support_requests", Integer.class);
+    }
+
     @Test
-    @Order(8)
+    @Order(61)
+    void aFilledHoneypotGetsTheSameSuccessAnswerButNothingIsMailedOrStored() throws Exception {
+        GREEN_MAIL.purgeEmailFromAllMailboxes();
+        int sent = rows("SENT"), support = supportRows();
+        String real = send(address(), form("Ece", "Y", "real@example.com", "Gerçek bir mesaj yazıyorum buraya."))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        assertTrue(GREEN_MAIL.waitForIncomingEmail(5_000, 1));
+        GREEN_MAIL.purgeEmailFromAllMailboxes();
+        int sentAfterReal = rows("SENT"), supportAfterReal = supportRows();
+        assertEquals(sent + 1, sentAfterReal);
+        assertEquals(support + 1, supportAfterReal);
+
+        long shown = System.currentTimeMillis() - 60_000;
+        var bot = send(address(), json("Bot", "Spam", "bot@example.com", "Ucuz saat satiyorum buradan alin.",
+                "\"website\":\"http://spam.example\",\"startedAt\":" + shown))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("SENT"))
+                .andExpect(header().string("Cache-Control", "no-store")).andReturn().getResponse();
+        // Byte-identical to the answer a real visitor gets: the bot learns nothing.
+        assertEquals(real, bot.getContentAsString());
+        // Not even an invalid body gives a bot a 400 to probe with.
+        send(address(), "{\"website\":\"x\",\"email\":\"nope\"}").andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("SENT"));
+
+        Thread.sleep(300);
+        assertEquals(0, GREEN_MAIL.getReceivedMessages().length);
+        assertEquals(sentAfterReal, rows("SENT"));
+        assertEquals(supportAfterReal, supportRows());
+    }
+
+    @Test
+    @Order(62)
+    void aFormSubmittedWithinThreeSecondsOfBeingShownIsDroppedButASlowerOneIsDelivered() throws Exception {
+        GREEN_MAIL.purgeEmailFromAllMailboxes();
+        int support = supportRows();
+        long now = System.currentTimeMillis();
+        for (long shown : new long[] {now - 300, now - 1_500, now + 2_000}) {
+            send(address(), json("Hızlı", null, "fast@example.com", "Bu form çok hızlı gönderildi, bot gibi.",
+                    "\"startedAt\":" + shown)).andExpect(status().isOk()).andExpect(jsonPath("$.status").value("SENT"));
+        }
+        Thread.sleep(300);
+        assertEquals(0, GREEN_MAIL.getReceivedMessages().length);
+        assertEquals(support, supportRows());
+
+        // Ten seconds is a person; an empty honeypot field is what the real form sends.
+        send(address(), json("Yavaş", null, "slow@example.com", "Bu form yeterince yavaş dolduruldu, insan.",
+                "\"website\":\"\",\"startedAt\":" + (System.currentTimeMillis() - 10_000))).andExpect(status().isOk());
+        assertTrue(GREEN_MAIL.waitForIncomingEmail(5_000, 1));
+        assertEquals(support + 1, supportRows());
+    }
+
+    @Test
+    @Order(63)
+    void aStaleOrFarFutureFormTimestampIsAnInvalidFieldNotASilentDrop() throws Exception {
+        int support = supportRows();
+        long now = System.currentTimeMillis();
+        for (long shown : new long[] {now - 25L * 3_600_000, now + 3_600_000, 0}) {
+            send(address(), json("Ece", null, "stale@example.com", "Sayfa bir gün açık kalmıştı galiba.",
+                    "\"startedAt\":" + shown)).andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.code").value("CONTACT_INVALID"))
+                    .andExpect(jsonPath("$.invalidFields[0]").value("startedAt"));
+        }
+        assertEquals(support, supportRows());
+    }
+
+    @Test
+    @Order(64)
+    void theCategoryAndAnOptionalLastNameAreMailedWithTheCategoryInTheSubjectAndStored() throws Exception {
+        GREEN_MAIL.purgeEmailFromAllMailboxes();
+        send(address(), json("Ece", null, "kvkk@example.com", "Verilerimin silinmesini talep ediyorum lütfen.",
+                "\"category\":\"DATA_REQUEST\"")).andExpect(status().isOk());
+        assertTrue(GREEN_MAIL.waitForIncomingEmail(5_000, 1));
+        MimeMessage mail = GREEN_MAIL.getReceivedMessages()[0];
+        assertEquals("Yeni PDA İletişim Talebi [KVKK/GDPR veri talebi]", mail.getSubject());
+        String body = mail.getContent().toString();
+        assertTrue(body.contains("KVKK/GDPR veri talebi"), body);
+        assertTrue(body.contains("Ad Soyad:") && body.contains("Ece"), body);
+
+        var row = jdbc.queryForMap("SELECT * FROM support_requests WHERE email = 'kvkk@example.com'");
+        assertEquals("DATA_REQUEST", row.get("category"));
+        assertEquals("Ece", row.get("first_name"));
+        assertNull(row.get("last_name"));
+        assertEquals("Verilerimin silinmesini talep ediyorum lütfen.", row.get("message"));
+        assertEquals("NEW", row.get("status"));
+        assertEquals("SENT", row.get("delivery_status"));
+        assertEquals(row.get("created_at"), row.get("status_changed_at"));
+
+        // No category means GENERAL (a client from before categories existed).
+        send(address(), form("Ece", "Yıldız", "general@example.com", "Kategori göndermeyen eski bir istemci.")).andExpect(status().isOk());
+        assertEquals("GENERAL", jdbc.queryForObject("SELECT category FROM support_requests WHERE email = 'general@example.com'", String.class));
+        // An unknown category is an invalid body and stores nothing.
+        int before = supportRows();
+        send(address(), json("Ece", null, "bad@example.com", "Bilinmeyen kategori ile gönderiyorum.",
+                "\"category\":\"SALES\"")).andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("CONTACT_INVALID"));
+        assertEquals(before, supportRows());
+    }
+
+    @Test
+    @Order(99)
     void whenTheMailServerIsDownTheAnswerIsAGenericFailureAndNotASuccess() throws Exception {
         int failedBefore = rows("FAILED");
+        int supportFailedBefore = jdbc.queryForObject("SELECT count(*) FROM support_requests WHERE delivery_status = 'FAILED'", Integer.class);
         int sentBefore = rows("SENT");
         GREEN_MAIL.stop();
         String body = send(address(), form("Ece", "Y", "down@example.com", "Mail sunucusu kapalıyken gönderiyorum."))
@@ -272,6 +381,9 @@ class ContactApiIntegrationTest {
         }
         assertEquals(failedBefore + 1, rows("FAILED"));
         assertEquals(sentBefore, rows("SENT"));
+        // The message itself is not lost: it is kept for the administrators, marked as not delivered by mail.
+        assertEquals(supportFailedBefore + 1, jdbc.queryForObject(
+                "SELECT count(*) FROM support_requests WHERE delivery_status = 'FAILED'", Integer.class));
 
         // Failed deliveries are not counted as requests; the same message may be retried at once (no 409).
         ContactReporting.ContactReport report = reporting.report(Instant.now().minusSeconds(3_600),

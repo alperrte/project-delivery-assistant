@@ -25,7 +25,7 @@ import { useAutoHide } from "./use-auto-hide";
 import { WorkspaceHistoryControls } from "./workspace-history-controls";
 import { NotificationsMenu } from "@/features/notifications/notifications-menu";
 
-type SessionUser = { id?: string; nickname?: string; email?: string; globalRole?: string; profilePhotoVersion?: number | null } | null | undefined;
+type SessionUser = { id?: string; nickname?: string; email?: string; globalRole?: string; adminVerified?: boolean; profilePhotoVersion?: number | null } | null | undefined;
 
 /**
  * Glass navbar centered on the physical viewport, independent of sidebar
@@ -57,16 +57,26 @@ export function AppHeader({
     <div className="pointer-events-none fixed inset-x-3 top-0 z-40 sm:inset-x-auto sm:left-1/2 sm:w-[min(calc(100vw-1.5rem),620px)] sm:-translate-x-1/2 lg:w-[620px] xl:w-[700px] 2xl:w-[760px]">
       <button
         type="button"
+        aria-label={tw("showNavigation")}
         aria-hidden={!hidden}
         tabIndex={hidden ? 0 : -1}
         onPointerEnter={reveal}
-        onFocus={reveal}
+        onFocus={() => {
+          reveal();
+          const controls = ref.current?.querySelectorAll<HTMLElement>("button, a, input");
+          const first = controls && Array.from(controls).find((control) =>
+            control.tabIndex >= 0 && !control.matches(":disabled") && control.getClientRects().length > 0,
+          );
+          first?.focus();
+        }}
         onClick={reveal}
         className={cn(
-          "pointer-events-auto absolute top-0 left-1/2 h-1.5 w-10 -translate-x-1/2 rounded-b-full bg-border transition-opacity duration-300",
+          "pointer-events-auto absolute top-0 left-1/2 size-11 -translate-x-1/2 rounded-md transition-opacity duration-300 focus-visible:outline-2 focus-visible:outline-ring",
           hidden ? "opacity-100" : "pointer-events-none opacity-0",
         )}
-      />
+      >
+        <span aria-hidden="true" className="absolute top-0 left-1/2 h-1.5 w-10 -translate-x-1/2 rounded-b-full bg-border" />
+      </button>
       <header
         ref={ref}
         className={cn(
@@ -109,7 +119,7 @@ export function AppHeader({
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem render={<Link href="/account" />}>{tw("accountSettings")}</DropdownMenuItem>
-              {user?.globalRole === "ADMIN" && (
+              {user?.globalRole === "ADMIN" && user.adminVerified && (
                 <DropdownMenuItem render={<Link href="/admin/users" />}>{ta("nav.label")}</DropdownMenuItem>
               )}
               <DropdownMenuSeparator />

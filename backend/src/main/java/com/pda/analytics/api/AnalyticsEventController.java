@@ -24,19 +24,21 @@ public class AnalyticsEventController {
 
     @PostMapping("/events")
     @Operation(summary = "Record an anonymous analytics event",
-            description = "Public with CSRF, rate limited per address, body of at most 2 KB. Types PAGE_VIEW and "
-                    + "ENGAGEMENT only. Carries a random visitor/session id, the route template, and (first page of "
-                    + "a session) the referrer host and UTM values. The browser sends it only after the person "
+            description = "Public with CSRF, rate limited per address, body of at most 2 KB. Types PAGE_VIEW, "
+                    + "ENGAGEMENT, CTA_CLICK (ctaId from a fixed allow-list) and CLIENT_ERROR (errorKind: render, "
+                    + "chunk_load, unhandled_rejection, network; no message or stack). Carries a random visitor/session "
+                    + "id, the route template, and (first page of a session) the referrer host and UTM values. The browser sends it only after the person "
                     + "allowed analytics. No user, role or account field is read; the server uses its own clock.")
     @ApiResponse(responseCode = "204", description = "Recorded (or dropped because a per-session limit was reached)")
     @ApiResponse(responseCode = "400", description = "Invalid or unknown event")
-    @ApiResponse(responseCode = "404", description = "ENGAGEMENT for a session the server does not know")
+    @ApiResponse(responseCode = "404", description = "ENGAGEMENT, CTA_CLICK or CLIENT_ERROR for a session the server does not know")
     @ApiResponse(responseCode = "413", description = "Body larger than 2 KB")
     @ApiResponse(responseCode = "429", description = "Rate limit exceeded")
     public ResponseEntity<Void> record(@Valid @RequestBody AnalyticsEventRequest request) {
         ingest.record(new AnalyticsIngestService.Event(request.type(), request.visitorId(), request.sessionId(),
                 request.path(), request.referrerHost(), request.utmSource(), request.utmMedium(),
-                request.utmCampaign(), request.engagedSeconds(), request.consentVersion()));
+                request.utmCampaign(), request.engagedSeconds(), request.consentVersion(), request.ctaId(),
+                request.errorKind()));
         return ResponseEntity.noContent().header("Cache-Control", "no-store").build();
     }
 }

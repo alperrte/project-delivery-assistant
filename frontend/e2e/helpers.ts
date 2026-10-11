@@ -4,6 +4,7 @@ import { matchPath } from "../src/i18n/routing";
 import tr from "../src/i18n/messages/tr.json";
 import { psql } from "./db";
 import { mailsTo, waitForCode } from "./mailpit";
+import { totpCode } from "./totp";
 
 const PASSWORD = "E2ePassword1!";
 
@@ -82,6 +83,98 @@ export async function login(page: Page, email: string, password: string) {
   await page.locator('input[name="password"]').fill(password);
   await page.getByRole("button", { name: /^Giriş yap$/ }).click();
   await expect(page.locator("#main-content")).toBeVisible({ timeout: 15_000 });
+}
+
+/** Reveal the real navbar from its own top strip, rather than the page/scrollbar edge. */
+export async function revealWorkspaceHeader(page: Page) {
+  const width = page.viewportSize()?.width ?? await page.evaluate(() => innerWidth);
+  await page.mouse.move(width / 2, 8);
+  await expect(page.locator(".app-shell header").first()).not.toHaveClass(/opacity-0/);
+}
+
+/** What the test's own "phone" knows about an administrator account: the authenticator key and the backup codes. */
+export type AdminAuthenticator = { secret: string; recoveryCodes: string[]; lastStep: number };
+const adminAuthenticators = new Map<string, AdminAuthenticator>();
+
+export function adminAuthenticator(email: string): AdminAuthenticator {
+  const known = adminAuthenticators.get(email);
+  if (!known) throw new Error(`${email} has not enrolled an authenticator in this test yet`);
+  return known;
+}
+
+/** For a test that walks the enrollment screens by hand and wants later sign-ins to use the key it read. */
+export function rememberAdminAuthenticator(email: string, authenticator: AdminAuthenticator) {
+  adminAuthenticators.set(email, authenticator);
+}
+
+const TOTP_STEP_MS = 30_000;
+
+/**
+ * The next authenticator code the server will accept for this key: it never accepts a step it already used (nor an
+ * older one) and tolerates one step either side of its own clock. Waits for the next 30-second step when the only
+ * acceptable step is not reachable yet.
+ */
+export async function nextAdminCode(page: Page, authenticator: AdminAuthenticator): Promise<string> {
+  for (;;) {
+    const now = Math.floor(Date.now() / TOTP_STEP_MS);
+    for (const offset of [0, 1]) {
+      if (now + offset > authenticator.lastStep) {
+        authenticator.lastStep = now + offset;
+        return totpCode(authenticator.secret, offset);
+      }
+    }
+    await page.waitForTimeout(1_000);
+  }
+}
+
+const tAdmin = tr.adminLogin;
+
+/** Fills the administrator sign-in's e-mail and password and presses "Devam et". The page must already be /pd-admin. */
+export async function submitAdminCredentials(page: Page, user: { email: string; password: string }) {
+  await page.locator('input[name="email"]').fill(user.email);
+  await page.locator('input[name="password"]').fill(user.password);
+  await page.getByRole("button", { name: tAdmin.submit, exact: true }).click();
+}
+
+/**
+ * Signs an account (already promoted with `promoteToAdmin`) in through the separate administrator sign-in. The first
+ * sign-in enrolls the authenticator exactly like a person would (reads the manual key, enters a code, saves the backup
+ * codes) and remembers the key for this account; later sign-ins answer the authenticator challenge. Ends in the panel.
+ */
+export async function adminSignIn(
+  page: Page,
+  user: { email: string; password: string },
+  options: { viaBackupCode?: boolean } = {},
+): Promise<AdminAuthenticator> {
+  await page.goto("/pd-admin");
+  await submitAdminCredentials(page, user);
+  let authenticator = adminAuthenticators.get(user.email);
+  if (!authenticator) {
+    const key = page.getByTestId("admin-manual-key");
+    await expect(key).toBeVisible({ timeout: 15_000 });
+    const secret = (await key.innerText()).replace(/\s+/g, "");
+    authenticator = { secret, recoveryCodes: [], lastStep: -1 };
+    await page.getByLabel(tAdmin.enroll.code, { exact: true }).fill(await nextAdminCode(page, authenticator));
+    await page.getByRole("button", { name: tAdmin.enroll.submit, exact: true }).click();
+    const list = page.getByTestId("admin-recovery-codes");
+    await expect(list).toBeVisible({ timeout: 15_000 });
+    authenticator.recoveryCodes = (await list.locator("li").allInnerTexts()).map((code) => code.trim());
+    adminAuthenticators.set(user.email, authenticator);
+    await page.getByRole("button", { name: tAdmin.codes.saved, exact: true }).click();
+  } else {
+    await expect(page.getByLabel(tAdmin.totp.code, { exact: true })).toBeVisible({ timeout: 15_000 });
+    if (options.viaBackupCode) {
+      // Spends one backup code (each works once) instead of waiting for the next 30-second authenticator step.
+      await page.getByRole("button", { name: tAdmin.totp.useBackup, exact: true }).click();
+      await page.getByLabel(tAdmin.totp.backupCode, { exact: true }).fill(authenticator.recoveryCodes.shift()!);
+    } else {
+      await page.getByLabel(tAdmin.totp.code, { exact: true }).fill(await nextAdminCode(page, authenticator));
+    }
+    await page.getByRole("button", { name: tAdmin.totp.submit, exact: true }).click();
+  }
+  await expect(page).toHaveURL((url) => !!matchPath(url.pathname)?.route.startsWith("/admin"), { timeout: 15_000 });
+  await expect(page.locator("#main-content")).toBeVisible({ timeout: 15_000 });
+  return authenticator;
 }
 
 export async function registerAndLogin(page: Page, prefix: string) {

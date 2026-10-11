@@ -1,14 +1,22 @@
 package com.pda.contact.application.service;
 
+import com.pda.contact.SupportCategory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
 /**
  * A validated, normalised contact-form submission. The server never trusts the browser's checks: every value is
- * trimmed, bounded and free of control characters before it can reach a mail header or body.
+ * trimmed, bounded and free of control characters before it can reach a mail header or body. The last name is optional
+ * (data minimisation) and is {@code null} when the visitor left it empty.
  */
-public record ContactMessage(String firstName, String lastName, String email, String message) {
+public record ContactMessage(String firstName, String lastName, String email, String message,
+                             SupportCategory category) {
+
+    /** A message of the {@link SupportCategory#GENERAL} category. */
+    public ContactMessage(String firstName, String lastName, String email, String message) {
+        this(firstName, lastName, email, message, SupportCategory.GENERAL);
+    }
 
     public static final int NAME_MAX = 80;
     public static final int EMAIL_MAX = 254;
@@ -35,13 +43,20 @@ public record ContactMessage(String firstName, String lastName, String email, St
     }
 
     public static ContactMessage validated(String firstName, String lastName, String email, String message) {
+        return validated(firstName, lastName, email, message, null);
+    }
+
+    /** {@code category} defaults to GENERAL when absent (a client from before categories existed). */
+    public static ContactMessage validated(String firstName, String lastName, String email, String message,
+                                           SupportCategory category) {
         List<String> invalid = new ArrayList<>();
         String first = name(firstName);
-        String last = name(lastName);
+        boolean lastGiven = lastName != null && !lastName.isBlank();
+        String last = lastGiven ? name(lastName) : null;
         String address = email == null ? null : email.strip();
         String body = message == null ? null : message.replace("\r\n", "\n").replace('\r', '\n').strip();
         if (first == null) invalid.add("firstName");
-        if (last == null) invalid.add("lastName");
+        if (lastGiven && last == null) invalid.add("lastName");
         if (address == null || address.length() > EMAIL_MAX || !EMAIL.matcher(address).matches()
                 || address.indexOf('@') > 64) {
             invalid.add("email");
@@ -53,7 +68,7 @@ public record ContactMessage(String firstName, String lastName, String email, St
         if (!invalid.isEmpty()) {
             throw new InvalidContactException(invalid);
         }
-        return new ContactMessage(first, last, address, body);
+        return new ContactMessage(first, last, address, body, category == null ? SupportCategory.GENERAL : category);
     }
 
     private static String name(String value) {

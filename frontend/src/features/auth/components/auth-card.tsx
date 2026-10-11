@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ReactNode, Ref } from "react";
 
 /** Primary action inside an AuthCard: the dark chrome bar (cyan in dark mode). */
 export const authCtaClass =
@@ -15,12 +15,18 @@ export function AuthCard({
   title,
   subtitle,
   headingLevel = 1,
+  eyebrow,
+  headingRef,
   children,
 }: {
   title: string;
   subtitle: string;
   /** 2 when the page already has its own h1 above the card (login). */
   headingLevel?: 1 | 2;
+  /** Small label above the heading (the administrator sign-in names its area here). */
+  eyebrow?: ReactNode;
+  /** Lets a multi-step card move focus to the heading when the step changes (the heading becomes programmatically focusable). */
+  headingRef?: Ref<HTMLHeadingElement>;
   children: ReactNode;
 }) {
   const Heading = headingLevel === 1 ? "h1" : "h2";
@@ -34,7 +40,13 @@ export function AuthCard({
         className="pointer-events-none absolute inset-x-10 top-0 h-px bg-linear-to-r from-transparent via-white to-transparent dark:via-(--glow)/50"
       />
       <div className="mb-7">
-        <Heading id="auth-card-title" className="text-[1.6rem] font-bold leading-tight tracking-tight">
+        {eyebrow}
+        <Heading
+          id="auth-card-title"
+          ref={headingRef}
+          tabIndex={headingRef ? -1 : undefined}
+          className="text-[1.6rem] font-bold leading-tight tracking-tight outline-none"
+        >
           {title}
         </Heading>
         <p className="mt-2 text-sm leading-relaxed text-(--auth-muted)">{subtitle}</p>

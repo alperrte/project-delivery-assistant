@@ -1,0 +1,9 @@
+# Gitleaks false positives: test fixtures, not real secrets.
+
+# RFC 6238 public TOTP test secret used by TotpTest (history scan, then working-tree scan).
+c47048d08907483b40ee5d187076fbcc913e386b:backend/src/test/java/com/pda/auth/application/service/TotpTest.java:generic-api-key:70
+backend/src/test/java/com/pda/auth/application/service/TotpTest.java:generic-api-key:70
+
+# Made-up mismatching passwords in the password-change e2e test (history scan, then working-tree scan).
+5dbc13cfde033da017d16a32ba4a483b5defc9cb:frontend/e2e/form-server-validation.spec.ts:generic-api-key:76
+frontend/e2e/form-server-validation.spec.ts:generic-api-key:80

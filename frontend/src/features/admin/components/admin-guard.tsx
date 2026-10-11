@@ -6,25 +6,31 @@ import Link from "@/i18n/navigation";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSession } from "@/features/auth/hooks/use-session";
+import { ADMIN_ENTRY_PATH } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 import { PageContainer } from "@/components/common/page-container";
 
 const ITEMS = [{ key: "users", href: "/admin/users" }, { key: "analytics", href: "/admin/analytics" }] as const;
 
 /**
- * Shows the administration area to administrators only; anyone else is sent to the dashboard before any admin content
- * is rendered. This is a convenience, not security: every admin API call is authorized again by the backend.
+ * Shows the administration area only to an administrator whose session was opened by the separate administrator
+ * sign-in (`adminVerified`). An administrator without that mark (an older session) is sent to `/pd-admin` to sign in
+ * again; anyone else goes to the dashboard. Both happen before any admin content is rendered. This is a convenience,
+ * not security: the backend refuses every admin API call of a session without the mark (403
+ * `admin_reauthentication_required`) and of a non-administrator (403).
  */
 export function AdminArea({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const t = useTranslations("admin");
   const router = useRouter();
   const { data: user, isLoading } = useSession();
-  const allowed = user?.globalRole === "ADMIN";
+  const isAdmin = user?.globalRole === "ADMIN";
+  const allowed = isAdmin && user?.adminVerified === true;
 
   useEffect(() => {
-    if (!isLoading && !allowed) router.replace("/dashboard");
-  }, [isLoading, allowed, router]);
+    if (isLoading || allowed) return;
+    router.replace(isAdmin ? `${ADMIN_ENTRY_PATH}?reason=reauthenticate` : "/dashboard");
+  }, [isLoading, allowed, isAdmin, router]);
 
   if (!allowed) {
     return (

@@ -1,7 +1,7 @@
 import {test,expect} from "@playwright/test";
 import {existsSync,readFileSync} from "node:fs";
 import path from "node:path";
-import {api,login,registerUser,uniqueUser} from "./helpers";
+import {api,login,registerUser,uniqueUser, revealWorkspaceHeader } from "./helpers";
 import {AUTH_DIR,MANAGER_STORAGE,MEMBER_STORAGE,MEMBER_USER_FILE} from "./global-setup";
 import {expireQaInvitation,invitationInDatabase} from "./invitation-db";
 
@@ -22,7 +22,7 @@ test("INV-003 same-document account switch isolates invitation list/preview and 
    else{arrivedC();await heldC;await route.continue().catch(()=>undefined);}
   });
   await b.locator('.app-shell a[href="/tr/davetler"]').first().click();await startedB;
-  await b.mouse.move(1,200);await b.mouse.move(1,1);await b.locator("header").getByRole("button",{name:/Hesap/}).click();await b.getByRole("menuitem",{name:"Çıkış yap",exact:true}).click();await expect(b).toHaveURL(/\/tr\/giris/);
+  await b.mouse.move(1,200);await revealWorkspaceHeader(b);await b.locator("header").getByRole("button",{name:/Hesap/}).click();await b.getByRole("menuitem",{name:"Çıkış yap",exact:true}).click();await expect(b).toHaveURL(/\/tr\/giris/);
   phase="C";await b.locator('input[name="email"]').fill(outsider.email);await b.locator('input[name="password"]').fill(outsider.password);await b.getByRole("button",{name:/^Giriş yap$/}).click();await expect(b.locator("#main-content")).toBeVisible();
   await b.locator('.app-shell a[href="/tr/davetler"]').first().click();await startedC;releaseB();
   await expect(b.getByRole("row").filter({hasText:name})).toHaveCount(0);await expect(b.getByText("B private invitation",{exact:true})).toHaveCount(0);await expect(b.getByRole("dialog")).toHaveCount(0);

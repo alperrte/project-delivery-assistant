@@ -322,13 +322,13 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
             <Section id={sectionHeadingIds.details} title={t("sections.details.title")} description={t("sections.details.description")}>
               {(
                 <div className="space-y-1.5">
-                  <Label>{t("details.organization")}</Label>
+                  <Label htmlFor="create-organization">{t("details.organization")}</Label>
                   <Controller
                     control={control}
                     name="organizationId"
                     render={({ field }) => (
                       <Select value={field.value ?? "__standalone__"} disabled={!organizations} onValueChange={(next) => setValue("organizationId", next === "__standalone__" ? undefined : next || undefined, { shouldDirty: true })}>
-                        <SelectTrigger className="w-full">
+                        <SelectTrigger id="create-organization" className="w-full">
                           <SelectValue placeholder={t("details.organizationNone")}>
                             {(value: string) => organizations?.content.find((org) => org.id === value)?.name ?? t("details.organizationNone")}
                           </SelectValue>

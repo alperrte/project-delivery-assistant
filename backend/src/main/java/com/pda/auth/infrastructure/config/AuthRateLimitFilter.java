@@ -31,6 +31,10 @@ final class AuthRateLimitFilter extends OncePerRequestFilter {
     private static final String TWO_FACTOR_ENABLE_PATH = "/api/v1/auth/2fa/enable";
     private static final String TWO_FACTOR_DISABLE_PATH = "/api/v1/auth/2fa/disable";
     private static final String TWO_FACTOR_RECOVERY_PATH = "/api/v1/auth/2fa/recovery-codes";
+    // Administrator sign-in: password step, authenticator step and the two enrolment steps. All of them use the strict
+    // sensitive bucket (5 per 10 minutes per address); the per-account authenticator lock (5 wrong codes, 15 minutes) applies too.
+    private static final java.util.Set<String> ADMIN_AUTH_PATHS = java.util.Set.of("/api/v1/auth/admin/login",
+            "/api/v1/auth/admin/login/2fa", "/api/v1/auth/admin/2fa/setup", "/api/v1/auth/admin/2fa/enable");
     private static final String ACCOUNT_DELETION_REQUEST_PATH = "/api/v1/auth/account/deletion/request";
     private static final String ACCOUNT_DELETION_CONFIRM_PATH = "/api/v1/auth/account/deletion/confirm";
     static final String ANALYTICS_PATH = "/api/v1/analytics/events";
@@ -119,6 +123,7 @@ final class AuthRateLimitFilter extends OncePerRequestFilter {
                 && !LOGIN_SECOND_FACTOR_PATH.equals(path) && !TWO_FACTOR_ENABLE_PATH.equals(path)
                 && !TWO_FACTOR_DISABLE_PATH.equals(path) && !TWO_FACTOR_RECOVERY_PATH.equals(path)
                 && !ACCOUNT_DELETION_REQUEST_PATH.equals(path) && !ACCOUNT_DELETION_CONFIRM_PATH.equals(path)
+                && !ADMIN_AUTH_PATHS.contains(path)
                 && !ANALYTICS_PATH.equals(path) && !CONTACT_PATH.equals(path);
     }
 

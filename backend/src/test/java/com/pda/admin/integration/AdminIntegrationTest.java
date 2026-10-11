@@ -38,7 +38,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
-/** Admin bootstrap, forced first-login password change and the admin API security boundary. */
+/** Admin bootstrap, the kept forced-password-change mechanism and the admin API security boundary. */
 @SpringBootTest(classes = BackendApplication.class)
 @AutoConfigureMockMvc
 @Testcontainers(disabledWithoutDocker = true)
@@ -48,6 +48,8 @@ class AdminIntegrationTest {
 
     private static final byte[] JWT_KEY = new byte[32];
     static { new SecureRandom().nextBytes(JWT_KEY); }
+    private static final byte[] TOTP_KEY = new byte[32];
+    static { new SecureRandom().nextBytes(TOTP_KEY); }
 
     private static final String ADMIN_EMAIL = "root.admin@example.test";
     private static final String INITIAL_PASSWORD = "Initial-Password-123";
@@ -65,6 +67,7 @@ class AdminIntegrationTest {
         registry.add("JWT_SECRET", () -> Base64.getEncoder().encodeToString(JWT_KEY));
         registry.add("ADMIN_EMAIL", () -> ADMIN_EMAIL);
         registry.add("ADMIN_INITIAL_PASSWORD", () -> INITIAL_PASSWORD);
+        registry.add("TOTP_ENCRYPTION_KEY", () -> Base64.getEncoder().encodeToString(TOTP_KEY));
         registry.add("GOOGLE_CLIENT_ID", () -> "google-id-secret-marker");
         registry.add("GOOGLE_CLIENT_SECRET", () -> "google-secret-value-marker");
     }
@@ -75,16 +78,18 @@ class AdminIntegrationTest {
     @Autowired BCryptPasswordEncoder encoder;
     @Autowired AdminBootstrapRunner runner;
     @Autowired com.pda.user.UserAdministration administration;
+    @Autowired com.pda.user.UserSessions sessions;
+    @Autowired com.pda.auth.application.service.JwtTokens tokens;
 
     @Test
     @Order(1)
-    void bootstrapCreatedOneActiveVerifiedAdminWithAHashedPasswordAndForcedChange() {
+    void bootstrapCreatedOneActiveVerifiedAdminWithAHashedPasswordAndNoForcedChange() {
         assertEquals(1, users.countByGlobalRole(GlobalRole.ADMIN));
         User admin = users.findByEmail(ADMIN_EMAIL).orElseThrow();
         assertEquals(GlobalRole.ADMIN, admin.getGlobalRole());
         assertEquals("ACTIVE", admin.getAccountStatus().name());
         assertEquals("VERIFIED", admin.getEmailVerificationStatus().name());
-        assertTrue(admin.isMustChangePassword());
+        assertFalse(admin.isMustChangePassword(), "the ENV administrator is not sent to a forced password change");
         assertNotNull(hash(ADMIN_EMAIL));
         assertFalse(hash(ADMIN_EMAIL).contains(INITIAL_PASSWORD));
         assertTrue(encoder.matches(INITIAL_PASSWORD, hash(ADMIN_EMAIL)));
@@ -130,10 +135,11 @@ class AdminIntegrationTest {
 
     @Test
     @Order(5)
-    void forcedFirstLoginBlocksEverythingUntilThePasswordIsChanged() throws Exception {
+    void theKeptForcedPasswordChangeMechanismBlocksEverythingUntilThePasswordIsChanged() throws Exception {
         Cookie csrf = csrfCookie();
-        Cookie[] tokens = login(ADMIN_EMAIL, INITIAL_PASSWORD, csrf);
-        Cookie access = tokens[0];
+        // The ENV administrator no longer carries the flag; the mechanism stays for any account that does.
+        jdbc.update("UPDATE users SET must_change_password = TRUE WHERE email = ?", ADMIN_EMAIL);
+        Cookie access = adminAccess();
 
         mvc.perform(get("/api/v1/auth/me").cookie(access)).andExpect(status().isOk())
                 .andExpect(jsonPath("$.mustChangePassword").value(true));
@@ -143,7 +149,7 @@ class AdminIntegrationTest {
                 .andExpect(jsonPath("$.code").value("password_change_required"));
 
         // a second session must be revoked by the change
-        Cookie[] other = login(ADMIN_EMAIL, INITIAL_PASSWORD, csrf);
+        Cookie other = adminAccess();
 
         mvc.perform(limited("/api/v1/auth/password/change").cookie(csrf, access)
                         .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
@@ -172,16 +178,18 @@ class AdminIntegrationTest {
                 .andExpect(status().isOk());
 
         assertFalse(users.findByEmail(ADMIN_EMAIL).orElseThrow().isMustChangePassword());
-        mvc.perform(get("/api/v1/auth/me").cookie(other[0])).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/v1/auth/me").cookie(other)).andExpect(status().isUnauthorized());
         mvc.perform(get("/api/v1/auth/me").cookie(access)).andExpect(status().isOk());
 
-        // the initial password no longer works; the new one does and carries no forced change
-        mvc.perform(limited("/api/v1/auth/login").cookie(csrf).header("X-XSRF-TOKEN", csrf.getValue())
+        // the initial password no longer works on the administrator sign-in; the new one does (no forced change, first-time enrolment)
+        mvc.perform(limited("/api/v1/auth/admin/login").cookie(csrf).header("X-XSRF-TOKEN", csrf.getValue())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"email\":\"" + ADMIN_EMAIL + "\",\"password\":\"" + INITIAL_PASSWORD + "\"}"))
                 .andExpect(status().isUnauthorized());
-        Cookie[] fresh = login(ADMIN_EMAIL, NEW_PASSWORD, csrf);
-        mvc.perform(get("/api/v1/admin/users").cookie(fresh[0])).andExpect(status().isOk());
+        mvc.perform(limited("/api/v1/auth/admin/login").cookie(csrf).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"" + ADMIN_EMAIL + "\",\"password\":\"" + NEW_PASSWORD + "\"}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("TWO_FACTOR_ENROLLMENT_REQUIRED"));
 
         // a restart with the same env must not reset the changed password
         runner.run(new DefaultApplicationArguments());
@@ -217,7 +225,7 @@ class AdminIntegrationTest {
     @Order(7)
     void adminManagesUsersAndSafetyRulesHold() throws Exception {
         Cookie csrf = csrfCookie();
-        Cookie admin = login(ADMIN_EMAIL, NEW_PASSWORD, csrf)[0];
+        Cookie admin = adminAccess();
         User victim = newUser("USER");
         Cookie[] victimTokens = login(victim.getEmail(), "Member-Password-1", csrf);
 
@@ -244,7 +252,7 @@ class AdminIntegrationTest {
                         .header("X-XSRF-TOKEN", csrf.getValue()))
                 .andExpect(status().isConflict());
         User secondAdmin = newUser("ADMIN");
-        Cookie second = login(secondAdmin.getEmail(), "Member-Password-1", csrf)[0];
+        Cookie second = AdminSessionFactory.verified(sessions, tokens, secondAdmin.getId())[0];
         mvc.perform(post("/api/v1/admin/users/" + secondAdmin.getId() + "/disable").cookie(csrf, second)
                         .header("X-XSRF-TOKEN", csrf.getValue()))
                 .andExpect(status().isConflict());
@@ -292,7 +300,7 @@ class AdminIntegrationTest {
     @Order(8)
     void overviewAndStatusExposeNoSecretsOrProjectContent() throws Exception {
         Cookie csrf = csrfCookie();
-        Cookie admin = login(ADMIN_EMAIL, NEW_PASSWORD, csrf)[0];
+        Cookie admin = adminAccess();
 
         mvc.perform(get("/api/v1/admin/overview").cookie(admin)).andExpect(status().isOk())
                 .andExpect(jsonPath("$.users.total").isNumber()).andExpect(jsonPath("$.projects.total").isNumber());
@@ -320,7 +328,7 @@ class AdminIntegrationTest {
                         .content("{\"name\":\"Admin Boundary Project\"}"))
                 .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
         String projectId = com.jayway.jsonpath.JsonPath.read(created, "$.id");
-        Cookie admin = login(ADMIN_EMAIL, NEW_PASSWORD, csrf)[0];
+        Cookie admin = adminAccess();
 
         mvc.perform(get("/api/v1/projects/" + projectId).cookie(admin)).andExpect(status().isForbidden());
         mvc.perform(post("/api/v1/projects/" + projectId + "/archive").cookie(csrf, admin)
@@ -336,7 +344,7 @@ class AdminIntegrationTest {
     @Order(10)
     void listFiltersOnTheServerAndProblemBodiesCarryStableCodes() throws Exception {
         Cookie csrf = csrfCookie();
-        Cookie admin = login(ADMIN_EMAIL, NEW_PASSWORD, csrf)[0];
+        Cookie admin = adminAccess();
         String stem = "qz" + UUID.randomUUID().toString().replace("-", "").substring(0, 8);
         User wanted = users.saveAndFlush(User.registerLocalActive(stem + "@example.test", stem + "nick",
                 "Member-Password-1", encoder));
@@ -368,7 +376,9 @@ class AdminIntegrationTest {
                 .andExpect(jsonPath("$.size").value(1)).andExpect(jsonPath("$.items.length()").value(1))
                 .andExpect(jsonPath("$.items[0].accountStatus").value("ACTIVE"));
         mvc.perform(get("/api/v1/admin/users?status=TERMINATED").cookie(admin)).andExpect(status().isBadRequest());
+        mvc.perform(get("/api/v1/admin/users?status=NOT_A_STATUS").cookie(admin)).andExpect(status().isBadRequest());
         mvc.perform(get("/api/v1/admin/users?status=DELETED").cookie(admin)).andExpect(status().isBadRequest());
+        mvc.perform(get("/api/v1/admin/users?status=PENDING_VERIFICATION").cookie(admin)).andExpect(status().isOk());
 
         // Disabling is reversible, never a delete, and keeps the row.
         assertTrue(users.findById(wanted.getId()).isPresent());
@@ -419,6 +429,12 @@ class AdminIntegrationTest {
     private static org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder limited(String path) {
         String address = "admin-test-" + IPS.incrementAndGet();
         return post(path).with(request -> { request.setRemoteAddr(address); return request; });
+    }
+
+    /** A session as the administrator sign-in leaves it; the real sign-in is covered by AdminAuthIntegrationTest. */
+    private Cookie adminAccess() {
+        UUID id = users.findByEmail(ADMIN_EMAIL).orElseThrow().getId();
+        return AdminSessionFactory.verified(sessions, tokens, id)[0];
     }
 
     private String hash(String email) {

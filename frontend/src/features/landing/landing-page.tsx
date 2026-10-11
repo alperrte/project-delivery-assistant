@@ -45,6 +45,7 @@ export function LandingPage() {
           <LocaleSwitcher hideLabelOnMobile triggerClassName="min-h-11" />
           <ThemeToggle />
           <Link href="/about" className={styles.headerLink}>{footer("about")}</Link>
+          <Link href="/contact" className={styles.headerLink}>{footer("contact")}</Link>
           <Link href="/login" className={styles.headerLink}>{t("login")}</Link>
           <Link href="/register" className={cn(buttonVariants(), "auth-cta hover:brightness-110", styles.headerLogin)}>{t("register")}<ArrowUpRight size={15} aria-hidden="true" /></Link>
         </nav>

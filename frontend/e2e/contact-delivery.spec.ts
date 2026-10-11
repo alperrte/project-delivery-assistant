@@ -42,8 +42,8 @@ test("a logged-out visitor sends a message: the mail reaches the sink with the f
 
   await expect.poll(async () => (await mailsContaining(marker)).length, { timeout: 15_000 }).toBe(1);
   const mail = (await mailsContaining(marker))[0];
-  expect(mail.Subject).toBe("Yeni PDA İletişim Talebi");
-  expect(mail.To.map((a) => a.Address)).toEqual(["pdassistant@gmail.com"]);
+  expect(mail.Subject).toBe("Yeni PDA İletişim Talebi [Genel]");
+  expect(mail.To.map((a) => a.Address)).toEqual(["pdassistant.info@gmail.com"]);
   expect(mail.ReplyTo.map((a) => a.Address)).toEqual([`${marker}@example.test`]);
   expect(mail.From.Address).toBe("pda-e2e@example.test");
   expect(mail.Cc).toEqual([]);
@@ -82,11 +82,11 @@ test("abuse through the real API: bad input, injected headers, a chosen recipien
   expect(ok.status).toBe(200);
   await expect.poll(async () => (await mailsContaining(marker)).length, { timeout: 15_000 }).toBe(1);
   const mail = (await mailsContaining(marker))[0];
-  expect(mail.To.map((a) => a.Address)).toEqual(["pdassistant@gmail.com"]);
+  expect(mail.To.map((a) => a.Address)).toEqual(["pdassistant.info@gmail.com"]);
   expect(mail.Cc).toEqual([]);
   expect(mail.Bcc).toEqual([]);
   expect(mail.From.Address).toBe("pda-e2e@example.test");
-  expect(mail.Subject).toBe("Yeni PDA İletişim Talebi");
+  expect(mail.Subject).toBe("Yeni PDA İletişim Talebi [Genel]");
 
   // The same message again straight away is refused and sends nothing more.
   const repeat = await post(page, good);

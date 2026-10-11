@@ -107,7 +107,7 @@ Notification type remains TASK_STATUS_CHANGED. GET /api/v1/notifications and PAT
 - Existing `DELETE /api/v1/projects/{p}/teams/{t}`: active PROJECT_MANAGER/SQUAD_MANAGE + CSRF, no body,204. Existing legacy squad archive routes delegate to the same delete use-case. Missing/deleted/wrong-project404; children/orphan409 (`TEAM_HAS_CHILDREN`, `TEAM_ARCHIVE_WOULD_ORPHAN`); unauthorized/CSRF403. Retained rows/FKs, pending invitations CANCELLED or elapsed EXPIRED, no project/task/membership cascade. Existing archived-target pool claim/release semantics retained.
 - Own `POST /api/v1/notifications/team-deletions/claim`: cookie session+CSRF, no body/actor/ID;200 one NotificationResponse or204. Nonempty body400; unauthenticated401; CSRF403. Private/no-store. Oldest unread/unpresented SQUAD_DELETED row gets an atomic presentation timestamp; read/unread stays separate. This grants at-most-once presentation, not guaranteed visual delivery after a lost response.
 - Existing own notification list/count/read/read-all contracts remain. Additive nullable `teamDeletion={projectName,teamName,actorNickname,occurredAt}` and `popupPresentedAt`; SQUAD_DELETED/resource SQUAD.
-- Authorized team `memberPreview` adds nullable real firstName/lastName; bounded newest5 batch data, no email/global directory expansion. Manager invitation list adds nullable invitedByNickname/invitedByPhotoVersion/profilePhotoVersion from one authorized page batch; no token in list responses.
+- Authorized team `memberPreview` adds nullable real firstName/lastName; bounded newest5 batch data, no email/global directory expansion. Each preview item also carries `roles` (array of `ProjectRole` names in enum order, first = primary; 2026-10-10), taken from the same member batch query (no extra query, no email). Manager invitation list adds nullable invitedByNickname/invitedByPhotoVersion/profilePhotoVersion from one authorized page batch; no token in list responses.
 - Swagger: `/swagger-ui/index.html`, `/v3/api-docs`; normal login/CSRF. Safe inputs: create team `{"name":"Example Team","includeCreator":true}`; delete/claim have no body.
 
 ## Frontend foundation own nickname API - 2026-10-07
@@ -148,10 +148,47 @@ Existing own GET `/api/v1/project-invitations/me?status=PENDING&page=0&size=1` n
 
 | Endpoint | Auth | Input | Success | Errors |
 | --- | --- | --- | --- | --- |
-| `POST /api/v1/analytics/events` | Public + CSRF; 600 / 10 min / address; body <= 2 KB | `{type: PAGE_VIEW or ENGAGEMENT, visitorId, sessionId (UUIDs), path (route template), referrerHost?, utmSource?, utmMedium?, utmCampaign?, engagedSeconds? (0..600, ENGAGEMENT), consentVersion}` | `204` | `400 ANALYTICS_INVALID`, `404 ANALYTICS_SESSION_UNKNOWN`, `403` CSRF, `411`/`413`, `429` |
+| `POST /api/v1/analytics/events` | Public + CSRF; 600 / 10 min / address; body <= 2 KB | `{type: PAGE_VIEW, ENGAGEMENT, CTA_CLICK or CLIENT_ERROR (the last two: see 2026-10-10 below), visitorId, sessionId (UUIDs), path (route template), referrerHost?, utmSource?, utmMedium?, utmCampaign?, engagedSeconds? (0..600, ENGAGEMENT), consentVersion}` | `204` | `400 ANALYTICS_INVALID`, `404 ANALYTICS_SESSION_UNKNOWN`, `403` CSRF, `411`/`413`, `429` |
 | `POST /api/v1/contact` | Public + CSRF; 5 / 10 min / address; body <= 16 KB | `{firstName (<=80), lastName (<=80), email (ASCII address <=254), message (10..5000)}`; other properties ignored | `200 {"status":"SENT"}` after the mail server accepted the message | `400 CONTACT_INVALID` (+ `invalidFields`), `409 CONTACT_DUPLICATE`, `503 CONTACT_UNAVAILABLE`, `503 CONTACT_DELIVERY_FAILED`, `413`, `429` |
 | `GET /api/v1/admin/users?page&size&search&status` | ADMIN (`USER_MANAGE`) | `search` <= 100 chars (email/nickname substring, case-insensitive); `status` ACTIVE, DISABLED or PENDING_VERIFICATION | `200` page | `400` unknown status / long search, `401`, `403` |
 | `POST /api/v1/admin/users/{id}/disable` / `enable` | ADMIN + CSRF | none | `200` | `404 USER_NOT_FOUND`, `409 ADMIN_SELF_DENIED`, `409 ADMIN_LAST_ADMIN` |
 | `GET /api/v1/admin/analytics?from&to&zone` | ADMIN (`SYSTEM_VIEW`) | ISO dates (inclusive, default last 30 days, at most 366 days), IANA `zone` (default UTC) | `200 {range, traffic{visits, uniqueSessions, uniqueVisitors, averageEngagedSeconds, daily[], sources[], topReferrers[], topCampaigns[]}, registrations{inRange, daily[]}, accounts{total, active, terminated, pendingVerification, admins}, contactRequests{inRange, total, daily[]}}` | `400` bad zone/range, `401`, `403` |
 
 Swagger check path (`API_DOCS_ENABLED=true`): `GET /api/v1/auth/csrf`, then call the two public POSTs with the returned token header; log in as an administrator for the admin calls. Local mail can be read in Mailpit (`http://localhost:8025`) when the stack is started with `docker-compose.e2e.yml`.
+
+## Administrator sign-in and the administrator-verified session - 2026-10-10
+
+Full rules and the ticket model: `.agents/SECURITY.md`, last section. Swagger check path (`API_DOCS_ENABLED=true`): `GET /api/v1/auth/csrf`, then the calls below with the returned `X-XSRF-TOKEN` header; the ticket cookies are kept by the browser or Swagger UI between calls (an authenticator code is needed for the last step).
+
+| Endpoint | Auth | Input | Success | Errors |
+| --- | --- | --- | --- | --- |
+| `POST /api/v1/auth/admin/login` | Public + CSRF; 5 / 10 min / address | `{email, password}` | `200 {"status":"TWO_FACTOR_REQUIRED"}` + cookie `PDA_ADMIN_MFA` (path `/api/v1/auth/admin/login/2fa`, 5 min) or `200 {"status":"TWO_FACTOR_ENROLLMENT_REQUIRED"}` + cookie `PDA_ADMIN_ENROLL` (path `/api/v1/auth/admin/2fa`, 10 min); no session | `401` identical for unknown / wrong password / not an ADMIN / disabled, `503 two_factor_unavailable`, `429` |
+| `POST /api/v1/auth/admin/2fa/setup` | Public + CSRF + `PDA_ADMIN_ENROLL`; 5 / 10 min | none | `200 {secret, otpauthUri}`, `no-store` (the only response that ever carries the secret) | `401 two_factor_session_expired`, `503`, `429` |
+| `POST /api/v1/auth/admin/2fa/enable` | Public + CSRF + `PDA_ADMIN_ENROLL`; 5 / 10 min | `{code}` (6 digits) | `200 {"status":"SIGNED_IN","recoveryCodes":[10]}` + `PDA_ACCESS`/`PDA_REFRESH` cookies; two-factor on; ticket used up | `400 two_factor_code_invalid` (two-factor stays off), `401 two_factor_session_expired`, `429 two_factor_locked` / rate limit |
+| `POST /api/v1/auth/admin/login/2fa` | Public + CSRF + `PDA_ADMIN_MFA`; 5 / 10 min | `{code}` (6 digits or a backup code) | `200 {"status":"SIGNED_IN"}` + `PDA_ACCESS`/`PDA_REFRESH` cookies; ticket used up | `400 two_factor_code_invalid`, `401 two_factor_session_expired`, `429 two_factor_locked` / rate limit, `503` |
+
+Changed behaviour of existing routes:
+
+- `POST /api/v1/auth/login` and the Google/GitHub sign-in answer an `ADMIN` account like a wrong password (`401`, redirect `/login?oauth_error=provider_error`); `POST /api/v1/auth/login/2fa` also refuses an administrator.
+- `GET /api/v1/auth/me` additionally returns `adminVerified` (`true` only for an `ADMIN` session opened by the administrator sign-in).
+- `/api/v1/admin/**` needs `ROLE_ADMIN` and an administrator-verified session: anonymous `401`, `USER` `403`, `ADMIN` with an older session `403` `{"code":"admin_reauthentication_required"}`.
+- `POST /api/v1/auth/2fa/disable` is `403` `{"code":"admin_two_factor_required"}` for an `ADMIN` account; a missing or changed `TOTP_ENCRYPTION_KEY` is `503` `{"code":"two_factor_unavailable"}` on every second-step route (never `500`).
+- `POST /api/v1/auth/logout` also clears `PDA_MFA`, `PDA_ADMIN_MFA` and `PDA_ADMIN_ENROLL`.
+
+## Support inbox, audit trail, status and behaviour analytics - 2026-10-10
+
+Details, privacy rules and retention are in `.agents/SECURITY.md` (last section). All admin routes below need `ROLE_ADMIN` plus an administrator-verified session; responses are `no-store`; POSTs need CSRF.
+
+| Endpoint | Permission | Request | Response |
+| --- | --- | --- | --- |
+| `POST /api/v1/contact` | public + CSRF | `{firstName, lastName?, email, message, category?, website?, startedAt?}`; `category` GENERAL (default) / BUG / DATA_REQUEST / ACCESSIBILITY; `website` honeypot (must be empty); `startedAt` epoch ms when the form was shown | `200 {"status":"SENT"}` (also for a bot-like submission, which is dropped), `400 CONTACT_INVALID` (`invalidFields` may contain `startedAt` for a form older than 24 h or from the future), `409`, `413`, `429`, `503` |
+| `GET /api/v1/admin/support-requests?page&size&status&category` | USER_MANAGE | newest first, size 1..100 | `{items:[summary + messagePreview],page,size,totalElements}` |
+| `GET /api/v1/admin/support-requests/{id}` | USER_MANAGE | - | detail with `message`; `404 SUPPORT_REQUEST_NOT_FOUND` |
+| `POST /api/v1/admin/support-requests/{id}/status` | USER_MANAGE | `{status: NEW / IN_PROGRESS / CLOSED}` | updated detail; audited |
+| `GET /api/v1/admin/audit-events?page&size&action&from&to&zone` | AUDIT_VIEW | `action` ADMIN_SIGN_IN, USER_DISABLE, USER_ENABLE, SESSION_REVOKE, SESSION_REVOKE_ALL, SUPPORT_REQUEST_STATUS_CHANGE; `from`/`to` ISO dates, inclusive, in `zone` (default UTC) | `{items:[{id,occurredAt,actorUserId,actorNickname,action,targetType,targetId,targetNickname,outcome}],page,size,totalElements}` |
+| `GET /api/v1/admin/system/status` | SYSTEM_VIEW | - | previous booleans plus `totpEncryptionKeyConfigured`, `activeSessions`, `httpErrorsLast24h {clientErrors,serverErrors}`, `scheduledJobs [{name,lastRunAt,lastOutcome,lastAffected}]` |
+| `GET /api/v1/admin/users/{id}` | USER_MANAGE | - | `{user, linkedProviders, activeSessions, platformPermissions[]}` (permissions read only) |
+| `GET /api/v1/admin/analytics?from&to&zone` | SYSTEM_VIEW | - | previous blocks plus `behavior {topPages, entryPages, exitPages, flows, notFound, ctas, conversions, clientErrors}` |
+| `POST /api/v1/analytics/events` | public + CSRF | new types `CTA_CLICK` (`ctaId`: landing_register, landing_login, header_register, header_login, register_submit, contact_submit, github_repo) and `CLIENT_ERROR` (`errorKind`: render, chunk_load, unhandled_rejection, network; `path` = route template) | `204`; `400 ANALYTICS_INVALID` for an unknown id/kind, `404 ANALYTICS_SESSION_UNKNOWN` |
+
+Existing admin contracts reviewed for the new admin screens (unchanged unless listed): `GET /api/v1/admin/users` (page/size/search/status), `POST .../disable`, `.../enable`, `GET .../sessions`, `POST .../sessions/revoke-all`, `POST .../sessions/{sessionId}/revoke` (disable, enable and both revokes are now audited), `GET /api/v1/admin/overview`, `GET /api/v1/admin/projects?page&size`.

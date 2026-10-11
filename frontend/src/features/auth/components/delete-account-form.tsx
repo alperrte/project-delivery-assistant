@@ -142,7 +142,7 @@ export function DeleteAccountForm() {
             </p>
           )}
 
-          <SubmitButton pending={isSubmitting} className="h-12 bg-destructive text-white hover:bg-destructive/90">
+          <SubmitButton pending={isSubmitting} className="h-12 bg-destructive text-white dark:text-background hover:bg-destructive/90">
             {isSubmitting ? t("submitting") : t("submit")}
           </SubmitButton>
         </fieldset>

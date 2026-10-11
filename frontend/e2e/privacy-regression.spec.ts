@@ -101,7 +101,7 @@ test("the contact form keeps markup as text and never relays: script text arrive
   const mail = (await mailsContaining(marker))[0];
   expect(mail.Text).toContain(`<script>alert("${marker}")</script> merhaba`);
   expect(mail.Text).toContain("<img src=x onerror=alert(1)> Test");
-  expect(mail.To.map((address) => address.Address)).toEqual(["pdassistant@gmail.com"]);
+  expect(mail.To.map((address) => address.Address)).toEqual(["pdassistant.info@gmail.com"]);
   // Nothing of the submission is persisted by the application.
   expect(psql(`SELECT count(*) FROM contact_requests WHERE id::text LIKE '%${marker}%'`)).toBe("0");
 });

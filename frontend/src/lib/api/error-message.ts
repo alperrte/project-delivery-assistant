@@ -30,6 +30,8 @@ const CODE_KEYS: Record<string, string> = {
   two_factor_already_enabled: "twoFactorAlreadyEnabled",
   two_factor_required: "twoFactorRequired",
   two_factor_unavailable: "twoFactorUnavailable",
+  admin_reauthentication_required: "adminReauthenticationRequired",
+  admin_two_factor_required: "adminTwoFactorRequired",
   deletion_link_invalid: "deletionLinkInvalid",
   deletion_link_expired: "deletionLinkExpired",
   deletion_credentials_invalid: "deletionCredentialsInvalid",

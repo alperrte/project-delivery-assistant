@@ -74,14 +74,14 @@ test.describe("Kayıt: e-posta doğrulama", () => {
     expect(replay.status, JSON.stringify(replay.json)).toBeGreaterThanOrEqual(400);
   });
 
-  test("3 dakikalık sayaç dolunca kod alanı kilitlenir ve yeni kod istenebilir", async ({ page }) => {
+  test("15 dakikalık sayaç dolunca kod alanı kilitlenir ve yeni kod istenebilir", async ({ page }) => {
     await page.clock.install();
     await fillRegistration(page, uniqueUser("timer"));
     await page.getByRole("button", { name: /^Kayıt ol$/ }).click();
     await expect(page).toHaveURL((url) => matchPath(url.pathname)?.route === "/verify-email");
-    await expect(page.getByRole("timer")).toContainText("3:00");
+    await expect(page.getByRole("timer")).toContainText("15:00");
 
-    await page.clock.fastForward("03:01");
+    await page.clock.fastForward("15:01");
     await expect(page.getByRole("button", { name: tr.codeEntry.resend, exact: true })).toBeVisible();
     await expect(codeField(page)).toBeDisabled();
   });

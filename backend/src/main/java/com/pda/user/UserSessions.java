@@ -8,6 +8,15 @@ import java.util.UUID;
 /** Public User module contract for Auth session use cases. */
 public interface UserSessions {
     UUID open(UUID userId, String refreshToken, Instant expiresAt, String userAgent);
+
+    /**
+     * Opens a session that was proven by the administrator sign-in (password plus authenticator code). Only such a
+     * session passes {@link #isAdminVerified}; refresh rotation keeps the mark because the session row is the same.
+     */
+    UUID openAdminVerified(UUID userId, String refreshToken, Instant expiresAt, String userAgent, Instant now);
+
+    /** True when this active session of the user was opened by the administrator sign-in. */
+    boolean isAdminVerified(UUID sessionId, UUID userId, Instant now);
     boolean isActive(UUID sessionId, UUID userId, Instant now);
     boolean revoke(UUID userId, String refreshToken, Instant now);
 
@@ -31,6 +40,9 @@ public interface UserSessions {
     int revokeAll(UUID userId, Instant now);
 
     long countActive(UUID userId, Instant now);
+
+    /** Active (not revoked, not expired) sessions of every account; for the administrator system status. */
+    long countAllActive(Instant now);
 
     record SessionView(UUID id, Instant createdAt, Instant lastUsedAt, Instant expiresAt, String userAgent) {}
 }

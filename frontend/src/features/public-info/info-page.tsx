@@ -39,7 +39,8 @@ export async function PublicInfoPage({ page }: { page: InfoPage }) {
   const groups: FaqGroup[] = page === "faq" ? t.raw("groups") : [];
   const isLicense = page === "license";
   const contents = page === "faq" ? groups : isLicense ? [...sections, { id: "full-text", title: t("fullTextTitle") }] : sections;
-  const date = new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Istanbul" }).format(new Date("2026-10-09T12:00:00+03:00"));
+  const updatedAt = page === "accessibility" ? "2026-10-11T12:00:00+03:00" : "2026-10-09T12:00:00+03:00";
+  const date = new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Istanbul" }).format(new Date(updatedAt));
 
   return (
     <article>
@@ -48,7 +49,7 @@ export async function PublicInfoPage({ page }: { page: InfoPage }) {
       {page === "faq" && <FaqJsonLd questions={groups.flatMap((group) => group.questions)} />}
       <header className="max-w-3xl">
         <p className="text-sm font-medium text-muted-foreground">PDA · Project Delivery Assistant</p>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">{t("title")}</h1>
+        <h1 className="mt-3 text-3xl font-semibold tracking-tight [overflow-wrap:anywhere] sm:text-4xl">{t("title")}</h1>
         <p className="mt-4 text-base leading-7 text-muted-foreground">{t("description")}</p>
         {!isLicense && <p className="mt-4 text-sm text-muted-foreground">{common("updated", { date })}</p>}
       </header>

@@ -41,6 +41,18 @@ public class AuthCookies {
     public static final String MFA_PATH = "/api/v1/auth/login";
     public static final String MFA_PURPOSE = "mfa_login";
     public static final Duration MFA_LIFETIME = Duration.ofMinutes(5);
+    /**
+     * Administrator sign-in, authenticator step: the password was right and the account has a confirmed authenticator.
+     * Only {@code /auth/admin/login/2fa} receives it (cookie path) and accepts it; it is single use (server-side row).
+     */
+    public static final String ADMIN_MFA = "PDA_ADMIN_MFA";
+    public static final String ADMIN_MFA_PATH = "/api/v1/auth/admin/login/2fa";
+    /**
+     * Administrator sign-in, first-time enrolment: the password was right but no authenticator is confirmed yet. Only
+     * the two {@code /auth/admin/2fa/*} enrolment endpoints receive and accept it; single use, 10 minutes.
+     */
+    public static final String ADMIN_ENROLL = "PDA_ADMIN_ENROLL";
+    public static final String ADMIN_ENROLL_PATH = "/api/v1/auth/admin/2fa";
     private final JwtTokens tokens;
     private final boolean production;
 
@@ -85,6 +97,13 @@ public class AuthCookies {
 
     public void clearSecondFactorPending(HttpServletRequest request, HttpServletResponse response) {
         clearTicket(MFA, MFA_PATH, request, response);
+    }
+
+    /** Logout: forget every half-finished sign-in proof (regular second step and both administrator tickets). */
+    public void clearSignInTickets(HttpServletRequest request, HttpServletResponse response) {
+        clearTicket(MFA, MFA_PATH, request, response);
+        clearTicket(ADMIN_MFA, ADMIN_MFA_PATH, request, response);
+        clearTicket(ADMIN_ENROLL, ADMIN_ENROLL_PATH, request, response);
     }
 
     public String access(HttpServletRequest request) { return read(request, ACCESS); }

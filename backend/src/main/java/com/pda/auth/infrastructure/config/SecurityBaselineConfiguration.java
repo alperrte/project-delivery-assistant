@@ -4,6 +4,7 @@ import java.net.URI;
 import java.time.Clock;
 import java.util.List;
 import com.pda.auth.application.service.JwtTokens;
+import com.pda.user.AdminReauthenticationRequiredException;
 import com.pda.user.UserAccounts;
 import com.pda.user.UserSessions;
 import jakarta.servlet.http.HttpServletResponse;
@@ -127,7 +128,13 @@ public class SecurityBaselineConfiguration {
                                     || path.equals("/api/v1/notifications") || path.startsWith("/api/v1/notifications/");
                             writeProblem(response, unauthenticated ? 401 : 403);
                         })
-                        .accessDeniedHandler((request, response, failure) -> writeProblem(response, 403)))
+                        .accessDeniedHandler((request, response, failure) -> {
+                            if (failure instanceof AdminReauthenticationRequiredException) {
+                                JwtCookieAuthenticationFilter.writeAdminReauthenticationRequired(response);
+                            } else {
+                                writeProblem(response, 403);
+                            }
+                        }))
                 .authorizeHttpRequests(authorize -> {
                     if (apiDocsEnabled) {
                         authorize.requestMatchers(HttpMethod.GET, "/swagger-ui.html", "/swagger-ui/**",
@@ -161,7 +168,10 @@ public class SecurityBaselineConfiguration {
                                     "/api/v1/auth/login", "/api/v1/auth/refresh",
                                     "/api/v1/auth/logout", "/api/v1/auth/password/forgot",
                                     "/api/v1/auth/password/reset/verify", "/api/v1/auth/password/reset",
-                                    "/api/v1/auth/login/2fa", "/api/v1/auth/account/deletion/confirm").permitAll()
+                                    "/api/v1/auth/login/2fa", "/api/v1/auth/account/deletion/confirm",
+                                    // Separate administrator sign-in: public with CSRF, each step needs its own ticket cookie.
+                                    "/api/v1/auth/admin/login", "/api/v1/auth/admin/login/2fa",
+                                    "/api/v1/auth/admin/2fa/setup", "/api/v1/auth/admin/2fa/enable").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/auth/account/deletion/request").authenticated()
                             .requestMatchers(HttpMethod.GET, "/api/v1/auth/2fa").authenticated()
                             .requestMatchers(HttpMethod.POST, "/api/v1/auth/2fa/setup", "/api/v1/auth/2fa/enable",

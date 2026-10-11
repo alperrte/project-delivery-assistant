@@ -1,5 +1,6 @@
 package com.pda.admin.application.service;
 
+import com.pda.user.AdminReauthenticationRequiredException;
 import com.pda.user.GlobalRole;
 import com.pda.user.PlatformPermission;
 import com.pda.user.RolePolicy;
@@ -22,6 +23,12 @@ public class AdminAuthorization {
         }
         if (!RolePolicy.allows(role, permission)) {
             throw new AccessDeniedException("Platform permission required");
+        }
+        // The role alone is not enough: the session must have been opened by the administrator sign-in
+        // (password plus authenticator code). The request filter enforces the same rule for the whole /api/v1/admin/**
+        // namespace; this is the second line behind it.
+        if (!principal.adminVerified()) {
+            throw new AdminReauthenticationRequiredException();
         }
     }
 }

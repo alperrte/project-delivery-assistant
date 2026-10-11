@@ -12,10 +12,10 @@ Kodlama: Sonnet 5.5 (high) alt-ajanları; orkestrasyon/inceleme/test/dokümantas
 
 - [x] Phase 0 — Global read-only audit
 - [x] Phase 1 — `general-features`
-- [ ] Transition Gate 1 — user commit/push confirmation
-- [ ] Phase 2 — `squad-service-backend`
-- [ ] Transition Gate 2 — user commit/push confirmation
-- [ ] Phase 3 — Final integrated verification
+- [x] Transition Gate 1 — user commit/push confirmation
+- [x] Phase 2 — `squad-service-backend`
+- [x] Transition Gate 2 — user commit/push confirmation
+- [x] Phase 3 — Final integrated verification (kayıtlı test istisnasıyla; bkz. final completion)
 
 ---
 
@@ -246,8 +246,8 @@ STOP → `BRANCH COMPLETE — general-features`
 
 ## Transition Gate 1
 
-- [ ] Kullanıcı commit/push'u doğruladı.
-- [ ] `squad-service-backend` main'den güncellendi ve Phase 1 commit'i erişilebilir.
+- [x] Kullanıcı commit/push'u doğruladı.
+- [x] `squad-service-backend` main'den güncellendi ve Phase 1 commit'i erişilebilir (PR #137, `5f524bb`).
 
 ---
 
@@ -281,13 +281,13 @@ Transition Gate 1.
 
 ### Checklist
 
-- [ ] 6.1 DTO + servis.
-- [ ] 6.2 Testler (roller doğru, sıralı, sorgu sayısı artmıyor, e-posta yok).
-- [ ] 6.3 `SECURITY.md`/`api.md` notu.
+- [x] 6.1 DTO + servis.
+- [x] 6.2 Testler (roller doğru, sıralı, sorgu sayısı artmıyor, e-posta yok).
+- [x] 6.3 `SECURITY.md`/`api.md` notu.
 
 ### Definition of Done
 
-- [ ] Roller önizlemede; N+1 yok; `ModularityTest` + tam verify geçer.
+- [x] Roller önizlemede; N+1 yok; `ModularityTest` + hedefli backend testleri geçer (tam verify Phase 3'te; kullanıcı kararı).
 
 ## Task 7 — Ekip kartında avatar + ad + pozisyon
 
@@ -317,14 +317,14 @@ Task 6.
 
 ### Checklist
 
-- [ ] 7.1 Üye kutusu: avatar, ad (truncate + title), ana rol + "+N" (tooltip/aria tüm roller).
-- [ ] 7.2 Çok üye: mevcut en fazla 5 + "+N" korunur; satır kaydırma (wrap) ile kart yüksekliği sınırlı.
-- [ ] 7.3 Tablo ve Şema görünümleri korunur (tablo/şema üye sunumu değişmez veya uyumlu kalır).
-- [ ] 7.4 E2E Test 6/7: fotoğraflı, fotoğrafsız, uzun ad, uzun rol, çok rol, çok üye, 0 üye; 320–1440, light/dark.
+- [x] 7.1 Üye kutusu: avatar, ad (kullanıcı geri bildirimiyle kısaltma YOK: tam ad, satıra kayar; tooltip tüm adı + rolleri gösterir), ana rol + "+N" (tooltip/aria tüm roller).
+- [x] 7.2 Çok üye: mevcut en fazla 5 + "+N" korunur; satır kaydırma (wrap) ile kart yüksekliği içeriğe göre büyür (uzun adlarda; bkz. completion kaydı "Kalan konular").
+- [x] 7.3 Tablo ve Şema görünümleri korunur (tablo/şema üye sunumu değişmez veya uyumlu kalır).
+- [x] 7.4 E2E Test 6/7: fotoğraflı, fotoğrafsız, uzun ad, uzun rol, çok rol, çok üye, 0 üye; 320–1440, light/dark.
 
 ### Definition of Done
 
-- [ ] Grid'de avatar + ad + pozisyon; Table/Schema çalışır; kart yüksekliği kontrollü.
+- [x] Grid'de avatar + ad + pozisyon; Table/Schema çalışır; kart yüksekliği kontrollü.
 
 ## Task 8 — Phase 2 regresyon
 
@@ -348,30 +348,30 @@ Task 6–7 DoD.
 
 ### Checklist
 
-- [ ] 8.1 Backend verify.
-- [ ] 8.2 lint/type/build.
-- [ ] 8.3 Playwright (team-*, teams-view-toggle, team-member-preview).
-- [ ] 8.4 pre-push.
-- [ ] 8.5 Docs + completion.
+- [x] 8.1 Backend verify. (hedefli 31/31; tam `verify` Phase 3'te)
+- [x] 8.2 lint/type/build. (lint + tsc; `next build` Phase 3'te)
+- [x] 8.3 Playwright (team-*, teams-view-toggle, team-member-preview).
+- [x] 8.4 pre-push. (kullanıcı kararı: Phase 3'te koşuldu)
+- [x] 8.5 Docs + completion.
 
 ### Definition of Done (Branch completion)
 
-- [ ] Talep 5 tamamlandı/test edildi; N+1 yok; Grid/Table/Schema korunur.
-- [ ] Commit/push yapılmadı.
+- [x] Talep 5 tamamlandı/test edildi; N+1 yok; Grid/Table/Schema korunur.
+- [x] Commit/push yapılmadı.
 
 STOP → `BRANCH COMPLETE — squad-service-backend`
 
 ## Transition Gate 2
 
-- [ ] Kullanıcı commit/push'u doğruladı.
+- [x] Kullanıcı commit/push'u doğruladı (PR #138, `90f7c7c`).
 
 ---
 
 ## Phase 3 — Final integrated verification
 
-- [ ] Her iki faz main'de birleşik (ortak commit doğrulaması).
-- [ ] Backend `mvnw clean verify`.
-- [ ] Frontend lint / TypeScript / production build.
-- [ ] Hedefli Playwright paketleri + full Chromium + public paket.
-- [ ] `.\pre-push\pre-push.cmd` (Docker build/start/health dahil).
-- [ ] Ayrı final completion dokümanı (md'deki başlıklarla).
+- [x] Her iki faz main'de birleşik (`90f7c7c`).
+- [x] Backend `mvnw clean verify`. (827/0)
+- [x] Frontend lint / TypeScript / production build.
+- [x] Hedefli Playwright paketleri + full Chromium + public paket. (814 + temiz yeniden koşu 60/61; kalan: palet testi yarışı)
+- [ ] `.\pre-push\pre-push.cmd` (Docker build/start/health dahil). — katı PASS değil: koşu branch geçişiyle kirlendi; bkz. final completion
+- [x] Ayrı final completion dokümanı: `docs/compliation/2026-10-10-account-public-ui-theme-teams-refinements.md`.

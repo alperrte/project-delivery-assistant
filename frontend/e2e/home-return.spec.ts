@@ -59,6 +59,12 @@ for (const scenario of [
     await page.getByRole("link", { name: scenario.logo ? "PDA · Ana sayfa" : "Ana sayfaya dön", exact: true }).click();
     await expect(page).toHaveURL(/\/tr\/ana-sayfa$/);
     await expect(page.locator("#landing-heading")).toBeVisible();
+    if ("deviceReduce" in scenario) {
+      expect((await readProbe(page)).animations).toHaveLength(0);
+      expect((await readProbe(page)).snapshots).toBe(0);
+      await expect(page.getByRole("link", { name: "Giriş yap", exact: true }).first()).toBeEnabled();
+      return;
+    }
     await expect.poll(async () => (await readProbe(page)).animations.some(entry => entry.state === "finished")).toBe(true);
     const probe = await readProbe(page);
     const animation = probe.animations.find(entry => entry.state === "finished")!;

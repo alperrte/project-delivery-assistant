@@ -9,6 +9,7 @@ import { clearPrivateInvitations } from "@/features/invitations/query-keys";
 import { clearPrivateNotifications } from "@/features/notifications/query-keys";
 import { clearPrivateTeams } from "@/features/squads/cache";
 import { clearPrivateAdmin } from "@/features/admin/query-keys";
+import { clearPrivateAuth } from "../query-keys";
 
 /** Pages a signed-in user is never sent back to after login. */
 const NOT_RETURNABLE = ["/login", "/register", "/forgot-password", "/change-password", "/verify-email", "/delete-account"];
@@ -27,6 +28,7 @@ export function useCompleteLogin() {
     clearPrivateNotifications(queryClient);
     clearPrivateTeams(queryClient);
     clearPrivateAdmin(queryClient);
+    clearPrivateAuth(queryClient);
     queryClient.setQueryData(sessionQueryKey, me);
     const invitation = new URLSearchParams(window.location.hash.slice(1)).get("invitation");
     const requested = new URLSearchParams(window.location.search).get("next");

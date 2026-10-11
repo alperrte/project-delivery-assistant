@@ -156,7 +156,9 @@
     "deletionLinkExpired": "The deletion link has expired. Request a new one from your account settings.",
     "deletionCredentialsInvalid": "Email or password is incorrect.",
     "ownsResources": "Hand over or delete the projects and organizations you own first.",
-    "administratorCannotDelete": "Administrator accounts cannot be deleted here."
+    "administratorCannotDelete": "Administrator accounts cannot be deleted here.",
+    "adminReauthenticationRequired": "The administration area needs the separate administrator sign-in. Please sign in again there.",
+    "adminTwoFactorRequired": "Two-step verification is mandatory for administrator accounts and cannot be turned off."
   },
   "app": {
     "nav": {
@@ -1265,6 +1267,63 @@
     "useAppCode": "Use the authenticator code",
     "twoFactorBack": "Back to sign in"
   },
+  "adminLogin": {
+    "metaTitle": "Administrator sign-in",
+    "metaDescription": "The separate administrator sign-in for the PDA administration area.",
+    "eyebrow": "Administrator area",
+    "title": "PDA Administrator Sign-in",
+    "subtitle": "This area is for administrators only. You need your email, password and authenticator code to continue.",
+    "email": "Email",
+    "password": "Password",
+    "emailPlaceholder": "admin@example.com",
+    "passwordPlaceholder": "Enter your password",
+    "submit": "Continue",
+    "submitting": "Checking...",
+    "checking": "Checking the session",
+    "notices": {
+      "sessionExpired": "Your administrator session has ended. Sign in again to continue.",
+      "reauthenticate": "The administration area needs the administrator sign-in. Please sign in again here.",
+      "ticketExpired": "The verification timed out. Please start again with your email and password."
+    },
+    "totp": {
+      "title": "Two-step verification",
+      "subtitle": "Enter the 6-digit code from your authenticator app.",
+      "backupSubtitle": "Enter one of your backup codes. Each code works only once.",
+      "code": "Verification code",
+      "backupCode": "Backup code",
+      "backupPlaceholder": "xxxxx-xxxxx",
+      "submit": "Verify and sign in",
+      "submitting": "Verifying...",
+      "useBackup": "Use a backup code",
+      "useApp": "Use the authenticator code",
+      "back": "Back to email and password"
+    },
+    "enroll": {
+      "title": "Connect your authenticator",
+      "subtitle": "Two-step verification is mandatory for administrator accounts. This setup only happens on the first sign-in.",
+      "step1": "Open Google Authenticator or another TOTP app on your phone.",
+      "step2": "Add a new account in the app and scan the QR code below.",
+      "qrLabel": "QR code for the authenticator setup",
+      "manualKey": "If you cannot scan the QR code, enter this key in the app by hand (time-based key):",
+      "copy": "Copy key",
+      "copied": "Copied",
+      "copyFailed": "Could not copy. Enter the key by hand.",
+      "step3": "Enter the 6-digit code the app shows.",
+      "code": "Verification code",
+      "submit": "Verify and turn on",
+      "submitting": "Verifying...",
+      "back": "Back to email and password"
+    },
+    "codes": {
+      "title": "Save your backup codes",
+      "warning": "If you lose access to your phone you can sign in with these codes. Each code works only once and will not be shown again; save them somewhere safe before leaving this page.",
+      "listLabel": "Backup codes",
+      "copy": "Copy codes",
+      "copied": "Copied",
+      "copyFailed": "Could not copy. Write the codes down.",
+      "saved": "I saved them, open the panel"
+    }
+  },
   "register": {
     "metaDescription": "Create a PDA account, set up your project, invite your team and deliver the work together.",
     "title": "Create your account",
@@ -1468,7 +1527,7 @@
       "description": "These preferences are saved to your account and apply every time you sign in.",
       "ui": {
         "label": "Interface animations",
-        "hint": "Animations are on by default. Turn off animations for dialogs, menus, the sidebar and language changes here.",
+        "hint": "Animations are on by default. Your device’s reduced-motion preference is always respected. Turn off animations for dialogs, menus, the sidebar and language changes here.",
         "on": "On",
         "off": "Off"
       },
@@ -1522,6 +1581,7 @@
   },
   "workspace": {
     "navigation": "Navigation menu",
+    "showNavigation": "Show navigation bar",
     "offline": "You are offline. Data refreshes by itself when the connection returns.",
     "search": "Search",
     "searchPlaceholder": "Search pages, projects, or organizations…",
@@ -2593,7 +2653,7 @@
             },
             {
               "question": "Can I run PDA on my own computer or server?",
-              "answer": "Yes. PDA is open source and can run on your own infrastructure. The backend and database start with Docker, and the interface runs with Node.js. The steps are in the README file in the GitHub repository. On your own installation, storing and backing up the data is your responsibility."
+              "answer": "Yes. PDA is open source and can run on your own infrastructure. The backend and database start with Docker, and the interface runs with Next.js. The steps are in the README file in the GitHub repository. On your own installation, storing and backing up the data is your responsibility."
             },
             {
               "question": "Which license is PDA released under?",
@@ -2665,7 +2725,7 @@
             },
             {
               "question": "How can I review my data or request deletion?",
-              "answer": "Read the KVKK and Privacy Policy pages for information about data processing. Send account or data requests to the contact email. The current account screen does not have an automatic deletion button; the request scope and identity verification need separate review."
+              "answer": "Read the KVKK and Privacy Policy pages for information about data processing. You can start account deletion from Account settings and complete the required verification using the link sent to your email. Send other account or data requests to the contact email; the request scope and identity verification will be reviewed separately."
             }
           ]
         },
@@ -2752,7 +2812,7 @@
           "title": "Retention and data requests",
           "paragraphs": [
             "Active account and project records are stored in the database for service features. A session expiring does not mean all historical records are automatically deleted.",
-            "Category-specific retention, backup and deletion schedules must be defined before launch. There is currently no automatic account deletion screen. Contact us with access, correction or deletion requests; they should be reviewed after verifying account ownership and considering other people's rights."
+            "Category-specific retention, backup and deletion schedules must be defined before launch. You can start account deletion from Account settings and complete the required verification using the link sent to your email. Contact us with other access, correction or deletion requests; they should be reviewed after verifying account ownership and considering other people's rights."
           ]
         },
         {
@@ -2848,8 +2908,8 @@
           "id": "approach",
           "title": "Our approach",
           "paragraphs": [
-            "We aim to make PDA accessible across screen sizes and different user needs. Accessibility requires renewed checks as the product develops.",
-            "The application has not undergone an independent, comprehensive WCAG conformance assessment. This page is not a certification or a claim that every screen works perfectly."
+            "We develop PDA to be accessible across screen sizes and different user needs. Accessibility checks have covered keyboard use, form labels, visible focus, zoom and reduced-motion behavior.",
+            "We continue to improve accessibility as the product evolves. If you encounter any additional issue or access barrier, please get in touch using the form on the Contact page."
           ]
         },
         {
@@ -2872,16 +2932,16 @@
           "id": "screen-readers",
           "title": "Structure and assistive technology",
           "paragraphs": [
-            "Information pages use semantic headings, main content and navigation. Footer GitHub links have accessible names including the person's name; decorative icons are hidden from screen readers.",
-            "Other application screens still need validation across screen readers and browsers. Reporting barriers helps us improve them."
+            "Headings, main content and navigation use semantic HTML. Form fields have labels, buttons have accessible names and error messages provide text explanations. Decorative icons are hidden from screen readers.",
+            "If you use assistive technology and have difficulty reading content or completing an action, please let us know. We use your feedback to guide accessibility improvements."
           ]
         },
         {
           "id": "feedback",
           "title": "Report a barrier",
           "paragraphs": [
-            "If you cannot use a page or complete an action, use the form on the Contact page to send the page address, intended action, browser/device and any assistive technology used.",
-            "Remove personal or secret information from screenshots. You do not need to disclose medical details to report a barrier."
+            "If you have an accessibility issue, bug or suggestion, please contact us using the form on the Contact page. Include the page address, intended action, issue encountered, browser/device and any assistive technology used.",
+            "Do not share your password, verification code or other confidential information. You do not need to disclose medical details to report an issue."
           ]
         }
       ]
@@ -3481,6 +3541,7 @@
       "on": "On",
       "off": "Off",
       "unavailable": "Two-step verification is not configured on this server yet.",
+      "adminRequired": "Two-step verification is mandatory for administrator accounts and cannot be turned off.",
       "enable": "Turn on two-step verification",
       "preparing": "Preparing...",
       "scanTitle": "1. Scan the QR code",

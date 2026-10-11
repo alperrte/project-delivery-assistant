@@ -9,6 +9,11 @@ export type AuthenticatedUser = {
   nickname: string;
   globalRole: string;
   mustChangePassword: boolean;
+  /**
+   * True only for an administrator whose session was opened by the separate administrator sign-in (password plus
+   * authenticator). Anything else, including an older administrator session, is refused by the admin API.
+   */
+  adminVerified?: boolean;
   /** Set only while the account has a profile photo; used as the `?v=` cache buster. */
   profilePhotoVersion?: number | null;
 };

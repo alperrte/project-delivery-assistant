@@ -156,7 +156,9 @@
     "deletionLinkExpired": "Der Löschlink ist abgelaufen. Fordern Sie in den Kontoeinstellungen einen neuen an.",
     "deletionCredentialsInvalid": "E-Mail oder Passwort ist falsch.",
     "ownsResources": "Übertragen oder löschen Sie zuerst die Projekte und Organisationen, die Ihnen gehören.",
-    "administratorCannotDelete": "Administratorkonten können hier nicht gelöscht werden."
+    "administratorCannotDelete": "Administratorkonten können hier nicht gelöscht werden.",
+    "adminReauthenticationRequired": "Der Verwaltungsbereich erfordert die separate Administratoranmeldung. Bitte melden Sie sich dort erneut an.",
+    "adminTwoFactorRequired": "Die Zwei-Schritt-Bestätigung ist für Administratorkonten verpflichtend und kann nicht ausgeschaltet werden."
   },
   "app": {
     "nav": {
@@ -1289,6 +1291,63 @@
     "useAppCode": "Authenticator-Code verwenden",
     "twoFactorBack": "Zurück zur Anmeldung"
   },
+  "adminLogin": {
+    "metaTitle": "Administratoranmeldung",
+    "metaDescription": "Die separate Administratoranmeldung für den PDA-Verwaltungsbereich.",
+    "eyebrow": "Administratorbereich",
+    "title": "PDA-Administratoranmeldung",
+    "subtitle": "Dieser Bereich ist nur für Administratoren. Zum Fortfahren benötigen Sie E-Mail, Passwort und Ihren Authenticator-Code.",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "emailPlaceholder": "admin@beispiel.de",
+    "passwordPlaceholder": "Passwort eingeben",
+    "submit": "Weiter",
+    "submitting": "Wird geprüft...",
+    "checking": "Sitzung wird geprüft",
+    "notices": {
+      "sessionExpired": "Ihre Administratorsitzung ist abgelaufen. Melden Sie sich erneut an, um fortzufahren.",
+      "reauthenticate": "Der Verwaltungsbereich erfordert die Administratoranmeldung. Bitte melden Sie sich hier erneut an.",
+      "ticketExpired": "Die Bestätigung ist abgelaufen. Bitte beginnen Sie erneut mit E-Mail und Passwort."
+    },
+    "totp": {
+      "title": "Zwei-Schritt-Bestätigung",
+      "subtitle": "Geben Sie den 6-stelligen Code aus Ihrer Authenticator-App ein.",
+      "backupSubtitle": "Geben Sie einen Ihrer Backup-Codes ein. Jeder Code funktioniert nur einmal.",
+      "code": "Bestätigungscode",
+      "backupCode": "Backup-Code",
+      "backupPlaceholder": "xxxxx-xxxxx",
+      "submit": "Bestätigen und anmelden",
+      "submitting": "Wird geprüft...",
+      "useBackup": "Backup-Code verwenden",
+      "useApp": "Authenticator-Code verwenden",
+      "back": "Zurück zu E-Mail und Passwort"
+    },
+    "enroll": {
+      "title": "Authenticator verbinden",
+      "subtitle": "Die Zwei-Schritt-Bestätigung ist für Administratorkonten verpflichtend. Diese Einrichtung erfolgt nur bei der ersten Anmeldung.",
+      "step1": "Öffnen Sie Google Authenticator oder eine andere TOTP-App auf Ihrem Telefon.",
+      "step2": "Fügen Sie in der App ein neues Konto hinzu und scannen Sie den QR-Code unten.",
+      "qrLabel": "QR-Code für die Authenticator-Einrichtung",
+      "manualKey": "Wenn Sie den QR-Code nicht scannen können, geben Sie diesen Schlüssel in der App ein (zeitbasierter Schlüssel):",
+      "copy": "Schlüssel kopieren",
+      "copied": "Kopiert",
+      "copyFailed": "Kopieren nicht möglich. Geben Sie den Schlüssel von Hand ein.",
+      "step3": "Geben Sie den 6-stelligen Code ein, den die App anzeigt.",
+      "code": "Bestätigungscode",
+      "submit": "Bestätigen und aktivieren",
+      "submitting": "Wird geprüft...",
+      "back": "Zurück zu E-Mail und Passwort"
+    },
+    "codes": {
+      "title": "Backup-Codes speichern",
+      "warning": "Wenn Sie keinen Zugriff auf Ihr Telefon haben, können Sie sich mit diesen Codes anmelden. Jeder Code funktioniert nur einmal und wird nicht erneut angezeigt; speichern Sie sie sicher, bevor Sie diese Seite verlassen.",
+      "listLabel": "Backup-Codes",
+      "copy": "Codes kopieren",
+      "copied": "Kopiert",
+      "copyFailed": "Kopieren nicht möglich. Notieren Sie die Codes.",
+      "saved": "Gespeichert, Verwaltung öffnen"
+    }
+  },
   "register": {
     "metaDescription": "Erstellen Sie ein PDA-Konto, richten Sie Ihr Projekt ein, laden Sie Ihr Team ein und liefern Sie gemeinsam.",
     "title": "Konto erstellen",
@@ -1492,7 +1551,7 @@
       "description": "Diese Einstellungen werden in Ihrem Konto gespeichert und gelten bei jeder Anmeldung.",
       "ui": {
         "label": "Oberflächenanimationen",
-        "hint": "Animationen sind standardmäßig an. Hier können Sie Animationen für Dialoge, Menüs, die Seitenleiste und den Sprachwechsel ausschalten.",
+        "hint": "Animationen sind standardmäßig an. Die Geräteeinstellung für reduzierte Bewegung wird immer berücksichtigt. Hier können Sie Animationen für Dialoge, Menüs, die Seitenleiste und den Sprachwechsel ausschalten.",
         "on": "An",
         "off": "Aus"
       },
@@ -1546,6 +1605,7 @@
   },
   "workspace": {
     "navigation": "Navigationsmenü",
+    "showNavigation": "Navigationsleiste anzeigen",
     "offline": "Sie sind offline. Die Daten werden automatisch aktualisiert, sobald die Verbindung zurück ist.",
     "search": "Suche",
     "searchPlaceholder": "Seiten, Projekte oder Organisationen suchen…",
@@ -2617,7 +2677,7 @@
             },
             {
               "question": "Kann ich PDA auf meinem eigenen Computer oder Server betreiben?",
-              "answer": "Ja. PDA ist Open Source und läuft auf Ihrer eigenen Infrastruktur. Backend und Datenbank starten mit Docker, die Oberfläche läuft mit Node.js. Die Schritte stehen in der README-Datei im GitHub-Repository. Bei einer eigenen Installation sind Sie selbst für Speicherung und Sicherung der Daten verantwortlich."
+              "answer": "Ja. PDA ist Open Source und läuft auf Ihrer eigenen Infrastruktur. Backend und Datenbank starten mit Docker, die Oberfläche läuft mit Next.js. Die Schritte stehen in der README-Datei im GitHub-Repository. Bei einer eigenen Installation sind Sie selbst für Speicherung und Sicherung der Daten verantwortlich."
             },
             {
               "question": "Unter welcher Lizenz wird PDA veröffentlicht?",
@@ -2689,7 +2749,7 @@
             },
             {
               "question": "Wie kann ich meine Daten prüfen oder eine Löschung beantragen?",
-              "answer": "Die KVKK- und Datenschutzseiten erläutern die Datenverarbeitung. Senden Sie Konto- oder Datenanfragen an die Kontaktadresse. Die aktuelle Kontoseite bietet keine automatische Kontolöschung; Umfang und Identitätsprüfung müssen gesondert geprüft werden."
+              "answer": "Die KVKK- und Datenschutzseiten erläutern die Datenverarbeitung. In den Kontoeinstellungen können Sie die Löschung Ihres Kontos anstoßen und die erforderlichen Prüfungen über den Link abschließen, den Sie per E-Mail erhalten. Andere Konto- oder Datenanfragen können Sie an die Kontaktadresse senden; Umfang und Identitätsprüfung werden gesondert geprüft."
             }
           ]
         },
@@ -2776,7 +2836,7 @@
           "title": "Speicherung und Datenanfragen",
           "paragraphs": [
             "Aktive Konto- und Projektdatensätze liegen für die Dienstfunktionen in der Datenbank. Eine abgelaufene Sitzung bedeutet nicht die automatische Löschung aller historischen Datensätze.",
-            "Speicher-, Sicherungs- und Löschfristen je Datenkategorie müssen vor dem Start bestimmt werden. Eine automatische Kontolöschungsseite gibt es derzeit nicht. Anfragen zu Auskunft, Berichtigung oder Löschung können an die Kontaktadresse gehen; Kontoinhaberschaft und Rechte anderer Personen sind dabei zu prüfen."
+            "Speicher-, Sicherungs- und Löschfristen je Datenkategorie müssen vor dem Start bestimmt werden. In den Kontoeinstellungen können Sie die Löschung Ihres Kontos anstoßen und die erforderlichen Prüfungen über den Link abschließen, den Sie per E-Mail erhalten. Andere Anfragen zu Auskunft, Berichtigung oder Löschung können an die Kontaktadresse gehen; Kontoinhaberschaft und Rechte anderer Personen sind dabei zu prüfen."
           ]
         },
         {
@@ -2872,8 +2932,8 @@
           "id": "approach",
           "title": "Unser Ansatz",
           "paragraphs": [
-            "PDA soll auf unterschiedlichen Bildschirmgrößen und für unterschiedliche Bedürfnisse zugänglich sein. Barrierefreiheit muss mit der Weiterentwicklung erneut geprüft werden.",
-            "Eine unabhängige, umfassende WCAG-Konformitätsprüfung wurde noch nicht durchgeführt. Diese Seite ist kein Zertifikat und keine Erklärung, dass alle Ansichten fehlerfrei funktionieren."
+            "Wir entwickeln PDA so, dass es auf unterschiedlichen Bildschirmgrößen und für unterschiedliche Bedürfnisse zugänglich ist. Tastaturbedienung, Formularbeschriftungen, sichtbarer Fokus, Zoom und die Reduzierung von Bewegung wurden auf Barrierefreiheit geprüft.",
+            "Wir verbessern die Barrierefreiheit mit der Weiterentwicklung des Produkts. Wenn Sie auf ein weiteres Problem oder eine Zugangsbarriere stoßen, kontaktieren Sie uns bitte über das Formular auf der Kontaktseite."
           ]
         },
         {
@@ -2889,23 +2949,23 @@
           "title": "Darstellung und Lesen",
           "paragraphs": [
             "Oben befinden sich Sprach- und Designkontrollen. Wählen Sie helles, dunkles oder Systemdesign sowie türkische, englische oder deutsche Texte.",
-            "Browserzoom ist nutzbar. Die Einstellung für reduzierte Bewegung verringert Animationen. Auf schmalen Bildschirmen werden Inhalte und Footerlinks untereinander angeordnet."
+            "Sie können den Browserzoom nutzen. Die Geräteeinstellung für reduzierte Bewegung verringert Animationen. Auf schmalen Bildschirmen werden Inhalte und Footerlinks untereinander angeordnet."
           ]
         },
         {
           "id": "screen-readers",
           "title": "Struktur und Hilfsmittel",
           "paragraphs": [
-            "Informationsseiten verwenden semantische Überschriften, Hauptinhalt und Navigation. GitHub-Links im Footer haben zugängliche Namen mit dem Namen der Person; dekorative Symbole werden vor Screenreadern verborgen.",
-            "Weitere Anwendungsseiten müssen noch mit verschiedenen Screenreadern und Browsern geprüft werden. Ihre Meldungen helfen, Hindernisse zu beheben."
+            "Überschriften, Hauptinhalt und Navigation verwenden semantisches HTML. Formularfelder haben Beschriftungen, Schaltflächen zugängliche Namen und Fehlermeldungen erklärende Texte. Dekorative Symbole werden vor Screenreadern verborgen.",
+            "Wenn Sie Hilfsmittel verwenden und Schwierigkeiten beim Lesen oder beim Ausführen einer Aktion haben, teilen Sie uns dies bitte mit. Ihre Rückmeldungen fließen in Verbesserungen der Barrierefreiheit ein."
           ]
         },
         {
           "id": "feedback",
           "title": "Ein Hindernis melden",
           "paragraphs": [
-            "Wenn Sie eine Seite oder Aktion nicht nutzen können, nutzen Sie das Formular auf der Kontaktseite mit Seitenadresse, gewünschter Aktion, Browser/Gerät und gegebenenfalls verwendetem Hilfsmittel.",
-            "Entfernen Sie personenbezogene oder geheime Informationen aus Screenshots. Medizinische Angaben sind für eine Meldung nicht erforderlich."
+            "Bei einem Problem mit der Barrierefreiheit, einem Fehler oder einem Vorschlag kontaktieren Sie uns bitte über das Formular auf der Kontaktseite. Geben Sie die Seitenadresse, die gewünschte Aktion, das aufgetretene Problem, Browser/Gerät und gegebenenfalls verwendete Hilfsmittel an.",
+            "Teilen Sie weder Ihr Passwort noch Ihren Bestätigungscode oder andere vertrauliche Informationen. Medizinische Angaben sind für eine Meldung nicht erforderlich."
           ]
         }
       ]
@@ -3505,6 +3565,7 @@
       "on": "Aktiv",
       "off": "Aus",
       "unavailable": "Die Zwei-Schritt-Bestätigung ist auf diesem Server noch nicht eingerichtet.",
+      "adminRequired": "Die Zwei-Schritt-Bestätigung ist für Administratorkonten verpflichtend und kann nicht ausgeschaltet werden.",
       "enable": "Zwei-Schritt-Bestätigung aktivieren",
       "preparing": "Wird vorbereitet...",
       "scanTitle": "1. QR-Code scannen",

@@ -93,7 +93,22 @@ public interface UserAccounts {
      * for the cache-busting `?v=` of `/users/{id}/profile-photo`; the photo bytes are never part of the summary.
      */
     record AuthenticatedUser(UUID id, String email, String nickname, String globalRole, boolean mustChangePassword,
-                             Long profilePhotoVersion) {}
+                             Long profilePhotoVersion, boolean adminVerified) {
+
+        public AuthenticatedUser(UUID id, String email, String nickname, String globalRole, boolean mustChangePassword,
+                                 Long profilePhotoVersion) {
+            this(id, email, nickname, globalRole, mustChangePassword, profilePhotoVersion, false);
+        }
+
+        /**
+         * The same account for a request whose session was opened by the administrator sign-in. The request
+         * filter sets it from the session row; a lookup by id never does.
+         */
+        public AuthenticatedUser withAdminVerified(boolean verified) {
+            return new AuthenticatedUser(id, email, nickname, globalRole, mustChangePassword, profilePhotoVersion,
+                    verified);
+        }
+    }
 
     record UserSearchResult(UUID userId, String nickname) {}
 
