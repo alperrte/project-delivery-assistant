@@ -686,6 +686,11 @@
       "completed": "Abgeschlossen",
       "remaining": "Offen"
     },
+    "status": {
+      "pending": "In Arbeit",
+      "completed": "Abgeschlossen",
+      "change": "Status von {title}: {status}. Zum Ändern öffnen"
+    },
     "search": "Kriterien suchen...",
     "noResults": "Keine passenden Kriterien gefunden.",
     "create": "Neues Kriterium",

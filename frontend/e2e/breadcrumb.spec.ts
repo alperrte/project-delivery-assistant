@@ -2,7 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 import { createProject, createTeam } from "./helpers";
 import { MANAGER_STORAGE } from "./global-setup";
 
-/** The trail under the header: every page below a section names its path; top-level pages show none. */
+/** The trail under the header: forms and records below a section name their path; top-level pages and the project sidebar pages show none. */
 test.describe.serial("Breadcrumb (signed in)", () => {
   let page: Page;
   let slug: string;
@@ -28,15 +28,20 @@ test.describe.serial("Breadcrumb (signed in)", () => {
     }
   });
 
-  test("a project, its section and its create pages name the path", async () => {
-    await page.goto(`/projects/${slug}`);
-    await expect(trail(page).getByRole("listitem")).toHaveText(["Projeler", projectName]);
-    await expect(trail(page).locator("[aria-current=page]")).toHaveText(projectName);
-    await expect(trail(page).getByRole("link", { name: "Projeler" })).toHaveAttribute("href", "/tr/projeler");
+  test("the project sidebar pages have no trail", async () => {
+    for (const path of [
+      `/projects/${slug}`, `/projects/${slug}?section=criteria`, `/projects/${slug}?section=teams`, `/projects/${slug}?section=repository`,
+      `/projects/${slug}/tasks`, `/projects/${slug}/tasks/board`, `/projects/${slug}/tasks/pool`, `/projects/${slug}/sprints`, `/projects/${slug}/labels`, `/projects/${slug}/edit`,
+    ]) {
+      await page.goto(path);
+      await expect(page.locator("main")).toBeVisible();
+      await expect(trail(page), path).toHaveCount(0);
+    }
+  });
 
-    await page.goto(`/projects/${slug}?section=teams`);
-    await expect(trail(page).locator("[aria-current=page]")).toHaveText("Ekipler");
-    await expect(trail(page).getByRole("listitem")).toHaveText(["Projeler", projectName, "Ekipler"]);
+  test("the create pages below a project name the path", async () => {
+    await page.goto(`/projects/${slug}/teams/new`);
+    await expect(trail(page).getByRole("link", { name: "Projeler" })).toHaveAttribute("href", "/tr/projeler");
 
     await page.goto(`/projects/${slug}/teams/new`);
     await expect(trail(page).getByRole("listitem")).toHaveText(["Projeler", projectName, "Ekipler", "Yeni ekip"]);
@@ -51,13 +56,6 @@ test.describe.serial("Breadcrumb (signed in)", () => {
     await page.goto(`/projects/${slug}/tasks/new`);
     await expect(trail(page).locator("[aria-current=page]")).toHaveText("Yeni görev");
     await expect(trail(page).getByRole("listitem")).toHaveText(["Projeler", projectName, "Görevler", "Yeni görev"]);
-
-    await page.goto(`/projects/${slug}/tasks/board`);
-    await expect(trail(page).locator("[aria-current=page]")).toHaveText("Pano");
-    await expect(trail(page).getByRole("listitem")).toHaveText(["Projeler", projectName, "Görevler", "Pano"]);
-
-    await page.goto(`/projects/${slug}/labels`);
-    await expect(trail(page).locator("[aria-current=page]")).toHaveText("Etiketler");
   });
 
   test("a team page names the team and the edit page keeps it", async () => {

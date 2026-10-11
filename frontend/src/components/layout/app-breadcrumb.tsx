@@ -2,10 +2,9 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { usePathname, useSearchParams } from "@/i18n/navigation";
+import { usePathname } from "@/i18n/navigation";
 import { Breadcrumb, type Crumb } from "@/components/common/breadcrumb";
 import { projectsApi } from "@/features/projects/api";
-import { projectSection } from "@/features/projects/project-sections";
 import { useBreadcrumbEntry } from "./breadcrumb-labels";
 
 /**
@@ -15,7 +14,6 @@ import { useBreadcrumbEntry } from "./breadcrumb-labels";
  */
 export function AppBreadcrumb() {
   const pathname = usePathname();
-  const section = useSearchParams().get("section");
   const common = useTranslations("common");
   const titles = useTranslations("pageTitles");
   const tabs = useTranslations("projects.detail.tabs");
@@ -40,11 +38,16 @@ export function AppBreadcrumb() {
     items.push({ label: titles("projects"), href: "/projects" }, { label: titles("projectNew") });
   } else if (slug) {
     const base = `/projects/${slug}`;
+    // The pages of the project sidebar (overview, criteria, teams, repository, tasks, board, pool, chat…) carry no trail:
+    // the sidebar already says where the visitor is. Only the forms and records below them do.
+    const [child] = rest;
+    const isSidebarPage = !second
+      || (second === "tasks" && (!child || child === "board" || child === "pool"))
+      || ((second === "criteria" || second === "teams" || second === "team-invitations" || second === "sprints") && !child)
+      || second === "labels";
+    if (isSidebarPage) return null;
     items.push({ label: titles("projects"), href: "/projects" }, projectCrumb);
-    if (!second) {
-      const current = projectSection(section, true);
-      if (current !== "overview") items.push({ label: tabs(current) });
-    } else if (second === "criteria") {
+    if (second === "criteria") {
       items.push({ label: tabs("criteria"), href: `${base}?section=criteria` });
       if (rest[0] === "new") items.push({ label: titles("criterionNew") });
       else if (rest[0]) items.push({ label: titles("criterionEdit") });
@@ -79,8 +82,6 @@ export function AppBreadcrumb() {
         items.push({ label: sprint?.label ?? titles("sprint"), href: `${base}/sprints/${sprintId}` });
         if (action === "edit") items.push({ label: titles("sprintEdit") });
       }
-    } else if (second === "labels") {
-      items.push({ label: nav("labels") });
     }
   } else if (root === "organizations" && first) {
     // The organization page itself carries no trail; only the create and edit forms below it do.

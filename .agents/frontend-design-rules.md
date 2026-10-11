@@ -464,3 +464,12 @@ Proje ayarları sayfasında düzenlenebilen her şey (projeyi silmek hariç) `Pr
 ## Organizasyon sayfası (2026-10-11)
 
 Organizasyon detay sayfasında breadcrumb ve “Tüm organizasyonlar” geri bağlantısı yoktur; yalnızca oluşturma ve düzenleme formlarının breadcrumb'ı kalır (`app-breadcrumb.tsx`). Düzenle (kalem + metin) ve Sil düğmeleri, proje kartındaki gibi kapağın sağ üst köşesindedir (`OrganizationProfileHeader` `corner` prop'u, yalnızca sahip görür); organizasyon kartında köşede yalnızca kalem simgesi bulunur. Kapak yüksekliği sınırlıdır (3:1/4:1 oran, `max-h-56`) ve geniş ekranda ince bir şerit gibi görünmez. Arşivleme yoktur: Sil, organizasyon adı yazılarak onaylanan kalıcı silmedir ve projeleri silmez, yalnızca bağımsız bırakır. Detay sayfası web sitesi, e-posta, konum, oluşturulma/güncelleme tarihi, proje sayısı, notlar ve proje tablosunu gösterir.
+
+## Proje kenar çubuğu sayfalarında breadcrumb yok (2026-10-11)
+
+Proje kenar çubuğundaki sayfalar (Genel Bakış, Kriterler, Ekipler, Ekip Davetleri, Depo, Görevler, Pano, Havuz, Sprintler, Etiketler) ve proje ayarları sayfası breadcrumb göstermez; kenar çubuğu konumu zaten söyler. İzi yalnızca bunların altındaki kayıt ve form sayfaları (yeni/düzenle/detay) taşır: `Projeler > Proje > Bölüm > Sayfa`. Kural `app-breadcrumb.tsx` içindeki `isSidebarPage` koşuludur; yeni bir kenar çubuğu sayfası eklenirse oraya da eklenir.
+
+## Kriter durumu (2026-10-11)
+
+Kriter listesinde durum onay kutusuyla değil, satırın sağındaki durum hapıyla (pill) değiştirilir (`CriterionStatus`, `criteria-list.tsx`). Yönetici hapa tıklayınca lucide ikonlu (`CircleDashed` / `CircleCheck`, `ChevronDown`) bir `DropdownMenuRadioGroup` açılır: Devam ediyor / Tamamlandı. Seçenekler `closeOnClick` ile menüyü kapatır; mevcut durum yeniden seçilirse istek atılmaz. Yönetici olmayanlar aynı hapı yalnızca okunur görür. Erişilebilir ad `criteria.status.change` anahtarıyla “{kriter} durumu: {durum}. Değiştirmek için aç” biçimindedir; e2e testleri `getByRole("button", { name: /^Kriter durumu: Devam ediyor/ })` ve `menuitemradio` ile çalışır. Backend durumu ikilidir (`completed`); yeni durum eklemek `ProjectCriterion`, API ve ilerleme hesabını da değiştirir.
+

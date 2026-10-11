@@ -686,6 +686,11 @@
       "completed": "Completed",
       "remaining": "Remaining"
     },
+    "status": {
+      "pending": "In progress",
+      "completed": "Completed",
+      "change": "{title} status: {status}. Open to change"
+    },
     "search": "Search criteria...",
     "noResults": "No criteria match your search.",
     "create": "New criterion",
