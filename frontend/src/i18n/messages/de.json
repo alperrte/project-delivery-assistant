@@ -4323,6 +4323,9 @@
     "unmet": "nicht erfüllt"
   },
   "codeEntry": {
+    "resendTimeLeft": "Neuen Code anfordern in: {time}",
+    "registrationValidity": "Bestätigen Sie Ihre Registrierung innerhalb von 15 Minuten. Ein neuer Code verlängert diese Frist nicht.",
+    "registrationExpired": "Ihre Registrierung ist abgelaufen, da sie nicht innerhalb von 15 Minuten bestätigt wurde. Bitte registrieren Sie sich erneut.",
     "label": "Bestätigungscode",
     "placeholder": "000000",
     "timeLeft": "Verbleibende Zeit: {time}",
@@ -4334,6 +4337,7 @@
     "resent": "Ein neuer Code wurde gesendet."
   },
   "verifyEmail": {
+    "restartRegistration": "Erneut registrieren",
     "metaTitle": "E-Mail bestätigen",
     "metaDescription": "Geben Sie den 6-stelligen Code ein, den wir an Ihre E-Mail-Adresse gesendet haben, um Ihr Konto zu aktivieren.",
     "title": "E-Mail bestätigen",

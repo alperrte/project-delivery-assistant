@@ -66,7 +66,7 @@ public class AuthRegistrationController {
     }
 
     @PostMapping("/register/resend")
-    @Operation(summary = "Send a new registration code", description = "Public with CSRF. Always 202 so the answer never reveals whether an unverified registration exists; at most one mail per minute per account.")
+    @Operation(summary = "Send a new registration code", description = "Public with CSRF. Always 202 so the answer never reveals whether an unverified registration exists; at most one mail per 3 minutes per account. Resending does not extend the original 15-minute registration window; expired registrations are discarded.")
     @ApiResponse(responseCode = "202", description = "Accepted; a new code was mailed when a pending registration exists")
     @ApiResponse(responseCode = "503", description = "Mail is temporarily unavailable")
     public ResponseEntity<Void> resend(@Valid @RequestBody ResendVerificationRequest request) {

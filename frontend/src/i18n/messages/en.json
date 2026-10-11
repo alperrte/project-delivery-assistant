@@ -4299,6 +4299,9 @@
     "unmet": "not met"
   },
   "codeEntry": {
+    "resendTimeLeft": "Request a new code in: {time}",
+    "registrationValidity": "Verify your registration within 15 minutes. Requesting a new code does not extend this time.",
+    "registrationExpired": "Your registration expired because it was not verified within 15 minutes. Please register again.",
     "label": "Verification code",
     "placeholder": "000000",
     "timeLeft": "Time left: {time}",
@@ -4310,6 +4313,7 @@
     "resent": "A new code has been sent."
   },
   "verifyEmail": {
+    "restartRegistration": "Register again",
     "metaTitle": "Verify your email",
     "metaDescription": "Enter the 6-digit code sent to your email address to activate your account.",
     "title": "Verify your email",

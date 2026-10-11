@@ -227,6 +227,18 @@ Because PDA uses cookie-based authentication:
 
 ## 11. API and Swagger Security
 
+### Registration verification timing (2026-10-11)
+
+Registration has a fixed 15-minute window from the first code. `POST /api/v1/auth/register/resend` permits a replacement only after 3 minutes; replacing a code invalidates the old hash and resets attempts/cooldown, but preserves `issued_at` and `expires_at`. At expiry verification returns `400 verification_code_expired` and discards the pending account; resend discards it without mailing and still returns the same generic `202` as unknown/active accounts. The existing one-minute cleanup also removes expired pending accounts. Password reset/change timing is unchanged. No ENV, migration, allowlist, cookie, CSRF, CORS or IP rate-limit change.
+
+| Endpoint | Scope / safe request | Success | Important errors |
+| --- | --- | --- | --- |
+| `POST /api/v1/auth/register` | Public + CSRF; `{email:"member@example.test",nickname:"member_1",password:"<strong password>",confirmPassword:"<same password>",locale:"tr"}` | `200`, pending account + first code, no session | `400` validation, `403` CSRF, `409` identity unavailable, `429` IP quota, `503` mail |
+| `POST /api/v1/auth/register/verify` | Public + CSRF; `{email:"member@example.test",code:"<6 digits>"}` | `200`, activates account, no session | `400 verification_code_invalid / verification_code_expired / verification_too_many_attempts`, `403`, `429` |
+| `POST /api/v1/auth/register/resend` | Public + CSRF; `{email:"member@example.test",locale:"tr"}` | Generic `202`, including cooldown/unknown/expired accounts | `400` validation, `403`, `429`, `503` mail |
+
+Swagger check: with the existing `API_DOCS_ENABLED=true`, open `/swagger-ui/index.html` or `/v3/api-docs`; obtain `GET /api/v1/auth/csrf` and send its cookie value as `X-XSRF-TOKEN` on POST. No login is required for these three routes. All responses remain `Cache-Control: no-store`.
+
 ### Organization profile and media (2026-10-04)
 
 2026-10-05 notes extension: organization POST/PUT JSON and profile response also include optional `notes` (<=1000, trimmed plain text, blank/missing→null on full PUT). Existing owner/CSRF checks apply. Notes are separate from description and rendered as escaped text, never HTML; no new endpoint or authorization model.
@@ -1021,7 +1033,7 @@ Braces <=3.0.3 has no official patched release as checked2026-10-08; open5-high 
 
 New public endpoints (all CSRF-protected, rate limited, none leak whether an account exists): `POST /api/v1/auth/register/verify`, `register/resend`, `password/reset/verify`, `login/2fa`, `account/deletion/confirm`. Session-only endpoints: `password/change/code`, `password/change/verify`, `2fa` (GET), `2fa/setup|enable|disable|recovery-codes`, `account/deletion/request`. Each is listed in `SecurityBaselineConfiguration` and, where it needs no session, in the 401 list.
 
-- **Mailed codes** (registration, reset, password change): 6 digits, HMAC-hashed with a per-purpose prefix (`EMAIL_VERIFICATION_HMAC_KEY`), 15 minutes, at most 5 attempts, single use (`consumed_at`), 60 s resend cooldown. Only the hash is stored.
+- **Mailed codes** (registration, reset, password change): 6 digits, HMAC-hashed with a per-purpose prefix (`EMAIL_VERIFICATION_HMAC_KEY`), at most 5 attempts, single use (`consumed_at`). Registration expires 15 minutes after the first code and has a 3-minute resend cooldown; resend never extends that deadline (2026-10-11). Password reset/change retain their 15-minute code lifetime and 60 s server cooldown. Only the hash is stored.
 - **Tickets**: short-lived HttpOnly JWT cookies with a fixed `token_use` — `PDA_RESET` (10 min), `PDA_PWCHANGE` (10 min), `PDA_MFA` (5 min). They carry no session authority and are cleared when used.
 - **Passwords**: 8–128 characters with an uppercase letter, a digit and a special character everywhere a new password is chosen.
 - **TOTP**: the secret is encrypted with `TOTP_ENCRYPTION_KEY` (AES-256-GCM); a used time step is never accepted again; 5 wrong codes lock the credential for 15 minutes; backup codes are hashed and single use. OAuth logins also pass the second step.

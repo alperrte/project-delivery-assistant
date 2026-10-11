@@ -1,5 +1,9 @@
 # Web Sitesi Kesinlikle Olması Gerekenler — Master Checklist
 
+## Kayıt doğrulama / yeniden kod sayaçları — 2026-10-11 (sınırlı kapsam)
+
+Kayıt ekranında 3 dakikalık yeniden kod beklemesi ile ilk gönderimden başlayan toplam 15 dakikalık kayıt süresi ayrıldı. Yenileme toplam süreyi uzatmaz; sayfa yenilenince iki sayaç korunur. Süre sonunda kod alanı kapanır ve yeniden kayıt bağlantısı görünür. Gönderim hatası kodu/süreyi korur; başarılı yeniden gönderimde kod alanı temizlenip odaklanır. TR/EN/DE 320 px başlangıç/expiry görünümlerinde yatay taşma yok, ekran görüntüleri incelendi. Ortak şifre sıfırlama davranışı korundu. Etkilenen Form Validation / Error State / Success State / Responsive / Focus State global kutuları yalnız bu yüzey doğrulandığı için değiştirilmedi. 41 backend testi, 7 yeni Chromium senaryosu + 1 mevcut odak/süre regresyonu, TypeScript ve hedefli ESLint başarılı. Browser timer/failure testleri açıkça stub yanıtlar kullanır; süre/temizlik gerçek PostgreSQL entegrasyon testleriyle doğrulandı. Kayıt: `docs/compliation/2026-10-11-kayit-dogrulama-sureleri.md`.
+
 ## general-features / main iletişim conflict doğrulaması — 2026-10-11
 
 İletişim sayfasının breadcrumb'ı ile main'in görünür e-postası birlikte korundu; gerçek teslimat testinin ortak alıcı sabiti, kategori ve bot koruması kontrolleri birleştirildi. TypeScript, hedefli ESLint, production build ve 22 Chromium testi başarılı; TR/EN/DE breadcrumb/JSON-LD eşleşmesi, form/klavye/320–1440 px ve gerçek Mailpit teslimatı doğrulandı. Genel checkbox'lar değiştirilmedi. Kayıt: `docs/compliation/2026-10-11-general-features-main-conflicts.md`.
