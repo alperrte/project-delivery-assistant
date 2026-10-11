@@ -1,18 +1,18 @@
--- One level of sub-tasks plus a per-task checklist.
-ALTER TABLE tasks
-    ADD COLUMN parent_task_id UUID REFERENCES tasks (id),
-    ADD CONSTRAINT ck_tasks_not_own_parent CHECK (parent_task_id IS NULL OR parent_task_id <> id);
-CREATE INDEX ix_tasks_parent ON tasks (parent_task_id) WHERE parent_task_id IS NOT NULL;
+-- Consolidated fresh-install schema; legacy transformations are retained in the test reference archive.
+-- This history replaces disposable pre-consolidation databases; do not repair an old database into it.
 
 CREATE TABLE task_checklist_items (
-    id UUID PRIMARY KEY,
-    task_id UUID NOT NULL REFERENCES tasks (id),
+    id uuid NOT NULL,
+    task_id uuid NOT NULL,
     text VARCHAR(200) NOT NULL,
-    done BOOLEAN NOT NULL DEFAULT FALSE,
-    position INTEGER NOT NULL,
-    done_by UUID,
-    done_at TIMESTAMP WITH TIME ZONE,
-    created_by UUID NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL
+    done boolean DEFAULT false NOT NULL,
+    position integer NOT NULL,
+    done_by uuid,
+    done_at TIMESTAMPTZ,
+    created_by uuid NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL,
+    CONSTRAINT task_checklist_items_pkey PRIMARY KEY (id),
+    CONSTRAINT task_checklist_items_task_id_fkey FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE
 );
-CREATE INDEX ix_task_checklist_task_position ON task_checklist_items (task_id, position);
+
+CREATE INDEX ix_task_checklist_task_position ON task_checklist_items USING btree (task_id, "position");

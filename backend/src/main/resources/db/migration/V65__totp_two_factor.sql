@@ -1,29 +1,32 @@
--- Two-factor sign-in with an authenticator app (RFC 6238 TOTP). The shared secret is stored encrypted (AES-256-GCM,
--- key TOTP_ENCRYPTION_KEY, never in the database); a row stays unconfirmed until the user proves the first code.
+-- Consolidated fresh-install schema; legacy transformations are retained in the test reference archive.
+-- This history replaces disposable pre-consolidation databases; do not repair an old database into it.
+
 CREATE TABLE totp_credentials (
-    id UUID PRIMARY KEY,
-    user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    id uuid NOT NULL,
+    user_id uuid NOT NULL,
     secret_encrypted VARCHAR(255) NOT NULL,
-    confirmed_at TIMESTAMP WITH TIME ZONE,
-    -- Highest 30-second step that was accepted: a code can be used once, even inside its +/-1 step tolerance.
-    last_used_step BIGINT NOT NULL DEFAULT 0,
-    failed_attempts INT NOT NULL DEFAULT 0,
-    locked_until TIMESTAMP WITH TIME ZONE,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    version BIGINT NOT NULL DEFAULT 0,
-    CONSTRAINT uk_totp_credentials_user UNIQUE (user_id),
-    CONSTRAINT ck_totp_credentials_attempts CHECK (failed_attempts >= 0)
+    confirmed_at TIMESTAMPTZ,
+    last_used_step bigint DEFAULT 0 NOT NULL,
+    failed_attempts integer DEFAULT 0 NOT NULL,
+    locked_until TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL,
+    version bigint DEFAULT 0 NOT NULL,
+    CONSTRAINT ck_totp_credentials_attempts CHECK ((failed_attempts >= 0)),
+    CONSTRAINT totp_credentials_pkey PRIMARY KEY (id),
+    CONSTRAINT totp_credentials_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT uk_totp_credentials_user UNIQUE (user_id)
 );
 
--- Single-use backup codes for a lost phone. Only an HMAC of each code is stored.
 CREATE TABLE totp_recovery_codes (
-    id UUID PRIMARY KEY,
-    user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    id uuid NOT NULL,
+    user_id uuid NOT NULL,
     code_hash VARCHAR(64) NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    used_at TIMESTAMP WITH TIME ZONE,
-    CONSTRAINT uk_totp_recovery_codes_user_hash UNIQUE (user_id, code_hash),
-    CONSTRAINT ck_totp_recovery_codes_hash CHECK (code_hash ~ '^[0-9a-f]{64}$')
+    created_at TIMESTAMPTZ NOT NULL,
+    used_at TIMESTAMPTZ,
+    CONSTRAINT ck_totp_recovery_codes_hash CHECK (((code_hash)::text ~ '^[0-9a-f]{64}$'::text)),
+    CONSTRAINT totp_recovery_codes_pkey PRIMARY KEY (id),
+    CONSTRAINT totp_recovery_codes_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT uk_totp_recovery_codes_user_hash UNIQUE (user_id, code_hash)
 );
 
-CREATE INDEX ix_totp_recovery_codes_user ON totp_recovery_codes (user_id);
+CREATE INDEX ix_totp_recovery_codes_user ON totp_recovery_codes USING btree (user_id);

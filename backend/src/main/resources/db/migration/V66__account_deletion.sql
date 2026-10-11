@@ -1,23 +1,20 @@
--- Account deletion. A deleted account is anonymised, not removed (tasks, comments and messages keep pointing at its id and
--- show "deleted user"), so it gets its own status that can never sign in again.
-ALTER TABLE users DROP CONSTRAINT ck_users_account_status;
-ALTER TABLE users ADD CONSTRAINT ck_users_account_status
-    CHECK (account_status IN ('PENDING_VERIFICATION', 'ACTIVE', 'DISABLED', 'DELETED'));
+-- Consolidated fresh-install schema; legacy transformations are retained in the test reference archive.
+-- This history replaces disposable pre-consolidation databases; do not repair an old database into it.
 
--- The mailed confirmation link. Only the SHA-256 of the random token is stored; the link is valid 15 minutes, single use,
--- and 5 wrong confirmations (email/password/code) cancel it. One open request per account (a new request replaces it).
 CREATE TABLE account_deletion_requests (
-    id UUID PRIMARY KEY,
-    user_id UUID NOT NULL REFERENCES users (id),
+    id uuid NOT NULL,
+    user_id uuid NOT NULL,
     token_hash VARCHAR(64) NOT NULL,
-    issued_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    last_sent_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    attempt_count INT NOT NULL DEFAULT 0,
-    consumed_at TIMESTAMP WITH TIME ZONE,
-    version BIGINT NOT NULL DEFAULT 0,
-    CONSTRAINT uk_account_deletion_requests_user UNIQUE (user_id),
+    issued_at TIMESTAMPTZ NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+    last_sent_at TIMESTAMPTZ NOT NULL,
+    attempt_count integer DEFAULT 0 NOT NULL,
+    consumed_at TIMESTAMPTZ,
+    version bigint DEFAULT 0 NOT NULL,
+    CONSTRAINT account_deletion_requests_pkey PRIMARY KEY (id),
+    CONSTRAINT account_deletion_requests_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id),
+    CONSTRAINT ck_account_deletion_requests_attempts CHECK (((attempt_count >= 0) AND (attempt_count <= 5))),
+    CONSTRAINT ck_account_deletion_requests_hash CHECK (((token_hash)::text ~ '^[0-9a-f]{64}$'::text)),
     CONSTRAINT uk_account_deletion_requests_token UNIQUE (token_hash),
-    CONSTRAINT ck_account_deletion_requests_hash CHECK (token_hash ~ '^[0-9a-f]{64}$'),
-    CONSTRAINT ck_account_deletion_requests_attempts CHECK (attempt_count BETWEEN 0 AND 5)
+    CONSTRAINT uk_account_deletion_requests_user UNIQUE (user_id)
 );

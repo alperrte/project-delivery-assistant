@@ -1,10 +1,12 @@
--- Operational record of public contact-form submissions. It deliberately holds NO name, e-mail address or message: the
--- message is only mailed to the PDA inbox. The row exists to count successful submissions (the admin dashboard) and to
--- show delivery failures; FAILED rows are never counted as requests.
+-- Consolidated fresh-install schema; legacy transformations are retained in the test reference archive.
+-- This history replaces disposable pre-consolidation databases; do not repair an old database into it.
+
 CREATE TABLE contact_requests (
-    id UUID PRIMARY KEY,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    delivery_status VARCHAR(16) NOT NULL CHECK (delivery_status IN ('SENT', 'FAILED'))
+    id uuid NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL,
+    delivery_status VARCHAR(16) NOT NULL,
+    CONSTRAINT contact_requests_delivery_status_check CHECK ((delivery_status IN ('SENT', 'FAILED'))),
+    CONSTRAINT contact_requests_pkey PRIMARY KEY (id)
 );
 
-CREATE INDEX idx_contact_requests_created_at ON contact_requests (created_at);
+CREATE INDEX idx_contact_requests_created_at ON contact_requests USING btree (created_at);

@@ -1,12 +1,14 @@
--- A user's profile photo. Like the project logo and banner, the bytes live in their own table (never read by list
--- queries) and the user row only carries a version, which becomes the cache-busting `?v=` of the photo URL.
-ALTER TABLE users
-    ADD COLUMN profile_photo_updated_at TIMESTAMP WITH TIME ZONE;
+-- Consolidated fresh-install schema; legacy transformations are retained in the test reference archive.
+-- This history replaces disposable pre-consolidation databases; do not repair an old database into it.
 
 CREATE TABLE user_profile_photos (
-    user_id UUID PRIMARY KEY REFERENCES users (id) ON DELETE CASCADE,
-    content_type VARCHAR(32) NOT NULL CHECK (content_type IN ('image/png', 'image/jpeg', 'image/webp')),
-    data BYTEA NOT NULL,
-    size_bytes INTEGER NOT NULL CHECK (size_bytes > 0 AND size_bytes <= 5242880),
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL
+    user_id uuid NOT NULL,
+    content_type VARCHAR(32) NOT NULL,
+    data bytea NOT NULL,
+    size_bytes integer NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL,
+    CONSTRAINT user_profile_photos_content_type_check CHECK ((content_type IN ('image/png', 'image/jpeg', 'image/webp'))),
+    CONSTRAINT user_profile_photos_pkey PRIMARY KEY (user_id),
+    CONSTRAINT user_profile_photos_size_bytes_check CHECK (((size_bytes > 0) AND (size_bytes <= 5242880))),
+    CONSTRAINT user_profile_photos_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );

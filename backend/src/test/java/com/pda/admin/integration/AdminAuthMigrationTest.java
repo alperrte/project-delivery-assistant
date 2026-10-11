@@ -6,12 +6,16 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.sql.DriverManager;
+import java.nio.file.Path;
+import com.pda.migration.LegacyMigrations;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.UUID;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.MigrationVersion;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -23,6 +27,15 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
  */
 @Testcontainers(disabledWithoutDocker = true)
 class AdminAuthMigrationTest {
+
+    @TempDir
+    static Path legacyDirectory;
+    static String legacyLocation;
+
+    @BeforeAll
+    static void legacyHistory() throws Exception {
+        legacyLocation = LegacyMigrations.extractTo(legacyDirectory);
+    }
 
     @Container
     static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:17-alpine");
@@ -56,7 +69,7 @@ class AdminAuthMigrationTest {
 
     private static void migrateTo(String version) {
         var configuration = Flyway.configure().dataSource(postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword())
-                .locations("classpath:db/migration");
+                .locations(legacyLocation);
         if (version != null) {
             configuration.target(MigrationVersion.fromVersion(version));
         }

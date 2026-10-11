@@ -1,24 +1,23 @@
--- Forgot-password is now three steps: e-mail -> code -> new password. The code is consumed in step two and hands out a
--- short-lived ticket; completed_at marks the ticket as used so the new password can be set only once per code.
-ALTER TABLE password_reset_challenges ADD COLUMN completed_at TIMESTAMP WITH TIME ZONE;
+-- Consolidated fresh-install schema; legacy transformations are retained in the test reference archive.
+-- This history replaces disposable pre-consolidation databases; do not repair an old database into it.
 
--- Changing the password from the account settings now needs a code mailed to the account first. Same shape and rules as
--- password_reset_challenges (hashed, 15 minutes, 5 guesses per code, hourly failure window, single use ticket).
 CREATE TABLE password_change_challenges (
-    id UUID PRIMARY KEY,
-    user_id UUID NOT NULL REFERENCES users (id),
+    id uuid NOT NULL,
+    user_id uuid NOT NULL,
     code_hash VARCHAR(64) NOT NULL,
-    issued_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    last_sent_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    attempt_count INT NOT NULL DEFAULT 0,
-    consumed_at TIMESTAMP WITH TIME ZONE,
-    completed_at TIMESTAMP WITH TIME ZONE,
-    window_failures INT NOT NULL DEFAULT 0,
-    failure_window_started_at TIMESTAMP WITH TIME ZONE,
-    version BIGINT NOT NULL DEFAULT 0,
-    CONSTRAINT uk_password_change_challenges_user UNIQUE (user_id),
-    CONSTRAINT ck_password_change_challenges_hash CHECK (code_hash ~ '^[0-9a-f]{64}$'),
-    CONSTRAINT ck_password_change_challenges_attempts CHECK (attempt_count BETWEEN 0 AND 5),
-    CONSTRAINT ck_password_change_challenges_window_failures CHECK (window_failures >= 0)
+    issued_at TIMESTAMPTZ NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+    last_sent_at TIMESTAMPTZ NOT NULL,
+    attempt_count integer DEFAULT 0 NOT NULL,
+    consumed_at TIMESTAMPTZ,
+    completed_at TIMESTAMPTZ,
+    window_failures integer DEFAULT 0 NOT NULL,
+    failure_window_started_at TIMESTAMPTZ,
+    version bigint DEFAULT 0 NOT NULL,
+    CONSTRAINT ck_password_change_challenges_attempts CHECK (((attempt_count >= 0) AND (attempt_count <= 5))),
+    CONSTRAINT ck_password_change_challenges_hash CHECK (((code_hash)::text ~ '^[0-9a-f]{64}$'::text)),
+    CONSTRAINT ck_password_change_challenges_window_failures CHECK ((window_failures >= 0)),
+    CONSTRAINT password_change_challenges_pkey PRIMARY KEY (id),
+    CONSTRAINT password_change_challenges_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id),
+    CONSTRAINT uk_password_change_challenges_user UNIQUE (user_id)
 );
