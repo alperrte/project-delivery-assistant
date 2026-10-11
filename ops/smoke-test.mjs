@@ -11,6 +11,7 @@
 // have no broken links or missing metadata (frontend/scripts/check-site.mjs). Exit code 1 when anything is wrong.
 import { spawnSync } from "node:child_process";
 import https from "node:https";
+import { randomBytes } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
@@ -64,7 +65,7 @@ check("no actuator route under /api", actuator.status !== 200, String(actuator.s
 // 4. WebSocket route reaches the backend (an unauthenticated upgrade is refused with 401, a broken route would be 502/404)
 // (fetch refuses an Upgrade header, so this one uses node:https directly)
 const wsStatus = await new Promise((resolve) => {
-  const request = https.request(`${site}/api/v1/ws`, { method: "GET", headers: { Connection: "Upgrade", Upgrade: "websocket", "Sec-WebSocket-Version": "13", "Sec-WebSocket-Key": "dGhlIHNhbXBsZSBub25jZQ==" } }, (response) => { resolve(response.statusCode); response.resume(); });
+  const request = https.request(`${site}/api/v1/ws`, { method: "GET", headers: { Connection: "Upgrade", Upgrade: "websocket", "Sec-WebSocket-Version": "13", "Sec-WebSocket-Key": randomBytes(16).toString("base64") } }, (response) => { resolve(response.statusCode); response.resume(); });
   request.on("upgrade", () => resolve(101));
   request.on("error", () => resolve(0));
   request.end();

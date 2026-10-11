@@ -92,6 +92,41 @@ async function walk(page, label, stops) {
     report["cookie dialog opened (speech log)"] = dialogLog.slice(-400);
     if (!/(iletişim kutusu|dialog|Çerez)/i.test(dialogLog)) problems.push("cookie: opening the preferences dialog was not announced");
     await fresh.close();
+
+    // 5. Signed-in workspace (optional): STORAGE_STATE=<Playwright storageState json of a signed-in account>.
+    if (process.env.STORAGE_STATE) {
+      const app = await browser.newContext({ storageState: process.env.STORAGE_STATE, locale: "tr-TR", viewport: { width: 1280, height: 800 } });
+      await app.addInitScript((c) => localStorage.setItem("pda:cookie-consent", c), REJECTED);
+      const appPage = await app.newPage();
+      await appPage.goto(`${SITE}/tr/genel-bakis`, { waitUntil: "load" });
+      await appPage.waitForTimeout(2500);
+      await walk(appPage, "dashboard (Tab walk)", 22);
+      // Landmarks of the workspace: navigation, main.
+      const marks = [];
+      for (let i = 0; i < 4; i += 1) { await nvda.perform(nvda.keyboardCommands.moveToNextLandmark); marks.push((await nvda.lastSpokenPhrase()).trim()); }
+      report["dashboard landmarks"] = marks;
+      // The notification centre is a dialog: opening it must be announced and Escape must close it.
+      activateWindow("PDA");
+      await appPage.getByRole("button", { name: /Bildirimler/ }).first().focus();
+      await nvda.press("Enter");
+      await appPage.waitForTimeout(900);
+      const dlg = (await nvda.spokenPhraseLog()).slice(-6).join(" | ");
+      report["notification centre opened"] = dlg;
+      if (!/(iletişim kutusu|Bildirimler)/i.test(dlg)) problems.push("workspace: opening the notification centre was not announced");
+      await nvda.press("Escape");
+      await appPage.waitForTimeout(500);
+      // An empty project form: the error must be spoken.
+      await appPage.goto(`${SITE}/tr/projeler/yeni`, { waitUntil: "load" });
+      await appPage.waitForTimeout(2000);
+      activateWindow("PDA");
+      await appPage.getByRole("button", { name: /^Projeyi oluştur$/ }).focus();
+      await nvda.press("Enter");
+      await appPage.waitForTimeout(1200);
+      const form = (await nvda.spokenPhraseLog()).slice(-5).join(" | ");
+      report["empty project form (speech)"] = form;
+      if (!/(zorunlu|gerekli|geçersiz|girin)/i.test(form)) problems.push("workspace: the empty project form error was not spoken");
+      await app.close();
+    }
   } catch (error) {
     problems.push(`script error: ${error.message}`);
   } finally {

@@ -46,7 +46,7 @@
 - [X] İlgili kişi başvuruları
 - [X] Açık rıza yönetimi
 - [X] Aydınlatma ile açık rızanın ayrılığı
-- [ ] Yurt dışına veri aktarımı
+- [X] Yurt dışına veri aktarımı — Bilgilendirme tamam (kullanıcı kararı, 2026-10-11): alıcılar (Google LLC, GitHub, Inc.), ülke (ABD) ve aktarılan veri KVKK Aydınlatma Metni 'Alıcılar ve yurt dışına aktarım' bölümünde ve Gizlilik Politikası'nda adlandırılıyor; metin, güvencelerin tamamlandığını beyan etmiyor. KVKK m.9 güvenceleri (standart sözleşme / Kurul bildirimi) veri sorumlularının (Hamza Taşbay, Alper Temiz) ayrı takip işidir ve bu maddenin kapsamı dışındadır.
 - [X] VERBİS değerlendirmesi
 - [X] Veri ihlali hazırlığı
 ### HAMZA
@@ -68,7 +68,7 @@
 - [Eklenmeyecek] İade, cayma ve iptal
 - [Eklenmeyecek] Ticari elektronik ileti
 ### HAMZA
-- [ ] GDPR ve yurt dışı yükümlülükleri
+- [X] GDPR ve yurt dışı yükümlülükleri — Bilgilendirme tamam (kullanıcı kararı, 2026-10-11): EN/DE Gizlilik Politikası'nda Art. 13, Art. 6 hukuki dayanaklar, Chapter V aktarımlar, saklama süresi, haklar ve şikâyet (Art. 15-21, 77) ve Art. 27 temsilci değerlendirmesi ('değerlendiriliyor, atanmış temsilci yok') yer alıyor. AB temsilcisi ve aktarım güvenceleri kararı veri sorumlularındadır.
 ### HAMZA
 - [X] Telif ve lisans kullanımı
 
@@ -76,7 +76,7 @@
 
 ### Görme engelli ve az gören kullanıcılar
 
-- [ ] Ekran okuyucu desteği — Otomatik ARIA kontrolleri geçti; gerçek NVDA sesli okuması doğrulanmadı.
+- [X] Ekran okuyucu desteği — NVDA (Guidepup ile otomatik, gerçek NVDA 2026.2, Türkçe) 2026-10-11: giriş, kayıt, iletişim, ana sayfa ve oturumlu panelde Tab gezintisi; her kontrol adı, rolü ve durumuyla okundu ('Şifreyi göster, düğmesi', 'Beni hatırla, onay kutusu, işaretli değil', 'Tema, grup, Açık, geçiş düğmesi, basılı', 'Ana Sayfa, link, geçerli sayfa', 'Kenar çubuğunu daralt, düğmesi, genişletildi'), başlık/bölge/sınır imi yapısı okundu, boş form gönderiminde 'geçersiz giriş, Bu alan zorunlu.' söylendi, çerez ve bildirim diyalogları 'iletişim kutusu' olarak duyuruldu. Adsız kontrol ve sessiz durak 0. Araç: `ops/nvda-check.cjs`.
 - [X] Semantik HTML
 - [X] Alternatif görsel metni (alt text)
 - [X] Erişilebilir buton isimleri
@@ -126,7 +126,7 @@
 - [N/A] Sesli betimleme — Gömülü video bulunmuyor.
 - [N/A] Medya alternatifleri — Gömülü ses veya video bulunmuyor.
 - [N/A] Otomatik ses kontrolü — Otomatik ses çalma bulunmuyor.
-- [ ] Manuel erişilebilirlik testleri — Tarayıcıda klavye, odak ve yakınlaştırma kontrolleri yapıldı; gerçek ekran okuyucu testi eksik.
+- [X] Manuel erişilebilirlik testleri — Klavye, odak, yakınlaştırma ve reflow Playwright ile; ekran okuyucu NVDA (Guidepup ile otomatik, gerçek NVDA 2026.2, Türkçe) 2026-10-11 gerçek NVDA ile (bkz. 'Ekran okuyucu desteği'). Gerçek VoiceOver/TalkBack denenmedi.
 
 ## 4. SEO, GEO, URL ve sosyal paylaşım
 
@@ -279,7 +279,7 @@
 
 ### İşletim, izleme ve süreklilik
 
-- [ ] Güvenlik güncellemeleri — Süreç `.agents/operations.md` §5'te, Dependabot yapılandırması `.github/dependabot.yml`'de; GitHub'da `main`'e birleşip ilk PR'lar gelince tiklenecek.
+- [ ] Güvenlik güncellemeleri — Süreç `.agents/operations.md` §5, Dependabot yapılandırması `.github/dependabot.yml`. Dependabot yalnız `main`'e birleşince çalışır ve depo yöneticisinin Dependabot alerts / security updates'i açması gerekir (`.agents/operations.md` §8); GitHub API ile okunamadı (admin yetkisi yok). İkisi yapılınca tiklenecek.
 - [X] Hata izleme ve loglama
 - [X] Hassas veriyi loglamama
 - [X] Yedekleme ve geri yükleme — `ops/backup.ps1` (DB + medya) ve `ops/restore.ps1` (geçici DB'ye geri yükleme tatbikatı) çalışan Docker yığınında denendi: yedek alındı (DB dump + medya arşivi), geçici veritabanına açıldı (56 tablo, Flyway kayıtları ve 1836 kullanıcı okundu), geçici DB silindi; canlı DB'ye dokunulmadı. Yedeğin makine dışına taşınması ve gerçek hosting yedeği hosting seçilince.
@@ -358,8 +358,8 @@
 - [X] Integration test
 - [X] E2E test — Playwright, tam paket (pre-push): 1036 testten 1005 geçti, 22 atlandı, 6 başarısız; başarısızlıkların tümü değişikliklerimden bağımsız (temiz HEAD'de de aynı: dil çerezi yarışı 4 test, `project-logo-settings` sohbet çubuğu 6 px çakışması; `team-deletion-notifications` tek başına geçiyor).
 - [X] Tarayıcı uyumluluğu — Herkese açık Playwright paketi Chromium, Chrome, Edge, Opera 137, Firefox 155 ve WebKit üzerinde çalıştırıldı (`E2E_CROSS_BROWSER=1`, Opera için `E2E_OPERA_PATH`). Chrome ve Edge: tüm testler geçti. Opera: 195 geçti; tek hata, `target=_blank` bağlantısının yeni sekme olayını Playwright'ın Opera'da almaması (bağlantı Opera'da gerçekten yeni sekme açıyor; test düzeneği sınırı) ve bir geliştirme-modu testi atlandı. Firefox ve WebKit'te kalan hatalar test düzeneğinden: WebKit'te `route.fulfill` ile mock'lanan çapraz-origin API (gerçek iletişim formu akışı WebKit ve Firefox'ta elle doğrulandı), WebKit'in Tab ile bağlantı odaklamama varsayılanı, Firefox'ta scrollbar hesaplanan değeri. Bulunup giderilen gerçek sorunlar: production CSP'sindeki `upgrade-insecure-requests` WebKit'te http alt kaynaklarını kırıyordu; çerez banner düğmeleri hydration'dan önce tıklanınca kayboluyordu. Gerçek Safari/iOS cihazı denenmedi (ayrı madde).
-- [ ] Gerçek mobil test — Gerçek cihaz gerektirir (iOS Safari, Android Chrome); yapılmadı.
-- [ ] Klavye ve ekran okuyucu testi — Klavye/odak otomatik testlerle geçti; gerçek NVDA/VoiceOver okuması yapılmadı.
+- [ ] Gerçek mobil test — Emüle cihazlarla (iPhone 15, Pixel 7, iPad) herkese açık paket çalıştırıldı: Pixel 7 (Chrome) 198 geçti (tek hata dokunmatikte anlamsız hover testi); iPhone ve iPad (WebKit) masaüstü WebKit ile aynı test düzeneği hataları dışında geçti. Gerçek bir telefonla elle test yapılmadı (kullanıcı 'daha sonra' dedi); geçici HTTPS tünel ve kontrol listesi hazırlanıp telefonla denenince tiklenecek.
+- [X] Klavye ve ekran okuyucu testi — Klavye: 13 oturumlu ekranda Tab gezintisi (tuzak yok, görünür odak) ve mevcut klavye testleri; ekran okuyucu: NVDA (Guidepup ile otomatik, gerçek NVDA 2026.2, Türkçe) 2026-10-11 (bkz. 'Ekran okuyucu desteği'), diyalog açma/kapama (Escape) ve form hatası duyurusu dahil.
 - [X] Otomatik erişilebilirlik analizi
 - [X] Kırık bağlantı kontrolü
 - [X] SEO / paylaşım testi
@@ -367,7 +367,7 @@
 ### Yayına alma ve sürdürülebilirlik
 
 - [X] Production ortam değişkenleri — Zorunlu değişken adları ve sabitler `docker-compose.prod.yml` ve `.agents/operations.md` §6a/§7'de; yalnız bu değişkenlerle production biçimli yığın (APP_ENV=prod, docs kapalı, Secure çerezler, tek origin) ayağa kalktı ve smoke testi geçti. Gerçek secret değerleri dağıtımda secret store'a girilir.
-- [ ] CI/CD pipeline — `.github/workflows/ci.yml` yazıldı (frontend lint/tsc/build/bütçe/audit, backend verify, Gitleaks, Docker build); GitHub'da henüz çalıştırılmadı. Deploy adımı hosting kararına bağlı.
+- [ ] CI/CD pipeline — `.github/workflows/ci.yml` (frontend lint/tsc/build/bütçe/audit, backend verify, Gitleaks, Docker build) GitHub'da henüz çalışmadı; işlerin yerel karşılıkları geçti: backend CI ortam değişkenleri ve geçici Postgres ile 897/897, frontend adımları, Gitleaks (192 commit, geçmiş dahil) 0 bulgu, backend ve frontend imajları derleniyor. Branch push edilip PR'da dört iş yeşil görülünce tiklenecek (push kullanıcıda).
 - [ ] Monitoring ve alarm — Uygulama içi sağlık ve hata sayaçları var; dış izleme için `.github/workflows/uptime.yml` yazıldı (30 dakikada smoke test + sertifika süresi, alarm = başarısız çalıştırma bildirimi, mail kotası kullanılmaz). Gerçek site adresi (`SITE_URL`) tanımlanıp GitHub'da çalıştığı görülünce tiklenecek.
 - [ ] Sertifika ve domain yenileme — Caddy sertifikayı otomatik alır/yeniler; `uptime.yml` sertifika (<14 gün) ve alan adı kaydı (<30 gün) için alarm üretir; plan `.agents/operations.md` §6. Gerçek alan adı ve ilk çalıştırma olmadan tiklenmedi.
 - [X] Deployment sonrası smoke test — `ops/smoke-test.mjs` (yönlendirme, HSTS/CSP/başlıklar, API ve Secure çerez, WebSocket yolu, statik dosyalar, 36 sayfa/753 bağlantı) production biçimli yığında 25/25 geçti; gerçek bir dağıtım henüz yok.

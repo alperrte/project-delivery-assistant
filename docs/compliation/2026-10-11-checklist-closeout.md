@@ -2,7 +2,7 @@
 
 Kapsam: `.agents/faz-md/Web_Sitesi_Master_Checklist.md` içindeki 62 açık maddenin koddan doğrulanması, eksiklerin tamamlanması ve tiklenmesi. Dal: `general-features`. Commit/push yapılmadı. Mail gönderilmedi: backend `docker-compose.e2e.yml` override'ıyla (Mailpit) çalıştı, CI'da `MAIL_ENABLED=false`.
 
-Sonuç: **62 açık madde → 12** (ilk teslimde 19'du; ikinci turda 7 madde daha kapandı). 50 madde tiklendi veya karara bağlandı; 12 madde gerekçesiyle açık (aşağıda).
+Sonuç: **62 açık madde → 7** (ilk teslimde 19, ikinci turda 12'ydi). 55 madde tiklendi veya karara bağlandı; 7 madde dış koşullarla açık (aşağıda).
 
 ## Yapılan kod değişiklikleri (kullanıcı onayıyla)
 
@@ -79,3 +79,28 @@ Yeni değişken adları: `SITE_ADDRESS`, `SITE_URL`, `HTTP_PORT`, `HTTPS_PORT`, 
 ### Açık kalan 12 madde
 
 Yurt dışı aktarım ve GDPR (veri sorumlularının kararı); Ekran okuyucu desteği, Manuel erişilebilirlik testleri, Klavye ve ekran okuyucu testi (NVDA koşusu için bilgisayarın boş olması gerekiyor); Gerçek mobil test (gerçek cihaz); Google Search Console, Geçerli TLS (halka açık CA sertifikası), Sertifika ve domain yenileme (gerçek alan adı); Monitoring ve alarm, CI/CD, Güvenlik güncellemeleri (dosyalar hazır, GitHub'da ilk çalışma/PR görülünce tiklenecek).
+
+
+## Üçüncü tur: NVDA, hukuki karar, CI ön doğrulaması
+
+| Yapılan | Sonuç |
+| --- | --- |
+| NVDA (gerçek, Guidepup, Türkçe) | `ops/nvda-check.cjs`: giriş, kayıt, iletişim, ana sayfa ve oturumlu panelde Tab gezintisi; tüm kontroller ad+rol+durumla okundu; başlık/bölge yapısı; boş formda "geçersiz giriş, Bu alan zorunlu." söylendi; çerez ve bildirim diyalogları "iletişim kutusu" olarak duyuruldu; adsız kontrol 0, sessiz durak 0. 3 madde tiklendi |
+| Hukuki | Kullanıcı kararı: yurt dışı aktarım ve GDPR "bilgilendirme tamam" olarak tiklendi; m.9 güvenceleri ve AB temsilcisi veri sorumlularında kalır |
+| Emüle mobil | Pixel 7: 198 geçti (1 dokunmatikte anlamsız hover testi); iPhone 15 / iPad (WebKit): masaüstü WebKit ile aynı test düzeneği hataları |
+| CI ön doğrulaması | Backend işi CI ortamıyla yerelde 897/897; Gitleaks (192 commit): ilk koşuda `ops/smoke-test.mjs`'teki RFC 6455 örnek WebSocket anahtarı sahte pozitif verdi → anahtar artık rastgele üretiliyor ve geçmişteki commit parmak izi `.gitleaksignore`'a eklendi (commit yeniden yazılırsa karma değişir: not dosyada) |
+| Kısıtlar | Kullanıcı: commit/push yalnız kendisi yapar. GitHub API'de depo admin yetkisi yok; Dependabot ayarları okunamadı |
+
+### Açık kalan 7 madde ve koşulları
+
+| Madde | Koşul |
+| --- | --- |
+| CI/CD pipeline | Kullanıcı push eder; PR'da CI'nin dört işi yeşil görülür |
+| Güvenlik güncellemeleri | `main`'e birleşme + depo yöneticisi Dependabot alerts/security updates'i açar |
+| Monitoring ve alarm | Hosting/domain + depoda `SITE_URL` değişkeni; `uptime.yml` çalışır |
+| Sertifika ve domain yenileme | Gerçek alan adı; `uptime.yml` sertifika/alan adı süresi alarmı |
+| Geçerli TLS ve HSTS | Gerçek alan adında halka açık CA sertifikası |
+| Google Search Console | Gerçek alan adı + kullanıcının Google hesabı |
+| Gerçek mobil test | Gerçek telefon (kullanıcı "daha sonra" dedi) |
+
+Adımlar: `.agents/operations.md` §8.

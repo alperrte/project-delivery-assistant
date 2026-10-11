@@ -29,6 +29,10 @@ export default defineConfig({
           // `E2E_OPERA_PATH=<path to opera.exe>`.
           { name: "chrome", use: { ...devices["Desktop Chrome"], channel: "chrome" } },
           { name: "edge", use: { ...devices["Desktop Edge"], channel: "msedge" } },
+          // Phones and a tablet (touch, small viewports, mobile user agents). Emulation: it complements, not replaces, a real device.
+          { name: "mobile-safari", use: { ...devices["iPhone 15"] } },
+          { name: "mobile-chrome", use: { ...devices["Pixel 7"] } },
+          { name: "tablet-safari", use: { ...devices["iPad (gen 7)"] } },
           ...(process.env.E2E_OPERA_PATH
             ? [{ name: "opera", use: { ...devices["Desktop Chrome"], launchOptions: { executablePath: process.env.E2E_OPERA_PATH } } }]
             : []),

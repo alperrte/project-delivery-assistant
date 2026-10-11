@@ -127,6 +127,15 @@ Yayın sonrası smoke test (hepsi başarılı olmadan yayın "bitti" sayılmaz; 
 6. Admin Sistem durumu'nda tüm arka plan işleri görünüyor.
 7. İlk yedek alındı ve geri yükleme tatbikatı başarılı.
 
+## 8. Bakımcıların elle yapacağı GitHub ve hosting adımları
+
+Bunlar kod değil, depo/hesap ayarıdır; yapılmadan ilgili checklist maddeleri tiklenmez:
+
+1. Değişiklikleri `main`'e birleştirin (commit/push/PR/merge sizde). Birleşmeden Dependabot (`.github/dependabot.yml`) çalışmaz; PR'da `CI` iş akışının dört işi (frontend, backend, secrets, docker) yeşil olmalı.
+2. Depo yöneticisi (admin yetkisi gerekir) şunları açar: Settings > Code security > **Dependabot alerts**, **Dependabot security updates**, **Secret scanning** (+ push protection).
+3. Hosting/domain seçilince Settings > Secrets and variables > Actions > Variables: `SITE_URL` (ör. `https://pda.example.org`) ve isteğe bağlı `DOMAIN`; ardından `Uptime watch` iş akışı çalışır (alarm = başarısız çalıştırma bildirimi).
+4. Domain'de: DNS A/AAAA kaydı, sunucuda 80/443; `docker-compose.prod.yml` ile kurulum; `node ops/smoke-test.mjs https://<domain>`; Google Search Console'da mülkü kendi Google hesabınızla doğrulayıp `https://<domain>/sitemap.xml` gönderin.
+
 ## Doğrulama kaydı
 
 | Tarih | Ne | Sonuç |
