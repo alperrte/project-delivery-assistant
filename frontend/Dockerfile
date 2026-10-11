@@ -1,7 +1,7 @@
 # -----------------------------
 # 1️⃣ Dependencies Stage
 # -----------------------------
-FROM node:22-alpine AS deps
+FROM node:25-alpine AS deps
 
 WORKDIR /app
 
@@ -13,7 +13,7 @@ RUN npm ci
 # -----------------------------
 # 2️⃣ Build Stage
 # -----------------------------
-FROM node:22-alpine AS builder
+FROM node:25-alpine AS builder
 
 WORKDIR /app
 
@@ -32,7 +32,7 @@ RUN npm run build
 # -----------------------------
 # 3️⃣ Runtime Stage
 # -----------------------------
-FROM node:22-alpine AS runner
+FROM node:25-alpine AS runner
 
 WORKDIR /app
 
