@@ -158,13 +158,13 @@ test("criteria filters and search show only matching real criteria", async ({ pa
 
   await page.goto("/projects/responsive-project");
   await page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Kriterler" }).click();
-  await expect(page.getByRole("checkbox", { name: "Giriş sistemi" })).toBeVisible();
-  await expect(page.getByRole("checkbox", { name: "Ekip modülü" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Giriş sistemi durumu: Tamamlandı/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Ekip modülü durumu: Devam ediyor/ })).toBeVisible();
   await page.getByRole("button", { name: "Tamamlanan 1" }).click();
-  await expect(page.getByRole("checkbox", { name: "Giriş sistemi" })).toBeVisible();
-  await expect(page.getByRole("checkbox", { name: "Ekip modülü" })).toBeHidden();
+  await expect(page.getByRole("button", { name: /^Giriş sistemi durumu: Tamamlandı/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Ekip modülü durumu: Devam ediyor/ })).toBeHidden();
   await page.getByRole("button", { name: "Tümü 2" }).click();
   await page.getByRole("textbox", { name: "Kriter ara..." }).fill("Ekip");
-  await expect(page.getByRole("checkbox", { name: "Ekip modülü" })).toBeVisible();
-  await expect(page.getByRole("checkbox", { name: "Giriş sistemi" })).toBeHidden();
+  await expect(page.getByRole("button", { name: /^Ekip modülü durumu: Devam ediyor/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Giriş sistemi durumu: Tamamlandı/ })).toBeHidden();
 });

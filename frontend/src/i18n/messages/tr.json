@@ -686,6 +686,11 @@
       "completed": "Tamamlanan",
       "remaining": "Devam eden"
     },
+    "status": {
+      "pending": "Devam ediyor",
+      "completed": "Tamamlandı",
+      "change": "{title} durumu: {status}. Değiştirmek için aç"
+    },
     "search": "Kriter ara...",
     "noResults": "Aramanıza uygun kriter bulunamadı.",
     "create": "Yeni kriter",

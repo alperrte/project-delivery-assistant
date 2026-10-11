@@ -129,13 +129,17 @@ test.describe("Responsive düzen, taşma ve gezinme", () => {
       await settle(page, path);
       f.check(`${path}: üst düzey sayfada breadcrumb yok`, (await trail().count()) === 0);
     }
-    for (const sub of ["", "/criteria", "/labels", "/sprints", "/tasks", "/edit"]) {
+    for (const sub of ["", "/criteria", "/labels", "/sprints", "/tasks", "/tasks/board", "/edit"]) {
+      await settle(page, `/projects/${slug}${sub}`);
+      f.check(`/projects/{proje}${sub}: kenar çubuğu sayfasında breadcrumb yok`, (await trail().count()) === 0);
+    }
+    for (const sub of ["/criteria/new"]) {
       await settle(page, `/projects/${slug}${sub}`);
       const items = await trail().getByRole("listitem").allInnerTexts();
       f.check(`/projects/{proje}${sub}: breadcrumb "Projeler > proje…"`, items.length >= 2 && items[0] === "Projeler", JSON.stringify(items));
       f.check(`/projects/{proje}${sub}: son öğe aria-current`, (await trail().locator("[aria-current=page]").count()) === 1);
     }
-    await settle(page, `/projects/${slug}/criteria`);
+    await settle(page, `/projects/${slug}/criteria/new`);
     await trail().getByRole("link", { name: "Projeler" }).click();
     await expect(page).toHaveURL(/\/tr\/projeler$/);
     f.check("breadcrumb bağlantısı üst sayfaya gidiyor", true);

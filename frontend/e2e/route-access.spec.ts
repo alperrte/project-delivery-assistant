@@ -47,6 +47,6 @@ test.describe.serial("Route access for a signed-in non-member", () => {
 
   test("the manager still opens it", async () => {
     await manager.goto(`/tr/projeler/${slug}`);
-    await expect(manager.getByRole("navigation", { name: "Konum", exact: true }).getByText(projectName)).toBeVisible();
+    await expect(manager.getByRole("heading", { name: projectName }).first()).toBeVisible();
   });
 });
