@@ -90,12 +90,11 @@ function CriterionFormBody({ slug, projectId, criterion }: { slug: string; proje
   }, [leaving]);
 
   return (
-    <div>
+    <PageContainer width="centered">
       <PageHeader title={t(editing ? "editTitle" : "createTitle")} description={t(editing ? "editDescription" : "description")} />
 
       <form onSubmit={handleSubmit((values) => mutation.mutate(values))} noValidate>
-        <PageContainer width="form">
-          <div className="max-w-2xl space-y-6">
+        <div className="space-y-6">
             <div className="space-y-1.5">
               <Label htmlFor="criterion-title">{t("titleLabel")}</Label>
               <Input
@@ -141,8 +140,7 @@ function CriterionFormBody({ slug, projectId, criterion }: { slug: string; proje
                 </p>
               )}
             </div>
-          </div>
-        </PageContainer>
+        </div>
 
         <StickyFormActions>
           <div className="flex items-center justify-between gap-2">
@@ -156,7 +154,7 @@ function CriterionFormBody({ slug, projectId, criterion }: { slug: string; proje
           </div>
         </StickyFormActions>
       </form>
-    </div>
+    </PageContainer>
   );
 }
 
@@ -174,9 +172,9 @@ function CriterionFormView({ slug, projectId, isManager, criterionId }: ProjectG
   if (!isManager) return <Unavailable slug={slug} message={te("forbidden")} />;
   if (editing && criteria.isPending) {
     return (
-      <div className="space-y-5" aria-hidden="true">
+      <div className="mx-auto w-full max-w-2xl space-y-5" aria-hidden="true">
         <Skeleton className="h-16 w-2/3 rounded-xl" />
-        <Skeleton className="h-64 w-full max-w-2xl rounded-xl" />
+        <Skeleton className="h-64 w-full rounded-xl" />
       </div>
     );
   }
