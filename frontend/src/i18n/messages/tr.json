@@ -186,7 +186,9 @@
   "organizations": {
     "card": {
       "lastUpdate": "Son güncelleme",
-      "openNamed": "{name} organizasyonunu aç"
+      "openNamed": "{name} organizasyonunu aç",
+      "edit": "Organizasyonu düzenle",
+      "editNamed": "{name} organizasyonunu düzenle"
     },
     "cardLabel": "ORGANİZASYON",
     "cardNoDescription": "Henüz açıklama eklenmedi.",
@@ -202,11 +204,12 @@
     "description": "Projelerinizi bir organizasyon altında gruplayın veya bağımsız tutun.",
     "create": "Yeni organizasyon",
     "edit": "Düzenle",
-    "archive": "Arşivle",
+    "delete": "Sil",
+    "deleteConfirmTitle": "Bu organizasyon kalıcı olarak silinsin mi?",
+    "deleteConfirmDescription": "Organizasyon, logosu ve kapak görseli kalıcı olarak silinir. Projeleriniz silinmez; yalnızca bu organizasyondan ayrılır ve bağımsız kalır. Bu işlem geri alınamaz.",
+    "deleteTypeName": "Onaylamak için organizasyon adını yazın: <strong>{name}</strong>",
+    "deleteConfirm": "Organizasyonu sil",
     "cancel": "Vazgeç",
-    "archiveConfirmTitle": "Bu organizasyon arşivlensin mi?",
-    "archiveConfirmDescription": "Arşivlenen organizasyonlar yeni proje kabul etmez. Bu işlem geri alınamaz.",
-    "archivedBadge": "Arşivlendi",
     "projectsHeading": "Projeler",
     "noProjects": "Bu organizasyonda erişebildiğiniz aktif proje yok.",
     "emptyTitle": "Henüz organizasyon yok",
@@ -288,7 +291,8 @@
       "detailsDescription": "Ek bilgiler ve notlar ekleyebilirsiniz.",
       "notes": "Ek notlar",
       "notesPlaceholder": "Bu organizasyon hakkında eklemek istediğiniz bilgiler… (isteğe bağlı)",
-      "cardPreview": "Kart görünümü"
+      "cardPreview": "Kart görünümü",
+      "created": "Oluşturulma"
     }
   },
   "projects": {
@@ -324,6 +328,7 @@
       "name": "Ad",
       "status": "Durum",
       "priority": "Öncelik",
+      "type": "Tür",
       "techStack": "Teknoloji",
       "updatedAt": "Güncelleme"
     },

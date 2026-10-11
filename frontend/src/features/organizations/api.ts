@@ -33,5 +33,6 @@ export const organizationsApi = {
     return apiRequest<void>(`/organizations/${id}/${kind}`, { method: "PUT", body });
   },
   removeImage: (id: string, kind: "logo" | "cover") => apiRequest<void>(`/organizations/${id}/${kind}`, { method: "DELETE" }),
-  archive: (organizationId: string) => apiRequest<void>(`/organizations/${organizationId}/archive`, { method: "POST" }),
+  /** Permanent. The organization's projects stay; they are only unlinked from it. */
+  remove: (organizationId: string) => apiRequest<void>(`/organizations/${organizationId}`, { method: "DELETE" }),
 };

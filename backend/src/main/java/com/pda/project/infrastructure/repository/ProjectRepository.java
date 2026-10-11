@@ -5,6 +5,7 @@ import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.repository.query.Param;
@@ -52,6 +53,11 @@ public interface ProjectRepository extends JpaRepository<Project, UUID> {
             + "and m.status = com.pda.project.domain.enums.MembershipStatus.ACTIVE)")
     Page<Project> findVisibleInOrganization(@Param("organizationId") UUID organizationId,
                                             @Param("userId") UUID userId, Pageable pageable);
+
+    /** Unlinks every project (archived ones included) from an organization that is about to be deleted for good. */
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("update Project p set p.organizationId = null where p.organizationId = :organizationId")
+    int detachFromOrganization(@Param("organizationId") UUID organizationId);
 
     /** Active (not archived) projects this user founded. */
     java.util.List<Project> findByCreatedByAndArchivedAtIsNullOrderByNameAsc(UUID createdBy);

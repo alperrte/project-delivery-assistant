@@ -142,7 +142,7 @@ const scenarios: Scenario[] = [
       await expect(page).toHaveURL(/\/organizations\/[^/]+$|\/organizasyonlar\/[^/]+$/, { timeout: 15_000 });
     },
     async cleanup(page, created) {
-      expect((await api(page, "POST", `/organizations/${created.json?.id}/archive`)).status).toBeLessThan(300);
+      expect((await api(page,"DELETE",`/organizations/${created.json?.id}`)).status).toBeLessThan(300);
     },
   },
   {

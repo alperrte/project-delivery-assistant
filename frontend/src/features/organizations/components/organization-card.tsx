@@ -1,7 +1,8 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { ArrowRight, CalendarBlank, Globe, MapPin } from "@phosphor-icons/react";
+import { ArrowRight, CalendarBlank, Globe, MapPin, PencilSimple } from "@phosphor-icons/react";
+import Link from "@/i18n/navigation";
 import { EntityCard, EntityCardFooter, EntityCardLink, EntityCardSection, EntityStatusPill } from "@/components/common/entity-card";
 import { EntityMark } from "@/components/common/entity-mark";
 import { buttonVariants } from "@/components/ui/button";
@@ -41,6 +42,16 @@ export function OrganizationCard({ organization, preview }: { organization: Orga
   return (
     <EntityCard
       tone={active ? "success" : "neutral"}
+      corner={!preview ? (
+        <Link
+          href={`/organizations/${organization.id}/edit`}
+          aria-label={t("card.editNamed", { name: organization.name })}
+          title={t("card.edit")}
+          className={cn(buttonVariants({ variant: "outline", size: "icon" }), "size-11 bg-background/90 shadow-sm backdrop-blur sm:size-9")}
+        >
+          <PencilSimple size={18} aria-hidden="true" />
+        </Link>
+      ) : undefined}
       banner={coverSrc ? <OrganizationCover key={coverSrc} src={coverSrc} className="aspect-auto size-full sm:aspect-auto" /> : undefined}
       mark={<EntityMark key={logoSrc ?? "none"} name={name} src={logoSrc} />}
       title={name || t("form.preview.namePlaceholder")}

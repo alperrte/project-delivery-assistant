@@ -32,7 +32,7 @@ test("organization picker includes the 101st owned organization in create and se
     await expect(page.getByRole("option", { name: lastName, exact: true })).toBeVisible();
   } finally {
     if (projectId) await api(page, "POST", `/projects/${projectId}/archive`);
-    for (const id of ids) await api(page, "POST", `/organizations/${id}/archive`);
+    for (const id of ids) await api(page,"DELETE",`/organizations/${id}`);
   }
 });
 
@@ -61,7 +61,7 @@ test("organization rename refreshes a previously opened Project Home through cli
     await expect(page.locator("#main-content").getByRole("link", { name: `${name} renamed`, exact: true })).toBeVisible();
   } finally {
     if (projectId) await api(page, "POST", `/projects/${projectId}/archive`);
-    if (organizationId) await api(page, "POST", `/organizations/${organizationId}/archive`);
+    if (organizationId) await api(page,"DELETE",`/organizations/${organizationId}`);
     await context.close();
   }
 });

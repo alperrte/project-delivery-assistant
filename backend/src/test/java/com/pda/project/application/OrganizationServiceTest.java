@@ -1,8 +1,11 @@
 package com.pda.project.application;
 
+import com.pda.project.infrastructure.repository.ProjectRepository;
 import com.pda.project.organization.application.OrganizationService;
 import com.pda.project.organization.domain.Organization;
+import com.pda.project.organization.infrastructure.OrganizationMediaRepository;
 import com.pda.project.organization.infrastructure.OrganizationRepository;
+import com.pda.shared.MediaStorage;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.access.AccessDeniedException;
 
@@ -19,7 +22,8 @@ import static org.mockito.Mockito.when;
 class OrganizationServiceTest {
 
     private final OrganizationRepository organizations = mock(OrganizationRepository.class);
-    private final OrganizationService service = new OrganizationService(organizations);
+    private final OrganizationService service = new OrganizationService(organizations, mock(ProjectRepository.class),
+            mock(OrganizationMediaRepository.class), mock(MediaStorage.class));
 
     @Test
     void createAssignsAuthenticatedActorAsOwner() {

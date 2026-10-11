@@ -13,6 +13,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -85,12 +86,14 @@ public class OrganizationController {
                 organizationId, request.name(), request.description(), request.website(), request.contactEmail(), request.location(), request.notes()));
     }
 
-    @PostMapping("/{organizationId}/archive")
-    @Operation(summary = "Archive an owned organization", description = "Owner only. Requires CSRF.")
-    @ApiResponse(responseCode = "204", description = "Organization archived")
-    public ResponseEntity<Void> archive(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
-                                        @PathVariable UUID organizationId) {
-        organizations.archive(AuthenticatedActor.id(principal), organizationId);
+    @DeleteMapping("/{organizationId}")
+    @Operation(summary = "Permanently delete an owned organization",
+            description = "Owner only. Requires CSRF. Hard delete: the organization, its logo and cover are removed for good. "
+                    + "Its projects are not deleted; they are only unlinked from the organization.")
+    @ApiResponse(responseCode = "204", description = "Organization deleted")
+    public ResponseEntity<Void> delete(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
+                                       @PathVariable UUID organizationId) {
+        organizations.delete(AuthenticatedActor.id(principal), organizationId);
         return ResponseEntity.noContent().build();
     }
 

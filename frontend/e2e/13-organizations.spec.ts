@@ -91,13 +91,19 @@ test.describe.serial("Organizations", () => {
     await expect(memberPage.locator("#org-name")).toHaveCount(0);
   });
 
-  test("archiving still asks first and an archived organization cannot be edited", async () => {
+  test("deleting asks for the name first and removes the organization for good", async () => {
     await managerPage.goto(organizationUrl);
-    await managerPage.getByRole("button", { name: /^Arşivle$/ }).click();
-    await managerPage.getByRole("dialog").getByRole("button", { name: /^Arşivle$/ }).click();
+    await expect(managerPage.getByRole("link", { name: "Tüm organizasyonlar" })).toHaveCount(0);
+    await expect(managerPage.getByRole("navigation", { name: "Konum", exact: true })).toHaveCount(0);
+    await managerPage.getByRole("button", { name: /^Sil$/ }).click();
+    const dialog = managerPage.getByRole("dialog");
+    const confirm = dialog.getByRole("button", { name: /^Organizasyonu sil$/ });
+    await expect(confirm).toBeDisabled();
+    await dialog.getByRole("textbox").fill(renamed);
+    await confirm.click();
     await expect(managerPage).toHaveURL(/\/tr\/organizasyonlar$/);
 
-    // The server no longer serves an archived organization, so its edit address is a 404 and never a form.
+    // The organization is really gone, so its edit address is a 404 and never a form.
     await managerPage.goto(`${organizationUrl}/duzenle`);
     await expect(managerPage.locator('[data-error-code="404"]')).toBeVisible();
     await expect(managerPage.locator("#org-name")).toHaveCount(0);

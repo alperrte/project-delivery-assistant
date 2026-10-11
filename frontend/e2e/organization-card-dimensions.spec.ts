@@ -94,6 +94,6 @@ test("organization card has the project card's dimensions at every width, in lig
     console.log(report.join("\n"));
   } finally {
     if (projectId) await api(page, "POST", `/projects/${projectId}/archive`);
-    if (orgId) await api(page, "POST", `/organizations/${orgId}/archive`);
+    if (orgId) await api(page,"DELETE",`/organizations/${orgId}`);
   }
 });

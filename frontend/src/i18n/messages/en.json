@@ -186,7 +186,9 @@
   "organizations": {
     "card": {
       "lastUpdate": "Last update",
-      "openNamed": "Open organization {name}"
+      "openNamed": "Open organization {name}",
+      "edit": "Edit organization",
+      "editNamed": "Edit {name}"
     },
     "cardLabel": "ORGANIZATION",
     "cardNoDescription": "No description added yet.",
@@ -202,11 +204,12 @@
     "description": "Group your projects under an organization, or keep them standalone.",
     "create": "New organization",
     "edit": "Edit",
-    "archive": "Archive",
+    "delete": "Delete",
+    "deleteConfirmTitle": "Permanently delete this organization?",
+    "deleteConfirmDescription": "The organization, its logo and its cover image are deleted for good. Your projects are not deleted; they are only unlinked from this organization and stay standalone. This cannot be undone.",
+    "deleteTypeName": "To confirm, type the organization name: <strong>{name}</strong>",
+    "deleteConfirm": "Delete organization",
     "cancel": "Cancel",
-    "archiveConfirmTitle": "Archive this organization?",
-    "archiveConfirmDescription": "Archived organizations no longer accept new projects. This cannot be undone.",
-    "archivedBadge": "Archived",
     "projectsHeading": "Projects",
     "noProjects": "There are no active projects you can access in this organization.",
     "emptyTitle": "No organizations yet",
@@ -288,7 +291,8 @@
       "detailsDescription": "Add further information and notes.",
       "notes": "Additional notes",
       "notesPlaceholder": "Anything else you would like to add about this organization… (optional)",
-      "cardPreview": "Card appearance"
+      "cardPreview": "Card appearance",
+      "created": "Created"
     }
   },
   "projects": {
@@ -324,6 +328,7 @@
       "name": "Name",
       "status": "Status",
       "priority": "Priority",
+      "type": "Type",
       "techStack": "Tech stack",
       "updatedAt": "Updated"
     },

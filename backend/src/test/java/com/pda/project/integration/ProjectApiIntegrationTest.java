@@ -113,7 +113,7 @@ class ProjectApiIntegrationTest {
         mvc.perform(put(base).cookie(csrf,owner.access()).header("X-XSRF-TOKEN",csrf.getValue()).contentType(MediaType.APPLICATION_JSON).content(associationBody(foreign))).andExpect(status().isForbidden());
         mvc.perform(put(base).cookie(csrf,owner.access()).header("X-XSRF-TOKEN",csrf.getValue()).contentType(MediaType.APPLICATION_JSON).content(associationBody(UUID.randomUUID()))).andExpect(status().isNotFound());
         assertEquals(b,jdbc.queryForObject("select organization_id from projects where id=?",UUID.class,pid));
-        organizations.archive(owner.id(),a);
+        organizations.delete(owner.id(),a);
         mvc.perform(put(base).cookie(csrf,owner.access()).header("X-XSRF-TOKEN",csrf.getValue()).contentType(MediaType.APPLICATION_JSON).content(associationBody(a))).andExpect(status().isNotFound());
         mvc.perform(put(base).cookie(csrf,owner.access()).header("X-XSRF-TOKEN",csrf.getValue()).contentType(MediaType.APPLICATION_JSON).content(associationBody(null))).andExpect(status().isOk());
         assertNull(jdbc.queryForObject("select organization_id from projects where id=?",UUID.class,pid));
@@ -166,7 +166,7 @@ class ProjectApiIntegrationTest {
                         com.pda.project.domain.enums.ProjectPriority.MEDIUM,ProjectStatus.PLANNING,null,null,null,null,oid)
                         :projectService.create(owner.id(),"Linked "+UUID.randomUUID(),null,oid));
                 assertTrue(validated.await(10,TimeUnit.SECONDS));
-                archiver=pool.submit(()->organizations.archive(owner.id(),oid));
+                archiver=pool.submit(()->organizations.delete(owner.id(),oid));
                 boolean committedEarly;
                 try{archiver.get(300,TimeUnit.MILLISECONDS);committedEarly=true;}catch(java.util.concurrent.TimeoutException expected){committedEarly=false;}
                 System.out.println("ORG_RACE_EVIDENCE update="+updating+" archiveCommittedBeforeAssociation="+committedEarly);
@@ -271,13 +271,18 @@ class ProjectApiIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(result -> assertEquals("http://localhost:3000",
                         result.getResponse().getHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN)));
-        mvc.perform(post("/api/v1/organizations/" + organizationId + "/archive").cookie(csrf, other.access())
+        mvc.perform(delete("/api/v1/organizations/" + organizationId).cookie(csrf, other.access())
                         .header("X-XSRF-TOKEN", csrf.getValue()))
                 .andExpect(status().isForbidden());
-        mvc.perform(post("/api/v1/organizations/" + organizationId + "/archive").cookie(csrf, owner.access())
+        mvc.perform(delete("/api/v1/organizations/" + organizationId).cookie(csrf, owner.access())
                         .header("X-XSRF-TOKEN", csrf.getValue()))
                 .andExpect(status().isNoContent());
         mvc.perform(get("/api/v1/organizations/" + organizationId).cookie(owner.access()))
+                .andExpect(status().isNotFound());
+        // Hard delete: the row is really gone, and the linked project survives without the organization.
+        assertEquals(0, jdbc.queryForObject("select count(*) from organizations where id=?", Integer.class, organizationId));
+        mvc.perform(delete("/api/v1/organizations/" + organizationId).cookie(csrf, owner.access())
+                        .header("X-XSRF-TOKEN", csrf.getValue()))
                 .andExpect(status().isNotFound());
     }
 
@@ -803,7 +808,7 @@ class ProjectApiIntegrationTest {
         mvc.perform(delete(base+"/logo").cookie(csrf,owner.access()).header("X-XSRF-TOKEN",csrf.getValue())).andExpect(status().isNoContent());
         mvc.perform(delete(base+"/logo").cookie(csrf,owner.access()).header("X-XSRF-TOKEN",csrf.getValue())).andExpect(status().isNoContent());
         mvc.perform(get(base+"/logo").cookie(owner.access())).andExpect(status().isNotFound());
-        organizations.archive(owner.id(),id);
+        organizations.delete(owner.id(),id);
         mvc.perform(get(base+"/cover").cookie(owner.access())).andExpect(status().isNotFound());
     }
 
