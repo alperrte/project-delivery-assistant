@@ -3256,202 +3256,73 @@
           "id": "what",
           "title": "Çerez nedir?",
           "paragraphs": [
-            "Çerezler, bir web sitesinin tarayıcınızda sakladığı küçük kayıtlardır. Bu sayfada “çerez” ifadesi, aynı amaçla kullanılan tarayıcı yerel depolamasını (localStorage) ve oturum depolamasını (sessionStorage) da kapsar.",
+            "Çerezler, bir web sitesini ziyaret ettiğinizde tarayıcınıza kaydedilen küçük metin dosyalarıdır. Siteyi sonraki ziyaretinizde tanımasına, oturumunuzu sürdürmesine ve ayarlarınızı hatırlamasına yardımcı olurlar. Bu sayfada “çerez” ifadesi, aynı amaçla kullanılan tarayıcı yerel depolamasını (localStorage) ve oturum depolamasını (sessionStorage) da kapsar.",
             "PDA reklam çerezi, kullanıcı profili çıkarma, üçüncü taraf takip aracı veya tarayıcı parmak izi yöntemi kullanmaz. Yazı tipleri PDA'nın kendi sunucusundan yüklenir."
           ]
         },
         {
-          "id": "categories",
-          "title": "Kategoriler",
+          "id": "why",
+          "title": "Çerezleri neden kullanıyoruz?",
           "paragraphs": [
-            "PDA iki onay kategorisi kullanır. Zorunlu kategori her zaman açıktır ve kapatılamaz; görünüm ve kullanım tercihleri de bu kategorinin işlevsel kısmı sayılır (aşağıdaki gerekçeye bakın). Analitik kategori yalnız sizin açık seçiminizle çalışır ve varsayılan olarak kapalıdır."
+            "PDA'da çerezler yalnız aşağıdaki amaçlarla kullanılır."
           ],
           "items": [
-            "Zorunlu: giriş, oturum güvenliği, sahte istek koruması, dil seçimi, geçici doğrulama adımları ve bu tercihin kaydı.",
-            "İşlevsel tercihler: yalnız sizin yaptığınız bir ayarı (tema, görünüm, hatırlanan e-posta) bu tarayıcıda hatırlar.",
-            "Analitik: sayfa türü, ziyaret kaynağı, etkin kullanım süresi, belirli düğmelere tıklama ve hata türünün anonim ölçümü."
+            "Giriş yapmanızı, oturumunuzu güvenle sürdürmenizi ve çıkış yapmanızı sağlamak.",
+            "Hesabınızı ve sitenin kendisini sahte istek gibi kötüye kullanımlara karşı korumak.",
+            "Seçtiğiniz dil, tema ve görünüm gibi ayarlarınızı sonraki ziyaretinizde yeniden sunabilmek.",
+            "Yalnız sizin izninizle, sitenin nasıl kullanıldığını anonim olarak ölçüp geliştirmek."
+          ],
+          "closing": [
+            "Tarayıcı ayarlarınızdan çerezleri engelleyebilir veya silebilirsiniz. Zorunlu çerezleri engellerseniz giriş ve oturum işlevleri çalışmaz; tercih kayıtlarını silerseniz ayarlarınız varsayılana döner."
+          ]
+        },
+        {
+          "id": "types",
+          "title": "Çerez türleri",
+          "paragraphs": [
+            "Çerezler saklanma sürelerine, kimin yönettiğine ve amacına göre gruplanır. PDA'da üç grup bulunur ve her biri ilerleyen bölümlerde ayrıca anlatılır."
+          ],
+          "items": [
+            "Oturum çerezleri geçicidir; tarayıcıyı veya sekmeyi kapattığınızda silinir. Kalıcı çerezler ise kendi süreleri dolana ya da siz silene kadar cihazınızda kalır.",
+            "PDA'nın kullandığı tüm çerezleri PDA'nın kendisi (birinci taraf) yönetir; reklam ya da takip amaçlı üçüncü taraf çerezi yoktur.",
+            "Zorunlu çerezler hizmetin çalışması için gereklidir ve kapatılamaz. Tercih çerezleri yalnız sizin yaptığınız bir ayarı hatırlar. Analitik çerezler ise varsayılan olarak kapalıdır ve yalnız sizin açık seçiminizle çalışır."
           ]
         },
         {
           "id": "necessary",
-          "title": "Zorunlu çerezler ve depolama",
+          "title": "Zorunlu çerezler",
           "paragraphs": [
-            "Aşağıdaki kayıtlar hizmetin çalışması için gereklidir ve analitik tercihinizden bağımsız kullanılır. Hepsini PDA (birinci taraf) yönetir. Süreler hizmetin yapılandırmasına bağlıdır; verilenler varsayılan değerlerdir. Tarayıcı ayarlarınızdan engellerseniz giriş ve oturum işlevleri çalışmaz."
+            "Aşağıdaki çerezler ve kayıtlar hizmetin çalışması için gereklidir ve analitik tercihinizden bağımsız kullanılır. Süreler hizmetin yapılandırmasına bağlıdır; verilenler varsayılan değerlerdir."
           ],
-          "table": {
-            "caption": "Zorunlu çerezler ve depolama kayıtları",
-            "headers": [
-              "Ad",
-              "Tür",
-              "Amaç",
-              "Süre"
-            ],
-            "rows": [
-              [
-                "PDA_ACCESS",
-                "Çerez, HttpOnly; yalnız /api yoluna gönderilir",
-                "Kısa ömürlü erişim belirteci",
-                "15 dakika"
-              ],
-              [
-                "PDA_REFRESH",
-                "Çerez, HttpOnly; yalnız /api/v1/auth yoluna gönderilir",
-                "Oturumu yenileyen belirteç",
-                "7 gün; çıkışta silinir"
-              ],
-              [
-                "PDA_SESSION",
-                "Çerez, HttpOnly",
-                "Belirteç taşımayan, bir oturum olup olmadığını gösteren işaret",
-                "Yenileme belirteciyle aynı; çıkışta silinir"
-              ],
-              [
-                "PDA_MFA",
-                "Çerez, HttpOnly; yalnız iki adımlı doğrulama yoluna gönderilir",
-                "Şifre adımı geçildikten sonra iki adımlı doğrulama kodunu girmeniz için geçici kanıt",
-                "5 dakika; kullanılınca silinir"
-              ],
-              [
-                "PDA_ADMIN_MFA",
-                "Çerez, HttpOnly; yalnız yönetici doğrulama yoluna gönderilir",
-                "Yönetici girişinde ikinci adım için geçici kanıt",
-                "5 dakika; kullanılınca silinir"
-              ],
-              [
-                "PDA_ADMIN_ENROLL",
-                "Çerez, HttpOnly; yalnız yönetici kurulum yoluna gönderilir",
-                "Yöneticinin ilk doğrulayıcı uygulama kurulumu için geçici kanıt",
-                "10 dakika; kullanılınca silinir"
-              ],
-              [
-                "PDA_RESET",
-                "Çerez, HttpOnly; dar bir yola gönderilir",
-                "Şifre sıfırlama adımını sürdürmek için geçici kanıt",
-                "10 dakika; kullanılınca silinir"
-              ],
-              [
-                "PDA_PWCHANGE",
-                "Çerez, HttpOnly; dar bir yola gönderilir",
-                "Oturum içi şifre değiştirme adımını sürdürmek için geçici kanıt",
-                "10 dakika; kullanılınca silinir"
-              ],
-              [
-                "XSRF-TOKEN",
-                "Çerez; sayfa tarafından okunur",
-                "Sahte istek (CSRF) koruması",
-                "Tarayıcı oturumu boyunca"
-              ],
-              [
-                "JSESSIONID",
-                "Çerez, HttpOnly",
-                "Yalnız Google veya GitHub ile giriş akışı sırasında kullanılır",
-                "Yaklaşık 30 dakika"
-              ],
-              [
-                "NEXT_LOCALE",
-                "Çerez",
-                "Seçtiğiniz dil",
-                "1 yıl"
-              ],
-              [
-                "pda:cookie-consent",
-                "localStorage",
-                "Bu çerez tercihinizin kaydı (sürüm, analitik izni, tarih)",
-                "Siz silene kadar"
-              ],
-              [
-                "pda:last-session-refresh",
-                "localStorage",
-                "Sekmelerin oturumu aynı anda yenilemesini önleyen zaman damgası",
-                "Üzerine yazılır; siz silene kadar"
-              ],
-              [
-                "pda.pendingVerification",
-                "sessionStorage",
-                "Kayıt veya giriş sonrası doğrulanacak e-posta adresini doğrulama sayfasına taşır (adres URL'de taşınmaz)",
-                "Doğrulama bitince ya da sekme kapanınca"
-              ],
-              [
-                "pda:renderer",
-                "sessionStorage",
-                "Tarayıcının animasyonları yazılımla mı donanımla mı çizdiğinin sonucu; arayüzü buna göre uyarlar",
-                "Sekme kapanana kadar"
-              ]
-            ]
-          }
+          "items": [
+            "Oturum çerezleri: giriş yaptığınızda oturumunuzu sürdürür. Kısa ömürlü erişim çerezi 15 dakika, oturumu yenileyen çerez ve oturumun var olduğunu gösteren işaret ise 7 güne kadar geçerlidir; çıkış yaptığınızda silinir. Erişim ve yenileme çerezleri sayfadaki komut dosyalarınca okunamaz (HttpOnly) ve yalnız gerekli adreslere gönderilir; oturum işareti hiçbir yetki vermez.",
+            "Doğrulama çerezleri: iki adımlı doğrulama, şifre sıfırlama, oturum içi şifre değiştirme ve yönetici girişi gibi adımlarda, bir önceki adımı geçtiğinizi gösteren geçici çerezlerdir. 5 ile 10 dakika arasında geçerlidir ve adım tamamlanınca silinir.",
+            "Güvenlik çerezi: sahte istek (CSRF) saldırılarına karşı koruma sağlar ve tarayıcı oturumunuz boyunca saklanır. Google veya GitHub ile giriş yaparsanız, yalnız o giriş akışı sırasında yaklaşık 30 dakika geçerli bir oturum çerezi de kullanılır.",
+            "Dil çerezi: seçtiğiniz dili 1 yıl boyunca hatırlar.",
+            "Çerez tercihi kaydı: bu sayfadaki çerez tercihinizi (analitik izni ve karar tarihi) tarayıcınızın yerel depolamasında siz silene kadar saklar.",
+            "Teknik kayıtlar: oturumun birden çok sekmede aynı anda yenilenmesini önleyen bir zaman damgası (siz silene kadar), kayıt veya giriş sonrası doğrulanacak e-posta adresini sayfalar arasında taşıyan geçici kayıt (doğrulama bitince ya da sekme kapanınca silinir; adres URL'de taşınmaz) ve tarayıcınızın animasyonları yazılımla mı donanımla mı çizdiğini gösteren sonuç (sekme kapanana kadar)."
+          ]
         },
         {
           "id": "preferences",
-          "title": "Görünüm ve kullanım tercihleri",
+          "title": "Tercih çerezleri",
           "paragraphs": [
             "Aşağıdaki kayıtlar yalnız sizin yaptığınız ayarları bu tarayıcıda hatırlar. Ziyaretinizi ölçmez, sunucuya gönderilmez ve izleme amacı taşımaz. Bu kayıtlar olmadan seçtiğiniz görünümü ve ayarları sonraki ziyarette sunamayız; bu nedenle onları, talep ettiğiniz hizmetin sunulması için gerekli işlevsel kayıtlar olarak değerlendiriyor ve ayrı onay istemiyoruz. Dilerseniz tarayıcı ayarlarınızdan silebilirsiniz; ayarlarınız varsayılana döner."
           ],
-          "table": {
-            "caption": "Görünüm ve kullanım tercihi kayıtları",
-            "headers": [
-              "Ad",
-              "Tür",
-              "Amaç",
-              "Süre"
-            ],
-            "rows": [
-              [
-                "theme",
-                "localStorage",
-                "Açık, koyu veya sistem teması",
-                "Siz silene kadar"
-              ],
-              [
-                "pda:motion, pda:theme-transition",
-                "localStorage",
-                "Animasyon tercihleri",
-                "Siz silene kadar"
-              ],
-              [
-                "pda:sidebar-collapsed",
-                "localStorage",
-                "Kenar çubuğunun daraltılması",
-                "Siz silene kadar"
-              ],
-              [
-                "pda:teams-view:v1:<kullanıcı kimliği>",
-                "localStorage",
-                "Ekipler sayfasındaki görünüm (eski pda.teams.view anahtarının yerine geçer)",
-                "Siz silene kadar"
-              ],
-              [
-                "pda:task-mode-help:v1:<kullanıcı kimliği>",
-                "localStorage",
-                "Görev türü yardımını gizleme tercihi",
-                "Siz silene kadar"
-              ],
-              [
-                "pda.rememberedEmail",
-                "localStorage",
-                "Yalnız giriş ekranında “Beni hatırla”yı siz seçerseniz e-posta adresiniz",
-                "Seçeneği kapatana kadar"
-              ],
-              [
-                "pda:last-project:<kullanıcı kimliği>",
-                "sessionStorage",
-                "Oturum boyunca son seçilen proje",
-                "Sekme kapanana kadar"
-              ],
-              [
-                "pda:session-baseline",
-                "sessionStorage",
-                "Oturum başındaki dil ve tema",
-                "Sekme kapanana kadar"
-              ]
-            ]
-          },
+          "items": [
+            "Tema: açık, koyu veya sistem teması tercihiniz. Siz silene kadar saklanır.",
+            "Animasyon ve görünüm tercihleri: animasyon ayarlarınız ve kenar çubuğunun daraltılmış olup olmadığı. Siz silene kadar saklanır.",
+            "Sayfa tercihleri: Ekipler sayfasındaki görünümünüz ve görev türü yardımını gizleme seçiminiz. Siz silene kadar saklanır.",
+            "Beni hatırla: giriş ekranında bu seçeneği siz işaretlerseniz e-posta adresiniz hatırlanır; seçeneği kapatana kadar saklanır.",
+            "Oturum içi seçimler: son seçtiğiniz proje ile oturum başındaki dil ve tema. Sekmeyi kapattığınızda silinir."
+          ],
           "closing": [
-            "<kullanıcı kimliği>, hesabınıza ait rastgele iç kimliktir; e-posta adresiniz veya adınız değildir."
+            "Bu kayıtlardan bazıları, hesabınıza ait rastgele bir iç kimlik içerir; bu kimlik e-posta adresiniz veya adınız değildir."
           ]
         },
         {
           "id": "analytics",
-          "title": "Analitik (varsayılan olarak kapalı)",
+          "title": "Analitik çerezler (varsayılan olarak kapalı)",
           "paragraphs": [
             "Analitik, siz “Tümünü kabul et” demeden veya tercih penceresinde Analitik'i açmadan hiçbir veri toplamaz ve hiçbir tanımlayıcı oluşturmaz. Karar vermediğiniz sürece de kapalıdır. Açtığınızda ölçüm PDA'nın kendi sunucusunda tutulur; üçüncü taraf analitik aracı yoktur.",
             "Ad, e-posta, mesaj içeriği, belirteç, şifre, hesap kimliği, IP adresi, tarayıcı bilgisi veya tarayıcı parmak izi toplanmaz. Giriş yapmış olsanız da ölçüm hesabınızla ilişkilendirilmez.",
@@ -3464,7 +3335,7 @@
             "Sitede etkin geçirilen süre; sekme arka plandayken veya pencere odak dışındayken sayılmaz.",
             "Düğme tıklamaları: yalnız sabit bir listedeki düğmelere (açılış sayfasındaki ve üst bölümdeki kayıt ve giriş düğmeleri, kayıt formunun ve iletişim formunun gönderimi, kaynak kod bağlantısı) tıklanıp tıklanmadığı; hangi kişinin tıkladığı veya yazdığınız hiçbir şey kaydedilmez.",
             "Hata olayları: uygulamada bir hata oluştuğunda yalnız hata türü (ekran çizimi, dosya yükleme, yakalanmayan söz hatası veya ağ hatası) ve sayfa türü kaydedilir. Hata iletisi, ayrıntısı, adres veya kimlik kaydedilmez. Aynı hata aynı oturumda bir kez bildirilir.",
-            "Rastgele üretilmiş anonim ziyaretçi ve oturum kimliği: pda:analytics-visitor ve pda:analytics-session (localStorage). Oturum kimliği 30 dakika hareketsizlikten sonra yenilenir. İzni geri çektiğinizde ikisi de silinir."
+            "Rastgele üretilmiş anonim ziyaretçi ve oturum kimliği tarayıcınızın yerel depolamasında tutulur. Oturum kimliği 30 dakika hareketsizlikten sonra yenilenir. İzni geri çektiğinizde ikisi de silinir."
           ]
         },
         {
@@ -3473,7 +3344,8 @@
           "paragraphs": [
             "Sayfa altındaki “Çerez tercihlerini yönet” bağlantısıyla veya bu sayfadaki düğmeyle tercih penceresini istediğiniz zaman açabilirsiniz. Analitiği kapattığınızda yeni ölçüm hemen durur, düğme tıklaması ve hata olayları da gönderilmez ve bu tarayıcıdaki analitik tanımlayıcıları silinir. Tanımlayıcı silindiği için daha önce toplanmış kayıtlar sizinle ilişkilendirilemez; bu kayıtlar 12 ay sonunda otomatik silinir.",
             "Geri çekmenin etkisi: Zorunlu çerezler çalışmaya devam eder; analitik dışında hiçbir özellik kısıtlanmaz. Geri çekme, daha önce verilen rızaya dayanan işlemlerin hukuka uygunluğunu etkilemez.",
-            "Tercih bu tarayıcıya aittir ve hesabınıza bağlı değildir: başka bir tarayıcıda veya cihazda ayrıca seçim yapmanız gerekir. Çerez uygulaması anlamlı biçimde değiştiğinde onay sürümü yükseltilir ve tercihiniz yeniden sorulur."
+            "Tercih bu tarayıcıya aittir ve hesabınıza bağlı değildir: başka bir tarayıcıda veya cihazda ayrıca seçim yapmanız gerekir. Çerez uygulaması anlamlı biçimde değiştiğinde onay sürümü yükseltilir ve tercihiniz yeniden sorulur.",
+            "Çerezleri tarayıcı ayarlarınızdan da silebilir veya engelleyebilirsiniz. Bunun için tarayıcınızın yardım sayfasına bakabilirsiniz."
           ]
         },
         {
