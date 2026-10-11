@@ -1,5 +1,4 @@
-# Production-shaped stack behind Caddy (automatic HTTPS). Provider independent: it runs on any machine with Docker and a public
-# DNS name; hosting is still an open decision (.agents/deployment.md), so nothing here is tied to a vendor.
+# Production stack behind Caddy (automatic HTTPS) for a single Docker host (the Hostinger VPS, .agents/deployment.md).
 #
 #   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
 #
@@ -7,16 +6,23 @@
 # /api/v1/ws) from the SAME host name, so there is no cross-origin traffic: FRONTEND_URL, NEXT_PUBLIC_SITE_URL and the API
 # base all share the origin and CORS never comes into play.
 #
-# Variables (a production env file; real values stay out of Git; names only):
-#   SITE_ADDRESS               public host name, e.g. pda.example.org (Caddy gets and renews its certificate by itself).
+# Environment: the .env.prod profile (ignored by Git; local development uses .env.dev, see ops/env.ps1). Variables:
+#   SITE_ADDRESS / WWW_ADDRESS public host names (Caddy gets and renews the certificate; www is redirected to SITE_ADDRESS).
 #                              `localhost` makes Caddy use its own local CA, which is how the stack is tried on one machine.
 #   SITE_URL                   https://<SITE_ADDRESS> (no trailing slash). Used for FRONTEND_URL and NEXT_PUBLIC_SITE_URL.
 #   DB_NAME, DB_USERNAME, DB_PASSWORD, JWT_SECRET, EMAIL_VERIFICATION_HMAC_KEY, TOTP_ENCRYPTION_KEY,
-#   ADMIN_EMAIL, ADMIN_INITIAL_PASSWORD, MAIL_* / SMTP_*   as in .env.example.
+#   ADMIN_EMAIL, ADMIN_INITIAL_PASSWORD, MAIL_* / SMTP_*, OAuth and CONTACT_*   documented inside .env.prod.
 # APP_ENV is forced to `prod` (Secure cookies) and API docs are forced off.
 # The frontend image bakes the public URLs in at BUILD time (CSP connect-src/img-src are derived from them): change SITE_URL
 # and rebuild the frontend image.
 name: pda-prod
+
+# Every container keeps at most 5 x 10 MB of logs: without a limit Docker's json logs grow until the disk is full.
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
 
 services:
   postgres:
@@ -29,6 +35,8 @@ services:
     # No published port: only the backend reaches the database, over the compose network.
     volumes:
       - pda_postgres_data:/var/lib/postgresql
+    mem_limit: 1536m
+    logging: *default-logging
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}"]
       interval: 5s
@@ -40,6 +48,8 @@ services:
     build:
       context: ./backend
     restart: unless-stopped
+    # The unprivileged account created in backend/Dockerfile (it owns the media directory a new volume inherits).
+    user: "10001:10001"
     env_file:
       - ${ENV_FILE:-.env.prod}
     environment:
@@ -53,8 +63,12 @@ services:
       # the rate limits count real visitors instead of one shared address.
       TRUSTED_PROXY_CIDRS: ${TRUSTED_PROXY_CIDRS:-172\.(1[6-9]|2[0-9]|3[0-1])\.[0-9]+\.[0-9]+}
       ORGANIZATION_MEDIA_STORAGE_PATH: /app/organization-media
+      # The heap may use 70% of the container limit; the rest is for metaspace, threads and native buffers.
+      JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=70
     volumes:
       - pda_organization_media:/app/organization-media
+    mem_limit: 2g
+    logging: *default-logging
     depends_on:
       postgres:
         condition: service_healthy
@@ -72,25 +86,41 @@ services:
         NEXT_PUBLIC_API_URL: ${SITE_URL}/api/v1
         NEXT_PUBLIC_SITE_URL: ${SITE_URL}
     restart: unless-stopped
+    mem_limit: 1g
+    logging: *default-logging
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:3000/robots.txt"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
     environment:
       SITE_ADDRESS: ${SITE_ADDRESS}
+      WWW_ADDRESS: ${WWW_ADDRESS:-www.localhost}
     ports:
       - "${HTTP_PORT:-80}:80"
       - "${HTTPS_PORT:-443}:443"
+      # HTTP/3 (QUIC) runs over UDP.
+      - "${HTTPS_PORT:-443}:443/udp"
     volumes:
       - ./ops/Caddyfile:/etc/caddy/Caddyfile:ro
       # The certificate, its key and the ACME account live here: losing this volume means a new certificate request.
       - caddy_data:/data
       - caddy_config:/config
+    mem_limit: 256m
+    logging: *default-logging
     depends_on:
-      - frontend
-      - backend
+      frontend:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
 
 volumes:
   pda_postgres_data:
