@@ -159,6 +159,7 @@ test("a submitted registration and a sent contact message are counted as convers
     await page.locator('input[name="nickname"]').fill(user.nickname);
     await page.locator('input[name="password"]').fill(user.password);
     await page.locator('input[name="confirmPassword"]').fill(user.password);
+    await page.getByRole("checkbox", { name: /Kullanım Koşulları/ }).check();
     await page.getByRole("button", { name: /^Kayıt ol$/ }).click();
   };
   await fillRegistration();

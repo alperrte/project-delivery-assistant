@@ -20,7 +20,8 @@ export function AuthCard({
   children,
 }: {
   title: string;
-  subtitle: string;
+  /** Omitted on screens whose heading says enough (register). */
+  subtitle?: string;
   /** 2 when the page already has its own h1 above the card (login). */
   headingLevel?: 1 | 2;
   /** Small label above the heading (the administrator sign-in names its area here). */
@@ -49,7 +50,7 @@ export function AuthCard({
         >
           {title}
         </Heading>
-        <p className="mt-2 text-sm leading-relaxed text-(--auth-muted)">{subtitle}</p>
+        {subtitle && <p className="mt-2 text-sm leading-relaxed text-(--auth-muted)">{subtitle}</p>}
       </div>
       {children}
     </section>

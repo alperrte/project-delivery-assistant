@@ -71,6 +71,7 @@ const forms: Form[] = [
       await page.getByLabel(tr.register.nickname, { exact: true }).fill("kisi_test");
       await page.getByLabel(tr.register.password, { exact: true }).fill("Parola-12345");
       await page.getByLabel(tr.register.confirmPassword, { exact: true }).fill("Parola-12345");
+      await page.getByRole("checkbox", { name: /Kullanım Koşulları/ }).check();
     },
     kept: (page) => ({ field: page.getByLabel(tr.register.email, { exact: true }), value: "kisi@example.test" }),
   },

@@ -1,6 +1,5 @@
 "use client";
 
-import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { GitHubIcon, GoogleIcon } from "@/components/common/brand-icons";
 import { buttonVariants } from "@/components/ui/button";
@@ -9,11 +8,9 @@ import { oauthStartUrl } from "../api";
 
 /**
  * Secondary sign-in routes. The backend starts the flow, so these are plain
- * navigations. The rule always sits between the buttons and the email form:
- * "or" above the buttons when they follow the form (login), "or with email"
- * below them when they come first (register).
+ * navigations. Shown on the login screen only, below the email form, behind an "or" rule.
  */
-export function OAuthButtons({ divider = "orEmail", notice }: { divider?: "or" | "orEmail"; notice?: ReactNode }) {
+export function OAuthButtons({ divider = "or" }: { divider?: "or" } = {}) {
   const t = useTranslations("oauth");
   const cls = cn(
     buttonVariants({ variant: "outline" }),
@@ -23,14 +20,14 @@ export function OAuthButtons({ divider = "orEmail", notice }: { divider?: "or" |
   const rule = (
     <div className="flex items-center gap-3 text-xs text-(--auth-muted)">
       <span className="h-px flex-1 bg-(--auth-field-border)" />
-      {t(divider === "or" ? "or" : "divider")}
+      {t("or")}
       <span className="h-px flex-1 bg-(--auth-field-border)" />
     </div>
   );
 
   return (
     <div className="space-y-5">
-      {divider === "or" && rule}
+      {rule}
       <div className="grid gap-3 sm:grid-cols-2">
         <a href={oauthStartUrl("google")} className={cls}>
           <GoogleIcon className="size-[18px]" />
@@ -41,8 +38,6 @@ export function OAuthButtons({ divider = "orEmail", notice }: { divider?: "or" |
           {t("github")}
         </a>
       </div>
-      {notice}
-      {divider === "orEmail" && rule}
     </div>
   );
 }

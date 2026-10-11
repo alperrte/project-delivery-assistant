@@ -40,6 +40,8 @@ export const registerSchema = z
     }),
     password: strongPassword,
     confirmPassword: z.string().min(1, "required"),
+    /** Client-only: the Terms of Use checkbox. Never sent to the API. */
+    acceptTerms: z.boolean().refine((accepted) => accepted, "termsRequired"),
   })
   .refine((v) => v.password === v.confirmPassword, {
     path: ["confirmPassword"],

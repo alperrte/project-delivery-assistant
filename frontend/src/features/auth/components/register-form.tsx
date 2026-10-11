@@ -16,6 +16,7 @@ import { registerSchema, type RegisterValues } from "../schemas";
 import { trackCta } from "@/features/analytics/cta";
 import { authCtaClass } from "./auth-card";
 import { RegistrationNotice } from "./registration-notice";
+import { TermsCheckbox } from "./terms-checkbox";
 import { PasswordRules } from "./password-rules";
 import { holdCredentialsForVerification, writePendingVerification } from "./pending-verification";
 import { useShake } from "./use-shake";
@@ -37,10 +38,10 @@ export function RegisterForm() {
     setError,
     control,
     formState: { errors, isSubmitting },
-  } = useForm<RegisterValues>({ resolver: zodResolver(registerSchema) });
+  } = useForm<RegisterValues>({ resolver: zodResolver(registerSchema), defaultValues: { acceptTerms: false } });
   const password = useWatch({ control, name: "password" }) ?? "";
 
-  async function onSubmit(values: RegisterValues) {
+  async function onSubmit({ acceptTerms: _acceptTerms, ...values }: RegisterValues) {
     setFormError(null);
     try {
       await authApi.register({ ...values, locale });
@@ -101,6 +102,7 @@ export function RegisterForm() {
           error={errors.confirmPassword && tv(errors.confirmPassword.message!)}
           {...register("confirmPassword")}
         />
+        <TermsCheckbox error={errors.acceptTerms && tv(errors.acceptTerms.message!)} {...register("acceptTerms")} />
 
         {formError && (
           <p role="alert" className="text-sm text-destructive">

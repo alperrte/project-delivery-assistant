@@ -121,7 +121,8 @@ export function TeamFormPage({ slug, teamId }: { slug: string; teamId?: string }
       created.current = true;
       await queryClient.invalidateQueries({ queryKey: teamsKey(projectId) });
       toast.success(t(editing ? "saved" : "created"));
-      router.push(`/projects/${slug}/teams/${saved.id}`);
+      // Creating lands on the team list (where the new card shows up), not inside the team: the visitor never opened it.
+      router.push(editing ? `/projects/${slug}/teams/${saved.id}` : `/projects/${slug}?section=teams`);
     },
     onError: (err) => toast.error(te(errorKey(err))),
   });

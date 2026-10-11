@@ -167,7 +167,7 @@ function OrganizationEditor({ initial }: { initial?: Organization }) {
    <StickyFormActions className={summarySections.length > 0 ? "mt-4" : undefined}>
     <div className="flex items-center justify-between gap-2"><Link href={backHref} className={buttonVariants({ variant: "outline" })}>{tf("cancel")}</Link><div className="flex min-w-0 flex-1 items-center justify-end gap-2">
      <a href="#organization-preview" className={buttonVariants({ variant: "ghost", className: "lg:hidden" })}><Eye size={16} aria-hidden="true" /><span className="sr-only min-[440px]:not-sr-only">{tf("preview.show")}</span></a>
-     <Button type="submit" aria-describedby={summarySections.length > 0 ? "org-form-summary" : undefined} className="h-auto min-h-9 min-w-0 whitespace-normal bg-label-blue px-5 py-1 text-white shadow-sm hover:bg-label-blue/90 dark:bg-label-blue/65 dark:hover:bg-label-blue/65 dark:saturate-150" disabled={saving}>{saving && <CircleNotch size={16} className="animate-spin" aria-hidden="true" />}{failures.length ? tp("retry") : editing ? tf("save") : tf("create")}</Button>
+     <Button type="submit" aria-describedby={summarySections.length > 0 ? "org-form-summary" : undefined} className="h-auto min-h-10 min-w-0 whitespace-normal" disabled={saving}>{saving && <CircleNotch size={16} className="animate-spin" aria-hidden="true" />}{failures.length ? tp("retry") : editing ? tf("save") : tf("create")}</Button>
     </div></div>
    </StickyFormActions>
   </form>

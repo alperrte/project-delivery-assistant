@@ -124,7 +124,7 @@ const scenarios: Scenario[] = [
     },
     async expectSuccess(page) {
       await expect(toast(page, "success")).toBeVisible();
-      await expect(page).toHaveURL(/\/tr\/projeler\/[^/]+\/ekipler\/[^/]+/, { timeout: 15_000 });
+      await expect(page).toHaveURL(/\/tr\/projeler\/[^/]+\/ekipler$/, { timeout: 15_000 });
     },
   },
   {
@@ -428,6 +428,7 @@ test.describe("Gönderim sonuçları: kayıt ve giriş (gerçek sunucu)", () => 
     await page.locator('input[name="nickname"]').fill(user.nickname);
     await page.locator('input[name="password"]').fill(user.password);
     await page.locator('input[name="confirmPassword"]').fill(user.password);
+    await page.getByRole("checkbox", { name: /Kullanım Koşulları/ }).check();
     await page.getByRole("button", { name: /^Kayıt ol$/ }).click();
     // Registration only mails a code; the account cannot sign in until the code is entered.
     await expect(toast(page, "success")).toBeVisible();

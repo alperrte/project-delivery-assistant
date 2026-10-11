@@ -24,6 +24,7 @@ async function fillRegistration(page: Page, user: { email: string; nickname: str
   await page.locator('input[name="nickname"]').fill(user.nickname);
   await page.locator('input[name="password"]').fill(user.password);
   await page.locator('input[name="confirmPassword"]').fill(user.password);
+  await page.getByRole("checkbox", { name: /Kullanım Koşulları/ }).check();
 }
 
 test.beforeAll(async () => {

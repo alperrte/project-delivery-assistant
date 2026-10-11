@@ -154,7 +154,8 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
   });
 
   const created = useRef(false);
-  const leaving = dirty && !mutation.isPending && !mutation.isSuccess;
+  // The landing demo renders this page with scripted values; nothing there is the visitor's work, so it never warns.
+  const leaving = !presentationValues && dirty && !mutation.isPending && !mutation.isSuccess;
   useEffect(() => {
     if (!leaving) return;
     // `created` flips synchronously, before React has re-rendered, so a navigation right after saving never warns.

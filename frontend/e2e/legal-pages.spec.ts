@@ -238,34 +238,38 @@ test("the FAQ answers match the product: account deletion exists and the data re
   expect(text).toContain("altı haneli bir doğrulama kodu");
 });
 
-test("registration shows a notice (not a consent box) with links to the terms, the KVKK notice and the privacy policy, next to the form and the sign-in buttons", async ({ page }) => {
+test("registration has a terms checkbox, and an info-only notice for the KVKK notice and privacy policy under the form, and no Google/GitHub sign-up buttons", async ({ page }) => {
   await page.context().addCookies([{ name: "NEXT_LOCALE", value: "tr", url: "http://localhost:3000" }]);
   await page.goto("/register");
-  const main = page.locator("#auth-main, main").first();
-  const notices = page.locator("p", { hasText: /Kullanım Koşulları.*KVKK Aydınlatma Metni.*Gizlilik Politikası/ });
-  await expect(notices).toHaveCount(2);
-  const form = page.locator("form p", { hasText: "Kayıt olarak" });
-  const oauth = page.locator("p", { hasText: "Google veya GitHub ile devam ederek" });
-  await expect(form).toBeVisible();
-  await expect(oauth).toBeVisible();
-  for (const notice of [form, oauth]) {
-    for (const [name, href] of [["Kullanım Koşulları", "/tr/kullanim-kosullari"], ["KVKK Aydınlatma Metni", "/tr/kvkk"], ["Gizlilik Politikası", "/tr/gizlilik"]] as const) {
-      const link = notice.getByRole("link", { name: new RegExp(name) });
-      await expect(link).toHaveAttribute("href", href);
-      await expect(link).toHaveAttribute("target", "_blank");
-      await expect(link).toHaveAttribute("rel", /noopener/);
-    }
+  const form = page.locator("form");
+  await expect(page.getByRole("link", { name: /Google ile devam et|GitHub ile devam et/ })).toHaveCount(0);
+  // The Terms of Use are accepted with a checkbox (unchecked by default); the link opens the page in a new tab.
+  const terms = form.getByRole("checkbox", { name: /Kullanım Koşulları/ });
+  await expect(terms).not.toBeChecked();
+  await expect(form.getByRole("checkbox")).toHaveCount(1);
+  const termsLink = form.getByRole("link", { name: /Kullanım Koşulları/ });
+  await expect(termsLink).toHaveAttribute("href", "/tr/kullanim-kosullari");
+  await expect(termsLink).toHaveAttribute("target", "_blank");
+  await expect(termsLink).toHaveAttribute("rel", /noopener/);
+  // KVKK and privacy stay a notice, not a consent request, and the text says so.
+  const notice = form.locator("p", { hasText: "bilgilendirme metinleridir" });
+  await expect(notice).toHaveCount(1);
+  await expect(notice).toContainText("açık rıza talebi değildir");
+  for (const [name, href] of [["KVKK Aydınlatma Metni", "/tr/kvkk"], ["Gizlilik Politikası", "/tr/gizlilik"]] as const) {
+    const link = notice.getByRole("link", { name: new RegExp(name) });
+    await expect(link).toHaveAttribute("href", href);
+    await expect(link).toHaveAttribute("target", "_blank");
+    await expect(link).toHaveAttribute("rel", /noopener/);
   }
-  // Notice, not consent: no checkbox anywhere, and the text says so.
-  await expect(page.getByRole("checkbox")).toHaveCount(0);
-  await expect(form).toContainText("açık rıza talebi değildir");
-  void main;
   // The links really open the pages (new tab).
-  const [popup] = await Promise.all([page.context().waitForEvent("page"), form.getByRole("link", { name: /KVKK Aydınlatma Metni/ }).click()]);
+  const [popup] = await Promise.all([page.context().waitForEvent("page"), notice.getByRole("link", { name: /KVKK Aydınlatma Metni/ }).click()]);
   await expect(popup).toHaveURL(/\/tr\/kvkk$/);
   await expect(popup.locator("h1")).toHaveText("KVKK Aydınlatma Metni");
   // The form and its typed text are untouched by that.
   await expect(page).toHaveURL(/\/tr\/kayit$/);
+  // Submitting without accepting the terms is refused with a message on the checkbox.
+  await form.locator('button[type="submit"]').click();
+  await expect(form.getByRole("alert").filter({ hasText: "Kullanım Koşulları" })).toBeVisible();
 });
 
 test("the footer shows the single public address next to the contact link on public pages, in every language", async ({ page, context }) => {

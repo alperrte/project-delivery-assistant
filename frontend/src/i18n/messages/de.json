@@ -1244,7 +1244,6 @@
   "oauth": {
     "google": "Weiter mit Google",
     "github": "Weiter mit GitHub",
-    "divider": "oder mit E-Mail",
     "errors": {
       "access_denied": "Die Anmeldeberechtigung wurde nicht erteilt.",
       "email_not_verified": "Die E-Mail-Adresse beim Anbieter ist nicht bestätigt.",
@@ -1353,10 +1352,9 @@
   "register": {
     "metaDescription": "Erstellen Sie ein PDA-Konto, richten Sie Ihr Projekt ein, laden Sie Ihr Team ein und liefern Sie gemeinsam.",
     "title": "Konto erstellen",
-    "subtitle": "Starten Sie mit wenigen Angaben.",
     "email": "E-Mail",
     "nickname": "Benutzername",
-    "nicknameHint": "3-32 Zeichen: Buchstaben, Ziffern, einzelne Leerzeichen, Unterstrich (_) und Bindestrich (-).",
+    "nicknameHint": "3-32 Zeichen",
     "password": "Passwort",
     "confirmPassword": "Passwort bestätigen",
     "submit": "Konto erstellen",
@@ -1368,8 +1366,8 @@
     "passwordPlaceholder": "Passwort erstellen",
     "confirmPasswordPlaceholder": "Passwort wiederholen",
     "codeSent": "Wir haben den Bestätigungscode an Ihre E-Mail gesendet.",
-    "notice": "Mit der Registrierung akzeptieren Sie die <terms>Nutzungsbedingungen</terms> und bestätigen, den <kvkk>KVKK-Datenschutzhinweis</kvkk> und die <privacy>Datenschutzerklärung</privacy> gelesen zu haben. Dies sind Informationstexte, keine Bitte um Einwilligung.",
-    "noticeOauth": "Wenn Sie mit Google oder GitHub fortfahren, akzeptieren Sie die <terms>Nutzungsbedingungen</terms> und bestätigen, den <kvkk>KVKK-Datenschutzhinweis</kvkk> und die <privacy>Datenschutzerklärung</privacy> gelesen zu haben.",
+    "notice": "Der <kvkk>KVKK-Datenschutzhinweis</kvkk> und die <privacy>Datenschutzerklärung</privacy> sind Informationstexte, keine Bitte um Einwilligung.",
+    "termsAgree": "Ich habe die <terms>Nutzungsbedingungen</terms> gelesen und akzeptiere sie.",
     "newTab": "(öffnet in neuem Tab)"
   },
   "validation": {
@@ -1382,6 +1380,7 @@
     "passwordMin": "Das Passwort muss mindestens 8 Zeichen lang sein.",
     "passwordMax": "Das Passwort darf höchstens 128 Zeichen lang sein.",
     "passwordMatch": "Die Passwörter stimmen nicht überein.",
+    "termsRequired": "Zum Fortfahren müssen Sie die Nutzungsbedingungen akzeptieren.",
     "maxLength": "Dieser Wert ist zu lang.",
     "dateOrder": "Das geplante Enddatum darf nicht vor dem Startdatum liegen.",
     "githubUrl": "Geben Sie eine öffentliche GitHub-Repository-URL ein, z. B. https://github.com/owner/repo.",

@@ -23,6 +23,7 @@ export async function registerUser(page: Page, user: { email: string; nickname: 
   await page.locator('input[name="nickname"]').fill(user.nickname);
   await page.locator('input[name="password"]').fill(user.password);
   await page.locator('input[name="confirmPassword"]').fill(user.password);
+  await page.getByRole("checkbox", { name: /Kullanım Koşulları/ }).check();
   await page.getByRole("button", { name: /^Kayıt ol$/ }).click();
   // The account starts unverified: the mailed code (read from the e2e stack's Mailpit) activates it and the page
   // signs the person in with the password just typed. The auth pages have their own navigation, so wait for the app
@@ -276,15 +277,22 @@ export async function openProjectListPage(page: Page, slug: string) {
 }
 
 /** Creates a team through the full-page form and returns its id, parsed from the post-create redirect. */
+/** Creates a team through the form (which returns to the team list) and then opens it, so callers continue inside the team. */
 export async function createTeam(page: Page, slug: string, name: string): Promise<string> {
   await page.goto(`/projects/${slug}/teams/new`);
   await page.locator("#team-name").fill(name);
-  await page.getByRole("button", { name: /^Ekibi oluştur$/ }).click();
+  const [response] = await Promise.all([
+    page.waitForResponse((res) => /\/projects\/[^/]+\/teams$/.test(res.url()) && res.request().method() === "POST"),
+    page.getByRole("button", { name: /^Ekibi oluştur$/ }).click(),
+  ]);
+  expect(response.status()).toBe(201);
+  const { id } = (await response.json()) as { id: string };
   await expect(page).toHaveURL(url => {
     const match = matchPath(url.pathname);
-    return match?.route === "/projects/[slug]/teams/[teamId]" && match.params.slug === slug;
+    return match?.route === "/projects/[slug]/teams" && match.params.slug === slug;
   }, { timeout: 15_000 });
-  return matchPath(new URL(page.url()).pathname)!.params.teamId;
+  await page.goto(`/projects/${slug}/teams/${id}`);
+  return id;
 }
 
 export async function gotoProjectTab(page: Page, slug: string, tabName: string) {

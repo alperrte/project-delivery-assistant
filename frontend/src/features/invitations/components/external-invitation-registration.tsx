@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
 import { AuthCard, authCtaClass } from "@/features/auth/components/auth-card";
 import { RegistrationNotice } from "@/features/auth/components/registration-notice";
+import { TermsCheckbox } from "@/features/auth/components/terms-checkbox";
 import { trackCta } from "@/features/analytics/cta";
 import { FormField } from "@/components/common/form-field";
 import { CircleNotch } from "@phosphor-icons/react";
@@ -40,6 +41,7 @@ export function ExternalInvitationRegistration() {
   const [nickname, setNickname] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [acceptTerms, setAcceptTerms] = useState(false);
   const invalidToken=!token?.trim() || token.length>200;
   const current=previewState?.token===token&&previewState.attempt===previewAttempt?previewState:null;
   const preview=current?.preview??null,signedIn=current?.signedIn??false;
@@ -70,7 +72,7 @@ export function ExternalInvitationRegistration() {
   async function register(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!token || !preview) return;
-    const values = { email: preview.email, nickname, password, confirmPassword };
+    const values = { email: preview.email, nickname, password, confirmPassword, acceptTerms };
     const validation = registerSchema.safeParse(values);
     if (!validation.success) {
       setError(tv(validation.error.issues[0].message));
@@ -110,6 +112,7 @@ export function ExternalInvitationRegistration() {
                 <FormField label={ta("nickname")} value={nickname} onChange={(event) => setNickname(event.target.value)} autoComplete="username" />
                 <FormField label={ta("password")} value={password} onChange={(event) => setPassword(event.target.value)} password autoComplete="new-password" />
                 <FormField label={ta("confirmPassword")} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} password autoComplete="new-password" />
+                <TermsCheckbox checked={acceptTerms} onChange={(event) => setAcceptTerms(event.target.checked)} />
                 <SubmitButton pending={busy} className={authCtaClass}>{t("externalJoin")}</SubmitButton>
                 <RegistrationNotice />
               </form>
