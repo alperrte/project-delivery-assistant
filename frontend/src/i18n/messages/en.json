@@ -3278,202 +3278,73 @@
           "id": "what",
           "title": "What are cookies?",
           "paragraphs": [
-            "Cookies are small records that a website stores in your browser. On this page, “cookie” also covers browser local storage (localStorage) and session storage (sessionStorage) used for the same purpose.",
+            "Cookies are small text files that a website saves in your browser when you visit it. They help the site recognise you on later visits, keep you signed in and remember your settings. On this page, “cookie” also covers browser local storage (localStorage) and session storage (sessionStorage) used for the same purpose.",
             "PDA uses no advertising cookies, no profiling, no third-party tracking tools and no browser fingerprinting. Fonts are loaded from PDA's own server."
           ]
         },
         {
-          "id": "categories",
-          "title": "Categories",
+          "id": "why",
+          "title": "Why do we use cookies?",
           "paragraphs": [
-            "PDA uses two consent categories. The necessary category is always on and cannot be switched off; appearance and usage preferences are treated as the functional part of this category (see the reasoning below). The analytics category runs only with your explicit choice and is off by default."
+            "On PDA, cookies are used only for the following purposes."
           ],
           "items": [
-            "Necessary: sign-in, session security, protection against forged requests, language choice, temporary verification steps and the record of this choice.",
-            "Functional preferences: remember a setting you made yourself (theme, layout, remembered e-mail) in this browser.",
-            "Analytics: anonymous measurement of page type, source of the visit, active time, clicks on certain buttons and the type of errors."
+            "To let you sign in, stay signed in securely and sign out.",
+            "To protect your account and the site itself against abuse such as forged requests.",
+            "To bring back settings such as your language, theme and layout on your next visit.",
+            "Only with your permission, to measure anonymously how the site is used so it can be improved."
+          ],
+          "closing": [
+            "You can block or delete cookies in your browser settings. If you block the necessary cookies, sign-in and session features will not work; if you delete preference records, your settings return to their defaults."
+          ]
+        },
+        {
+          "id": "types",
+          "title": "Types of cookies",
+          "paragraphs": [
+            "Cookies are grouped by how long they last, who manages them and what they are for. PDA has three groups, and each is described in the sections below."
+          ],
+          "items": [
+            "Session cookies are temporary and are deleted when you close the browser or tab. Persistent cookies stay on your device until they expire or you delete them.",
+            "All cookies PDA uses are managed by PDA itself (first party); there are no third-party cookies for advertising or tracking.",
+            "Necessary cookies are required for the service to work and cannot be switched off. Preference cookies only remember a setting you made yourself. Analytics cookies are off by default and run only with your explicit choice."
           ]
         },
         {
           "id": "necessary",
-          "title": "Necessary cookies and storage",
+          "title": "Necessary cookies",
           "paragraphs": [
-            "The following records are required for the service to work and are used regardless of your analytics choice. All are managed by PDA (first party). Durations depend on the service configuration; the values given are the defaults. If you block them in your browser settings, sign-in and session features will not work."
+            "The following cookies and records are required for the service to work and are used regardless of your analytics choice. Durations depend on the service configuration; the values given are the defaults."
           ],
-          "table": {
-            "caption": "Necessary cookies and storage entries",
-            "headers": [
-              "Name",
-              "Type",
-              "Purpose",
-              "Duration"
-            ],
-            "rows": [
-              [
-                "PDA_ACCESS",
-                "Cookie, HttpOnly; sent only to the /api path",
-                "Short-lived access token",
-                "15 minutes"
-              ],
-              [
-                "PDA_REFRESH",
-                "Cookie, HttpOnly; sent only to the /api/v1/auth path",
-                "Token that renews the session",
-                "7 days; deleted on sign-out"
-              ],
-              [
-                "PDA_SESSION",
-                "Cookie, HttpOnly",
-                "Marker, carrying no token, that shows whether a session exists",
-                "Same as the refresh token; deleted on sign-out"
-              ],
-              [
-                "PDA_MFA",
-                "Cookie, HttpOnly; sent only to the two-factor path",
-                "Temporary proof, after the password step, that lets you enter your two-factor code",
-                "5 minutes; deleted when used"
-              ],
-              [
-                "PDA_ADMIN_MFA",
-                "Cookie, HttpOnly; sent only to the administrator verification path",
-                "Temporary proof for the second step of the administrator sign-in",
-                "5 minutes; deleted when used"
-              ],
-              [
-                "PDA_ADMIN_ENROLL",
-                "Cookie, HttpOnly; sent only to the administrator set-up path",
-                "Temporary proof for an administrator's first authenticator set-up",
-                "10 minutes; deleted when used"
-              ],
-              [
-                "PDA_RESET",
-                "Cookie, HttpOnly; narrow path",
-                "Temporary proof to continue the password reset",
-                "10 minutes; deleted when used"
-              ],
-              [
-                "PDA_PWCHANGE",
-                "Cookie, HttpOnly; narrow path",
-                "Temporary proof to continue an in-session password change",
-                "10 minutes; deleted when used"
-              ],
-              [
-                "XSRF-TOKEN",
-                "Cookie; read by the page",
-                "Protection against forged requests (CSRF)",
-                "Browser session"
-              ],
-              [
-                "JSESSIONID",
-                "Cookie, HttpOnly",
-                "Used only during the Google or GitHub sign-in flow",
-                "About 30 minutes"
-              ],
-              [
-                "NEXT_LOCALE",
-                "Cookie",
-                "Your chosen language",
-                "1 year"
-              ],
-              [
-                "pda:cookie-consent",
-                "localStorage",
-                "The record of this cookie choice (version, analytics consent, date)",
-                "Until you delete it"
-              ],
-              [
-                "pda:last-session-refresh",
-                "localStorage",
-                "Timestamp that stops tabs from renewing the session at the same time",
-                "Overwritten; until you delete it"
-              ],
-              [
-                "pda.pendingVerification",
-                "sessionStorage",
-                "Carries the e-mail address to be verified after registration or sign-in to the verification page (the address is not carried in the URL)",
-                "Until verification ends or the tab closes"
-              ],
-              [
-                "pda:renderer",
-                "sessionStorage",
-                "Result of whether the browser draws animations in software or hardware; the interface adapts to it",
-                "Until the tab closes"
-              ]
-            ]
-          }
+          "items": [
+            "Session cookies: keep you signed in. The short-lived access cookie lasts 15 minutes; the cookie that renews your session and the marker that shows a session exists last up to 7 days and are deleted when you sign out. The access and renewal cookies cannot be read by scripts on the page (HttpOnly) and are sent only to the addresses that need them; the session marker grants no access.",
+            "Verification cookies: short-lived cookies that show you have passed an earlier step during two-factor verification, password reset, changing your password while signed in and administrator sign-in. They last 5 to 10 minutes and are deleted when the step is completed.",
+            "Security cookie: protects against forged requests (CSRF) and is kept for your browser session. If you sign in with Google or GitHub, a session cookie valid for about 30 minutes is also used, only during that sign-in flow.",
+            "Language cookie: remembers the language you chose for 1 year.",
+            "Cookie choice record: keeps your choice on this page (analytics consent and the date of the decision) in your browser's local storage until you delete it.",
+            "Technical records: a timestamp that stops several tabs from renewing the session at the same time (until you delete it), a temporary record that carries the e-mail address to be verified between pages after registration or sign-in (deleted when verification ends or the tab closes; the address is never carried in the URL) and a result showing whether your browser draws animations in software or hardware (until the tab closes)."
+          ]
         },
         {
           "id": "preferences",
-          "title": "Appearance and usage preferences",
+          "title": "Preference cookies",
           "paragraphs": [
-            "The following records only remember settings you made yourself in this browser. They do not measure your visit, are not sent to the server and have no tracking purpose. Without them we could not provide the appearance and settings you chose on your next visit; we therefore treat them as functional records necessary to provide the service you asked for and do not ask for separate consent. You can delete them in your browser settings; your settings then return to the defaults."
+            "The following records only remember settings that you made yourself in this browser. They do not measure your visit, are not sent to the server and are not used for tracking. Without them we could not provide the appearance and settings you chose on your next visit, so we treat them as functional records needed to provide the service you requested and do not ask for separate consent. You can delete them in your browser settings; your settings then return to their defaults."
           ],
-          "table": {
-            "caption": "Appearance and usage preference entries",
-            "headers": [
-              "Name",
-              "Type",
-              "Purpose",
-              "Duration"
-            ],
-            "rows": [
-              [
-                "theme",
-                "localStorage",
-                "Light, dark or system theme",
-                "Until you delete it"
-              ],
-              [
-                "pda:motion, pda:theme-transition",
-                "localStorage",
-                "Animation preferences",
-                "Until you delete it"
-              ],
-              [
-                "pda:sidebar-collapsed",
-                "localStorage",
-                "Whether the sidebar is collapsed",
-                "Until you delete it"
-              ],
-              [
-                "pda:teams-view:v1:<user ID>",
-                "localStorage",
-                "Layout of the teams page (replaces the old pda.teams.view key)",
-                "Until you delete it"
-              ],
-              [
-                "pda:task-mode-help:v1:<user ID>",
-                "localStorage",
-                "Preference to hide the task-type help",
-                "Until you delete it"
-              ],
-              [
-                "pda.rememberedEmail",
-                "localStorage",
-                "Your e-mail address, only if you choose “Remember me” on the sign-in screen",
-                "Until you turn the option off"
-              ],
-              [
-                "pda:last-project:<user ID>",
-                "sessionStorage",
-                "The last selected project during the session",
-                "Until the tab closes"
-              ],
-              [
-                "pda:session-baseline",
-                "sessionStorage",
-                "Language and theme at the start of the session",
-                "Until the tab closes"
-              ]
-            ]
-          },
+          "items": [
+            "Theme: your light, dark or system theme choice. Kept until you delete it.",
+            "Animation and layout preferences: your animation settings and whether the sidebar is collapsed. Kept until you delete them.",
+            "Page preferences: your view on the Teams page and your choice to hide the task-type help. Kept until you delete them.",
+            "Remember me: if you tick this option on the sign-in screen, your e-mail address is remembered; kept until you turn the option off.",
+            "In-session choices: the project you selected last and the language and theme at the start of the session. Deleted when you close the tab."
+          ],
           "closing": [
-            "<user ID> is the random internal ID of your account; it is not your e-mail address or name."
+            "Some of these records contain a random internal ID of your account; it is not your e-mail address or name."
           ]
         },
         {
           "id": "analytics",
-          "title": "Analytics (off by default)",
+          "title": "Analytics cookies (off by default)",
           "paragraphs": [
             "Analytics collects no data and creates no identifier until you say “Accept all” or switch Analytics on in the preferences window. It also stays off as long as you have not decided. When on, the measurement is kept on PDA's own server; there is no third-party analytics tool.",
             "No name, e-mail, message content, token, password, account ID, IP address, browser information or browser fingerprint is collected. Even if you are signed in, the measurement is not linked to your account.",
@@ -3486,7 +3357,7 @@
             "Active time on the site; time while the tab is in the background or the window is out of focus is not counted.",
             "Button clicks: only whether buttons from a fixed list were clicked (the register and sign-in buttons on the landing page and in the header, submission of the registration and contact forms, the source-code link); nothing about who clicked or what you typed is recorded.",
             "Error events: when an error occurs in the application, only the error type (rendering, file loading, unhandled promise rejection or network) and the page type are recorded. No error message, detail, address or identifier is recorded. The same error is reported once per session.",
-            "Randomly generated anonymous visitor and session IDs: pda:analytics-visitor and pda:analytics-session (localStorage). The session ID is renewed after 30 minutes of inactivity. Both are deleted when you withdraw consent."
+            "Randomly generated anonymous visitor and session IDs are kept in your browser's local storage. The session ID is renewed after 30 minutes of inactivity. Both are deleted when you withdraw consent."
           ]
         },
         {
@@ -3495,7 +3366,8 @@
           "paragraphs": [
             "You can open the preferences window at any time with the “Manage cookie preferences” link at the bottom of the page or the button on this page. When you turn analytics off, new measurements stop at once, button-click and error events are no longer sent, and the analytics identifiers in this browser are deleted. Because the identifier is deleted, records collected earlier can no longer be linked to you; they are deleted automatically after 12 months.",
             "Effect of withdrawal: necessary cookies keep working; no feature other than analytics is restricted. Withdrawal does not affect the lawfulness of processing based on consent before its withdrawal.",
-            "The choice belongs to this browser and is not tied to your account: you need to choose separately in another browser or device. When the cookie practice changes in a meaningful way, the consent version is raised and your choice is asked again."
+            "The choice belongs to this browser and is not tied to your account: you need to choose separately in another browser or device. When the cookie practice changes in a meaningful way, the consent version is raised and your choice is asked again.",
+            "You can also delete or block cookies in your browser settings; see your browser's help pages for how."
           ]
         },
         {

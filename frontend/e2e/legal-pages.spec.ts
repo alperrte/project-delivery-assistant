@@ -1,6 +1,4 @@
 import { test, expect, type Page } from "@playwright/test";
-import { readdirSync, readFileSync, statSync } from "node:fs";
-import path from "node:path";
 import { buildPath } from "../src/i18n/routing";
 
 // The final legal texts (KVKK notice, privacy policy, terms of use, cookie policy, accessibility statement): content
@@ -198,35 +196,14 @@ test("German cookie policy is worded for § 25 TDDDG (formerly TTDSG); the Engli
   for (const fact of ["§ 25(2) No. 2 TDDDG", "Article 5(3) of the ePrivacy Directive", "12 months", "button clicks"]) expect(en.toLowerCase(), fact).toContain(fact.toLowerCase());
 });
 
-test("the cookie policy lists every cookie and storage key the code writes", async ({ page }) => {
-  // Collect the keys from the source: every quoted `pda:...` / `pda....` key, the PDA_* cookies and next-themes' `theme`.
-  const root = path.resolve(__dirname, "../src");
-  const files: string[] = [];
-  const walk = (dir: string) => {
-    for (const entry of readdirSync(dir)) {
-      const full = path.join(dir, entry);
-      if (statSync(full).isDirectory()) walk(full);
-      else if (/\.(ts|tsx)$/.test(entry)) files.push(full);
-    }
-  };
-  walk(root);
-  const keys = new Set<string>();
-  for (const file of files) {
-    const source = readFileSync(file, "utf8");
-    for (const match of source.matchAll(/["'`](pda[:.][A-Za-z0-9:._-]+)(?:\$\{[^}]*\})?[A-Za-z0-9:._-]*["'`]/g)) keys.add(match[1]);
-  }
-  for (const known of ["PDA_ACCESS", "PDA_REFRESH", "PDA_SESSION", "PDA_MFA", "PDA_ADMIN_MFA", "PDA_ADMIN_ENROLL", "PDA_RESET", "PDA_PWCHANGE", "XSRF-TOKEN", "JSESSIONID", "NEXT_LOCALE", "theme"]) keys.add(known);
-  // Keys that are not browser storage: Web Lock names, event names, translation namespaces and the like.
-  const notStorage = new Set(["pda:cookie-consent-changed", "pda:session-expired", "pda:network-failure", "pda:consent-not-read", "pda-session-refresh", "pda.teams.view", "pda:sidebar-collapsed-changed", "pda:story-progress", "pda:project-selection-changed", "pda:preferences-changed"]);
-  const expected = [...keys].filter((key) => !notStorage.has(key) && !/^pda\.(?:teams|projects|tasks)\b/.test(key) || key === "pda.pendingVerification" || key === "pda.rememberedEmail");
-  expect(expected.length).toBeGreaterThan(15);
-
+test("the cookie policy is a readable text (no table, no internal names) that still covers every kind of record the code writes", async ({ page }) => {
   const text = await articleText(page, "/cookies", "tr");
-  const missing = expected.filter((key) => !text.includes(key.replace(/:$/, "")));
-  expect(missing, "keys written by the code but missing from the cookie policy").toEqual([]);
-  // The old key is named only as the one that was replaced.
-  expect(text).toContain("pda:teams-view:v1:<kullanıcı kimliği>");
-  expect(text).toContain("eski pda.teams.view anahtarının yerine geçer");
+  await expect(page.locator("article table")).toHaveCount(0);
+  expect(text).not.toMatch(/PDA_[A-Z]+|XSRF-TOKEN|JSESSIONID|NEXT_LOCALE|pda[:.][a-z]/);
+  // Cookie types and what each group of records does, by function.
+  for (const fact of ["Oturum çerezleri", "Kalıcı çerezler", "birinci taraf", "Zorunlu çerezler", "Doğrulama çerezleri", "Güvenlik çerezi", "Dil çerezi", "Tema", "Beni hatırla", "Analitik çerezler"]) expect(text, fact).toContain(fact);
+  // Durations stated in prose.
+  for (const fact of ["15 dakika", "7 güne kadar", "5 ile 10 dakika", "1 yıl", "30 dakika"]) expect(text, fact).toContain(fact);
   // Retention of analytics and the visitor renewal are stated.
   expect(text).toContain("12 ay sonra otomatik silinir");
   expect(text).toContain("12 ayda bir yenilenir");

@@ -118,11 +118,14 @@ for (const [locale, policyTitle, manageLabel] of [
     await expect(page).toHaveURL(new RegExp(`${buildPath("/cookies", {}, locale)}$`));
     await expect(page.locator("h1")).toHaveText(policyTitle);
     await expect(page.locator("meta[name=\"robots\"]")).toHaveCount(0);
-    // The real inventory is named on the page.
-    for (const name of ["PDA_ACCESS", "PDA_REFRESH", "PDA_SESSION", "PDA_MFA", "PDA_ADMIN_MFA", "PDA_ADMIN_ENROLL", "PDA_RESET", "PDA_PWCHANGE", "XSRF-TOKEN", "NEXT_LOCALE", "pda:cookie-consent", "pda:analytics-visitor", "pda:renderer", "pda.pendingVerification", "pda:teams-view:v1:"]) {
-      await expect(page.locator("article")).toContainText(name);
+    // A readable policy, not a technical inventory: sections in prose and lists, no table, no internal cookie names.
+    await expect(page.locator("article table")).toHaveCount(0);
+    for (const name of ["PDA_ACCESS", "PDA_REFRESH", "PDA_SESSION", "XSRF-TOKEN", "NEXT_LOCALE", "pda:cookie-consent", "pda:analytics-visitor"]) {
+      await expect(page.locator("article")).not.toContainText(name);
     }
-    expect(await page.locator("article section").count()).toBeGreaterThanOrEqual(5);
+    for (const id of ["what", "why", "types", "necessary", "preferences", "analytics", "manage", "third-parties", "legal"]) {
+      await expect(page.locator(`article section#${id}`)).toHaveCount(1);
+    }
     // Footer link and the page's own button.
     await expect(page.locator(`footer a[href="${buildPath("/cookies", {}, locale)}"]`)).toBeVisible();
     await page.locator("article").getByRole("button", { name: manageLabel }).click();

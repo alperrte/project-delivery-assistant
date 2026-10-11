@@ -3302,202 +3302,73 @@
           "id": "what",
           "title": "Was sind Cookies?",
           "paragraphs": [
-            "Cookies sind kleine Einträge, die eine Website in Ihrem Browser speichert. Auf dieser Seite umfasst „Cookie“ auch den lokalen Browser-Speicher (localStorage) und den Sitzungsspeicher (sessionStorage), die zum gleichen Zweck verwendet werden.",
+            "Cookies sind kleine Textdateien, die eine Website beim Besuch in Ihrem Browser speichert. Sie helfen der Website, Sie bei späteren Besuchen wiederzuerkennen, Ihre Anmeldung aufrechtzuerhalten und Ihre Einstellungen zu merken. Auf dieser Seite umfasst „Cookie“ auch den lokalen Browser-Speicher (localStorage) und den Sitzungsspeicher (sessionStorage), die zum gleichen Zweck verwendet werden.",
             "PDA verwendet keine Werbe-Cookies, kein Profiling, keine Tracking-Werkzeuge Dritter und kein Browser-Fingerprinting. Schriftarten werden vom eigenen Server von PDA geladen."
           ]
         },
         {
-          "id": "categories",
-          "title": "Kategorien",
+          "id": "why",
+          "title": "Wozu verwenden wir Cookies?",
           "paragraphs": [
-            "PDA verwendet zwei Einwilligungskategorien. Die Kategorie „Notwendig“ ist immer aktiv und kann nicht abgeschaltet werden; Darstellungs- und Nutzungseinstellungen gelten als funktionaler Teil dieser Kategorie (siehe die Begründung unten). Die Kategorie „Analyse“ läuft nur mit Ihrer ausdrücklichen Wahl und ist standardmäßig ausgeschaltet."
+            "Bei PDA werden Cookies ausschließlich für die folgenden Zwecke verwendet."
           ],
           "items": [
-            "Notwendig: Anmeldung, Sitzungssicherheit, Schutz vor gefälschten Anfragen, Sprachauswahl, vorübergehende Bestätigungsschritte und die Speicherung dieser Auswahl.",
-            "Funktionale Einstellungen: merken sich eine von Ihnen selbst vorgenommene Einstellung (Design, Ansicht, gemerkte E-Mail) in diesem Browser.",
-            "Analyse: anonyme Messung von Seitentyp, Herkunft des Besuchs, aktiver Nutzungszeit, Klicks auf bestimmte Schaltflächen und Fehlerarten."
+            "Damit Sie sich anmelden, sicher angemeldet bleiben und abmelden können.",
+            "Um Ihr Konto und die Website selbst vor Missbrauch wie gefälschten Anfragen zu schützen.",
+            "Um Einstellungen wie Sprache, Design und Ansicht bei Ihrem nächsten Besuch wiederherzustellen.",
+            "Nur mit Ihrer Einwilligung: um die Nutzung der Website anonym zu messen und sie zu verbessern."
+          ],
+          "closing": [
+            "Sie können Cookies in den Browser-Einstellungen blockieren oder löschen. Blockieren Sie die notwendigen Cookies, funktionieren Anmeldung und Sitzung nicht; löschen Sie Einstellungseinträge, kehren Ihre Einstellungen zu den Standardwerten zurück."
+          ]
+        },
+        {
+          "id": "types",
+          "title": "Arten von Cookies",
+          "paragraphs": [
+            "Cookies werden nach Speicherdauer, Verwaltung und Zweck gruppiert. PDA kennt drei Gruppen, die in den folgenden Abschnitten jeweils beschrieben werden."
+          ],
+          "items": [
+            "Sitzungs-Cookies sind vorübergehend und werden gelöscht, wenn Sie den Browser oder Tab schließen. Dauerhafte Cookies bleiben auf Ihrem Gerät, bis sie ablaufen oder Sie sie löschen.",
+            "Alle von PDA verwendeten Cookies werden von PDA selbst (First Party) verwaltet; es gibt keine Cookies Dritter für Werbung oder Tracking.",
+            "Notwendige Cookies sind für den Betrieb des Dienstes erforderlich und können nicht abgeschaltet werden. Einstellungs-Cookies merken sich nur eine von Ihnen selbst vorgenommene Einstellung. Analyse-Cookies sind standardmäßig ausgeschaltet und laufen nur mit Ihrer ausdrücklichen Wahl."
           ]
         },
         {
           "id": "necessary",
-          "title": "Notwendige Cookies und Speicher",
+          "title": "Notwendige Cookies",
           "paragraphs": [
-            "Die folgenden Einträge sind für den Betrieb des Dienstes erforderlich und werden unabhängig von Ihrer Analyse-Auswahl verwendet. Alle werden von PDA selbst (First Party) verwaltet. Die Laufzeiten hängen von der Konfiguration des Dienstes ab; angegeben sind die Standardwerte. Wenn Sie sie in den Browser-Einstellungen blockieren, funktionieren Anmeldung und Sitzung nicht."
+            "Die folgenden Cookies und Einträge sind für den Betrieb des Dienstes erforderlich (unbedingt erforderlich) und werden unabhängig von Ihrer Analyse-Auswahl verwendet. Die Laufzeiten hängen von der Konfiguration des Dienstes ab; angegeben sind die Standardwerte."
           ],
-          "table": {
-            "caption": "Notwendige Cookies und Speichereinträge",
-            "headers": [
-              "Name",
-              "Art",
-              "Zweck",
-              "Dauer"
-            ],
-            "rows": [
-              [
-                "PDA_ACCESS",
-                "Cookie, HttpOnly; nur an den Pfad /api gesendet",
-                "Kurzlebiges Zugriffs-Token",
-                "15 Minuten"
-              ],
-              [
-                "PDA_REFRESH",
-                "Cookie, HttpOnly; nur an den Pfad /api/v1/auth gesendet",
-                "Token zur Erneuerung der Sitzung",
-                "7 Tage; beim Abmelden gelöscht"
-              ],
-              [
-                "PDA_SESSION",
-                "Cookie, HttpOnly",
-                "Markierung ohne Token, die anzeigt, ob eine Sitzung besteht",
-                "Wie das Erneuerungs-Token; beim Abmelden gelöscht"
-              ],
-              [
-                "PDA_MFA",
-                "Cookie, HttpOnly; nur an den Zwei-Faktor-Pfad gesendet",
-                "Vorübergehender Nachweis nach dem Passwortschritt, damit Sie Ihren Zwei-Faktor-Code eingeben können",
-                "5 Minuten; nach Verwendung gelöscht"
-              ],
-              [
-                "PDA_ADMIN_MFA",
-                "Cookie, HttpOnly; nur an den Administrator-Prüfpfad gesendet",
-                "Vorübergehender Nachweis für den zweiten Schritt der Administrator-Anmeldung",
-                "5 Minuten; nach Verwendung gelöscht"
-              ],
-              [
-                "PDA_ADMIN_ENROLL",
-                "Cookie, HttpOnly; nur an den Administrator-Einrichtungspfad gesendet",
-                "Vorübergehender Nachweis für die erstmalige Einrichtung der Authenticator-App eines Administrators",
-                "10 Minuten; nach Verwendung gelöscht"
-              ],
-              [
-                "PDA_RESET",
-                "Cookie, HttpOnly; enger Pfad",
-                "Vorübergehender Nachweis, um das Zurücksetzen des Passworts fortzusetzen",
-                "10 Minuten; nach Verwendung gelöscht"
-              ],
-              [
-                "PDA_PWCHANGE",
-                "Cookie, HttpOnly; enger Pfad",
-                "Vorübergehender Nachweis, um eine Passwortänderung innerhalb der Sitzung fortzusetzen",
-                "10 Minuten; nach Verwendung gelöscht"
-              ],
-              [
-                "XSRF-TOKEN",
-                "Cookie; von der Seite gelesen",
-                "Schutz vor gefälschten Anfragen (CSRF)",
-                "Browsersitzung"
-              ],
-              [
-                "JSESSIONID",
-                "Cookie, HttpOnly",
-                "Nur während der Anmeldung mit Google oder GitHub verwendet",
-                "Etwa 30 Minuten"
-              ],
-              [
-                "NEXT_LOCALE",
-                "Cookie",
-                "Ihre gewählte Sprache",
-                "1 Jahr"
-              ],
-              [
-                "pda:cookie-consent",
-                "localStorage",
-                "Speicherung dieser Cookie-Auswahl (Version, Analyse-Einwilligung, Datum)",
-                "Bis Sie sie löschen"
-              ],
-              [
-                "pda:last-session-refresh",
-                "localStorage",
-                "Zeitstempel, der verhindert, dass Tabs die Sitzung gleichzeitig erneuern",
-                "Wird überschrieben; bis Sie ihn löschen"
-              ],
-              [
-                "pda.pendingVerification",
-                "sessionStorage",
-                "Überträgt die zu bestätigende E-Mail-Adresse nach Registrierung oder Anmeldung zur Bestätigungsseite (die Adresse wird nicht in der URL übertragen)",
-                "Bis die Bestätigung endet oder der Tab geschlossen wird"
-              ],
-              [
-                "pda:renderer",
-                "sessionStorage",
-                "Ergebnis, ob der Browser Animationen per Software oder Hardware zeichnet; die Oberfläche passt sich daran an",
-                "Bis der Tab geschlossen wird"
-              ]
-            ]
-          }
+          "items": [
+            "Sitzungs-Cookies: halten Sie angemeldet. Das kurzlebige Zugriffs-Cookie gilt 15 Minuten; das Cookie zur Erneuerung der Sitzung und die Markierung, dass eine Sitzung besteht, gelten bis zu 7 Tage und werden beim Abmelden gelöscht. Zugriffs- und Erneuerungs-Cookie sind für Skripte auf der Seite nicht lesbar (HttpOnly) und werden nur an die Adressen gesendet, die sie benötigen; die Sitzungsmarkierung verleiht keinen Zugriff.",
+            "Bestätigungs-Cookies: kurzlebige Cookies, die belegen, dass Sie einen vorherigen Schritt bei der Zwei-Faktor-Bestätigung, beim Zurücksetzen oder Ändern des Passworts in der angemeldeten Sitzung und bei der Administrator-Anmeldung bestanden haben. Sie gelten 5 bis 10 Minuten und werden gelöscht, sobald der Schritt abgeschlossen ist.",
+            "Sicherheits-Cookie: schützt vor gefälschten Anfragen (CSRF) und wird für Ihre Browser-Sitzung gespeichert. Melden Sie sich mit Google oder GitHub an, wird nur während dieses Anmeldevorgangs zusätzlich ein Sitzungs-Cookie mit etwa 30 Minuten Gültigkeit verwendet.",
+            "Sprach-Cookie: merkt sich die gewählte Sprache für 1 Jahr.",
+            "Speicherung der Cookie-Auswahl: hält Ihre Auswahl auf dieser Seite (Analyse-Einwilligung und Datum der Entscheidung) im lokalen Speicher Ihres Browsers, bis Sie sie löschen.",
+            "Technische Einträge: ein Zeitstempel, der verhindert, dass mehrere Tabs die Sitzung gleichzeitig erneuern (bis Sie ihn löschen), ein vorübergehender Eintrag, der die zu bestätigende E-Mail-Adresse nach Registrierung oder Anmeldung zwischen den Seiten weiterreicht (wird gelöscht, wenn die Bestätigung endet oder der Tab geschlossen wird; die Adresse steht nie in der URL), und ein Ergebnis, ob Ihr Browser Animationen per Software oder Hardware zeichnet (bis der Tab geschlossen wird)."
+          ]
         },
         {
           "id": "preferences",
-          "title": "Darstellungs- und Nutzungseinstellungen",
+          "title": "Einstellungs-Cookies",
           "paragraphs": [
             "Die folgenden Einträge merken sich nur Einstellungen, die Sie selbst in diesem Browser vorgenommen haben. Sie messen Ihren Besuch nicht, werden nicht an den Server gesendet und dienen nicht dem Tracking. Ohne sie könnten wir die von Ihnen gewählte Darstellung und Einstellungen beim nächsten Besuch nicht bereitstellen; wir behandeln sie daher als funktionale Einträge, die für den von Ihnen ausdrücklich gewünschten Dienst unbedingt erforderlich sind (§ 25 Abs. 2 Nr. 2 TDDDG), und holen dafür keine gesonderte Einwilligung ein. Sie können sie in den Browser-Einstellungen löschen; Ihre Einstellungen kehren dann zu den Standardwerten zurück."
           ],
-          "table": {
-            "caption": "Einträge für Darstellungs- und Nutzungseinstellungen",
-            "headers": [
-              "Name",
-              "Art",
-              "Zweck",
-              "Dauer"
-            ],
-            "rows": [
-              [
-                "theme",
-                "localStorage",
-                "Helles, dunkles oder Systemdesign",
-                "Bis Sie es löschen"
-              ],
-              [
-                "pda:motion, pda:theme-transition",
-                "localStorage",
-                "Animationseinstellungen",
-                "Bis Sie sie löschen"
-              ],
-              [
-                "pda:sidebar-collapsed",
-                "localStorage",
-                "Ob die Seitenleiste eingeklappt ist",
-                "Bis Sie es löschen"
-              ],
-              [
-                "pda:teams-view:v1:<Benutzer-ID>",
-                "localStorage",
-                "Ansicht der Teamseite (ersetzt den alten Schlüssel pda.teams.view)",
-                "Bis Sie es löschen"
-              ],
-              [
-                "pda:task-mode-help:v1:<Benutzer-ID>",
-                "localStorage",
-                "Einstellung, die Hilfe zur Aufgabenart auszublenden",
-                "Bis Sie sie löschen"
-              ],
-              [
-                "pda.rememberedEmail",
-                "localStorage",
-                "Ihre E-Mail-Adresse, nur wenn Sie auf dem Anmeldebildschirm „Angemeldet bleiben“ wählen",
-                "Bis Sie die Option ausschalten"
-              ],
-              [
-                "pda:last-project:<Benutzer-ID>",
-                "sessionStorage",
-                "Das zuletzt gewählte Projekt während der Sitzung",
-                "Bis der Tab geschlossen wird"
-              ],
-              [
-                "pda:session-baseline",
-                "sessionStorage",
-                "Sprache und Design zu Beginn der Sitzung",
-                "Bis der Tab geschlossen wird"
-              ]
-            ]
-          },
+          "items": [
+            "Design: Ihre Wahl zwischen hellem, dunklem oder Systemdesign. Bleibt, bis Sie es löschen.",
+            "Animations- und Darstellungseinstellungen: Ihre Animationseinstellungen und ob die Seitenleiste eingeklappt ist. Bleiben, bis Sie sie löschen.",
+            "Seiteneinstellungen: Ihre Ansicht auf der Teamseite und Ihre Wahl, die Hilfe zur Aufgabenart auszublenden. Bleiben, bis Sie sie löschen.",
+            "Angemeldet bleiben: Wählen Sie diese Option auf dem Anmeldebildschirm, wird Ihre E-Mail-Adresse gemerkt; bleibt, bis Sie die Option ausschalten.",
+            "Auswahl innerhalb der Sitzung: das zuletzt gewählte Projekt sowie Sprache und Design zu Beginn der Sitzung. Werden gelöscht, wenn Sie den Tab schließen."
+          ],
           "closing": [
-            "<Benutzer-ID> ist die zufällige interne ID Ihres Kontos; sie ist weder Ihre E-Mail-Adresse noch Ihr Name."
+            "Einige dieser Einträge enthalten eine zufällige interne ID Ihres Kontos; sie ist weder Ihre E-Mail-Adresse noch Ihr Name."
           ]
         },
         {
           "id": "analytics",
-          "title": "Analyse (standardmäßig ausgeschaltet)",
+          "title": "Analyse-Cookies (standardmäßig ausgeschaltet)",
           "paragraphs": [
             "Die Analyse erhebt keine Daten und erzeugt keine Kennung, bevor Sie „Alle akzeptieren“ wählen oder im Einstellungsfenster Analyse einschalten. Sie bleibt auch ausgeschaltet, solange Sie nicht entschieden haben. Ist sie eingeschaltet, werden die Messdaten auf dem eigenen Server von PDA gespeichert; es gibt kein Analysewerkzeug eines Dritten.",
             "Es werden weder Name, E-Mail, Nachrichteninhalt, Token, Passwort, Konto-ID, IP-Adresse, Browserinformationen noch ein Browser-Fingerprint erhoben. Auch wenn Sie angemeldet sind, wird die Messung nicht mit Ihrem Konto verknüpft.",
@@ -3510,7 +3381,7 @@
             "Aktive Zeit auf der Website; Zeit, in der der Tab im Hintergrund oder das Fenster nicht fokussiert ist, wird nicht gezählt.",
             "Schaltflächenklicks: nur ob Schaltflächen aus einer festen Liste angeklickt wurden (Registrieren- und Anmelden-Schaltflächen auf der Startseite und im Kopfbereich, Absenden des Registrierungs- und des Kontaktformulars, Link zum Quellcode); nichts darüber, wer geklickt hat oder was Sie eingegeben haben, wird erfasst.",
             "Fehlerereignisse: Tritt in der Anwendung ein Fehler auf, werden nur die Fehlerart (Darstellung, Laden von Dateien, nicht abgefangene Promise-Ablehnung oder Netzwerk) und der Seitentyp erfasst. Fehlermeldung, Details, Adresse oder Kennung werden nicht erfasst. Derselbe Fehler wird pro Sitzung einmal gemeldet.",
-            "Zufällig erzeugte anonyme Besucher- und Sitzungs-ID: pda:analytics-visitor und pda:analytics-session (localStorage). Die Sitzungs-ID wird nach 30 Minuten Inaktivität erneuert. Beide werden gelöscht, wenn Sie die Einwilligung widerrufen."
+            "Zufällig erzeugte anonyme Besucher- und Sitzungs-IDs werden im lokalen Speicher Ihres Browsers gehalten. Die Sitzungs-ID wird nach 30 Minuten Inaktivität erneuert. Beide werden gelöscht, wenn Sie die Einwilligung widerrufen."
           ]
         },
         {
@@ -3519,7 +3390,8 @@
           "paragraphs": [
             "Sie können das Einstellungsfenster jederzeit über den Link „Cookie-Einstellungen verwalten“ am Seitenende oder die Schaltfläche auf dieser Seite öffnen. Schalten Sie die Analyse aus, enden neue Messungen sofort, Schaltflächenklick- und Fehlerereignisse werden nicht mehr gesendet und die Analyse-Kennungen in diesem Browser werden gelöscht. Da die Kennung gelöscht ist, lassen sich früher erhobene Datensätze Ihnen nicht mehr zuordnen; sie werden nach 12 Monaten automatisch gelöscht.",
             "Wirkung des Widerrufs: Notwendige Cookies funktionieren weiter; außer der Analyse wird keine Funktion eingeschränkt. Der Widerruf berührt nicht die Rechtmäßigkeit der aufgrund der Einwilligung bis zum Widerruf erfolgten Verarbeitung.",
-            "Die Auswahl gehört zu diesem Browser und ist nicht an Ihr Konto gebunden: In einem anderen Browser oder auf einem anderen Gerät müssen Sie gesondert wählen. Ändert sich die Cookie-Praxis wesentlich, wird die Einwilligungsversion erhöht und Ihre Auswahl erneut abgefragt."
+            "Die Auswahl gehört zu diesem Browser und ist nicht an Ihr Konto gebunden: In einem anderen Browser oder auf einem anderen Gerät müssen Sie gesondert wählen. Ändert sich die Cookie-Praxis wesentlich, wird die Einwilligungsversion erhöht und Ihre Auswahl erneut abgefragt.",
+            "Cookies können Sie auch in den Browser-Einstellungen löschen oder blockieren; wie das geht, steht in der Hilfe Ihres Browsers."
           ]
         },
         {
