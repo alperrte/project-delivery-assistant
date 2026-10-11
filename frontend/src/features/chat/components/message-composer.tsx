@@ -92,7 +92,7 @@ export function MessageComposer({ draftKey, initialDraft, onDraftChange, onSend,
           {disabledReason}
         </p>
       )}
-      <div className="flex items-end gap-2">
+      <div className="flex items-center gap-2">
         <div className="relative min-w-0 flex-1">
         <Textarea
           ref={inputRef}
@@ -102,7 +102,7 @@ export function MessageComposer({ draftKey, initialDraft, onDraftChange, onSend,
           disabled={disabled}
           rows={1}
           aria-label={t("composerLabel")}
-          aria-describedby={[hintId, disabledReason ? statusId : null].filter(Boolean).join(" ")}
+          aria-describedby={[problemText ? hintId : null, disabledReason ? statusId : null].filter(Boolean).join(" ") || undefined}
           aria-invalid={problem ? true : undefined}
           placeholder={t("composerPlaceholder")}
           data-testid="chat-composer"
@@ -126,15 +126,13 @@ export function MessageComposer({ draftKey, initialDraft, onDraftChange, onSend,
           disabled={disabled || !validation.ok}
           aria-label={t("send")}
           data-testid="chat-send"
-          className="shrink-0"
+          className="size-11 shrink-0"
         >
           <PaperPlaneRight weight="fill" aria-hidden="true" />
         </Button>
       </div>
-      <div className="mt-1.5 flex items-center justify-between gap-3 text-[11px] text-muted-foreground">
-        <span id={hintId} className="truncate">
-          {problemText ? <span role="alert" className="text-destructive">{problemText}</span> : t("hint")}
-        </span>
+      <div className="mt-1.5 flex items-center justify-end gap-3 text-[11px] text-muted-foreground">
+        {problemText && <span id={hintId} role="alert" className="min-w-0 flex-1 truncate text-destructive">{problemText}</span>}
         <span className={cn("shrink-0 tabular-nums", overLimit && "font-semibold text-destructive")} aria-hidden="true">
           {t("counter", { count: length, max: MESSAGE_MAX_LENGTH })}
         </span>

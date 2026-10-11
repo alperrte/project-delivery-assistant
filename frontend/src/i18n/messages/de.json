@@ -4269,7 +4269,7 @@
   },
   "contact": {
     "title": "Kontakt",
-    "description": "Schreiben Sie dem PDA-Team bei Fragen, Vorschlägen oder Rückmeldungen. Eine Anmeldung ist nicht nötig.",
+    "description": "Senden Sie uns Fragen, Vorschläge und Feedback ohne Anmeldung.",
     "form": {
       "label": "Kontaktformular",
       "firstName": "Vorname",

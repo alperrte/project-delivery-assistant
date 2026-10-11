@@ -41,6 +41,7 @@ for (const [locale, title, send] of [["tr", "İletişim", "Gönder"], ["en", "Co
     expect(response?.status()).toBe(200);
     await expect(page).toHaveURL(new RegExp(`${buildPath("/contact", {}, locale)}$`));
     await expect(page.locator("h1")).toHaveText(title);
+    await expect(page.locator("[data-contact-page] nav")).toHaveCount(0);
     // First name, last name, e-mail, message: the four fields a person sees (plus the category select and the hidden bot trap).
     await expect(page.getByRole("textbox")).toHaveCount(4);
     await expect(page.getByRole("combobox")).toHaveCount(1);
@@ -71,7 +72,7 @@ test("every field is validated in the browser and each error is tied to its fiel
   await expect(page.getByText("Mesaj en az 10 karakter olmalı.")).toBeVisible();
   await expect(page.getByLabel("Ad", { exact: true })).toHaveAttribute("aria-invalid", "true");
   await expect(page.getByLabel("Soyad", { exact: true })).not.toHaveAttribute("aria-invalid", "true");
-  await expect(page.getByLabel("Soyad", { exact: true })).toHaveAccessibleDescription("İsteğe bağlı.");
+  await expect(page.getByLabel("Soyad", { exact: true })).toHaveAttribute("placeholder", "İsteğe bağlı.");
 
   await fill(page, { message: "x".repeat(5001) });
   await page.getByRole("button", { name: "Gönder" }).click();

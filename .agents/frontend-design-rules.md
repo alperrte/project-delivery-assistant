@@ -1,8 +1,18 @@
 # Frontend tasarım kuralları
 
+## Sohbet mesaj alanı alt metni — 2026-10-11
+
+Gönder düğmesi 44×44 px boyutundadır ve mesaj kutusuna dikey ortalanır (`items-center`); çok satırda kutu büyürken ortalama korunur.
+
+`features/chat/components/message-composer.tsx` altında Enter/Shift+Enter kullanım ipucu gösterilmez. Karakter sayacı sağda kalır; doğrulama hataları gerektiğinde görünür ve `aria-describedby` yalnız mevcut hata/durum öğelerine bağlanır. Klavye davranışı değişmez.
+
+## Hakkımızda sayfası başlığı — 2026-10-11
+
+Kullanıcı tercihiyle `features/public-info/about-page.tsx` görünür breadcrumb ve başlık üstündeki “PDA · Project Delivery Assistant” satırını göstermez. TR/EN/DE ortak sayfa doğrudan h1 başlığıyla başlar; eski üst etiketin `mt-3` boşluğu da kaldırılmıştır.
+
 ## İletişim sayfası gezinme yolu — 2026-10-11
 
-`features/contact/contact-page.tsx` ortak `Breadcrumb` bileşeniyle ana sayfa → iletişim yolunu gösterir; mevcut `PageJsonLd` ile aynı iki öğeyi kullanır. `common.breadcrumb`, `landing.homeTitle` ve `contact.title` yerelleştirmeleri, mevcut `mb-6` boşluğu ve ortak token'lar kullanılır; yeni renk/font/spacing token'ı yoktur.
+Kullanıcı tercihiyle `features/contact/contact-page.tsx` görünür ana sayfa → iletişim yolunu göstermez; içerik doğrudan İletişim başlığıyla başlar. Türkçe giriş açıklaması tek satıra sığacak şekilde kısaltılmıştır; dar ekranda normal satır kırılması sürer. Soyadın isteğe bağlı olduğu alan içindeki yerelleştirilmiş placeholder ile belirtilir. Mevcut `PageJsonLd` ve tasarım token'ları korunur.
 
 ## Navbar scroll davranışı — 2026-10-11
 

@@ -124,7 +124,7 @@ export function ContactForm() {
             label={t("form.lastName")}
             autoComplete="family-name"
             maxLength={CONTACT_LIMITS.nameMax * 2}
-            hint={t("form.optional")}
+            placeholder={t("form.optional")}
             error={errors.lastName && tv(errors.lastName.message!)}
             {...register("lastName")}
           />

@@ -1,5 +1,19 @@
 # Web Sitesi Kesinlikle Olması Gerekenler — Master Checklist
 
+## Sohbet kullanım ipucu kaldırılması — 2026-10-11
+
+Takip düzenlemesi: Gönder düğmesi 44×44 px ve mesaj alanına dikey ortalıdır. İlgili Responsive / erişilebilirlik global kutuları bu küçük stil değişikliğiyle tamamlanmış sayılmadı.
+
+Kullanıcı isteğiyle ortak sohbet mesaj alanındaki Enter/Shift+Enter alt metni kaldırıldı. Karakter sayacı, doğrulama hataları ve klavye davranışı korunur; hata/durum açıklamalarının erişilebilir bağlantıları koşullu tutulur. Form Validation / Keyboard Navigation / Screen Reader global kutuları değiştirilmedi. Kayıt: `docs/compliation/2026-10-11-chat-composer-hint-removal.md`.
+
+## Hakkımızda başlık sadeleştirmesi — 2026-10-11
+
+Kullanıcı isteğiyle Hakkımızda sayfasında görünür breadcrumb ve PDA üst etiketi TR/EN/DE için kaldırıldı. Mevcut JSON-LD ve sayfa içi bölüm navigasyonu korunur; Breadcrumb / Breadcrumb Structured Data global kutuları değiştirilmedi. Kayıt: `docs/compliation/2026-10-11-about-header-simplification.md`.
+
+## İletişim gezinme yolu kaldırılması — 2026-10-11
+
+Kullanıcı isteğiyle iletişim sayfasındaki görünür ana sayfa → iletişim satırı kaldırıldı (TR/EN/DE ortak bileşen). Türkçe açıklama kısaltıldı; soyadın isteğe bağlı metni placeholder'a taşındı. Başlık, form işlevi ve mevcut JSON-LD korunur. Breadcrumb, Breadcrumb Structured Data, Responsive ve Form Validation global kutuları değiştirilmedi; önceki iletişim breadcrumb kayıtları tarihsel doğrulamalardır. Kayıt: `docs/compliation/2026-10-11-contact-breadcrumb-removal.md`.
+
 ## Kayıt doğrulama / yeniden kod sayaçları — 2026-10-11 (sınırlı kapsam)
 
 Kayıt ekranında 3 dakikalık yeniden kod beklemesi ile ilk gönderimden başlayan toplam 15 dakikalık kayıt süresi ayrıldı. Yenileme toplam süreyi uzatmaz; sayfa yenilenince iki sayaç korunur. Süre sonunda kod alanı kapanır ve yeniden kayıt bağlantısı görünür. Gönderim hatası kodu/süreyi korur; başarılı yeniden gönderimde kod alanı temizlenip odaklanır. TR/EN/DE 320 px başlangıç/expiry görünümlerinde yatay taşma yok, ekran görüntüleri incelendi. Ortak şifre sıfırlama davranışı korundu. Etkilenen Form Validation / Error State / Success State / Responsive / Focus State global kutuları yalnız bu yüzey doğrulandığı için değiştirilmedi. 41 backend testi, 7 yeni Chromium senaryosu + 1 mevcut odak/süre regresyonu, TypeScript ve hedefli ESLint başarılı. Browser timer/failure testleri açıkça stub yanıtlar kullanır; süre/temizlik gerçek PostgreSQL entegrasyon testleriyle doğrulandı. Kayıt: `docs/compliation/2026-10-11-kayit-dogrulama-sureleri.md`.

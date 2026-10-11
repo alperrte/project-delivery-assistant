@@ -172,9 +172,8 @@ test("public information pages declare their type and breadcrumb", async ({ requ
 
 test("public information pages show the same breadcrumb they declare as structured data", async ({ page }) => {
   for (const [path, label, home, homeHref] of [
-    ["/tr/hakkimizda", "Konum", "Ana sayfa", "/tr/ana-sayfa"], ["/en/faq", "Breadcrumb", "Home", "/en/home"], ["/de/datenschutz", "Brotkrumen", "Startseite", "/de/startseite"],
+    ["/en/faq", "Breadcrumb", "Home", "/en/home"], ["/de/datenschutz", "Brotkrumen", "Startseite", "/de/startseite"],
     ["/en/license", "Breadcrumb", "Home", "/en/home"], ["/tr/erisilebilirlik", "Konum", "Ana sayfa", "/tr/ana-sayfa"],
-    ["/tr/iletisim", "Konum", "Ana sayfa", "/tr/ana-sayfa"], ["/de/kontakt", "Brotkrumen", "Startseite", "/de/startseite"],
   ]) {
     await page.goto(path);
     const trail = page.getByRole("navigation", { name: label, exact: true });

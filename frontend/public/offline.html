@@ -19,27 +19,31 @@
     h2 { margin: 0 0 4px; font-size: 1rem; }
     a { display: inline-block; margin-top: 8px; min-height: 44px; line-height: 44px; padding: 0 16px; border: 1px solid var(--accent); border-radius: 8px; color: var(--accent); font-weight: 600; text-decoration: none; }
     a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+    /* offline.js marks the page with the visitor's language; without JavaScript all three languages stay visible. */
+    html[data-lang] section { display: none; }
+    html[data-lang="tr"] section[data-for="tr"], html[data-lang="en"] section[data-for="en"], html[data-lang="de"] section[data-for="de"] { display: block; border-top: 0; }
   </style>
 </head>
 <body>
   <main>
     <img src="/icons/icon-192.png" alt="" width="56" height="56">
     <h1>PDA</h1>
-    <section lang="tr">
+    <section lang="tr" data-for="tr">
       <h2>İnternet bağlantısı yok</h2>
       <p>Sayfa açılamadı. Bağlantınızı kontrol edip yeniden deneyin; hesabınızdaki hiçbir şey bu cihazda saklanmaz.</p>
       <a href="/">Tekrar dene</a>
     </section>
-    <section lang="en">
+    <section lang="en" data-for="en">
       <h2>You are offline</h2>
       <p>The page could not be opened. Check your connection and try again; nothing from your account is stored on this device.</p>
       <a href="/">Try again</a>
     </section>
-    <section lang="de">
+    <section lang="de" data-for="de">
       <h2>Keine Internetverbindung</h2>
       <p>Die Seite konnte nicht geöffnet werden. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut; nichts aus Ihrem Konto wird auf diesem Gerät gespeichert.</p>
       <a href="/">Erneut versuchen</a>
     </section>
   </main>
+  <script src="/offline.js"></script>
 </body>
 </html>

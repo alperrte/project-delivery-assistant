@@ -9,7 +9,9 @@ for (const [locale, url, title, intro] of [
     const response = await page.goto(url);
     expect(response?.status()).toBe(200);
     await expect(page.locator("h1")).toHaveText(title);
-    await expect(page.locator("article > header p").nth(1)).toContainText(intro);
+    await expect(page.locator("article > header p")).toContainText(intro);
+    await expect(page.locator("article > nav")).toHaveCount(0);
+    await expect(page.locator("article > header")).not.toContainText("PDA · Project Delivery Assistant");
     await expect(page.locator("article section")).toHaveCount(4);
     const cards = page.locator("#team > ul > li");
     await expect(cards).toHaveCount(2);
