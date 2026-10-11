@@ -168,7 +168,8 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
     },
   });
 
-  const leaving = isDirty && !mutation.isPending && !mutation.isSuccess;
+  // The landing demo renders this form with scripted values; nothing there is the visitor's work, so it never warns.
+  const leaving = !presentationValues && isDirty && !mutation.isPending && !mutation.isSuccess;
   useEffect(() => {
     if (!leaving) return;
     // `created` flips synchronously, before React re-renders, so navigating right after saving never warns.

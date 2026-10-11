@@ -1244,7 +1244,6 @@
   "oauth": {
     "google": "Google ile devam et",
     "github": "GitHub ile devam et",
-    "divider": "veya e-posta ile",
     "errors": {
       "access_denied": "Giriş izni verilmedi.",
       "email_not_verified": "Sağlayıcıdaki e-posta adresiniz doğrulanmamış.",
@@ -1353,10 +1352,9 @@
   "register": {
     "metaDescription": "PDA'da hesap oluşturun; projenizi kurun, ekibinizi davet edin ve işi birlikte teslim edin.",
     "title": "Hesap oluşturun",
-    "subtitle": "Birkaç bilgiyle başlayın.",
     "email": "E-posta",
     "nickname": "Kullanıcı adı",
-    "nicknameHint": "3-32 karakter: harf, rakam, tek boşluk, alt çizgi (_) ve tire (-).",
+    "nicknameHint": "3-32 karakter",
     "password": "Şifre",
     "confirmPassword": "Şifre tekrarı",
     "submit": "Kayıt ol",
@@ -1368,8 +1366,8 @@
     "passwordPlaceholder": "Şifrenizi oluşturun",
     "confirmPasswordPlaceholder": "Şifrenizi tekrar girin",
     "codeSent": "Doğrulama kodunu e-postanıza gönderdik.",
-    "notice": "Kayıt olarak <terms>Kullanım Koşulları</terms>'nı kabul etmiş, <kvkk>KVKK Aydınlatma Metni</kvkk>'ni ve <privacy>Gizlilik Politikası</privacy>'nı okuduğunuzu bildirmiş olursunuz. Bunlar bilgilendirme metinleridir; açık rıza talebi değildir.",
-    "noticeOauth": "Google veya GitHub ile devam ederek <terms>Kullanım Koşulları</terms>'nı kabul etmiş, <kvkk>KVKK Aydınlatma Metni</kvkk>'ni ve <privacy>Gizlilik Politikası</privacy>'nı okuduğunuzu bildirmiş olursunuz.",
+    "notice": "<kvkk>KVKK Aydınlatma Metni</kvkk> ve <privacy>Gizlilik Politikası</privacy> bilgilendirme metinleridir; açık rıza talebi değildir.",
+    "termsAgree": "<terms>Kullanım Koşulları</terms>'nı okudum ve kabul ediyorum.",
     "newTab": "(yeni sekmede açılır)"
   },
   "validation": {
@@ -1382,6 +1380,7 @@
     "passwordMin": "Şifre en az 8 karakter olmalı.",
     "passwordMax": "Şifre en fazla 128 karakter olabilir.",
     "passwordMatch": "Şifreler eşleşmiyor.",
+    "termsRequired": "Devam etmek için Kullanım Koşulları'nı kabul etmelisiniz.",
     "maxLength": "Bu değer çok uzun.",
     "dateOrder": "Hedef bitiş tarihi başlangıç tarihinden önce olamaz.",
     "githubUrl": "Genel bir GitHub depo URL'si girin, ör. https://github.com/owner/repo.",

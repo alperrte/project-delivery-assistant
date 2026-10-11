@@ -39,8 +39,11 @@ test.describe.serial("Teams page (manager)", () => {
     await page.locator("#team-name").fill("Backend");
     await expect(page.locator("#team-preview").getByText("Backend")).toBeVisible();
     await page.getByRole("button", { name: /^Ekibi oluştur$/ }).click();
-    await expect(page).toHaveURL(new RegExp(`/tr/projeler/${slug}/ekipler/(?!yeni-ekip$)[^/]+$`), { timeout: 15_000 });
-    await expect(page.getByRole("row", { name: new RegExp(manager.nickname) })).toBeVisible();
+    // Creating returns to the team list, with the new team's card and the view switcher, not inside the team.
+    await expect(page).toHaveURL(`/tr/projeler/${slug}/ekipler`, { timeout: 15_000 });
+    await expect(page.getByRole("link", { name: /Backend ekibini aç/ })).toBeVisible();
+    await expect(page.getByRole("tab", { name: "Şema" })).toBeVisible();
+    await expect(page.getByRole("link", { name: /^Yeni ekip$/ })).toBeVisible();
   });
 
   test("a whole team card opens the detail page and the list switches to the chart", async () => {

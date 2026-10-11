@@ -1220,7 +1220,6 @@
   "oauth": {
     "google": "Continue with Google",
     "github": "Continue with GitHub",
-    "divider": "or with email",
     "errors": {
       "access_denied": "Sign-in permission was not granted.",
       "email_not_verified": "The email address at the provider is not verified.",
@@ -1329,10 +1328,9 @@
   "register": {
     "metaDescription": "Create a PDA account, set up your project, invite your team and deliver the work together.",
     "title": "Create your account",
-    "subtitle": "Get started with a few details.",
     "email": "Email",
     "nickname": "Username",
-    "nicknameHint": "3-32 characters: letters, digits, single spaces, underscore (_) and hyphen (-).",
+    "nicknameHint": "3-32 characters",
     "password": "Password",
     "confirmPassword": "Confirm password",
     "submit": "Create account",
@@ -1344,8 +1342,8 @@
     "passwordPlaceholder": "Create a password",
     "confirmPasswordPlaceholder": "Repeat your password",
     "codeSent": "We sent the verification code to your email.",
-    "notice": "By registering you accept the <terms>Terms of Use</terms> and confirm that you have read the <kvkk>KVKK Privacy Notice</kvkk> and the <privacy>Privacy Policy</privacy>. These are information texts, not a request for consent.",
-    "noticeOauth": "By continuing with Google or GitHub you accept the <terms>Terms of Use</terms> and confirm that you have read the <kvkk>KVKK Privacy Notice</kvkk> and the <privacy>Privacy Policy</privacy>.",
+    "notice": "The <kvkk>KVKK Privacy Notice</kvkk> and the <privacy>Privacy Policy</privacy> are information texts, not a request for consent.",
+    "termsAgree": "I have read and accept the <terms>Terms of Use</terms>.",
     "newTab": "(opens in a new tab)"
   },
   "validation": {
@@ -1358,6 +1356,7 @@
     "passwordMin": "Password must be at least 8 characters.",
     "passwordMax": "Password can be at most 128 characters.",
     "passwordMatch": "Passwords do not match.",
+    "termsRequired": "You must accept the Terms of Use to continue.",
     "maxLength": "This value is too long.",
     "dateOrder": "Target end date cannot be before the start date.",
     "githubUrl": "Enter a public GitHub repository URL, e.g. https://github.com/owner/repo.",

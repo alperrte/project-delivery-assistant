@@ -59,6 +59,7 @@ test.describe("Yükleniyor durumu: herkese açık formlar", () => {
     await page.getByLabel(tr.register.nickname, { exact: true }).fill("kisi_test");
     await page.getByLabel(tr.register.password, { exact: true }).fill("Parola-12345");
     await page.getByLabel(tr.register.confirmPassword, { exact: true }).fill("Parola-12345");
+    await page.getByRole("checkbox", { name: /Kullanım Koşulları/ }).check();
     await page.locator('form button[type="submit"]').first().click();
     await expectLoadingThenIdle(page, seen);
     await expect(page.getByLabel(tr.register.email, { exact: true })).toHaveValue("kisi@example.test");

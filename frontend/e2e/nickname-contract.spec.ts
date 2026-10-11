@@ -98,6 +98,7 @@ async function expectRegisterBlocked(page: Page, nickname: string, message: RegE
   await page.locator('input[name="nickname"]').fill(nickname);
   await page.locator('input[name="password"]').fill("E2ePassword1!");
   await page.locator('input[name="confirmPassword"]').fill("E2ePassword1!");
+  await page.getByRole("checkbox", { name: /Kullanım Koşulları/ }).check();
   await page.getByRole("button", { name: /^Kayıt ol$/ }).click();
   await expect(page.getByRole("alert").filter({ hasText: message })).toBeVisible();
   await expect(page.locator('input[name="nickname"]')).toHaveAttribute("aria-invalid", "true");
