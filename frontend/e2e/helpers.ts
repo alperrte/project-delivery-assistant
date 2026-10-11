@@ -85,6 +85,13 @@ export async function login(page: Page, email: string, password: string) {
   await expect(page.locator("#main-content")).toBeVisible({ timeout: 15_000 });
 }
 
+/** Reveal the real navbar from its own top strip, rather than the page/scrollbar edge. */
+export async function revealWorkspaceHeader(page: Page) {
+  const width = page.viewportSize()?.width ?? await page.evaluate(() => innerWidth);
+  await page.mouse.move(width / 2, 8);
+  await expect(page.locator(".app-shell header").first()).not.toHaveClass(/opacity-0/);
+}
+
 /** What the test's own "phone" knows about an administrator account: the authenticator key and the backup codes. */
 export type AdminAuthenticator = { secret: string; recoveryCodes: string[]; lastStep: number };
 const adminAuthenticators = new Map<string, AdminAuthenticator>();

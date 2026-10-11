@@ -1,6 +1,6 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import tr from "../src/i18n/messages/tr.json";
-import { api, registerAndLogin } from "./helpers";
+import { api, registerAndLogin, revealWorkspaceHeader } from "./helpers";
 
 // Real backend, real users, no mocks: the inviting manager's "+N" (unread accepted/rejected answers of the selected
 // project) is a separate number from the pending count, follows the notification read state, belongs to the inviter
@@ -162,7 +162,7 @@ test("inviter's +N follows unread answers per project, read state and account; p
     await expect(strip.locator("li")).toHaveCount(1);
 
     // Account switch on the same tab: the previous manager's badge never shows for the next account.
-    await a.mouse.move(20, 2);
+    await revealWorkspaceHeader(a);
     await a.getByRole("button", { name: /Hesap menüsü/ }).click();
     await a.getByRole("menuitem", { name: "Çıkış yap", exact: true }).click();
     await expect(a.locator('input[name="email"]')).toBeVisible();

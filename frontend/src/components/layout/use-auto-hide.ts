@@ -30,7 +30,9 @@ export function useAutoHide<T extends HTMLElement>(enabled = true, interactionOp
     revealRef.current = show;
     function pointer(event: PointerEvent) {
       if (!media.matches || event.pointerType === "touch") return;
-      const next = event.clientY <= TOP_ZONE_PX;
+      // The reveal strip belongs to the navbar, not the scrollbar at the page edge.
+      const bounds = node!.getBoundingClientRect();
+      const next = event.clientY <= TOP_ZONE_PX && event.clientX >= bounds.left && event.clientX <= bounds.right;
       if (next !== topZone) { topZone = next; if (next) show(); else arm(); }
     }
     function enter(event: PointerEvent) { if (media.matches && event.pointerType !== "touch") { hovered = true; show(); } }
@@ -43,7 +45,8 @@ export function useAutoHide<T extends HTMLElement>(enabled = true, interactionOp
     function scroll() {
       const y = window.scrollY, delta = y - lastY; lastY = y;
       if (delta > 0 && y > SCROLL_HIDE_DELTA && !held()) { clear(); setHidden(true); }
-      else if (delta < 0) show();
+      // Pointer users reveal the navbar deliberately; scroll-up reveal is for touch devices.
+      else if (delta < 0 && !media.matches) show();
       else if (delta > 0) arm();
     }
     function keyboard(event: KeyboardEvent) { if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") show(); }

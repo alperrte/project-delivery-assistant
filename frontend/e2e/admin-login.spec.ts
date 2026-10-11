@@ -17,6 +17,7 @@ import {
   rememberAdminAuthenticator,
   submitAdminCredentials,
   uniqueUser,
+  revealWorkspaceHeader,
 } from "./helpers";
 import { totpCode } from "./totp";
 
@@ -48,7 +49,7 @@ async function newAdminAccount(browser: Browser, prefix: string) {
 }
 
 async function signOut(page: Page) {
-  await page.mouse.move(2, 2);
+  await revealWorkspaceHeader(page);
   await page.getByRole("button", { name: /Hesap menüsü/ }).click();
   await page.getByRole("menuitem", { name: "Çıkış yap", exact: true }).click();
   await expect(page).toHaveURL(/\/tr\/giris/);
@@ -452,9 +453,15 @@ test.describe.serial("administrator lifecycle", () => {
     const page = await context.newPage();
     try {
       await adminSignIn(page, admin.user, { viaBackupCode: true });
+      const analyticsHref = await page.getByRole("link", { name: "Analitik", exact: true }).getAttribute("href");
       await context.clearCookies({ name: "PDA_ACCESS" });
       await context.clearCookies({ name: "PDA_REFRESH" });
-      await page.getByRole("link", { name: "Analitik", exact: true }).click();
+      // Polling may already redirect after cookies disappear. Avoid waiting for a link on the login page.
+      if (inPanel(new URL(page.url()))) {
+        await page.evaluate(href => {
+          (window as unknown as { next: { router: { push: (url: string) => void } } }).next.router.push(href!);
+        }, analyticsHref);
+      }
       await expect(page).toHaveURL(/\/pd-admin\?reason=session-expired/, { timeout: 15_000 });
       await expect(page.getByRole("status").filter({ hasText: t.notices.sessionExpired })).toBeVisible();
     } finally {

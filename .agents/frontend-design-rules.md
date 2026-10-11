@@ -1,5 +1,13 @@
 # Frontend tasarım kuralları
 
+## İletişim sayfası gezinme yolu — 2026-10-11
+
+`features/contact/contact-page.tsx` ortak `Breadcrumb` bileşeniyle ana sayfa → iletişim yolunu gösterir; mevcut `PageJsonLd` ile aynı iki öğeyi kullanır. `common.breadcrumb`, `landing.homeTitle` ve `contact.title` yerelleştirmeleri, mevcut `mb-6` boşluğu ve ortak token'lar kullanılır; yeni renk/font/spacing token'ı yoktur.
+
+## Navbar scroll davranışı — 2026-10-11
+
+`use-auto-hide.ts`: hover destekleyen cihazlarda yukarı scroll navbar'ı açmaz. Üst 24 px reveal alanı navbar'ın yatay sınırlarıyla sınırlıdır; scrollbar kenarında gezinmek tetiklemez. Dokunmatik cihazlarda scroll-up reveal korunur. Önceki bölümlerdeki genel scroll-up davranışı artık yalnız dokunmatik cihazlar için geçerlidir. 700 ms idle, hover, focus, Ctrl-K, açık popup/drawer ve mevcut layout reserve korunur.
+
 ## Invitations remediation — 2026-10-06
 
 Invitation UI manager EXPIRED tab/empty translations mevcut status dilini kullanır; expired row resend action sunar, live pending cancel davranışı kalır. Public preview yalnız404/invalid token için expired copy;429 mevcut rate copy, network ayrı, server contextual unavailable copy. Retry state token/attempt ile bağlıdır; cancellation/abort eski response/error overwrite etmez. Navbar/current centered placement ve design tokens değiştirilmedi.

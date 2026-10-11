@@ -79,7 +79,7 @@ test("with the theme transition saved as off the theme changes straight away", a
   }
 });
 
-test("animations default to on independently of the device and can be explicitly disabled", async ({ page }) => {
+test("device reduced motion always suppresses animations, and explicit off is respected", async ({ page }) => {
   try {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/dashboard");
@@ -88,7 +88,7 @@ test("animations default to on independently of the device and can be explicitly
 
     await navbarTheme(page, "Koyu");
     await expect(page.locator("html")).toHaveClass(/dark/);
-    expect(await seenClasses(page)).toEqual(["theme-close-in"]);
+    expect(await seenClasses(page)).toEqual([]);
 
     await saveAnimations(page, { ui: "Kapalı" });
     await page.goto("/dashboard");
@@ -98,7 +98,7 @@ test("animations default to on independently of the device and can be explicitly
     await expect(page.locator("html")).toHaveClass(/dark/);
     expect(await seenClasses(page)).toEqual([]);
 
-    // "Always animate" overrides the device.
+    // Enabling motion still respects the device accessibility preference.
     await saveAnimations(page, { ui: "Açık" });
     await page.goto("/dashboard");
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
@@ -110,7 +110,7 @@ test("animations default to on independently of the device and can be explicitly
     await page.evaluate(() => (window as unknown as { __themeMotion: Set<string> }).__themeMotion.clear());
     await navbarTheme(page, "Açık");
     await expect(page.locator("html")).not.toHaveClass(/dark/);
-    expect(await seenClasses(page)).toEqual(["theme-reveal"]);
+    expect(await seenClasses(page)).toEqual([]);
   } finally {
     await api(page, "PUT", "/users/me/preferences", PLAIN);
   }

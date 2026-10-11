@@ -68,6 +68,8 @@ class AdminOperationsIntegrationTest {
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
         registry.add("FRONTEND_URL", () -> "http://localhost:3000");
+        // This suite checks the mail-disabled status; developer mail settings must not change it.
+        registry.add("MAIL_ENABLED", () -> "false");
         registry.add("JWT_SECRET", () -> Base64.getEncoder().encodeToString(JWT_KEY));
         registry.add("TOTP_ENCRYPTION_KEY", () -> Base64.getEncoder().encodeToString(TOTP_KEY));
     }

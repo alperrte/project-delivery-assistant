@@ -1,13 +1,13 @@
 import { test,expect,type Page } from "@playwright/test";
 import { MANAGER_STORAGE } from "./global-setup";
-import { api,createProject } from "./helpers";
+import { api,createProject, revealWorkspaceHeader } from "./helpers";
 import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { localizeHref } from "../src/i18n/routing";
 import { chooseMessageAction } from "./chat-actions";
 
 async function arrow(page:Page,direction:"back"|"forward") {
- await page.mouse.move(1,200);await page.mouse.move(1,1);
+ await page.mouse.move(1,200);await revealWorkspaceHeader(page);
  const button=page.getByTestId(`workspace-${direction}`);await expect(button).toBeEnabled();await button.click();
 }
 async function link(page:Page,href:string) {
@@ -25,7 +25,7 @@ test("history header stays viewport-centered, fits mobile and remains outside fu
  try {
   await expect(page.locator('[data-sonner-toast]')).toHaveCount(0);
   for(const width of [320,390,640,768,1024,1440])for(const dark of [false,true]){
-   await page.setViewportSize({width,height:900});await page.evaluate(d=>document.documentElement.classList.toggle("dark",d),dark);await page.mouse.move(1,200);await page.mouse.move(1,1);
+   await page.setViewportSize({width,height:900});await page.evaluate(d=>document.documentElement.classList.toggle("dark",d),dark);await page.mouse.move(1,200);await revealWorkspaceHeader(page);
    const header=page.locator('.app-shell header');await expect(header).toBeVisible();await expect.poll(()=>header.evaluate(el=>{const scale=getComputedStyle(el).scale;return scale==="none"?1:Number.parseFloat(scale);})).toBe(1);const box=(await header.boundingBox())!;
    expect(box.x).toBeGreaterThanOrEqual(0);expect(box.x+box.width).toBeLessThanOrEqual(width);expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBe(width);
    if(width<640){expect(box.height).toBe(112);await expect.poll(async()=>(await page.getByTestId("workspace-back").boundingBox())!.width).toBe(44);}
@@ -34,10 +34,10 @@ test("history header stays viewport-centered, fits mobile and remains outside fu
    const controls=await header.getByRole("button").evaluateAll(buttons=>buttons.flatMap(button=>{const rect=button.getBoundingClientRect(),style=getComputedStyle(button);return rect.width>0&&rect.height>0&&style.visibility!=="hidden"?[{x:rect.x,y:rect.y,width:rect.width,height:rect.height,label:button.getAttribute("aria-label")??(button as HTMLElement).innerText}]:[];}));
    for(const control of controls){expect(control.x).toBeGreaterThanOrEqual(box.x);expect(control.x+control.width).toBeLessThanOrEqual(box.x+box.width);}
    for(let i=0;i<controls.length;i++)for(let j=i+1;j<controls.length;j++){const a=controls[i],b=controls[j];expect(Math.max(0,Math.min(a.x+a.width,b.x+b.width)-Math.max(a.x,b.x))*Math.max(0,Math.min(a.y+a.height,b.y+b.height)-Math.max(a.y,b.y)),JSON.stringify({width,dark,a,b})).toBeLessThanOrEqual(0.5);}
-   if(width>=1024){await page.getByRole("button",{name:"Kenar çubuğunu daralt",exact:true}).click();await expect.poll(async()=>(await header.boundingBox())!.x).toBe(box.x);await page.getByRole("button",{name:"Kenar çubuğunu genişlet",exact:true}).click();await expect.poll(async()=>(await header.boundingBox())!.x).toBe(box.x);}
+   if(width>=1024){await page.getByRole("button",{name:"Kenar çubuğunu daralt",exact:true}).click();await revealWorkspaceHeader(page);await expect.poll(async()=>(await header.boundingBox())!.x).toBe(box.x);await page.getByRole("button",{name:"Kenar çubuğunu genişlet",exact:true}).click();await revealWorkspaceHeader(page);await expect.poll(async()=>(await header.boundingBox())!.x).toBe(box.x);}
    await page.screenshot({path:path.join(screenshots,`header-${width}-${dark?"dark":"light"}.png`)});
   }
-  await page.setViewportSize({width:390,height:844});await page.mouse.move(1,1);await page.getByRole("button",{name:"Gezinme menüsü",exact:true}).click();await page.getByRole("dialog").getByTestId("chat-nav-item").click();
+  await page.setViewportSize({width:390,height:844});await revealWorkspaceHeader(page);await page.getByRole("button",{name:"Gezinme menüsü",exact:true}).click();await page.getByRole("dialog").getByTestId("chat-nav-item").click();
   await expect(page.getByTestId("chat-panel")).toBeVisible();await expect(page.getByRole("dialog")).toHaveCount(0);
   const header=(await page.locator('.app-shell header').boundingBox())!,chat=(await page.getByTestId("chat-panel").boundingBox())!;expect(chat.y).toBe(128);expect(chat.y).toBeGreaterThan(header.y+header.height);
   expect(await page.getByTestId("workspace-back").evaluate(el=>!!el.closest("[inert]"))).toBe(false);expect(await page.locator("#main-content").getAttribute("inert")).not.toBeNull();

@@ -1,5 +1,21 @@
 # Web Sitesi Kesinlikle Olması Gerekenler — Master Checklist
 
+## general-features / main iletişim conflict doğrulaması — 2026-10-11
+
+İletişim sayfasının breadcrumb'ı ile main'in görünür e-postası birlikte korundu; gerçek teslimat testinin ortak alıcı sabiti, kategori ve bot koruması kontrolleri birleştirildi. TypeScript, hedefli ESLint, production build ve 22 Chromium testi başarılı; TR/EN/DE breadcrumb/JSON-LD eşleşmesi, form/klavye/320–1440 px ve gerçek Mailpit teslimatı doğrulandı. Genel checkbox'lar değiştirilmedi. Kayıt: `docs/compliation/2026-10-11-general-features-main-conflicts.md`.
+
+## Frontend başarısız test düzeltmeleri — 2026-10-11
+
+İletişim sayfasına ortak `Breadcrumb` eklendi; görünür iki öğe mevcut `PageJsonLd` ile TR/EN/DE eşleşir. Navbar testleri üst kenarda navbar'ın yatay merkezinden açılma ve sidebar etkileşimi sonrası yeniden açılarak ölçüm yapma standardını kullanır. Cihaz reduced-motion tercihi testlerde korunur. Önceki 18 başarısız ve seri admin grubunda çalışmayan 6 senaryo hedefli koşumlarla doğrulandı: 39 senaryo, ilk koşum 38 başarılı/1 ölçüm hazırlığı hatası; son kalan test düzeltmeden sonra başarılı. Lint/TypeScript/build geçti. Breadcrumb/structured-data/keyboard global kutuları bu sınırlı kapsamla değiştirilmedi; 945 testlik paket yeniden çalıştırılmadı. Kayıt: `docs/compliation/2026-10-11-frontend-failed-tests-fixes.md`.
+
+## Frontend başarısız test düzeltmeleri — 2026-10-11
+
+İletişim sayfasına ortak `Breadcrumb` eklendi; görünür iki öğe mevcut `PageJsonLd` ile TR/EN/DE eşleşir. Navbar testleri üst kenarda navbar'ın yatay merkezinden açılma ve sidebar etkileşimi sonrası yeniden açılarak ölçüm yapma standardını kullanır. Cihaz reduced-motion tercihi testlerde korunur. Önceki 18 başarısız ve seri admin grubunda çalışmayan 6 senaryo hedefli koşumlarla doğrulandı: 39 senaryo, ilk koşum 38 başarılı/1 ölçüm hazırlığı hatası; son kalan test düzeltmeden sonra başarılı. Lint/TypeScript/build geçti. Breadcrumb/structured-data/keyboard global kutuları bu sınırlı kapsamla değiştirilmedi; 945 testlik paket yeniden çalıştırılmadı. Kayıt: `docs/compliation/2026-10-11-frontend-failed-tests-fixes.md`.
+
+## Navbar scroll düzeltmesi — 2026-10-11
+
+Yalnız oturum içi navbar etkileşimi kontrol edildi: masaüstünde navbar dışında yukarı scroll ve scrollbar kenarında yukarı çıkma görünürlüğü tetiklemez; hover/focus/açık bildirim popup'ı/Ctrl-K/dokunmatik drawer ve dokunmatik scroll-up erişimi korunur. Dört hedefli Chromium testi, TypeScript ve hedefli ESLint başarılıdır. Keyboard/Focus/Responsive global kutuları bu sınırlı kontrolle değiştirilmedi. Kayıt: `docs/compliation/2026-10-11-navbar-scroll-reveal-fix.md`.
+
 ## source-map-js security follow-up — 2026-10-06
 
 Onaylı ayrı transitive patch 1.2.1→1.2.2; application/invitation/UI/test kaynakları değişmedi. Temiz npm ci, lint/TypeScript/build, 33 targeted Chromium ve canonical pre-push geçti: 469 backend testi, 0 failure/error/skip; 248 Chromium passed + 1 expected crash-route skip; Docker health PASS. Güncelleme sonrası full audit 5 high (mevcut dev debt), production audit 0. Global checklist kutuları değişmedi. Ayrı kayıt: `docs/compliation/2026-10-06-source-map-js-security-remediation.md`.

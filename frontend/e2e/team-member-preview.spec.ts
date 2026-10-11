@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import { api, login, uniqueUser } from "./helpers";
 import { AUTH_DIR, MANAGER_STORAGE, MEMBER_USER_FILE } from "./global-setup";
@@ -14,7 +14,6 @@ test("real onboarding names reach the team card without member requests; 101 tea
   const created = await api(page, "POST", "/projects", { name: `Preview QA ${Date.now()}`, projectType: "WEB" });
   expect(created.status).toBe(201);
   const project = created.json as { id: string; slug: string };
-  const actor=(await api(page,"GET","/auth/me")).json as {id:string};
   const peopleContexts = [];
   try {
     const backup = (await api(page, "POST", `/projects/${project.id}/teams`, { name: "Preview backup", includeCreator: true })).json as { id: string };
@@ -76,11 +75,10 @@ test("real onboarding names reach the team card without member requests; 101 tea
     }
     for (const file of [MEMBER_USER_FILE, path.join(AUTH_DIR, "chat-outsider-user.json")]) {
       const user = JSON.parse(readFileSync(file, "utf8")) as { email: string; password: string };
-      const session=path.join(AUTH_DIR,`${file===MEMBER_USER_FILE?"notification-setup":"chat-outsider-session"}-${actor.id}.json`);
-      const personContext=await browser.newContext(existsSync(session)?{storageState:session}:{});peopleContexts.push(personContext);
+      // Start a session for this fixture instead of reusing another spec's rotated refresh cookies.
+      const personContext=await browser.newContext();peopleContexts.push(personContext);
       const person=await personContext.newPage();
-      if(existsSync(session)){await person.goto("/projects");const current=await api(person,"GET","/auth/me");expect(current.status).toBe(200);expect((current.json as {email:string}).email).toBe(user.email);}
-      else await login(person,user.email,user.password);
+      await login(person,user.email,user.password);
       const identity = (await api(person, "GET", "/auth/me")).json as { id: string };
       const invitation = await api(page, "POST", `/projects/${project.id}/invitations`, { userId: identity.id, teamId: backup.id, roles: ["TESTER"] });
       expect(invitation.status).toBe(201);
