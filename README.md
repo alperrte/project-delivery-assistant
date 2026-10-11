@@ -9,126 +9,209 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/Lisans-Apache%202.0-111827?style=for-the-badge" alt="Apache License 2.0" /></a>
-  <img src="https://img.shields.io/badge/Durum-Geliştirme%20Aşamasında-2563EB?style=for-the-badge" alt="Geliştirme Aşamasında" />
+  <img src="https://img.shields.io/badge/Sürüm-V1.0-16A34A?style=for-the-badge" alt="Sürüm V1.0" />
   <img src="https://img.shields.io/badge/Mimari-Modular%20Monolith-0F172A?style=for-the-badge" alt="Modular Monolith" />
   <img src="https://img.shields.io/badge/Self--Hosted-Evet-0369A1?style=for-the-badge" alt="Self Hosted" />
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Java-Spring%20Boot-111827?style=flat-square&logo=openjdk&logoColor=white" alt="Java Spring Boot" />
-  <img src="https://img.shields.io/badge/Next.js-TypeScript-111827?style=flat-square&logo=nextdotjs&logoColor=white" alt="Next.js" />
-  <img src="https://img.shields.io/badge/PostgreSQL-Database-336791?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL" />
-  <img src="https://img.shields.io/badge/Docker-Development-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker" />
+  <img src="https://img.shields.io/badge/Java%2025-Spring%20Boot%204-111827?style=flat-square&logo=openjdk&logoColor=white" alt="Java Spring Boot" />
+  <img src="https://img.shields.io/badge/Next.js%2016-TypeScript-111827?style=flat-square&logo=nextdotjs&logoColor=white" alt="Next.js" />
+  <img src="https://img.shields.io/badge/PostgreSQL%2018-Database-336791?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL" />
+  <img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker" />
 </p>
 
-# PDA — Project Delivery Assistant
+<h1 align="center">PDA — Project Delivery Assistant V1</h1>
 
 **PDA**, öğrenciler ve küçük yazılım ekipleri için geliştirilen **ücretsiz, açık kaynak ve self-hosted proje yönetim platformudur**.
 
-Amaç; Jira veya Plane gibi araçlarda bulunan temel proje ve görev yönetimi deneyimini, öğrencilerin ve küçük ekiplerin kolayca kurabileceği, anlayabileceği ve geliştirmeye katkı verebileceği daha sade bir yapıda sunmaktır.
+Ekibin işini planlamak, dağıtmak, takip etmek ve konuşmak için ayrı ayrı araçlara ihtiyaç duymazsınız. PDA, öğrencilerin ve küçük ekiplerin kolayca kurabileceği, anlayabileceği ve geliştirmeye katkı verebileceği sade bir yapıda, projenin tüm teslim sürecini tek yerde toplar.
 
-PDA yalnızca bir görev listesi değildir. Proje oluşturma, ekip ve rol yönetimi, görev atama, test raporları, bildirimler ve ekip içi iş akışlarını tek bir platformda toplamayı hedefler.
+### Öne çıkan özellikler
 
-> [!IMPORTANT]
-> PDA şu anda aktif geliştirme aşamasındadır. V1 teknik planı tamamlandı; repository, backend ve frontend temelleri adım adım oluşturuluyor.
+- **Basit ve gelişmiş görev yönetimi** ve esnek görev dağılımı
+- **GitHub repo takibi** (basit ve gelişmiş mod)
+- **Proje içi sohbet** ve kullanıcılar arası birebir iletişim
+- **Roller, ekipler, kriterler, issue ve test raporları**
+- **Güvenli ve self-hosted:** Kendi sunucunuzda, kendi SMTP hesabınızla çalışır
+
+Ayrıntılar için [V1 Özellikleri](#-v1-özellikleri) bölümüne bakın.
 
 <p align="center">
-  <img src="assets/git_images/development-tr.jpeg" alt="PDA geliştirme aşamasında" width="100%" />
+  <img src="docs/assets/pda-tour.gif" alt="PDA ekran turu: genel bakış, projeler, kriterler, görev listesi, pano ve takvim" width="100%" />
 </p>
+
+---
+
+## 🖼️ Ekran Görüntüleri
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/assets/screenshots/dashboard-light.png" alt="Genel bakış, açık tema" /></td>
+    <td width="50%"><img src="docs/assets/screenshots/dashboard-dark.png" alt="Genel bakış, koyu tema" /></td>
+  </tr>
+  <tr>
+    <td align="center" colspan="2"><sub>Genel bakış · Light ve Dark</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/assets/screenshots/tasks-board-light.png" alt="Görev panosu, açık tema" /></td>
+    <td width="50%"><img src="docs/assets/screenshots/tasks-board-dark.png" alt="Görev panosu, koyu tema" /></td>
+  </tr>
+  <tr>
+    <td align="center" colspan="2"><sub>Görev panosu · Light ve Dark</sub></td>
+  </tr>
+</table>
+
+<details>
+<summary><strong>Daha fazla ekran</strong></summary>
+
+<br />
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/assets/screenshots/landing-light.png" alt="Karşılama sayfası, açık tema" /></td>
+    <td width="50%"><img src="docs/assets/screenshots/landing-dark.png" alt="Karşılama sayfası, koyu tema" /></td>
+  </tr>
+  <tr>
+    <td align="center" colspan="2"><sub>Karşılama sayfası · Light ve Dark</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/assets/screenshots/project-overview-light.png" alt="Proje genel bakışı, açık tema" /></td>
+    <td width="50%"><img src="docs/assets/screenshots/project-overview-dark.png" alt="Proje genel bakışı, koyu tema" /></td>
+  </tr>
+  <tr>
+    <td align="center" colspan="2"><sub>Proje genel bakışı · Light ve Dark</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/assets/screenshots/tasks-list-light.png" alt="Görev listesi, açık tema" /></td>
+    <td width="50%"><img src="docs/assets/screenshots/tasks-list-dark.png" alt="Görev listesi, koyu tema" /></td>
+  </tr>
+  <tr>
+    <td align="center" colspan="2"><sub>Görev listesi · Light ve Dark</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/assets/screenshots/criteria-light.png" alt="Proje kriterleri, açık tema" /></td>
+    <td width="50%"><img src="docs/assets/screenshots/criteria-dark.png" alt="Proje kriterleri, koyu tema" /></td>
+  </tr>
+  <tr>
+    <td align="center" colspan="2"><sub>Proje kriterleri · Light ve Dark</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/assets/screenshots/calendar-light.png" alt="Takvim, açık tema" /></td>
+    <td width="50%"><img src="docs/assets/screenshots/calendar-dark.png" alt="Takvim, koyu tema" /></td>
+  </tr>
+  <tr>
+    <td align="center" colspan="2"><sub>Takvim · Light ve Dark</sub></td>
+  </tr>
+</table>
+
+**Mobil görünüm**
+
+<table>
+  <tr>
+    <td align="center" width="33%"><img src="docs/assets/screenshots/landing-mobile.png" alt="Karşılama sayfası, mobil" width="220" /></td>
+    <td align="center" width="33%"><img src="docs/assets/screenshots/dashboard-mobile.png" alt="Genel bakış, mobil" width="220" /></td>
+    <td align="center" width="33%"><img src="docs/assets/screenshots/tasks-board-mobile.png" alt="Görev panosu, mobil" width="220" /></td>
+  </tr>
+</table>
+
+</details>
 
 ---
 
 ## 🎯 Neden PDA?
 
-PDA'nın ilk hedef kitlesi **öğrenciler ve küçük yazılım ekipleri**. Özellikle üniversite projelerinde veya küçük ekip çalışmalarında şu sorunları azaltmayı hedefliyoruz:
+PDA'nın hedef kitlesi **öğrenciler ve küçük yazılım ekipleri**. Özellikle üniversite projelerinde veya küçük ekip çalışmalarında şu sorunları azaltmayı hedefliyoruz:
 
-- görevlerin WhatsApp / Discord mesajları arasında kaybolması,
-- kimin hangi işten sorumlu olduğunun belirsizleşmesi,
-- proje ilerleyişinin takip edilememesi,
-- test ve hata süreçlerinin dağınık yürütülmesi,
-- ücretli proje yönetim araçlarının küçük ekipler için gereksiz karmaşık veya maliyetli olması.
+- Görevlerin WhatsApp / Discord mesajları arasında kaybolması
+- Kimin hangi işten sorumlu olduğunun belirsizleşmesi
+- Proje ilerleyişinin takip edilememesi
+- Test ve hata süreçlerinin dağınık yürütülmesi
+- Ücretli proje yönetim araçlarının küçük ekipler için gereksiz karmaşık veya maliyetli olması
 
-PDA bu süreci **tek yerde, açık kaynak ve kurulabilir** hale getirmeyi amaçlar.
+PDA bu süreci **tek yerde, açık kaynak ve kurulabilir** hale getirir.
 
 ### Temel prensipler
 
 - **Açık kaynak:** Apache License 2.0
-- **Ücretsiz kullanım hedefi:** mümkün olduğunca ücretsiz servislerle çalışabilme
-- **Self-hosted:** kendi altyapınızda çalıştırabilme
-- **Öğrenci odaklı:** gerçek yazılım ekiplerindeki rol ve görev akışlarını deneyimleme
-- **Modüler ama sade:** Microservice yerine Modular Monolith
-- **Katkıya açık:** Issue, feature request ve pull request desteği
-- **Güvenli varsayılanlar:** secret yönetimi, cookie tabanlı auth, validation ve RBAC
+- **Ücretsiz kullanım:** Ücretli bir servise bağımlı değildir; kendi altyapınızda çalışır
+- **Self-hosted:** Kendi altyapınızda çalıştırabilirsiniz
+- **Öğrenci odaklı:** Gerçek yazılım ekiplerindeki rol ve görev akışlarını deneyimleyin
+- **Modüler ama sade:** Modular Monolith mimarisi; modüller net ayrılır, kurulum tek backend ile basit kalır
+- **Katkıya açık:** Issue ve Pull Request desteği
+- **Güvenli varsayılanlar:** Secret yönetimi, cookie tabanlı auth, validation ve RBAC
 
 ---
 
-## ✨ V1 Kapsamı
+## ✨ V1 Özellikleri
 
-V1 için hedeflenen ana yetenekler:
+> Sürümün ayrıntılı değişiklik listesi [Releases](https://github.com/alperrte/project-delivery-assistant/releases) sayfasındadır. Burada yalnızca ana başlıklar yer alır.
 
-- kullanıcı kayıt / giriş / çıkış akışı,
-- access + refresh token yapısı,
-- HttpOnly cookie tabanlı authentication,
-- BCrypt ile şifre saklama,
-- `.env` üzerinden ilk admin bootstrap,
-- proje oluşturma ve proje üyelerini yönetme,
-- proje bazlı roller,
-- bir göreve tek veya birden fazla kullanıcı atama,
-- görev tarihleri, durumları ve tamamlanma akışları,
-- Squad / ekip yönetimi,
-- Issue / problem kayıtları,
-- Tester rolü için test raporları,
-- uygulama içi kalıcı bildirimler,
-- SMTP veya Brevo üzerinden opsiyonel e-posta desteği,
-- Türkçe / İngilizce arayüz,
-- Light / Dark / System tema desteği,
-- mobil, tablet, laptop ve masaüstü responsive tasarım,
-- Swagger / OpenAPI dokümantasyonu,
-- Docker tabanlı geliştirme ortamı.
+### 📋 Görev yönetimi: Basit ve Gelişmiş
 
-> Detaylı servis methodları, endpoint davranışları ve lifecycle kuralları ilgili feature geliştirilmeden hemen önce planlanacaktır.
+Her proje için hangi modun açık olacağını siz seçersiniz. Bir göreve tek veya birden fazla kişi atanabilir.
 
----
+- **Basit:** Başlık, açıklama, öncelik, durum ve atanan kişiler. Hızlı iş girmek için idealdir.
+- **Gelişmiş:** Basit görevdeki her şeye ek olarak alt görev, etiket, tahmini süre ve puan, sprint. Ayrıntılı planlama için idealdir.
 
-## 🧭 Yol Haritası
+Liste, sürükle-bırak pano, sprint ve havuz (backlog) görünümleriyle işin kimde olduğu her an görünür.
 
-README aynı zamanda projenin yüksek seviyeli ilerleme durumunu gösterecek şekilde tutulacaktır.
+### 🐙 GitHub repo takibi: Basit ve Gelişmiş
 
-| Aşama | Durum |
-|---|---|
-| Teknik planlama | ✅ Tamamlandı |
-| Marka / README / açık kaynak repo temeli | ✅ Tamamlandı |
-| Backend scaffold | ✅ Tamamlandı |
-| Authentication & Security | ✅ Tamamlandı |
-| Project / Role / Squad modülleri (backend + frontend) | ✅ Tamamlandı |
-| Task management — backend (Task API, workflow, RBAC) | ✅ Tamamlandı |
-| Task management — frontend (Task UI, geçmiş görünümü) | ⏳ Sırada |
-| Notification / Mail | ⏳ Planlandı |
-| Frontend scaffold | ✅ Tamamlandı |
-| UI / UX geliştirme | 🔄 Devam ediyor |
-| Frontend ↔ Backend entegrasyonu | 🔄 Devam ediyor |
-| Regression / E2E / Performance testleri | ⏳ Planlandı |
-| Deployment kararı | ⏳ TBD |
-| V1.0.0 | ⏳ Hedef |
+Herkese açık bir GitHub deposu projeye bağlanır (salt okunur).
+
+- **Basit:** Ana daldaki son commit'ler.
+- **Gelişmiş:** Dallar, merge edilen ve edilmeyen commit'ler, her commit'i kimin attığı.
+
+Yeni commit geldiğinde ekibe bildirim gider.
+
+### 💬 İletişim
+
+- **Proje içi sohbet:** Her projenin grup sohbeti; yanıt ve tepki desteği.
+- **Birebir yazışma:** Aynı projedeki üyeler arasında.
+- **Bildirimler, hatırlatıcılar ve takvim.**
+
+### 🔐 Hesap ve altyapı
+
+- **Kayıt ve giriş:** E-posta doğrulamalı kayıt, giriş, şifre sıfırlama; Google / GitHub ile giriş (opsiyonel).
+- **Güvenlik:** İki adımlı doğrulama (TOTP), HttpOnly cookie oturumu, rol tabanlı yetki.
+- **SMTP altyapısı:** Doğrulama ve bildirim e-postaları kendi SMTP hesabınızla gönderilir.
+- **Admin paneli:** İlk yönetici hesabı `.env` üzerinden oluşturulur.
+- **Docker ile kurulum.**
+
+### 👥 Proje ve ekip
+
+- Organizasyon, davet ve üyelik yönetimi, squad / ekip yapısı.
+- Proje bazlı roller (bir kullanıcı aynı projede birden fazla role sahip olabilir).
+- Teslim kriterleri ve tamamlanma yüzdesi, issue kayıtları, tester'lar için test raporları.
+
+### 🎨 Arayüz
+
+- Türkçe, İngilizce ve Almanca arayüz.
+- Light / Dark / Sistem tema.
+- Mobil, tablet ve masaüstü uyumlu tasarım.
 
 ---
 
 ## 🧩 Rol Yapısı
 
-PDA'da V1 rollerinin yetkileri uygulama tarafında sabit tutulur. Bir kullanıcı aynı projede birden fazla role sahip olabilir.
+PDA'da rollerin yetkileri uygulama tarafında sabit tutulur; bir rol adı tek başına erişim vermez. Bir kullanıcı aynı projede birden fazla role sahip olabilir.
 
-### Global rol
+### Global roller
 
-- `ADMIN`
+- `USER`
+- `ADMIN` — PDA kurulumunu yönetir, projelerde örtük yetkisi yoktur
 
 ### Proje bazlı roller
 
 - `PROJECT_MANAGER`
-- `BACKEND_ENGINEER`
-- `FRONTEND_ENGINEER`
+- `BACKEND_DEVELOPER`
+- `FRONTEND_DEVELOPER`
 - `FULL_STACK_DEVELOPER`
+- `AI_ML_DEVELOPER`
+- `UI_UX_DEVELOPER`
 - `TESTER`
-- `UI_DESIGNER`
+- `ANALYST`
 
 Aynı kullanıcı farklı projelerde farklı rollere sahip olabilir.
 
@@ -136,216 +219,78 @@ Aynı kullanıcı farklı projelerde farklı rollere sahip olabilir.
 
 ## 🏗️ Mimari ve Teknoloji Yığını
 
-PDA, **Modular Monolith** mimarisi ile geliştirilmektedir.
+PDA, **Modular Monolith** mimarisi ile geliştirilmiştir.
 
 Bu yaklaşım ile:
 
-- modüller birbirinden net biçimde ayrılır,
-- tek backend deployment korunur,
-- microservice operasyon yükü oluşmaz,
-- ücretsiz / düşük maliyetli deployment hedefi desteklenir,
-- ileride ihtiyaç oluşursa modüllerin ayrıştırılması kolaylaşır.
+- Modüller birbirinden net biçimde ayrılır
+- Tek backend deployment korunur, kurulum ve işletme basit kalır
+- Ücretsiz / düşük maliyetli deployment desteklenir
+- İleride ihtiyaç oluşursa modüllerin ayrıştırılması kolaylaşır
+
+```mermaid
+flowchart LR
+    user["Tarayıcı<br/>öğrenci · yönetici · geliştirici · tester · admin"]
+
+    subgraph fe["Frontend · :3000"]
+        next["Next.js 16 · React 19 · TypeScript<br/>App Router · next-intl · TanStack Query"]
+    end
+
+    subgraph be["Backend · :8080 · /api/v1"]
+        sec["Güvenlik katmanı<br/>HttpOnly cookie JWT · CSRF · RBAC · rate limiting"]
+        mods["Spring Boot 4 · Java 25 · Spring Modulith<br/>auth · user · admin · project · squad · task · issue<br/>testreport · comment · chat · notification · reminder<br/>mail · contact · dashboard · search · activity · audit · analytics"]
+        sec --> mods
+    end
+
+    db[("PostgreSQL 18<br/>Flyway migration")]
+    smtp["SMTP<br/>doğrulama ve bildirim e-postaları"]
+    oauth["Google · GitHub<br/>OAuth ile giriş (opsiyonel)"]
+    gh["GitHub API<br/>depo ve commit bilgisi"]
+
+    user -->|HTTPS| next
+    next -->|"REST + WebSocket"| sec
+    mods -->|JPA| db
+    mods -.-> smtp
+    mods -.-> oauth
+    mods -.-> gh
+```
 
 <p align="center">
   <img src="assets/git_images/tech-stack.png" alt="PDA teknoloji yığını" width="100%" />
 </p>
 
-### Frontend
-
-- Next.js
-- TypeScript
-- Tailwind CSS
-- shadcn/ui — seçici / opsiyonel kullanım
-- App Router
-- Feature-based architecture
-
-### Backend
-
-- Java
-- Spring Boot
-- Maven
-- Spring Security
-- Spring Data JPA / Hibernate
-- Flyway
-- Spring Modulith
-- MapStruct
-- Lombok
-- Spring Boot Actuator
-- Springdoc OpenAPI / Swagger
-
-### Veri Katmanı
-
-- PostgreSQL
-- Development: Docker içindeki PostgreSQL
-- Production database için öncelikli ücretsiz seçenek: Neon
-
-### Altyapı
-
-- Docker
-- Docker Compose
-- `.env` tabanlı config yönetimi
-
-> Production deployment platformu bilinçli olarak **TBD** bırakılmıştır ve daha sonra ayrıca kararlaştırılacaktır.
-
 ---
 
 ## 🔐 Güvenlik Yaklaşımı
 
-PDA deploy edilebilir açık kaynak bir proje olduğu için güvenlik varsayılanları baştan sıkı tutulacaktır.
+PDA deploy edilebilir açık kaynak bir proje olduğu için güvenlik varsayılanları baştan sıkı tutulur.
 
 - Şifreler **BCrypt** ile hashlenir.
 - Access ve refresh tokenlar **HttpOnly cookie** içerisinde tutulur.
 - `localStorage` ve `sessionStorage` içerisinde auth token tutulmaz.
-- Cookie tabanlı auth nedeniyle CSRF koruması aktif tutulur.
+- Cookie tabanlı auth nedeniyle CSRF koruması aktiftir.
+- İki adımlı doğrulama sırları veritabanında şifreli saklanır.
+- E-postayla gönderilen kodlar ve bağlantılar HMAC ile hashlenir.
 - Production CORS explicit allowlist ile yönetilir.
-- Spring Data JPA ve parameterized query kullanımı tercih edilir.
+- Spring Data JPA ve parameterized query kullanılır.
 - Dynamic SQL string concatenation yasaktır.
 - Backend input validation zorunludur.
-- Auth endpointlerinde rate limiting / brute-force koruması uygulanır.
+- Auth, mesajlaşma, analitik ve iletişim uç noktalarında rate limiting uygulanır.
 - Secret değerler yalnızca ENV / deployment secret store üzerinden alınır.
 - Password, JWT, cookie içeriği ve secret bilgiler loglanmaz.
-- Swagger production'da varsayılan olarak kapalıdır.
-
----
-
-## 📚 API Standardı
-
-REST API şu versioning standardı ile başlayacaktır:
-
-```text
-/api/v1/...
-```
-
-Yeni API versiyonu yalnızca **breaking change** olduğunda açılır.
-
-Development:
-
-```env
-API_DOCS_ENABLED=true
-```
-
-Production varsayılanı:
-
-```env
-API_DOCS_ENABLED=false
-```
-
----
-
-## 📬 E-posta ve Bildirimler
-
-Mail altyapısı provider bağımsız tutulacaktır.
-
-Desteklenen transport seçenekleri:
-
-- standart SMTP,
-- Brevo HTTP API.
-
-Örnek:
-
-```env
-MAIL_ENABLED=true
-MAIL_PROVIDER=smtp
-```
-
-veya:
-
-```env
-MAIL_PROVIDER=brevo
-```
-
-Mail kapalı olsa bile PDA çalışmaya devam eder.
-
-In-app notification sistemi mailden bağımsızdır ve V1'de:
-
-- persistent notification,
-- read / unread state,
-- unread count
-
-destekler.
-
----
-
-## 🎨 Frontend Standartları
-
-Arayüz tasarımı en baştan **mobil, tablet, laptop ve masaüstü** için hazırlanacaktır.
-
-- Light / Dark / System
-- Türkçe + İngilizce
-- ileride yeni dil eklemeye uygun i18n altyapısı
-- breadcrumb
-- toast sistemi
-- inline validation mesajları
-- confirmation dialog
-- skeleton / loading state
-- empty state
-- error state
-- özel `403`, `404`, `500` sayfaları
-- global notification center
-- accessibility kuralları
-- favicon / app icon seti
-- Next.js Metadata API
-- Open Graph / social share preview
-- Web App Manifest
-- proje assetlerinde WebP / AVIF optimizasyonu
-
----
-
-## 🧪 Test Stratejisi
-
-### Backend geliştirmesi sırasında
-
-- JUnit Jupiter
-- Mockito
-- AssertJ
-- Spring Boot Test
-- MockMvc
-- Spring Security Test
-- Spring Modulith architecture testleri
-- Testcontainers + PostgreSQL
-- Regression testleri
-- JaCoCo coverage
-
-### Frontend geliştirmesi sırasında
-
-- kritik kullanıcı akışları
-- routing / role kontrolleri
-- form ve validation senaryoları
-- Playwright E2E
-- Chromium / Firefox / WebKit kontrolleri
-
-### Pull Request / CI sırasında
-
-- backend automated test suite
-- frontend build / lint / type-check
-- JaCoCo coverage
-- SonarQube Cloud analizi
-- Docker build validation
-
-### Release öncesi
-
-- full regression
-- kritik E2E senaryoları
-- browser compatibility
-- Grafana k6 load / stress testleri
-- Sonar Quality Gate
-
-> Hedef `%100 coverage` değildir. Kritik business logic, security ve regression senaryolarını güvence altına almak önceliklidir.
+- Swagger varsayılan olarak kapalıdır (`API_DOCS_ENABLED=false`).
 
 ---
 
 ## 🚀 Hızlı Başlangıç
 
-> [!NOTE]
-> Repository henüz aktif scaffold aşamasındadır. Aşağıdaki akış backend ve frontend temelleri tamamlandığında projenin ana kurulum yöntemi olacaktır.
-
 ### Gereksinimler
 
 - Git
 - Docker Desktop **veya** Docker Engine + Docker Compose (backend ve PostgreSQL için)
-- Node.js (frontend için)
+- Node.js 22 ve npm (Next.js frontend'i çalıştırmak için)
 
-Java ve PostgreSQL'i host makineye ayrı ayrı kurmak gerekmez; frontend Docker dışında çalışır.
+Java ve PostgreSQL'i host makineye ayrı ayrı kurmak gerekmez; backend ve veritabanı Docker içinde çalışır, frontend Docker dışında çalışır.
 
 ### 1. Repoyu klonlayın
 
@@ -370,41 +315,95 @@ Copy-Item .env.example .env
 
 ### 3. `.env` değerlerini doldurun
 
+`.env.example` dosyası her değişkenin yanında açıklama içerir. Başlangıç için doldurmanız gerekenler:
+
+| Değişken | Ne yapmalısınız |
+|---|---|
+| `DB_PASSWORD` | `change_me` yerine kendi veritabanı şifrenizi yazın. |
+| `JWT_SECRET` | Uzun, rastgele bir değer üretin. |
+| `EMAIL_VERIFICATION_HMAC_KEY` | `openssl rand -base64 32` çıktısını yazın. |
+| `TOTP_ENCRYPTION_KEY` | Farklı bir `openssl rand -base64 32` çıktısı yazın. Sonradan değiştirirseniz herkesin iki adımlı doğrulaması kapanır. |
+| `ADMIN_EMAIL` ve `ADMIN_INITIAL_PASSWORD` | İlk admin hesabınızın e-postası ve geçici şifresi. |
+| `MAIL_ENABLED`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `MAIL_FROM` | Kayıt akışı için gereklidir; `MAIL_ENABLED=false` iken kayıt `503` döner. Aşağıya bakın. |
+
+Üretilen değerler:
+
+```bash
+openssl rand -base64 32
+```
+
+Windows PowerShell'de `openssl` yoksa:
+
+```powershell
+[Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Maximum 256 }))
+```
+
+Örnek yapı (değerleri kendinize göre değiştirin):
+
 ```env
 # Application
-APP_ENV=development
+APP_ENV=dev
+BACKEND_PORT=8080
+FRONTEND_PORT=3000
 
-# Database
-DB_URL=
-DB_USERNAME=
-DB_PASSWORD=
+# PostgreSQL
+DB_NAME=pda
+DB_PORT=5432
+DB_USERNAME=pda
+DB_PASSWORD=<kendi-sifreniz>
+DB_URL=jdbc:postgresql://postgres:5432/pda
 
 # JWT
-JWT_SECRET=
-JWT_ACCESS_TOKEN_EXPIRATION=15m
-JWT_REFRESH_TOKEN_EXPIRATION=7d
+JWT_SECRET=<uzun-rastgele-deger>
+JWT_ACCESS_TOKEN_EXPIRATION_MINUTES=15
+JWT_REFRESH_TOKEN_EXPIRATION_DAYS=7
+
+# Frontend / CORS
+FRONTEND_URL=http://localhost:3000
+ALLOWED_ORIGINS=http://localhost:3000
+NEXT_PUBLIC_API_URL=http://localhost:8080/api/v1
+INTERNAL_API_URL=http://backend:8080/api/v1
 
 # API Documentation
 API_DOCS_ENABLED=true
 
-# Mail
-MAIL_ENABLED=false
-MAIL_PROVIDER=smtp
-SMTP_HOST=
-SMTP_PORT=587
-SMTP_USERNAME=
-SMTP_PASSWORD=
-SMTP_FROM_ADDRESS=
-BREVO_API_KEY=
-
-# Frontend / CORS
-FRONTEND_URL=
-ALLOWED_ORIGINS=
-
 # Initial Admin
-ADMIN_EMAIL=
-ADMIN_INITIAL_PASSWORD=
+ADMIN_EMAIL=<admin-e-postasi>
+ADMIN_INITIAL_PASSWORD=<gecici-sifre>
+
+# Mail (Gmail SMTP)
+MAIL_ENABLED=true
+MAIL_PROVIDER=smtp
+MAIL_FROM=<gonderici@gmail.com>
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=<gonderici@gmail.com>
+SMTP_PASSWORD=<16-karakterlik-uygulama-sifresi>
+SMTP_AUTH=true
+SMTP_STARTTLS=true
+
+# Güvenlik anahtarları
+EMAIL_VERIFICATION_HMAC_KEY=<openssl rand -base64 32>
+TOTP_ENCRYPTION_KEY=<baska bir openssl rand -base64 32>
 ```
+
+#### E-posta (Gmail SMTP) nasıl ayarlanır?
+
+1. Gönderici olarak bir Gmail hesabı kullanın ve hesapta **2 adımlı doğrulamayı** açın (Google Hesabı → Güvenlik).
+2. <https://myaccount.google.com/apppasswords> adresinden bir **uygulama şifresi** oluşturun (16 karakter, yalnızca bir kez gösterilir).
+3. `MAIL_FROM` ve `SMTP_USERNAME` aynı tam adres olmalıdır; `SMTP_PASSWORD` alanına boşluksuz uygulama şifresini yazın, `MAIL_ENABLED=true` yapın.
+
+Gmail dışında bir sağlayıcı da aynı şekilde çalışır (örneğin Resend: `SMTP_HOST=smtp.resend.com`, `SMTP_USERNAME=resend`, `SMTP_PASSWORD=<API anahtarı>`).
+
+#### Opsiyonel ayarlar
+
+| Değişken | Açıklama |
+|---|---|
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google ile giriş. İkisi de boşsa kapalıdır, ikisi de doluysa açılır. Yönlendirme adresi: `http://localhost:8080/api/v1/auth/oauth2/callback/google` |
+| `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | GitHub ile giriş. Yönlendirme adresi: `http://localhost:8080/api/v1/auth/oauth2/callback/github` |
+| `GITHUB_API_TOKEN` | Proje depo sayfası için. Boşsa tüm sunucu için saatte 60 istek yapılabilir; kapsamsız (scope'suz) bir token bunu saatte 5000'e çıkarır. Yalnızca sunucuda kullanılır. |
+| `TRUSTED_PROXY_CIDRS` | Yalnızca backend'in önüne gerçekten bir reverse proxy koyarsanız, onun adresini yazın. Aksi halde boş bırakın. |
+| `LOG_LEVEL` | Log seviyesi. |
 
 > Gerçek `.env` dosyası hiçbir zaman Git'e commit edilmemelidir.
 
@@ -422,7 +421,7 @@ npm install
 npm run dev
 ```
 
-Frontend `http://localhost:3000` adresinde açılır ve `http://localhost:8080/api/v1` üzerindeki backend'e bağlanır.
+Frontend `http://localhost:3000` adresinde açılır ve `http://localhost:8080/api/v1` üzerindeki backend'e bağlanır. `API_DOCS_ENABLED=true` ise Swagger arayüzü backend üzerinden açılır.
 
 ### 6. Servisleri durdurun
 
@@ -434,48 +433,9 @@ docker compose down
 
 ---
 
-## 🗃️ Migration Yönetimi
-
-Database migration işlemleri **Flyway** ile versioned olarak ilerler:
-
-```text
-V1__initial_schema.sql
-V2__create_projects.sql
-V3__create_tasks.sql
-V4__add_notifications.sql
-...
-```
-
-Schema değişiklikleri production'da manuel SQL yerine migration dosyaları üzerinden yürütülecektir.
-
----
-
-## ⚙️ Environment ve Config Yönetimi
-
-Spring profilleri:
-
-```text
-application.yml
-application-dev.yml
-application-test.yml
-application-prod.yml
-```
-
-Secret yönetimi:
-
-```text
-.env              ❌ Git
-.env.local        ❌ Git
-.env.example      ✅ Git
-```
-
-Production ortamında zorunlu secret eksikse uygulama **fail-fast** davranacaktır.
-
----
-
 ## 👑 İlk Admin Hesabı
 
-İlk admin hesabı `.env` üzerinden bootstrap edilir:
+İlk admin hesabı `.env` üzerinden oluşturulur:
 
 ```env
 ADMIN_EMAIL=
@@ -492,36 +452,6 @@ Akış:
 
 ---
 
-## 📈 Performans ve Gözlemlenebilirlik
-
-V1'de ücretsiz ve sade deployment hedefi nedeniyle gereksiz altyapı eklenmeyecektir.
-
-### V1
-
-- Redis yok
-- harici cache yok
-- pagination
-- ihtiyaca göre database indexleri
-- uygun yerlerde Next.js cache
-- Spring Boot / Logback console logs
-- Spring Boot Actuator
-- `/actuator/health`
-- liveness / readiness
-- Docker health check
-
-### İhtiyaç çıkarsa daha sonra
-
-- Spring Cache / Caffeine
-- Redis
-- Prometheus
-- Grafana
-- ELK
-- Loki
-
-Prensip: **önce ölç, sonra optimize et.**
-
----
-
 ## 🤝 Katkıda Bulunma
 
 PDA açık kaynak ve katkıya açık bir projedir.
@@ -534,36 +464,47 @@ Katkı akışı:
 4. ilgili testleri çalıştırın,
 5. Pull Request açın.
 
-Detaylar için [`CONTRIBUTING.md`](CONTRIBUTING.md) dosyasını inceleyebilirsiniz.
-
-- Bug bildirmek için GitHub Issue şablonlarını kullanın.
-- Yeni fikirler için Feature Request açın.
-- Güvenlik açıklarını public issue yerine [`SECURITY.md`](SECURITY.md) sürecine göre bildirin.
+- Hata bildirmek ve yeni fikir önermek için GitHub Issue açın.
+- Güvenlik açıklarını public issue yerine [pdassistant.info@gmail.com](mailto:pdassistant.info@gmail.com) adresine bildirin.
 
 ---
 
-## 📄 Lisans
+## 👨‍💻 Projeyi Geliştirenler
 
-PDA, **Apache License 2.0** altında lisanslanmaktadır.
-
-Detaylar: [`LICENSE`](LICENSE)
-
----
-
-## 👨‍💻 Geliştiriciler
+<div align="center">
 
 <table>
   <tr>
-    <td align="center">
-      <strong>Alper Temiz</strong><br />
-      <a href="https://github.com/alperrte">@alperrte</a>
+    <td align="center" valign="top" width="50%">
+      <br />
+      <img src="docs/assets/team/alper-temiz.png" alt="Alper Temiz" width="120" />
+      <h3>Alper Temiz</h3>
+      <sub><code>Full Stack Developer</code></sub>
+      <br /><br />
+      <table>
+        <tr><td>🐙 <a href="https://github.com/alperrte">github.com/alperrte</a></td></tr>
+        <tr><td>💼 <a href="https://www.linkedin.com/in/alpertemizz/">linkedin.com/in/alpertemizz</a></td></tr>
+        <tr><td>✉️ <a href="mailto:alpertemiz15@gmail.com">alpertemiz15@gmail.com</a></td></tr>
+        <tr><td>📄 <a href="frontend/public/cv/alper-temiz-cv.pdf">Özgeçmiş (CV)</a></td></tr>
+      </table>
     </td>
-    <td align="center">
-      <strong>Hamza Taşbay</strong><br />
-      <a href="https://github.com/HmzT270">@HmzT270</a>
+    <td align="center" valign="top" width="50%">
+      <br />
+      <img src="docs/assets/team/hamza-tasbay.png" alt="Hamza Taşbay" width="120" />
+      <h3>Hamza Taşbay</h3>
+      <sub><code>Full Stack Developer</code></sub>
+      <br /><br />
+      <table>
+        <tr><td>🐙 <a href="https://github.com/HmzT270">github.com/HmzT270</a></td></tr>
+        <tr><td>💼 <a href="https://www.linkedin.com/in/hamza-tasbay">linkedin.com/in/hamza-tasbay</a></td></tr>
+        <tr><td>✉️ <a href="mailto:tasbayh@gmail.com">tasbayh@gmail.com</a></td></tr>
+        <tr><td>📄 <a href="frontend/public/cv/hamza-tasbay-cv.pdf">Özgeçmiş (CV)</a></td></tr>
+      </table>
     </td>
   </tr>
 </table>
+
+</div>
 
 ---
 
@@ -573,4 +514,13 @@ Detaylar: [`LICENSE`](LICENSE)
 
 <p align="center">
   <strong>Öğrenciler ve küçük yazılım ekipleri için açık kaynak proje yönetimi.</strong>
+</p>
+
+---
+
+<h2 align="center">📄 Lisans</h2>
+
+<p align="center">
+  PDA, <strong>Apache License 2.0</strong> altında lisanslanmaktadır.<br />
+  Detaylar: <a href="LICENSE"><code>LICENSE</code></a>
 </p>

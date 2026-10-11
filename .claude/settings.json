@@ -11,7 +11,6 @@
       "Read(./.git/**)",
       "Read(./.vscode/**)",
       "Read(./LICENSE)",
-      "Read(./README_EN.md)",
       "Read(**/node_modules/**)",
       "Read(**/*.log)",
       "Read(**/*.class)",
