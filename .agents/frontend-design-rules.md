@@ -456,3 +456,7 @@ Admin için normal Login'in koşullu kopyası yoktur: `/pd-admin` kendi rotası 
 ## Tek kolonlu create/edit sayfalarının ortalanması (2026-10-11)
 
 Ekip Davet Et, Sprint ve Kriter oluştur/düzenle gibi tek kolonlu tam sayfa formlar `PageContainer width="centered"` (`mx-auto w-full max-w-2xl`) ile sarılır. Sarmalayıcı sayfanın bütün sütununu (geri bağlantısı, `PageHeader`, alanlar, hata özeti ve `StickyFormActions`) tek bir bloğa alır; ortalama `AppShell` ana içerik alanına göre yapılır (kenar çubuğu açık/kapalı fark etmez, viewport'a göre değil), dar ekranda blok tam genişliktir. Sayfa içinde ayrıca `max-w-2xl` yazılmaz; `form` genişliği (`max-w-5xl`, sola yaslı) yalnız iki kolonlu ayar/hesap sayfaları içindir.
+
+## Proje oluşturma ve proje ayarları aynı soruları sorar (2026-10-11)
+
+Proje ayarları sayfasında düzenlenebilen her şey (projeyi silmek hariç) `ProjectCreatePage` formunda da sorulur: kimlik, tür, teknoloji, planlama (durum, öncelik, başlangıç/hedef bitiş tarihi, organizasyon), açıklama, görev oluşturma tercihi, depo. Ayarlara yeni bir alan eklenirse oluşturma formuna da eklenir (`createProjectSchema`), yoksa yeni ve düzenlenmiş proje farklı davranır. Backend create endpointi yalnız kimlik alanlarını alır; planlama `PUT /projects/{id}`, görev tercihi `PATCH /projects/{id}/task-management-mode` ile oluşturmanın hemen ardından yazılır ve hata olursa uyarı toast'ı gösterilir (logo/kapak/depo ile aynı desen). Görev tercihi kartları iki sayfada `TaskModelOptions` bileşenini paylaşır.

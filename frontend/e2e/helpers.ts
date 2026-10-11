@@ -215,7 +215,7 @@ export async function createProject(
   await page.getByRole("radio", { name: /^Web/ }).click();
 
   if (opts.organizationName) {
-    const orgSelect = page.getByRole("combobox");
+    const orgSelect = page.locator("#create-organization");
     if (await orgSelect.isVisible().catch(() => false)) {
       await orgSelect.click();
       await page.getByRole("option", { name: opts.organizationName }).click();

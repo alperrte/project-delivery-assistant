@@ -12,6 +12,24 @@ import { errorKey } from "@/lib/api/error-message";
 import { projectsApi } from "../api";
 import type { Project, TaskManagementMode } from "../types";
 
+/** The three policy cards, shared by the project settings page and the project create form so both ask the same way. */
+export function TaskModelOptions({ value, onChange }: { value: TaskManagementMode | null; onChange: (mode: TaskManagementMode) => void }) {
+  const t = useTranslations("taskModels");
+  return (
+    <div className="grid gap-3 @2xl:grid-cols-3">
+      {(["SIMPLE", "ADVANCED", "BOTH"] as const).map((mode) => (
+        <label key={mode} className="flex cursor-pointer items-start gap-3 rounded-lg border p-4 has-[:checked]:border-primary has-[:checked]:bg-primary/5 has-[:focus-visible]:ring-3 has-[:focus-visible]:ring-ring/50">
+          <input type="radio" name="task-management-mode" value={mode} checked={value === mode} onChange={() => onChange(mode)} className="mt-1 size-4 shrink-0 accent-primary" />
+          <span className="min-w-0 space-y-1 break-words">
+            <span className="block text-sm font-medium">{t(`policy.${mode}`)}</span>
+            <span className="block text-xs leading-5 text-muted-foreground">{t(`policyDescription.${mode}`)}</span>
+          </span>
+        </label>
+      ))}
+    </div>
+  );
+}
+
 export function TaskModelSetting({ project, initial = false }: { project: Project; initial?: boolean }) {
   const t = useTranslations("taskModels");
   const te = useTranslations("errors");
@@ -36,17 +54,7 @@ export function TaskModelSetting({ project, initial = false }: { project: Projec
     <SettingsSection title={t(initial ? "setupTitle" : "settingTitle")} description={t("settingDescription")}>
       <fieldset disabled={!owner || save.isPending || !!project.archivedAt} className="@container min-w-0 space-y-4">
         <legend className="sr-only">{t("settingTitle")}</legend>
-        <div className="grid gap-3 @2xl:grid-cols-3">
-          {(["SIMPLE", "ADVANCED", "BOTH"] as const).map((mode) => (
-            <label key={mode} className="flex cursor-pointer items-start gap-3 rounded-lg border p-4 has-[:checked]:border-primary has-[:checked]:bg-primary/5 has-[:focus-visible]:ring-3 has-[:focus-visible]:ring-ring/50">
-              <input type="radio" name="task-management-mode" value={mode} checked={(owner ? choice : project.taskManagementMode) === mode} onChange={() => setChoice(mode)} className="mt-1 size-4 shrink-0 accent-primary" />
-              <span className="min-w-0 space-y-1 break-words">
-                <span className="block text-sm font-medium">{t(`policy.${mode}`)}</span>
-                <span className="block text-xs leading-5 text-muted-foreground">{t(`policyDescription.${mode}`)}</span>
-              </span>
-            </label>
-          ))}
-        </div>
+        <TaskModelOptions value={owner ? choice : project.taskManagementMode} onChange={setChoice} />
         <p className="text-sm text-muted-foreground">{t("preserve")}</p>
         {owner && <Button type="button" onClick={() => save.mutate()} disabled={save.isPending || choice === project.taskManagementMode}>
           {save.isPending && <CircleNotch className="animate-spin" aria-hidden="true" />}

@@ -348,9 +348,15 @@
           "title": "GitHub deposu",
           "description": "İsteğe bağlı. Genel bir depoyu şimdi bağlayabilir ya da sonra proje ayarlarından ekleyebilirsiniz."
         },
+        "planning": {
+          "title": "Planlama"
+        },
+        "taskModel": {
+          "title": "Görev oluşturma tercihi"
+        },
         "details": {
           "title": "Detaylar",
-          "description": "Organizasyon ve açıklama isteğe bağlıdır."
+          "description": "Açıklama isteğe bağlıdır."
         }
       },
       "logo": {
@@ -410,8 +416,6 @@
         }
       },
       "details": {
-        "organization": "Organizasyon",
-        "organizationNone": "Organizasyon yok",
         "description": "Açıklama",
         "descriptionPlaceholder": "Bu proje ne yapıyor, kimin için?"
       },
@@ -439,6 +443,8 @@
         "cancel": "Vazgeç",
         "submit": "Projeyi oluştur",
         "created": "Proje oluşturuldu.",
+        "planningFailed": "Planlama bilgileri kaydedilemedi. Proje ayarlarından tekrar deneyebilirsiniz.",
+        "taskModeFailed": "Görev oluşturma tercihi kaydedilemedi. Proje ayarlarından tekrar deneyebilirsiniz.",
         "logoFailed": "Logo yüklenemedi. Proje ayarlarından tekrar deneyebilirsiniz.",
         "bannerFailed": "Kapak görseli yüklenemedi. Proje ayarlarından tekrar deneyebilirsiniz.",
         "repositoryFailed": "Depo bağlanamadı. Proje ayarlarından tekrar deneyebilirsiniz."

@@ -16,7 +16,7 @@ test("explicit standalone selection and assign/move/remove persist real UI reque
   try {
     await page.goto("/tr/projeler/yeni");
     await page.locator("#project-name").fill(prefix);await page.getByRole("radio", {name:/^Web/}).click();
-    const select = page.locator("#main-content").getByRole("combobox");
+    const select = page.locator("#create-organization");
     await select.click();await page.getByRole("option", {name:a.name,exact:true}).click();
     await select.click();await page.getByRole("option", {name:"Organizasyon yok",exact:true}).click();
     const [created] = await Promise.all([page.waitForResponse(r=>r.request().method()==="POST"&&new URL(r.url()).pathname==="/api/v1/projects"),page.getByRole("button",{name:/^Projeyi oluştur$/}).click()]);
@@ -122,7 +122,7 @@ test("warm old/new organization lists refresh after move/remove/assign/rename/cr
   }
   await settings();await page.locator("#settings-name").fill(prefix+" renamed");await save();await orgPage(a);await expect(page.locator("#main-content").getByRole("link",{name:prefix+" renamed",exact:true})).toBeVisible();
   await page.locator('.app-shell a[href="/tr/projeler"]').first().click();await page.getByRole("link",{name:"Yeni proje",exact:true}).click();
-  await page.locator("#project-name").fill(prefix+" P2");await page.getByRole("radio",{name:/^Web/}).click();await page.locator("#main-content").getByRole("combobox").click();await page.getByRole("option",{name:a.name,exact:true}).click();
+  await page.locator("#project-name").fill(prefix+" P2");await page.getByRole("radio",{name:/^Web/}).click();await page.locator("#create-organization").click();await page.getByRole("option",{name:a.name,exact:true}).click();
   const [response]=await Promise.all([page.waitForResponse(r=>r.request().method()==="POST"&&new URL(r.url()).pathname==="/api/v1/projects"),page.getByRole("button",{name:/^Projeyi oluştur$/}).focus().then(()=>page.keyboard.press("Enter"))]);await declineTeamPrompt(page);const second=await response.json();created.push(second);expect(projectOrganizationInDatabase(second.id)).toBe(a.id);
   await orgPage(a);await expect(page.locator(`#main-content a[href="/tr/projeler/${second.slug}/genel-bakis"]`)).toBeVisible();
   await settings();await page.getByRole("button",{name:"Projeyi sil",exact:true}).click();await page.getByRole("dialog").getByLabel(/Onaylamak için proje adını yazın/).fill(prefix+" renamed");await page.getByRole("dialog").getByRole("button",{name:"Bu projeyi sil",exact:true}).click();
