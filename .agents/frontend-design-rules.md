@@ -442,3 +442,7 @@ Admin için normal Login'in koşullu kopyası yoktur: `/pd-admin` kendi rotası 
 - Sayfa içi eager/`priority` yalnız ilk ekranda görünen ve LCP'ye giren görsel içindir. Tema başına iki dosya olan görsellerde (`Logo` wordmark, `AuthShell` arka planı) hangi temanın aktif olduğu sunucuda bilinmez; ikisi de `eager` kalır (ilk tema geçişinde boş kare olmasın), arka planlar `fetchPriority="low"`, wordmark `priority` (preload) KULLANMAZ, `eager` yüklenir.
 - Ağır, ilk ekranın dışındaki bileşenler (demo, QR, sohbet paneli) `next/dynamic` ile ayrılır; yer tutucu nihai boyutu CSS'te rezerve eder (CLS 0).
 - Yeni rota segmentleri için `loading.tsx` iskeleti `Skeleton` ile mevcut `projects/loading.tsx` düzenini izler.
+
+## Tek kolonlu create/edit sayfalarının ortalanması (2026-10-11)
+
+Ekip Davet Et, Sprint ve Kriter oluştur/düzenle gibi tek kolonlu tam sayfa formlar `PageContainer width="centered"` (`mx-auto w-full max-w-2xl`) ile sarılır. Sarmalayıcı sayfanın bütün sütununu (geri bağlantısı, `PageHeader`, alanlar, hata özeti ve `StickyFormActions`) tek bir bloğa alır; ortalama `AppShell` ana içerik alanına göre yapılır (kenar çubuğu açık/kapalı fark etmez, viewport'a göre değil), dar ekranda blok tam genişliktir. Sayfa içinde ayrıca `max-w-2xl` yazılmaz; `form` genişliği (`max-w-5xl`, sola yaslı) yalnız iki kolonlu ayar/hesap sayfaları içindir.
