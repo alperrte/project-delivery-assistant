@@ -1,5 +1,9 @@
 # Web Sitesi Kesinlikle Olması Gerekenler — Master Checklist
 
+## Çoklu proje türleri — 2026-10-12
+
+Create/edit ortak çoklu checkbox grubu, en az bir seçim, boş seçim hata/focus/aria-describedby, taslak/Vazgeç/kayıt/reload, kart/önizleme rozetleri ve birleşik/tekrarsız teknoloji önerileri doğrulandı. Production kaynakta 4 Chromium + 4 mobil WebKit testi: TR/EN/DE, light/dark, 320/390/768/1440 px, >=44 px label hedefleri, overflow ve hata/retry; mobil görseller incelendi. PostgreSQL integration 30/0 failure/error/skip: çoklu kayıt/update/list, legacy-client koruması, validation/auth/CSRF, V47→V48 tüm beş legacy türün backfill/constraint kontrolü. Lint/TypeScript/frontend build/backend package/diff başarılı. Form Validation / Responsive / Keyboard Navigation / Focus State / Screen Reader / QA global kutuları bu sınırlı kapsamla tamamlanmış sayılmadı. Kayıt: `docs/compliation/2026-10-12-project-multiple-types.md`.
+
 ## Navbar görünürlük seçimi — 2026-10-12
 
 Ayarlar iki seçenek sunar: Her zaman görünür / Otomatik gizlen. Taslak, Vazgeç, Kaydet, kayıtlı tercihin reload sonrası uygulanması; 320/390/768/1440 px, TR/EN/DE, light/dark, açık drawer/focus ve dokunmatik yukarı scroll/reduced-motion kontrolleri üretim build üzerinde 6 Chromium + 6 mobil WebKit testiyle doğrulandı; görseller incelendi. Backend own-account/CSRF/invalid/legacy-client/relogin ve V46→V47 veri koruma/DB CHECK toplam 5 test geçti. Saved-preferences cache userId kapsamına alındı ve GET abort desteği eklendi. Hedefli ESLint/TypeScript/build/diff başarılı. Responsive / Keyboard Navigation / Focus State / Form Validation / QA global kutuları bu dar kapsamla tamamlanmış sayılmadı. Kayıt: `docs/compliation/2026-10-12-navbar-visibility-preference.md`.

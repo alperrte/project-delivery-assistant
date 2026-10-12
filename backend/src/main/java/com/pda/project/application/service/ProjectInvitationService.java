@@ -257,7 +257,7 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
 
     /** Card-level fields only. The recipient may inspect an invitation without becoming a project member. */
     public record InvitationProjectPreview(UUID projectId, String slug, String name, String tagline, String description,
-                                           String projectGoal, ProjectStatus status, ProjectType projectType,
+                                           String projectGoal, ProjectStatus status, ProjectType projectType, List<ProjectType> projectTypes,
                                            String techStack, long memberCount, Instant updatedAt,
                                            Long logoVersion, Long bannerVersion, com.pda.project.LogoShape logoShape) {}
 
@@ -267,7 +267,7 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
         Instant logoUpdatedAt = project.getLogoUpdatedAt();
         Instant bannerUpdatedAt = project.getBannerUpdatedAt();
         return new InvitationProjectPreview(project.getId(), project.getSlug(), project.getName(), project.getTagline(),
-                project.getDescription(), project.getProjectGoal(), project.getStatus(), project.getProjectType(),
+                project.getDescription(), project.getProjectGoal(), project.getStatus(), project.getProjectType(), project.getProjectTypes(),
                 project.getTechStack(), memberships.countByProjectIdAndStatus(project.getId(), MembershipStatus.ACTIVE),
                 project.getUpdatedAt(), logoUpdatedAt == null ? null : logoUpdatedAt.toEpochMilli(),
                 bannerUpdatedAt == null ? null : bannerUpdatedAt.toEpochMilli(), project.getLogoShape());

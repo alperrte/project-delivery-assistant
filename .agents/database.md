@@ -1,5 +1,9 @@
 # Veritabanı ve kalıcılık
 
+## V48 çoklu proje türü — 2026-10-12
+
+`projects.project_types VARCHAR(16)[] NOT NULL DEFAULT ARRAY['OTHER']`; mevcut `project_type` her satırda tek elemanlı diziye backfill edilir. CHECK: 1–5 öğe, tek boyut, NULL/tekrar/yabancı enum yok; kanonik WEB/MOBILE/AI/DESKTOP/OTHER sırası. ORM String[] temel alanı domain'de immutable enum listesine dönüştürür. Legacy `project_type` ilk kanonik öğe projection'ı olarak korunur. Diğer proje verileri, timestamp/medya/üyelikler ve eski migration'lar değişmez; PostgreSQL 18 V47→V48 upgrade + tüm beş legacy tür/constraint testi vardır.
+
 ## V47 navbar görünürlüğü — 2026-10-12
 
 `user_preferences.navbar_mode VARCHAR(16) NULL`; CHECK yalnız `always-visible|auto-hide` veya NULL kabul eder. Mevcut kayıtlar NULL ile cihaz varsayılanını korur; dil/tema/hareket/tarih veya kullanıcı verisi değiştirilmez. Yeni seçim mevcut own-user preference kaydıyla saklanır. V46→V47 upgrade ve DB CHECK gerçek PostgreSQL entegrasyon testiyle doğrulanır; önceki migration'lar değiştirilmez.

@@ -75,6 +75,61 @@ class ProjectIdentityIntegrationTest {
     @Autowired ProjectMembershipService memberships;
 
     @Test
+    void multipleTypesPersistAcrossCreateEditListAndLegacySaves() throws Exception {
+        Cookie csrf = csrfCookie();
+        Account manager = account("multitype");
+        Account stranger = account("typestranger");
+        var response = mvc.perform(post("/api/v1/projects").cookie(csrf, manager.access())
+                        .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Multiple products\",\"projectTypes\":[\"MOBILE\",\"WEB\",\"WEB\",\"OTHER\"]}"))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.projectType").value("WEB"))
+                .andExpect(jsonPath("$.projectTypes.length()").value(3))
+                .andExpect(jsonPath("$.projectTypes[1]").value("MOBILE")).andReturn().getResponse();
+        UUID id = UUID.fromString(JsonPath.read(response.getContentAsString(), "$.id"));
+        mvc.perform(get("/api/v1/projects/" + id).cookie(manager.access()))
+                .andExpect(jsonPath("$.projectTypes[2]").value("OTHER"));
+        mvc.perform(get("/api/v1/projects").cookie(manager.access()))
+                .andExpect(jsonPath("$.content[0].projectTypes.length()").value(3));
+        String legacySave = "{\"name\":\"Multiple products\",\"priority\":\"MEDIUM\",\"status\":\"PLANNING\",\"projectType\":\"WEB\"}";
+        mvc.perform(put("/api/v1/projects/" + id).cookie(csrf, manager.access())
+                        .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON).content(legacySave))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.projectTypes.length()").value(3));
+        String edit = "{\"name\":\"Multiple products\",\"priority\":\"MEDIUM\",\"status\":\"PLANNING\",\"projectTypes\":[\"AI\",\"DESKTOP\"]}";
+        mvc.perform(put("/api/v1/projects/" + id).cookie(csrf, manager.access())
+                        .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON).content(edit))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.projectTypes.length()").value(2))
+                .andExpect(jsonPath("$.projectType").value("AI"));
+        mvc.perform(get("/api/v1/projects/" + id).cookie(manager.access()))
+                .andExpect(jsonPath("$.projectTypes[1]").value("DESKTOP"));
+        mvc.perform(put("/api/v1/projects/" + id).cookie(csrf, stranger.access())
+                        .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON).content(edit))
+                .andExpect(status().isForbidden());
+        mvc.perform(put("/api/v1/projects/" + id).cookie(manager.access())
+                        .contentType(MediaType.APPLICATION_JSON).content(edit)).andExpect(status().isForbidden());
+        mvc.perform(post("/api/v1/projects").cookie(csrf).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Anonymous\",\"projectTypes\":[\"WEB\",\"MOBILE\"]}"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void invalidAndEmptyTypeSelectionsAreRejectedWithoutChangingTheProject() throws Exception {
+        Cookie csrf = csrfCookie();
+        Account manager = account("badtypes");
+        UUID id = createProject(manager, csrf, "Protected identity");
+        for (String types : new String[]{"[]", "[null]", "[\"UNKNOWN\"]", "[\"WEB\",\"WEB\",\"WEB\",\"WEB\",\"WEB\",\"WEB\"]"}) {
+            mvc.perform(post("/api/v1/projects").cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                            .contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Invalid selection\",\"projectTypes\":" + types + "}"))
+                    .andExpect(status().isBadRequest());
+            mvc.perform(put("/api/v1/projects/" + id).cookie(csrf, manager.access()).header("X-XSRF-TOKEN", csrf.getValue())
+                            .contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Invalid selection\",\"priority\":\"MEDIUM\",\"status\":\"PLANNING\",\"projectTypes\":" + types + "}"))
+                    .andExpect(status().isBadRequest());
+        }
+        mvc.perform(get("/api/v1/projects/" + id).cookie(manager.access()))
+                .andExpect(jsonPath("$.name").value("Protected identity"))
+                .andExpect(jsonPath("$.projectTypes[0]").value("OTHER"));
+    }
+
+    @Test
     void createStoresTypeTaglineAndTechStackAndCreatorIsLastEditor() throws Exception {
         Cookie csrf = csrfCookie();
         Account manager = account("identity");

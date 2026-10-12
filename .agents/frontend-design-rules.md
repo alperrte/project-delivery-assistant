@@ -1,5 +1,9 @@
 # Frontend tasarım kuralları
 
+## Çoklu proje türü seçimi — 2026-10-12
+
+Create ve edit aynı `TypePicker` native checkbox kartlarını kullanır: Web, Mobil, AI, Masaüstü, Diğer bağımsız seçilir; en az bir tür gerekir. Grup yerelleştirilmiş başlıkla, checkbox'lar ad/açıklamayla etiketlidir; klavye Space, focus-visible kart halkası ve hata açıklaması desteklenir. Edit grup genel bilgilerde tam satırdır; eski projeler kendi türü seçili açılır. Kart/tablo ve create/edit/davet önizlemeleri tüm türleri gösterir. Teknoloji grupları seçimlerin birleşimidir, tekrarlar tekilleşir; Diğer/no selection tüm kataloğu açar, türü kaldırmak eski teknoloji seçimlerini silmez. Mevcut renk/font/radius/44 px hedef token'ları korunur.
+
 ## Kullanıcıya bağlı navbar görünürlüğü — 2026-10-12
 
 Ayarlar → Üst gezinme çubuğu ortak `OptionGroup` ile yalnız iki seçenek sunar: `always-visible` / `auto-hide`. Seçim taslaktır; Kaydet mevcut preferences API/cache üzerinden hesaba yazar, Vazgeç geri alır. Kaydedilmiş seçim mobil ve masaüstünde aynıdır; auto-hide 700 ms idle, focus/popup/drawer koruması, üst tutamaç ve dokunmatikte yukarı scroll ile açılmayı korur. Seçim henüz yoksa önceki desktop auto-hide / mobile sürekli görünür varsayılanı sürer. Önceki mobil asla gizlenmez açıklamaları artık yalnız seçilmemiş varsayılan için geçerlidir. Drawer animasyonu ve header reserve değişmez.

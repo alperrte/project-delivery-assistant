@@ -23,6 +23,9 @@ import java.time.LocalDate;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.Arrays;
+import java.util.List;
+import java.util.EnumSet;
 
 @Entity
 @org.hibernate.annotations.DynamicUpdate
@@ -82,6 +85,10 @@ public class Project {
     @Enumerated(EnumType.STRING)
     @Column(name = "project_type", nullable = false, length = 16)
     private ProjectType projectType = ProjectType.OTHER;
+
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.ARRAY)
+    @Column(name = "project_types", nullable = false, columnDefinition = "varchar(16)[]")
+    private String[] projectTypes = { ProjectType.OTHER.name() };
 
     @Column(length = TAGLINE_LIMIT)
     private String tagline;
@@ -154,6 +161,7 @@ public class Project {
         project.updatedBy = createdBy;
         project.organizationId = organizationId;
         project.projectType = projectType == null ? ProjectType.OTHER : projectType;
+        project.projectTypes = new String[]{ project.projectType.name() };
         project.tagline = optionalText(tagline, TAGLINE_LIMIT, "tagline");
         project.techStack = optionalText(techStack, 1000, "techStack");
         project.status = ProjectStatus.PLANNING;
@@ -168,10 +176,26 @@ public class Project {
             throw new IllegalStateException("Archived projects cannot be changed");
         }
         String validTagline = optionalText(tagline, TAGLINE_LIMIT, "tagline");
-        if (projectType != null) {
-            this.projectType = projectType;
+        if (projectType != null && projectType != this.projectType) {
+            updateProjectTypes(List.of(projectType));
         }
         this.tagline = validTagline;
+    }
+
+    /** A bounded enum set, stored in canonical order; the scalar remains an older-client projection. */
+    public void updateProjectTypes(List<ProjectType> types) {
+        if (archivedAt != null) throw new IllegalStateException("Archived projects cannot be changed");
+        if (types == null) return;
+        if (types.isEmpty() || types.size() > ProjectType.values().length || types.stream().anyMatch(Objects::isNull)) {
+            throw new IllegalArgumentException("Choose at least one supported project type");
+        }
+        EnumSet<ProjectType> selected = EnumSet.copyOf(types);
+        projectTypes = selected.stream().map(Enum::name).toArray(String[]::new);
+        projectType = selected.iterator().next();
+    }
+
+    public List<ProjectType> getProjectTypes() {
+        return Arrays.stream(projectTypes).map(ProjectType::valueOf).toList();
     }
 
     /** Records who changed the project last; the timestamp itself is maintained by {@code @PreUpdate}. */
