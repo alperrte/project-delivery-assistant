@@ -96,6 +96,7 @@
     "TASK_ATTACHMENT_TYPE": "Dieser Dateityp wird nicht unterstützt.",
     "TASK_ATTACHMENT_INVALID": "Der Dateiinhalt passt nicht zum Typ oder die Datei ist leer.",
     "TASK_ATTACHMENT_TOO_LARGE": "Eine Datei darf höchstens 10 MB groß sein.",
+    "TASK_ATTACHMENT_IMAGE_TOO_LARGE": "Bilder dürfen höchstens 1 MB groß sein.",
     "TASK_ATTACHMENT_LIMIT": "Eine Aufgabe kann höchstens 20 Dateien haben.",
     "TASK_CHECKLIST_LIMIT": "Eine Checkliste kann höchstens 50 Einträge haben.",
     "TASK_LABEL_LIMIT": "Eine Aufgabe kann höchstens 10 Labels haben.",
@@ -1764,6 +1765,7 @@
         "project": "Ganzes Projekt"
       },
       "unassigned": "Nicht zugewiesen",
+      "assignedBy": "{assigner} hat zugewiesen an: {assignees}",
       "statusChanged": "{key} wurde auf „{status}“ gesetzt",
       "changeStatus": "Status ändern, aktuell: {status}",
       "moveTo": "Verschieben nach",
@@ -1865,6 +1867,7 @@
       "allTasks": "Alle Aufgaben",
       "backlog": "Backlog",
       "onlyMine": "Nur meine",
+      "hideDone": "Erledigte ausblenden",
       "dragHint": "Mögliche Zielspalten sind hervorgehoben",
       "retry": "Erneut versuchen",
       "emptyTitle": "Keine Aufgaben auf dem Board",
@@ -1873,6 +1876,7 @@
       "column": "{status}, {count, plural, one {# Aufgabe} other {# Aufgaben}}",
       "dropHere": "Hier ablegen",
       "columnEmpty": "Keine Aufgaben",
+      "doneHidden": "{count, plural, one {# erledigte Aufgabe ausgeblendet} other {# erledigte Aufgaben ausgeblendet}}",
       "moveCard": "{key} verschieben"
     },
     "form": {
@@ -1901,6 +1905,10 @@
         "assignment": {
           "title": "Zuweisung",
           "description": "Weisen Sie die Aufgabe Personen zu oder legen Sie sie in den Pool."
+        },
+        "images": {
+          "title": "Bilder",
+          "description": "Fügen Sie Screenshots hinzu, die den Fehler oder die Aufgabe beschreiben."
         },
         "checklist": {
           "title": "Checkliste",
@@ -2010,6 +2018,17 @@
         "hint": "{count} / {max} Schritte. Jeder Schritt darf bis zu {length} Zeichen lang sein.",
         "editing": "Die Checkliste wird auf der Detailseite der Aufgabe verwaltet.",
         "partial": "{count, plural, one {Die Aufgabe wurde erstellt, aber # Checklistenschritt konnte nicht hinzugefügt werden. Sie können ihn auf der Detailseite ergänzen.} other {Die Aufgabe wurde erstellt, aber # Checklistenschritte konnten nicht hinzugefügt werden. Sie können sie auf der Detailseite ergänzen.}}"
+      },
+      "images": {
+        "drop": "Bilder hier ablegen",
+        "choose": "Bilder auswählen",
+        "hint": "PNG, JPEG oder WebP · höchstens {size} pro Bild · bis zu {max} Bilder",
+        "remove": "{name} entfernen",
+        "invalidType": "{count, plural, one {# Datei wurde nicht hinzugefügt, weil sie kein PNG-, JPEG- oder WebP-Bild ist.} other {# Dateien wurden nicht hinzugefügt, weil sie keine PNG-, JPEG- oder WebP-Bilder sind.}}",
+        "tooLarge": "{count, plural, one {# Bild wurde nicht hinzugefügt, weil es {size} überschreitet.} other {# Bilder wurden nicht hinzugefügt, weil sie {size} überschreiten.}}",
+        "undecodable": "{count, plural, one {# Datei wurde nicht hinzugefügt, weil sie sich nicht als Bild öffnen ließ.} other {# Dateien wurden nicht hinzugefügt, weil sie sich nicht als Bild öffnen ließen.}}",
+        "limit": "{count, plural, one {Es können höchstens {max} Bilder hinzugefügt werden; # Bild wurde nicht hinzugefügt.} other {Es können höchstens {max} Bilder hinzugefügt werden; # Bilder wurden nicht hinzugefügt.}}",
+        "partial": "{count, plural, one {Die Aufgabe wurde erstellt, aber # Bild konnte nicht hochgeladen werden. Sie können es auf der Detailseite ergänzen.} other {Die Aufgabe wurde erstellt, aber # Bilder konnten nicht hochgeladen werden. Sie können sie auf der Detailseite ergänzen.}}"
       }
     },
     "locked": {
@@ -2091,6 +2110,7 @@
       },
       "attachments": {
         "title": "Anhänge",
+        "imagesTitle": "Bilder",
         "open": "{name} in neuem Tab öffnen",
         "download": "{name} herunterladen",
         "deleteTitle": "Diesen Anhang löschen?",
@@ -2100,11 +2120,16 @@
         "cancel": "Abbrechen",
         "limit": "Eine Aufgabe kann höchstens {max} Dateien haben.",
         "skipped": "Einige Dateien wurden übersprungen, weil sie {max} überschreiten.",
+        "skippedImage": "Einige Bilder wurden übersprungen, weil sie {max} überschreiten.",
+        "skippedType": "Zu dieser Aufgabe können nur Bilder (PNG, JPEG, WebP, GIF) hinzugefügt werden.",
         "loading": "Anhänge werden geladen",
         "drop": "Dateien hier ablegen",
+        "dropImages": "Bilder hier ablegen",
         "uploading": "{count, plural, one {{count} Datei wird hochgeladen} other {{count} Dateien werden hochgeladen}}",
         "choose": "Dateien auswählen",
-        "hint": "Höchstens {size} pro Datei und {max} Dateien pro Aufgabe."
+        "chooseImages": "Bilder auswählen",
+        "hint": "Bilder höchstens {imageSize}, andere Dateien höchstens {size}; {max} Dateien pro Aufgabe.",
+        "imageHint": "Höchstens {size} pro Bild und {max} Bilder pro Aufgabe."
       },
       "activity": {
         "title": "Aktivität",

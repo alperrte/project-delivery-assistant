@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import type { Task } from "../types";
 import { TaskProgressAction } from "./my-task-card";
 import { StatusMenu } from "./status-menu";
-import { AssigneeAvatars, BlockedMark, DeadlineChip, PoolMark, PriorityBadge } from "./task-badges";
+import { AssignmentFlow, BlockedMark, DeadlineChip, PoolMark, PriorityBadge } from "./task-badges";
 import { TaskModeBadge } from "./task-mode-picker";
 
 type TaskTableProps = {
@@ -88,7 +88,7 @@ export function TaskTable({ tasks, label, canChange, hrefOf, onOpen, showProject
             </div>
             <div className="flex items-center justify-between gap-2">
               {task.deadlineAt ? <DeadlineChip task={task} /> : <span className="text-xs text-muted-foreground">{t("noDeadline")}</span>}
-              <AssigneeAvatars people={task.assignees} />
+              <AssignmentFlow assigners={task.assigners ?? []} assignees={task.assignees} />
             </div>
             {(progress || onOpen) && (
               <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-3">
@@ -127,7 +127,7 @@ export function TaskTable({ tasks, label, canChange, hrefOf, onOpen, showProject
                 </TableCell>
                 <TableCell className="px-3"><StatusMenu task={task} canChange={canChange(task)} /></TableCell>
                 <TableCell className="px-3"><PriorityBadge priority={task.priority} /></TableCell>
-                <TableCell className="px-3"><AssigneeAvatars people={task.assignees} /></TableCell>
+                <TableCell className="px-3"><AssignmentFlow assigners={task.assigners ?? []} assignees={task.assignees} /></TableCell>
                 <TableCell className="px-3">
                   {task.deadlineAt ? <DeadlineChip task={task} /> : (
                     <span className="text-muted-foreground"><span aria-hidden="true">—</span><span className="sr-only">{t("noDeadline")}</span></span>

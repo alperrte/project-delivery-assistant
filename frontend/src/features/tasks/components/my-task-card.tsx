@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Task, TaskStatus } from "../types";
 import { allowedTransitions } from "../workflow";
-import { AssigneeAvatars, DeadlineChip, PriorityBadge } from "./task-badges";
+import { AssignmentFlow, DeadlineChip, PriorityBadge } from "./task-badges";
 import { StatusMenu, useChangeStatus } from "./status-menu";
 import { StatusConfirmation } from "./status-confirmation";
 import { TaskModeBadge } from "./task-mode-picker";
@@ -61,7 +61,7 @@ export function MyTaskCard({ task, canChange, onOpen, href, showProject = true, 
       {task.description?.trim() && <p className="line-clamp-1 text-sm break-words text-muted-foreground">{task.description.trim()}</p>}
     </div>
     <div className="flex flex-wrap items-center gap-1.5"><PriorityBadge priority={task.priority} /><TaskModeBadge mode={task.creationMode} /></div>
-    <div className="flex items-center justify-between gap-2"><span><DeadlineChip task={task} /></span><AssigneeAvatars people={task.assignees} /></div>
+    <div className="flex items-center justify-between gap-2"><span><DeadlineChip task={task} /></span><AssignmentFlow assigners={task.assigners ?? []} assignees={task.assignees} /></div>
     <div className="relative z-10 mt-auto flex flex-wrap items-center justify-between gap-2 border-t pt-3">
       {onOpen
         ? <Button variant="ghost" size="sm" onClick={() => onOpen(true)} aria-label={t("comment", { key: task.taskKey })}><ChatCircle aria-hidden="true" />{comments}</Button>

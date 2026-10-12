@@ -46,6 +46,7 @@ import { useProjectTeams } from "../hooks";
 import { ESTIMATE_POINTS, TASK_PRIORITIES, type PersonRef, type Task, type TaskPriority, type TaskRef } from "../types";
 import { PriorityIndicator } from "./task-badges";
 import { AssigneePicker, FormSection, LabelPicker, ParentPicker, Segment } from "./task-form-fields";
+import { TaskImagePicker } from "./task-image-picker";
 import { TaskPreview } from "./task-preview";
 import { ProjectGate, type ProjectGateContext } from "./project-gate";
 
@@ -126,6 +127,7 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
   const [parent, setParent] = useState<TaskRef | null>(task?.parent ?? initialParent);
   const [checklistText, setChecklistText] = useState("");
   const [previewDescription, setPreviewDescription] = useState(false);
+  const [images, setImages] = useState<File[]>([]);
 
   function pickParent(next: TaskRef | null) {
     setParent(next);
@@ -144,7 +146,7 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
   const mutation = useMutation({
     mutationFn: async (form: TaskFormValues) => {
       const payload = toTaskPayload(form, task, advancedWritable);
-      if (task) return { saved: await tasksApi.update(projectId, task.id, payload), checklistFailed: 0 };
+      if (task) return { saved: await tasksApi.update(projectId, task.id, payload), checklistFailed: 0, imagesFailed: 0 };
       const saved = await tasksApi.create(projectId, payload);
       let checklistFailed = 0;
       for (const text of form.creationMode === "ADVANCED" ? form.checklist : []) {
@@ -154,13 +156,22 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
           checklistFailed += 1;
         }
       }
-      return { saved, checklistFailed };
+      let imagesFailed = 0;
+      for (const file of images) {
+        try {
+          await tasksApi.uploadAttachment(projectId, saved.id, file);
+        } catch {
+          imagesFailed += 1;
+        }
+      }
+      return { saved, checklistFailed, imagesFailed };
     },
-    onSuccess: async ({ saved, checklistFailed }) => {
+    onSuccess: async ({ saved, checklistFailed, imagesFailed }) => {
       created.current = true;
       await invalidateTaskViews(queryClient, projectId);
       toast.success(t(editing ? "saved" : "created", { key: saved.taskKey }));
       if (checklistFailed > 0) toast.error(t("checklist.partial", { count: checklistFailed }));
+      if (imagesFailed > 0) toast.error(t("images.partial", { count: imagesFailed }));
       router.push(`/projects/${slug}/tasks/${saved.id}`);
     },
     onError: (err) => {
@@ -170,7 +181,7 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
   });
 
   // The landing demo renders this form with scripted values; nothing there is the visitor's work, so it never warns.
-  const leaving = !presentationValues && isDirty && !mutation.isPending && !mutation.isSuccess;
+  const leaving = !presentationValues && (isDirty || images.length > 0) && !mutation.isPending && !mutation.isSuccess;
   useEffect(() => {
     if (!leaving) return;
     // `created` flips synchronously, before React re-renders, so navigating right after saving never warns.
@@ -527,6 +538,12 @@ export function TaskFormBody({ slug, project, projectId, userId, task, initialSp
                 />
               )}
             </FormSection>
+
+            {!editing && !presentationValues && (
+              <FormSection id={`${ids}-images`} title={t("sections.images.title")} description={t("sections.images.description")}>
+                <TaskImagePicker files={images} onChange={setImages} disabled={mutation.isPending} />
+              </FormSection>
+            )}
 
             {advanced && (
               <>

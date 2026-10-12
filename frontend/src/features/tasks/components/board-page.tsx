@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type DragEvent } from "react";
+import { useId, useRef, useState, type DragEvent } from "react";
 import { usePathname, useRouter, useSearchParams } from "@/i18n/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { EmptyState } from "@/components/common/empty-state";
 import { PageHeader } from "@/components/common/page-header";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSprints } from "@/features/sprints/hooks";
@@ -19,6 +20,7 @@ import { tasksApi } from "../api";
 import { invalidateTaskViews, tasksKey, useAllTasks } from "../hooks";
 import { taskPermissions } from "../permissions";
 import type { Task, TaskCreationMode, TaskListParams, TaskStatus } from "../types";
+import { useBoardHideDone } from "../use-board-prefs";
 import { canTransition, STATUS_ORDER } from "../workflow";
 import { BoardCard } from "./board-card";
 import { ProjectGate, type ProjectGateContext } from "./project-gate";
@@ -65,6 +67,8 @@ function BoardView({ slug, project, projectId, userId, isManager }: ProjectGateC
   const requested = searchParams.get("sprint");
   const sprintChoice = !advanced ? ALL : requested ?? (sprints.isPending ? null : (activeSprint?.id ?? ALL));
   const onlyMine = searchParams.get("mine") === "1";
+  const { hideDone, setHideDone } = useBoardHideDone();
+  const hideDoneId = useId();
 
   const params: TaskListParams = {
     sort: "priority",
@@ -168,6 +172,10 @@ function BoardView({ slug, project, projectId, userId, isManager }: ProjectGateC
         <Button variant={onlyMine ? "secondary" : "outline"} size="lg" aria-pressed={onlyMine} onClick={() => setParam("mine", onlyMine ? null : "1")}>
           {t("onlyMine")}
         </Button>
+        <label htmlFor={hideDoneId} className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-2.5 text-sm font-medium transition-colors hover:bg-muted dark:border-input dark:bg-input/30 dark:hover:bg-input/50">
+          <Checkbox id={hideDoneId} checked={hideDone} onCheckedChange={(next) => setHideDone(next === true)} />
+          {t("hideDone")}
+        </label>
         {drag && <span className="text-xs text-muted-foreground">{t("dragHint")}</span>}
       </div>
 
@@ -223,6 +231,8 @@ function BoardView({ slug, project, projectId, userId, isManager }: ProjectGateC
                   </header>
                   {column.length === 0 ? (
                     <p className="rounded-lg border border-dashed px-3 py-6 text-center text-xs text-muted-foreground">{accepts ? t("dropHere") : t("columnEmpty")}</p>
+                  ) : status === "DONE" && hideDone ? (
+                    <p className="rounded-lg border border-dashed px-3 py-6 text-center text-xs text-muted-foreground" data-testid="board-done-hidden">{accepts ? t("dropHere") : t("doneHidden", { count: column.length })}</p>
                   ) : (
                     <ul className="max-h-[32rem] space-y-2 overflow-y-auto pr-0.5">
                       {column.map((task) => (

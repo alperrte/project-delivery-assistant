@@ -96,6 +96,7 @@
     "TASK_ATTACHMENT_TYPE": "Bu dosya türü desteklenmiyor.",
     "TASK_ATTACHMENT_INVALID": "Dosya içeriği türüyle uyuşmuyor ya da dosya boş.",
     "TASK_ATTACHMENT_TOO_LARGE": "Dosya en fazla 10 MB olabilir.",
+    "TASK_ATTACHMENT_IMAGE_TOO_LARGE": "Görseller en fazla 1 MB olabilir.",
     "TASK_ATTACHMENT_LIMIT": "Bir göreve en fazla 20 dosya eklenebilir.",
     "TASK_CHECKLIST_LIMIT": "Checklist en fazla 50 madde içerebilir.",
     "TASK_LABEL_LIMIT": "Bir göreve en fazla 10 etiket eklenebilir.",
@@ -1764,6 +1765,7 @@
         "project": "Tüm proje"
       },
       "unassigned": "Atanmamış",
+      "assignedBy": "{assigner} atadı: {assignees}",
       "statusChanged": "{key} görevi “{status}” durumuna alındı",
       "changeStatus": "Durumu değiştir, şu an: {status}",
       "moveTo": "Şuna taşı",
@@ -1865,6 +1867,7 @@
       "allTasks": "Tüm görevler",
       "backlog": "Bekleyen işler",
       "onlyMine": "Yalnız bana atananlar",
+      "hideDone": "Tamamlananları gösterme",
       "dragHint": "Bırakılabilecek sütunlar vurgulandı",
       "retry": "Tekrar dene",
       "emptyTitle": "Panoda görev yok",
@@ -1873,6 +1876,7 @@
       "column": "{status}, {count} görev",
       "dropHere": "Buraya bırakın",
       "columnEmpty": "Görev yok",
+      "doneHidden": "{count} tamamlanan görev gizli",
       "moveCard": "{key} görevini taşı"
     },
     "form": {
@@ -1901,6 +1905,10 @@
         "assignment": {
           "title": "Atama",
           "description": "Görevi kişilere atayın ya da üstlenilmek üzere havuza koyun."
+        },
+        "images": {
+          "title": "Görseller",
+          "description": "Hatayı ya da görevi anlatan ekran görüntüleri ekleyin."
         },
         "checklist": {
           "title": "Kontrol listesi",
@@ -2010,6 +2018,17 @@
         "hint": "{count} / {max} adım. Her adım en fazla {length} karakter olabilir.",
         "editing": "Kontrol listesi görevin ayrıntı sayfasında yönetilir.",
         "partial": "Görev oluşturuldu ancak {count} kontrol listesi adımı eklenemedi. Ayrıntı sayfasından ekleyebilirsiniz."
+      },
+      "images": {
+        "drop": "Görselleri buraya bırakın",
+        "choose": "Görsel seçin",
+        "hint": "PNG, JPEG veya WebP · görsel başına en fazla {size} · en çok {max} görsel",
+        "remove": "{name} görselini kaldır",
+        "invalidType": "{count} dosya PNG, JPEG ya da WebP olmadığı için eklenmedi.",
+        "tooLarge": "{count} görsel {size} sınırını aştığı için eklenmedi.",
+        "undecodable": "{count} dosya görsel olarak açılamadığı için eklenmedi.",
+        "limit": "En fazla {max} görsel eklenebilir; {count} görsel eklenmedi.",
+        "partial": "Görev oluşturuldu ancak {count} görsel yüklenemedi. Ayrıntı sayfasından ekleyebilirsiniz."
       }
     },
     "locked": {
@@ -2091,6 +2110,7 @@
       },
       "attachments": {
         "title": "Ekler",
+        "imagesTitle": "Görseller",
         "open": "{name} dosyasını yeni sekmede aç",
         "download": "{name} dosyasını indir",
         "deleteTitle": "Ek silinsin mi?",
@@ -2100,11 +2120,16 @@
         "cancel": "Vazgeç",
         "limit": "Bir göreve en fazla {max} dosya eklenebilir.",
         "skipped": "Bazı dosyalar {max} sınırını aştığı için atlandı.",
+        "skippedImage": "Bazı görseller {max} sınırını aştığı için atlandı.",
+        "skippedType": "Bu görevde yalnız görsel (PNG, JPEG, WebP, GIF) eklenebilir.",
         "loading": "Ekler yükleniyor",
         "drop": "Dosyaları buraya bırakın",
+        "dropImages": "Görselleri buraya bırakın",
         "uploading": "{count} dosya yükleniyor",
         "choose": "Dosya seçin",
-        "hint": "Dosya başına en fazla {size}, görev başına {max} dosya."
+        "chooseImages": "Görsel seçin",
+        "hint": "Görseller en fazla {imageSize}, diğer dosyalar {size}; görev başına {max} dosya.",
+        "imageHint": "Görsel başına en fazla {size}, görev başına {max} görsel."
       },
       "activity": {
         "title": "Etkinlik",

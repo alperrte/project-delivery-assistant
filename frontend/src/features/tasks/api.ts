@@ -24,6 +24,7 @@ import type {
 
 export const TASK_PAGE_SIZE = 25;
 export const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
+export const MAX_IMAGE_BYTES = 1024 * 1024;
 export const MAX_ATTACHMENTS = 20;
 
 type QueryValue = string | number | boolean | null | undefined | readonly (string | number)[];

@@ -71,7 +71,9 @@ test("mode help preserves drafts, suppression is optional, simple submit exclude
   for (const key of ["estimatePoints", "labelIds", "parentTaskId", "sprintId", "pool"]) expect(payload).not.toHaveProperty(key);
   await expect(page).toHaveURL(/gorevler\/(?!yeni-gorev$)[^/]+$/);
   await expect(page.locator("#detail-checklist")).toHaveCount(0);
-  await expect(page.locator("#detail-attachments")).toHaveCount(0);
+  // A simple task takes images only: the section is there, titled for images, not for generic attachments.
+  await expect(page.locator("#detail-attachments")).toBeVisible();
+  await expect(page.locator("#detail-attachments")).toHaveText("Görseller");
   await page.getByRole("combobox", { name: "Yorum", exact: true }).fill("Comments work on simple tasks");
   await page.getByRole("button", { name: "Yorum yap", exact: true }).click();
   await expect(page.getByText("Comments work on simple tasks", { exact: true })).toBeVisible();
