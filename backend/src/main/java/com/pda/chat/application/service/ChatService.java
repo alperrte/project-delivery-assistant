@@ -14,6 +14,7 @@ import com.pda.chat.domain.entity.ChatMessage;
 import com.pda.chat.domain.enums.ChatConversationType;
 import com.pda.chat.infrastructure.repository.ChatConversationRepository;
 import com.pda.chat.infrastructure.repository.ChatMessageRepository;
+import com.pda.chat.infrastructure.repository.ChatReactionRepository;
 import com.pda.chat.infrastructure.repository.ChatReadStateRepository;
 import com.pda.project.ProjectAccess;
 import com.pda.project.ProjectMemberView;
@@ -69,10 +70,15 @@ public class ChatService {
     private final ChatDelivery delivery;
     private final Clock clock;
     private final ChatReactionViewReader reactionViews;
+    private final ChatTypingRateLimiter typingLimiter;
+    private final ChatReactionRepository reactionRepository;
 
     public ChatService(ProjectAccess projects, UserAccounts users, ChatConversationRepository conversations,
                        ChatMessageRepository messages, ChatReadStateRepository readStates,
-                       ChatSendRateLimiter rateLimiter, ChatDelivery delivery, Clock clock, ChatReactionViewReader reactionViews) {
+                       ChatSendRateLimiter rateLimiter, ChatDelivery delivery, Clock clock, ChatReactionViewReader reactionViews,
+                       ChatTypingRateLimiter typingLimiter, ChatReactionRepository reactionRepository) {
+        this.typingLimiter = typingLimiter;
+        this.reactionRepository = reactionRepository;
         this.projects = projects;
         this.users = users;
         this.conversations = conversations;
@@ -224,8 +230,14 @@ public class ChatService {
         if (!rateLimiter.tryAcquire(actor)) {
             throw ChatException.rateLimited();
         }
-        if (replyToMessageId != null) messages.findByIdAndConversationId(replyToMessageId,conversationId)
-                .orElseThrow(() -> ChatException.notFound("CHAT_REPLY_NOT_FOUND"));
+        if (replyToMessageId != null) {
+            // Nobody can quote a message that was deleted: its text is gone.
+            ChatMessage target = messages.findByIdAndConversationId(replyToMessageId, conversationId)
+                    .orElseThrow(() -> ChatException.notFound("CHAT_REPLY_NOT_FOUND"));
+            if (target.isDeleted()) {
+                throw ChatException.notFound("CHAT_REPLY_NOT_FOUND");
+            }
+        }
         ChatMessage message = ChatMessage.create(conversation.getId(), actor, content, replyToMessageId, clock.instant());
         messages.saveAndFlush(message);
         conversations.touch(conversation.getId(), message.getCreatedAt());
@@ -239,12 +251,87 @@ public class ChatService {
         return view;
     }
 
+    /**
+     * Deletes the caller's own message for everybody: the text is erased and the row stays as a tombstone so replies,
+     * ordering and cursors keep working. Same access rule as reading the conversation; only the sender may delete
+     * (nobody else, no administrator bypass). Idempotent: deleting a deleted message changes and announces nothing.
+     */
+    @Transactional
+    public void deleteMessage(UUID actor, UUID projectId, UUID conversationId, UUID messageId) {
+        ChatConversation conversation = accessible(actor, projectId, conversationId);
+        ChatMessage message = messages.lockByIdAndConversationId(Objects.requireNonNull(messageId, "messageId is required"),
+                        conversationId)
+                .orElseThrow(() -> ChatException.notFound("CHAT_NOT_FOUND"));
+        if (!actor.equals(message.getSenderUserId())) {
+            throw ChatException.forbidden();
+        }
+        if (message.isDeleted()) {
+            return;
+        }
+        message.delete(clock.instant());
+        reactionRepository.removeAll(messageId);
+        messages.flush();
+        Set<UUID> participants = conversation.getType() == ChatConversationType.DIRECT
+                ? Set.of(conversation.getDirectUserLow(), conversation.getDirectUserHigh()) : Set.of();
+        ChatDelivery.ChatMessageDeleted event = new ChatDelivery.ChatMessageDeleted(projectId, conversation.getId(),
+                conversation.getType(), participants, messageId);
+        afterCommit(() -> delivery.messageDeleted(event));
+    }
+
     /** Marks everything in the conversation read for the caller (the marker only ever moves forward). */
     @Transactional
     public void markRead(UUID actor, UUID projectId, UUID conversationId) {
         ChatConversation conversation = accessible(actor, projectId, conversationId);
-        readStates.markRead(conversation.getId(), actor, clock.instant().truncatedTo(ChronoUnit.MICROS));
-        afterCommit(() -> delivery.conversationRead(projectId, conversation.getId(), actor));
+        Instant readAt = clock.instant().truncatedTo(ChronoUnit.MICROS);
+        readStates.markRead(conversation.getId(), actor, readAt);
+        Set<UUID> participants = conversation.getType() == ChatConversationType.DIRECT
+                ? Set.of(conversation.getDirectUserLow(), conversation.getDirectUserHigh()) : Set.of();
+        ChatDelivery.ChatSeen seen = new ChatDelivery.ChatSeen(projectId, conversation.getId(), conversation.getType(),
+                participants, actor, readAt);
+        afterCommit(() -> {
+            delivery.conversationRead(projectId, conversation.getId(), actor);
+            delivery.seen(seen);
+        });
+    }
+
+    /**
+     * Who has read the conversation and up to when ("seen"): the read markers of the other people, restricted to
+     * people who are still active project members. Same access rule as reading the conversation.
+     */
+    // Not read-only: the membership lookup takes a shared row lock, like in overview().
+    @Transactional
+    public List<ChatViews.ReceiptView> receipts(UUID actor, UUID projectId, UUID conversationId) {
+        ChatConversation conversation = accessible(actor, projectId, conversationId);
+        var rows = readStates.findOthers(conversation.getId(), actor);
+        if (rows.isEmpty()) {
+            return List.of();
+        }
+        Set<UUID> ids = new HashSet<>();
+        rows.forEach(row -> ids.add(row.getUserId()));
+        Set<UUID> active = projects.activeMemberIds(projectId, ids);
+        return rows.stream().filter(row -> active.contains(row.getUserId()))
+                .map(row -> new ChatViews.ReceiptView(row.getUserId(), row.getLastReadAt())).toList();
+    }
+
+    /**
+     * "Is typing" signal for the other participants. Nothing is written: the state lives only in the clients and
+     * expires there. Same access rule as reading the conversation (a foreign or unknown conversation is a 404), the
+     * typist is the authenticated user and the nickname comes from the server-side account, never from the request.
+     */
+    @Transactional(readOnly = true)
+    public void typing(UUID actor, UUID projectId, UUID conversationId, boolean typing) {
+        ChatConversation conversation = accessible(actor, projectId, conversationId);
+        if (!typingLimiter.tryAcquire(actor)) {
+            throw ChatException.rateLimited();
+        }
+        UserAccounts.AuthenticatedUser account = users.findActiveByIds(Set.of(actor)).get(actor);
+        if (account == null) {
+            throw new AccessDeniedException("Account not active");
+        }
+        Set<UUID> participants = conversation.getType() == ChatConversationType.DIRECT
+                ? Set.of(conversation.getDirectUserLow(), conversation.getDirectUserHigh()) : Set.of();
+        delivery.typing(new ChatDelivery.ChatTyping(projectId, conversation.getId(), conversation.getType(),
+                participants, actor, account.nickname(), typing));
     }
 
     // ---- authorization and lookup -------------------------------------------------------------------------------
@@ -323,18 +410,19 @@ public class ChatService {
         return page.stream().map(message -> {
             var parent = replies.get(message.getReplyToMessageId());
             var quote = parent == null ? null : new ChatViews.ReplyView(parent.getId(),
-                    chatUser(parent.getSenderUserId(),accounts.get(parent.getSenderUserId())),preview(parent.getContent()));
+                    chatUser(parent.getSenderUserId(),accounts.get(parent.getSenderUserId())),preview(parent.getContent()),
+                    parent.isDeleted());
             var reactions = snapshots.get(message.getId());
             return new MessageView(message.getId(),message.getConversationId(),message.getContent(),message.getCreatedAt(),
                     chatUser(message.getSenderUserId(),accounts.get(message.getSenderUserId())),quote,
-                    reactions.reactionVersion(),reactions.reactions());
+                    reactions.reactionVersion(),reactions.reactions(),message.isDeleted());
         }).toList();
     }
 
     private static ConversationView conversationView(ChatConversation conversation, ChatUser peer, ChatMessage last,
                                                      long unread) {
         LastMessageView lastView = last == null ? null
-                : new LastMessageView(preview(last.getContent()), last.getCreatedAt(), last.getSenderUserId());
+                : new LastMessageView(preview(last.getContent()), last.getCreatedAt(), last.getSenderUserId(), last.isDeleted());
         return new ConversationView(conversation.getId(), conversation.getType(), peer, lastView, unread);
     }
 

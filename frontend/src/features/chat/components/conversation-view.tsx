@@ -5,14 +5,17 @@ import { useTranslations } from "next-intl";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSession } from "@/features/auth/hooks/use-session";
 import { useChat, draftKey } from "../chat-provider";
-import { useChatMessages } from "../hooks";
+import { useChatMessages, useChatReceipts } from "../hooks";
 import { MessageComposer } from "./message-composer";
 import { GroupAvatar, PersonAvatar } from "./person-avatar";
 import { MessageList } from "./message-list";
-import type { ChatMessage, ChatReply } from "../types";
+import { TypingIndicator } from "./typing-indicator";
+import type { ChatMessage, ChatReceipt, ChatReply } from "../types";
 import { previewOf } from "../limits";
 import { toast } from "sonner";
 import { errorKey } from "@/lib/api/error-message";
+
+const NO_RECEIPTS: ChatReceipt[] = [];
 
 function subscribeToVisibility(onChange: () => void) {
   document.addEventListener("visibilitychange", onChange);
@@ -63,8 +66,9 @@ export function ConversationView({ autoFocus }: { autoFocus?: boolean }) {
   const chat = useChat();
   const { data: user } = useSession();
   const selfId = user?.id;
-  const { projectId, activeConversationId: conversationId, active, overview, reportView, markRead } = chat;
+  const { projectId, activeConversationId: conversationId, active, overview, reportView, markRead, notifyTyping } = chat;
   const query = useChatMessages(projectId, conversationId);
+  const receipts = useChatReceipts(projectId, conversationId);
   const key = active ? draftKey(active) : "none";
   const [reply, setReply] = useState<ChatReply | null>(() => chat.getReply(key));
   function chooseReply(message: ChatMessage) {
@@ -107,6 +111,9 @@ export function ConversationView({ autoFocus }: { autoFocus?: boolean }) {
     return () => window.clearTimeout(timer);
   }, [conversationId, atBottom, visible, lastId, lastFromOther, unread, markRead]);
 
+  // Leaving a conversation (or closing the chat) ends the "typing" announced for it.
+  useEffect(() => () => { if (conversationId) notifyTyping(conversationId, "stopped"); }, [conversationId, notifyTyping]);
+
   const opening = !conversationId;
 
   return (
@@ -139,10 +146,14 @@ export function ConversationView({ autoFocus }: { autoFocus?: boolean }) {
           onReact={(messageId,code,add)=>{void chat.react(messageId,code,add).catch(error=>toast.error(`${t("reactions.error")} ${te(errorKey(error))}`));}}
           reactionPending={chat.reactionPending}
           reactionsDisabled={chat.sendBlocked}
+          onDelete={chat.deleteMessage}
+          receipts={receipts.data ?? NO_RECEIPTS}
         />
       )}
+      <TypingIndicator people={chat.typingPeople} />
       <MessageComposer
         key={key}
+        onTyping={(state) => { if (conversationId) notifyTyping(conversationId, state); }}
         draftKey={key}
         initialDraft={chat.getDraft(key)}
         onDraftChange={(text) => chat.setDraft(key, text)}

@@ -21,6 +21,11 @@ public class ChatReactionRepository {
     public ChatReactionRepository(NamedParameterJdbcTemplate jdbc) { this.jdbc = jdbc; }
     public record Row(UUID messageId, long version, ChatReactionCode code, long count, Set<UUID> viewers) { }
 
+    /** A deleted message keeps no reactions. */
+    public int removeAll(UUID messageId) {
+        return jdbc.update("delete from chat_message_reactions where message_id = :message", Map.of("message", messageId));
+    }
+
     public List<Row> snapshots(UUID conversationId, Collection<UUID> messageIds, Collection<UUID> viewers) {
         if (messageIds.isEmpty() || viewers.isEmpty()) return List.of();
         return jdbc.query("""

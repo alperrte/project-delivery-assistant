@@ -7,9 +7,14 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 public interface ChatReadStateRepository extends JpaRepository<ChatReadState, ChatReadState.Key> {
+
+    /** The read markers of everybody in the conversation except the given user ("seen by"). */
+    @Query("select r from ChatReadState r where r.conversationId = :conversationId and r.userId <> :userId")
+    List<ChatReadState> findOthers(@Param("conversationId") UUID conversationId, @Param("userId") UUID userId);
 
     /** Moves the read marker forward only; a late or duplicate request can never make messages unread again. */
     @Modifying

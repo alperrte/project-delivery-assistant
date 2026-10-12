@@ -1,5 +1,5 @@
 import { apiRequest, apiUrl } from "@/lib/api/client";
-import type { ChatConversation, ChatMember, ChatMessage, ChatMessagePage, ChatOverview, ReactionCode, ReactionSnapshot } from "./types";
+import type { ChatConversation, ChatMember, ChatReceipt, ChatMessage, ChatMessagePage, ChatOverview, ReactionCode, ReactionSnapshot } from "./types";
 import { normalizeChatMessage, validReactionSnapshot } from "./reactions";
 
 const chatPath = (projectId: string) => `/projects/${projectId}/chat`;
@@ -43,6 +43,15 @@ export const chatApi = {
         })) throw new Error("Invalid reaction batch contract");
         return snapshots;
       }),
+  /** The other members' read markers of a conversation ("seen"). */
+  receipts: (projectId: string, conversationId: string, signal?: AbortSignal) =>
+    apiRequest<ChatReceipt[]>(`${chatPath(projectId)}/conversations/${conversationId}/receipts`, { signal }),
+  /** Only the sender may delete; the text is erased for everybody and a tombstone stays. */
+  deleteMessage: (projectId: string, conversationId: string, messageId: string, signal?: AbortSignal) =>
+    apiRequest<void>(`${chatPath(projectId)}/conversations/${conversationId}/messages/${messageId}`, { method: "DELETE", signal }),
+  /** Ephemeral "is typing" signal; the server derives the typist from the session and stores nothing. */
+  typing: (projectId: string, conversationId: string, typing: boolean, signal?: AbortSignal) =>
+    apiRequest<void>(`${chatPath(projectId)}/conversations/${conversationId}/typing`, { method: "POST", signal, body: { typing } }),
   markRead: (projectId: string, conversationId: string) =>
     apiRequest<void>(`${chatPath(projectId)}/conversations/${conversationId}/read`, { method: "POST" }),
 };

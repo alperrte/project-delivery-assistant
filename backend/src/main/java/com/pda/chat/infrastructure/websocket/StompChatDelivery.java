@@ -62,6 +62,60 @@ class StompChatDelivery implements ChatDelivery {
         }
     }
 
+    public record SeenSocketEvent(String type, UUID projectId, UUID conversationId, UUID userId, java.time.Instant readAt) { }
+
+    @Override
+    public void seen(ChatSeen event) {
+        try {
+            SeenSocketEvent payload = new SeenSocketEvent("SEEN", event.projectId(), event.conversationId(),
+                    event.userId(), event.readAt());
+            for (UUID recipient : recipients(event.projectId(), event.type(), event.directParticipants())) {
+                if (!recipient.equals(event.userId())) {
+                    messaging.convertAndSendToUser(recipient.toString(), ChatWebSocketConfiguration.USER_QUEUE, payload);
+                }
+            }
+        } catch (RuntimeException failure) {
+            log.debug("Chat seen delivery failed: project={} conversation={} ({})", event.projectId(),
+                    event.conversationId(), failure.getClass().getSimpleName());
+        }
+    }
+
+    public record DeletedSocketEvent(String type, UUID projectId, UUID conversationId, UUID messageId) { }
+
+    @Override
+    public void messageDeleted(ChatMessageDeleted event) {
+        try {
+            DeletedSocketEvent payload = new DeletedSocketEvent("DELETED", event.projectId(), event.conversationId(),
+                    event.messageId());
+            for (UUID recipient : recipients(event.projectId(), event.type(), event.directParticipants())) {
+                messaging.convertAndSendToUser(recipient.toString(), ChatWebSocketConfiguration.USER_QUEUE, payload);
+            }
+        } catch (RuntimeException failure) {
+            log.warn("Chat delete delivery failed: project={} conversation={} message={} ({})", event.projectId(),
+                    event.conversationId(), event.messageId(), failure.getClass().getSimpleName());
+        }
+    }
+
+    /** Typist identity comes from the server (authenticated user), never from the client. */
+    public record TypingSocketEvent(String type, UUID projectId, UUID conversationId, UUID userId, String nickname,
+                                    boolean typing) { }
+
+    @Override
+    public void typing(ChatTyping event) {
+        try {
+            TypingSocketEvent payload = new TypingSocketEvent("TYPING", event.projectId(), event.conversationId(),
+                    event.userId(), event.nickname(), event.typing());
+            for (UUID recipient : recipients(event.projectId(), event.type(), event.directParticipants())) {
+                if (!recipient.equals(event.userId())) {
+                    messaging.convertAndSendToUser(recipient.toString(), ChatWebSocketConfiguration.USER_QUEUE, payload);
+                }
+            }
+        } catch (RuntimeException failure) {
+            log.debug("Chat typing delivery failed: project={} conversation={} ({})", event.projectId(),
+                    event.conversationId(), failure.getClass().getSimpleName());
+        }
+    }
+
     @Override
     public void conversationRead(UUID projectId, UUID conversationId, UUID userId) {
         try {

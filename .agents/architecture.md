@@ -13,6 +13,10 @@
 - **Site taraması.** `npm run check:site -- <adres>` (`scripts/check-site.mjs`) sitemap'teki sayfaları gezer; kırık dahili bağlantı, canonical/hreflang/Open Graph/Twitter eksiği ve ulaşılamayan `og:image` bulursa 1 ile çıkar.
 - İşletme (yedek, olay müdahale, rollback, migration, bakım): `.agents/operations.md`; betikler `ops/`.
 
+## Sohbet "yazıyor…" göstergesi ve mesaj yerleşimi (2026-10-12)
+
+Yazıyor durumu mevcut STOMP kuyruğunu (`/user/queue/chat`) yeniden kullanır; ikinci bir gerçek zamanlı kanal, tablo veya migration yoktur. İstemci soketten gönderemez (kural aynı kaldı): composer `POST .../conversations/{id}/typing` çağırır, `ChatService.typing` erişimi (`accessible`) ve oran sınırını denetler, `ChatDelivery.typing` yazan kişi hariç katılımcılara `TYPING` olayı iter. Yazan kimliği her zaman oturumdan gelir. Alıcı tarafta `features/chat/typing.ts` içindeki `TypingTracker` (7 sn TTL; MESSAGE, "stopped", bağlantı kopması ve proje/hesap değişimi temizler) ve gönderici tarafta `TypingEmitter` (3 sn throttle, 5 sn boşta durdurma) kullanılır; state yalnız tarayıcıdadır. Mesaj balonu: eylem düğmesi artık balonun iç boşluğunda değil yanında (`flex` kardeşi) durur, böylece sol/sağ padding eşittir; avatar satırın üstüne (`items-start`) hizalıdır, reaksiyon/saat avatarı oynatmaz.
+
 ## Invitations remediation — 2026-10-06
 
 Private invitation list/preview/project-history/count keys actor ID ile scope edilir; sign-in/out/session boundary yalnız invitation private family cancel/remove yapar. Recipient local modal state actor key ile remount olur. Expired pending mutation row lock altında EXPIRED + flush olur; yeni INSERT mevcut partial unique constraint ile korunur. GET presentation/count/candidates etkin expiry kullanır; arka plan scheduler, auth policy, yeni migration veya General Team eklenmedi. Legacy accept mevcut projects/private invitation roots invalidates; external signed-in baseline zaten geçti ve callback gereksiz değiştirilmedi.

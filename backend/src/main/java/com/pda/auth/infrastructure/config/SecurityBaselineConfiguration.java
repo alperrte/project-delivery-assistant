@@ -206,6 +206,7 @@ public class SecurityBaselineConfiguration {
                             .requestMatchers(HttpMethod.GET, "/api/v1/projects/*/chat/conversations/*/messages/reactions").authenticated()
                             .requestMatchers(HttpMethod.PUT, "/api/v1/projects/*/chat/conversations/*/messages/*/reactions/*").authenticated()
                             .requestMatchers(HttpMethod.DELETE, "/api/v1/projects/*/chat/conversations/*/messages/*/reactions/*").authenticated()
+                            .requestMatchers(HttpMethod.DELETE, "/api/v1/projects/*/chat/conversations/*/messages/*").authenticated()
                             .requestMatchers(HttpMethod.PATCH, "/api/v1/notifications/read-all",
                                     "/api/v1/notifications/*/read").authenticated()
                             .requestMatchers(HttpMethod.DELETE, "/api/v1/notifications/*", "/api/v1/notifications").authenticated()
@@ -235,6 +236,7 @@ public class SecurityBaselineConfiguration {
                                     "/api/v1/projects/*/chat/direct/*",
                                     "/api/v1/projects/*/chat/conversations/*/messages",
                                     "/api/v1/projects/*/chat/conversations/*/read",
+                                    "/api/v1/projects/*/chat/conversations/*/typing",
                                     "/api/v1/projects/*/repository").authenticated()
                             .requestMatchers(HttpMethod.POST, "/api/v1/projects/*/labels",
                                     "/api/v1/projects/*/sprints",

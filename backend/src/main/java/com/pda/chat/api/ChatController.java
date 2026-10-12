@@ -1,6 +1,7 @@
 package com.pda.chat.api;
 
 import com.pda.chat.api.dto.request.SendMessageRequest;
+import com.pda.chat.api.dto.request.TypingRequest;
 import com.pda.chat.api.dto.response.ChatResponses;
 import com.pda.chat.application.service.ChatService;
 import com.pda.chat.application.service.ChatReactionService;
@@ -96,6 +97,42 @@ public class ChatController {
     public ResponseEntity<Void> markRead(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
                                          @PathVariable UUID projectId, @PathVariable UUID conversationId) {
         chat.markRead(actorId(principal), projectId, conversationId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/conversations/{conversationId}/receipts")
+    @Operation(summary = "Who has read the conversation",
+            description = "Participants only. The other active members' read markers {userId, readAt}; a message is "
+                    + "\"seen\" by someone when readAt is not before its createdAt. Updates arrive as SEEN events.")
+    public ResponseEntity<List<ChatResponses.Receipt>> receipts(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
+                                                                @PathVariable UUID projectId, @PathVariable UUID conversationId) {
+        return ResponseEntity.ok().header("Cache-Control", "private, no-store").body(
+                chat.receipts(actorId(principal), projectId, conversationId).stream().map(ChatResponses.Receipt::from).toList());
+    }
+
+    @DeleteMapping("/conversations/{conversationId}/messages/{messageId}")
+    @Operation(summary = "Delete own message",
+            description = "Only the sender can delete, for everybody. The text is erased and the message stays as a "
+                    + "tombstone (replies keep working). Idempotent. Participants get a DELETED event over the "
+                    + "WebSocket. Requires CSRF.")
+    @ApiResponse(responseCode = "204", description = "Message deleted (or already deleted)")
+    public ResponseEntity<Void> deleteMessage(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
+                                              @PathVariable UUID projectId, @PathVariable UUID conversationId,
+                                              @PathVariable UUID messageId) {
+        chat.deleteMessage(actorId(principal), projectId, conversationId, messageId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/conversations/{conversationId}/typing")
+    @Operation(summary = "Signal that the caller is typing",
+            description = "Body {\"typing\": true|false}. Ephemeral and never stored: the other participants receive "
+                    + "a TYPING event over the WebSocket. Same access rule as reading the conversation; the typist is "
+                    + "always the authenticated user. 120 signals per minute per user. Requires CSRF.")
+    @ApiResponse(responseCode = "204", description = "Signal accepted")
+    public ResponseEntity<Void> typing(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
+                                       @PathVariable UUID projectId, @PathVariable UUID conversationId,
+                                       @RequestBody TypingRequest request) {
+        chat.typing(actorId(principal), projectId, conversationId, Boolean.TRUE.equals(request.typing()));
         return ResponseEntity.noContent().build();
     }
 

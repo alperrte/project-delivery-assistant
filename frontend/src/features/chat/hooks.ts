@@ -48,6 +48,20 @@ export function useChatMessages(projectId: string | undefined, conversationId: s
   return { ...query, messages: flattenMessages(query.data) };
 }
 
+/**
+ * Who has read the conversation ("seen"). Loaded once per opened conversation; SEEN socket events patch it in place
+ * and a reconnect refetches it, so it is never polled.
+ */
+export function useChatReceipts(projectId: string | undefined, conversationId: string | undefined) {
+  return useQuery({
+    queryKey: chatKeys.receipts(projectId ?? "", conversationId ?? ""),
+    queryFn: ({ signal }) => chatApi.receipts(projectId!, conversationId!, signal),
+    enabled: !!projectId && !!conversationId,
+    staleTime: Infinity,
+    refetchOnReconnect: false,
+  });
+}
+
 /** Opens (finds or creates) the direct conversation with a project member. */
 export function useOpenDirect(projectId: string | undefined) {
   return useMutation({

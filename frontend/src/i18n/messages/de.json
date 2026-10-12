@@ -2555,6 +2555,23 @@
         "ROCKET": "Rakete"
       }
     },
+    "delete": {
+      "action": "Löschen",
+      "title": "Nachricht löschen?",
+      "description": "Die Nachricht wird für alle gelöscht und kann nicht wiederhergestellt werden. An ihrer Stelle bleibt der Hinweis „Diese Nachricht wurde gelöscht“.",
+      "cancel": "Abbrechen",
+      "confirm": "Löschen",
+      "deletedMessage": "Diese Nachricht wurde gelöscht"
+    },
+    "seen": {
+      "one": "Gesehen",
+      "count": "{count, plural, one {Von # Person gesehen} other {Von # Personen gesehen}}"
+    },
+    "typing": {
+      "one": "{name} schreibt…",
+      "two": "{first} und {second} schreiben…",
+      "many": "{first}, {second} und {count, plural, one {# weitere Person} other {# weitere Personen}} schreiben…"
+    },
     "reactions": {
       "action": "Reagieren",
       "chip": "{emoji}, {count} Reaktionen",

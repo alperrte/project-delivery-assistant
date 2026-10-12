@@ -127,7 +127,7 @@ export function ConversationList({ onSelected }: { onSelected?: () => void }) {
             <span className="min-w-0 flex-1">
               <span className="block truncate text-sm font-semibold">{chat.projectName ?? t("groupName")}</span>
               <span className="block truncate text-xs text-muted-foreground">
-                {group.lastMessage?.preview ?? t("groupHint")}
+                {group.lastMessage ? (group.lastMessage.deleted ? t("delete.deletedMessage") : group.lastMessage.preview) : t("groupHint")}
               </span>
             </span>
             {group.lastMessage && (
@@ -158,7 +158,7 @@ export function ConversationList({ onSelected }: { onSelected?: () => void }) {
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-medium">{row.nickname ?? "?"}</span>
                   {row.lastMessage && (
-                    <span className="block truncate text-xs text-muted-foreground">{row.lastMessage.preview}</span>
+                    <span className="block truncate text-xs text-muted-foreground">{row.lastMessage.deleted ? t("delete.deletedMessage") : row.lastMessage.preview}</span>
                   )}
                 </span>
                 {row.lastMessage && (

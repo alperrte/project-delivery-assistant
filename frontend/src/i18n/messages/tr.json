@@ -2555,6 +2555,23 @@
         "ROCKET": "Roket"
       }
     },
+    "delete": {
+      "action": "Sil",
+      "title": "Mesaj silinsin mi?",
+      "description": "Mesaj herkes için silinir ve geri alınamaz. Yerinde \"Bu mesaj silindi\" notu kalır.",
+      "cancel": "Vazgeç",
+      "confirm": "Sil",
+      "deletedMessage": "Bu mesaj silindi"
+    },
+    "seen": {
+      "one": "Görüldü",
+      "count": "{count} kişi gördü"
+    },
+    "typing": {
+      "one": "{name} yazıyor…",
+      "two": "{first} ve {second} yazıyor…",
+      "many": "{first}, {second} ve {count} kişi daha yazıyor…"
+    },
     "reactions": {
       "action": "Tepki ver",
       "chip": "{emoji}, {count} tepki",

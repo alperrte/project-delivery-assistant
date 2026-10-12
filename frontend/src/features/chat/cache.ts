@@ -1,6 +1,6 @@
 import type { InfiniteData, QueryClient } from "@tanstack/react-query";
 import { previewOf } from "./limits";
-import type { ChatConversation, ChatMessage, ChatMessagePage, ChatOverview, ReactionSnapshot } from "./types";
+import type { ChatConversation, ChatMessage, ChatReceipt, ChatMessagePage, ChatOverview, ReactionSnapshot } from "./types";
 import { newerReactionVersion, normalizeChatMessage } from "./reactions";
 
 /** Query keys of one project's chat. Everything is nested under the project id, so projects never share state. */
@@ -8,6 +8,9 @@ export const chatKeys = {
   all: (projectId: string) => ["projects", projectId, "chat"] as const,
   overview: (projectId: string) => ["projects", projectId, "chat", "overview"] as const,
   members: (projectId: string) => ["projects", projectId, "chat", "members"] as const,
+  receipts: (projectId: string, conversationId: string) =>
+    ["projects", projectId, "chat", "receipts", conversationId] as const,
+  receiptsRoot: (projectId: string) => ["projects", projectId, "chat", "receipts"] as const,
   messagesRoot: (projectId: string) => ["projects", projectId, "chat", "messages"] as const,
   messages: (projectId: string, conversationId: string) =>
     ["projects", projectId, "chat", "messages", conversationId] as const,
@@ -72,6 +75,42 @@ export function applyReactionSnapshots(queryClient: QueryClient, projectId: stri
   }) }));
   if (changed) queryClient.setQueryData(key, { ...old, pages });
   return found;
+}
+
+/**
+ * Turns a message into its tombstone in a loaded conversation (text and reactions dropped) and marks the replies that
+ * quote it. Idempotent, so the socket event, the REST answer and a catch-up can all apply it.
+ */
+export function applyMessageDeleted(queryClient: QueryClient, projectId: string, conversationId: string, messageId: string) {
+  queryClient.setQueryData<MessagePages>(chatKeys.messages(projectId, conversationId), (old) => {
+    if (!old) return old;
+    let changed = false;
+    const pages = old.pages.map((page) => ({
+      ...page,
+      messages: page.messages.map((message) => {
+        if (message.id === messageId && !message.deleted) {
+          changed = true;
+          return { ...message, deleted: true, content: "", reactions: [], replyTo: null };
+        }
+        if (message.replyTo?.id === messageId && !message.replyTo.deleted) {
+          changed = true;
+          return { ...message, replyTo: { ...message.replyTo, deleted: true, preview: "" } };
+        }
+        return message;
+      }),
+    }));
+    return changed ? { ...old, pages } : old;
+  });
+}
+
+/** Records that `userId` read the conversation up to `readAt` (markers only move forward). Not-yet-loaded lists are left alone. */
+export function applySeen(queryClient: QueryClient, projectId: string, conversationId: string, userId: string, readAt: string) {
+  queryClient.setQueryData<ChatReceipt[]>(chatKeys.receipts(projectId, conversationId), (old) => {
+    if (!old) return old;
+    const known = old.find((receipt) => receipt.userId === userId);
+    if (known && Date.parse(known.readAt) >= Date.parse(readAt)) return old;
+    return known ? old.map((receipt) => (receipt.userId === userId ? { userId, readAt } : receipt)) : [...old, { userId, readAt }];
+  });
 }
 
 /** The id of the newest confirmed message of a loaded conversation, the cursor for a reconnect catch-up. */
