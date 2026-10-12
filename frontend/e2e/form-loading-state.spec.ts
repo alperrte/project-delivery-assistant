@@ -62,7 +62,7 @@ test.describe.serial("Yükleniyor durumu: giriş gerektiren formlar", () => {
     const seen = await hold(page, { method: "POST", url: /\/api\/v1\/projects$/ });
     await page.goto("/projects/new");
     await page.locator("#project-name").fill("Yükleniyor projesi");
-    await page.getByRole("radio", { name: /^Web/ }).click();
+    await page.getByRole("checkbox", { name: /^Web/ }).click();
     const submit = page.getByRole("button", { name: /^Projeyi oluştur$/ });
     await submit.click();
     await expectLoadingThenIdle(submit, seen);

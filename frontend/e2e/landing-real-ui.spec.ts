@@ -123,7 +123,7 @@ for (const theme of ["light", "dark"]) {
       await real.locator(field).fill(stage === "project" ? data.project.name : data.task.title);
       await real.locator(stage === "project" ? "#project-description" : "#task-description").fill(data.project.description!);
       if (stage === "project") {
-        await real.getByRole("radio").first().click();
+        await real.getByRole("checkbox").first().click();
         for (const tech of ["Next.js", "Spring Boot", "PostgreSQL"]) await real.getByRole("button", { name: tech, exact: true }).first().click();
       }
       await real.locator("textarea").first().blur();

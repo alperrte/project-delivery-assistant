@@ -120,6 +120,7 @@ export function MessageComposer({ draftKey, initialDraft, onDraftChange, onSend,
         <Button type="button" variant="ghost" size="icon" className="size-11 shrink-0" aria-label={t("files.add")} disabled={disabled||uploading} onClick={()=>fileInput.current?.click()}><Paperclip aria-hidden="true"/></Button>
         <div className="relative min-w-0 flex-1">
         <Textarea
+          data-workspace-scroll=""
           ref={inputRef}
           value={text}
           onChange={(event) => change(event.target.value)}

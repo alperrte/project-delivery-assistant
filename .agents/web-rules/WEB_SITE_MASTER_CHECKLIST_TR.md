@@ -1,7 +1,5 @@
 # Web Sitesi Kesinlikle Olması Gerekenler — Master Checklist
 
-<<<<<<< Updated upstream
-=======
 ## Çoklu proje türleri — 2026-10-12
 
 Create/edit ortak çoklu checkbox grubu, en az bir seçim, boş seçim hata/focus/aria-describedby, taslak/Vazgeç/kayıt/reload, kart/önizleme rozetleri ve birleşik/tekrarsız teknoloji önerileri doğrulandı. Production kaynakta 4 Chromium + 4 mobil WebKit testi: TR/EN/DE, light/dark, 320/390/768/1440 px, >=44 px label hedefleri, overflow ve hata/retry; mobil görseller incelendi. PostgreSQL integration 30/0 failure/error/skip: çoklu kayıt/update/list, legacy-client koruması, validation/auth/CSRF, V47→V48 tüm beş legacy türün backfill/constraint kontrolü. Lint/TypeScript/frontend build/backend package/diff başarılı. Form Validation / Responsive / Keyboard Navigation / Focus State / Screen Reader / QA global kutuları bu sınırlı kapsamla tamamlanmış sayılmadı. Kayıt: `docs/compliation/2026-10-12-project-multiple-types.md`.
@@ -14,7 +12,6 @@ Ayarlar iki seçenek sunar: Her zaman görünür / Otomatik gizlen. Taslak, Vazg
 
 Çalışma alanı çekmecesi 280 ms soldan kayma ve 200 ms kapanma, eşzamanlı backdrop fade kullanır. Chromium + mobil WebKit'te nested dil/tema/Escape/odak/rota/resize ve fullscreen chat erişimi toplam 4 hedefli test geçti. Chromium frame örneklemesinde gerçek ara konumlar, final x=0/scale=1, reduced-motion ve motion-off altında 0.01 ms geçiş doğrulandı; lint/TypeScript/diff başarılı. Global erişilebilirlik/QA kutuları değişmedi. Kayıt: `docs/compliation/2026-10-12-workspace-drawer-soft-motion.md`.
 
->>>>>>> Stashed changes
 ## Mobil navbar gizlenmesini kaldırma — 2026-10-12
 
 Mobil/tablet ve touch-primary cihazlarda auto-hide kapatıldı; yalnız >=1024 px hover/fine-pointer desktop'ta sürer. Güncel dev kaynakta 390/768 px idle/scroll/drawer/focus ve 1440 px desktop/touch + mobile resize senaryosu Chromium ve mobil WebKit'te birer başarılı; TypeScript/lint/diff geçti. Eski gerçek hesaplı touch test beklentileri uyarlandı; o backendli paket bu küçük takipte çalıştırılmadı. Global kutular değişmedi. Kayıt: `docs/compliation/2026-10-12-mobile-navbar-always-visible.md`.
@@ -383,3 +380,23 @@ Dosya doğrulamasındaki yanlış retler giderildi: PDF normal sayfa hedefleri, 
 ## Sohbet PDF Content Credentials düzeltmesi — 2026-10-12 (sınırlı kapsam)
 
 Repodaki 958377 byte CV'nin ret nedeni 24296 byte C2PA metadata'sı olarak doğrudan teşhis edildi. Yeni doğrulayıcı aynı PDF'yi `application/pdf` olarak kabul eder; gerçek dosya yeniden oluşturulmaz. Genel otomatik test koşumu yapılmadı; yalnız dosya üzerinde validator incelemesi ve backend derlemesi yapıldı. Form Validation / Error State genel kutuları bu sınırlı kanıtla değiştirilmedi. Kayıt: `docs/compliation/2026-10-12-chat-pdf-c2pa.md`.
+
+## Sohbet scrollbar paleti — 2026-10-12 (sınırlı kapsam)
+
+Dark Mode / UI tutarlılığı kapsamı: sohbetin altı kaydırılabilir yüzeyi mevcut `data-workspace-scroll` paletine bağlandı; light/dark label-blue token'ı, transparan track, ortak hover ve forced-colors fallback kullanılır. Hedefli ESLint ve production build başarılı; küçük stil değişikliği için genel audit/test koşumu yapılmadı. Global checklist kutuları bu sınırlı kanıtla değiştirilmedi. Kayıt: `docs/compliation/2026-10-12-chat-scrollbar-theme.md`.
+
+## Profile FAQ / consent session continuity - 2026-10-12 (scoped)
+
+Affected navigation, keyboard/focus, responsive, dark-mode and consent standards: shared FAQ opens within the workspace without route changes; keyboard/Escape/focus return, TR/EN/DE at 320 px, desktop light and mobile dark visuals verified. Real API confirms unchanged authentication cookies during preferences, reload/public/contact return, actual refresh rotation after TEST-ONLY access expiry, and explicit logout. 3 new + 4 existing targeted Chromium tests, lint/type/build PASS. Global boxes remain unchanged. Evidence: docs/compliation/2026-10-12-profile-help-session.md.
+
+## Profile FAQ page - 2026-10-12 (scoped follow-up)
+
+Previous FAQ modal replaced by authenticated /account/faq page. Localized title, noindex/account guard, return navigation after reload, TR/EN/DE 320 px, light/dark and real session/refresh/logout passed in 3 Chromium tests. Lint/type/build PASS. Global boxes unchanged. Latest evidence: docs/compliation/2026-10-12-profile-faq-page.md.
+
+## Legacy FAQ navigation - 2026-10-12 (scoped)
+
+Authenticated legacy FAQ URLs in TR/EN/DE now resolve to workspace layout; anonymous public FAQ and protected-route login guard verified. 3 targeted real-session Chromium tests, lint/build PASS. Global boxes unchanged. Evidence: docs/compliation/2026-10-12-profile-faq-routing.md.
+
+## Workspace contact page - 2026-10-12 (scoped)
+
+Navigation/title/noindex/responsive/dark-mode scope: profile and legacy contact addresses keep signed-in workspace layout, reload/back/cookies verified; anonymous contact and protected login guard preserved. TR/EN/DE at 320 px and desktop/mobile screenshots checked. 3 targeted Chromium tests, lint/type/build PASS. Form/mail delivery unchanged and not retested; global boxes unchanged. Evidence: docs/compliation/2026-10-12-profile-contact-page.md.

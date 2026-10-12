@@ -101,9 +101,21 @@ const GROUPS_BY_TYPE: Record<Exclude<ProjectType, "OTHER">, TechGroup[]> = {
 export const MAX_TECH_SELECTION = 12;
 
 /** Suggested technologies for a type. OTHER (or no type yet) offers the whole catalog in one searchable list. */
-export function techGroupsFor(type: ProjectType | undefined): TechGroup[] {
-  if (type && type !== "OTHER") return GROUPS_BY_TYPE[type];
-  return [{ key: "all", items: Object.values(TECH_CATALOG) }];
+export function techGroupsFor(types: readonly (ProjectType | undefined)[] | undefined): TechGroup[] {
+  const selected = types?.filter((type): type is ProjectType => !!type) ?? [];
+  if (!selected.length || selected.includes("OTHER")) return [{ key: "all", items: Object.values(TECH_CATALOG) }];
+  const groups = new Map<string, TechGroup>();
+  const seen = new Set<string>();
+  for (const type of selected) {
+    if (type === "OTHER") continue;
+    for (const group of GROUPS_BY_TYPE[type]) {
+      const items = group.items.filter(item => { if (seen.has(item.id)) return false; seen.add(item.id); return true; });
+      if (!items.length) continue;
+      const existing = groups.get(group.key);
+      groups.set(group.key, { key: group.key, items: [...existing?.items ?? [], ...items] });
+    }
+  }
+  return [...groups.values()];
 }
 
 const normalize = (value: string) => value.trim().toLocaleLowerCase("en");

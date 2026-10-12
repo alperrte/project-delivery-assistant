@@ -351,8 +351,8 @@
           "description": "The logo, name and tagline appear at the top of the card."
         },
         "type": {
-          "title": "Project type",
-          "description": "The type shows as a badge on the card and shapes the technology suggestions."
+          "title": "Project types",
+          "description": "Choose one or more types. They appear on the card and shape the technology suggestions."
         },
         "technology": {
           "title": "Technologies",
@@ -611,7 +611,7 @@
       "dangerDescription": "The project and everything in it is permanently deleted. This cannot be undone.",
       "tagline": "Tagline",
       "taglinePlaceholder": "Describe the project in one sentence",
-      "type": "Project type",
+      "type": "Project types",
       "logo": {
         "label": "Project logo",
         "hint": "PNG, JPEG or WebP, up to 512 KB. Changes are saved immediately.",
@@ -1551,6 +1551,13 @@
       "title": "Appearance",
       "description": "The default theme: light, dark, or follow your device. It does not change until you press Save.",
       "label": "Theme"
+    },
+    "navigation": {
+      "title": "Top navigation bar",
+      "description": "Choose how the top bar behaves on mobile and desktop. Changes apply when you save.",
+      "alwaysVisible": "Always visible",
+      "autoHide": "Auto-hide",
+      "hint": "Auto-hide hides the bar when it is idle. Use the handle at the top to reveal it; on mobile, scrolling up also reveals it."
     },
     "motion": {
       "title": "Animations",
@@ -4320,6 +4327,7 @@
   "contact": {
     "title": "Contact",
     "description": "Send us your questions, suggestions and feedback without signing in.",
+    "workspaceDescription": "Send us your questions, suggestions and feedback.",
     "form": {
       "label": "Contact form",
       "firstName": "First name",

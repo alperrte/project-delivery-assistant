@@ -16,7 +16,8 @@ test.use({ serviceWorkers: "block" });
 // TEST-ONLY shell presentation fixture. No request reaches a backend, and no production auth policy is changed.
 async function fixture(page: Page, context: BrowserContext, origin: string, locale: Locale = "tr", withProject = false) {
   const seed = withProject ? demoData(landing) : null;
-  if (seed) await page.routeWebSocket(/\/api\/v1\/ws$/, socket => socket.onMessage(message => {
+  let preferences: Record<string, unknown> = { motion: "on", themeTransition: false };
+  await page.routeWebSocket(/\/api\/v1\/ws$/, socket => socket.onMessage(message => {
     if (String(message).startsWith("CONNECT")) socket.send("CONNECTED\nversion:1.2\nheart-beat:0,0\n\n\0");
   }));
   await context.addCookies([
@@ -28,17 +29,18 @@ async function fixture(page: Page, context: BrowserContext, origin: string, loca
     const url = new URL(request.url());
     const headers = { "access-control-allow-origin": origin, "access-control-allow-credentials": "true" };
     if (request.method() === "OPTIONS" || url.pathname.endsWith("/team-deletions/claim")) return route.fulfill({ status: 204, headers });
+    if (url.pathname.endsWith("/users/me/preferences") && request.method() === "PUT") preferences = request.postDataJSON();
     const body = seed && url.pathname === "/api/v1/projects" ? demoPage([seed.project])
       : seed && url.pathname.includes("/projects/by-slug/") ? seed.project
       : seed && url.pathname.endsWith("/members/header-ui-fixture") ? { ...seed.members[0], userId: "header-ui-fixture" }
       : seed && url.pathname.endsWith("/home") ? seed.home
       : seed && url.pathname.endsWith("/teams") ? demoPage([seed.team])
-      : seed && url.pathname.endsWith("/chat/conversations") ? { group: { id: "header-qa-group", type: "PROJECT", peer: null, lastMessage: null, unread: 0 }, directs: [], totalUnread: 0 }
-      : seed && url.pathname.endsWith("/chat/members") ? []
+      : url.pathname.endsWith("/chat/conversations") ? { group: null, groups: seed ? [{ id: "header-qa-group", type: "PROJECT", peer: null, lastMessage: null, unread: 0, projectId: seed.project.id, projectName: seed.project.name }] : [], directs: [], totalUnread: 0 }
+      : url.pathname.endsWith("/chat/members") ? []
       : seed && url.pathname.endsWith("/messages") ? { messages: [], hasMore: false }
       : url.pathname.endsWith("/auth/me")
       ? { id: "header-ui-fixture", nickname: "Mobile QA", email: "header@example.test", globalRole: "USER", mustChangePassword: false }
-      : url.pathname.endsWith("/users/me/preferences") ? { motion: "on", themeTransition: false }
+      : url.pathname.endsWith("/users/me/preferences") ? preferences
       : url.pathname.endsWith("/auth/csrf") ? { headerName: "X-XSRF-TOKEN" }
       : /count$/.test(url.pathname) ? { count: 0 }
       : { content: [], totalElements: 0, totalPages: 0, counts: {} };
@@ -216,6 +218,115 @@ test("fullscreen chat uses the compact reserve and keeps hamburger controls outs
   await page.keyboard.press("Escape");
   await expect(panel).not.toBeVisible();
   await expect(chat).toBeVisible();
+});
+
+for (const locale of ["tr", "en", "de"] as const) {
+  test(`navbar choice is a saved draft and works on mobile and desktop: ${locale}`, async ({ page, context, baseURL }) => {
+    await fixture(page, context, new URL(baseURL!).origin, locale);
+    await page.addInitScript(theme => localStorage.setItem("theme", theme), locale === "de" ? "dark" : "light");
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(buildPath("/settings", {}, locale));
+    const words = catalogs[locale].preferences;
+    const options = page.getByRole("radiogroup", { name: words.navigation.title, exact: true });
+    const auto = options.getByRole("radio", { name: words.navigation.autoHide, exact: true });
+    const always = options.getByRole("radio", { name: words.navigation.alwaysVisible, exact: true });
+    const save = page.getByRole("button", { name: words.save.save, exact: true });
+    const header = page.locator(".app-shell header");
+    const handle = header.locator("..").locator(":scope > button");
+    await expect(options.getByRole("radio")).toHaveCount(2);
+    await expect(always).toBeChecked();
+    await auto.click();
+    await page.waitForTimeout(NAVBAR_IDLE_MS + 100);
+    await expect(header).not.toHaveClass(/opacity-0/);
+    await page.getByRole("button", { name: words.save.discard, exact: true }).click();
+    await expect(always).toBeChecked();
+    await expect(save).toBeDisabled();
+    await auto.focus();
+    await page.keyboard.press("Space");
+    const saved = page.waitForResponse(response => response.url().endsWith("/users/me/preferences") && response.request().method() === "PUT");
+    await save.click();
+    expect((await saved).request().postDataJSON().navbarMode).toBe("auto-hide");
+    await page.mouse.move(1, 500);
+    await expect(header).toHaveClass(/opacity-0/);
+    await handle.click();
+    await expect(header).not.toHaveClass(/opacity-0/);
+    const panel = await drawer(page, locale);
+    await page.waitForTimeout(NAVBAR_IDLE_MS + 100);
+    await expect(header).not.toHaveClass(/opacity-0/);
+    await page.keyboard.press("Escape");
+    await expect(panel).not.toBeVisible();
+    await expect(header.getByRole("button", { name: catalogs[locale].workspace.navigation, exact: true })).toBeFocused();
+    await page.waitForTimeout(NAVBAR_IDLE_MS + 100);
+    await expect(header).not.toHaveClass(/opacity-0/);
+    await page.evaluate(() => (document.activeElement as HTMLElement)?.blur());
+    await page.mouse.move(1, 500);
+    await expect(header).toHaveClass(/opacity-0/);
+
+    await always.click();
+    await save.click();
+    await expect(header).not.toHaveClass(/opacity-0/);
+    await page.reload();
+    await expect(always).toBeChecked();
+    const section = options.locator("xpath=ancestor::section");
+    await section.evaluate(element => window.scrollTo(0, element.getBoundingClientRect().top + scrollY - 100));
+    await section.screenshot({ path: path.join(captures, `navbar-preference-${locale}.png`) });
+    for (const width of [320, 390, 768, 1440]) {
+      await page.setViewportSize({ width, height: 844 });
+      await page.evaluate(() => (document.activeElement as HTMLElement)?.blur());
+      await page.mouse.move(1, 500);
+      await page.waitForTimeout(NAVBAR_IDLE_MS + 100);
+      await expect(header).not.toHaveClass(/opacity-0/);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+    }
+    await auto.click();
+    await save.click();
+    await page.mouse.move(1, 500);
+    await expect(header).toHaveClass(/opacity-0/);
+    await page.reload();
+    await expect(auto).toBeChecked();
+    await page.mouse.move(1, 500);
+    await expect(header).toHaveClass(/opacity-0/);
+  });
+}
+
+test("failed navbar save keeps the current behavior and allows retry", async ({ page, context, baseURL }) => {
+  await fixture(page, context, new URL(baseURL!).origin);
+  let fail = true;
+  await page.route("**/users/me/preferences", route => route.request().method() === "PUT" && fail
+    ? route.fulfill({ status: 500, contentType: "application/json", body: "{}" }) : route.fallback());
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/settings");
+  const options = page.getByRole("radiogroup", { name: catalogs.tr.preferences.navigation.title });
+  await options.getByRole("radio", { name: catalogs.tr.preferences.navigation.autoHide }).click();
+  const save = page.getByRole("button", { name: "Kaydet", exact: true });
+  await save.click();
+  await expect(save).toBeEnabled();
+  await page.waitForTimeout(NAVBAR_IDLE_MS + 100);
+  await expect(page.locator(".app-shell header")).not.toHaveClass(/opacity-0/);
+  fail = false;
+  await save.click();
+  await expect(save).toBeDisabled();
+  await page.mouse.move(1, 500);
+  await expect(page.locator(".app-shell header")).toHaveClass(/opacity-0/);
+});
+
+test("touch auto-hide reveals on upward scroll and honors reduced motion", async ({ page, context, baseURL }) => {
+  await fixture(page, context, new URL(baseURL!).origin);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/settings");
+  await page.getByRole("radio", { name: catalogs.tr.preferences.navigation.autoHide, exact: true }).click();
+  await page.getByRole("button", { name: "Kaydet", exact: true }).click();
+  const header = page.locator(".app-shell header");
+  await page.mouse.move(1, 500);
+  await expect(header).toHaveClass(/opacity-0/);
+  await expect.poll(() => header.evaluate(element => parseFloat(getComputedStyle(element).transitionDuration))).toBe(0.00001);
+  await page.evaluate(() => window.scrollTo(0, 500));
+  await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(80);
+  await page.evaluate(() => window.scrollTo(0, 100));
+  const touch = await page.evaluate(() => !matchMedia("(hover: hover)").matches);
+  if (touch) await expect(header).not.toHaveClass(/opacity-0/);
+  else await expect(header).toHaveClass(/opacity-0/);
 });
 
 test("mobile/tablet header stays visible after idle and scroll; desktop retains auto-hide", async ({ page, context, baseURL }) => {
