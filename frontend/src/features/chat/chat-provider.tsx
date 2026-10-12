@@ -28,6 +28,9 @@ import {
   applyMessageToOverview,
   applyReactionSnapshots,
   applyMessageDeleted,
+  applyMessagesDelivered,
+  applyMessagesRead,
+  applySeen,
   flattenMessages,
   chatKeys,
   newestMessageId,
@@ -326,6 +329,10 @@ function AccountChatProvider({ children, slug, selfId, ownerKey, pageKey }: {
         void queryClient.invalidateQueries({queryKey:chatKeys.overview(pid)});
         return;
       }
+      if (event.type === "DELIVERED") {
+        applyMessagesDelivered(queryClient, pid, event.conversationId, event.messageIds);
+        return;
+      }
       if (event.type === "TYPING") {
         // The server never echoes a typist to themselves; this also covers a second tab of the same account.
         if (event.userId === selfIdRef.current) return;
@@ -334,6 +341,8 @@ function AccountChatProvider({ children, slug, selfId, ownerKey, pageKey }: {
         return;
       }
       if (event.type === "SEEN") {
+        applySeen(queryClient, pid, event.conversationId, event.userId, event.readAt);
+        applyMessagesRead(queryClient, pid, event.conversationId, event.readAt);
         void queryClient.invalidateQueries({queryKey:chatKeys.receipts(pid,event.conversationId)});
         void queryClient.invalidateQueries({queryKey:chatKeys.infoRoot(pid,event.conversationId)});
         return;
@@ -361,7 +370,11 @@ function AccountChatProvider({ children, slug, selfId, ownerKey, pageKey }: {
       if (messageIds.size > 1000) messageIds.delete(messageIds.values().next().value!);
       const mine = message.sender.userId === selfIdRef.current;
       appendMessages(queryClient, pid, message.conversationId, [message]);
-      if (mine) dispatch({ type: "outboxConsume", conversationId: message.conversationId, content: message.content, replyId: message.replyTo?.id });
+      if (mine) {
+        dispatch({ type: "outboxConsume", conversationId: message.conversationId, content: message.content, replyId: message.replyTo?.id });
+      } else {
+        void chatApi.markDelivered(pid, message.conversationId, [message.id]).catch(() => {});
+      }
       const view = viewRef.current;
       const viewing =
         view.conversationId === message.conversationId &&

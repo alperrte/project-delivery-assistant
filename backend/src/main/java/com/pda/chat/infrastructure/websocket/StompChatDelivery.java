@@ -127,6 +127,25 @@ class StompChatDelivery implements ChatDelivery {
         }
     }
 
+    public record DeliveredSocketEvent(String type, UUID projectId, UUID conversationId, UUID recipientId,
+                                       java.util.List<UUID> messageIds) { }
+
+    @Override
+    public void delivered(ChatDelivered event) {
+        try {
+            DeliveredSocketEvent payload = new DeliveredSocketEvent("DELIVERED", event.projectId(),
+                    event.conversationId(), event.recipientId(), event.messageIds());
+            for (UUID recipient : recipients(event.projectId(), event.type(), event.directParticipants())) {
+                if (!recipient.equals(event.recipientId())) {
+                    messaging.convertAndSendToUser(recipient.toString(), ChatWebSocketConfiguration.USER_QUEUE, payload);
+                }
+            }
+        } catch (RuntimeException failure) {
+            log.warn("Chat delivered delivery failed: project={} conversation={} ({})", event.projectId(),
+                    event.conversationId(), failure.getClass().getSimpleName());
+        }
+    }
+
     public record ReactionSocketEvent(String type, UUID projectId, UUID conversationId, UUID messageId,
                                       String reactionVersion, java.util.List<ChatResponses.Reaction> reactions) { }
 

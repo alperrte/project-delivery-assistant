@@ -102,6 +102,20 @@ public class ChatController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/conversations/{conversationId}/delivered")
+    @Operation(summary = "Acknowledge message delivery",
+            description = "Acknowledges that the client has received the given messages. Updates delivered_at and notifies senders. Requires CSRF.")
+    @ApiResponse(responseCode = "204", description = "Delivery acknowledged")
+    public ResponseEntity<Void> markDelivered(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
+                                              @PathVariable(required = false) UUID projectId,
+                                              @PathVariable UUID conversationId,
+                                              @RequestBody(required = false) VisibleMessages request) {
+        if (request != null && request.messageIds() != null && !request.messageIds().isEmpty()) {
+            chat.markDelivered(actorId(principal), conversationId, request.messageIds());
+        }
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/conversations/{conversationId}/receipts")
     @Operation(summary = "Who has read the conversation",
             description = "Participants only. The other active members' read markers {userId, readAt}; a message is "

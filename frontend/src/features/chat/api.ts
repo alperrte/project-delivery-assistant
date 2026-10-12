@@ -60,6 +60,8 @@ export const chatApi = {
     apiRequest<void>(`${chatPath(accountId)}/conversations/${conversationId}/typing`, { method: "POST", signal, body: { typing } }),
   markRead: (accountId: string, conversationId: string, messageIds: string[]) =>
     apiRequest<void>(`${chatPath(accountId)}/conversations/${conversationId}/read`, { method: "POST", body: {messageIds} }),
+  markDelivered: (accountId: string, conversationId: string, messageIds: string[]) =>
+    apiRequest<void>(`${chatPath(accountId)}/conversations/${conversationId}/delivered`, { method: "POST", body: { messageIds } }),
 };
 
 /**
