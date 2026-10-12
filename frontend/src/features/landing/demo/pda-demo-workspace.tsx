@@ -54,7 +54,7 @@ function DemoWorkspace({ data, stage, progress }: { data: DemoData; stage: DemoS
         : (stage === "delivery" || assigned) && compact ? Array.from(viewport.querySelectorAll("[data-task-row]")).find(row => (row as HTMLElement).offsetHeight > 0) : null;
       const scale = viewport.getBoundingClientRect().width / viewport.offsetWidth;
       if (target && scale) {
-        const inset = viewport.clientWidth < 640 ? 144 : 84;
+        const inset = Number.parseFloat(getComputedStyle(main).paddingTop) + 12;
         const offset = Math.max(0, (target.getBoundingClientRect().top - viewport.getBoundingClientRect().top) / scale - inset);
         main.scrollTop = offset;
       }

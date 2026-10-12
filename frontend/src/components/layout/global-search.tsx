@@ -32,6 +32,7 @@ function matches(query: string, ...fields: (string | null | undefined)[]) {
  */
 export function GlobalSearch({ className, onNavigate, keyboardShortcut = true }: { className?: string; onNavigate?: () => void; keyboardShortcut?: boolean }) {
   const t = useTranslations("workspace");
+  const tc = useTranslations("common");
   const tApp = useTranslations("app");
   const router = useRouter();
   const listboxId = useId();
@@ -45,6 +46,11 @@ export function GlobalSearch({ className, onNavigate, keyboardShortcut = true }:
   // The shadcn `Input` wrapper does not forward a ref, so focus is driven
   // through the DOM by scoping a query to the root instead.
   const focusInput = () => rootRef.current?.querySelector("input")?.focus();
+  const closeMobileSearch = () => {
+    setFocused(false);
+    setMobileOpen(false);
+    requestAnimationFrame(() => rootRef.current?.querySelector<HTMLButtonElement>("[data-mobile-search-trigger]")?.focus());
+  };
 
   const trimmed = query.trim();
   const hasQuery = trimmed.length > 0;
@@ -126,7 +132,7 @@ export function GlobalSearch({ className, onNavigate, keyboardShortcut = true }:
     function onPointerDown(event: PointerEvent) {
       if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
         setFocused(false);
-        if (!query) setMobileOpen(false);
+        setMobileOpen(false);
       }
     }
     document.addEventListener("pointerdown", onPointerDown);
@@ -159,6 +165,7 @@ export function GlobalSearch({ className, onNavigate, keyboardShortcut = true }:
         setFocused(false);
         setMobileOpen(false);
         rootRef.current?.querySelector("input")?.blur();
+        requestAnimationFrame(() => rootRef.current?.querySelector<HTMLButtonElement>("[data-mobile-search-trigger]")?.focus());
       }
     }
   }
@@ -195,7 +202,7 @@ export function GlobalSearch({ className, onNavigate, keyboardShortcut = true }:
           onChange={(event) => updateQuery(event.target.value)}
           onFocus={() => setFocused(true)}
           onKeyDown={onKeyDown}
-          className="h-9 w-full max-w-sm pr-7 pl-8"
+          className="h-9 w-full max-w-sm pr-7 pl-8 max-sm:pr-12"
         />
         {query && (
           <button
@@ -205,11 +212,12 @@ export function GlobalSearch({ className, onNavigate, keyboardShortcut = true }:
               updateQuery("");
               focusInput();
             }}
-            className="absolute top-1/2 right-1.5 -translate-y-1/2 rounded-sm p-1 text-muted-foreground hover:text-foreground"
+            className="absolute top-1/2 right-1.5 -translate-y-1/2 rounded-sm p-1 text-muted-foreground hover:text-foreground max-sm:hidden"
           >
             <X size={14} aria-hidden="true" />
           </button>
         )}
+        {mobileOpen && <Button type="button" variant="ghost" size="icon" aria-label={tc("close")} onClick={closeMobileSearch} className="absolute top-1/2 right-1.5 size-11 -translate-y-1/2 sm:hidden"><X size={18} aria-hidden="true" /></Button>}
       </div>
 
       {mobileOpen ? null : (
@@ -218,7 +226,8 @@ export function GlobalSearch({ className, onNavigate, keyboardShortcut = true }:
           variant="ghost"
           size="icon"
           aria-label={t("search")}
-          className="sm:hidden"
+          data-mobile-search-trigger
+          className="size-11 shrink-0 sm:hidden"
           onClick={() => {
             setMobileOpen(true);
             requestAnimationFrame(focusInput);
@@ -233,7 +242,7 @@ export function GlobalSearch({ className, onNavigate, keyboardShortcut = true }:
           id={listboxId}
           role="listbox"
           aria-label={t("search")}
-          className="absolute top-full left-0 z-50 mt-2 max-h-96 w-full min-w-72 overflow-y-auto rounded-lg border bg-popover p-1.5 text-popover-foreground shadow-lg ring-1 ring-foreground/10"
+          className="absolute top-full left-0 z-50 mt-2 max-h-96 w-full min-w-72 overflow-y-auto rounded-lg border bg-popover p-1.5 text-popover-foreground shadow-lg ring-1 ring-foreground/10 max-sm:max-h-[calc(100dvh-7rem)] max-sm:min-w-0"
         >
           {isLoading && <p className="px-2.5 py-2 text-sm text-muted-foreground">{t("loading")}</p>}
           {isError && (

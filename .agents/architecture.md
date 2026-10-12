@@ -1,5 +1,9 @@
 ﻿# Mimari kısa özet
 
+## Mobil çalışma alanı üst çubuğu — 2026-10-12
+
+`AppHeader` 640 px altında 56 px tek satırdır; tercihler ve native history kontrolleri mevcut `AppShellView` dialog çekmecesindedir. AppHeader/drawer main dışında kalır. Main/fullscreen chat ortak reserve değeri mobilde 80 px, sm üstünde 72 px'tir (`globals.css`); landing demo aynı padding'i okur. Native history capability/oturum sınırı, preference persistence, auth ve modül/API sözleşmeleri değişmez. UI kontrolü `e2e/workspace-mobile-header.spec.ts` içinde açıkça TEST-ONLY REST/WS fixture'larıyla yapılır.
+
 ## Güvenlik başlıkları, çevrimdışı sayfa ve çeviri yedeği (2026-10-11)
 
 - **CSP.** `src/proxy.ts` her sayfa yanıtı için istek başına nonce üretir (`lib/security/csp.ts`: `script-src 'self' 'nonce-…' 'strict-dynamic'`, `frame-ancestors 'none'`, `connect-src`/`img-src` API origin'i `NEXT_PUBLIC_API_URL`'den). Nonce `x-nonce` isteği başlığıyla `app/layout.tsx`'e (`RENDERER_BOOT_SCRIPT`) ve `Providers` → next-themes'e iner. Tüm sayfalar istek başına render edilir. `NEXT_PUBLIC_API_URL` frontend derlenmeden önce tanımlı olmalıdır. Production'da `Strict-Transport-Security` `next.config.ts` ile gider. Ayrıntı ve sınırlar: `SECURITY.md` §15.

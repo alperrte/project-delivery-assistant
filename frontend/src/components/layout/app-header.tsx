@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar } from "@/components/ui/avatar";
+import { Logo } from "@/components/common/logo";
 import { openConsentPreferences } from "@/features/consent/consent-store";
 import { profilePhotoUrl } from "@/features/account/api";
 import { cn } from "@/lib/utils";
@@ -29,7 +30,8 @@ type SessionUser = { id?: string; nickname?: string; email?: string; globalRole?
 
 /**
  * Glass navbar centered on the physical viewport, independent of sidebar
- * collapse. Below sm it uses two rows and the same responsive reserve as main
+ * collapse. Phones use a single row; preferences/history live in the drawer.
+ * The same responsive reserve is shared by main
  * and fullscreen chat. History controls remain outside main's inert region.
  * useAutoHide preserves pointer, scroll, focus and search-shortcut behavior;
  * hiding the header never changes the space reserved for page content.
@@ -80,33 +82,38 @@ export function AppHeader({
       <header
         ref={ref}
         className={cn(
-          "pointer-events-auto relative top-3 flex h-28 w-full flex-col items-center gap-1 rounded-2xl border border-border/60 bg-background/95 px-3 py-2 shadow-[0_10px_30px_-14px_hsl(var(--shadow-tint)/0.35)] backdrop-saturate-150 transition-[translate,scale,opacity] duration-500 ease-out supports-[backdrop-filter]:bg-background/55 supports-[backdrop-filter]:backdrop-blur-2xl sm:h-12 sm:flex-row sm:gap-2 sm:rounded-full sm:px-4 sm:py-0",
+          "pointer-events-auto relative top-3 flex h-14 w-full items-center gap-1 rounded-2xl border border-border/60 bg-background/95 px-2 shadow-[0_10px_30px_-14px_hsl(var(--shadow-tint)/0.35)] backdrop-saturate-150 transition-[translate,scale,opacity] duration-500 ease-out supports-[backdrop-filter]:bg-background/55 supports-[backdrop-filter]:backdrop-blur-2xl sm:h-12 sm:gap-2 sm:rounded-full sm:px-4",
           hidden && "pointer-events-none scale-95 -translate-y-[calc(100%+16px)] opacity-0",
         )}
       >
-        <div className="flex h-11 w-full min-w-0 shrink-0 items-center gap-2 sm:contents">
-        <Button variant="ghost" size="icon" className="shrink-0 max-sm:size-11 lg:hidden" aria-label={tw("navigation")} onClick={onOpenMobileMenu}>
+        <div className="flex h-11 min-w-0 flex-1 items-center gap-1 sm:contents">
+        <Button variant="ghost" size="icon" className="shrink-0 max-sm:size-11 lg:hidden" aria-label={tw("navigation")} aria-haspopup="dialog" aria-expanded={mobileMenuOpen} aria-controls="workspace-mobile-navigation" onClick={onOpenMobileMenu}>
           <List size={20} aria-hidden="true" />
         </Button>
-        <WorkspaceHistoryControls enabled={!contained} />
+        <Link href="/dashboard" aria-label="PDA" className="flex h-11 w-14 shrink-0 items-center sm:hidden">
+          <Logo variant="wordmark" compact plain size={56} />
+        </Link>
+        <div className="hidden sm:contents"><WorkspaceHistoryControls enabled={!contained} /></div>
         <GlobalSearch className="min-w-0 flex-1" keyboardShortcut={!contained} />
         </div>
         <div className="ml-auto flex h-11 min-w-0 shrink-0 items-center gap-1 sm:h-auto sm:gap-2">
-          <LocaleSwitcher triggerClassName="max-sm:px-1" hideLabelOnMobile />
-          <ThemeToggle />
+          <div className="hidden items-center gap-2 sm:flex">
+            <LocaleSwitcher hideLabelOnMobile />
+            <ThemeToggle />
+          </div>
           <NotificationsMenu userId={user?.id} disabled={contained} />
           <div className="mx-1 h-5 border-l max-sm:hidden" />
           <DropdownMenu>
             <DropdownMenuTrigger
               render={
-                <Button variant="ghost" size="sm" className="max-w-44 min-w-0 gap-2 px-1 sm:px-2 xl:max-w-56">
+                <Button variant="ghost" size="sm" className="max-w-44 min-w-0 gap-2 px-1 max-sm:size-11 sm:px-2 xl:max-w-56">
                   <Avatar
                     name={user?.nickname ?? ""}
                     src={user?.id && user.profilePhotoVersion != null ? profilePhotoUrl(user.id, user.profilePhotoVersion) : null}
                     className="size-7 bg-primary text-[11px] text-primary-foreground ring-0"
                   />
                   <span className="hidden truncate sm:block" title={user?.nickname}>{user?.nickname}</span>
-                  <CaretDown size={13} aria-hidden="true" />
+                  <CaretDown size={13} aria-hidden="true" className="max-sm:hidden" />
                   <span className="sr-only">{tw("account")}</span>
                 </Button>
               }
