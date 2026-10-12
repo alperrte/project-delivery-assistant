@@ -4344,6 +4344,7 @@
   "contact": {
     "title": "Kontakt",
     "description": "Senden Sie uns Fragen, Vorschläge und Feedback ohne Anmeldung.",
+    "workspaceDescription": "Senden Sie uns Fragen, Vorschläge und Feedback.",
     "form": {
       "label": "Kontaktformular",
       "firstName": "Vorname",

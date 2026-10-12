@@ -72,6 +72,16 @@ export function proxy(request: NextRequest) {
 
   const authenticated = request.cookies.has("PDA_SESSION");
 
+  // Old/bookmarked/footer help links must also keep a signed-in visitor in the workspace.
+  // This chooses a layout only: AppShell and the API still validate the session.
+  if (authenticated && (page.internalPath === "/faq" || page.internalPath === "/contact")) {
+    const target = request.nextUrl.clone();
+    target.pathname = buildPath(page.internalPath === "/faq" ? "/account/faq" : "/account/contact", {}, page.locale);
+    const response = NextResponse.redirect(target, 307);
+    response.headers.set("Cache-Control", "no-store");
+    return response;
+  }
+
   if (!authenticated && PROTECTED_PATHS.some(path => page.internalPath === path || page.internalPath.startsWith(`${path}/`))) {
     const loginUrl = new URL(buildPath("/login", {}, page.locale), request.url);
     loginUrl.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
