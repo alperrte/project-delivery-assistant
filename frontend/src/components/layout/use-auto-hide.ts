@@ -1,18 +1,26 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 export const NAVBAR_IDLE_MS = 700;
 const TOP_ZONE_PX = 24;
 const SCROLL_HIDE_DELTA = 80;
+const DESKTOP_QUERY = "(min-width: 1024px) and (hover: hover) and (pointer: fine)";
+function subscribeDesktop(onChange: () => void) {
+  const query = window.matchMedia(DESKTOP_QUERY);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+}
 
-/** One idle timer for pointer and touch; focused/owned interactions always keep the header visible. */
+/** Auto-hide is desktop-only. Phones/tablets and touch-primary devices always keep the header visible. */
 export function useAutoHide<T extends HTMLElement>(enabled = true, interactionOpen = false) {
+  const desktop = useSyncExternalStore(subscribeDesktop, () => window.matchMedia(DESKTOP_QUERY).matches, () => false);
+  const active = enabled && desktop;
   const ref = useRef<T>(null), revealRef = useRef<() => void>(() => {});
   const [hidden, setHidden] = useState(false);
   useEffect(() => {
     const node = ref.current;
-    if (!node || !enabled) return;
+    if (!node || !active) return;
     const media = matchMedia("(hover: hover)");
     let timer: ReturnType<typeof setTimeout> | undefined, focusFrame: number | undefined;
     let hovered = false, topZone = false, lastY = window.scrollY, disposed = false;
@@ -45,8 +53,7 @@ export function useAutoHide<T extends HTMLElement>(enabled = true, interactionOp
     function scroll() {
       const y = window.scrollY, delta = y - lastY; lastY = y;
       if (delta > 0 && y > SCROLL_HIDE_DELTA && !held()) { clear(); setHidden(true); }
-      // Pointer users reveal the navbar deliberately; scroll-up reveal is for touch devices.
-      else if (delta < 0 && !media.matches) show();
+      // Desktop pointer users reveal the navbar deliberately; phones/tablets never hide.
       else if (delta > 0) arm();
     }
     function keyboard(event: KeyboardEvent) { if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") show(); }
@@ -63,6 +70,6 @@ export function useAutoHide<T extends HTMLElement>(enabled = true, interactionOp
       node.removeEventListener("pointerenter", enter); node.removeEventListener("pointerleave", leave); node.removeEventListener("focusin", focusIn); node.removeEventListener("focusout", focusOut);
       media.removeEventListener("change", inputModeChanged);
     };
-  }, [enabled, interactionOpen]);
-  return { ref, hidden: enabled && !interactionOpen && hidden, reveal: () => revealRef.current() };
+  }, [active, interactionOpen]);
+  return { ref, hidden: active && !interactionOpen && hidden, reveal: () => revealRef.current() };
 }

@@ -1,5 +1,9 @@
 # Web Sitesi Kesinlikle Olması Gerekenler — Master Checklist
 
+## Mobil navbar gizlenmesini kaldırma — 2026-10-12
+
+Mobil/tablet ve touch-primary cihazlarda auto-hide kapatıldı; yalnız >=1024 px hover/fine-pointer desktop'ta sürer. Güncel dev kaynakta 390/768 px idle/scroll/drawer/focus ve 1440 px desktop/touch + mobile resize senaryosu Chromium ve mobil WebKit'te birer başarılı; TypeScript/lint/diff geçti. Eski gerçek hesaplı touch test beklentileri uyarlandı; o backendli paket bu küçük takipte çalıştırılmadı. Global kutular değişmedi. Kayıt: `docs/compliation/2026-10-12-mobile-navbar-always-visible.md`.
+
 ## Oturum içi mobil navbar — 2026-10-12 (sınırlı kapsam)
 
 AppHeader 640 px altında tek satır/56 px, 44 px hamburger/arama/bildirim/hesap ve PDA logo kullanır; dil/tema/native history mevcut çekmecededir. Main/fullscreen chat reserve mobil 80 px / desktop 72 px. Arama kapatma/odak, viewporta sığan sonuçlar, drawer Escape/nested dil menüsü/rota/resize, native geri ve dürüst unsupported fallback, auto-hide/drawer hold ve chat inert sınırı doğrulandı. Production build üzerinde 38 Chromium (28 landing/gerçek component + 2 native history + 8 yeni UI) ve 8 dokunmatik mobil WebKit başarılı; lint/TypeScript/build/diff geçti. TR/EN/DE, light/dark, 320/390/640/768/1024/1440 px geometrisi ve ekran görüntüleri incelendi. UI testleri açıkça TEST-ONLY REST/WS fixture kullanır; service worker yalnız fixture routing'i güvenilir kılmak için bu testlerde bloklanır. Gerçek backend hesaplı geniş gate ve gerçek cihaz kontrolü yapılmadı. Responsive / Mobil Görünüm / Keyboard Navigation / Focus State global kutuları değişmedi. Kayıt: `docs/compliation/2026-10-12-workspace-mobile-navbar.md`.

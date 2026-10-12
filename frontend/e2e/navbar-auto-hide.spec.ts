@@ -59,7 +59,7 @@ test("hover, focus and an owned popup hold the header; leaving the interaction r
   } finally { await context.close(); }
 });
 
-test("actual touch drawer interaction holds navbar and resumes idle after focus leaves", async ({ browser }) => {
+test("actual touch navbar stays visible after drawer dismissal and focus leaves", async ({ browser }) => {
   const context = await browser.newContext({ storageState: MANAGER_STORAGE, viewport: { width: 390, height: 500 }, hasTouch: true, isMobile: true });
   const page = await context.newPage();
   try {
@@ -68,11 +68,11 @@ test("actual touch drawer interaction holds navbar and resumes idle after focus 
     await menu.click(); const drawer = page.getByRole("dialog", { name: "Gezinme menüsü", exact: true }); await expect(drawer).toBeVisible();
     await page.waitForTimeout(NAVBAR_IDLE_MS + 250); await expect(header(page)).not.toHaveClass(/opacity-0/);
     await page.keyboard.press("Escape"); await expect(drawer).toBeHidden(); await page.locator("#main-content").focus();
-    await expect(header(page)).toHaveClass(/opacity-0/);
+    await page.waitForTimeout(NAVBAR_IDLE_MS + 250); await expect(header(page)).not.toHaveClass(/opacity-0/);
   } finally { await context.close(); }
 });
 
-test("touch upward scroll reopens the navbar and uses the same idle hide", async ({ browser }) => {
+test("touch scrolling and idle never hide the navbar", async ({ browser }) => {
   const context = await browser.newContext({ storageState: MANAGER_STORAGE, viewport: { width: 390, height: 500 }, hasTouch: true, isMobile: true });
   const page = await context.newPage();
   try {
@@ -86,9 +86,9 @@ test("touch upward scroll reopens the navbar and uses the same idle hide", async
     };
     await pan(420, 180); await pan(420, 180);
     await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(80);
-    await expect(header(page)).toHaveClass(/opacity-0/);
+    await expect(header(page)).not.toHaveClass(/opacity-0/);
     await pan(180, 320);
     await expect(header(page)).not.toHaveClass(/opacity-0/);
-    await expect(header(page)).toHaveClass(/opacity-0/, { timeout: 2500 });
+    await page.waitForTimeout(NAVBAR_IDLE_MS + 250); await expect(header(page)).not.toHaveClass(/opacity-0/);
   } finally { await context.close(); }
 });

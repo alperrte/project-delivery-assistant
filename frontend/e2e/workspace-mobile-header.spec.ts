@@ -218,14 +218,23 @@ test("fullscreen chat uses the compact reserve and keeps hamburger controls outs
   await expect(chat).toBeVisible();
 });
 
-test("compact header keeps idle hiding and stays visible while its drawer is open", async ({ page, context, baseURL }) => {
+test("mobile/tablet header stays visible after idle and scroll; desktop retains auto-hide", async ({ page, context, baseURL }) => {
   await fixture(page, context, new URL(baseURL!).origin);
+  const header = page.locator(".app-shell header");
+  for (const width of [390, 768]) {
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto("/settings");
+    await expect(header).toBeVisible();
+    await page.evaluate(() => (document.activeElement as HTMLElement)?.blur());
+    await page.mouse.move(1, 500);
+    await page.waitForTimeout(NAVBAR_IDLE_MS + 100);
+    await expect(header).not.toHaveClass(/opacity-0/);
+    await page.evaluate(() => window.scrollTo(0, 500));
+    await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(80);
+    await page.waitForTimeout(NAVBAR_IDLE_MS + 100);
+    await expect(header).not.toHaveClass(/opacity-0/);
+  }
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/settings");
-  const header = await reveal(page);
-  await page.evaluate(() => (document.activeElement as HTMLElement)?.blur());
-  await page.mouse.move(1, 500);
-  await expect(header).toHaveClass(/opacity-0/);
   const panel = await drawer(page);
   await page.waitForTimeout(NAVBAR_IDLE_MS + 100);
   await expect(header).not.toHaveClass(/opacity-0/);
@@ -233,4 +242,15 @@ test("compact header keeps idle hiding and stays visible while its drawer is ope
   await page.keyboard.press("Escape");
   await expect(panel).not.toBeVisible();
   await expect(header.getByRole("button", { name: "Gezinme menüsü", exact: true })).toBeFocused();
+  await page.setViewportSize({ width: 1440, height: 844 });
+  await page.evaluate(() => (document.activeElement as HTMLElement)?.blur());
+  await page.mouse.move(1, 500);
+  const desktop = await page.evaluate(() => matchMedia("(hover: hover) and (pointer: fine)").matches);
+  if (desktop) await expect(header).toHaveClass(/opacity-0/);
+  else {
+    await page.waitForTimeout(NAVBAR_IDLE_MS + 100);
+    await expect(header).not.toHaveClass(/opacity-0/);
+  }
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(header).not.toHaveClass(/opacity-0/);
 });
