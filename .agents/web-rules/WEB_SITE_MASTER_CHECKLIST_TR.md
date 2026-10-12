@@ -1,5 +1,9 @@
 # Web Sitesi Kesinlikle Olması Gerekenler — Master Checklist
 
+## Navbar görünürlük seçimi — 2026-10-12
+
+Ayarlar iki seçenek sunar: Her zaman görünür / Otomatik gizlen. Taslak, Vazgeç, Kaydet, kayıtlı tercihin reload sonrası uygulanması; 320/390/768/1440 px, TR/EN/DE, light/dark, açık drawer/focus ve dokunmatik yukarı scroll/reduced-motion kontrolleri üretim build üzerinde 6 Chromium + 6 mobil WebKit testiyle doğrulandı; görseller incelendi. Backend own-account/CSRF/invalid/legacy-client/relogin ve V46→V47 veri koruma/DB CHECK toplam 5 test geçti. Saved-preferences cache userId kapsamına alındı ve GET abort desteği eklendi. Hedefli ESLint/TypeScript/build/diff başarılı. Responsive / Keyboard Navigation / Focus State / Form Validation / QA global kutuları bu dar kapsamla tamamlanmış sayılmadı. Kayıt: `docs/compliation/2026-10-12-navbar-visibility-preference.md`.
+
 ## Hamburger çekmecesi yumuşak açılma — 2026-10-12
 
 Çalışma alanı çekmecesi 280 ms soldan kayma ve 200 ms kapanma, eşzamanlı backdrop fade kullanır. Chromium + mobil WebKit'te nested dil/tema/Escape/odak/rota/resize ve fullscreen chat erişimi toplam 4 hedefli test geçti. Chromium frame örneklemesinde gerçek ara konumlar, final x=0/scale=1, reduced-motion ve motion-off altında 0.01 ms geçiş doğrulandı; lint/TypeScript/diff başarılı. Global erişilebilirlik/QA kutuları değişmedi. Kayıt: `docs/compliation/2026-10-12-workspace-drawer-soft-motion.md`.

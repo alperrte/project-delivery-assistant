@@ -1576,6 +1576,13 @@
       "description": "Varsayılan tema: açık, koyu ya da cihazınızı izleyin. Kaydet'e basana kadar değişmez.",
       "label": "Tema"
     },
+    "navigation": {
+      "title": "Üst gezinme çubuğu",
+      "description": "Mobilde ve masaüstünde üst çubuğun görünürlüğünü seçin. Kaydet'e basana kadar değişmez.",
+      "alwaysVisible": "Her zaman görünür",
+      "autoHide": "Otomatik gizlen",
+      "hint": "Otomatik gizlen seçeneği, kullanılmadığında çubuğu gizler. Üstteki tutamaçla yeniden açabilirsiniz; mobilde yukarı kaydırmak da çubuğu açar."
+    },
     "motion": {
       "title": "Animasyonlar",
       "description": "Bu tercihler hesabınıza kaydedilir ve her girişinizde uygulanır.",

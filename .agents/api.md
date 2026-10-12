@@ -1,5 +1,9 @@
 # API rehberi
 
+## Navbar görünürlüğü — 2026-10-12
+
+Mevcut `GET|PUT /api/v1/users/me/preferences` opsiyonel `navbarMode` (`always-visible|auto-hide`) taşır. GET seçilmemiş değeri null/absent verir; eski PUT alanı atlar veya null verirse önceki değer korunur. Diğer dört zorunlu alan değişmez. Yalnız principal'ın hesabı, mevcut cookie/CSRF/no-store politikası; geçersiz mode 400. Güvenli body: `{locale:"tr",theme:"system",motion:"on",themeTransition:true,navbarMode:"always-visible"}`.
+
 ## Merkezi mesajlaşma — 2026-10-12
 
 Güncel kök `/api/v1/chat`; eski `/projects/{id}/chat` yolları uyumluluk için kalır. Merkezi overview `group` (nullable), `groups[]`, `directs[]`, `totalUnread` döner; grup özetleri projectId/projectName/logoVersion/logoShape içerir. `/members` diğer aktif ortak-proje üyelerini e-postasız döner. DM oluşturma global tekildir; var olan DM ortak proje olmasa da açılır.

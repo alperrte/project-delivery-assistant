@@ -20,17 +20,20 @@ import {
   useMotionPreference,
   useThemeTransitionPreference,
 } from "@/lib/preferences/motion";
-import { preferencesApi, preferencesKey, type PreferencesDraft, type SavedPreferences, type ThemeChoice } from "../api";
+import { preferencesApi, savedPreferencesKey, type PreferencesDraft, type SavedPreferences, type ThemeChoice } from "../api";
 import { useSavedPreferences, writeBaseline } from "../session-preferences";
 import { AppearanceSection } from "./appearance-section";
 import { LanguageSection } from "./language-section";
 import { MotionSection } from "./motion-section";
+import { NavigationSection } from "./navigation-section";
+import { useNavbarAutoHideEnabled } from "@/components/layout/use-auto-hide";
 
 const same = (a: PreferencesDraft, b: PreferencesDraft) =>
-  a.locale === b.locale && a.theme === b.theme && a.motion === b.motion && a.themeTransition === b.themeTransition;
+  a.locale === b.locale && a.theme === b.theme && a.motion === b.motion && a.themeTransition === b.themeTransition
+  && a.navbarMode === b.navbarMode;
 
 /**
- * The interface defaults (language, theme, animations); the account and the password are on the account page. They are edited as a draft: nothing changes on screen while
+ * The interface defaults (language, theme, animations, navbar); the account and the password are on the account page. They are edited as a draft: nothing changes on screen while
  * choosing, and Kaydet stores them on the account, where they apply at every sign-in. The language and theme switches
  * in the navbar are separate and only last for the current sign-in.
  */
@@ -49,11 +52,13 @@ export function SettingsPage() {
 
   // What is saved, or, for somebody who never saved, what the interface has right now.
   const stored: SavedPreferences | undefined = saved.data;
+  const autoHide = useNavbarAutoHideEnabled(stored?.navbarMode);
   const initial: PreferencesDraft = {
     locale: stored?.locale ?? locale,
     theme: stored?.theme ?? ((theme === "light" || theme === "dark" ? theme : "system") as ThemeChoice),
     motion: stored?.motion ?? motion,
     themeTransition: stored?.themeTransition ?? themeTransition,
+    navbarMode: stored?.navbarMode ?? (autoHide ? "auto-hide" : "always-visible"),
   };
   const current = draft ?? initial;
   const dirty = draft !== null && !same(draft, initial);
@@ -61,7 +66,7 @@ export function SettingsPage() {
   const save = useMutation({
     mutationFn: (values: PreferencesDraft) => preferencesApi.save(values),
     onSuccess: (result, values) => {
-      queryClient.setQueryData(preferencesKey, result);
+      queryClient.setQueryData(savedPreferencesKey(user?.id), result);
       setDraft(null);
       // They are the defaults now, and what the navbar's temporary changes return to at sign-out.
       if (user) writeBaseline({ userId: user.id, theme: values.theme, locale: values.locale });
@@ -83,6 +88,7 @@ export function SettingsPage() {
         <>
           <LanguageSection value={current.locale} onChange={(next) => setDraft({ ...current, locale: next })} />
           <AppearanceSection value={current.theme} onChange={(next) => setDraft({ ...current, theme: next })} />
+          <NavigationSection value={current.navbarMode} onChange={(next) => setDraft({ ...current, navbarMode: next })} />
           <MotionSection
             motion={current.motion}
             themeTransition={current.themeTransition}

@@ -1,5 +1,9 @@
 # Frontend tasarım kuralları
 
+## Kullanıcıya bağlı navbar görünürlüğü — 2026-10-12
+
+Ayarlar → Üst gezinme çubuğu ortak `OptionGroup` ile yalnız iki seçenek sunar: `always-visible` / `auto-hide`. Seçim taslaktır; Kaydet mevcut preferences API/cache üzerinden hesaba yazar, Vazgeç geri alır. Kaydedilmiş seçim mobil ve masaüstünde aynıdır; auto-hide 700 ms idle, focus/popup/drawer koruması, üst tutamaç ve dokunmatikte yukarı scroll ile açılmayı korur. Seçim henüz yoksa önceki desktop auto-hide / mobile sürekli görünür varsayılanı sürer. Önceki mobil asla gizlenmez açıklamaları artık yalnız seçilmemiş varsayılan için geçerlidir. Drawer animasyonu ve header reserve değişmez.
+
 ## Çalışma alanı hamburger çekmecesi animasyonu — 2026-10-12
 
 `AppShellView` çekmecesi modal zoom/fade yerine soldan kayarak 280 ms `cubic-bezier(0.22,1,0.36,1)` ile açılır; 200 ms `cubic-bezier(0.4,0,1,1)` ile kapanır. Arka örtü aynı sürelerde opacity geçişi yapar. Base UI `data-starting-style`/`data-ending-style` ile mount/unmount ve odak yönetiminin sahibidir. CSS yalnız `workspace-navigation-drawer/backdrop` sınıflarına scoped; ortak DialogContent yeni opsiyonel `overlayClassName` alır, diğer dialog animasyonları değişmez. Global reduced-motion ve animasyon kapalı tercihleri bu geçişleri de anlık yapar; mobil navbar sürekli görünür kalır.

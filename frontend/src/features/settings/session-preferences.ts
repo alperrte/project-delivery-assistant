@@ -8,7 +8,7 @@ import { writeLocaleCookie } from "@/i18n/locale-cookie";
 import { locales, type Locale } from "@/i18n/config";
 import { switchLocale } from "@/i18n/routing";
 import { setMotionPreference, setThemeTransitionPreference } from "@/lib/preferences/motion";
-import { preferencesApi, preferencesKey, type ThemeChoice } from "./api";
+import { preferencesApi, savedPreferencesKey, type ThemeChoice } from "./api";
 
 /**
  * Two layers of interface choices:
@@ -50,8 +50,8 @@ function clearBaseline() {
 /** The signed-in user's saved defaults; shared by the session start and the Settings page. */
 export function useSavedPreferences(userId: string | undefined) {
   return useQuery({
-    queryKey: preferencesKey,
-    queryFn: preferencesApi.get,
+    queryKey: savedPreferencesKey(userId),
+    queryFn: ({ signal }) => preferencesApi.get(signal),
     enabled: !!userId,
     staleTime: Number.POSITIVE_INFINITY,
   });
