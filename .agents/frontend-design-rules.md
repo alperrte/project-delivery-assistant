@@ -1,5 +1,9 @@
 # Frontend tasarım kuralları
 
+## Mobil navbar sürekli görünür — 2026-10-12
+
+Kullanıcının tercihiyle mobil/tablet navbar bekleme, scroll veya focus değişiminde gizlenmez. `use-auto-hide.ts` yalnız `(min-width: 1024px) and (hover: hover) and (pointer: fine)` cihazlarda çalışır; dar ekranlar ve touch-primary cihazlar ilk render'dan itibaren görünürdür. Desktop → mobile resize gizlenmiş navbar'ı da açar. Önceki touch idle/scroll-up auto-hide açıklamaları geçersizdir; navbar boyut/reserve/menü düzeni değişmedi.
+
 ## Oturum içi mobil navbar — 2026-10-12
 
 640 px altında `AppHeader` tek satır ve 56 px yüksekliktedir: 44 px hamburger, PDA wordmark, arama, bildirim ve hesap tetikleyicileri. Dil/tema ve native geri/ileri kontrolleri mevcut `AppShellView` çekmecesinin altındadır; aynı ortak component'ler ve oturum tercihleri kullanılır. Menü Escape ile odağı tetikleyiciye döndürür, rota seçimi/geçmiş traversali veya desktop kontrol breakpoint'ine geçişte kapanır. Drawer altı safe-area payını gözetir. Desktop navbar viewport merkezindeki konumunu ve 48 px yüksekliğini korur.
