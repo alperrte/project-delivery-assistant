@@ -1,5 +1,9 @@
 # Frontend tasarım kuralları
 
+## Çalışma alanı hamburger çekmecesi animasyonu — 2026-10-12
+
+`AppShellView` çekmecesi modal zoom/fade yerine soldan kayarak 280 ms `cubic-bezier(0.22,1,0.36,1)` ile açılır; 200 ms `cubic-bezier(0.4,0,1,1)` ile kapanır. Arka örtü aynı sürelerde opacity geçişi yapar. Base UI `data-starting-style`/`data-ending-style` ile mount/unmount ve odak yönetiminin sahibidir. CSS yalnız `workspace-navigation-drawer/backdrop` sınıflarına scoped; ortak DialogContent yeni opsiyonel `overlayClassName` alır, diğer dialog animasyonları değişmez. Global reduced-motion ve animasyon kapalı tercihleri bu geçişleri de anlık yapar; mobil navbar sürekli görünür kalır.
+
 ## Mobil navbar sürekli görünür — 2026-10-12
 
 Kullanıcının tercihiyle mobil/tablet navbar bekleme, scroll veya focus değişiminde gizlenmez. `use-auto-hide.ts` yalnız `(min-width: 1024px) and (hover: hover) and (pointer: fine)` cihazlarda çalışır; dar ekranlar ve touch-primary cihazlar ilk render'dan itibaren görünürdür. Desktop → mobile resize gizlenmiş navbar'ı da açar. Önceki touch idle/scroll-up auto-hide açıklamaları geçersizdir; navbar boyut/reserve/menü düzeni değişmedi.

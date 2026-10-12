@@ -659,6 +659,29 @@ html:is(.theme-reveal, .theme-close-in) .auth-slogan::after {
   }
 }
 
+/* Workspace drawer: slide from its left edge; the backdrop fades at the same pace.
+   Base UI owns starting/ending styles and keeps the popup mounted until exit finishes. */
+.workspace-navigation-drawer[data-slot="dialog-content"] {
+  animation: none;
+  opacity: 1;
+  transform: translateX(0);
+  transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.workspace-navigation-drawer:is([data-starting-style], [data-ending-style]) {
+  transform: translateX(-100%);
+}
+.workspace-navigation-drawer[data-ending-style] {
+  transition-duration: 200ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 1, 1);
+}
+.workspace-navigation-backdrop[data-slot="dialog-overlay"] {
+  animation: none;
+  opacity: 1;
+  transition: opacity 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.workspace-navigation-backdrop:is([data-starting-style], [data-ending-style]) { opacity: 0; }
+.workspace-navigation-backdrop[data-ending-style] { transition-duration: 200ms; }
+
 /*
  * Both the device reduced-motion preference and an explicit off stop animations.
  */

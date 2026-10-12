@@ -1,5 +1,9 @@
 # Web Sitesi Kesinlikle Olması Gerekenler — Master Checklist
 
+## Hamburger çekmecesi yumuşak açılma — 2026-10-12
+
+Çalışma alanı çekmecesi 280 ms soldan kayma ve 200 ms kapanma, eşzamanlı backdrop fade kullanır. Chromium + mobil WebKit'te nested dil/tema/Escape/odak/rota/resize ve fullscreen chat erişimi toplam 4 hedefli test geçti. Chromium frame örneklemesinde gerçek ara konumlar, final x=0/scale=1, reduced-motion ve motion-off altında 0.01 ms geçiş doğrulandı; lint/TypeScript/diff başarılı. Global erişilebilirlik/QA kutuları değişmedi. Kayıt: `docs/compliation/2026-10-12-workspace-drawer-soft-motion.md`.
+
 ## Mobil navbar gizlenmesini kaldırma — 2026-10-12
 
 Mobil/tablet ve touch-primary cihazlarda auto-hide kapatıldı; yalnız >=1024 px hover/fine-pointer desktop'ta sürer. Güncel dev kaynakta 390/768 px idle/scroll/drawer/focus ve 1440 px desktop/touch + mobile resize senaryosu Chromium ve mobil WebKit'te birer başarılı; TypeScript/lint/diff geçti. Eski gerçek hesaplı touch test beklentileri uyarlandı; o backendli paket bu küçük takipte çalıştırılmadı. Global kutular değişmedi. Kayıt: `docs/compliation/2026-10-12-mobile-navbar-always-visible.md`.
