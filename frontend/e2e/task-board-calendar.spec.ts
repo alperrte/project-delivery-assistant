@@ -164,6 +164,42 @@ test.describe.serial("Task board, status names and calendar", () => {
     expect((await api(managerPage, "GET", `/projects/${projectId}/tasks/${ownTask.id}`)).json).toMatchObject({ status: "TODO" });
   });
 
+  test("the hide-completed checkbox leaves the Done cards out, keeps the columns and is remembered", async () => {
+    const doneTitle = `Tamamlanan görev ${stamp}`;
+    const done = await api(managerPage, "POST", `/projects/${projectId}/tasks`, { title: doneTitle, priority: "LOW", assigneeIds: [managerId] });
+    expect(done.status).toBe(201);
+    const doneId = (done.json as TaskJson).id;
+    for (const status of ["TODO", "IN_PROGRESS", "DONE"]) {
+      expect((await api(managerPage, "PATCH", `/projects/${projectId}/tasks/${doneId}/status`, { status })).status).toBe(200);
+    }
+
+    await managerPage.goto(`/projects/${slug}/tasks/board?sprint=all`);
+    const sections = managerPage.locator('[data-testid="board-grid"] > section');
+    const doneColumn = managerPage.getByRole("region", { name: /^Tamamlandı/ });
+    const checkbox = managerPage.getByRole("checkbox", { name: "Tamamlananları gösterme" });
+    await expect(doneColumn.getByRole("link", { name: doneTitle })).toBeVisible();
+    await expect(checkbox).not.toBeChecked();
+
+    await checkbox.click();
+    await expect(checkbox).toBeChecked();
+    await expect(doneColumn.getByRole("link", { name: doneTitle })).toHaveCount(0);
+    // The column stays, with a note instead of the card, and the other columns are untouched.
+    await expect(sections).toHaveCount(6);
+    await expect(managerPage.getByTestId("board-done-hidden")).toHaveText("1 tamamlanan görev gizli");
+    await expect(managerPage.getByRole("region", { name: /^Sırada/ }).getByRole("link", { name: ownTitle })).toBeVisible();
+
+    // The choice survives a reload, per account.
+    await managerPage.reload();
+    await expect(checkbox).toBeChecked();
+    await expect(sections).toHaveCount(6);
+    await expect(managerPage.getByRole("region", { name: /^Sırada/ }).getByRole("link", { name: ownTitle })).toBeVisible();
+    await expect(doneColumn.getByRole("link", { name: doneTitle })).toHaveCount(0);
+
+    await checkbox.click();
+    await expect(checkbox).not.toBeChecked();
+    await expect(doneColumn.getByRole("link", { name: doneTitle })).toBeVisible();
+  });
+
   test("Turkish says Bekleyen işler / Sırada / Yapılıyor, English keeps Backlog / To do / In progress", async () => {
     await managerPage.goto(`/projects/${slug}/tasks/board?sprint=all`);
     const headings = managerPage.locator('[data-testid="board-grid"] h2');

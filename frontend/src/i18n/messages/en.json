@@ -96,6 +96,7 @@
     "TASK_ATTACHMENT_TYPE": "This file type is not supported.",
     "TASK_ATTACHMENT_INVALID": "The file content does not match its type, or the file is empty.",
     "TASK_ATTACHMENT_TOO_LARGE": "A file can be at most 10 MB.",
+    "TASK_ATTACHMENT_IMAGE_TOO_LARGE": "Images can be at most 1 MB.",
     "TASK_ATTACHMENT_LIMIT": "A task can have at most 20 files.",
     "TASK_CHECKLIST_LIMIT": "A checklist can have at most 50 items.",
     "TASK_LABEL_LIMIT": "A task can have at most 10 labels.",
@@ -1740,6 +1741,7 @@
         "project": "Whole project"
       },
       "unassigned": "Unassigned",
+      "assignedBy": "{assigner} assigned to {assignees}",
       "statusChanged": "{key} moved to “{status}”",
       "changeStatus": "Change status, currently: {status}",
       "moveTo": "Move to",
@@ -1841,6 +1843,7 @@
       "allTasks": "All tasks",
       "backlog": "Backlog",
       "onlyMine": "Only mine",
+      "hideDone": "Hide completed",
       "dragHint": "Columns you can drop on are highlighted",
       "retry": "Try again",
       "emptyTitle": "No tasks on the board",
@@ -1849,6 +1852,7 @@
       "column": "{status}, {count, plural, one {# task} other {# tasks}}",
       "dropHere": "Drop here",
       "columnEmpty": "No tasks",
+      "doneHidden": "{count, plural, one {# completed task hidden} other {# completed tasks hidden}}",
       "moveCard": "Move {key}"
     },
     "form": {
@@ -1877,6 +1881,10 @@
         "assignment": {
           "title": "Assignment",
           "description": "Assign the task to people or put it in the pool for someone to claim."
+        },
+        "images": {
+          "title": "Images",
+          "description": "Add screenshots that show the problem or explain the task."
         },
         "checklist": {
           "title": "Checklist",
@@ -1986,6 +1994,17 @@
         "hint": "{count} / {max} steps. Each step can be up to {length} characters.",
         "editing": "The checklist is managed on the task detail page.",
         "partial": "{count, plural, one {The task was created but # checklist step could not be added. You can add it on the detail page.} other {The task was created but # checklist steps could not be added. You can add them on the detail page.}}"
+      },
+      "images": {
+        "drop": "Drop images here",
+        "choose": "Choose images",
+        "hint": "PNG, JPEG or WebP · up to {size} per image · up to {max} images",
+        "remove": "Remove {name}",
+        "invalidType": "{count, plural, one {# file was not added because it is not a PNG, JPEG or WebP image.} other {# files were not added because they are not PNG, JPEG or WebP images.}}",
+        "tooLarge": "{count, plural, one {# image was not added because it exceeds {size}.} other {# images were not added because they exceed {size}.}}",
+        "undecodable": "{count, plural, one {# file was not added because it could not be opened as an image.} other {# files were not added because they could not be opened as images.}}",
+        "limit": "{count, plural, one {Up to {max} images can be added; # image was not added.} other {Up to {max} images can be added; # images were not added.}}",
+        "partial": "{count, plural, one {The task was created but # image could not be uploaded. You can add it on the detail page.} other {The task was created but # images could not be uploaded. You can add them on the detail page.}}"
       }
     },
     "locked": {
@@ -2067,6 +2086,7 @@
       },
       "attachments": {
         "title": "Attachments",
+        "imagesTitle": "Images",
         "open": "Open {name} in a new tab",
         "download": "Download {name}",
         "deleteTitle": "Delete this attachment?",
@@ -2076,11 +2096,16 @@
         "cancel": "Cancel",
         "limit": "A task can have up to {max} files.",
         "skipped": "Some files were skipped because they exceed {max}.",
+        "skippedImage": "Some images were skipped because they exceed {max}.",
+        "skippedType": "Only images (PNG, JPEG, WebP, GIF) can be added to this task.",
         "loading": "Loading attachments",
         "drop": "Drop files here",
+        "dropImages": "Drop images here",
         "uploading": "{count, plural, one {Uploading {count} file} other {Uploading {count} files}}",
         "choose": "Choose files",
-        "hint": "Up to {size} per file and {max} files per task."
+        "chooseImages": "Choose images",
+        "hint": "Images up to {imageSize}, other files up to {size}; {max} files per task.",
+        "imageHint": "Up to {size} per image and {max} images per task."
       },
       "activity": {
         "title": "Activity",

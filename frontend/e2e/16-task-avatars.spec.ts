@@ -98,6 +98,22 @@ test.describe.serial("Task avatars", () => {
     for (const avatar of await without.all()) await expectInitials(avatar, manager.nickname);
   });
 
+  test("the task list shows who assigned the task, an arrow and the assignees", async () => {
+    await managerPage.goto(`/projects/${slug}/tasks`);
+    // The list renders a stacked and a table layout; only one of them is visible at a time.
+    const row = managerPage.locator(`[data-task-row="${taskId}"]:visible`);
+    await expect(row).toHaveCount(1);
+    const flow = row.locator('span[title*="atadı"]');
+    await expect(flow).toBeVisible();
+    // The assigner (the manager, who has no photo) comes first, then the animated arrow, then the assignees.
+    await expect(flow.locator("[data-assigner]")).toHaveText(initialsOf(manager.nickname));
+    await expect(flow.locator(".assign-flow")).toBeVisible();
+    // One avatar for the assigner and one for each of the two assignees.
+    await expect(flow.locator("[data-slot='avatar']")).toHaveCount(3);
+    // Assistive technology gets one sentence instead of a pile of avatars.
+    await expect(flow.locator(".sr-only")).toContainText(`${manager.nickname} atadı: `);
+  });
+
   test("a comment shows its author's photo, and a comment by the person without a photo shows initials", async () => {
     const memberText = "Fotoğraflı yorum: üzerinde çalışıyorum";
     await memberPage.goto(`/projects/${slug}/tasks/${taskId}`);

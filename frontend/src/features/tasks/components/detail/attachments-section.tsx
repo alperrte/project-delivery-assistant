@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { attachmentContentUrl, isPreviewableImage, MAX_ATTACHMENT_BYTES, MAX_ATTACHMENTS, tasksApi } from "../../api";
+import { attachmentContentUrl, isPreviewableImage, MAX_ATTACHMENT_BYTES, MAX_ATTACHMENTS, MAX_IMAGE_BYTES, tasksApi } from "../../api";
 import { useTaskFormat } from "../../format";
 import { useAttachments, useTaskMutation } from "../../hooks";
 import { canEditOwn } from "../../permissions";
@@ -25,6 +25,11 @@ function useBytes() {
   };
 }
 
+/** Advanced tasks follow the advanced project model; Simple tasks take images in every model that allows them. */
+function attachmentsWritable(ctx: DetailContext) {
+  return ctx.task.creationMode === "SIMPLE" ? ctx.poolWritable : ctx.advancedWritable;
+}
+
 function AttachmentCard({ attachment, ctx, onDelete }: { attachment: Attachment; ctx: DetailContext; onDelete: () => Promise<void> }) {
   const t = useTranslations("tasks.detail.attachments");
   const format = useTaskFormat();
@@ -32,7 +37,7 @@ function AttachmentCard({ attachment, ctx, onDelete }: { attachment: Attachment;
   const [broken, setBroken] = useState(false);
   const url = attachmentContentUrl(ctx.projectId, ctx.task.id, attachment.id);
   const image = isPreviewableImage(attachment.contentType) && !broken;
-  const removable = canEditOwn(attachment.uploadedBy, ctx.userId, ctx.isManager) && ctx.advancedWritable && !ctx.task.archivedAt;
+  const removable = canEditOwn(attachment.uploadedBy, ctx.userId, ctx.isManager) && attachmentsWritable(ctx) && !ctx.task.archivedAt;
 
   return (
     <li className="group flex min-w-0 flex-col overflow-hidden rounded-xl border bg-card">
@@ -80,7 +85,7 @@ function AttachmentCard({ attachment, ctx, onDelete }: { attachment: Attachment;
   );
 }
 
-export function AttachmentsSection(ctx: DetailContext) {
+export function AttachmentsSection({ imagesOnly, ...ctx }: DetailContext & { imagesOnly?: boolean }) {
   const { task, projectId } = ctx;
   const t = useTranslations("tasks.detail.attachments");
   const bytes = useBytes();
@@ -89,10 +94,13 @@ export function AttachmentsSection(ctx: DetailContext) {
   const [uploading, setUploading] = useState(0);
   const attachments = useAttachments(projectId, task.id);
   const list = attachments.data ?? [];
-  const canUpload = ctx.advancedWritable && !task.archivedAt;
+  const canUpload = attachmentsWritable(ctx) && !task.archivedAt;
 
   const upload = useTaskMutation(projectId, (file: File) => tasksApi.uploadAttachment(projectId, task.id, file));
   const remove = useTaskMutation(projectId, (id: string) => tasksApi.deleteAttachment(projectId, task.id, id));
+
+  // A Simple task has nothing to show here once it has no images and the viewer cannot add any.
+  if (imagesOnly && list.length === 0 && !canUpload && !attachments.isPending) return null;
 
   async function send(files: File[]) {
     if (files.length === 0) return;
@@ -101,8 +109,24 @@ export function AttachmentsSection(ctx: DetailContext) {
       toast.error(t("limit", { max: MAX_ATTACHMENTS }));
       return;
     }
-    const accepted = files.filter((file) => file.size <= MAX_ATTACHMENT_BYTES).slice(0, room);
-    if (accepted.length < files.length) toast.error(t("skipped", { max: bytes(MAX_ATTACHMENT_BYTES) }));
+    let skippedType = 0;
+    let skippedImage = 0;
+    const eligible = files.filter((file) => {
+      const image = isPreviewableImage(file.type);
+      if (imagesOnly && !image) {
+        skippedType += 1;
+        return false;
+      }
+      if (file.size > (image ? MAX_IMAGE_BYTES : MAX_ATTACHMENT_BYTES)) {
+        if (image) skippedImage += 1;
+        return false;
+      }
+      return true;
+    });
+    const accepted = eligible.slice(0, room);
+    if (skippedType > 0) toast.error(t("skippedType"));
+    else if (skippedImage > 0) toast.error(t("skippedImage", { max: bytes(MAX_IMAGE_BYTES) }));
+    else if (accepted.length < files.length) toast.error(t("skipped", { max: bytes(MAX_ATTACHMENT_BYTES) }));
     setUploading(accepted.length);
     for (const file of accepted) {
       try {
@@ -122,7 +146,7 @@ export function AttachmentsSection(ctx: DetailContext) {
   }
 
   return (
-    <DetailSection id="detail-attachments" title={t("title")} count={list.length > 0 ? `${list.length}/${MAX_ATTACHMENTS}` : undefined}>
+    <DetailSection id="detail-attachments" title={imagesOnly ? t("imagesTitle") : t("title")} count={list.length > 0 ? `${list.length}/${MAX_ATTACHMENTS}` : undefined}>
       {list.length > 0 && (
         <ul className="grid gap-3 sm:grid-cols-2">
           {list.map((attachment) => (
@@ -147,13 +171,17 @@ export function AttachmentsSection(ctx: DetailContext) {
           )}
         >
           <UploadSimple size={18} className="text-muted-foreground" aria-hidden="true" />
-          <p className="text-sm text-muted-foreground">{t("drop")}</p>
-          <input ref={input} type="file" multiple className="sr-only" tabIndex={-1} aria-hidden="true" onChange={(event) => void send(Array.from(event.target.files ?? []))} />
+          <p className="text-sm text-muted-foreground">{imagesOnly ? t("dropImages") : t("drop")}</p>
+          <input ref={input} type="file" multiple accept={imagesOnly ? "image/png,image/jpeg,image/webp,image/gif" : undefined} className="sr-only" tabIndex={-1} aria-hidden="true" onChange={(event) => void send(Array.from(event.target.files ?? []))} />
           <Button variant="outline" size="lg" disabled={uploading > 0} onClick={() => input.current?.click()}>
             {uploading > 0 ? <CircleNotch className="animate-spin" aria-hidden="true" /> : <UploadSimple aria-hidden="true" />}
-            {uploading > 0 ? t("uploading", { count: uploading }) : t("choose")}
+            {uploading > 0 ? t("uploading", { count: uploading }) : t(imagesOnly ? "chooseImages" : "choose")}
           </Button>
-          <p className="text-xs text-muted-foreground">{t("hint", { size: bytes(MAX_ATTACHMENT_BYTES), max: MAX_ATTACHMENTS })}</p>
+          <p className="text-xs text-muted-foreground">
+            {imagesOnly
+              ? t("imageHint", { size: bytes(MAX_IMAGE_BYTES), max: MAX_ATTACHMENTS })
+              : t("hint", { imageSize: bytes(MAX_IMAGE_BYTES), size: bytes(MAX_ATTACHMENT_BYTES), max: MAX_ATTACHMENTS })}
+          </p>
           <p role="status" aria-live="polite" className="sr-only">{uploading > 0 ? t("uploading", { count: uploading }) : ""}</p>
         </div>
       )}

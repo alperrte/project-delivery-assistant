@@ -90,7 +90,7 @@ export function TaskDetailBody({ slug, project, projectId, isManager, userId, ta
 
         <div className="min-w-0 space-y-8 lg:col-span-8 lg:col-start-1 lg:row-start-2">
           {advanced && <RelationsSection {...ctx} />}
-          {advanced && <AttachmentsSection {...ctx} />}
+          <AttachmentsSection {...ctx} imagesOnly={!advanced} />
           <ActivitySection {...ctx} focusComments={focusComments} />
         </div>
       </div>

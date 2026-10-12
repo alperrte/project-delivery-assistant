@@ -309,6 +309,32 @@ html::-webkit-scrollbar-thumb:hover,
 .workspace-primary-action:hover { background: var(--primary-hover); }
 .project-workspace [data-slot="table-container"] { border-radius: 0.5rem; }
 .project-workspace [data-slot="table-head"] { letter-spacing: 0.02em; }
+/* Task assignment arrow: dashes flowing from the assigner to the assignee. */
+.assign-flow {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  width: 1.625rem;
+  color: var(--success);
+}
+.assign-flow-track {
+  flex: 1;
+  height: 2px;
+  overflow: hidden;
+  border-radius: 1px;
+}
+.assign-flow-track::before {
+  content: "";
+  display: block;
+  width: calc(100% + 8px);
+  height: 100%;
+  background: repeating-linear-gradient(90deg, currentColor 0 4px, transparent 4px 8px);
+  animation: assign-flow 0.9s linear infinite;
+}
+@keyframes assign-flow {
+  from { transform: translateX(-8px); }
+  to { transform: translateX(0); }
+}
 /*
  * Team org chart: nested lists drawn with border connectors, no library.
  * Below md it is an indented vertical tree; from md up the children fan out horizontally.
@@ -697,7 +723,8 @@ html:is(.theme-reveal, .theme-close-in) .auth-slogan::after {
   }
   /* Ambient loops simply stay at rest. */
   html .auth-slogan::after,
-  html .auth-neon-band {
+  html .auth-neon-band,
+  html .assign-flow-track::before {
     animation: none !important;
   }
   /* Resting electrons would be two frozen arcs; leave the logo plain. */
@@ -715,7 +742,8 @@ html[data-motion="off"] ::after {
   transition-duration: 0.01ms !important;
 }
 html[data-motion="off"] .auth-slogan::after,
-html[data-motion="off"] .auth-neon-band {
+html[data-motion="off"] .auth-neon-band,
+html[data-motion="off"] .assign-flow-track::before {
   animation: none !important;
 }
 html[data-motion="off"] .logo-current {

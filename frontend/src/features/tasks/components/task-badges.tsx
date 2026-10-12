@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { CheckCircle, Clock, Lock, Prohibit, Tray } from "@phosphor-icons/react";
+import { CaretRight, CheckCircle, Clock, Lock, Prohibit, Tray } from "@phosphor-icons/react";
 import { CircleAlert } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { profilePhotoSrc } from "@/features/account/api";
@@ -134,8 +134,8 @@ export function PoolMark({ task, className }: { task: Pick<Task, "pool">; classN
   );
 }
 
-/** Small avatars (decorative) followed by a screen reader list of the names. */
-export function AssigneeAvatars({ people, max = 3, className }: { people: PersonRef[]; max?: number; className?: string }) {
+/** Small avatars (decorative) followed by a screen reader list of the names. `silent` leaves the names to a parent that announces them. */
+export function AssigneeAvatars({ people, max = 3, className, silent }: { people: PersonRef[]; max?: number; className?: string; silent?: boolean }) {
   const t = useTranslations("tasks.common");
   if (people.length === 0) {
     return <span className={cn("text-xs text-muted-foreground", className)}>{t("unassigned")}</span>;
@@ -154,7 +154,34 @@ export function AssigneeAvatars({ people, max = 3, className }: { people: Person
           </span>
         )}
       </span>
-      <span className="sr-only">{people.map((person) => person.nickname ?? "?").join(", ")}</span>
+      {!silent && <span className="sr-only">{people.map((person) => person.nickname ?? "?").join(", ")}</span>}
+    </span>
+  );
+}
+
+/** Who assigned the task, an arrow, and who it was assigned to. Without an assigner or an assignee it is just the assignee avatars. */
+export function AssignmentFlow({ assigners, assignees, max = 3, className }: { assigners: PersonRef[]; assignees: PersonRef[]; max?: number; className?: string }) {
+  const tc = useTranslations("tasks.common");
+  if (assignees.length === 0 || assigners.length === 0) return <AssigneeAvatars people={assignees} max={max} className={className} />;
+  const [first] = assigners;
+  const extra = assigners.length - 1;
+  const names = (people: PersonRef[]) => people.map((person) => person.nickname ?? "?").join(", ");
+  const text = tc("assignedBy", { assigner: names(assigners), assignees: names(assignees) });
+  return (
+    <span className={cn("inline-flex items-center gap-1", className)} title={text}>
+      <span className="inline-flex items-center gap-1" aria-hidden="true">
+        <span data-assigner className="inline-flex">
+          <Avatar name={first.nickname ?? "?"} src={profilePhotoSrc(first.userId, first.profilePhotoVersion)} title={false} className="size-6 bg-muted text-[10px] text-foreground" />
+        </span>
+        {extra > 0 && (
+          <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-secondary text-[10px] font-medium text-muted-foreground ring-2 ring-card">
+            +{extra}
+          </span>
+        )}
+        <span className="assign-flow" aria-hidden="true"><span className="assign-flow-track" /><CaretRight weight="bold" size={10} /></span>
+        <AssigneeAvatars people={assignees} max={max} silent />
+      </span>
+      <span className="sr-only">{text}</span>
     </span>
   );
 }

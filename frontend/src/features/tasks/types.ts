@@ -53,6 +53,8 @@ export type Task = {
   version: number;
   assigneeIds: string[];
   assignees: PersonRef[];
+  /** Who assigned the task, latest first, self-assignment left out; older servers omit it. */
+  assigners?: PersonRef[];
   labels: LabelRef[];
   parent: TaskRef | null;
   subtaskCount: number;
