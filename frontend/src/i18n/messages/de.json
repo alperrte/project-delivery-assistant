@@ -351,8 +351,8 @@
           "description": "Logo, Name und Slogan erscheinen oben auf der Karte."
         },
         "type": {
-          "title": "Projektart",
-          "description": "Die Art erscheint als Badge auf der Karte und bestimmt die Technologie-Vorschläge."
+          "title": "Projektarten",
+          "description": "Wählen Sie eine oder mehrere Arten. Sie erscheinen auf der Karte und bestimmen die Technologie-Vorschläge."
         },
         "technology": {
           "title": "Technologien",
@@ -611,7 +611,7 @@
       "dangerDescription": "Das Projekt und alles darin wird dauerhaft gelöscht. Das lässt sich nicht rückgängig machen.",
       "tagline": "Slogan",
       "taglinePlaceholder": "Beschreiben Sie das Projekt in einem Satz",
-      "type": "Projektart",
+      "type": "Projektarten",
       "logo": {
         "label": "Projektlogo",
         "hint": "PNG, JPEG oder WebP, bis zu 512 KB. Änderungen werden sofort gespeichert.",
@@ -1575,6 +1575,13 @@
       "title": "Darstellung",
       "description": "Das Standarddesign: hell, dunkel oder dem Gerät folgen. Es ändert sich erst, wenn Sie auf Speichern klicken.",
       "label": "Design"
+    },
+    "navigation": {
+      "title": "Obere Navigationsleiste",
+      "description": "Wählen Sie das Verhalten auf Mobilgeräten und am Desktop. Änderungen gelten nach dem Speichern.",
+      "alwaysVisible": "Immer sichtbar",
+      "autoHide": "Automatisch ausblenden",
+      "hint": "Bei Inaktivität wird die Leiste automatisch ausgeblendet. Über den Griff am oberen Rand wird sie wieder sichtbar; auf Mobilgeräten auch beim Scrollen nach oben."
     },
     "motion": {
       "title": "Animationen",
@@ -2571,6 +2578,11 @@
       "cancel": "Abbrechen",
       "confirm": "Löschen",
       "deletedMessage": "Diese Nachricht wurde gelöscht"
+    },
+    "status": {
+      "sent": "Gesendet",
+      "delivered": "Zugestellt",
+      "read": "Gelesen"
     },
     "seen": {
       "one": "Gesehen",
@@ -4344,6 +4356,7 @@
   "contact": {
     "title": "Kontakt",
     "description": "Senden Sie uns Fragen, Vorschläge und Feedback ohne Anmeldung.",
+    "workspaceDescription": "Senden Sie uns Fragen, Vorschläge und Feedback.",
     "form": {
       "label": "Kontaktformular",
       "firstName": "Vorname",

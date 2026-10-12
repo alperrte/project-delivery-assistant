@@ -33,7 +33,7 @@ import { invalidateProjectMutation } from "../query-invalidation";
 import { createProjectSchema, projectPriorities, projectStatuses, TAGLINE_MAX, type CreateProjectValues } from "../schemas";
 import { MAX_TECH_SELECTION } from "../tech-catalog";
 import { formatTechStack } from "../tech-stack";
-import type { UserRef } from "../types";
+import { getProjectTypes, type UserRef } from "../types";
 import { BannerPickField } from "./create/banner-pick-field";
 import { LogoField } from "./create/logo-field";
 import { TechPicker } from "./create/tech-picker";
@@ -48,6 +48,7 @@ const DEFAULT_VALUES = {
   logoShape: "SQUARE",
   tagline: "",
   techStack: [],
+  projectTypes: [],
   description: "",
   status: "PLANNING",
   priority: "MEDIUM",
@@ -129,7 +130,7 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
       const project = await projectsApi.create({
         name: form.name.trim(),
         logoShape: form.logoShape,
-        projectType: form.projectType,
+        projectTypes: form.projectTypes,
         tagline: form.tagline?.trim() || undefined,
         description: form.description?.trim() || undefined,
         organizationId: form.organizationId || undefined,
@@ -151,7 +152,7 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
             projectGoal: project.projectGoal,
             techStack: project.techStack,
             organizationId: project.organizationId,
-            projectType: project.projectType,
+            projectTypes: getProjectTypes(project),
             tagline: project.tagline,
           });
         } catch {
@@ -232,7 +233,8 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
       projectGoal: null,
       status: values.status ?? "PLANNING",
       priority: values.priority ?? "MEDIUM",
-      projectType: values.projectType ?? null,
+      projectType: null,
+      projectTypes: (values.projectTypes ?? []).filter((type): type is import("../types").ProjectType => !!type),
       techStack: formatTechStack((values.techStack ?? []).filter((item): item is string => typeof item === "string")) || null,
       logoVersion: null,
       logoShape: values.logoShape ?? "SQUARE",
@@ -242,7 +244,7 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
     }),
     // `author` is derived from the session; keying on its fields keeps the memo stable.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [name, values.logoShape, values.tagline, values.description, values.status, values.priority, values.projectType, values.techStack, author.userId, author.nickname, t],
+    [name, values.logoShape, values.tagline, values.description, values.status, values.priority, values.projectTypes, values.techStack, author.userId, author.nickname, t],
   );
 
   const taglineLength = values.tagline?.length ?? 0;
@@ -268,7 +270,7 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
   } as const;
   const failedSections: Record<keyof typeof sectionHeadingIds, boolean> = {
     identity: !!(errors.name || errors.tagline),
-    type: !!errors.projectType,
+    type: !!errors.projectTypes,
     technology: !!errors.techStack,
     planning: !!(errors.targetEndDate || errors.organizationId),
     details: !!errors.description,
@@ -354,14 +356,14 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
             <Section id={typeLabelId} title={t("sections.type.title")} description={t("sections.type.description")}>
               <Controller
                 control={control}
-                name="projectType"
+                name="projectTypes"
                 render={({ field }) => (
-                  <TypePicker id={`${ids}-type-picker`} value={field.value} onChange={field.onChange} labelledBy={typeLabelId} invalid={!!errors.projectType} />
+                  <TypePicker id={`${ids}-type-picker`} value={field.value} onChange={field.onChange} labelledBy={typeLabelId} invalid={!!errors.projectTypes} describedBy={errors.projectTypes ? `${ids}-types-error` : undefined} />
                 )}
               />
-              {errors.projectType && (
-                <p role="alert" className="text-sm text-destructive">
-                  {tv(errors.projectType.message ?? "required")}
+              {errors.projectTypes && (
+                <p id={`${ids}-types-error`} role="alert" className="text-sm text-destructive">
+                  {tv(errors.projectTypes.message ?? "required")}
                 </p>
               )}
             </Section>
@@ -374,7 +376,7 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
               <Controller
                 control={control}
                 name="techStack"
-                render={({ field }) => <TechPicker type={values.projectType} value={field.value} onChange={field.onChange} />}
+                render={({ field }) => <TechPicker types={values.projectTypes} value={field.value} onChange={field.onChange} />}
               />
             </Section>
 

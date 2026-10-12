@@ -18,9 +18,10 @@ public class UserPreferenceService {
     public static final Set<String> LOCALES = Set.of("tr", "en", "de");
     public static final Set<String> THEMES = Set.of("system", "light", "dark");
     public static final Set<String> MOTIONS = Set.of("system", "on", "off");
+    public static final Set<String> NAVBAR_MODES = Set.of("always-visible", "auto-hide");
 
     /** Nullable fields mean the user has not chosen yet. */
-    public record Preferences(String locale, String theme, String motion, Boolean themeTransition) {
+    public record Preferences(String locale, String theme, String motion, Boolean themeTransition, String navbarMode) {
     }
 
     private final UserPreferenceRepository preferences;
@@ -35,13 +36,14 @@ public class UserPreferenceService {
     public Preferences get(UUID userId) {
         Objects.requireNonNull(userId, "userId is required");
         Optional<UserPreference> saved = preferences.findById(userId);
-        return saved.map(UserPreferenceService::view).orElseGet(() -> new Preferences(null, null, null, null));
+        return saved.map(UserPreferenceService::view).orElseGet(() -> new Preferences(null, null, null, null, null));
     }
 
     @Transactional
-    public Preferences save(UUID userId, String locale, String theme, String motion, boolean themeTransition) {
+    public Preferences save(UUID userId, String locale, String theme, String motion, boolean themeTransition, String navbarMode) {
         Objects.requireNonNull(userId, "userId is required");
-        if (!LOCALES.contains(locale) || !THEMES.contains(theme) || !MOTIONS.contains(motion)) {
+        if (!LOCALES.contains(locale) || !THEMES.contains(theme) || !MOTIONS.contains(motion)
+                || (navbarMode != null && !NAVBAR_MODES.contains(navbarMode))) {
             throw new IllegalArgumentException("Unsupported preference value");
         }
         UserPreference preference = preferences.findById(userId).orElse(null);
@@ -50,11 +52,13 @@ public class UserPreferenceService {
         } else {
             preference.replace(locale, theme, motion, themeTransition, clock.instant());
         }
+        // Old clients must not reset a choice saved by a newer client.
+        if (navbarMode != null) preference.setNavbarMode(navbarMode);
         return view(preferences.save(preference));
     }
 
     private static Preferences view(UserPreference preference) {
         return new Preferences(preference.getLocale(), preference.getTheme(), preference.getMotion(),
-                preference.getThemeTransition());
+                preference.getThemeTransition(), preference.getNavbarMode());
     }
 }

@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import { projectBannerUrl, projectLogoSource } from "../api";
 import { canonicalTech } from "../tech-catalog";
 import { parseTechStack } from "../tech-stack";
-import type { Project, ProjectPriority, ProjectType } from "../types";
+import { getProjectTypes, type Project, type ProjectPriority, type ProjectType } from "../types";
 import {
   projectStatusBadgeClass,
   projectStatusDotClass,
@@ -33,6 +33,7 @@ export type ProjectCardData = Pick<
 > & {
   /** `null` only in the create preview, before a type has been picked. */
   projectType: ProjectType | null;
+  projectTypes?: ProjectType[];
   /** Absent where the source has none (create page, invitation preview); the card then shows no priority rather than a guess. */
   priority?: ProjectPriority | null;
   /** Epoch ms of the banner; absent in the create preview, where no banner exists yet. */
@@ -165,9 +166,9 @@ export function ProjectCard({ project, preview, invitationPreview }: {
             dotClassName={projectStatusDotClass(project.status)}
             label={t(`overview.statusValues.${project.status}`)}
           />
-          {project.projectType && (
-            <ProjectTypeBadge type={project.projectType} label={t(`card.types.${project.projectType}`)} />
-          )}
+          {getProjectTypes(project).map(type => (
+            <ProjectTypeBadge key={type} type={type} label={t(`card.types.${type}`)} />
+          ))}
         </div>
       }
       className={preview || invitationPreview ? "hover:translate-y-0 hover:border-border hover:shadow-none motion-safe:hover:translate-y-0" : undefined}
@@ -263,7 +264,7 @@ export function ProjectRow({ project }: { project: Project }) {
           {t(`overview.priorityValues.${project.priority}`)}
         </span>
       </TableCell>
-      <TableCell className="text-muted-foreground">{t(`card.types.${project.projectType}`)}</TableCell>
+      <TableCell className="text-muted-foreground">{getProjectTypes(project).map(type => t(`card.types.${type}`)).join(", ")}</TableCell>
       <TableCell className="text-muted-foreground">{canonicalTech(parseTechStack(project.techStack)).join(", ") || "—"}</TableCell>
       <TableCell className="text-right text-muted-foreground">{date.format(new Date(project.updatedAt))}</TableCell>
     </TableRow>

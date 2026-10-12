@@ -212,7 +212,7 @@ export async function createProject(
 ): Promise<string> {
   await page.goto("/projects/new");
   await page.locator("#project-name").fill(name);
-  await page.getByRole("radio", { name: /^Web/ }).click();
+  await page.getByRole("checkbox", { name: /^Web/ }).click();
 
   if (opts.organizationName) {
     const orgSelect = page.locator("#create-organization");

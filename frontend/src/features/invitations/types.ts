@@ -68,6 +68,7 @@ export type InvitationProjectPreview = {
   projectGoal: string | null;
   status: ProjectStatus;
   projectType: ProjectType;
+  projectTypes?: ProjectType[];
   techStack: string | null;
   memberCount: number;
   updatedAt: string;

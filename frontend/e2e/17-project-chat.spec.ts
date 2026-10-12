@@ -107,10 +107,10 @@ test.describe.serial("Project chat", () => {
     expect(accepted.status).toBe(200);
   });
 
-  test("the Mesajlaşma entry appears in the selected project's navigation", async () => {
+  test("the Sohbet entry appears in the selected project's navigation", async () => {
     await managerPage.goto(`/projects/${slug}`);
     await expect(navItemOf(managerPage)).toBeVisible();
-    await expect(navItemOf(managerPage)).toContainText("Mesajlaşma");
+    await expect(navItemOf(managerPage)).toContainText("Sohbet");
     // It belongs to the selected-project group, not to the global links.
     await expect(managerPage.getByRole("navigation", { name: "Gezinme menüsü" }).getByTestId("chat-nav-item")).toBeVisible();
   });

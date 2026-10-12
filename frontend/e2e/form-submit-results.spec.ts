@@ -71,7 +71,7 @@ const scenarios: Scenario[] = [
       await page.goto("/projects/new");
       const field = page.locator("#project-name");
       await field.fill(`Sonuç projesi ${Date.now()}`);
-      await page.getByRole("radio", { name: /^Web/ }).click();
+      await page.getByRole("checkbox", { name: /^Web/ }).click();
       return { submit: page.getByRole("button", { name: /^Projeyi oluştur$/ }), field, enter: true };
     },
     async expectSuccess(page) {

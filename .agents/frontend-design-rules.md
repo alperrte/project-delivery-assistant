@@ -1,7 +1,5 @@
 # Frontend tasarım kuralları
 
-<<<<<<< Updated upstream
-=======
 ## Çoklu proje türü seçimi — 2026-10-12
 
 Create ve edit aynı `TypePicker` native checkbox kartlarını kullanır: Web, Mobil, AI, Masaüstü, Diğer bağımsız seçilir; en az bir tür gerekir. Grup yerelleştirilmiş başlıkla, checkbox'lar ad/açıklamayla etiketlidir; klavye Space, focus-visible kart halkası ve hata açıklaması desteklenir. Edit grup genel bilgilerde tam satırdır; eski projeler kendi türü seçili açılır. Kart/tablo ve create/edit/davet önizlemeleri tüm türleri gösterir. Teknoloji grupları seçimlerin birleşimidir, tekrarlar tekilleşir; Diğer/no selection tüm kataloğu açar, türü kaldırmak eski teknoloji seçimlerini silmez. Mevcut renk/font/radius/44 px hedef token'ları korunur.
@@ -14,7 +12,6 @@ Ayarlar → Üst gezinme çubuğu ortak `OptionGroup` ile yalnız iki seçenek s
 
 `AppShellView` çekmecesi modal zoom/fade yerine soldan kayarak 280 ms `cubic-bezier(0.22,1,0.36,1)` ile açılır; 200 ms `cubic-bezier(0.4,0,1,1)` ile kapanır. Arka örtü aynı sürelerde opacity geçişi yapar. Base UI `data-starting-style`/`data-ending-style` ile mount/unmount ve odak yönetiminin sahibidir. CSS yalnız `workspace-navigation-drawer/backdrop` sınıflarına scoped; ortak DialogContent yeni opsiyonel `overlayClassName` alır, diğer dialog animasyonları değişmez. Global reduced-motion ve animasyon kapalı tercihleri bu geçişleri de anlık yapar; mobil navbar sürekli görünür kalır.
 
->>>>>>> Stashed changes
 ## Mobil navbar sürekli görünür — 2026-10-12
 
 Kullanıcının tercihiyle mobil/tablet navbar bekleme, scroll veya focus değişiminde gizlenmez. `use-auto-hide.ts` yalnız `(min-width: 1024px) and (hover: hover) and (pointer: fine)` cihazlarda çalışır; dar ekranlar ve touch-primary cihazlar ilk render'dan itibaren görünürdür. Desktop → mobile resize gizlenmiş navbar'ı da açar. Önceki touch idle/scroll-up auto-hide açıklamaları geçersizdir; navbar boyut/reserve/menü düzeni değişmedi.
@@ -541,3 +538,7 @@ Mesajlaşma girişi global Kişisel navigasyondadır; seçili projenin altında 
 Composer'da 44 px dosya kontrolü, güvenli dosya adı/tür/boyut ve küçük blob preview vardır; upload sırasında çift gönderim engellenir, hatada metin/dosya korunur. Blob URL'leri değişim ve unmount'ta temizlenir. Özel API image'leri cookie gerektirdiği için native img kullanır; proxy yapılmaz. Dosyaların büyük gösterimi ve own-message Bilgi dialogu mevcut Dialog/focus/theme sistemini, viewport sınırı ve overscroll-contain'i kullanır. Escape yalnız dialogu kapatır. Bilgi TR/EN/DE ve Intl tarih/saat formatlarını kullanır; eski okuma kanıtı ayrı legacy açıklaması taşır.
 
 Read isteği aktif belgede IntersectionObserver ile görünür message ID'lerinden oluşur; aynı view'de onaylanan ID yeniden gönderilmez. Okunmamış kayıtlar yalnız liste preview'sinden ya da websocket varışından read yapılmaz.
+
+## Sohbet kaydırma çubukları — 2026-10-12
+
+Sohbet konuşma listesi, mesaj geçmişi, composer textarea, emoji popup, Bilgi ve görsel dialogları `data-workspace-scroll` ile mevcut ortak scrollbar stiline katılır. Thumb aktif temanın `--label-blue` token'ıdır, track transparandır; hover mevcut foreground karışımını kullanır. Ayrı dark/light sabit renk veya yeni token eklenmez. Alt öğelere scrollbar rengi mirası sıfırlanır; forced-colors native fallback korunur.

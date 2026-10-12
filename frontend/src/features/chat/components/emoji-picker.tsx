@@ -17,7 +17,7 @@ export function EmojiPicker({ choices, label, testId, onChoose, disabled, finalF
     {showTrigger && <Popover.Trigger render={<Button type="button" variant="ghost" size="icon-sm" disabled={disabled} aria-label={label}
       data-testid={testId} className="max-sm:size-11" />}><Smiley size={18} aria-hidden="true" /></Popover.Trigger>}
     <Popover.Portal><Popover.Positioner anchor={anchorRef} side="top" align="end" sideOffset={8} className="z-50">
-      <Popover.Popup finalFocus={finalFocus} data-testid={`${testId}-popup`} aria-label={label}
+      <Popover.Popup data-workspace-scroll="" finalFocus={finalFocus} data-testid={`${testId}-popup`} aria-label={label}
         onKeyDown={event=>{if(event.key==="Escape"){event.stopPropagation();setOpen(false);}}}
         className="max-h-(--available-height) w-[min(18rem,calc(100vw-1.5rem))] overflow-y-auto rounded-lg border bg-popover p-2 text-popover-foreground shadow-lg outline-none duration-100 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0">
         <div className="mb-1 flex items-center justify-between gap-2 px-1 text-xs font-medium">

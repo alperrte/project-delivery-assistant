@@ -5,6 +5,7 @@ import com.pda.chat.application.service.ChatViews.ChatUser;
 import com.pda.chat.application.service.ChatViews.ConversationView;
 import com.pda.chat.application.service.ChatViews.LastMessageView;
 import com.pda.chat.application.service.ChatViews.MemberView;
+import com.pda.chat.application.service.ChatViews.MessageDeliveryStatus;
 import com.pda.chat.application.service.ChatViews.MessagePage;
 import com.pda.chat.application.service.ChatViews.MessageView;
 import com.pda.chat.application.service.ChatViews.OverviewView;
@@ -351,6 +352,55 @@ public class ChatService {
         afterCommit(()->{delivery.conversationRead(conversation.getProjectId(),conversationId,actor);delivery.seen(new ChatDelivery.ChatSeen(conversation.getProjectId(),conversationId,conversation.getType(),participants,actor,readAt));});
     }
 
+    /**
+     * Acknowledges that the caller's client has received the given messages. This sets delivered_at on the
+     * receipt rows where it was still null. If the caller is not a recipient of a message id it is silently
+     * ignored (the DB WHERE clause handles this). A read message is already treated as delivered, so
+     * backfilling delivered_at from read_at during the V49 migration is correct.
+     *
+     * <p>After-commit: the senders of the newly delivered messages receive a DELIVERED socket push so their
+     * tick icons can advance from single to double.
+     */
+    @Transactional
+    public void markDelivered(UUID actor, UUID conversationId, List<UUID> messageIds) {
+        if (messageIds == null || messageIds.isEmpty() || messageIds.size() > 100 || messageIds.stream().anyMatch(Objects::isNull)) {
+            throw ChatException.invalid("CHAT_INVALID_REQUEST");
+        }
+        accessible(actor, null, conversationId);
+        Instant deliveredAt = now();
+        // Only update rows where this user IS the recipient and delivered_at is still null.
+        List<UUID> unique = messageIds.stream().distinct().toList();
+        int changed = 0;
+        for (UUID id : unique) {
+            changed += jdbc.update(
+                "UPDATE chat_message_receipts SET delivered_at = ? WHERE message_id = ? AND user_id = ? AND delivered_at IS NULL",
+                java.sql.Timestamp.from(deliveredAt), id, actor);
+        }
+        if (changed == 0) return;
+        // Notify the senders of newly-delivered messages so their ticks can update in real time.
+        // We look up which messages were just marked to find their senders.
+        record SenderMsg(UUID senderId, UUID messageId) {}
+        List<SenderMsg> affected = new ArrayList<>();
+        for (UUID id : unique) {
+            jdbc.query(
+                "SELECT m.sender_user_id FROM chat_messages m JOIN chat_message_receipts r ON r.message_id = m.id WHERE m.id = ? AND r.user_id = ? AND r.delivered_at = ?",
+                (rs, n) -> new SenderMsg(rs.getObject(1, UUID.class), id),
+                id, actor, java.sql.Timestamp.from(deliveredAt)).forEach(affected::add);
+        }
+        // Group by sender so we fire one event per sender.
+        Map<UUID, List<UUID>> bySender = new HashMap<>();
+        affected.forEach(sm -> bySender.computeIfAbsent(sm.senderId(), k -> new ArrayList<>()).add(sm.messageId()));
+        ChatConversation conversation = conversations.findById(conversationId)
+                .orElseThrow(() -> ChatException.notFound("CHAT_NOT_FOUND"));
+        Set<UUID> participants = conversation.getType() == ChatConversationType.DIRECT
+                ? Set.of(conversation.getDirectUserLow(), conversation.getDirectUserHigh()) : Set.of();
+        bySender.forEach((senderId, msgs) -> {
+            ChatDelivery.ChatDelivered event = new ChatDelivery.ChatDelivered(
+                    conversation.getProjectId(), conversationId, conversation.getType(), participants, actor, msgs);
+            afterCommit(() -> delivery.delivered(event));
+        });
+    }
+
     @Transactional(readOnly=true)
     public ChatViews.MessageInfo messageInfo(UUID actor,UUID conversationId,UUID messageId) {
         accessible(actor,null,conversationId);
@@ -480,15 +530,48 @@ public class ChatService {
         Map<UUID, UserAccounts.AuthenticatedUser> accounts = senderIds.isEmpty() ? Map.of()
                 : users.findActiveByIds(senderIds);
         var snapshots = reactionViews.forActor(conversationId,page.stream().map(ChatMessage::getId).toList(),actor);
+        // Compute delivery status for messages sent by the caller.
+        List<UUID> ownMessageIds = page.stream()
+                .filter(m -> actor.equals(m.getSenderUserId()) && !m.isDeleted())
+                .map(ChatMessage::getId).toList();
+        // receipt rows for own messages: map messageId -> (totalRecipients, deliveredCount, readCount)
+        record ReceiptSummary(long total, long delivered, long read) {}
+        Map<UUID, ReceiptSummary> statusMap = new HashMap<>();
+        if (!ownMessageIds.isEmpty()) {
+            String inSql = String.join(",", java.util.Collections.nCopies(ownMessageIds.size(), "?"));
+            jdbc.query(
+                "SELECT message_id, COUNT(*) AS total_cnt, "
+                + "COALESCE(SUM(CASE WHEN delivered_at IS NOT NULL THEN 1 ELSE 0 END), 0) AS del_cnt, "
+                + "COALESCE(SUM(CASE WHEN read_at IS NOT NULL THEN 1 ELSE 0 END), 0) AS read_cnt "
+                + "FROM chat_message_receipts WHERE message_id IN (" + inSql + ") GROUP BY message_id",
+                (rs, rowNum) -> {
+                    UUID mid = rs.getObject("message_id", UUID.class);
+                    statusMap.put(mid, new ReceiptSummary(rs.getLong("total_cnt"), rs.getLong("del_cnt"), rs.getLong("read_cnt")));
+                    return null;
+                },
+                ownMessageIds.toArray());
+        }
         return page.stream().map(message -> {
             var parent = replies.get(message.getReplyToMessageId());
             var quote = parent == null ? null : new ChatViews.ReplyView(parent.getId(),
                     chatUser(parent.getSenderUserId(),accounts.get(parent.getSenderUserId())),messagePreview(parent),
                     parent.isDeleted());
             var reactions = snapshots.get(message.getId());
+            MessageDeliveryStatus status = MessageDeliveryStatus.SENT;
+            if (actor.equals(message.getSenderUserId()) && !message.isDeleted()) {
+                ReceiptSummary s = statusMap.get(message.getId());
+                if (s != null && s.total() > 0) {
+                    if (s.read() >= s.total()) {
+                        status = MessageDeliveryStatus.READ;
+                    } else if (s.delivered() >= s.total()) {
+                        status = MessageDeliveryStatus.DELIVERED;
+                    }
+                    // else: at least one recipient has not confirmed delivery → SENT
+                }
+            }
             return new MessageView(message.getId(),message.getConversationId(),message.getContent(),message.getCreatedAt(),
                     chatUser(message.getSenderUserId(),accounts.get(message.getSenderUserId())),quote,
-                    reactions.reactionVersion(),reactions.reactions(),message.isDeleted(),attachmentView(message.getId()));
+                    reactions.reactionVersion(),reactions.reactions(),message.isDeleted(),attachmentView(message.getId()),status);
         }).toList();
     }
 

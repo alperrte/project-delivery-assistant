@@ -108,6 +108,21 @@ export function ConversationView({ autoFocus }: { autoFocus?: boolean }) {
     return ()=>{observer.disconnect();clearTimeout(timer);};
   },[conversationId,visible,messages,markRead]);
 
+  // Automatically acknowledge delivery of messages received by the client (REST catch-up or initial load).
+  const confirmedDeliveries = useRef(new Set<string>());
+  useEffect(() => {
+    if (!accountId || !conversationId || !messages.length) return;
+    const incoming = messages
+      .filter((m) => m.sender.userId !== selfId && !confirmedDeliveries.current.has(m.id))
+      .map((m) => m.id);
+    if (incoming.length === 0) return;
+    incoming.forEach((id) => confirmedDeliveries.current.add(id));
+    for (let i = 0; i < incoming.length; i += 100) {
+      const batch = incoming.slice(i, i + 100);
+      void chatApi.markDelivered(accountId, conversationId, batch).catch(() => {});
+    }
+  }, [accountId, conversationId, messages, selfId]);
+
   // Leaving a conversation (or closing the chat) ends the "typing" announced for it.
   useEffect(() => () => { if (conversationId) notifyTyping(conversationId, "stopped"); }, [conversationId, notifyTyping]);
 

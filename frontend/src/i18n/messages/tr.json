@@ -113,7 +113,7 @@
     "SPRINT_INVALID": "Sprint bilgileri geçersiz.",
     "LABEL_NAME_EXISTS": "Bu adda bir etiket zaten var.",
     "WORKLOG_INVALID": "Süre kaydı geçersiz.",
-    "CHAT_FORBIDDEN": "Bu projenin mesajlaşmasına erişim iznin yok.",
+    "CHAT_FORBIDDEN": "Bu projenin sohbetine erişim iznin yok.",
     "CHAT_NOT_FOUND": "Bu konuşma bulunamadı.",
     "CHAT_RECIPIENT": "Bu kişiye mesaj gönderilemiyor; artık projede olmayabilir.",
     "CHAT_SELF": "Kendinle konuşma başlatamazsın.",
@@ -351,8 +351,8 @@
           "description": "Logo, ad ve slogan kartın üst kısmında görünür."
         },
         "type": {
-          "title": "Proje türü",
-          "description": "Tür kartta rozet olarak görünür ve teknoloji önerilerini belirler."
+          "title": "Proje türleri",
+          "description": "Bir veya daha fazla tür seçin. Seçimler kartta görünür ve teknoloji önerilerini belirler."
         },
         "technology": {
           "title": "Teknolojiler",
@@ -611,7 +611,7 @@
       "dangerDescription": "Proje ve içindeki her şey kalıcı olarak silinir. Bu işlem geri alınamaz.",
       "tagline": "Slogan",
       "taglinePlaceholder": "Projeyi tek cümleyle anlatın",
-      "type": "Proje türü",
+      "type": "Proje türleri",
       "logo": {
         "label": "Proje logosu",
         "hint": "PNG, JPEG veya WebP, en fazla 512 KB. Değişiklikler hemen kaydedilir.",
@@ -1576,6 +1576,13 @@
       "description": "Varsayılan tema: açık, koyu ya da cihazınızı izleyin. Kaydet'e basana kadar değişmez.",
       "label": "Tema"
     },
+    "navigation": {
+      "title": "Üst gezinme çubuğu",
+      "description": "Mobilde ve masaüstünde üst çubuğun görünürlüğünü seçin. Kaydet'e basana kadar değişmez.",
+      "alwaysVisible": "Her zaman görünür",
+      "autoHide": "Otomatik gizlen",
+      "hint": "Otomatik gizlen seçeneği, kullanılmadığında çubuğu gizler. Üstteki tutamaçla yeniden açabilirsiniz; mobilde yukarı kaydırmak da çubuğu açar."
+    },
     "motion": {
       "title": "Animasyonlar",
       "description": "Bu tercihler hesabınıza kaydedilir ve her girişinizde uygulanır.",
@@ -2479,9 +2486,9 @@
     }
   },
   "chat": {
-    "title": "Mesajlaşma",
+    "title": "Sohbet",
     "nav": {
-      "label": "Mesajlaşma",
+      "label": "Sohbet",
       "unread": "{count} okunmamış mesaj"
     },
     "groupName": "Proje Grubu",
@@ -2491,7 +2498,7 @@
     "listFailed": "Konuşmalar yüklenemedi.",
     "noMembers": "Bu projede henüz başka üye yok.",
     "unreadCount": "{count} okunmamış mesaj",
-    "messagesLabel": "Mesajlar",
+    "messagesLabel": "Sohbet",
     "loading": "Mesajlar yükleniyor",
     "loadingOlder": "Eski mesajlar yükleniyor…",
     "loadFailed": "Mesajlar yüklenemedi.",
@@ -2517,15 +2524,15 @@
       "invalid": "Mesaj izin verilmeyen kontrol karakterleri içeriyor."
     },
     "panel": {
-      "label": "Mesajlaşma paneli",
+      "label": "Sohbet paneli",
       "minimize": "Küçült",
       "close": "Kapat",
       "fullscreen": "Tam ekran yap",
       "back": "Konuşmalara dön"
     },
     "dock": {
-      "label": "Küçültülmüş mesajlaşma",
-      "open": "Mesajlaşmayı aç"
+      "label": "Küçültülmüş sohbet",
+      "open": "Sohbeti aç"
     },
     "reply": {
       "action": "Yanıtla",
@@ -2572,6 +2579,11 @@
       "confirm": "Sil",
       "deletedMessage": "Bu mesaj silindi"
     },
+    "status": {
+      "sent": "İletildi",
+      "delivered": "Teslim edildi",
+      "read": "Okundu"
+    },
     "seen": {
       "one": "Görüldü",
       "count": "{count} kişi gördü"
@@ -2593,10 +2605,10 @@
     "categories": {
       "label": "Kategoriler",
       "all": "Tüm konuşmalar",
-      "direct": "Özel mesajlar",
+      "direct": "Birebir sohbetler",
       "projects": "Projeler",
       "empty": "Henüz konuşma yok",
-      "start": "Yeni özel mesaj"
+      "start": "Yeni sohbet başlat"
     },
     "files": {
       "add": "Dosya ekle",
@@ -4298,6 +4310,7 @@
   "contact": {
     "title": "İletişim",
     "description": "Soru, öneri ve geri bildirimlerinizi giriş yapmadan bize iletebilirsiniz.",
+    "workspaceDescription": "Soru, öneri ve geri bildirimlerinizi bize iletebilirsiniz.",
     "form": {
       "label": "İletişim formu",
       "firstName": "Ad",

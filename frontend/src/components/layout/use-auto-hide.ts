@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import type { NavbarMode } from "@/features/settings/api";
 
 export const NAVBAR_IDLE_MS = 700;
 const TOP_ZONE_PX = 24;
@@ -12,10 +13,15 @@ function subscribeDesktop(onChange: () => void) {
   return () => query.removeEventListener("change", onChange);
 }
 
-/** Auto-hide is desktop-only. Phones/tablets and touch-primary devices always keep the header visible. */
-export function useAutoHide<T extends HTMLElement>(enabled = true, interactionOpen = false) {
+/** Until a choice is saved, preserve the desktop auto-hide / mobile always-visible defaults. */
+export function useNavbarAutoHideEnabled(mode?: NavbarMode) {
   const desktop = useSyncExternalStore(subscribeDesktop, () => window.matchMedia(DESKTOP_QUERY).matches, () => false);
-  const active = enabled && desktop;
+  return mode ? mode === "auto-hide" : desktop;
+}
+
+export function useAutoHide<T extends HTMLElement>(enabled = true, interactionOpen = false, mode?: NavbarMode) {
+  const autoHide = useNavbarAutoHideEnabled(mode);
+  const active = enabled && autoHide;
   const ref = useRef<T>(null), revealRef = useRef<() => void>(() => {});
   const [hidden, setHidden] = useState(false);
   useEffect(() => {
@@ -53,7 +59,8 @@ export function useAutoHide<T extends HTMLElement>(enabled = true, interactionOp
     function scroll() {
       const y = window.scrollY, delta = y - lastY; lastY = y;
       if (delta > 0 && y > SCROLL_HIDE_DELTA && !held()) { clear(); setHidden(true); }
-      // Desktop pointer users reveal the navbar deliberately; phones/tablets never hide.
+      // Touch users can reveal by scrolling up, in addition to the persistent top handle.
+      else if (delta < -2 && !media.matches) show();
       else if (delta > 0) arm();
     }
     function keyboard(event: KeyboardEvent) { if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") show(); }
@@ -63,9 +70,10 @@ export function useAutoHide<T extends HTMLElement>(enabled = true, interactionOp
     observer.observe(node, { attributes: true, subtree: true, attributeFilter: ["aria-expanded", "data-popup-open"] });
     window.addEventListener("pointermove", pointer); window.addEventListener("scroll", scroll, { passive: true }); window.addEventListener("keydown", keyboard);
     node.addEventListener("pointerenter", enter); node.addEventListener("pointerleave", leave); node.addEventListener("focusin", focusIn); node.addEventListener("focusout", focusOut);
-    media.addEventListener("change", inputModeChanged); arm();
+    media.addEventListener("change", inputModeChanged);
+    const startFrame = requestAnimationFrame(show);
     return () => {
-      disposed = true; clear(); if (focusFrame !== undefined) cancelAnimationFrame(focusFrame); observer.disconnect(); revealRef.current = () => {};
+      disposed = true; clear(); cancelAnimationFrame(startFrame); if (focusFrame !== undefined) cancelAnimationFrame(focusFrame); observer.disconnect(); revealRef.current = () => {};
       window.removeEventListener("pointermove", pointer); window.removeEventListener("scroll", scroll); window.removeEventListener("keydown", keyboard);
       node.removeEventListener("pointerenter", enter); node.removeEventListener("pointerleave", leave); node.removeEventListener("focusin", focusIn); node.removeEventListener("focusout", focusOut);
       media.removeEventListener("change", inputModeChanged);

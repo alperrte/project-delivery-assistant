@@ -351,8 +351,8 @@
           "description": "The logo, name and tagline appear at the top of the card."
         },
         "type": {
-          "title": "Project type",
-          "description": "The type shows as a badge on the card and shapes the technology suggestions."
+          "title": "Project types",
+          "description": "Choose one or more types. They appear on the card and shape the technology suggestions."
         },
         "technology": {
           "title": "Technologies",
@@ -611,7 +611,7 @@
       "dangerDescription": "The project and everything in it is permanently deleted. This cannot be undone.",
       "tagline": "Tagline",
       "taglinePlaceholder": "Describe the project in one sentence",
-      "type": "Project type",
+      "type": "Project types",
       "logo": {
         "label": "Project logo",
         "hint": "PNG, JPEG or WebP, up to 512 KB. Changes are saved immediately.",
@@ -1552,6 +1552,13 @@
       "description": "The default theme: light, dark, or follow your device. It does not change until you press Save.",
       "label": "Theme"
     },
+    "navigation": {
+      "title": "Top navigation bar",
+      "description": "Choose how the top bar behaves on mobile and desktop. Changes apply when you save.",
+      "alwaysVisible": "Always visible",
+      "autoHide": "Auto-hide",
+      "hint": "Auto-hide hides the bar when it is idle. Use the handle at the top to reveal it; on mobile, scrolling up also reveals it."
+    },
     "motion": {
       "title": "Animations",
       "description": "These preferences are saved to your account and apply every time you sign in.",
@@ -2455,9 +2462,9 @@
     }
   },
   "chat": {
-    "title": "Messaging",
+    "title": "Chat",
     "nav": {
-      "label": "Messaging",
+      "label": "Chat",
       "unread": "{count} unread messages"
     },
     "groupName": "Project group",
@@ -2467,7 +2474,7 @@
     "listFailed": "Conversations could not be loaded.",
     "noMembers": "There are no other members in this project yet.",
     "unreadCount": "{count} unread messages",
-    "messagesLabel": "Messages",
+    "messagesLabel": "Chat",
     "loading": "Loading messages",
     "loadingOlder": "Loading older messages…",
     "loadFailed": "Messages could not be loaded.",
@@ -2493,15 +2500,15 @@
       "invalid": "The message contains control characters that are not allowed."
     },
     "panel": {
-      "label": "Messaging panel",
+      "label": "Chat panel",
       "minimize": "Minimize",
       "close": "Close",
       "fullscreen": "Make full size",
       "back": "Back to conversations"
     },
     "dock": {
-      "label": "Minimized messaging",
-      "open": "Open messaging"
+      "label": "Minimized chat",
+      "open": "Open chat"
     },
     "reply": {
       "action": "Reply",
@@ -2548,6 +2555,11 @@
       "confirm": "Delete",
       "deletedMessage": "This message was deleted"
     },
+    "status": {
+      "sent": "Sent",
+      "delivered": "Delivered",
+      "read": "Read"
+    },
     "seen": {
       "one": "Seen",
       "count": "{count, plural, one {Seen by # person} other {Seen by # people}}"
@@ -2569,10 +2581,10 @@
     "categories": {
       "label": "Categories",
       "all": "All conversations",
-      "direct": "Direct messages",
+      "direct": "Direct chats",
       "projects": "Projects",
       "empty": "No conversations yet",
-      "start": "New direct message"
+      "start": "Start new chat"
     },
     "files": {
       "add": "Attach file",
@@ -4320,6 +4332,7 @@
   "contact": {
     "title": "Contact",
     "description": "Send us your questions, suggestions and feedback without signing in.",
+    "workspaceDescription": "Send us your questions, suggestions and feedback.",
     "form": {
       "label": "Contact form",
       "firstName": "First name",

@@ -42,6 +42,17 @@ public interface ChatDelivery {
     void messageDeleted(ChatMessageDeleted event);
 
     /**
+     * A recipient has confirmed delivery of one or more messages (they were received on the client device).
+     * The sender's sessions are told so their tick icons can advance from single to double tick.
+     * {@code recipientId} is the user who acknowledged, {@code messageIds} are the messages now delivered.
+     */
+    record ChatDelivered(UUID projectId, UUID conversationId, ChatConversationType type,
+                         Set<UUID> directParticipants, UUID recipientId, java.util.List<UUID> messageIds) {
+    }
+
+    void delivered(ChatDelivered event);
+
+    /**
      * Ephemeral "is typing" signal; never persisted. The audience is the other participants only (the typist's own
      * sessions are excluded), resolved from current membership like every other delivery.
      */

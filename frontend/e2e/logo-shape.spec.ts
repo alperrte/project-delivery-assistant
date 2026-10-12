@@ -25,7 +25,7 @@ test("project create and edit retain the shape across preview, refresh, cards, s
   const name = `Logo shape project ${Date.now()}`;
   await page.goto("/projects/new");
   await page.locator("#project-name").fill(name);
-  await page.getByRole("radio", { name: /^Web/ }).check();
+  await page.getByRole("checkbox", { name: /^Web/ }).check();
   await picker(page).getByRole("radio", { name: "Yuvarlak", exact: true }).check();
   await frameShape(page.locator("#project-preview [data-logo-frame]"), true);
   await page.locator('input[type="file"]').first().setInputFiles(file);

@@ -4,7 +4,8 @@ import { REJECTED_STATE } from "./e2e/consent-state";
 // Public pages and isolated workspace presentation checks do not need backend accounts.
 export default defineConfig({
   testDir: "./e2e",
-  testMatch: ["cookie-consent.spec.ts", "contact-form.spec.ts", "legal-pages.spec.ts", "form-first-error-focus-public.spec.ts", "form-loading-state-public.spec.ts", "form-submit-results-public.spec.ts", "ui-ux-public.spec.ts", "footer-public-pages.spec.ts", "license-page.spec.ts", "about-page.spec.ts", "error-pages.spec.ts", "landing-page.spec.ts", "landing-real-ui.spec.ts", "workspace-mobile-header.spec.ts", "localized-routing.spec.ts", "a11y-public.spec.ts", "public-scrollbars.spec.ts"],
+  // Project platform presentation uses isolated API fixtures; persistence is tested against PostgreSQL.
+  testMatch: ["cookie-consent.spec.ts", "contact-form.spec.ts", "legal-pages.spec.ts", "form-first-error-focus-public.spec.ts", "form-loading-state-public.spec.ts", "form-submit-results-public.spec.ts", "ui-ux-public.spec.ts", "footer-public-pages.spec.ts", "license-page.spec.ts", "about-page.spec.ts", "error-pages.spec.ts", "landing-page.spec.ts", "landing-real-ui.spec.ts", "workspace-mobile-header.spec.ts", "project-multiple-types.spec.ts", "localized-routing.spec.ts", "a11y-public.spec.ts", "public-scrollbars.spec.ts"],
   timeout: 60_000,
   fullyParallel: false,
   workers: 1,

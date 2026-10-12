@@ -10,7 +10,7 @@ import type { ProjectType } from "../../types";
 import { TechLogo } from "../tech-logo";
 
 type TechPickerProps = {
-  type: ProjectType | undefined;
+  types: readonly (ProjectType | undefined)[] | undefined;
   value: string[];
   onChange: (value: string[]) => void;
 };
@@ -33,7 +33,7 @@ function TechChip({ label, logo, pressed, disabled, onToggle }: { label: string;
   );
 }
 
-export function TechPicker({ type, value, onChange }: TechPickerProps) {
+export function TechPicker({ types, value, onChange }: TechPickerProps) {
   const t = useTranslations("projects.newPage.technology");
   const searchId = useId();
   const [query, setQuery] = useState("");
@@ -45,8 +45,8 @@ export function TechPicker({ type, value, onChange }: TechPickerProps) {
       const items = Object.values(TECH_CATALOG).filter((tech) => tech.name.toLocaleLowerCase("en").includes(trimmed));
       return [{ key: "all", items }];
     }
-    return techGroupsFor(type);
-  }, [trimmed, type]);
+    return techGroupsFor(types);
+  }, [trimmed, types]);
 
   const listed = new Set(groups.flatMap((group) => group.items.map((tech) => tech.name)));
   // Selections that the current type does not suggest (or free text from elsewhere) stay visible and removable.

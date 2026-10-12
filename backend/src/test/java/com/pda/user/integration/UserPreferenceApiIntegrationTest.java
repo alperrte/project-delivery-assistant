@@ -61,6 +61,33 @@ class UserPreferenceApiIntegrationTest {
                 + "\",\"themeTransition\":" + themeTransition + "}";
     }
 
+    private static String navbarBody(String mode) {
+        String base = body("tr", "system", "on", "true");
+        return base.substring(0, base.length() - 1) + ",\"navbarMode\":\"" + mode + "\"}";
+    }
+
+    @Test
+    void navbarChoicesPersistAndOlderClientsDoNotResetThem() throws Exception {
+        Cookie csrf = csrfCookie();
+        Cookie owner = login("navbarprefs");
+        Cookie other = login("othernavbar");
+        mvc.perform(get(PATH).cookie(owner)).andExpect(jsonPath("$.navbarMode").doesNotExist());
+        for (String mode : new String[]{"auto-hide", "always-visible"}) {
+            mvc.perform(put(PATH).cookie(csrf, owner).header("X-XSRF-TOKEN", csrf.getValue())
+                            .contentType(MediaType.APPLICATION_JSON).content(navbarBody(mode)))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.navbarMode").value(mode));
+            mvc.perform(get(PATH).cookie(owner)).andExpect(jsonPath("$.navbarMode").value(mode));
+            mvc.perform(get(PATH).cookie(other)).andExpect(jsonPath("$.navbarMode").doesNotExist());
+        }
+        mvc.perform(put(PATH).cookie(csrf, owner).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content(body("en", "dark", "off", "false")))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.navbarMode").value("always-visible"));
+        mvc.perform(put(PATH).cookie(csrf, owner).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content(navbarBody("invalid")))
+                .andExpect(status().isBadRequest());
+        mvc.perform(get(PATH).cookie(owner)).andExpect(jsonPath("$.navbarMode").value("always-visible"));
+    }
+
     @Test
     void nothingIsSavedUntilTheUserSavesAndThenAllFourChoicesComeBack() throws Exception {
         Cookie csrf = csrfCookie();
@@ -112,14 +139,13 @@ class UserPreferenceApiIntegrationTest {
         Cookie other = login("otherprefs");
 
         mvc.perform(put(PATH).cookie(csrf, first).header("X-XSRF-TOKEN", csrf.getValue())
-                        .contentType(MediaType.APPLICATION_JSON).content(body("en", "dark", "system", "true")))
+                        .contentType(MediaType.APPLICATION_JSON).content(navbarBody("auto-hide")))
                 .andExpect(status().isOk());
 
         // Signing out and in again creates a new session; the defaults are the same.
         Cookie second = signIn(email, password);
         mvc.perform(get(PATH).cookie(second))
-                .andExpect(jsonPath("$.locale").value("en"))
-                .andExpect(jsonPath("$.theme").value("dark"));
+                .andExpect(jsonPath("$.navbarMode").value("auto-hide"));
 
         // Somebody else sees none of it.
         mvc.perform(get(PATH).cookie(other)).andExpect(jsonPath("$.locale").doesNotExist());

@@ -5,6 +5,7 @@ import { pageAlternates, pageOpenGraph } from "@/lib/seo/alternates";
 import { PageJsonLd } from "@/lib/seo/json-ld";
 import { CONTACT_EMAIL } from "@/features/public-info/site-info";
 import { ContactForm } from "./contact-form";
+import { WorkspaceHelpBack } from "@/features/public-info/workspace-help-back";
 
 export async function contactMetadata(): Promise<Metadata> {
   const t = await getTranslations("contact");
@@ -18,14 +19,14 @@ export async function contactMetadata(): Promise<Metadata> {
 }
 
 /** Public: the form works for visitors who are not signed in. */
-export async function ContactPage() {
+export async function ContactPage({ workspace = false }: { workspace?: boolean } = {}) {
   const t = await getTranslations("contact");
   return (
-    <article data-contact-page className="mx-auto w-full max-w-2xl motion-safe:animate-[fade-up_280ms_cubic-bezier(0.22,1,0.36,1)_backwards]">
-      <PageJsonLd route="/contact" type="ContactPage" name={t("title")} description={t("description")} />
+    <article data-contact-page className={workspace ? "w-full" : "mx-auto w-full max-w-2xl motion-safe:animate-[fade-up_280ms_cubic-bezier(0.22,1,0.36,1)_backwards]"}>
+      {workspace ? <WorkspaceHelpBack /> : <PageJsonLd route="/contact" type="ContactPage" name={t("title")} description={t("description")} />}
       <header>
         <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{t("title")}</h1>
-        <p className="mt-4 text-base leading-7 text-muted-foreground">{t("description")}</p>
+        <p className="mt-4 text-base leading-7 text-muted-foreground">{t(workspace ? "workspaceDescription" : "description")}</p>
         <p className="mt-2 text-base leading-7 text-muted-foreground">
           {t("emailAlt")}{" "}
           <a href={`mailto:${CONTACT_EMAIL}`} className="inline-flex min-h-11 items-center rounded-md font-medium text-primary underline underline-offset-4 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring">{CONTACT_EMAIL}</a>

@@ -34,7 +34,7 @@ test.describe("Yeni proje sayfası", () => {
 
     await page.locator("#project-name").fill("Teslimat Portalı");
     await page.locator("#project-tagline").fill("Sevkiyatı tek yerden izleyin");
-    await page.getByRole("radio", { name: /^Mobil/ }).click();
+    await page.getByRole("checkbox", { name: /^Mobil/ }).click();
 
     await expect(preview.getByRole("heading", { name: "Teslimat Portalı" })).toBeVisible();
     await expect(preview.getByText("Sevkiyatı tek yerden izleyin")).toBeVisible();
@@ -64,13 +64,13 @@ test.describe("Yeni proje sayfası", () => {
     await expect(page).toHaveURL(/\/tr\/projeler\/yeni-proje$/);
     await expect(page.getByRole("alert").filter({ hasText: "Bu alan zorunlu." })).toBeVisible();
     // The type cards are the only invalid field, so focus has to land on them instead of staying on the button.
-    await expect(page.getByRole("radio").first()).toBeFocused();
+    await expect(page.getByRole("checkbox").first()).toBeFocused();
   });
 
   test("yalnız boşluktan oluşan ad kabul edilmez", async ({ page }) => {
     await page.goto("/projects/new");
     await page.locator("#project-name").fill("     ");
-    await page.getByRole("radio", { name: /^Web/ }).click();
+    await page.getByRole("checkbox", { name: /^Web/ }).click();
     await page.getByRole("button", { name: /^Projeyi oluştur$/ }).click();
     await expect(page).toHaveURL(/\/tr\/projeler\/yeni-proje$/);
     await expect(page.locator("#project-name")).toBeFocused();
@@ -83,7 +83,7 @@ test.describe("Yeni proje sayfası", () => {
 
     await page.locator('input[type="file"]').first().setInputFiles({ name: "logo.png", mimeType: "image/png", buffer: PNG });
     await page.locator("#project-name").fill(name);
-    await page.getByRole("radio", { name: /^Web/ }).click();
+    await page.getByRole("checkbox", { name: /^Web/ }).click();
     await page.getByRole("button", { name: "React", exact: true }).click();
     await page.getByRole("button", { name: /^Projeyi oluştur$/ }).click();
     await declineTeamPrompt(page);
@@ -119,7 +119,7 @@ test.describe("Yeni proje sayfası", () => {
     await expect(page.getByRole("button", { name: "Kaldır" })).toBeVisible();
 
     await page.locator("#project-name").fill(name);
-    await page.getByRole("radio", { name: /^Web/ }).click();
+    await page.getByRole("checkbox", { name: /^Web/ }).click();
     await page.getByRole("button", { name: "React", exact: true }).click();
     await page.getByRole("button", { name: /^Projeyi oluştur$/ }).click();
     await declineTeamPrompt(page);
@@ -142,7 +142,7 @@ test.describe("Yeni proje sayfası", () => {
   test("ayarlar sayfasındaki planlama ve görev tercihi oluştururken de sorulur ve kaydedilir", async ({ page }) => {
     await page.goto("/projects/new");
     await page.locator("#project-name").fill(`Planlı Proje ${Date.now()}`);
-    await page.getByRole("radio", { name: /^Web/ }).click();
+    await page.getByRole("checkbox", { name: /^Web/ }).click();
     await expect(page.getByRole("heading", { name: "Planlama" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Görev oluşturma tercihi" })).toBeVisible();
     // The same defaults the settings page shows for a fresh project.
@@ -183,7 +183,7 @@ test.describe("Yeni proje sayfası", () => {
   test("hedef bitiş tarihi başlangıçtan önce olamaz", async ({ page }) => {
     await page.goto("/projects/new");
     await page.locator("#project-name").fill(`Tarih Sırası ${Date.now()}`);
-    await page.getByRole("radio", { name: /^Web/ }).click();
+    await page.getByRole("checkbox", { name: /^Web/ }).click();
     await chooseDate(page, "create-start", "2030-06-20");
     await chooseDate(page, "create-end", "2030-03-10");
     await expect(page.locator("#create-end-error")).toBeVisible();

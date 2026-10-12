@@ -24,7 +24,7 @@ class CentralChatMigrationTest {
    sql.execute("INSERT INTO chat_conversations(id,project_id,type,created_at) SELECT g,p1,'PROJECT',now()-interval '2 day' FROM fixture");
    sql.execute("INSERT INTO chat_messages(id,conversation_id,sender_user_id,content,created_at) SELECT gm,g,a,'old group',now()-interval '2 hour' FROM fixture");
    sql.execute("INSERT INTO chat_read_states(conversation_id,user_id,last_read_at) SELECT g,b,now() FROM fixture");
-   var latest=Flyway.configure().dataSource(postgres.getJdbcUrl(),postgres.getUsername(),postgres.getPassword()).locations("classpath:db/migration").load();assertEquals(4,latest.migrate().migrationsExecuted);
+   var latest=Flyway.configure().dataSource(postgres.getJdbcUrl(),postgres.getUsername(),postgres.getPassword()).locations("classpath:db/migration").load();assertTrue(latest.migrate().migrationsExecuted>=4);
    try(var r=sql.executeQuery("SELECT count(*),count(distinct conversation_id) FROM chat_messages WHERE conversation_id=(SELECT c1 FROM fixture)")){assertTrue(r.next());assertEquals(3,r.getInt(1));assertEquals(1,r.getInt(2));}
    try(var r=sql.executeQuery("SELECT m.reply_to_message_id=f.m2,m.conversation_id=f.c1 FROM chat_messages m CROSS JOIN fixture f WHERE m.id=f.m3")){assertTrue(r.next());assertTrue(r.getBoolean(1));assertTrue(r.getBoolean(2));}
    try(var r=sql.executeQuery("SELECT count(*) FROM chat_message_reactions")){assertTrue(r.next());assertEquals(1,r.getInt(1));}

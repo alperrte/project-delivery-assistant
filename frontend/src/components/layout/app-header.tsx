@@ -1,9 +1,9 @@
 "use client";
 
+import { usePathname, useSearchParams } from "next/navigation";
 import Link from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { CaretDown, Cookie, EnvelopeSimple, List, Question, ShieldCheck, SignOut, UserCircle } from "@phosphor-icons/react";
-import { CONTACT_HREF } from "@/features/public-info/site-info";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -25,6 +25,7 @@ import { ThemeToggle } from "./theme-toggle";
 import { useAutoHide } from "./use-auto-hide";
 import { WorkspaceHistoryControls } from "./workspace-history-controls";
 import { NotificationsMenu } from "@/features/notifications/notifications-menu";
+import { useSavedPreferences } from "@/features/settings/session-preferences";
 
 type SessionUser = { id?: string; nickname?: string; email?: string; globalRole?: string; adminVerified?: boolean; profilePhotoVersion?: number | null } | null | undefined;
 
@@ -53,7 +54,12 @@ export function AppHeader({
   const tw = useTranslations("workspace");
   const tf = useTranslations("siteFooter");
   const ta = useTranslations("admin");
-  const { ref, hidden, reveal } = useAutoHide<HTMLElement>(!contained, mobileMenuOpen);
+  const pathname = usePathname();
+  const search = useSearchParams().toString();
+  const faqHref = `/account/faq?returnTo=${encodeURIComponent(pathname + (search ? `?${search}` : ""))}`;
+  const contactHref = `/account/contact?returnTo=${encodeURIComponent(pathname + (search ? `?${search}` : ""))}`;
+  const saved = useSavedPreferences(contained ? undefined : user?.id);
+  const { ref, hidden, reveal } = useAutoHide<HTMLElement>(!contained, mobileMenuOpen, saved.data?.navbarMode);
 
   return (
     <div className="pointer-events-none fixed inset-x-3 top-0 z-40 sm:inset-x-auto sm:left-1/2 sm:w-[min(calc(100vw-1.5rem),620px)] sm:-translate-x-1/2 lg:w-[620px] xl:w-[700px] 2xl:w-[760px]">
@@ -138,7 +144,7 @@ export function AppHeader({
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
                 <DropdownMenuLabel>{tf("information")}</DropdownMenuLabel>
-                <DropdownMenuItem className="min-h-11" render={<Link href="/faq" />}>
+                <DropdownMenuItem className="min-h-11" render={<Link href={faqHref} />}>
                   <Question data-icon="inline-start" size={16} aria-hidden="true" />
                   {tf("faq")}
                 </DropdownMenuItem>
@@ -146,7 +152,7 @@ export function AppHeader({
                   <Cookie data-icon="inline-start" size={16} aria-hidden="true" />
                   {tf("manageCookies")}
                 </DropdownMenuItem>
-                <DropdownMenuItem className="min-h-11" render={<Link href={CONTACT_HREF} />}>
+                <DropdownMenuItem className="min-h-11" render={<Link href={contactHref} />}>
                   <EnvelopeSimple data-icon="inline-start" size={16} aria-hidden="true" />
                   {tf("contact")}
                 </DropdownMenuItem>
