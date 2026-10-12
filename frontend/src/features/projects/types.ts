@@ -6,6 +6,12 @@ export type ProjectVisibility = "PRIVATE";
 export const PROJECT_TYPES = ["WEB", "MOBILE", "AI", "DESKTOP", "OTHER"] as const;
 export type ProjectType = (typeof PROJECT_TYPES)[number];
 
+/** New responses carry the full selection; older API/demo records still have the scalar. */
+export function getProjectTypes(project: { projectTypes?: readonly ProjectType[]; projectType?: ProjectType | null }): ProjectType[] {
+  const selected = project.projectTypes ?? (project.projectType ? [project.projectType] : []);
+  return PROJECT_TYPES.filter(type => selected.includes(type));
+}
+
 export type UserRef = { userId: string; nickname: string; profilePhotoVersion?: number | null };
 /** Filled by the list endpoint only (aggregated per page); detail responses carry `null`. */
 export type ProjectTeam = { memberCount: number; preview: UserRef[] };
@@ -31,6 +37,7 @@ export type Project = {
   updatedAt: string;
   archivedAt: string | null;
   projectType: ProjectType;
+  projectTypes?: ProjectType[];
   tagline: string | null;
   /** Epoch ms of the stored logo; `null` means no logo. Append to the logo URL as `?v=` for cache busting. */
   logoShape: LogoShape;

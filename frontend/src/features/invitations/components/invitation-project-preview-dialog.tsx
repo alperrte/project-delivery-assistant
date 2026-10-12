@@ -31,6 +31,7 @@ export function InvitationProjectPreviewDialog({ invitationId, onClose }: {
     projectGoal: project.projectGoal,
     status: project.status,
     projectType: project.projectType,
+    projectTypes: project.projectTypes,
     techStack: project.techStack,
     updatedAt: project.updatedAt,
     updatedBy: null,

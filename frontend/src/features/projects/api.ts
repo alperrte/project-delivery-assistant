@@ -12,7 +12,7 @@ export type CreateProjectBody = {
   name: string;
   description?: string;
   organizationId?: string;
-  projectType: ProjectType;
+  projectTypes: ProjectType[];
   tagline?: string;
   techStack?: string;
 };
@@ -28,7 +28,7 @@ export type UpdateProjectValues = {
   projectGoal?: string | null;
   techStack?: string | null;
   organizationId?: string | null;
-  projectType?: ProjectType;
+  projectTypes?: ProjectType[];
   tagline?: string | null;
 };
 

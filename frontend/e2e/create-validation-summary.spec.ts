@@ -30,7 +30,7 @@ test.describe("Validation summary on create forms", () => {
 
     // Entries scroll to and focus the first invalid control of their section.
     await summary.getByRole("button", { name: "Proje türü" }).click();
-    await expect(page.getByRole("radiogroup").getByRole("radio").first()).toBeFocused();
+    await expect(page.getByRole("checkbox").first()).toBeFocused();
     await summary.getByRole("button", { name: "Kimlik" }).click();
     await expect(page.locator("#project-name")).toBeFocused();
 
@@ -38,7 +38,7 @@ test.describe("Validation summary on create forms", () => {
     await page.locator("#project-name").fill("Özet doğrulama projesi");
     await expect(page.locator("#project-name")).toBeFocused();
     await expect(summary.getByRole("button")).toHaveCount(1);
-    await page.getByRole("radio", { name: /^Web/ }).click();
+    await page.getByRole("checkbox", { name: /^Web/ }).click();
     await expect(summary).toHaveCount(0);
     await expect(submitProject(page)).not.toHaveAttribute("aria-describedby", /.+/);
 
@@ -50,7 +50,7 @@ test.describe("Validation summary on create forms", () => {
   test("project: a valid form with an invalid repository URL lists the repository section", async ({ page }) => {
     await page.goto("/projects/new");
     await page.locator("#project-name").fill("Depo hatası projesi");
-    await page.getByRole("radio", { name: /^Web/ }).click();
+    await page.getByRole("checkbox", { name: /^Web/ }).click();
     await page.locator("#project-repository-url").fill("not-a-repository");
     await submitProject(page).click();
 

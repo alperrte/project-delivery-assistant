@@ -16,7 +16,7 @@ test("organization picker includes the 101st owned organization in create and se
     }
     await page.goto("/tr/projeler/yeni");
     await page.locator("#project-name").fill(`${prefix} project`);
-    await page.getByRole("radio", { name: /^Web/ }).click();
+    await page.getByRole("checkbox", { name: /^Web/ }).click();
     await page.locator("#create-organization").click();
     await page.getByRole("option", { name: lastName, exact: true }).click();
     await page.getByRole("button", { name: /^Projeyi oluştur$/ }).click();

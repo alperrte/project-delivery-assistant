@@ -351,8 +351,8 @@
           "description": "The logo, name and tagline appear at the top of the card."
         },
         "type": {
-          "title": "Project type",
-          "description": "The type shows as a badge on the card and shapes the technology suggestions."
+          "title": "Project types",
+          "description": "Choose one or more types. They appear on the card and shape the technology suggestions."
         },
         "technology": {
           "title": "Technologies",
@@ -611,7 +611,7 @@
       "dangerDescription": "The project and everything in it is permanently deleted. This cannot be undone.",
       "tagline": "Tagline",
       "taglinePlaceholder": "Describe the project in one sentence",
-      "type": "Project type",
+      "type": "Project types",
       "logo": {
         "label": "Project logo",
         "hint": "PNG, JPEG or WebP, up to 512 KB. Changes are saved immediately.",
