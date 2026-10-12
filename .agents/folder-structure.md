@@ -273,3 +273,9 @@ Public routes now include `(public)/about` and `(public)/license` beside cookies
 ## Corporate SMTP — 2026-10-12
 
 `shared/SmtpMailSettings.java` and `shared/ProductionMailConfigurationValidator.java` contain transport settings and production startup checks. Existing auth/contact/project mail adapters keep their domain ports. `shared/SmtpMailSettingsTest.java` verifies TLS/configuration and real local SMTP authentication/delivery for all mail flows.
+
+## Logo şekli — 2026-10-12
+
+- Backend: project/LogoShape.java; db/migration/V42__entity_logo_shape.sql; project ve organization mevcut entity/request/response/service sınırları.
+- Frontend: lib/media/logo-shape.ts, components/common/logo-shape-picker.tsx; EntityMark + data-logo-frame görünümleri; mevcut dört form ve chat/invitation/squad shape aktarımı.
+- Testler: LogoShapeIntegrationTest, LogoShapeMigrationTest, frontend/e2e/logo-shape.spec.ts.

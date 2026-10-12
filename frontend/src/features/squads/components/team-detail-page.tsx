@@ -212,11 +212,11 @@ export function TeamDetailPage({ slug, teamId }: { slug: string; teamId: string 
 
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex min-w-0 items-start gap-4">
-          <span
+          <span data-logo-frame
             aria-hidden="true"
             className="grid size-12 shrink-0 place-items-center overflow-hidden rounded-xl border border-primary/25 bg-primary/10 font-heading text-lg font-semibold text-primary"
           >
-            <ProjectMark key={projectLogoSrc(projectData) ?? "none"} name={projectData.name} src={projectLogoSrc(projectData)} />
+            <ProjectMark shape={projectData.logoShape} key={projectLogoSrc(projectData) ?? "none"} name={projectData.name} src={projectLogoSrc(projectData)} />
           </span>
           <div className="min-w-0 space-y-1.5">
             <PageTitle className="font-heading text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">{teamData.name}</PageTitle>

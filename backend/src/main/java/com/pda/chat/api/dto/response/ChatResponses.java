@@ -22,7 +22,7 @@ public final class ChatResponses {
         }
     }
 
-    public record Reply(UUID id, UserSummary sender, String preview) { }
+    public record Reply(UUID id, UserSummary sender, String preview, boolean deleted) { }
     public record Reaction(String code, String emoji, long count, boolean reactedByCurrentUser) {
         static Reaction from(ChatViews.ReactionView view) { return new Reaction(view.code().name(),view.emoji(),view.count(),view.reactedByCurrentUser()); }
     }
@@ -30,17 +30,21 @@ public final class ChatResponses {
         public static Reactions from(ChatViews.ReactionSnapshot view) { return new Reactions(view.messageId(),view.reactionVersion(),view.reactions().stream().map(Reaction::from).toList()); }
     }
     public record Message(UUID id, UUID conversationId, String content, Instant createdAt, UserSummary sender,
-                          Reply replyTo, String reactionVersion, List<Reaction> reactions) {
+                          Reply replyTo, String reactionVersion, List<Reaction> reactions, boolean deleted) {
         public static Message from(ChatViews.MessageView view) {
             return new Message(view.id(), view.conversationId(), view.content(), view.createdAt(),
-                    UserSummary.from(view.sender()), view.replyTo()==null?null:new Reply(view.replyTo().id(),UserSummary.from(view.replyTo().sender()),view.replyTo().preview()),
-                    view.reactionVersion(),view.reactions().stream().map(Reaction::from).toList());
+                    UserSummary.from(view.sender()), view.replyTo()==null?null:new Reply(view.replyTo().id(),UserSummary.from(view.replyTo().sender()),view.replyTo().preview(),view.replyTo().deleted()),
+                    view.reactionVersion(),view.reactions().stream().map(Reaction::from).toList(),view.deleted());
         }
     }
 
-    public record LastMessage(String preview, Instant createdAt, UUID senderUserId) {
+    public record Receipt(UUID userId, Instant readAt) {
+        public static Receipt from(ChatViews.ReceiptView view) { return new Receipt(view.userId(), view.readAt()); }
+    }
+
+    public record LastMessage(String preview, Instant createdAt, UUID senderUserId, boolean deleted) {
         static LastMessage from(ChatViews.LastMessageView view) {
-            return view == null ? null : new LastMessage(view.preview(), view.createdAt(), view.senderUserId());
+            return view == null ? null : new LastMessage(view.preview(), view.createdAt(), view.senderUserId(), view.deleted());
         }
     }
 

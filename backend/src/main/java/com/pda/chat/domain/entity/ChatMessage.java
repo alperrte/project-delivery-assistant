@@ -34,7 +34,7 @@ public class ChatMessage {
     @Column(name = "sender_user_id", nullable = false, updatable = false)
     private UUID senderUserId;
 
-    @Column(nullable = false, updatable = false, columnDefinition = "text")
+    @Column(nullable = false, columnDefinition = "text")
     private String content;
 
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -45,6 +45,10 @@ public class ChatMessage {
 
     @Column(name = "reaction_version", nullable = false)
     private long reactionVersion;
+
+    /** Set when the sender deleted the message; the text is erased then (content is empty). */
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
 
     protected ChatMessage() {
         // JPA
@@ -107,4 +111,12 @@ public class ChatMessage {
     public UUID getReplyToMessageId() { return replyToMessageId; }
     public long getReactionVersion() { return reactionVersion; }
     public void reactionsChanged() { reactionVersion = Math.addExact(reactionVersion, 1); }
+    public boolean isDeleted() { return deletedAt != null; }
+
+    /** Turns the message into a tombstone: the text is erased for good, the row stays for replies and ordering. */
+    public void delete(Instant now) {
+        this.content = "";
+        this.deletedAt = Objects.requireNonNull(now, "now is required").truncatedTo(ChronoUnit.MICROS);
+        reactionsChanged();
+    }
 }

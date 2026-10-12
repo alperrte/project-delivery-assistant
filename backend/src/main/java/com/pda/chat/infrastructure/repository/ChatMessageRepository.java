@@ -75,6 +75,7 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, UUID> 
             where c.project_id = :projectId
               and (c.type = 'PROJECT' or :userId in (c.direct_user_low, c.direct_user_high))
               and m.sender_user_id <> :userId
+              and m.deleted_at is null
               and m.created_at > greatest(
                     coalesce(r.last_read_at, cast('-infinity' as timestamptz)),
                     case when c.type = 'PROJECT' then cast(:groupFloor as timestamptz)

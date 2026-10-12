@@ -9,7 +9,7 @@ export function organizationImageSource(org: Pick<Organization, "id" | "logoVers
   return version ? apiUrl(`/organizations/${org.id}/${kind}?v=${encodeURIComponent(version)}`) : null;
 }
 function metadata(body: OrganizationFormValues) {
-  return { name: body.name.trim(), ...Object.fromEntries(["description", "website", "contactEmail", "location", "notes"].map(key => [key, body[key as keyof OrganizationFormValues]?.trim() || null])) };
+  return { logoShape: body.logoShape, name: body.name.trim(), ...Object.fromEntries(["description", "website", "contactEmail", "location", "notes"].map(key => [key, body[key as keyof OrganizationFormValues]?.trim() || null])) };
 }
 export const organizationsApi = {
   list: (page: number, size = 20) => apiRequest<Page<Organization>>(`/organizations?page=${page}&size=${size}`),

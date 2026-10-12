@@ -2,12 +2,12 @@
 
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { ArrowDown } from "@phosphor-icons/react";
+import { ArrowDown, Checks, Prohibit } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { dayKey, formatClock, formatDayLabel } from "../format";
-import type { ChatMessage, PendingMessage, ReactionCode } from "../types";
+import type { ChatMessage, ChatReceipt, PendingMessage, ReactionCode } from "../types";
 import { ReactionChips } from "./reaction-chips";
 import { PersonAvatar } from "./person-avatar";
 import { MessageActions } from "./message-actions";
@@ -38,6 +38,10 @@ type Props = {
   onReact: (messageId: string, code: ReactionCode, add: boolean) => void;
   reactionPending: (messageId: string, code: ReactionCode) => boolean;
   reactionsDisabled: boolean;
+  /** Deletes an own message for everybody (the dialog reports failures itself). */
+  onDelete: (messageId: string) => Promise<void>;
+  /** The other members' read markers, for the "seen" line. */
+  receipts: ChatReceipt[];
 };
 
 /**
@@ -65,6 +69,8 @@ export function MessageList({
   onReact,
   reactionPending,
   reactionsDisabled,
+  onDelete,
+  receipts,
 }: Props) {
   const t = useTranslations("chat");
   const locale = useLocale();
@@ -169,6 +175,10 @@ export function MessageList({
   const labels = { today: t("today"), yesterday: t("yesterday") };
   const showNewMessages = !atBottom && lastId !== undefined && lastId !== seenLastId;
   const empty = messages.length === 0 && outbox.length === 0;
+  // "Seen" is shown under the newest own message only (like messengers do), not under every one.
+  const lastOwnId = [...messages].reverse().find((message) => message.sender.userId === selfId && !message.deleted)?.id;
+  const seenBy = (message: ChatMessage) =>
+    receipts.filter((receipt) => Date.parse(receipt.readAt) >= Date.parse(message.createdAt)).length;
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
@@ -207,8 +217,9 @@ export function MessageList({
                 data-testid="chat-message"
                 data-own={own ? "true" : "false"}
                 data-message-id={message.id}
-                className={cn("group/message flex items-end gap-2", own ? "justify-end" : "justify-start", newRun && "pt-2")}
+                className={cn("group/message flex items-start gap-2", own ? "justify-end" : "justify-start", newRun && "pt-2")}
               >
+                {/* The avatar is pinned to the top of the row: reactions and the time sit below the bubble and must not move it. */}
                 {!own && showSenders && (
                   <span className="w-7 shrink-0">
                     {newRun && <PersonAvatar user={message.sender} className="size-7 text-[10px]" />}
@@ -220,22 +231,50 @@ export function MessageList({
                       {message.sender.nickname ?? "?"}
                     </span>
                   )}
-                  <div
-                    data-testid="chat-message-bubble"
-                    className={cn(
-                      "relative min-h-7 rounded-2xl px-3 py-1.5 text-sm break-words whitespace-pre-wrap [overflow-wrap:anywhere] max-sm:min-h-11",
-                      own ? "rounded-br-sm bg-primary pr-10 text-primary-foreground max-sm:pr-12" : "rounded-bl-sm bg-muted pl-10 text-foreground max-sm:pl-12",
-                    )}
-                  >
-                    {message.replyTo && <ReplyPreview reply={message.replyTo} />}
-                    <span data-testid="chat-message-text">{message.content}</span>
-                    <MessageActions own={own} message={message} onReply={onReply} onReact={(code,add)=>onReact(message.id,code,add)} disabled={reactionsDisabled} />
-                  </div>
-                  <ReactionChips message={message} onReact={(code,add)=>onReact(message.id,code,add)} pending={code=>reactionPending(message.id,code)} disabled={reactionsDisabled} />
+                  {/* The actions button sits beside the bubble (not inside its padding), so the bubble keeps equal left and right padding. */}
+                  {message.deleted ? (
+                    <div
+                      data-testid="chat-message-deleted"
+                      className="flex min-w-0 items-center gap-1.5 rounded-2xl border border-dashed border-border px-3 py-1.5 text-sm text-muted-foreground italic"
+                    >
+                      <Prohibit size={14} aria-hidden="true" className="shrink-0" />
+                      <span className="min-w-0 [overflow-wrap:anywhere]">{t("delete.deletedMessage")}</span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className={cn("flex max-w-full min-w-0 items-start gap-1", own && "flex-row-reverse")}>
+                        <div
+                          data-testid="chat-message-bubble"
+                          // Double click (double tap on touch screens) replies; the menu stays the keyboard route.
+                          onDoubleClick={() => {
+                            if (reactionsDisabled) return;
+                            window.getSelection()?.removeAllRanges();
+                            onReply(message);
+                          }}
+                          className={cn(
+                            "min-w-0 rounded-2xl px-3 py-1.5 text-sm break-words whitespace-pre-wrap [overflow-wrap:anywhere] touch-manipulation",
+                            own ? "rounded-br-sm bg-primary text-primary-foreground" : "rounded-bl-sm bg-muted text-foreground",
+                          )}
+                        >
+                          {message.replyTo && <ReplyPreview reply={message.replyTo} />}
+                          <span data-testid="chat-message-text">{message.content}</span>
+                        </div>
+                        <MessageActions own={own} message={message} onReply={onReply} onReact={(code,add)=>onReact(message.id,code,add)}
+                          onDelete={own ? () => onDelete(message.id) : undefined} disabled={reactionsDisabled} />
+                      </div>
+                      <ReactionChips message={message} onReact={(code,add)=>onReact(message.id,code,add)} pending={code=>reactionPending(message.id,code)} disabled={reactionsDisabled} />
+                    </>
+                  )}
                   <div className="mt-0.5 flex items-center gap-1">
                   <time dateTime={message.createdAt} className="px-1 text-[10px] text-muted-foreground tabular-nums">
                     {formatClock(message.createdAt, locale)}
                   </time>
+                  {own && message.id === lastOwnId && seenBy(message) > 0 && (
+                    <span data-testid="chat-message-seen" className="flex items-center gap-0.5 text-[10px] text-primary">
+                      <Checks size={12} weight="bold" aria-hidden="true" />
+                      {showSenders ? t("seen.count", { count: seenBy(message) }) : t("seen.one")}
+                    </span>
+                  )}
                   </div>
                 </div>
               </div>

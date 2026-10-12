@@ -357,7 +357,157 @@ class ChatWebSocketIntegrationTest {
         assertEquals(direct.toString(), read.get("conversationId"));
         assertEquals(f.projectId.toString(), read.get("projectId"));
         assertFalse(read.containsKey("message"));
-        assertNull(manager.events.poll(1, TimeUnit.SECONDS));
+        // The other participant learns that it was seen (and nothing else); the reader's own tab got READ only.
+        Map<String, Object> seen = manager.next();
+        assertEquals("SEEN", seen.get("type"));
+        assertEquals(f.member.id().toString(), seen.get("userId"));
+        assertEquals(direct.toString(), seen.get("conversationId"));
+        assertNotNull(seen.get("readAt"));
+        assertNull(manager.events.poll(300, TimeUnit.MILLISECONDS));
+        assertNull(memberTab.events.poll(300, TimeUnit.MILLISECONDS), "the reader was told about their own read twice");
+        // The same information is available over REST for whoever opens the conversation later, to participants only.
+        String receipts = mvc.perform(get(base(f.projectId) + "/conversations/" + direct + "/receipts").cookie(f.manager.access()))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        assertEquals(f.member.id().toString(), JsonPath.read(receipts, "$[0].userId"));
+        mvc.perform(get(base(f.projectId) + "/conversations/" + direct + "/receipts").cookie(f.otherMember.access()))
+                .andExpect(status().isNotFound());
+        mvc.perform(get(base(f.projectId) + "/conversations/" + direct + "/receipts").cookie(f.outsider.access()))
+                .andExpect(status().isForbidden());
+    }
+
+    // ---- deleting -----------------------------------------------------------------------------------------------
+
+    @Test
+    void onlyTheSenderCanDeleteAndEveryoneInTheAudienceLearnsAboutItOnce() throws Exception {
+        Fixture f = fixture();
+        UUID direct = openDirect(f.manager, f.projectId, f.member.id());
+        UUID group = groupId(f.manager, f.projectId);
+        UUID groupMessage = UUID.fromString(JsonPath.read(send(f.member, f.projectId, group, "secret group text")
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString(), "$.id"));
+        UUID directMessage = UUID.fromString(JsonPath.read(send(f.member, f.projectId, direct, "secret direct text")
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString(), "$.id"));
+        reaction(f.manager, f.projectId, group, groupMessage, "HEART", true).andExpect(status().isOk());
+        Socket member = connect(f.member);
+        Socket memberSecondTab = connect(f.member);
+        Socket manager = connect(f.manager);
+        Socket bystander = connect(f.otherMember);
+        Socket outsider = connect(f.outsider);
+        for (Socket socket : List.of(member, memberSecondTab, manager, bystander, outsider)) {
+            socket.subscribeToOwnQueue();
+        }
+
+        // Somebody else's message, or somebody outside the project: refused, nothing is sent.
+        deleteMessage(f.manager, f.projectId, group, groupMessage).andExpect(status().isForbidden());
+        deleteMessage(f.outsider, f.projectId, group, groupMessage).andExpect(status().isForbidden());
+        deleteMessage(f.otherMember, f.projectId, direct, directMessage).andExpect(status().isNotFound());
+        deleteMessage(f.member, f.projectId, group, UUID.randomUUID()).andExpect(status().isNotFound());
+        assertNull(manager.events.poll(300, TimeUnit.MILLISECONDS));
+
+        deleteMessage(f.member, f.projectId, group, groupMessage).andExpect(status().isNoContent());
+        for (Socket socket : List.of(member, memberSecondTab, manager, bystander)) {
+            Map<String, Object> event = socket.next();
+            assertEquals("DELETED", event.get("type"));
+            assertEquals(groupMessage.toString(), event.get("messageId"));
+            assertEquals(group.toString(), event.get("conversationId"));
+            assertFalse(event.containsKey("content"));
+        }
+        assertNull(outsider.events.poll(100, TimeUnit.MILLISECONDS));
+        // Deleting again is a no-op and announces nothing.
+        deleteMessage(f.member, f.projectId, group, groupMessage).andExpect(status().isNoContent());
+        assertNull(manager.events.poll(300, TimeUnit.MILLISECONDS));
+
+        // The text is gone for good; the tombstone stays in history with no reactions.
+        String history = mvc.perform(get(messagesUrl(f.projectId, group)).cookie(f.manager.access()))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        assertEquals(true, JsonPath.read(history, "$.messages[0].deleted"));
+        assertEquals("", JsonPath.read(history, "$.messages[0].content"));
+        assertEquals(0, ((List<?>) JsonPath.read(history, "$.messages[0].reactions")).size());
+        assertEquals("", jdbc.queryForObject("select content from chat_messages where id=?", String.class, groupMessage));
+        assertEquals(0, jdbc.queryForObject("select count(*) from chat_message_reactions where message_id=?", Integer.class, groupMessage));
+        // A deleted message can be neither reacted to nor quoted.
+        reaction(f.manager, f.projectId, group, groupMessage, "HEART", true).andExpect(status().isNotFound());
+        postJson(f.manager, messagesUrl(f.projectId, group),
+                "{\"content\":\"quote\",\"replyToMessageId\":\"" + groupMessage + "\"}").andExpect(status().isNotFound());
+
+        // The direct message is deleted for its two participants only.
+        deleteMessage(f.member, f.projectId, direct, directMessage).andExpect(status().isNoContent());
+        assertEquals("DELETED", member.next().get("type"));
+        assertEquals("DELETED", manager.next().get("type"));
+        assertNull(bystander.events.poll(200, TimeUnit.MILLISECONDS));
+    }
+
+    private ResultActions deleteMessage(Account actor, UUID project, UUID conversation, UUID message) throws Exception {
+        Cookie csrf = csrfCookie();
+        return mvc.perform(delete(messagesUrl(project, conversation) + "/" + message)
+                .cookie(csrf, actor.access()).header("X-XSRF-TOKEN", csrf.getValue()));
+    }
+
+    // ---- typing -------------------------------------------------------------------------------------------------
+
+    @Test
+    void typingReachesOnlyTheOtherParticipantsNeverTheTypistsOwnTabsAndIsNotStored() throws Exception {
+        Fixture f = fixture();
+        UUID direct = openDirect(f.manager, f.projectId, f.member.id());
+        UUID group = groupId(f.manager, f.projectId);
+        Socket manager = connect(f.manager);
+        Socket managerSecondTab = connect(f.manager);
+        Socket member = connect(f.member);
+        Socket bystander = connect(f.otherMember);
+        Socket outsider = connect(f.outsider);
+        for (Socket socket : List.of(manager, managerSecondTab, member, bystander, outsider)) {
+            socket.subscribeToOwnQueue();
+        }
+
+        // The body names somebody else as the typist; the event must carry the authenticated user.
+        postJson(f.manager, typingUrl(f.projectId, direct), "{\"typing\":true,\"userId\":\"" + f.member.id() + "\"}")
+                .andExpect(status().isNoContent());
+        Map<String, Object> started = member.next();
+        assertEquals("TYPING", started.get("type"));
+        assertEquals(direct.toString(), started.get("conversationId"));
+        assertEquals(f.projectId.toString(), started.get("projectId"));
+        assertEquals(f.manager.id().toString(), started.get("userId"));
+        assertEquals(true, started.get("typing"));
+        assertFalse(started.toString().contains("@example.test"), "a typing event leaks an email");
+        assertNull(manager.events.poll(300, TimeUnit.MILLISECONDS), "the typist saw their own typing");
+        assertNull(managerSecondTab.events.poll(100, TimeUnit.MILLISECONDS), "the typist's other tab saw their typing");
+        assertNull(bystander.events.poll(100, TimeUnit.MILLISECONDS), "a non-participant heard a direct typing event");
+        assertNull(outsider.events.poll(100, TimeUnit.MILLISECONDS));
+
+        postJson(f.manager, typingUrl(f.projectId, direct), "{\"typing\":false}").andExpect(status().isNoContent());
+        assertEquals(false, member.next().get("typing"));
+
+        // In the project group every other member hears it.
+        postJson(f.member, typingUrl(f.projectId, group), "{\"typing\":true}").andExpect(status().isNoContent());
+        for (Socket socket : List.of(manager, managerSecondTab, bystander)) {
+            Map<String, Object> event = socket.next();
+            assertEquals("TYPING", event.get("type"));
+            assertEquals(f.member.id().toString(), event.get("userId"));
+        }
+        assertNull(member.events.poll(300, TimeUnit.MILLISECONDS), "the typist saw their own typing");
+        assertNull(outsider.events.poll(100, TimeUnit.MILLISECONDS));
+
+        assertEquals(0, jdbc.queryForObject("select count(*) from chat_messages where conversation_id in (?, ?)",
+                Integer.class, direct, group), "typing must never be stored");
+    }
+
+    @Test
+    void typingIntoSomeoneElsesConversationOrFromOutsideTheProjectIsRefused() throws Exception {
+        Fixture f = fixture();
+        UUID direct = openDirect(f.manager, f.projectId, f.member.id());
+        UUID group = groupId(f.manager, f.projectId);
+        Socket manager = connect(f.manager);
+        manager.subscribeToOwnQueue();
+
+        // A project member who is not a participant: same answer as a conversation that does not exist.
+        postJson(f.otherMember, typingUrl(f.projectId, direct), "{\"typing\":true}").andExpect(status().isNotFound());
+        postJson(f.otherMember, typingUrl(f.projectId, UUID.randomUUID()), "{\"typing\":true}").andExpect(status().isNotFound());
+        // Somebody outside the project.
+        postJson(f.outsider, typingUrl(f.projectId, group), "{\"typing\":true}").andExpect(status().isForbidden());
+        // Anonymous.
+        mvc.perform(post(typingUrl(f.projectId, group)).contentType(MediaType.APPLICATION_JSON).content("{\"typing\":true}"))
+                .andExpect(status().is4xxClientError());
+
+        assertNull(manager.events.poll(500, TimeUnit.MILLISECONDS), "a refused typing signal was delivered");
     }
 
     // ---- sockets end with their session -------------------------------------------------------------------------
@@ -573,6 +723,10 @@ class ChatWebSocketIntegrationTest {
 
     private static String base(UUID projectId) {
         return "/api/v1/projects/" + projectId + "/chat";
+    }
+
+    private static String typingUrl(UUID projectId, UUID conversationId) {
+        return base(projectId) + "/conversations/" + conversationId + "/typing";
     }
 
     private static String messagesUrl(UUID projectId, UUID conversationId) {

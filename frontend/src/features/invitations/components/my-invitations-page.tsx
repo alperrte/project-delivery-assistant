@@ -77,9 +77,9 @@ function ProjectCell({ invitation, wrapMessage = false }: { invitation: MyInvita
   const teamTitle = invitation.teamName ? t("mineTeamInvitation", { team: invitation.teamName }) : t("mineProjectInvitation");
   return (
     <div className="flex min-w-0 items-start gap-3">
-      <span aria-hidden="true"
+      <span data-logo-frame aria-hidden="true"
         className="grid size-10 shrink-0 place-items-center rounded-lg border border-primary/25 bg-primary/10 font-heading text-sm font-semibold text-primary">
-        <ProjectMark name={invitation.projectName ?? "?"} src={null} />
+        <ProjectMark shape={invitation.logoShape} name={invitation.projectName ?? "?"} src={null} />
       </span>
       <div className="min-w-0 space-y-0.5">
         <p className={cn("truncate font-medium", invitation.projectName ? "text-foreground" : "text-muted-foreground")} title={name}>{name}</p>

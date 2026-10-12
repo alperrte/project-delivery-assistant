@@ -35,6 +35,7 @@ export function InvitationProjectPreviewDialog({ invitationId, onClose }: {
     updatedAt: project.updatedAt,
     updatedBy: null,
     logoVersion: project.logoVersion,
+    logoShape: project.logoShape,
     team: { memberCount: project.memberCount, preview: [] },
   } : null;
 

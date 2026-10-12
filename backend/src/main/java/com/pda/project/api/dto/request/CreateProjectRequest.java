@@ -13,6 +13,7 @@ public record CreateProjectRequest(
         UUID organizationId,
         ProjectType projectType,
         @Size(max = 120) String tagline,
-        @Size(max = 1000) String techStack
+        @Size(max = 1000) String techStack,
+        com.pda.project.LogoShape logoShape
 ) {
 }

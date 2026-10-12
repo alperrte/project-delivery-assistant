@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CircleNotch, Eye, Trash } from "@phosphor-icons/react";
 import { toast } from "sonner";
+import { LogoShapePicker } from "@/components/common/logo-shape-picker";
 import { PageHeader } from "@/components/common/page-header";
 import { PageContainer } from "@/components/common/page-container";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
@@ -46,6 +47,7 @@ const selectClass = "w-full bg-background";
 function toFormValues(project: Project): ProjectSettingsValues {
   return {
     name: project.name,
+    logoShape: project.logoShape ?? "SQUARE",
     description: project.description ?? "",
     priority: project.priority,
     status: project.status === "ARCHIVED" ? "PLANNING" : project.status,
@@ -149,12 +151,13 @@ export function ProjectSettingsForm({ project, organization }: { project: Projec
       projectType: watched.projectType ?? project.projectType,
       techStack: watched.techStack || null,
       logoVersion: project.logoVersion,
+      logoShape: watched.logoShape ?? project.logoShape,
       bannerVersion: project.bannerVersion,
       team: project.team,
       updatedBy: project.updatedBy,
       updatedAt: project.updatedAt,
     }),
-    [project, watched.name, watched.tagline, watched.description, watched.status, watched.priority, watched.projectType, watched.techStack, tp],
+    [project, watched.logoShape, watched.name, watched.tagline, watched.description, watched.status, watched.priority, watched.projectType, watched.techStack, tp],
   );
   const updatedLabel = new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(project.updatedAt));
 
@@ -223,7 +226,8 @@ export function ProjectSettingsForm({ project, organization }: { project: Projec
           </SettingsSection>
 
           <SettingsSection title={t("sections.logo.title")} description={t("sections.logo.description")}>
-            <ProjectLogoField project={project} />
+            <ProjectLogoField project={project} shape={watched.logoShape} />
+            <LogoShapePicker value={watched.logoShape ?? "SQUARE"} onChange={shape => setValue("logoShape", shape, { shouldDirty: true })} name={watched.name ?? project.name} src={projectLogoSource(project)} disabled={saving} />
           </SettingsSection>
 
           <SettingsSection title={t("sections.banner.title")} description={t("sections.banner.description")}>
@@ -393,6 +397,7 @@ export function ProjectSettingsForm({ project, organization }: { project: Projec
                   value: project.name,
                   label: t.rich("deleteTypeName", {
                     name: project.name,
+    logoShape: project.logoShape ?? "SQUARE",
                     strong: (chunks) => <strong className="font-semibold text-foreground">{chunks}</strong>,
                   }),
                 }}

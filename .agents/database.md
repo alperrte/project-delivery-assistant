@@ -194,3 +194,7 @@ Registration now creates `PENDING_VERIFICATION` users; expired pending users are
 - Tested on a database migrated up to V68 and then to the latest (`SupportAuditAnalyticsMigrationTest`): existing rows are untouched, the new tables start empty and their constraints reject malformed rows.
 
 Organization hard delete (2026-10-11): no schema or migration change. `OrganizationService.delete` runs in one transaction: lock the owned row, `update projects set organization_id = null where organization_id = :id` (the FK has no cascade), delete the `organization_media_objects` rows, delete the `organizations` row; the files behind the media keys are deleted in an `afterCommit` hook. The `ARCHIVED` status and `archived_at` column are kept for old rows but are no longer written.
+
+## V42 logo şekli — 2026-10-12
+
+projects.logo_shape ve organizations.logo_shape VARCHAR(16) NOT NULL DEFAULT 'SQUARE'; CHECK yalnız SQUARE/CIRCLE kabul eder. Eski kayıtlar Square olur, görsel baytları/referansları/sürümleri değişmez. Shape seçimi dosya yüklemeden bağımsızdır. V41 → V42 backfill ve constraint testi gerçek PostgreSQL 18 üzerinde çalışır; konsolidasyon karşılaştırma testi orijinal V40 şemasına sabitlenir, yeni migration testi ayrı çalışır.

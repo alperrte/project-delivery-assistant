@@ -356,3 +356,7 @@ Footer, iletişim/destek, KVKK/Gizlilik/Çerez metinlerindeki kurumsal adres `in
 ## Ekip breadcrumb kaldırma — 2026-10-12 (sınırlı kapsam)
 
 Yalnız Breadcrumb maddesiyle ilişkili: kullanıcının istediği ekip detay/düzenle/üye davet yollarında breadcrumb kaldırıldı; gerçek QA backend + Chromium ile bu üç sayfada yokluğu, ekip oluşturma sayfasında varlığı doğrulandı. Global Breadcrumb kutusu bu sınırlı kapsam nedeniyle değiştirilmedi. Ayrıntı: `docs/compliation/2026-10-12-team-pages-breadcrumb.md`.
+
+## Proje / organizasyon logo şekli — 2026-10-12 (sınırlı kapsam)
+
+Etkilenen Görsel fallback / Responsive / Dark Mode / Form Validation / Keyboard Navigation / Focus State maddeleri açısından yalnız logo yüzeyleri doğrulandı: ortak native radio seçici, dört formda anlık preview ve API/DB kalıcılığı, Circle 50% kırpma ve Square mevcut radius, kart/başlık/sidebar/ekip/sohbet/davet tutarlılığı. TR/EN/DE, light/dark ve 320/390/768/1440 px overflow/klavye kontrolleri geçti; mobil/masaüstü ekran görüntüleri incelendi. 4 yeni + 25 mevcut Chromium testi, hedefli backend verify 60/0/0/0 ve son lint/type/build exit0. Normal başarılar gerçek API/PostgreSQL/medya; QA hesap hazırlığı ve mevcut regresyon hata/latency senaryoları TEST-ONLY. Global maddeler bu kapsamla [x] yapılmadı; production veya tüm tarayıcı audit'i iddia edilmez. Ayrıntı: docs/compliation/2026-10-12-project-organization-logo-shape.md.

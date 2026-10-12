@@ -11,10 +11,11 @@ import { errorKey } from "@/lib/api/error-message";
 import { projectsApi, projectLogoSource } from "../api";
 import { LOGO_ACCEPTED_TYPES, logoValidationError } from "../logo-validation";
 import type { Project } from "../types";
+import type { LogoShape } from "@/lib/media/logo-shape";
 import { ProjectMark } from "./project-mark";
 
 /** Media is saved independently of the settings form; refetch never resets its unsaved text fields. */
-export function ProjectLogoField({ project }: { project: Project }) {
+export function ProjectLogoField({ project, shape = project.logoShape }: { project: Project; shape?: LogoShape }) {
   const t = useTranslations("projects.settings.logo");
   const tv = useTranslations("projects.newPage.logo");
   const te = useTranslations("errors");
@@ -52,9 +53,9 @@ export function ProjectLogoField({ project }: { project: Project }) {
   return (
     <div data-testid="project-logo-field" aria-busy={busy} className="space-y-3">
       <div className="flex items-center gap-4">
-        <span aria-hidden="true" data-testid="project-settings-mark"
+        <span data-logo-frame aria-hidden="true" data-testid="project-settings-mark"
           className="grid size-16 shrink-0 place-items-center rounded-xl border border-primary/25 bg-primary/10 font-heading text-2xl font-semibold text-primary">
-          <ProjectMark name={project.name} src={src} />
+          <ProjectMark shape={shape} name={project.name} src={src} />
         </span>
         <div className="min-w-0 space-y-2">
           <p className="text-sm text-foreground">{src ? t("statusSet") : t("statusNone")}</p>

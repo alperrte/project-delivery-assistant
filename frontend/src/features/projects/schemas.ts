@@ -1,3 +1,4 @@
+import { LOGO_SHAPES } from "@/lib/media/logo-shape";
 import { z } from "zod";
 import { MAX_TECH_SELECTION } from "./tech-catalog";
 import { PROJECT_TYPES } from "./types";
@@ -11,6 +12,7 @@ export const taskManagementModes = ["SIMPLE", "ADVANCED", "BOTH"] as const;
 /** Everything the settings page can change (except deleting) is asked here too, so a new project and an edited one never differ. */
 export const createProjectSchema = z
   .object({
+    logoShape: z.enum(LOGO_SHAPES),
     name: z.string().trim().min(1, "required").max(160, "maxLength"),
     tagline: z.string().max(TAGLINE_MAX, "maxLength").optional(),
     projectType: z.enum(PROJECT_TYPES, { error: "required" }),
@@ -32,6 +34,7 @@ export type CreateProjectValues = z.infer<typeof createProjectSchema>;
 
 export const projectSettingsSchema = z
   .object({
+    logoShape: z.enum(LOGO_SHAPES),
     name: z.string().trim().min(1, "required").max(160, "maxLength"),
     description: z.string().max(2000, "maxLength").optional(),
     priority: z.enum(projectPriorities),

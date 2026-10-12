@@ -27,6 +27,8 @@ import {
   applyMessageToOverview,
   applyReadToOverview,
   applyReactionSnapshots,
+  applyMessageDeleted,
+  applySeen,
   flattenMessages,
   chatKeys,
   newestMessageId,
@@ -45,11 +47,15 @@ import type {
   PendingMessage,
   ChatReply,
   ReactionCode,
+  TypingPerson,
 } from "./types";
 import { useChatSocket } from "./use-chat-socket";
+import { TypingEmitter, TypingTracker, type TypingSnapshot } from "./typing";
 import { ReactionBuffer } from "./reactions";
 import { ReactionSyncQueue, resyncReactions } from "./reaction-resync";
 import { pendingMatches } from "./pending";
+
+const NO_TYPING: TypingPerson[] = [];
 
 function chatLifetime() {
   return { active: true, messageIds: new Set<string>(), reactions: new ReactionBuffer(), abort: new AbortController(),
@@ -150,6 +156,7 @@ type ChatContextValue = {
   /** The project's own name and logo: the project group conversation is shown under them. Undefined while loading. */
   projectName?: string;
   projectLogoSrc: string | null;
+  projectLogoShape: import("@/lib/media/logo-shape").LogoShape;
   contextSlug?: string;
   mode: ChatMode;
   active: ActiveConversation | null;
@@ -180,6 +187,7 @@ type ChatContextValue = {
   setReply: (key: string, reply: ChatReply | null) => void;
   react: (messageId: string, code: ReactionCode, add: boolean) => Promise<void>;
   reactionPending: (messageId: string, code: ReactionCode) => boolean;
+  deleteMessage: (messageId: string) => Promise<void>;
   outboxFor: (conversationId: string | undefined) => PendingMessage[];
   send: (conversationId: string, text: string, reply?: ChatReply | null) => MessageValidation;
   retry: (conversationId: string, clientId: string) => void;
@@ -187,6 +195,10 @@ type ChatContextValue = {
   /** The conversation view reports what is on screen so unread counting and read marking know about it. */
   reportView: (view: ViewState) => void;
   markRead: (conversationId: string) => void;
+  /** Other people typing in the active conversation (never the signed-in user). */
+  typingPeople: TypingPerson[];
+  /** The composer reports its state: keystrokes (`typing`), an emptied box or a left conversation (`stopped`), a sent message (`sent`). */
+  notifyTyping: (conversationId: string, state: "typing" | "stopped" | "sent") => void;
 };
 
 const ChatContext = createContext<ChatContextValue | null>(null);
@@ -231,6 +243,7 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey, pageKe
   else if (state.pageKey !== pageKey) dispatch({ type: "navigation", pageKey });
   const projectId = project?.id;
   const projectName = project?.name;
+  const projectLogoShape = project?.logoShape ?? "SQUARE";
   const projectLogoSrc = project ? projectLogoSource(project) : null;
   const shown = state.mode !== "closed";
 
@@ -244,8 +257,22 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey, pageKe
   const [reactionPendingKeys, setReactionPendingKeys] = useState<Set<string>>(new Set());
   const pendingReactionsRef = useRef<Set<string>>(new Set());
   const triggerRef = useRef<HTMLElement | null>(null);
+  const connectionRef = useRef<ChatConnection>("connecting");
+  // Typing state is ephemeral: it lives only in the browser and expires on its own (see typing.ts).
+  const [typingSnapshot, setTypingSnapshot] = useState<TypingSnapshot>({});
+  const [typingTracker] = useState(() => new TypingTracker(setTypingSnapshot));
+  const [typingEmitter] = useState(() => new TypingEmitter());
   // Each account/project transition is a distinct generation, including a quick A -> B -> A trip.
   const lifetimeRef = useRef(chatLifetime());
+  useEffect(() => {
+    typingEmitter.setSender((conversationId, typing) => {
+      const pid = projectIdRef.current;
+      const lifetime = lifetimeRef.current;
+      // A signal is only worth sending while the socket is up and the project is the one the user sees.
+      if (!pid || !lifetime.active || connectionRef.current !== "connected") return;
+      void chatApi.typing(pid, conversationId, typing, lifetime.abort.signal).catch(() => { /* best effort: the next keystroke repeats it */ });
+    });
+  }, [typingEmitter]);
   useEffect(() => {
     const lifetime = chatLifetime();
     lifetimeRef.current = lifetime;
@@ -256,6 +283,8 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey, pageKe
     selfIdRef.current = selfId;
     modeRef.current = state.mode;
   });
+  // Another account/project, or leaving the workspace: nobody's typing state may carry over.
+  useEffect(() => () => { typingEmitter.cancel(); typingTracker.clearAll(); }, [ownerKey, typingEmitter, typingTracker]);
 
   // A project switch also drops that project's drafts and loaded history (the state itself reset in the reducer).
   useEffect(() => {
@@ -311,6 +340,23 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey, pageKe
         applyReadToOverview(queryClient, pid, event.conversationId);
         return;
       }
+      if (event.type === "TYPING") {
+        // The server never echoes a typist to themselves; this also covers a second tab of the same account.
+        if (event.userId === selfIdRef.current) return;
+        if (event.typing) typingTracker.set(event.conversationId, { userId: event.userId, nickname: event.nickname });
+        else typingTracker.clear(event.conversationId, event.userId);
+        return;
+      }
+      if (event.type === "SEEN") {
+        if (event.userId !== selfIdRef.current) applySeen(queryClient, pid, event.conversationId, event.userId, event.readAt);
+        return;
+      }
+      if (event.type === "DELETED") {
+        applyMessageDeleted(queryClient, pid, event.conversationId, event.messageId);
+        // Previews and unread counts of the conversation list came from the server; refresh them.
+        void queryClient.invalidateQueries({ queryKey: chatKeys.overview(pid) });
+        return;
+      }
       if (event.type === "REACTIONS") {
         const found = applyReactionSnapshots(queryClient, pid, event.conversationId, [event]);
         if (!found.has(event.messageId)) lifetimeRef.current.reactions.put(event.conversationId, event);
@@ -318,6 +364,8 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey, pageKe
       }
       const message = event.message;
       if (!message || message.conversationId !== event.conversationId) return;
+      // A sent message ends that person's "typing" at once.
+      typingTracker.clear(message.conversationId, message.sender.userId);
       // Renewal briefly keeps both subscriptions alive. Process a delivered message once, including unread/outbox.
       const messageIds = lifetimeRef.current.messageIds;
       if (messageIds.has(message.id)) return;
@@ -340,7 +388,7 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey, pageKe
         void queryClient.invalidateQueries({ queryKey: chatKeys.members(pid) });
       }
     },
-    [queryClient],
+    [queryClient, typingTracker],
   );
 
   /** Whatever happened while the socket was down is fetched over REST: no message is lost on a reconnect. */
@@ -348,7 +396,12 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey, pageKe
     const pid = projectIdRef.current;
     const lifetime = lifetimeRef.current;
     if (!lifetime.active || !pid) return;
-    if (reconnect) void queryClient.invalidateQueries({ queryKey: chatKeys.overview(pid) });
+    if (reconnect) {
+      void queryClient.invalidateQueries({ queryKey: chatKeys.overview(pid) });
+      // A deletion announced while the socket was down is not part of the "newer messages" catch-up below.
+      void queryClient.invalidateQueries({ queryKey: chatKeys.messagesRoot(pid) });
+      void queryClient.invalidateQueries({ queryKey: chatKeys.receiptsRoot(pid) });
+    }
     const loaded = queryClient.getQueriesData<MessagePages>({ queryKey: chatKeys.messagesRoot(pid) });
     void (async () => {
       for (const [key, data] of loaded) {
@@ -379,6 +432,18 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey, pageKe
 
   const connection = useChatSocket({ contextKey: projectId && selfId ? `${selfId}:${projectId}` : undefined, onEvent: handleEvent, onConnect: handleConnect });
 
+  useEffect(() => {
+    connectionRef.current = connection;
+    // A dropped socket may have swallowed "stopped" signals in both directions: start clean instead of guessing.
+    if (connection !== "connected") { typingEmitter.cancel(); typingTracker.clearAll(); }
+  }, [connection, typingEmitter, typingTracker]);
+
+  const notifyTyping = useCallback((conversationId: string, state: "typing" | "stopped" | "sent") => {
+    if (state === "typing") typingEmitter.typing(conversationId);
+    else if (state === "stopped") typingEmitter.stop();
+    else typingEmitter.cancel();
+  }, [typingEmitter]);
+
   // ---- data --------------------------------------------------------------------------------------------------------
   const overviewQuery = useChatOverview(projectId, { poll: connection !== "connected" });
   const membersQuery = useChatMembers(projectId, shown);
@@ -400,6 +465,8 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey, pageKe
     if (fromDirects) return fromDirects;
     return membersQuery.data?.find((member) => member.userId === activePeerId) ?? null;
   }, [activePeerId, overview, membersQuery.data]);
+
+  const typingPeople = (activeConversationId && typingSnapshot[activeConversationId]) || NO_TYPING;
 
   useEffect(() => {
     if (shown && activeConversationId) void syncReactions(activeConversationId);
@@ -480,6 +547,16 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey, pageKe
   }, [activeConversationId, queryClient]);
   const reactionPending = useCallback((messageId: string, code: ReactionCode) => reactionPendingKeys.has(`${activeConversationId}:${messageId}:${code}`), [reactionPendingKeys, activeConversationId]);
 
+  /** Deletes an own message; the tombstone appears once the server confirmed (errors are the caller's to show). */
+  const deleteMessage = useCallback(async (messageId: string) => {
+    const pid = projectIdRef.current, cid = activeConversationId, lifetime = lifetimeRef.current;
+    if (!pid || !cid || !lifetime.active) return;
+    await chatApi.deleteMessage(pid, cid, messageId, lifetime.abort.signal);
+    if (!lifetime.active || projectIdRef.current !== pid) return;
+    applyMessageDeleted(queryClient, pid, cid, messageId);
+    void queryClient.invalidateQueries({ queryKey: chatKeys.overview(pid) });
+  }, [activeConversationId, queryClient]);
+
   const deliver = useCallback(
     async (conversationId: string, clientId: string, content: string, reply?: ChatReply | null) => {
       const pid = projectIdRef.current;
@@ -558,6 +635,7 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey, pageKe
       contextSlug: slug,
       projectName,
       projectLogoSrc,
+      projectLogoShape,
       mode: state.mode,
       active,
       activeConversationId,
@@ -585,20 +663,23 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey, pageKe
       setReply,
       react,
       reactionPending,
+      deleteMessage,
       outboxFor,
       send,
       retry,
       discard,
       reportView,
       markRead,
+      typingPeople,
+      notifyTyping,
     }),
     // The query objects change identity every render; their data/status are what matters.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
-      projectId, projectName, projectLogoSrc, slug, state.mode, active, activeConversationId, activePeer, connection, overview,
+      projectId, projectName, projectLogoSrc, projectLogoShape, slug, state.mode, active, activeConversationId, activePeer, connection, overview,
       overviewQuery.status, membersQuery.data, membersQuery.status, openDirect.isPending, open,
       minimize, expandCompact, expandFull, close, navigatePage, selectGroup, selectPeer, getDraft, setDraft, outboxFor, send,
-      retry, discard, reportView, markRead, getReply, setReply, react, reactionPending,
+      retry, discard, reportView, markRead, getReply, setReply, react, reactionPending, deleteMessage, typingPeople, notifyTyping,
     ],
   );
 

@@ -1,4 +1,10 @@
 {
+  "logoShape": {
+    "label": "Logo shape",
+    "SQUARE": "Square",
+    "CIRCLE": "Circle",
+    "hint": "Choose the logo and initial shape without changing the image."
+  },
   "common": {
     "appName": "Project Delivery Assistant",
     "loading": "Loading",
@@ -2530,6 +2536,23 @@
         "CHECK": "Check",
         "ROCKET": "Rocket"
       }
+    },
+    "delete": {
+      "action": "Delete",
+      "title": "Delete this message?",
+      "description": "The message is deleted for everyone and cannot be restored. A \"This message was deleted\" note stays in its place.",
+      "cancel": "Cancel",
+      "confirm": "Delete",
+      "deletedMessage": "This message was deleted"
+    },
+    "seen": {
+      "one": "Seen",
+      "count": "{count, plural, one {Seen by # person} other {Seen by # people}}"
+    },
+    "typing": {
+      "one": "{name} is typing…",
+      "two": "{first} and {second} are typing…",
+      "many": "{first}, {second} and {count, plural, one {# other} other {# others}} are typing…"
     },
     "reactions": {
       "action": "React",

@@ -53,10 +53,16 @@ public class OrganizationService {
 
     @Transactional
     public Organization create(UUID actorId, String name, String description, String website, String contactEmail, String location, String notes) {
+        return create(actorId, name, description, website, contactEmail, location, notes, null);
+    }
+
+    @Transactional
+    public Organization create(UUID actorId, String name, String description, String website, String contactEmail, String location, String notes, com.pda.project.LogoShape logoShape) {
         Objects.requireNonNull(actorId, "actorId is required");
         Organization organization = Organization.create(name, SlugGenerator.generate(name),
                 description, actorId);
         organization.updateProfile(name, description, website, contactEmail, location, notes);
+        organization.updateLogoShape(logoShape);
         return organizations.saveAndFlush(organization);
     }
 
@@ -83,8 +89,14 @@ public class OrganizationService {
 
     @Transactional
     public Organization update(UUID actorId, UUID organizationId, String name, String description, String website, String contactEmail, String location, String notes) {
+        return update(actorId, organizationId, name, description, website, contactEmail, location, notes, null);
+    }
+
+    @Transactional
+    public Organization update(UUID actorId, UUID organizationId, String name, String description, String website, String contactEmail, String location, String notes, com.pda.project.LogoShape logoShape) {
         Organization organization = lockedOwned(actorId, organizationId);
         organization.updateProfile(name, description, website, contactEmail, location, notes);
+        organization.updateLogoShape(logoShape);
         return organizations.save(organization);
     }
 

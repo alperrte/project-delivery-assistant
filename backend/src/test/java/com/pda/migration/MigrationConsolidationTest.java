@@ -30,7 +30,8 @@ class MigrationConsolidationTest {
         try (var postgres = new PostgreSQLContainer(image)) {
             postgres.start();
             Flyway legacy = flyway(postgres, "legacy", legacyLocation);
-            Flyway consolidated = flyway(postgres, "consolidated", "classpath:db/migration");
+            Flyway consolidated = Flyway.configure().dataSource(postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword())
+                    .schemas("consolidated").defaultSchema("consolidated").locations("classpath:db/migration").target("40").load();
             assertEquals(59, legacy.migrate().migrationsExecuted);
             assertEquals(40, consolidated.migrate().migrationsExecuted);
             legacy.validate();

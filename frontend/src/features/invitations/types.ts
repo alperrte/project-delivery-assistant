@@ -1,3 +1,4 @@
+import type { LogoShape } from "@/lib/media/logo-shape";
 import type { ProjectRole, ProjectStatus, ProjectType } from "@/features/projects/types";
 
 export type InvitationStatus = "PENDING" | "ACCEPTED" | "REJECTED" | "CANCELLED" | "EXPIRED";
@@ -41,6 +42,7 @@ export type ExternalInvitationPreview = {
 export type AcceptedExternalInvitation = { projectId: string; projectSlug: string };
 
 export type MyInvitation = {
+  logoShape: LogoShape;
   id: string;
   projectId: string;
   projectName: string | null;
@@ -57,6 +59,7 @@ export type MyInvitation = {
 
 /** The invited account's card-level view; it does not confer project membership. */
 export type InvitationProjectPreview = {
+  logoShape: LogoShape;
   projectId: string;
   slug: string;
   name: string;

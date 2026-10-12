@@ -18,10 +18,12 @@ export type ChatMessage = {
   replyTo: ChatReply | null;
   reactionVersion: string;
   reactions: ChatReaction[];
+  /** The sender deleted it: the text is gone, only a tombstone remains. */
+  deleted?: boolean;
 };
 
 export type ReactionCode = "THUMBS_UP" | "HEART" | "LAUGH" | "SURPRISED" | "SAD" | "THANKS";
-export type ChatReply = { id: string; sender: ChatUser; preview: string };
+export type ChatReply = { id: string; sender: ChatUser; preview: string; deleted?: boolean };
 export type ChatReaction = { code: ReactionCode; emoji: string; count: number; reactedByCurrentUser: boolean };
 export type ReactionSnapshot = { messageId: string; reactionVersion: string; reactions: ChatReaction[] };
 
@@ -29,6 +31,7 @@ export type ChatLastMessage = {
   preview: string;
   createdAt: string;
   senderUserId: string;
+  deleted?: boolean;
 };
 
 /** `peer` is the other person of a direct conversation and null for the project group. */
@@ -65,7 +68,16 @@ export type ChatSocketEvent = ChatEventScope & (
   | { type: "MESSAGE"; conversationType?: ChatConversationType; message: ChatMessage }
   | { type: "READ" }
   | ({ type: "REACTIONS" } & ReactionSnapshot)
+  | { type: "TYPING"; userId: string; nickname: string | null; typing: boolean }
+  | { type: "DELETED"; messageId: string }
+  | { type: "SEEN"; userId: string; readAt: string }
 );
+
+/** "`userId` has read this conversation up to `readAt`" (ISO instant): a message is seen when `readAt` is not before it. */
+export type ChatReceipt = { userId: string; readAt: string };
+
+/** Someone who is typing right now in a conversation (ephemeral, browser-only). */
+export type TypingPerson = { userId: string; nickname: string | null };
 
 /** What the user is looking at. A direct conversation gets its id once it was opened on the server. */
 export type ActiveConversation =

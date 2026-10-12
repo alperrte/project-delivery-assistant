@@ -57,8 +57,8 @@ export function ProjectDetail({ slug }: { slug: string }) {
     <Tabs value={section} className="project-workspace min-w-0">
         <div className="min-w-0 space-y-6">
           <div className="flex flex-wrap items-start gap-4 sm:gap-5">
-            <div aria-hidden="true" data-testid="project-header-mark" className="grid size-14 shrink-0 place-items-center rounded-xl border border-primary/30 bg-primary/10 font-heading text-xl font-semibold text-primary sm:size-16">
-              <ProjectMark name={project.name} src={projectLogoSource(project)} />
+            <div data-logo-frame aria-hidden="true" data-testid="project-header-mark" className="grid size-14 shrink-0 place-items-center rounded-xl border border-primary/30 bg-primary/10 font-heading text-xl font-semibold text-primary sm:size-16">
+              <ProjectMark shape={project.logoShape} name={project.name} src={projectLogoSource(project)} />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-x-3 gap-y-2">

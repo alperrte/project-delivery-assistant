@@ -1,3 +1,4 @@
+import { LOGO_SHAPES } from "@/lib/media/logo-shape";
 import { z } from "zod";
 function websiteValid(value: string) {
   if (!value) return true;
@@ -5,7 +6,8 @@ function websiteValid(value: string) {
   try { const url = new URL(value); return ["https:", "http:"].includes(url.protocol) && !!url.hostname && !url.username && !url.password; } catch { return false; }
 }
 export const organizationFormSchema = z.object({
-  name: z.string().trim().min(1, "required").max(160, "maxLength"),
+  logoShape: z.enum(LOGO_SHAPES),
+    name: z.string().trim().min(1, "required").max(160, "maxLength"),
   description: z.string().max(2000, "maxLength").optional(),
   website: z.string().trim().max(2048, "maxLength").refine(websiteValid, "url").optional(),
   contactEmail: z.string().trim().max(254, "maxLength").refine(value => !value || z.email().safeParse(value).success, "email").optional(),

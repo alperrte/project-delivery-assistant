@@ -17,15 +17,17 @@ export function PersonAvatar({ user, className }: { user: Pick<ChatUser, "userId
  * The project group shows the project's logo when it has one (or when it fails to load: the people icon), so the
  * group reads as the project itself.
  */
-export function GroupAvatar({ logoSrc, className }: { logoSrc?: string | null; className?: string }) {
+export function GroupAvatar({ logoSrc, shape = "SQUARE", className }: { logoSrc?: string | null; shape?: import("@/lib/media/logo-shape").LogoShape; className?: string }) {
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const showLogo = Boolean(logoSrc) && failedSrc !== logoSrc;
   return (
     <span
       aria-hidden="true"
       data-slot="group-avatar"
+      data-logo-shape={shape}
+      style={shape === "CIRCLE" ? { borderRadius: "50%" } : undefined}
       className={cn(
-        "inline-flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/15 text-primary ring-2 ring-card",
+        "inline-flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-primary/15 text-primary ring-2 ring-card",
         className,
       )}
     >

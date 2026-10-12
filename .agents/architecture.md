@@ -13,6 +13,10 @@
 - **Site taraması.** `npm run check:site -- <adres>` (`scripts/check-site.mjs`) sitemap'teki sayfaları gezer; kırık dahili bağlantı, canonical/hreflang/Open Graph/Twitter eksiği ve ulaşılamayan `og:image` bulursa 1 ile çıkar.
 - İşletme (yedek, olay müdahale, rollback, migration, bakım): `.agents/operations.md`; betikler `ops/`.
 
+## Sohbet "yazıyor…" göstergesi ve mesaj yerleşimi (2026-10-12)
+
+Yazıyor durumu mevcut STOMP kuyruğunu (`/user/queue/chat`) yeniden kullanır; ikinci bir gerçek zamanlı kanal, tablo veya migration yoktur. İstemci soketten gönderemez (kural aynı kaldı): composer `POST .../conversations/{id}/typing` çağırır, `ChatService.typing` erişimi (`accessible`) ve oran sınırını denetler, `ChatDelivery.typing` yazan kişi hariç katılımcılara `TYPING` olayı iter. Yazan kimliği her zaman oturumdan gelir. Alıcı tarafta `features/chat/typing.ts` içindeki `TypingTracker` (7 sn TTL; MESSAGE, "stopped", bağlantı kopması ve proje/hesap değişimi temizler) ve gönderici tarafta `TypingEmitter` (3 sn throttle, 5 sn boşta durdurma) kullanılır; state yalnız tarayıcıdadır. Mesaj balonu: eylem düğmesi artık balonun iç boşluğunda değil yanında (`flex` kardeşi) durur, böylece sol/sağ padding eşittir; avatar satırın üstüne (`items-start`) hizalıdır, reaksiyon/saat avatarı oynatmaz.
+
 ## Invitations remediation — 2026-10-06
 
 Private invitation list/preview/project-history/count keys actor ID ile scope edilir; sign-in/out/session boundary yalnız invitation private family cancel/remove yapar. Recipient local modal state actor key ile remount olur. Expired pending mutation row lock altında EXPIRED + flush olur; yeni INSERT mevcut partial unique constraint ile korunur. GET presentation/count/candidates etkin expiry kullanır; arka plan scheduler, auth policy, yeni migration veya General Team eklenmedi. Legacy accept mevcut projects/private invitation roots invalidates; external signed-in baseline zaten geçti ve callback gereksiz değiştirilmedi.
@@ -165,3 +169,7 @@ Kayıt: `docs/compliation/2026-10-11-performance-technical-quality.md`.
 ## Corporate SMTP — 2026-10-12
 
 Mail domain ports remain unchanged; shared `SmtpMailSettings` contains only environment-driven JavaMail transport/address validation. SMTP and Brevo relay selections use the same Spring Mail path, no HTTP API/fallback. Hostinger implicit TLS and optional STARTTLS are mutually exclusive. ProductionMailConfigurationValidator checks enabled production mail eagerly without network I/O.
+
+## Proje ve organizasyon logo şekli — 2026-10-12
+
+`project.LogoShape` (`SQUARE`, `CIRCLE`) görsel dosyasından bağımsız kimlik metadata'sıdır. V42 her iki tabloya varsayılan SQUARE, NOT NULL ve CHECK ekler. Create/PUT mevcut yetki ve CSRF kurallarını kullanır; eksik/null create şekli Square, eksik/null PUT şekli kayıtlı tercihi korur. Yanıtlar ve alıcı kapsamlı davet listesi/önizlemesi şekli taşır. EntityMark ve açık data-logo-frame çerçevesi kart, başlık, sidebar, ekip ve önizlemelerde ortak kırpma uygular; sohbet grup avatarı aynı proje tercihinden beslenir. Yeni medya endpoint'i, depolama biçimi veya yetki modeli yoktur.

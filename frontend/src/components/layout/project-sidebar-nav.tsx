@@ -149,11 +149,11 @@ export function ProjectSidebarNav({
           title={project?.name ?? t("chooseProject")}
           className="mb-1 flex items-center justify-center rounded-md py-2 hover:bg-muted"
         >
-          <span
+          <span data-logo-frame
             aria-hidden="true"
             className="grid size-7 shrink-0 place-items-center rounded-md bg-primary text-[11px] font-semibold text-primary-foreground"
           >
-            <ProjectMark key={projectLogo ?? "none"} name={project?.name ?? "P"} src={projectLogo} />
+            <ProjectMark shape={project?.logoShape} key={projectLogo ?? "none"} name={project?.name ?? "P"} src={projectLogo} />
           </span>
         </Link>
 
@@ -252,11 +252,11 @@ export function ProjectSidebarNav({
           title={project?.name}
           className="mb-2 flex min-w-0 items-center gap-2.5 rounded-md border bg-card/60 px-2.5 py-2 text-[13px] font-semibold hover:bg-muted"
         >
-          <span
+          <span data-logo-frame
             aria-hidden="true"
             className="grid size-7 shrink-0 place-items-center rounded-md bg-primary text-[11px] font-semibold text-primary-foreground"
           >
-            <ProjectMark key={projectLogo ?? "none"} name={project?.name ?? "P"} src={projectLogo} />
+            <ProjectMark shape={project?.logoShape} key={projectLogo ?? "none"} name={project?.name ?? "P"} src={projectLogo} />
           </span>
 
           <span className="truncate">{project?.name ?? slug}</span>

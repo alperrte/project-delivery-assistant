@@ -16,6 +16,7 @@ public record OrganizationResponse(
         String location,
         String notes,
         String logoVersion,
+        com.pda.project.LogoShape logoShape,
         String coverVersion,
         UUID ownerUserId,
         OrganizationStatus status,
@@ -26,7 +27,7 @@ public record OrganizationResponse(
     public static OrganizationResponse from(Organization organization) {
         return new OrganizationResponse(organization.getId(), organization.getName(),
                 organization.getSlug(), organization.getDescription(), organization.getWebsite(),
-                organization.getContactEmail(), organization.getLocation(), organization.getNotes(), organization.getLogoKey(),
+                organization.getContactEmail(), organization.getLocation(), organization.getNotes(), organization.getLogoKey(), organization.getLogoShape(),
                 organization.getCoverKey(), organization.getOwnerUserId(),
                 organization.getStatus(), organization.getCreatedAt(), organization.getUpdatedAt(),
                 organization.getArchivedAt());

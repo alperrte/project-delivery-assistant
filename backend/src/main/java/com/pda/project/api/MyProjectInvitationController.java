@@ -43,7 +43,7 @@ public class MyProjectInvitationController {
                     InvitationSummary i = item.invitation();
                     return new MyInvitationResponse(i.id(), i.projectId(), item.projectName(), i.invitedBy(),
                             item.invitedByNickname(), item.invitedByPhotoVersion(), i.initialRoles(), i.status(),
-                            i.createdAt(), i.expiresAt(), i.message(), i.teamName());
+                            i.createdAt(), i.expiresAt(), i.message(), i.teamName(), item.logoShape());
                 });
     }
 
@@ -105,5 +105,5 @@ public class MyProjectInvitationController {
                                        String invitedByNickname, Long invitedByPhotoVersion,
                                        Set<ProjectRole> initialRoles,
                                        InvitationStatus status, Instant createdAt, Instant expiresAt,
-                                       String message, String teamName) {}
+                                       String message, String teamName, com.pda.project.LogoShape logoShape) {}
 }

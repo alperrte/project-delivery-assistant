@@ -27,6 +27,30 @@ public interface ChatDelivery {
                                 Set<UUID> directParticipants, UUID messageId, long committedVersion) { }
     void reactionsChanged(ChatReactionsChanged event);
 
+    /** The user read the conversation up to {@code readAt}; the other participants learn it ("seen"). */
+    record ChatSeen(UUID projectId, UUID conversationId, ChatConversationType type, Set<UUID> directParticipants,
+                    UUID userId, java.time.Instant readAt) {
+    }
+
+    void seen(ChatSeen event);
+
+    /** The sender deleted a message; everybody in the audience (the deleter's other tabs included) is told its id. */
+    record ChatMessageDeleted(UUID projectId, UUID conversationId, ChatConversationType type,
+                              Set<UUID> directParticipants, UUID messageId) {
+    }
+
+    void messageDeleted(ChatMessageDeleted event);
+
+    /**
+     * Ephemeral "is typing" signal; never persisted. The audience is the other participants only (the typist's own
+     * sessions are excluded), resolved from current membership like every other delivery.
+     */
+    record ChatTyping(UUID projectId, UUID conversationId, ChatConversationType type, Set<UUID> directParticipants,
+                      UUID userId, String nickname, boolean typing) {
+    }
+
+    void typing(ChatTyping event);
+
     /** The user read the conversation; only that user's own sessions are told (unread sync across tabs). */
     void conversationRead(UUID projectId, UUID conversationId, UUID userId);
 }

@@ -55,7 +55,7 @@ export function EntityCard({ tone = "neutral", banner, corner, mark, title, desc
             <div aria-hidden="true" className="absolute inset-0 bg-background/50" />
           </>
         )}
-        <span
+        <span data-logo-frame
           aria-hidden="true"
           className={cn("relative mx-auto grid size-12 place-items-center rounded-lg font-heading text-xl font-semibold", palette.mark)}
         >

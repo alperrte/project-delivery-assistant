@@ -11,6 +11,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CircleNotch, Eye } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { FormErrorSummary, focusFormSection, type FormErrorSection } from "@/components/common/form-error-summary";
+import { LogoShapePicker } from "@/components/common/logo-shape-picker";
 import { PageHeader } from "@/components/common/page-header";
 import { StickyFormActions } from "@/components/common/sticky-form-actions";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -44,6 +45,7 @@ import { TaskModelOptions } from "./task-model-setting";
 /** What a new project starts with: the same values the server would pick, and the settings page's "both" task policy. */
 const DEFAULT_VALUES = {
   name: "",
+  logoShape: "SQUARE",
   tagline: "",
   techStack: [],
   description: "",
@@ -126,6 +128,7 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
     mutationFn: async (form: CreateProjectValues) => {
       const project = await projectsApi.create({
         name: form.name.trim(),
+        logoShape: form.logoShape,
         projectType: form.projectType,
         tagline: form.tagline?.trim() || undefined,
         description: form.description?.trim() || undefined,
@@ -232,13 +235,14 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
       projectType: values.projectType ?? null,
       techStack: formatTechStack((values.techStack ?? []).filter((item): item is string => typeof item === "string")) || null,
       logoVersion: null,
+      logoShape: values.logoShape ?? "SQUARE",
       team: { memberCount: 1, preview: [author] },
       updatedBy: author,
       updatedAt: new Date().toISOString(),
     }),
     // `author` is derived from the session; keying on its fields keeps the memo stable.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [name, values.tagline, values.description, values.status, values.priority, values.projectType, values.techStack, author.userId, author.nickname, t],
+    [name, values.logoShape, values.tagline, values.description, values.status, values.priority, values.projectType, values.techStack, author.userId, author.nickname, t],
   );
 
   const taglineLength = values.tagline?.length ?? 0;
@@ -301,7 +305,8 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
         <div className="grid gap-10 lg:grid-cols-12 lg:gap-12">
           <div className="space-y-8 lg:col-span-7">
             <Section id={sectionHeadingIds.identity} title={t("sections.identity.title")} description={t("sections.identity.description")}>
-              <LogoField name={name} previewUrl={logoUrl} onChange={changeLogo} />
+              <LogoField shape={values.logoShape} name={name} previewUrl={logoUrl} onChange={changeLogo} />
+              <LogoShapePicker value={values.logoShape ?? "SQUARE"} onChange={shape => setValue("logoShape", shape, { shouldDirty: true })} name={name} src={logoUrl} disabled={mutation.isPending} />
               <BannerPickField previewUrl={bannerUrl} onChange={changeBanner} />
 
               <div className="space-y-1.5">

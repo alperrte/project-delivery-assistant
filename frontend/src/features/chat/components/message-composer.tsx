@@ -26,13 +26,15 @@ type Props = {
   autoFocus?: boolean;
   reply?: ChatReply | null;
   onCancelReply?: () => void;
+  /** Reports typing activity: keystrokes, an emptied box, a sent message. The owner throttles what goes out. */
+  onTyping?: (state: "typing" | "stopped" | "sent") => void;
 };
 
 /**
  * The message box: Enter sends, Shift+Enter starts a new line, the counter mirrors the 2000 character limit. The
  * checks here only save a round trip, the server validates again.
  */
-export function MessageComposer({ draftKey, initialDraft, onDraftChange, onSend, disabled, disabledReason, autoFocus, reply, onCancelReply }: Props) {
+export function MessageComposer({ draftKey, initialDraft, onDraftChange, onSend, disabled, disabledReason, autoFocus, reply, onCancelReply, onTyping }: Props) {
   const t = useTranslations("chat");
   const [text, setText] = useState(initialDraft);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -55,11 +57,13 @@ export function MessageComposer({ draftKey, initialDraft, onDraftChange, onSend,
   function change(value: string) {
     setText(value);
     onDraftChange(value);
+    onTyping?.(value.trim() === "" ? "stopped" : "typing");
   }
 
   function submit() {
     if (disabled || !validation.ok) return;
     onSend(text);
+    onTyping?.("sent");
     setText("");
     onDraftChange("");
     inputRef.current?.focus();

@@ -247,18 +247,19 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
                     senders.containsKey(invitation.getInvitedBy())
                             ? senders.get(invitation.getInvitedBy()).nickname() : null,
                     senders.containsKey(invitation.getInvitedBy())
-                            ? senders.get(invitation.getInvitedBy()).profilePhotoVersion() : null);
+                            ? senders.get(invitation.getInvitedBy()).profilePhotoVersion() : null,
+                    project == null ? com.pda.project.LogoShape.SQUARE : project.getLogoShape());
         });
     }
 
     public record MyInvitationSummary(InvitationSummary invitation, String projectName, String invitedByNickname,
-                                      Long invitedByPhotoVersion) {}
+                                      Long invitedByPhotoVersion, com.pda.project.LogoShape logoShape) {}
 
     /** Card-level fields only. The recipient may inspect an invitation without becoming a project member. */
     public record InvitationProjectPreview(UUID projectId, String slug, String name, String tagline, String description,
                                            String projectGoal, ProjectStatus status, ProjectType projectType,
                                            String techStack, long memberCount, Instant updatedAt,
-                                           Long logoVersion, Long bannerVersion) {}
+                                           Long logoVersion, Long bannerVersion, com.pda.project.LogoShape logoShape) {}
 
     @Transactional(readOnly = true)
     public InvitationProjectPreview previewMine(UUID actorId, UUID invitationId) {
@@ -269,7 +270,7 @@ public class ProjectInvitationService implements ProjectInvitationOnboarding {
                 project.getDescription(), project.getProjectGoal(), project.getStatus(), project.getProjectType(),
                 project.getTechStack(), memberships.countByProjectIdAndStatus(project.getId(), MembershipStatus.ACTIVE),
                 project.getUpdatedAt(), logoUpdatedAt == null ? null : logoUpdatedAt.toEpochMilli(),
-                bannerUpdatedAt == null ? null : bannerUpdatedAt.toEpochMilli());
+                bannerUpdatedAt == null ? null : bannerUpdatedAt.toEpochMilli(), project.getLogoShape());
     }
 
     @Transactional(readOnly = true)

@@ -1,3 +1,4 @@
+import type { LogoShape } from "@/lib/media/logo-shape";
 export type OrganizationStatus = "ACTIVE" | "ARCHIVED";
 
 export type Organization = {
@@ -9,6 +10,7 @@ export type Organization = {
   contactEmail: string | null;
   location: string | null;
   notes: string | null;
+  logoShape: LogoShape;
   logoVersion: string | null;
   coverVersion: string | null;
   ownerUserId: string;

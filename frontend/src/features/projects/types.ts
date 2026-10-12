@@ -1,3 +1,4 @@
+import type { LogoShape } from "@/lib/media/logo-shape";
 export type ProjectStatus = "PLANNING" | "ACTIVE" | "ON_HOLD" | "COMPLETED" | "ARCHIVED";
 export type ProjectPriority = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 export type ProjectVisibility = "PRIVATE";
@@ -32,6 +33,7 @@ export type Project = {
   projectType: ProjectType;
   tagline: string | null;
   /** Epoch ms of the stored logo; `null` means no logo. Append to the logo URL as `?v=` for cache busting. */
+  logoShape: LogoShape;
   logoVersion: number | null;
   /** Epoch ms of the stored banner (cover image); `null` means none. Append to the banner URL as `?v=`. */
   bannerVersion: number | null;

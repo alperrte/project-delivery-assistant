@@ -37,6 +37,7 @@ public class ChatReactionService {
         ChatReactionCode code=ChatReactionCode.parse(rawCode);
         if(!limits.tryAcquire(actor))throw new ChatException(ChatException.Kind.RATE_LIMITED,"CHAT_REACTION_RATE_LIMITED");
         var target=messages.lockByIdAndConversationId(message,conversation).orElseThrow(()->ChatException.notFound("CHAT_NOT_FOUND"));
+        if(target.isDeleted())throw ChatException.notFound("CHAT_NOT_FOUND");
         int changed=add?reactions.add(message,actor,code,clock.instant()):reactions.remove(message,actor,code);
         if(changed>0){
             target.reactionsChanged();messages.flush();

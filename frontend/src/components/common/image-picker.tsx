@@ -4,12 +4,13 @@ import { UploadSimple, ImageSquare } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { IMAGE_TYPES, imageValidationError, canDecodeImage } from "@/lib/media/image-validation";
+import type { LogoShape } from "@/lib/media/logo-shape";
 import { EntityMark } from "./entity-mark";
 import { EntityCover } from "./entity-cover";
 export type ImagePickerLabels = { label: string; choose: string; change: string; remove: string; hint: string; invalidType: string; tooLarge: string; empty: string; detail?: string };
-export function ImagePicker({ name = "", src, onChange, maximum, labels, cover = false, disabled = false, removeControl, tile = false, decodeError }: {
+export function ImagePicker({ name = "", src, onChange, maximum, labels, cover = false, disabled = false, removeControl, tile = false, decodeError, shape = "SQUARE" }: {
   name?: string; src: string | null; onChange: (file: File | null) => void; maximum: number; labels: ImagePickerLabels;
-  cover?: boolean; disabled?: boolean; removeControl?: ReactNode; tile?: boolean; decodeError?: string;
+  cover?: boolean; disabled?: boolean; removeControl?: ReactNode; tile?: boolean; decodeError?: string; shape?: LogoShape;
 }) {
   const id = useId(); const input = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null); const [dragging, setDragging] = useState(false);
@@ -36,8 +37,8 @@ export function ImagePicker({ name = "", src, onChange, maximum, labels, cover =
     <label htmlFor={id} className="text-sm font-medium">{labels.label}</label>
     <div onDragOver={(event) => { event.preventDefault(); if (!disabled) setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={drop}
       className={cn("flex items-center gap-4 rounded-xl border border-dashed bg-surface-2/40 p-3 transition-colors", dragging ? "border-primary bg-primary/5" : "border-border", error && "border-destructive", tile && "flex-1 gap-3")}>
-      <span aria-hidden="true" className={cn("grid shrink-0 place-items-center overflow-hidden rounded-xl border border-primary/25 bg-primary/10 font-heading text-2xl font-semibold text-primary", tile ? "size-12 bg-muted text-foreground border-border" : cover ? "h-16 w-24 sm:w-28" : "size-16")}>
-        {tile && !src ? (cover ? <ImageSquare size={24}/> : <UploadSimple size={24}/>) : cover ? <EntityCover src={src} className="h-full aspect-auto sm:aspect-auto" /> : <EntityMark name={name} src={src} />}
+      <span data-logo-frame aria-hidden="true" className={cn("grid shrink-0 place-items-center overflow-hidden rounded-xl border border-primary/25 bg-primary/10 font-heading text-2xl font-semibold text-primary", tile ? "size-12 bg-muted text-foreground border-border" : cover ? "h-16 w-24 sm:w-28" : "size-16")}>
+        {tile && !src && cover ? <ImageSquare size={24}/> : cover ? <EntityCover src={src} className="h-full aspect-auto sm:aspect-auto" /> : <EntityMark name={name} src={src} shape={shape} />}
       </span>
       <div className="min-w-0 flex-1 space-y-2">
         <div className="flex flex-wrap items-center gap-2">

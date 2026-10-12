@@ -94,7 +94,7 @@ function Bar() {
         {chat.active?.kind === "direct" && chat.activePeer ? (
           <PersonAvatar user={chat.activePeer} className="size-6 text-[10px] ring-0" />
         ) : (
-          <GroupAvatar logoSrc={chat.projectLogoSrc} className="size-6 ring-0" />
+          <GroupAvatar shape={chat.projectLogoShape} logoSrc={chat.projectLogoSrc} className="size-6 ring-0" />
         )}
         <span className="min-w-0 flex-1 truncate text-sm font-semibold" data-testid="chat-bar-title">
           {chat.active?.kind === "direct" ? (chat.activePeer?.nickname ?? t("title")) : (chat.projectName ?? t("groupName"))}

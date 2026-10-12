@@ -17,18 +17,21 @@ public final class ChatViews {
     public record ChatUser(UUID userId, String nickname, Long profilePhotoVersion) {
     }
 
-    public record ReplyView(UUID id, ChatUser sender, String preview) { }
+    public record ReplyView(UUID id, ChatUser sender, String preview, boolean deleted) { }
     public record ReactionView(ChatReactionCode code, String emoji, long count, boolean reactedByCurrentUser) { }
     public record ReactionSnapshot(UUID messageId, String reactionVersion, List<ReactionView> reactions) { }
     public record MessageView(UUID id, UUID conversationId, String content, Instant createdAt, ChatUser sender,
-                              ReplyView replyTo, String reactionVersion, List<ReactionView> reactions) {
+                              ReplyView replyTo, String reactionVersion, List<ReactionView> reactions, boolean deleted) {
         public MessageView(UUID id, UUID conversationId, String content, Instant createdAt, ChatUser sender) {
-            this(id,conversationId,content,createdAt,sender,null,"0",List.of());
+            this(id,conversationId,content,createdAt,sender,null,"0",List.of(),false);
         }
     }
 
+    /** "{@code userId} has read this conversation up to {@code readAt}": the basis of the "seen" indicator. */
+    public record ReceiptView(UUID userId, Instant readAt) { }
+
     /** What the conversation list shows of the newest message: a short single-line preview. */
-    public record LastMessageView(String preview, Instant createdAt, UUID senderUserId) {
+    public record LastMessageView(String preview, Instant createdAt, UUID senderUserId, boolean deleted) {
     }
 
     /** {@code peer} is the other participant of a DIRECT conversation and null for the project group. */

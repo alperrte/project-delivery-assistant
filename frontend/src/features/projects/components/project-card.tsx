@@ -29,7 +29,7 @@ const MAX_TECH_LOGOS = 6;
 
 export type ProjectCardData = Pick<
   Project,
-  "id" | "slug" | "name" | "tagline" | "description" | "projectGoal" | "status" | "techStack" | "logoVersion" | "team" | "updatedBy" | "updatedAt"
+  "id" | "slug" | "name" | "tagline" | "description" | "projectGoal" | "status" | "techStack" | "logoVersion" | "logoShape" | "team" | "updatedBy" | "updatedAt"
 > & {
   /** `null` only in the create preview, before a type has been picked. */
   projectType: ProjectType | null;
@@ -155,7 +155,7 @@ export function ProjectCard({ project, preview, invitationPreview }: {
         </Link>
       ) : undefined}
       cornerStart={project.priority && !invitationPreview ? <ProjectPriorityChip priority={project.priority} /> : undefined}
-      mark={<ProjectMark key={logo ?? "none"} name={project.name} src={logo} />}
+      mark={<ProjectMark shape={project.logoShape} key={logo ?? "none"} name={project.name} src={logo} />}
       title={project.name}
       description={project.tagline || project.description || project.projectGoal || t("cardNoDescription")}
       badge={
@@ -231,11 +231,11 @@ export function ProjectRow({ project }: { project: Project }) {
     >
       <TableCell className="whitespace-normal">
         <div className="flex min-w-0 items-center gap-3">
-          <span
+          <span data-logo-frame
             aria-hidden="true"
             className="grid size-9 shrink-0 place-items-center rounded-lg border border-primary/25 bg-primary/10 font-heading text-sm font-semibold text-primary"
           >
-            <ProjectMark key={logo ?? "none"} name={project.name} src={logo} />
+            <ProjectMark shape={project.logoShape} key={logo ?? "none"} name={project.name} src={logo} />
           </span>
           <div className="min-w-0">
             <Link

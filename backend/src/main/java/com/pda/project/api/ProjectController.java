@@ -48,7 +48,7 @@ public class ProjectController {
             @Valid @RequestBody CreateProjectRequest request) {
         ProjectResponse response = ProjectResponse.from(projects.create(AuthenticatedActor.id(principal),
                 request.name(), request.description(), request.organizationId(), request.projectType(),
-                request.tagline(), request.techStack()));
+                request.tagline(), request.techStack(), request.logoShape()));
         return ResponseEntity.created(URI.create("/api/v1/projects/" + response.id())).body(response);
     }
 
@@ -95,7 +95,7 @@ public class ProjectController {
         return ProjectResponse.from(projects.update(AuthenticatedActor.id(principal), projectId,
                 request.name(), request.description(), request.priority(), request.status(), request.startDate(),
                 request.targetEndDate(), request.projectGoal(), request.techStack(), request.organizationId(),
-                request.projectType(), request.tagline()));
+                request.projectType(), request.tagline(), request.logoShape()));
     }
 
     @org.springframework.web.bind.annotation.PatchMapping("/{projectId}/task-management-mode")

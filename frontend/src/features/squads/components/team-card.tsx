@@ -14,7 +14,7 @@ import { relativeTime } from "../relative-time";
 import type { Team } from "../types";
 import { DeleteTeamButton } from "./delete-team-button";
 
-type TeamCardProject = Pick<Project, "id" | "slug" | "name" | "logoVersion">;
+type TeamCardProject = Pick<Project, "id" | "slug" | "name" | "logoVersion" | "logoShape">;
 
 /** Live preview on the form: no links or actions, and the logo / time labels are supplied by the caller. */
 export type TeamCardPreview = { logoSrc: string | null; updatedLabel: string; joinedLabel: string | null };
@@ -49,7 +49,7 @@ export function TeamCard({
 
   return (
     <EntityCard
-      mark={<ProjectMark key={logo ?? "none"} name={project.name} src={logo} />}
+      mark={<ProjectMark shape={project.logoShape} key={logo ?? "none"} name={project.name} src={logo} />}
       title={name}
       description={team.description || t("noDescription")}
       badge={

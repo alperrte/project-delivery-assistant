@@ -194,3 +194,7 @@ Details, privacy rules and retention are in `.agents/SECURITY.md` (last section)
 Existing admin contracts reviewed for the new admin screens (unchanged unless listed): `GET /api/v1/admin/users` (page/size/search/status), `POST .../disable`, `.../enable`, `GET .../sessions`, `POST .../sessions/revoke-all`, `POST .../sessions/{sessionId}/revoke` (disable, enable and both revokes are now audited), `GET /api/v1/admin/overview`, `GET /api/v1/admin/projects?page&size`.
 
 Organization delete (2026-10-11): `POST /api/v1/organizations/{id}/archive` no longer exists. `DELETE /api/v1/organizations/{id}` (owner only, CSRF) answers `204` and removes the organization, its logo and cover permanently; its projects stay with `organizationId=null`. A second DELETE or a read afterwards answers `404`. Hard delete only; `ARCHIVED` stays a valid stored status value but nothing sets it any more.
+
+## Logo shape — 2026-10-12
+
+POST /projects, PUT /projects/{id}, POST /organizations, PUT /organizations/{id} accept optional logoShape: SQUARE | CIRCLE. Missing/null create defaults to SQUARE; missing/null update preserves the saved shape for legacy clients. Invalid strings, numeric ordinals, booleans, arrays and objects return 400. Project/organization detail/list/by-slug and invitation recipient list/preview responses include logoShape. Shape changes do not rewrite media or its version. Existing PROJECT_UPDATE / organization owner and CSRF checks remain in force.
