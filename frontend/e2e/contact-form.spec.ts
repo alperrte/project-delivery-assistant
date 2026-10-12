@@ -5,6 +5,7 @@ import { buildPath } from "../src/i18n/routing";
 // failure and slow-answer cases; the real delivery is proven in contact-delivery.spec.ts against the e2e stack).
 
 const API = "http://localhost:8080/api/v1";
+const ORIGIN = new URL(process.env.E2E_BASE_URL ?? "http://localhost:3000").origin;
 
 /** The browser waits out the server's minimum fill time (3 s) before sending, so answers are expected a little later. */
 const SLOW = { timeout: 12_000 };
@@ -12,16 +13,16 @@ const SLOW = { timeout: 12_000 };
 async function simulateApi(page: Page, contact: { status: number; body: unknown; delayMs?: number }, onContact?: (body: Record<string, unknown>) => void) {
   await page.route(`${API}/auth/csrf`, (route) => route.fulfill({
     status: 200, contentType: "application/json",
-    headers: { "access-control-allow-origin": "http://localhost:3000", "access-control-allow-credentials": "true" },
+    headers: { "access-control-allow-origin": ORIGIN, "access-control-allow-credentials": "true" },
     body: JSON.stringify({ headerName: "X-XSRF-TOKEN", parameterName: "_csrf", token: "t" }),
   }));
   await page.route(`${API}/contact`, async (route) => {
-    if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers: { "access-control-allow-origin": "http://localhost:3000", "access-control-allow-credentials": "true", "access-control-allow-headers": "Content-Type, X-XSRF-TOKEN", "access-control-allow-methods": "POST" } });
+    if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers: { "access-control-allow-origin": ORIGIN, "access-control-allow-credentials": "true", "access-control-allow-headers": "Content-Type, X-XSRF-TOKEN", "access-control-allow-methods": "POST" } });
     onContact?.(route.request().postDataJSON() as Record<string, unknown>);
     if (contact.delayMs) await new Promise((resolve) => setTimeout(resolve, contact.delayMs));
     await route.fulfill({
       status: contact.status, contentType: "application/json",
-      headers: { "access-control-allow-origin": "http://localhost:3000", "access-control-allow-credentials": "true" },
+      headers: { "access-control-allow-origin": ORIGIN, "access-control-allow-credentials": "true" },
       body: JSON.stringify(contact.body),
     });
   });
@@ -46,7 +47,7 @@ for (const [locale, title, send] of [["tr", "İletişim", "Gönder"], ["en", "Co
     await expect(page.getByRole("textbox")).toHaveCount(4);
     await expect(page.getByRole("combobox")).toHaveCount(1);
     await expect(page.getByRole("button", { name: send })).toBeVisible();
-    await expect(page.locator('main a[href^="mailto:"]')).toHaveAttribute("href", "mailto:pdassistant.info@gmail.com");
+    await expect(page.locator('main a[href^="mailto:"]')).toHaveAttribute("href", "mailto:info@pd-assistant.com");
     await expect(page.locator('footer a[href^="mailto:"]')).toHaveCount(1);
     await expect(page.locator(`footer a[href="${buildPath("/contact", {}, locale)}"]`)).toBeVisible();
     await expect(page.locator("meta[name=\"robots\"]")).toHaveCount(0);

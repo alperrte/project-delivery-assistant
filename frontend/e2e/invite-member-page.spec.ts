@@ -85,8 +85,7 @@ test.describe.serial("Üye davet et sayfası", () => {
     await expect(teamSelect()).toBeVisible();
 
     const trail = page.getByRole("navigation", { name: tr.common.breadcrumb });
-    await expect(trail.getByRole("listitem")).toHaveText([tr.pageTitles.projects, projectName, tr.projects.detail.tabs.invitations, tr.pageTitles.memberInvite]);
-    await expect(trail.getByRole("link", { name: tr.projects.detail.tabs.invitations })).toHaveAttribute("href", listUrl());
+    await expect(trail).toHaveCount(0);
     // The virtual section stays the highlighted sidebar item.
     await expect(page.locator(`a[aria-label="${tr.projects.detail.tabs.invitations}"]`)).toHaveAttribute("aria-current", "page");
 

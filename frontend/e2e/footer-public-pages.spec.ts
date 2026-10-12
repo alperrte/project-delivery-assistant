@@ -3,7 +3,8 @@ import { buildPath } from "../src/i18n/routing";
 import path from "node:path";
 
 const infoPaths = ["/about", "/faq", "/kvkk", "/privacy", "/terms", "/cookies", "/accessibility", "/license"] as const;
-const EMAIL = "pdassistant.info@gmail.com";
+const EMAIL = "info@pd-assistant.com";
+const ORIGIN = new URL(process.env.E2E_BASE_URL ?? "http://localhost:3000").origin;
 
 for (const locale of ["tr", "en", "de"] as const) {
   test(`mobile footer wraps long labels and preserves 44px targets: ${locale}`, async ({ page, context }) => {
@@ -185,7 +186,7 @@ test("authenticated app shell has no footer and information links work from the 
       : { content: [], totalElements: 0, totalPages: 0 };
     await route.fulfill({
       status: 200, contentType: "application/json",
-      headers: { "access-control-allow-origin": "http://localhost:3000", "access-control-allow-credentials": "true" },
+      headers: { "access-control-allow-origin": ORIGIN, "access-control-allow-credentials": "true" },
       body: JSON.stringify(data),
     });
   });

@@ -324,7 +324,7 @@ The `.env.example` file has a description next to every variable. To get started
 | `EMAIL_VERIFICATION_HMAC_KEY` | Paste the output of `openssl rand -base64 32`. |
 | `TOTP_ENCRYPTION_KEY` | Paste a different `openssl rand -base64 32` output. If you change it later, everyone's two-factor authentication is disabled. |
 | `ADMIN_EMAIL` and `ADMIN_INITIAL_PASSWORD` | The email and temporary password of your first admin account. |
-| `MAIL_ENABLED`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `MAIL_FROM` | Required for sign-up; while `MAIL_ENABLED=false`, sign-up returns `503`. See below. |
+| `MAIL_ENABLED`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM_ADDRESS` | Required for sign-up; while `MAIL_ENABLED=false`, sign-up returns `503`. See below. |
 
 Generating values:
 
@@ -371,29 +371,32 @@ API_DOCS_ENABLED=true
 ADMIN_EMAIL=<admin-email>
 ADMIN_INITIAL_PASSWORD=<temporary-password>
 
-# Mail (Gmail SMTP)
-MAIL_ENABLED=true
+# Mail (Hostinger Email, implicit TLS)
+MAIL_ENABLED=false
 MAIL_PROVIDER=smtp
-MAIL_FROM=<sender@gmail.com>
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USERNAME=<sender@gmail.com>
-SMTP_PASSWORD=<16-character-app-password>
+SMTP_FROM_ADDRESS=info@pd-assistant.com
+SMTP_HOST=smtp.hostinger.com
+SMTP_PORT=465
+SMTP_USERNAME=info@pd-assistant.com
+SMTP_PASSWORD=
 SMTP_AUTH=true
-SMTP_STARTTLS=true
+SMTP_STARTTLS=false
+SMTP_SSL=true
+CONTACT_RECIPIENT=info@pd-assistant.com
 
 # Security keys
 EMAIL_VERIFICATION_HMAC_KEY=<openssl rand -base64 32>
 TOTP_ENCRYPTION_KEY=<another openssl rand -base64 32>
 ```
 
-#### How to set up email (Gmail SMTP)
+#### How to set up email (Hostinger Email)
 
-1. Use a Gmail account as the sender and turn on **2-Step Verification** on the account (Google Account → Security).
-2. Create an **app password** at <https://myaccount.google.com/apppasswords> (16 characters, shown only once).
-3. `MAIL_FROM` and `SMTP_USERNAME` must be the same full address; put the app password without spaces in `SMTP_PASSWORD` and set `MAIL_ENABLED=true`.
+1. Enter the `info@pd-assistant.com` mailbox password only in `SMTP_PASSWORD` in your local `.env.dev` / `.env.prod`. Never commit it or share it in chat.
+2. Hostinger uses `smtp.hostinger.com:465`, `SMTP_SSL=true`, `SMTP_STARTTLS=false`. For port 587 instead use `SMTP_SSL=false`, `SMTP_STARTTLS=true`; never enable both TLS modes.
+3. Verify the sender/domain and MX/SPF/DKIM/DMARC status in Hostinger, then set `MAIL_ENABLED=true`. Synchronize the active copy with `ops/env.ps1 use dev`; recreate the backend to load the new environment.
+4. Verify real registration/contact delivery and SPF/DKIM/DMARC results in received message headers.
 
-A provider other than Gmail works the same way (for example Resend: `SMTP_HOST=smtp.resend.com`, `SMTP_USERNAME=resend`, `SMTP_PASSWORD=<API key>`).
+`SMTP_FROM_ADDRESS` selects the visible sender; the provider's SMTP login may differ. Legacy `MAIL_FROM` remains supported when the new key is absent. `MAIL_PROVIDER=brevo` uses Brevo's SMTP relay through the same Spring Mail path; supply the actual account SMTP host/login/SMTP key. There is no Brevo HTTP API or automatic fallback. See the [SMTP handoff](docs/compliation/2026-10-12-hostinger-corporate-mail.md).
 
 #### Optional settings
 
@@ -465,7 +468,7 @@ Contribution flow:
 5. open a Pull Request.
 
 - Open a GitHub Issue to report a bug or suggest a new idea.
-- Report security vulnerabilities to [pdassistant.info@gmail.com](mailto:pdassistant.info@gmail.com) instead of a public issue.
+- Report security vulnerabilities to [info@pd-assistant.com](mailto:info@pd-assistant.com) instead of a public issue.
 
 ---
 

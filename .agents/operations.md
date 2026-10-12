@@ -41,8 +41,8 @@ Kurallar:
 
 Önem derecesi: **P1** veri sızıntısı/hesap ele geçirme/yetkisiz admin erişimi; **P2** hizmet kesintisi veya yetki hatası; **P3** tek kullanıcı etkisi.
 
-1. **Tespit ve kayıt.** Kaynak: admin paneli (Sistem durumu, Denetim kaydı, Davranış/hata raporları), kullanıcı bildirimi (`pdassistant.info@gmail.com`), bağımlılık/güvenlik uyarısı. Olayın saati, kapsamı ve kim tarafından görüldüğü bir olay notuna yazılır.
-2. **Sınırlama.** Şüpheli oturumlar admin panelinden/oturum iptaliyle kapatılır; gerekiyorsa backend durdurulur; etkilenen secret döndürülür (JWT_SECRET değişimi tüm oturumları düşürür; `TOTP_ENCRYPTION_KEY` değişimi 2FA'yı sıfırlar, bu yüzden son çare). OAuth istemci secret'ı sızdıysa sağlayıcıdan yenilenir. SMTP uygulama şifresi sızdıysa Google hesabından iptal edilir.
+1. **Tespit ve kayıt.** Kaynak: admin paneli (Sistem durumu, Denetim kaydı, Davranış/hata raporları), kullanıcı bildirimi (`info@pd-assistant.com`), bağımlılık/güvenlik uyarısı. Olayın saati, kapsamı ve kim tarafından görüldüğü bir olay notuna yazılır.
+2. **Sınırlama.** Şüpheli oturumlar admin panelinden/oturum iptaliyle kapatılır; gerekiyorsa backend durdurulur; etkilenen secret döndürülür (JWT_SECRET değişimi tüm oturumları düşürür; `TOTP_ENCRYPTION_KEY` değişimi 2FA'yı sıfırlar, bu yüzden son çare). OAuth istemci secret'ı sızdıysa sağlayıcıdan yenilenir. Hostinger SMTP posta kutusu şifresi sızdıysa Hostinger panelinden değiştirilir; uygulamadaki SMTP_PASSWORD güvenli biçimde güncellenir.
 3. **Kanıt koruma.** İlgili log ve denetim kayıtları silinmeden saklanır (denetim kaydı saklama süresi 24 ay; temizlik işi dondurmak için `RETENTION_CRON=-`). Loglarda secret yoktur; yine de dışarı paylaşılırken kontrol edilir.
 4. **Giderme.** Kök neden düzeltilir, düzeltme `SECURITY.md` kurallarına göre gözden geçirilir, rollback seçeneği hazır tutulur (bölüm 3).
 5. **Bildirim.** Kişisel veri ihlalinde veri sorumluları (Hamza Taşbay, Alper Temiz) etkilenen kişilere gecikmeden, Kişisel Verileri Koruma Kurulu'na **en geç 72 saat içinde** bildirim yükümlülüğünü değerlendirir (KVKK m.12); AB'de bulunan kişiler etkileniyorsa GDPR Art. 33/34 ayrıca değerlendirilir. Metinler: KVKK Aydınlatma Metni "Veri güvenliği ve ihlal bildirimi" bölümü.
@@ -70,7 +70,7 @@ Güvenlik açığı bildirimleri `SECURITY.md` bölüm 20'ye göre özel kanalda
 | Sürekli | Dependabot (`.github/dependabot.yml`) haftalık npm/Maven, aylık Docker/Actions PR'ları açar; güvenlik güncellemeleri GitHub tarafından ayrıca önerilir. CI (`.github/workflows/ci.yml`) geçmeden birleştirilmez. |
 | Haftalık | Dependabot PR'larını incele; `npm audit --omit=dev`, Trivy ile Maven ve npm taraması (aşağıda) ve admin Sistem durumu sayfası; yedek kopyasının dışarı alındığını doğrula. |
 | Aylık | Geçici bir veritabanında geri yükleme tatbikatı; denetim/saklama işlerinin çalıştığını (Sistem durumu) doğrula; `SECURITY.md` açık takipleri (ör. braces/ESLint zinciri) gözden geçir. |
-| Üç ayda bir | JDK/Node LTS, Spring Boot, Next.js ana/ikincil sürüm güncellemesi (ayrı dal, tam test); Gmail uygulama şifresi ve OAuth secret'ları döndürme değerlendirmesi; hukuki metinlerin gözden geçirilmesi. |
+| Üç ayda bir | JDK/Node LTS, Spring Boot, Next.js ana/ikincil sürüm güncellemesi (ayrı dal, tam test); Hostinger posta kutusu SMTP şifresi ve OAuth secret'ları döndürme değerlendirmesi; hukuki metinlerin gözden geçirilmesi. |
 | Kritik açık duyurulunca | 48 saat içinde değerlendirme; etkileniyorsa acil yama ve olay prosedürü (bölüm 2). |
 
 Bağımlılık taraması (Docker ile, salt-okunur; Maven Central'ın hız sınırına takılmamak için yerel `.m2` önbelleği bağlanır):
@@ -92,7 +92,7 @@ Mevcut: `/actuator/health` (liveness için tek açık actuator ucu), admin **Sis
 
 Hosting seçilince yapılacaklar (henüz uygulanmadı; yukarıdaki iş bir kısmını karşılar):
 
-1. Dışarıdan çalışan bir uptime kontrolü (ör. ücretsiz bir ping servisi) `GET /actuator/health` ve ana sayfayı 1-5 dakikada bir yoklar; ardışık 2 hata e-posta alarmı üretir (alıcı: `pdassistant.info@gmail.com` ve bir kişisel adres).
+1. Dışarıdan çalışan bir uptime kontrolü (ör. ücretsiz bir ping servisi) `GET /actuator/health` ve ana sayfayı 1-5 dakikada bir yoklar; ardışık 2 hata e-posta alarmı üretir (alıcı: `info@pd-assistant.com` ve bir kişisel adres).
 2. Sağlayıcının CPU/bellek/disk uyarıları açılır; veritabanı disk kullanımı %80'de uyarı verir.
 3. Alarm alındığında bölüm 2'deki P2 akışı izlenir.
 4. TLS sertifikası: yönetilen platformlarda otomatik yenilenir (Let's Encrypt/ACME); yenilemenin son kullanma tarihinden **en az 14 gün önce** başarılı olduğu uptime aracının sertifika-süresi uyarısıyla izlenir. Domain kaydı otomatik yenilemeye ve ikinci bir iletişim e-postasına ayarlanır; sona erme tarihi takvime işlenir (30 ve 7 gün önce hatırlatma).

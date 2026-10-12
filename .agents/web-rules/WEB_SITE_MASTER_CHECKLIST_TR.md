@@ -118,7 +118,7 @@ Bu checklist uygulanırken:
   - 2026-10-03: Auth ve bilgi sayfalarında SiteFooter, landing’de kompakt LandingFooter bulunur. Kullanıcı tercihiyle çalışma ekranlarında footer yerine hesap menüsündeki “Bilgi ve destek” bağlantıları kullanılır. Public test paketi bu erişimi doğrular.
   - 2026-10-05: Landing footer, login ile aynı ortak CONTRIBUTORS listesinden Alper/Hamza GitHub profillerini ve aynı kaynak kod/Apache 2.0 bağlantısını gösterir. TR/EN/DE, light/dark, 320/390/1440 px hedefli kontrol; doğru href, ikon, metin, 44 px hedef ve klavye odağı doğrulandı.
 - [x] **KVKK** — Kişisel veri işleme süreçleriyle ilgili gerekli bilgilendirme ve kullanıcı hakları erişilebilir olmalıdır.
-  - 2026-10-11: "KVKK Aydınlatma Metni" (`/kvkk`) son metindir: veri sorumluları, veri kategorileri, amaç–hukuki sebep tablosu, alıcılar ve yurt dışı aktarım, saklama tablosu, m.11 hakları + başvuru yolu (form kategorisi + `pdassistant.info@gmail.com`, en geç 30 gün), VERBİS değerlendirmesi (sonuç henüz yok, metinde böyle yazılı). Kayıt formunda KVKK/Gizlilik için aydınlatma bildirimi var (onay kutusu yok); Kullanım Koşulları ayrı onay kutusuyla kabul edilir (yalnız istemci doğrulaması, kaydedilmez). Hukuki danışman incelemesi yapılmadı; metin proje sahiplerinin kararıyla yayındadır. (2026-10-11, `docs/compliation/2026-10-11-auth-service-frontend-legal-contact-analytics.md`)
+  - 2026-10-11: "KVKK Aydınlatma Metni" (`/kvkk`) son metindir: veri sorumluları, veri kategorileri, amaç–hukuki sebep tablosu, alıcılar ve yurt dışı aktarım, saklama tablosu, m.11 hakları + başvuru yolu (form kategorisi + `info@pd-assistant.com`, en geç 30 gün), VERBİS değerlendirmesi (sonuç henüz yok, metinde böyle yazılı). Kayıt formunda KVKK/Gizlilik için aydınlatma bildirimi var (onay kutusu yok); Kullanım Koşulları ayrı onay kutusuyla kabul edilir (yalnız istemci doğrulaması, kaydedilmez). Hukuki danışman incelemesi yapılmadı; metin proje sahiplerinin kararıyla yayındadır. (2026-10-11, `docs/compliation/2026-10-11-auth-service-frontend-legal-contact-analytics.md`)
 - [x] **Gizlilik Politikası** — Kullanıcı verilerinin nasıl toplandığını, kullanıldığını ve gerektiğinde saklandığını/paylaşıldığını açıklar.
   - 2026-10-11: güncel veri kategorileri, hesap silme/anonimleştirme, saklama tablosu, güvenlik, çocuklar; EN/DE sürümlerinde GDPR bölümleri (Art. 13/6/Chapter V/haklar/Art. 27 değerlendirmesi). (2026-10-11, `docs/compliation/2026-10-11-auth-service-frontend-legal-contact-analytics.md`)
 - [ ] **Erişilebilirlik** — Site farklı kullanıcı ihtiyaçları düşünülerek erişilebilir biçimde geliştirilmiş olmalıdır.
@@ -129,7 +129,7 @@ Bu checklist uygulanırken:
 - [ ] **Hakkımızda Sayfası** — Projenin, ürünün veya kurumun kim olduğunu ve ne sunduğunu açıklar.
 - [x] **Kullanım Koşulları** — Kullanıcı ile platform arasındaki kullanım kurallarını ve sorumlulukları tanımlar.
   - 2026-10-11: `/terms` (TR `kullanim-kosullari`, DE `nutzungsbedingungen`): kapsam, hesap kuralları, kabul edilebilir kullanım, kullanıcı içeriği, garanti yok, askıya alma, hesap silme, açık kaynak lisansı ilişkisi, sorumluluk sınırı, uygulanacak hukuk (Türkiye), değişiklikler. Altbilgi ve hesap menüsünde bağlantı var. (2026-10-11, `docs/compliation/2026-10-11-auth-service-frontend-legal-contact-analytics.md`)
-- [x] **İletişim / Destek Kanalı** — Kullanıcının problem, KVKK talebi veya genel iletişim için ulaşabileceği açık ve çalışan bir kanal sağlar. (2026-10-09: herkese açık iletişim formu `/iletisim`; yerel gerçek SMTP yolu Mailpit ile kanıtlandı, üretimde `MAIL_ENABLED`/`SMTP_*` yapılandırması gerekir; 2026-10-11: tek görünür adres `pdassistant.info@gmail.com` altbilgide, iletişim sayfasında ve bilgi sayfalarının iletişim bloğunda; form kategori, isteğe bağlı soyad, honeypot + süre tuzağı ve veri işleme bildirimi içerir.)
+- [x] **İletişim / Destek Kanalı** — Kullanıcının problem, KVKK talebi veya genel iletişim için ulaşabileceği açık ve çalışan bir kanal sağlar. (2026-10-09: herkese açık iletişim formu `/iletisim`; yerel gerçek SMTP yolu Mailpit ile kanıtlandı, üretimde `MAIL_ENABLED`/`SMTP_*` yapılandırması gerekir; 2026-10-11: tek görünür adres `info@pd-assistant.com` altbilgide, iletişim sayfasında ve bilgi sayfalarının iletişim bloğunda; form kategori, isteğe bağlı soyad, honeypot + süre tuzağı ve veri işleme bildirimi içerir.)
 
 # B — CTA / UX / UI State
 
@@ -333,3 +333,18 @@ Kapsam yalnız `/pd-admin` yüzeyidir; hiçbir global madde `[x]` yapılmadı. E
 ## Yönetim operasyon ekranları scoped verification - 2026-10-11 (auth-service-frontend)
 
 Kapsam yalnız `(app)/admin/**` ekranlarıdır (kullanıcı detayı + oturumlar, sistem, denetim kaydı, destek talepleri, analitik davranış raporları); hiçbir global madde `[x]` yapılmadı. Etkilenen maddeler: **Loading / Empty / Error State** ve **Responsive** (`[ ]` kalır: yalnız bu ekranlarda her bölümün yükleme iskeleti, boş, hata + yeniden dene durumu ve 320/390/768/1024/1440 px açık/koyu yatay taşma yokluğu doğrulandı), **Keyboard Navigation / Focus State** (`[ ]` kalır: yıkıcı eylem diyaloğu klavyeyle açılır/Escape ile kapanır, odak tetikleyiciye döner; sekmeler ve eylemler ≥44 px / ≥36 px), **Unique Page Title** (`[ ]` kalır: yeni 5 sayfa başlığı TR/EN/DE), **Kritik işlem onayı** (`[x]` kalır: oturum kapatma ve talep kapatma `ConfirmDialog` ile). Plan Task 8 maddeleri (kullanıcı detayı, sistem, denetim, destek, analitik raporları) bu görevde uygulandı; "Rol ve izin yönetimi" tek admin politikası gereği yalnız salt okunur gösterim + not olarak karşılandı (düzenleme yok). Sonuçlar: `docs/compliation/2026-10-10-auth-service-frontend-admin-operations.md`.
+
+
+## Kurumsal e-posta geçişi — 2026-10-12 (sınırlı kapsam)
+
+Footer, iletişim/destek, KVKK/Gizlilik/Çerez metinlerindeki kurumsal adres `info@pd-assistant.com`; TR/EN/DE Gmail gönderim ifadeleri Hostinger Email ile güncellendi. Gönderim yapılandırması şifre beklediği için yerel profillerde kapalıdır; üretim posta/DNS teslimi doğrulanmış sayılmaz. Mevcut kutular proje geneli yeni audit kanıtı olarak değiştirilmedi. Doğrulama ve kullanıcı adımları: `docs/compliation/2026-10-12-hostinger-corporate-mail.md`.
+
+
+## Sidebar seçili proje logosu — 2026-10-12 (sınırlı kapsam)
+
+İlgili Görsel fallback / Responsive / Dark Mode / Navigasyon kapsamı: gerçek proje logo API'si açık/daraltılmış sidebar ve mobil çekmecede doğrulandı; logosuz proje ve TEST-ONLY 404 baş harfe döner. Mevcut global kutular bu küçük kapsamla değiştirilmedi. Build/TypeScript ve hedefli lint başarılı. Ayrıntı: `docs/compliation/2026-10-12-sidebar-selected-project-logo.md`.
+
+
+## Ekip breadcrumb kaldırma — 2026-10-12 (sınırlı kapsam)
+
+Yalnız Breadcrumb maddesiyle ilişkili: kullanıcının istediği ekip detay/düzenle/üye davet yollarında breadcrumb kaldırıldı; gerçek QA backend + Chromium ile bu üç sayfada yokluğu, ekip oluşturma sayfasında varlığı doğrulandı. Global Breadcrumb kutusu bu sınırlı kapsam nedeniyle değiştirilmedi. Ayrıntı: `docs/compliation/2026-10-12-team-pages-breadcrumb.md`.

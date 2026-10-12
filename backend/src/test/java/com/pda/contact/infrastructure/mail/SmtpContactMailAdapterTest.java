@@ -25,7 +25,7 @@ class SmtpContactMailAdapterTest {
 
     private static MimeMessage compose(ContactMessage message) throws Exception {
         MimeMessage mime = new MimeMessage(Session.getInstance(new Properties()));
-        SmtpContactMailAdapter.compose(mime, "pda-noreply@example.test", "pdassistant.info@gmail.com", message);
+        SmtpContactMailAdapter.compose(mime, "pda-noreply@example.test", "info@pd-assistant.com", message);
         mime.saveChanges();
         return mime;
     }
@@ -34,7 +34,7 @@ class SmtpContactMailAdapterTest {
     void fromIsThePdaSenderToIsTheFixedRecipientAndReplyToIsTheVisitor() throws Exception {
         MimeMessage mime = compose(MESSAGE);
         assertArrayEquals(new InternetAddress[] {new InternetAddress("pda-noreply@example.test")}, mime.getFrom());
-        assertArrayEquals(new InternetAddress[] {new InternetAddress("pdassistant.info@gmail.com")},
+        assertArrayEquals(new InternetAddress[] {new InternetAddress("info@pd-assistant.com")},
                 mime.getRecipients(Message.RecipientType.TO));
         assertArrayEquals(new InternetAddress[] {new InternetAddress("ece@example.com")}, mime.getReplyTo());
         assertNull(mime.getRecipients(Message.RecipientType.CC));
@@ -107,7 +107,7 @@ class SmtpContactMailAdapterTest {
     void enabledMailNeedsAHostASenderAndAValidFixedRecipient() {
         MockEnvironment valid = new MockEnvironment().withProperty("MAIL_ENABLED", "true")
                 .withProperty("SMTP_HOST", "localhost").withProperty("MAIL_FROM", "pda@example.test")
-                .withProperty("SMTP_AUTH", "false").withProperty("pda.contact.recipient", "pdassistant.info@gmail.com");
+                .withProperty("SMTP_AUTH", "false").withProperty("pda.contact.recipient", "info@pd-assistant.com");
         assertTrue(new SmtpContactMailAdapter(valid).available());
         for (String recipient : new String[] {"", "not-an-address", "a@b.co, c@d.co", "Name <a@b.co>"}) {
             MockEnvironment bad = new MockEnvironment().withProperty("MAIL_ENABLED", "true")
@@ -117,6 +117,6 @@ class SmtpContactMailAdapterTest {
         }
         assertThrows(IllegalStateException.class, () -> new SmtpContactMailAdapter(new MockEnvironment()
                 .withProperty("MAIL_ENABLED", "true").withProperty("MAIL_FROM", "pda@example.test")
-                .withProperty("pda.contact.recipient", "pdassistant.info@gmail.com")));
+                .withProperty("pda.contact.recipient", "info@pd-assistant.com")));
     }
 }

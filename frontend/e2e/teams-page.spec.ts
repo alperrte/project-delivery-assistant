@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { api, createProject, createTeam } from "./helpers";
+import { openProjectTeamsPage, api, createProject, createTeam } from "./helpers";
 import { MANAGER_STORAGE } from "./global-setup";
 
 /**
@@ -48,7 +48,7 @@ test.describe.serial("Teams page (manager)", () => {
 
   test("a whole team card opens the detail page and the list switches to the chart", async () => {
     await createTeam(page, slug, "Frontend");
-    await page.getByRole("navigation", { name: "Konum" }).getByRole("link", { name: "Ekipler" }).click();
+    await openProjectTeamsPage(page);
     await expect(page).toHaveURL(`/tr/projeler/${slug}/ekipler`);
 
     await page.getByRole("tab", { name: "Şema" }).click();

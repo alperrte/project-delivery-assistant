@@ -2752,7 +2752,7 @@
             },
             {
               "question": "How do I delete my account or get access to my data?",
-              "answer": "You can delete your account yourself on the account screen: you confirm with a one-time link sent to your e-mail and your own sign-in credentials, and the account is anonymised at once. If you own a project or an organisation, you must first transfer ownership or delete it. For requests such as access, correction or export of your data, choose the category “KVKK / data request” in the contact form or write to pdassistant.info@gmail.com; we reply within 30 days at the latest. Details are in the KVKK Privacy Notice and the Privacy Policy."
+              "answer": "You can delete your account yourself on the account screen: you confirm with a one-time link sent to your e-mail and your own sign-in credentials, and the account is anonymised at once. If you own a project or an organisation, you must first transfer ownership or delete it. For requests such as access, correction or export of your data, choose the category “KVKK / data request” in the contact form or write to info@pd-assistant.com; we reply within 30 days at the latest. Details are in the KVKK Privacy Notice and the Privacy Policy."
             }
           ]
         },
@@ -2785,7 +2785,7 @@
           "title": "Scope and who is responsible",
           "paragraphs": [
             "This policy covers the account, project, team, task, chat, calendar and other features of the PDA web application. When you go to external GitHub or Google pages, the privacy terms of that service apply.",
-            "The data controllers are Hamza Taşbay and Alper Temiz, natural persons and maintainers of the open-source PDA project. You can reach us through the contact form or at pdassistant.info@gmail.com.",
+            "The data controllers are Hamza Taşbay and Alper Temiz, natural persons and maintainers of the open-source PDA project. You can reach us through the contact form or at info@pd-assistant.com.",
             "The detailed information under the Turkish Law No. 6698 (legal bases, transfers, your rights) is in the KVKK Privacy Notice; this policy is a user-oriented summary of the same information."
           ]
         },
@@ -2845,7 +2845,7 @@
           "id": "transfers",
           "title": "Service providers and transfers abroad",
           "paragraphs": [
-            "E-mails are sent through Gmail SMTP (Google, USA). The optional Google/GitHub sign-in and the GitHub repository features connect to the respective providers (USA). The hosting provider has not been chosen yet; this policy will be updated once it is.",
+            "E-mails are sent through Hostinger Email SMTP. The optional Google/GitHub sign-in and the GitHub repository features connect to the respective providers (USA). The hosting provider has not been chosen yet; this policy will be updated once it is.",
             "Details of these transfers (recipients, country, which data goes where) and their current status under Article 9 of the Law are in the “Recipients and transfers abroad” section of the KVKK Privacy Notice and in the GDPR sections below; the controllers track compliance of these transfers."
           ]
         },
@@ -2876,7 +2876,7 @@
               [
                 "Contact-form status records and stored support messages (name, e-mail, category, message)",
                 "12 months",
-                "Deleted automatically. The e-mail copies delivered to the PDA inbox (Gmail) are cleaned up manually by the controllers at least once a year: messages older than 12 months are deleted at the latest in the yearly cleanup, and immediately on request (data request via the contact-form category “KVKK / data request” or by e-mail)."
+                "Deleted automatically. The e-mail copies delivered to the PDA inbox (Hostinger Email) are cleaned up manually by the controllers at least once a year: messages older than 12 months are deleted at the latest in the yearly cleanup, and immediately on request (data request via the contact-form category “KVKK / data request” or by e-mail)."
               ],
               [
                 "Visit analytics (sessions, page views, button clicks and error events)",
@@ -2910,7 +2910,7 @@
           "id": "gdpr-controller",
           "title": "GDPR: controller and contact (Art. 13(1)(a)–(b))",
           "paragraphs": [
-            "For visitors in the European Union or the European Economic Area, the following information is given under Articles 13 and 14 of the General Data Protection Regulation (GDPR). The controllers are Hamza Taşbay and Alper Temiz, natural persons and maintainers of the open-source PDA project, based in Türkiye. Contact: the contact form or pdassistant.info@gmail.com. No data protection officer has been appointed."
+            "For visitors in the European Union or the European Economic Area, the following information is given under Articles 13 and 14 of the General Data Protection Regulation (GDPR). The controllers are Hamza Taşbay and Alper Temiz, natural persons and maintainers of the open-source PDA project, based in Türkiye. Contact: the contact form or info@pd-assistant.com. No data protection officer has been appointed."
           ]
         },
         {
@@ -2933,8 +2933,8 @@
           "id": "gdpr-transfers",
           "title": "GDPR: recipients and international transfers (Chapter V)",
           "paragraphs": [
-            "Recipients are the project members you work with, Google (Gmail SMTP for e-mail; optional Google sign-in), GitHub (optional sign-in; repository features) and, once chosen, the hosting provider. The controllers themselves are located in Türkiye, a third country without a European Commission adequacy decision.",
-            "Personal data is transferred to the USA, to Google LLC (Gmail SMTP; optional Google sign-in) and GitHub, Inc. (GitHub API; optional GitHub sign-in). Verification and reset codes and notifications about contact-form messages are sent through Gmail; sign-in identifiers go to Google or GitHub only if you choose that sign-in; repository metadata requests go to GitHub when you use the repository feature. The optional sign-ins and the repository feature can be avoided; you can also register with e-mail and password. The controllers track the compliance of these transfers with Chapter V GDPR and Art. 9 KVKK (appropriate safeguards such as standard contractual clauses under Art. 46) and will update this text as such safeguards are put in place. This text does not claim that any specific safeguard or contract is already in place."
+            "Recipients are the project members you work with, Hostinger Email (e-mail), Google (optional Google sign-in), GitHub (optional sign-in; repository features) and, once chosen, the hosting provider. The controllers themselves are located in Türkiye, a third country without a European Commission adequacy decision.",
+            "Personal data is transferred to the USA, to Google LLC (optional Google sign-in) and GitHub, Inc. (GitHub API; optional GitHub sign-in). Verification and reset codes and notifications about contact-form messages are sent through Hostinger Email; processing locations and transfer terms for the e-mail service are assessed separately against the provider agreement; sign-in identifiers go to Google or GitHub only if you choose that sign-in; repository metadata requests go to GitHub when you use the repository feature. The optional sign-ins and the repository feature can be avoided; you can also register with e-mail and password. The controllers track the compliance of these transfers with Chapter V GDPR and Art. 9 KVKK (appropriate safeguards such as standard contractual clauses under Art. 46) and will update this text as such safeguards are put in place. This text does not claim that any specific safeguard or contract is already in place."
           ]
         },
         {
@@ -2948,7 +2948,7 @@
           "id": "gdpr-rights",
           "title": "GDPR: your rights and complaints (Art. 15–21, 77)",
           "paragraphs": [
-            "You have the right of access (Art. 15), rectification (Art. 16), erasure (Art. 17), restriction of processing (Art. 18), data portability (Art. 20) and objection to processing based on legitimate interests (Art. 21), and the right to withdraw consent at any time (Art. 7(3)). Send your request through the contact form (category “KVKK / data request”) or to pdassistant.info@gmail.com; we reply within 30 days at the latest.",
+            "You have the right of access (Art. 15), rectification (Art. 16), erasure (Art. 17), restriction of processing (Art. 18), data portability (Art. 20) and objection to processing based on legitimate interests (Art. 21), and the right to withdraw consent at any time (Art. 7(3)). Send your request through the contact form (category “KVKK / data request”) or to info@pd-assistant.com; we reply within 30 days at the latest.",
             "You can delete your account yourself. Data portability is not yet a self-service function; we provide your data in a structured, commonly used format on request.",
             "You have the right to lodge a complaint with a supervisory authority, in particular in the EU/EEA member state of your habitual residence, place of work or place of the alleged infringement (Art. 77), as well as with the Turkish Personal Data Protection Board."
           ]
@@ -2979,7 +2979,7 @@
           "paragraphs": [
             "This notice informs you, under Article 10 of the Turkish Personal Data Protection Law No. 6698 (KVKK), about the personal data processed when you use PDA · Project Delivery Assistant (PDA).",
             "The data controllers are Hamza Taşbay and Alper Temiz, the maintainers of the open-source PDA project. Both are natural persons; PDA is not run on behalf of a company or commercial business, so there is no trade name, MERSİS number or registered e-mail (KEP) address.",
-            "You can reach the controllers through the contact form on this site or at pdassistant.info@gmail.com. How to submit a personal-data request is described under “How to apply”.",
+            "You can reach the controllers through the contact form on this site or at info@pd-assistant.com. How to submit a personal-data request is described under “How to apply”.",
             "This notice is not a request for consent. The only processing that relies on explicit consent is the optional visit analytics; you decide on it separately and freely in the cookie layer (see the Cookie Policy)."
           ]
         },
@@ -3059,14 +3059,14 @@
           ],
           "items": [
             "Project members: workspace content and membership information (e-mail, nickname, profile photo) are shown to the authorised members of the project for working together; an invitation preview is shown to the recipient of the invitation.",
-            "E-mail service (Google, USA): verification codes, password reset, invitation and notification e-mails and contact-form messages are sent through Gmail SMTP. Contact-form messages are also delivered to the PDA inbox (pdassistant.info@gmail.com, Gmail).",
+            "E-mail service (Hostinger Email): verification codes, password resets, invitations and contact-form messages are sent through the configured SMTP service. Contact-form messages are delivered to the PDA inbox (info@pd-assistant.com). The provider’s current data-processing and international-transfer terms must be assessed separately.",
             "Sign-in with Google and GitHub (optional): if you choose it, authentication takes place at the provider (USA); PDA receives the basic account information needed for sign-in (account ID, e-mail address, name).",
             "GitHub API (repository features): when you connect a public repository to a project, repository information and recent commits are read from the GitHub API (USA).",
             "Hosting provider: the hosting provider for PDA's production environment has not been chosen yet. Once it is chosen, this notice will be updated with its name, the data location and any transfer abroad.",
             "Authorities: public bodies and authorities, where a legal obligation arises."
           ],
           "closing": [
-            "Transfers abroad (Art. 9): personal data is transferred to the following recipients in the USA: Google LLC (Gmail SMTP and optional Google sign-in) and GitHub, Inc. (GitHub API and optional GitHub sign-in). Verification and reset codes and notifications about contact-form messages are sent through Gmail; your sign-in identifiers go to Google or GitHub only if you choose that sign-in; repository metadata requests go to GitHub when you use the repository feature.",
+            "Transfers abroad (Art. 9): personal data is transferred to the following recipients in the USA: Google LLC (optional Google sign-in) and GitHub, Inc. (GitHub API and optional GitHub sign-in). Verification and reset codes and notifications about contact-form messages are sent through Hostinger Email; processing locations and transfer terms for the e-mail service are assessed separately against the provider agreement; your sign-in identifiers go to Google or GitHub only if you choose that sign-in; repository metadata requests go to GitHub when you use the repository feature.",
             "The optional Google/GitHub sign-in and the repository features can be avoided; you can also register with e-mail and password. Sending e-mail, however, is necessary for the service to work. The controllers track compliance of these transfers with Article 9 of the Law (appropriate safeguards such as standard contracts and the notification to the Board) and will update this text as these safeguards are put in place. This text does not state that any specific safeguard or contract is already in place."
           ]
         },
@@ -3097,7 +3097,7 @@
               [
                 "Contact-form status records and stored support messages (name, e-mail, category, message)",
                 "12 months",
-                "Deleted automatically. The e-mail copies delivered to the PDA inbox (Gmail) are cleaned up manually by the controllers at least once a year: messages older than 12 months are deleted at the latest in the yearly cleanup, and immediately on request (data request via the contact-form category “KVKK / data request” or by e-mail)."
+                "Deleted automatically. The e-mail copies delivered to the PDA inbox (Hostinger Email) are cleaned up manually by the controllers at least once a year: messages older than 12 months are deleted at the latest in the yearly cleanup, and immediately on request (data request via the contact-form category “KVKK / data request” or by e-mail)."
               ],
               [
                 "Visit analytics (sessions, page views, button clicks and error events)",
@@ -3138,7 +3138,7 @@
           "id": "requests",
           "title": "How to apply",
           "paragraphs": [
-            "To exercise your rights, choose one of two ways: select the category “KVKK / data request” in the contact form, or send an e-mail to pdassistant.info@gmail.com.",
+            "To exercise your rights, choose one of two ways: select the category “KVKK / data request” in the contact form, or send an e-mail to info@pd-assistant.com.",
             "State your name, the e-mail address linked to your account and your request clearly. Sending from the e-mail address linked to your account is usually enough to confirm the application is yours; if necessary we may ask for proportionate additional verification. Do not send passwords, verification codes or invitation links.",
             "We conclude your application, depending on its nature, as soon as possible and at the latest within 30 days, free of charge. If the process requires a separate cost, the fee in the tariff set by the Board may be charged.",
             "If you find the answer insufficient, you can complain to the Personal Data Protection Board within 30 days of learning the answer and in any case within 60 days of the application date."
@@ -3230,7 +3230,7 @@
           "id": "feedback",
           "title": "Report a barrier",
           "paragraphs": [
-            "If you cannot use a page or a process, tell us through the contact form with the category “Accessibility” or by writing to pdassistant.info@gmail.com. Give the page address, what you wanted to do, your browser/device and, if any, the assistive technology you use.",
+            "If you cannot use a page or a process, tell us through the contact form with the category “Accessibility” or by writing to info@pd-assistant.com. Give the page address, what you wanted to do, your browser/device and, if any, the assistive technology you use.",
             "We reply to reports within 30 days at the latest and, where possible, provide the content in an alternative format. If you share screenshots, cover personal data and secrets. You do not need to explain a medical condition to make a report."
           ]
         }
@@ -3400,7 +3400,7 @@
           "title": "Legal basis and contact",
           "paragraphs": [
             "Storing or reading information on your device is subject to your consent unless it is strictly necessary to provide a service you expressly requested. Necessary and functional records fall under that exception: under Turkish law they rest on Article 5/2(c) and (f) of the KVKK; in the EU, Article 5(3) of the ePrivacy Directive and its national implementations apply, for visitors in Germany § 25(2) No. 2 TDDDG (formerly TTDSG). Analytics rests only on your explicit consent (Art. 5/1 KVKK; Art. 6(1)(a) GDPR; § 25(1) TDDDG). The regulator's cookie guide is linked in the official references below.",
-            "Send questions about cookies through the contact form or to pdassistant.info@gmail.com. The data controllers are Hamza Taşbay and Alper Temiz (details in the KVKK Privacy Notice and the Privacy Policy)."
+            "Send questions about cookies through the contact form or to info@pd-assistant.com. The data controllers are Hamza Taşbay and Alper Temiz (details in the KVKK Privacy Notice and the Privacy Policy)."
           ]
         }
       ]
@@ -4299,7 +4299,7 @@
     },
     "notice": {
       "title": "Before you send",
-      "text": "The data controllers are Hamza Taşbay and Alper Temiz. Your message is processed to reply to you; it is kept for 12 months and delivered by email to the PDA inbox (Gmail); the copies in the inbox are cleaned up manually at least once a year (messages older than 12 months are deleted at the latest in the yearly cleanup, and immediately on request). Do not write your password, verification code or the secret parts of an invitation link.",
+      "text": "The data controllers are Hamza Taşbay and Alper Temiz. Your message is processed to reply to you; it is kept for 12 months and delivered by email to the PDA inbox (Hostinger Email); the copies in the inbox are cleaned up manually at least once a year (messages older than 12 months are deleted at the latest in the yearly cleanup, and immediately on request). Do not write your password, verification code or the secret parts of an invitation link.",
       "privacy": "Privacy Policy",
       "more": "Details:",
       "kvkk": "KVKK Privacy Notice"

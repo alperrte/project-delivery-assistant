@@ -5,7 +5,7 @@ import { mailpitAvailable, mailsContaining } from "./mailpit";
 // A logged-out visitor on the real stack: browser -> frontend -> API -> SMTP code path -> Mailpit sink, rows in PostgreSQL.
 // (No session cookies; the cookie banner is not the subject here, so the visitor has already decided.)
 
-const RECIPIENT = "pdassistant.info@gmail.com";
+const RECIPIENT = "info@pd-assistant.com";
 
 const sentRows = () => Number(psql("SELECT count(*) FROM contact_requests WHERE delivery_status = 'SENT'"));
 const failedRows = () => Number(psql("SELECT count(*) FROM contact_requests WHERE delivery_status = 'FAILED'"));

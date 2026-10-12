@@ -71,11 +71,16 @@ class ContactApiIntegrationTest {
         registry.add("FRONTEND_URL", () -> "http://localhost:3000");
         registry.add("JWT_SECRET", () -> Base64.getEncoder().encodeToString(JWT_KEY));
         registry.add("MAIL_ENABLED", () -> "true");
+        // Pre-push imports the operator's .env. Every transport/address setting must belong to this local sink.
+        registry.add("MAIL_PROVIDER", () -> "smtp");
+        registry.add("SMTP_FROM_ADDRESS", () -> SENDER);
         registry.add("MAIL_FROM", () -> SENDER);
+        registry.add("pda.contact.recipient", () -> "info@pd-assistant.com");
         registry.add("SMTP_HOST", () -> "127.0.0.1");
         registry.add("SMTP_PORT", () -> Integer.toString(GREEN_MAIL.getSmtp().getPort()));
         registry.add("SMTP_AUTH", () -> "false");
         registry.add("SMTP_STARTTLS", () -> "false");
+        registry.add("SMTP_SSL", () -> "false");
         registry.add("contact.rate-limit.max-requests", () -> "9");
     }
 
@@ -131,7 +136,7 @@ class ContactApiIntegrationTest {
         MimeMessage[] received = GREEN_MAIL.getReceivedMessages();
         assertEquals(1, received.length);
         MimeMessage mail = received[0];
-        assertEquals(List.of(new InternetAddress("pdassistant.info@gmail.com")), List.of(mail.getRecipients(Message.RecipientType.TO)));
+        assertEquals(List.of(new InternetAddress("info@pd-assistant.com")), List.of(mail.getRecipients(Message.RecipientType.TO)));
         assertEquals(List.of(new InternetAddress(SENDER)), List.of(mail.getFrom()));
         assertEquals(List.of(new InternetAddress("ece@example.com")), List.of(mail.getReplyTo()));
         assertNull(mail.getRecipients(Message.RecipientType.CC));
@@ -165,7 +170,7 @@ class ContactApiIntegrationTest {
         assertTrue(GREEN_MAIL.waitForIncomingEmail(5_000, 1));
         assertEquals(1, GREEN_MAIL.getReceivedMessages().length);
         MimeMessage mail = GREEN_MAIL.getReceivedMessages()[0];
-        assertEquals(List.of(new InternetAddress("pdassistant.info@gmail.com")), List.of(mail.getRecipients(Message.RecipientType.TO)));
+        assertEquals(List.of(new InternetAddress("info@pd-assistant.com")), List.of(mail.getRecipients(Message.RecipientType.TO)));
         assertNull(mail.getRecipients(Message.RecipientType.CC));
         assertNull(mail.getRecipients(Message.RecipientType.BCC));
         assertEquals(List.of(new InternetAddress(SENDER)), List.of(mail.getFrom()));

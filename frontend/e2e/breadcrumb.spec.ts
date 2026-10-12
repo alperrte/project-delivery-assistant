@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { createProject, createTeam } from "./helpers";
+import { createProject, createTeam, openProjectTeamsPage } from "./helpers";
 import { MANAGER_STORAGE } from "./global-setup";
 
 /** The trail under the header: forms and records below a section name their path; top-level pages and the project sidebar pages show none. */
@@ -58,16 +58,16 @@ test.describe.serial("Breadcrumb (signed in)", () => {
     await expect(trail(page).getByRole("listitem")).toHaveText(["Projeler", projectName, "Görevler", "Yeni görev"]);
   });
 
-  test("a team page names the team and the edit page keeps it", async () => {
+  test("team detail, edit and member invite pages intentionally have no trail", async () => {
     const teamId = await createTeam(page, slug, "Arka Uç");
-    await expect(trail(page).locator("[aria-current=page]")).toHaveText("Arka Uç");
-    await expect(trail(page).getByRole("listitem")).toHaveText(["Projeler", projectName, "Ekipler", "Arka Uç"]);
-    await trail(page).getByRole("link", { name: "Ekipler" }).click();
+    await expect(trail(page)).toHaveCount(0);
+    await openProjectTeamsPage(page);
     await expect(page).toHaveURL(`/tr/projeler/${slug}/ekipler`);
-
-    await page.goto(`/projects/${slug}/teams/${teamId}/edit`);
-    await expect(trail(page).locator("[aria-current=page]")).toHaveText("Ekibi düzenle");
-    await expect(trail(page).getByRole("link", { name: "Arka Uç" })).toHaveAttribute("href", `/tr/projeler/${slug}/ekipler/${teamId}`);
+    for (const path of [`/teams/${teamId}/edit`, `/team-invitations/new?team=${teamId}`]) {
+      await page.goto(`/projects/${slug}${path}`);
+      await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+      await expect(trail(page)).toHaveCount(0);
+    }
   });
 
   test("organization and calendar create pages name the path", async () => {

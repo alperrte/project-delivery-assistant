@@ -2776,7 +2776,7 @@
             },
             {
               "question": "Wie lösche ich mein Konto oder erhalte Zugriff auf meine Daten?",
-              "answer": "Sie können Ihr Konto auf dem Kontobildschirm selbst löschen: Sie bestätigen mit einem Einmal-Link, der an Ihre E-Mail-Adresse gesendet wird, und Ihren eigenen Anmeldedaten; das Konto wird sofort anonymisiert. Wenn Sie ein Projekt oder eine Organisation besitzen, müssen Sie zuvor die Inhaberschaft übertragen oder sie löschen. Für Anfragen wie Auskunft, Berichtigung oder Export Ihrer Daten wählen Sie im Kontaktformular die Kategorie „KVKK / Datenanfrage“ oder schreiben Sie an pdassistant.info@gmail.com; wir antworten spätestens innerhalb von 30 Tagen. Einzelheiten stehen im KVKK-Datenschutzhinweis und in der Datenschutzerklärung."
+              "answer": "Sie können Ihr Konto auf dem Kontobildschirm selbst löschen: Sie bestätigen mit einem Einmal-Link, der an Ihre E-Mail-Adresse gesendet wird, und Ihren eigenen Anmeldedaten; das Konto wird sofort anonymisiert. Wenn Sie ein Projekt oder eine Organisation besitzen, müssen Sie zuvor die Inhaberschaft übertragen oder sie löschen. Für Anfragen wie Auskunft, Berichtigung oder Export Ihrer Daten wählen Sie im Kontaktformular die Kategorie „KVKK / Datenanfrage“ oder schreiben Sie an info@pd-assistant.com; wir antworten spätestens innerhalb von 30 Tagen. Einzelheiten stehen im KVKK-Datenschutzhinweis und in der Datenschutzerklärung."
             }
           ]
         },
@@ -2809,7 +2809,7 @@
           "title": "Geltungsbereich und Verantwortliche",
           "paragraphs": [
             "Diese Erklärung gilt für die Konto-, Projekt-, Team-, Aufgaben-, Chat-, Kalender- und weiteren Funktionen der PDA-Webanwendung. Wenn Sie zu externen GitHub- oder Google-Seiten wechseln, gelten deren eigene Datenschutzbestimmungen.",
-            "Verantwortliche sind Hamza Taşbay und Alper Temiz, natürliche Personen und Betreuer des Open-Source-Projekts PDA. Sie erreichen uns über das Kontaktformular oder unter pdassistant.info@gmail.com.",
+            "Verantwortliche sind Hamza Taşbay und Alper Temiz, natürliche Personen und Betreuer des Open-Source-Projekts PDA. Sie erreichen uns über das Kontaktformular oder unter info@pd-assistant.com.",
             "Die ausführlichen Informationen nach dem türkischen Gesetz Nr. 6698 (Rechtsgrundlagen, Übermittlungen, Ihre Rechte) stehen im KVKK-Datenschutzhinweis; diese Erklärung ist eine nutzerorientierte Zusammenfassung derselben Informationen."
           ]
         },
@@ -2869,7 +2869,7 @@
           "id": "transfers",
           "title": "Dienstleister und Übermittlung ins Ausland",
           "paragraphs": [
-            "E-Mails werden über Gmail SMTP (Google, USA) versendet. Die optionale Anmeldung mit Google/GitHub und die GitHub-Repository-Funktionen verbinden mit den jeweiligen Anbietern (USA). Der Hosting-Anbieter ist noch nicht ausgewählt; diese Erklärung wird aktualisiert, sobald er feststeht.",
+            "E-Mails werden über Hostinger Email SMTP versendet. Die optionale Anmeldung mit Google/GitHub und die GitHub-Repository-Funktionen verbinden mit den jeweiligen Anbietern (USA). Der Hosting-Anbieter ist noch nicht ausgewählt; diese Erklärung wird aktualisiert, sobald er feststeht.",
             "Einzelheiten zu diesen Übermittlungen (Empfänger, Land, welche Daten wohin gelangen) und ihr aktueller Stand nach Art. 9 KVKK stehen im Abschnitt „Empfänger und Übermittlung ins Ausland“ des KVKK-Datenschutzhinweises und in den DSGVO-Abschnitten unten; die Verantwortlichen verfolgen die Einhaltung dieser Anforderungen."
           ]
         },
@@ -2900,7 +2900,7 @@
               [
                 "Statusdatensätze des Kontaktformulars und gespeicherte Support-Nachrichten (Name, E-Mail, Kategorie, Nachricht)",
                 "12 Monate",
-                "Werden automatisch gelöscht. Die an das PDA-Postfach (Gmail) zugestellten E-Mail-Kopien werden von den Verantwortlichen mindestens einmal jährlich manuell bereinigt: Nachrichten, die älter als 12 Monate sind, werden spätestens bei der jährlichen Bereinigung gelöscht, auf Anfrage sofort (Datenanfrage über die Kategorie „KVKK / Datenanfrage“ im Kontaktformular oder per E-Mail)."
+                "Werden automatisch gelöscht. Die an das PDA-Postfach (Hostinger Email) zugestellten E-Mail-Kopien werden von den Verantwortlichen mindestens einmal jährlich manuell bereinigt: Nachrichten, die älter als 12 Monate sind, werden spätestens bei der jährlichen Bereinigung gelöscht, auf Anfrage sofort (Datenanfrage über die Kategorie „KVKK / Datenanfrage“ im Kontaktformular oder per E-Mail)."
               ],
               [
                 "Besuchsanalyse (Sitzungen, Seitenaufrufe, Schaltflächenklicks und Fehlerereignisse)",
@@ -2934,7 +2934,7 @@
           "id": "gdpr-controller",
           "title": "DSGVO: Verantwortliche und Kontakt (Art. 13 Abs. 1 lit. a, b)",
           "paragraphs": [
-            "Für Besucher in der Europäischen Union oder im Europäischen Wirtschaftsraum gelten die folgenden Informationen nach Art. 13 und 14 der Datenschutz-Grundverordnung (DSGVO). Verantwortliche sind Hamza Taşbay und Alper Temiz, natürliche Personen und Betreuer des Open-Source-Projekts PDA mit Sitz in der Türkei. Kontakt: das Kontaktformular oder pdassistant.info@gmail.com. Ein Datenschutzbeauftragter wurde nicht benannt."
+            "Für Besucher in der Europäischen Union oder im Europäischen Wirtschaftsraum gelten die folgenden Informationen nach Art. 13 und 14 der Datenschutz-Grundverordnung (DSGVO). Verantwortliche sind Hamza Taşbay und Alper Temiz, natürliche Personen und Betreuer des Open-Source-Projekts PDA mit Sitz in der Türkei. Kontakt: das Kontaktformular oder info@pd-assistant.com. Ein Datenschutzbeauftragter wurde nicht benannt."
           ]
         },
         {
@@ -2957,8 +2957,8 @@
           "id": "gdpr-transfers",
           "title": "DSGVO: Empfänger und Drittlandübermittlung (Kapitel V)",
           "paragraphs": [
-            "Empfänger sind die Projektmitglieder, mit denen Sie zusammenarbeiten, Google (Gmail SMTP für E-Mails; optionale Anmeldung mit Google), GitHub (optionale Anmeldung; Repository-Funktionen) und, sobald ausgewählt, der Hosting-Anbieter. Die Verantwortlichen selbst befinden sich in der Türkei, einem Drittland ohne Angemessenheitsbeschluss der Europäischen Kommission.",
-            "Personenbezogene Daten werden in die USA übermittelt, an Google LLC (Gmail SMTP; optionale Anmeldung mit Google) und GitHub, Inc. (GitHub-API; optionale Anmeldung mit GitHub). Bestätigungs- und Rücksetzcodes sowie Benachrichtigungen über Kontaktformular-Nachrichten werden über Gmail versendet; Anmeldekennungen gehen nur dann an Google oder GitHub, wenn Sie diese Anmeldung wählen; Anfragen zu Repository-Metadaten gehen an GitHub, wenn Sie die Repository-Funktion nutzen. Die optionalen Anmeldungen und die Repository-Funktion lassen sich vermeiden; Sie können sich auch mit E-Mail und Passwort registrieren. Die Verantwortlichen verfolgen die Einhaltung von Kapitel V DSGVO und Art. 9 KVKK bei diesen Übermittlungen (geeignete Garantien wie Standardvertragsklauseln nach Art. 46) und aktualisieren diesen Text, sobald solche Garantien geschaffen sind. Dieser Text behauptet nicht, dass bereits eine bestimmte Garantie oder ein bestimmter Vertrag besteht."
+            "Empfänger sind die Projektmitglieder, mit denen Sie zusammenarbeiten, Hostinger Email (E-Mails), Google (optionale Anmeldung mit Google), GitHub (optionale Anmeldung; Repository-Funktionen) und, sobald ausgewählt, der Hosting-Anbieter. Die Verantwortlichen selbst befinden sich in der Türkei, einem Drittland ohne Angemessenheitsbeschluss der Europäischen Kommission.",
+            "Personenbezogene Daten werden in die USA übermittelt, an Google LLC (optionale Anmeldung mit Google) und GitHub, Inc. (GitHub-API; optionale Anmeldung mit GitHub). Bestätigungs- und Rücksetzcodes sowie Benachrichtigungen über Kontaktformular-Nachrichten werden über Hostinger Email versendet; Verarbeitungsorte und Übermittlungsbedingungen des E-Mail-Dienstes werden anhand des Anbieter-Vertrags gesondert geprüft; Anmeldekennungen gehen nur dann an Google oder GitHub, wenn Sie diese Anmeldung wählen; Anfragen zu Repository-Metadaten gehen an GitHub, wenn Sie die Repository-Funktion nutzen. Die optionalen Anmeldungen und die Repository-Funktion lassen sich vermeiden; Sie können sich auch mit E-Mail und Passwort registrieren. Die Verantwortlichen verfolgen die Einhaltung von Kapitel V DSGVO und Art. 9 KVKK bei diesen Übermittlungen (geeignete Garantien wie Standardvertragsklauseln nach Art. 46) und aktualisieren diesen Text, sobald solche Garantien geschaffen sind. Dieser Text behauptet nicht, dass bereits eine bestimmte Garantie oder ein bestimmter Vertrag besteht."
           ]
         },
         {
@@ -2972,7 +2972,7 @@
           "id": "gdpr-rights",
           "title": "DSGVO: Ihre Rechte und Beschwerde (Art. 15–21, 77)",
           "paragraphs": [
-            "Sie haben das Recht auf Auskunft (Art. 15), Berichtigung (Art. 16), Löschung (Art. 17), Einschränkung der Verarbeitung (Art. 18), Datenübertragbarkeit (Art. 20) und Widerspruch gegen Verarbeitungen auf Grundlage berechtigter Interessen (Art. 21) sowie das Recht, eine Einwilligung jederzeit zu widerrufen (Art. 7 Abs. 3). Senden Sie Ihre Anfrage über das Kontaktformular (Kategorie „KVKK / Datenanfrage“) oder an pdassistant.info@gmail.com; wir antworten spätestens innerhalb von 30 Tagen.",
+            "Sie haben das Recht auf Auskunft (Art. 15), Berichtigung (Art. 16), Löschung (Art. 17), Einschränkung der Verarbeitung (Art. 18), Datenübertragbarkeit (Art. 20) und Widerspruch gegen Verarbeitungen auf Grundlage berechtigter Interessen (Art. 21) sowie das Recht, eine Einwilligung jederzeit zu widerrufen (Art. 7 Abs. 3). Senden Sie Ihre Anfrage über das Kontaktformular (Kategorie „KVKK / Datenanfrage“) oder an info@pd-assistant.com; wir antworten spätestens innerhalb von 30 Tagen.",
             "Sie können Ihr Konto selbst löschen. Die Datenübertragbarkeit ist noch keine Selbstbedienungsfunktion; wir stellen Ihre Daten auf Anfrage in einem strukturierten, gängigen Format bereit.",
             "Sie haben das Recht, bei einer Aufsichtsbehörde Beschwerde einzulegen, insbesondere in dem EU-/EWR-Mitgliedstaat Ihres gewöhnlichen Aufenthaltsorts, Ihres Arbeitsplatzes oder des Orts des mutmaßlichen Verstoßes (Art. 77), sowie beim türkischen Datenschutzrat."
           ]
@@ -3003,7 +3003,7 @@
           "paragraphs": [
             "Dieser Hinweis informiert Sie nach Art. 10 des türkischen Datenschutzgesetzes Nr. 6698 (KVKK) über die personenbezogenen Daten, die bei der Nutzung von PDA · Project Delivery Assistant (PDA) verarbeitet werden.",
             "Verantwortliche sind Hamza Taşbay und Alper Temiz, die Betreuer des Open-Source-Projekts PDA. Beide sind natürliche Personen; PDA wird nicht im Namen eines Unternehmens oder gewerblichen Betriebs betrieben, daher gibt es keine Firma, keine MERSİS-Nummer und keine KEP-Adresse (registrierte E-Mail-Adresse).",
-            "Sie erreichen die Verantwortlichen über das Kontaktformular dieser Website oder unter pdassistant.info@gmail.com. Wie Sie eine Anfrage zu personenbezogenen Daten stellen, steht im Abschnitt „So stellen Sie eine Anfrage“.",
+            "Sie erreichen die Verantwortlichen über das Kontaktformular dieser Website oder unter info@pd-assistant.com. Wie Sie eine Anfrage zu personenbezogenen Daten stellen, steht im Abschnitt „So stellen Sie eine Anfrage“.",
             "Dieser Hinweis ist keine Bitte um Einwilligung. Die einzige Verarbeitung, die auf einer ausdrücklichen Einwilligung beruht, ist die optionale Besuchsanalyse; darüber entscheiden Sie getrennt und frei in der Cookie-Ebene (siehe Cookie-Richtlinie)."
           ]
         },
@@ -3083,14 +3083,14 @@
           ],
           "items": [
             "Projektmitglieder: Inhalte des Arbeitsbereichs und Mitgliedschaftsangaben (E-Mail, Benutzername, Profilfoto) werden den berechtigten Mitgliedern des Projekts für die Zusammenarbeit angezeigt; die Einladungsvorschau wird dem Empfänger der Einladung angezeigt.",
-            "E-Mail-Dienst (Google, USA): Bestätigungscodes, Passwort-Zurücksetzung, Einladungs- und Benachrichtigungs-E-Mails sowie Kontaktformular-Nachrichten werden über Gmail SMTP versendet. Kontaktformular-Nachrichten werden zusätzlich an das PDA-Postfach (pdassistant.info@gmail.com, Gmail) zugestellt.",
+            "E-Mail-Dienst (Hostinger Email): Bestätigungscodes, Passwort-Zurücksetzungen, Einladungen und Kontaktformular-Nachrichten werden über den konfigurierten SMTP-Dienst versendet. Kontaktformular-Nachrichten werden an das PDA-Postfach (info@pd-assistant.com) zugestellt. Die aktuellen Bedingungen des Anbieters zur Datenverarbeitung und internationalen Datenübermittlung müssen gesondert geprüft werden.",
             "Anmeldung mit Google und GitHub (optional): Wenn Sie dies wählen, erfolgt die Authentifizierung beim jeweiligen Anbieter (USA); PDA erhält die für die Anmeldung nötigen Basisinformationen des Kontos (Konto-ID, E-Mail-Adresse, Name).",
             "GitHub-API (Repository-Funktionen): Wenn Sie einem Projekt ein öffentliches Repository zuordnen, werden Repository-Informationen und aktuelle Commits über die GitHub-API (USA) gelesen.",
             "Hosting-Anbieter: Der Hosting-Anbieter für die Produktivumgebung von PDA ist noch nicht ausgewählt. Sobald er feststeht, wird dieser Hinweis um Name, Datenstandort und eine etwaige Übermittlung ins Ausland ergänzt.",
             "Behörden: Behörden und öffentliche Stellen, soweit eine rechtliche Verpflichtung besteht."
           ],
           "closing": [
-            "Übermittlung ins Ausland (Art. 9): Personenbezogene Daten werden an folgende Empfänger in den USA übermittelt: Google LLC (Gmail SMTP und optionale Anmeldung mit Google) und GitHub, Inc. (GitHub-API und optionale Anmeldung mit GitHub). Bestätigungs- und Rücksetzcodes sowie Benachrichtigungen über Kontaktformular-Nachrichten werden über Gmail versendet; Ihre Anmeldekennungen gehen nur dann an Google oder GitHub, wenn Sie diese Anmeldung wählen; Anfragen zu Repository-Metadaten gehen an GitHub, wenn Sie die Repository-Funktion nutzen.",
+            "Übermittlung ins Ausland (Art. 9): Personenbezogene Daten werden an folgende Empfänger in den USA übermittelt: Google LLC (optionale Anmeldung mit Google) und GitHub, Inc. (GitHub-API und optionale Anmeldung mit GitHub). Bestätigungs- und Rücksetzcodes sowie Benachrichtigungen über Kontaktformular-Nachrichten werden über Hostinger Email versendet; Verarbeitungsorte und Übermittlungsbedingungen des E-Mail-Dienstes werden anhand des Anbieter-Vertrags gesondert geprüft; Ihre Anmeldekennungen gehen nur dann an Google oder GitHub, wenn Sie diese Anmeldung wählen; Anfragen zu Repository-Metadaten gehen an GitHub, wenn Sie die Repository-Funktion nutzen.",
             "Die optionale Anmeldung mit Google/GitHub und die Repository-Funktionen lassen sich vermeiden; Sie können sich auch mit E-Mail und Passwort registrieren. Der E-Mail-Versand ist dagegen für den Betrieb des Dienstes erforderlich. Die Verantwortlichen verfolgen die Einhaltung von Art. 9 KVKK bei diesen Übermittlungen (geeignete Garantien wie Standardverträge und die Meldung an den Datenschutzrat) und aktualisieren diesen Text, sobald diese Garantien geschaffen sind. Dieser Text gibt nicht an, dass bereits eine bestimmte Garantie oder ein bestimmter Vertrag besteht."
           ]
         },
@@ -3121,7 +3121,7 @@
               [
                 "Statusdatensätze des Kontaktformulars und gespeicherte Support-Nachrichten (Name, E-Mail, Kategorie, Nachricht)",
                 "12 Monate",
-                "Werden automatisch gelöscht. Die an das PDA-Postfach (Gmail) zugestellten E-Mail-Kopien werden von den Verantwortlichen mindestens einmal jährlich manuell bereinigt: Nachrichten, die älter als 12 Monate sind, werden spätestens bei der jährlichen Bereinigung gelöscht, auf Anfrage sofort (Datenanfrage über die Kategorie „KVKK / Datenanfrage“ im Kontaktformular oder per E-Mail)."
+                "Werden automatisch gelöscht. Die an das PDA-Postfach (Hostinger Email) zugestellten E-Mail-Kopien werden von den Verantwortlichen mindestens einmal jährlich manuell bereinigt: Nachrichten, die älter als 12 Monate sind, werden spätestens bei der jährlichen Bereinigung gelöscht, auf Anfrage sofort (Datenanfrage über die Kategorie „KVKK / Datenanfrage“ im Kontaktformular oder per E-Mail)."
               ],
               [
                 "Besuchsanalyse (Sitzungen, Seitenaufrufe, Schaltflächenklicks und Fehlerereignisse)",
@@ -3162,7 +3162,7 @@
           "id": "requests",
           "title": "So stellen Sie eine Anfrage",
           "paragraphs": [
-            "Zur Ausübung Ihrer Rechte haben Sie zwei Möglichkeiten: Wählen Sie im Kontaktformular die Kategorie „KVKK / Datenanfrage“ oder senden Sie eine E-Mail an pdassistant.info@gmail.com.",
+            "Zur Ausübung Ihrer Rechte haben Sie zwei Möglichkeiten: Wählen Sie im Kontaktformular die Kategorie „KVKK / Datenanfrage“ oder senden Sie eine E-Mail an info@pd-assistant.com.",
             "Nennen Sie in Ihrer Anfrage Ihren Namen, die mit Ihrem Konto verknüpfte E-Mail-Adresse und Ihr Anliegen klar. Das Senden von der mit Ihrem Konto verknüpften E-Mail-Adresse genügt meist, um zu bestätigen, dass die Anfrage von Ihnen stammt; bei Bedarf können wir eine verhältnismäßige zusätzliche Bestätigung verlangen. Senden Sie keine Passwörter, Bestätigungscodes oder Einladungslinks.",
             "Wir schließen Ihre Anfrage je nach Art so schnell wie möglich und spätestens innerhalb von 30 Tagen kostenlos ab. Erfordert der Vorgang gesondert Kosten, kann die vom Datenschutzrat festgelegte Gebühr verlangt werden.",
             "Halten Sie die Antwort für unzureichend, können Sie sich innerhalb von 30 Tagen nach Kenntnis der Antwort und in jedem Fall innerhalb von 60 Tagen nach dem Antragsdatum beim Datenschutzrat (Kişisel Verileri Koruma Kurulu) beschweren."
@@ -3254,7 +3254,7 @@
           "id": "feedback",
           "title": "Eine Barriere melden",
           "paragraphs": [
-            "Wenn Sie eine Seite oder einen Vorgang nicht nutzen können, melden Sie es uns über das Kontaktformular mit der Kategorie „Barrierefreiheit“ oder per E-Mail an pdassistant.info@gmail.com. Nennen Sie die Seitenadresse, was Sie tun wollten, Ihren Browser bzw. Ihr Gerät und gegebenenfalls die verwendete assistive Technologie.",
+            "Wenn Sie eine Seite oder einen Vorgang nicht nutzen können, melden Sie es uns über das Kontaktformular mit der Kategorie „Barrierefreiheit“ oder per E-Mail an info@pd-assistant.com. Nennen Sie die Seitenadresse, was Sie tun wollten, Ihren Browser bzw. Ihr Gerät und gegebenenfalls die verwendete assistive Technologie.",
             "Wir antworten auf Meldungen spätestens innerhalb von 30 Tagen und stellen den Inhalt nach Möglichkeit in einem alternativen Format bereit. Wenn Sie Screenshots teilen, verdecken Sie personenbezogene Daten und Geheimnisse. Sie müssen für eine Meldung keine gesundheitlichen Umstände erläutern."
           ]
         }
@@ -3424,7 +3424,7 @@
           "title": "Rechtsgrundlage und Kontakt",
           "paragraphs": [
             "Nach § 25 Abs. 1 TDDDG (bis 2024: TTDSG) ist für das Speichern von Informationen auf Ihrem Endgerät oder den Zugriff darauf Ihre Einwilligung erforderlich. Ausgenommen ist nach § 25 Abs. 2 Nr. 2 TDDDG, was unbedingt erforderlich ist, damit wir einen von Ihnen ausdrücklich gewünschten digitalen Dienst zur Verfügung stellen können. Die Einträge der Kategorie „Notwendig“ und die funktionalen Einstellungen stützen wir auf diese Ausnahme (Verarbeitung personenbezogener Daten dabei: Art. 6 Abs. 1 lit. b und f DSGVO). Die Analyse beruht allein auf Ihrer ausdrücklichen Einwilligung (§ 25 Abs. 1 TDDDG; Art. 6 Abs. 1 lit. a DSGVO; Art. 5/1 KVKK). Für die Verarbeitung nach türkischem Recht gelten Art. 5/2(c) und (f) KVKK. Den Cookie-Leitfaden der Behörde finden Sie unter den offiziellen Quellen unten.",
-            "Fragen zu Cookies senden Sie über das Kontaktformular oder an pdassistant.info@gmail.com. Verantwortliche sind Hamza Taşbay und Alper Temiz (Einzelheiten im KVKK-Datenschutzhinweis und in der Datenschutzerklärung)."
+            "Fragen zu Cookies senden Sie über das Kontaktformular oder an info@pd-assistant.com. Verantwortliche sind Hamza Taşbay und Alper Temiz (Einzelheiten im KVKK-Datenschutzhinweis und in der Datenschutzerklärung)."
           ]
         }
       ]
@@ -4323,7 +4323,7 @@
     },
     "notice": {
       "title": "Bevor Sie senden",
-      "text": "Verantwortliche sind Hamza Taşbay und Alper Temiz. Ihre Nachricht wird verarbeitet, um Ihnen zu antworten; sie wird 12 Monate gespeichert und per E-Mail an das PDA-Postfach (Gmail) zugestellt; die Kopien im Postfach werden mindestens einmal jährlich manuell bereinigt (Nachrichten älter als 12 Monate werden spätestens bei der jährlichen Bereinigung gelöscht, auf Anfrage sofort). Schreiben Sie weder Ihr Passwort noch Bestätigungscodes oder die geheimen Teile eines Einladungslinks.",
+      "text": "Verantwortliche sind Hamza Taşbay und Alper Temiz. Ihre Nachricht wird verarbeitet, um Ihnen zu antworten; sie wird 12 Monate gespeichert und per E-Mail an das PDA-Postfach (Hostinger Email) zugestellt; die Kopien im Postfach werden mindestens einmal jährlich manuell bereinigt (Nachrichten älter als 12 Monate werden spätestens bei der jährlichen Bereinigung gelöscht, auf Anfrage sofort). Schreiben Sie weder Ihr Passwort noch Bestätigungscodes oder die geheimen Teile eines Einladungslinks.",
       "privacy": "Datenschutzerklärung",
       "more": "Einzelheiten:",
       "kvkk": "KVKK-Datenschutzhinweis"

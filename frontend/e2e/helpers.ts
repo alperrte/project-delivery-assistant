@@ -278,6 +278,15 @@ export async function openProjectListPage(page: Page, slug: string) {
 
 /** Creates a team through the full-page form and returns its id, parsed from the post-create redirect. */
 /** Creates a team through the form (which returns to the team list) and then opens it, so callers continue inside the team. */
+export async function openProjectTeamsPage(page: Page) {
+  const toggle = page.getByRole("button", { name: "Ekipler", exact: true });
+  if (await toggle.getAttribute("aria-expanded") !== "true") {
+    await toggle.focus();
+    await toggle.press("Enter");
+  }
+  await page.getByRole("link", { name: "Tüm Ekipler", exact: true }).click();
+}
+
 export async function createTeam(page: Page, slug: string, name: string): Promise<string> {
   await page.goto(`/projects/${slug}/teams/new`);
   await page.locator("#team-name").fill(name);

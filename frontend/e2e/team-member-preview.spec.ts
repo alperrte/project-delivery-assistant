@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { api, login, uniqueUser } from "./helpers";
+import { openProjectTeamsPage, api, login, uniqueUser } from "./helpers";
 import { AUTH_DIR, MANAGER_STORAGE, MEMBER_USER_FILE } from "./global-setup";
 import { memberIdentityInDatabase } from "./team-deletion-db";
 
@@ -57,7 +57,7 @@ test("real onboarding names reach the team card without member requests; 101 tea
       await page.getByRole("button", { name: `${user.nickname} kişisini ekipten çıkar`, exact: true }).click();
       await page.getByRole("dialog").getByRole("button", { name: "Ekipten çıkar", exact: true }).click();
       await expect(page.getByRole("dialog")).toBeHidden();
-      await page.getByRole("navigation", { name: "Konum", exact: true }).getByRole("link", { name: "Ekipler", exact: true }).click();
+      await openProjectTeamsPage(page);
       await expect(card.locator(`[data-member-preview="${identity.id}"]`)).toHaveCount(0);
       expect(await page.evaluate(() => (window as unknown as { previewDocument: number }).previewDocument)).toBe(7);
       await card.getByRole("link", { name: "Named preview ekibini aç", exact: true }).click();
@@ -68,7 +68,7 @@ test("real onboarding names reach the team card without member requests; 101 tea
       // Adding a project member is immediate: the page stays, the row turns into "in team" and the way back is a link.
       await expect(page.getByRole("list", { name: "Arama sonuçları", exact: true }).getByText("Ekipte", { exact: true })).toBeVisible();
       await page.getByRole("link", { name: "Ekibe dön", exact: true }).click();
-      await page.getByRole("navigation", { name: "Konum", exact: true }).getByRole("link", { name: "Ekipler", exact: true }).click();
+      await openProjectTeamsPage(page);
       await expect(card.locator(`[data-member-preview="${identity.id}"] [data-member-name]`)).toHaveText(fullName);
       expect(await page.evaluate(() => (window as unknown as { previewDocument: number }).previewDocument)).toBe(7);
       await api(person, "DELETE", "/users/me/profile-photo");

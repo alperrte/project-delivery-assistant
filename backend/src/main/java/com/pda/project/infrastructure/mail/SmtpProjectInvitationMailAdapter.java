@@ -4,11 +4,11 @@ import com.pda.project.application.service.ProjectInvitationMailPort;
 import com.pda.user.ProjectRole;
 import java.time.Instant;
 import java.util.Set;
-import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.env.Environment;
+import com.pda.shared.SmtpMailSettings;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Reuses the same {@code MAIL_ENABLED}/{@code MAIL_PROVIDER}/{@code SMTP_*}/{@code MAIL_FROM} ENV contract as
- * {@code com.pda.auth.infrastructure.mail.SmtpVerificationMailAdapter}; no new ENV/secret. A separate component
+ * {@code com.pda.auth.infrastructure.mail.SmtpVerificationMailAdapter}; shared transport settings. A separate component
  * (not a shared adapter) because that Auth class implements a port scoped to verification codes only.
  */
 @Component
@@ -29,38 +29,9 @@ public class SmtpProjectInvitationMailAdapter implements ProjectInvitationMailPo
     private final String fromAddress;
 
     public SmtpProjectInvitationMailAdapter(Environment environment) {
-        boolean enabled = environment.getProperty("MAIL_ENABLED", Boolean.class, false);
-        if (!enabled) {
-            sender = null;
-            fromAddress = null;
-            return;
-        }
-        if (!"smtp".equalsIgnoreCase(environment.getProperty("MAIL_PROVIDER", "smtp"))) {
-            throw new IllegalStateException("Unsupported mail provider");
-        }
-        String host = required(environment, "SMTP_HOST");
-        String from = required(environment, "MAIL_FROM");
-        int port = environment.getProperty("SMTP_PORT", Integer.class, 587);
-        if (port < 1 || port > 65535) {
-            throw new IllegalStateException("SMTP_PORT is invalid");
-        }
-        boolean authenticate = environment.getProperty("SMTP_AUTH", Boolean.class, true);
-        JavaMailSenderImpl configured = new JavaMailSenderImpl();
-        configured.setHost(host);
-        configured.setPort(port);
-        if (authenticate) {
-            configured.setUsername(required(environment, "SMTP_USERNAME"));
-            configured.setPassword(required(environment, "SMTP_PASSWORD"));
-        }
-        Properties properties = configured.getJavaMailProperties();
-        properties.put("mail.smtp.auth", Boolean.toString(authenticate));
-        properties.put("mail.smtp.starttls.enable", Boolean.toString(
-                environment.getProperty("SMTP_STARTTLS", Boolean.class, true)));
-        properties.put("mail.smtp.connectiontimeout", "5000");
-        properties.put("mail.smtp.timeout", "5000");
-        properties.put("mail.smtp.writetimeout", "5000");
-        sender = configured;
-        fromAddress = from;
+        SmtpMailSettings settings = SmtpMailSettings.from(environment);
+        sender = settings.sender();
+        fromAddress = settings.fromAddress();
     }
 
     @Override
@@ -98,7 +69,8 @@ public class SmtpProjectInvitationMailAdapter implements ProjectInvitationMailPo
             String invitationLink) {
         String project = singleLine(projectName);
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(fromAddress);
+        message.setFrom(SmtpMailSettings.namedAddress(fromAddress).toString());
+        message.setReplyTo(fromAddress);
         message.setTo(recipientEmail);
         message.setSubject("You're invited to join " + project + " on PDA");
         message.setText(singleLine(inviterName) + " invited you to join the project \"" + project + "\" on PDA.\n"
@@ -122,11 +94,4 @@ public class SmtpProjectInvitationMailAdapter implements ProjectInvitationMailPo
         return clean.toString().replaceAll(" {2,}", " ").strip();
     }
 
-    private static String required(Environment environment, String key) {
-        String value = environment.getProperty(key);
-        if (value == null || value.isBlank()) {
-            throw new IllegalStateException(key + " is required when mail is enabled");
-        }
-        return value;
-    }
 }

@@ -28,6 +28,12 @@ export function AppBreadcrumb() {
   const project = useQuery({ queryKey: ["projects", "by-slug", slug], queryFn: () => projectsApi.bySlug(slug!), enabled: !!slug });
   if (project.isError) return null;
 
+  const [teamId, teamAction] = rest;
+  const isTeamDetailOrEdit = second === "teams" && teamId && teamId !== "new"
+    && (rest.length === 1 || (rest.length === 2 && teamAction === "edit"));
+  const isMemberInvite = second === "team-invitations" && rest.length === 1 && teamId === "new";
+  if (slug && (isTeamDetailOrEdit || isMemberInvite)) return null;
+
   const projectCrumb: Crumb = {
     label: project.data?.name ?? <><span aria-hidden="true" className="inline-block h-3.5 w-24 animate-pulse rounded bg-muted align-middle" /><span className="sr-only">{common("loading")}</span></>,
     href: `/projects/${slug}`,

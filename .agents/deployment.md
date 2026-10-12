@@ -7,6 +7,7 @@ Karar verildi: tek bir **Hostinger KVM 2 VPS** (2 vCPU, 8 GB RAM, 100 GB NVMe, U
 - **Ortam ayrımı (iki profil).** Gerçek değerler iki profil dosyasındadır: `.env.dev` (yerel geliştirme, `docker-compose.yml`) ve `.env.prod` (production, `docker-compose.prod.yml`). İkisi de Git dışındadır; `.env.prod` için şablon dosya yoktur, her değerin açıklaması `.env.prod` içindeki yorumlardadır (değişken adları `operations.md` §6a'da). `.env` yalnız **etkin profilin kopyasıdır** (`docker-compose.yml`, `pre-push` ve `ops/backup.ps1` onu okur) ve `.\ops\env.ps1 use dev|prod` ile yazılır; değişiklik `.env` içine değil profil dosyasına yapılır. Production değerleri (JWT, HMAC, TOTP anahtarı, DB ve admin parolası) geliştirme değerlerinden farklı üretilmiştir ve asla aynı olmamalıdır. Sunucuda yalnız `.env.prod` bulunur ve doğrudan `--env-file .env.prod` ile kullanılır.
 - **İmajlar sunucuda derlenir** (`up -d --build`); registry yoktur. Bellek sınırları (toplam ≈ 4,75 GB: postgres 1,5 GB, backend 2 GB — JVM heap %70, frontend 1 GB, caddy 256 MB) 8 GB'lık sunucuda derleme için yer bırakır; 2 GB swap önerilir. Her konteynerin logu en çok 5×10 MB tutulur.
 - **Ayrıcalıksız çalışma.** Frontend `node` kullanıcısıyla (Dockerfile `USER node`), backend `10001` kullanıcısıyla çalışır; backend kullanıcısı production compose'ta `user: "10001:10001"` ile verilir (geliştirme compose'u root kalır, eski medya volume'ü bozulmaz). Medya klasörü imajda bu kullanıcıya aittir; **yeni** bir named volume bu sahipliği devralır. Eski, root sahipli bir volume'ü production'a bağlamayın.
+- **Mail.** Hostinger Email: `smtp.hostinger.com:465`, implicit SSL/TLS; gönderen `info@pd-assistant.com`. Alternatif relay ENV üzerinden seçilir.
 - **Yedek.** Linux sunucuda `ops/backup.sh` ve `ops/restore.sh` (DB + medya); cron ile günlük, son 14 kopya; sunucu dışı kopya `ops/pull-backups.ps1` ile geliştirici bilgisayarından harici diske çekilir (bkz. `operations.md` §1 ve §6b). Hostinger haftalık anlık görüntüsü (snapshot) ek güvencedir.
 - **Mail.** Başlangıçta Gmail uygulama şifresi; spam sorunu çıkarsa alan adına ait bir SMTP servisine (Resend/Brevo) geçilir (yalnız `SMTP_*`/`MAIL_FROM` değişir).
 - **Halka açma kapısı.** Teknik kurulum yayından önce tamamlanabilir; KVKK/Gizlilik/Kullanım Koşulları metinleri bitmeden site duyurulmaz.
@@ -64,13 +65,13 @@ Backend profilleri `application-dev.yml`, `application-test.yml`, `application-p
 | JWT | `JWT_SECRET`, `JWT_ACCESS_TOKEN_EXPIRATION`, `JWT_REFRESH_TOKEN_EXPIRATION` |
 | API dokümantasyonu | `API_DOCS_ENABLED` |
 | Frontend ve CORS | `FRONTEND_URL`, `ALLOWED_ORIGINS` |
-| Mail | `MAIL_ENABLED`, `MAIL_PROVIDER` (yalnız `smtp`), `MAIL_FROM` |
-| SMTP | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_AUTH`, `SMTP_STARTTLS` |
+| Mail | `MAIL_ENABLED`, `MAIL_PROVIDER` (`smtp` veya `brevo` SMTP relay), `SMTP_FROM_ADDRESS` (`MAIL_FROM` eski uyum) |
+| SMTP | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_AUTH`, `SMTP_STARTTLS`, `SMTP_SSL` |
 | İletişim formu | `CONTACT_RECIPIENT`, `CONTACT_MIN_FILL_TIME`, `CONTACT_MAX_FORM_AGE`, `CONTACT_REQUIRE_STARTED_AT`, `CONTACT_RATE_LIMIT_MAX_REQUESTS` |
 | Saklama süreleri | `RETENTION_CRON`, `RETENTION_BATCH_SIZE`, `RETENTION_ANALYTICS_MONTHS`, `RETENTION_USER_SESSIONS_DAYS`, `RETENTION_CONTACT_MONTHS`, `RETENTION_AUDIT_MONTHS` |
 | Log ve bootstrap | `LOG_LEVEL`, `ADMIN_EMAIL`, `ADMIN_INITIAL_PASSWORD` |
 
-`MAIL_ENABLED=false` iken uygulama çalışmaya devam eder. Mail açıksa `MAIL_PROVIDER=smtp` olmalıdır: kodda yalnız SMTP adaptörleri vardır (kayıt/şifre/hesap silme, proje daveti ve iletişim formu) ve başka bir `MAIL_PROVIDER` değeri açılışta reddedilir. Brevo/Resend gibi sağlayıcılar kendi SMTP röle bilgileriyle `SMTP_*` üzerinden kullanılır; ayrı bir Brevo API adaptörü (`BREVO_API_KEY`) yoktur ve otomatik sağlayıcı fallback'i V1 kapsamında değildir. Development/test ortamında Swagger açık, production'da varsayılan kapalıdır; `API_DOCS_ENABLED` ile yönetilir.
+`MAIL_ENABLED=false` uygulamayı mailsiz çalıştırır; kayıt/şifre/iletişim işlemleri mevcut unavailable davranışını korur. `MAIL_PROVIDER=smtp` ve `brevo` açıkça yapılandırılan SMTP rölesini kullanır; ayrı Brevo HTTP API veya otomatik fallback yoktur. SMTP kullanıcı adı From ile aynı olmak zorunda değildir. `SMTP_FROM_ADDRESS` varsa kullanılır (boşsa hata); yoksa eski `MAIL_FROM`, o da yoksa `info@pd-assistant.com`. Production mail açıksa host, geçerli port/adres, gerekli kimlik bilgileri ve TLS başlangıçta doğrulanır. Swagger mevcut `API_DOCS_ENABLED` ile yönetilir.
 
 ## Production'a çıkmadan önce
 
@@ -102,7 +103,7 @@ Seçim ölçütleri: ücretsiz veya düşük maliyet, Spring Boot + Docker uyumu
 
 `docker-compose.e2e.yml` (Mailpit mail sink and raised rate limits for local browser tests) was removed on 2026-10-10. The Playwright specs that read mail from Mailpit need an equivalent override before they can run again. The stack now always uses the real `MAIL_*`/`SMTP_*` settings.
 
-New optional settings (defaults are the production values; names only in `.env.example`): `CONTACT_RECIPIENT` (fixed contact inbox, default `pdassistant.info@gmail.com` since 2026-10-10), `ANALYTICS_RATE_LIMIT_MAX_REQUESTS` (600), `CONTACT_RATE_LIMIT_MAX_REQUESTS` (5). Contact mail uses the existing `MAIL_*`/`SMTP_*` settings; without `MAIL_ENABLED=true` the contact form answers `503 CONTACT_UNAVAILABLE`. Behind a reverse proxy set `TRUSTED_PROXY_CIDRS`, otherwise all visitors share one rate-limit bucket.
+New optional settings (defaults are the production values; names only in `.env.example`): `CONTACT_RECIPIENT` (fixed contact inbox, default `info@pd-assistant.com` since 2026-10-12), `ANALYTICS_RATE_LIMIT_MAX_REQUESTS` (600), `CONTACT_RATE_LIMIT_MAX_REQUESTS` (5). Contact mail uses the existing `MAIL_*`/`SMTP_*` settings; without `MAIL_ENABLED=true` the contact form answers `503 CONTACT_UNAVAILABLE`. Behind a reverse proxy set `TRUSTED_PROXY_CIDRS`, otherwise all visitors share one rate-limit bucket.
 
 ## Canonical smoke and long serial browser suites ? 2026-10-09
 
@@ -121,7 +122,7 @@ All optional; the defaults are the published retention periods and need no `.env
 
 - `TOTP_ENCRYPTION_KEY` — Base64 of 32 random bytes (`openssl rand -base64 32`), different from every other key. Without it two-step verification reports itself unavailable. Losing or changing it makes stored authenticator secrets unreadable: users would have to set 2FA up again.
 - `EMAIL_VERIFICATION_HMAC_KEY` — now required for registration too (it hashes the mailed codes).
-- `MAIL_ENABLED=true` with working `SMTP_*` is required: registration, password reset/change and account deletion all send mail, and registration answers `503` without creating an account when mail is off. Gmail needs an app password (2-step verification on).
+- `MAIL_ENABLED=true` with working `SMTP_*` is required: registration, password reset/change and account deletion all send mail, and registration answers `503` without creating an account when mail is off. Hostinger needs the mailbox SMTP password. Never reuse a former Gmail app password.
 - To try real mail locally, run plain `docker compose up -d` with the `SMTP_*` values in `.env`.
 
 
@@ -132,3 +133,10 @@ All optional; the defaults are the published retention periods and need no `.env
 - **Hata ve actuator.** `server.error.include-stacktrace`, `include-message`, `include-binding-errors` = `never`, `include-exception=false`; actuator HTTP'de yalnız `health` açık (`management.endpoints.web.exposure.include=health`). Yeni env adı eklenmedi.
 - **`APP_ENV` notu.** `spring.profiles.active=${APP_ENV:dev}`: `APP_ENV` verilmezse profil `dev` olur. Bugün repoda `application-dev*` dosyası, `@Profile` veya profil okuyan kod yoktur, yani `dev` hiçbir davranışı değiştirmez. Risk, gelecekte eklenecek dev-özel ayarların (gevşek log, Swagger, seed vb.) unutulmuş bir `APP_ENV` yüzünden üretimde açılmasıdır. Öneri: üretimde `APP_ENV=prod` zorunlu tutulsun (üretim şablonunda varsayılansız) ve profil-özel ayar eklenirse varsayılan `prod`'a çevrilsin. Varsayılan bu görevde DEĞİŞTİRİLMEDİ.
 - **Kaynak haritası.** `productionBrowserSourceMaps` kapalıdır; üretim imajında `.map` dosyası yayımlanmaz.
+
+
+## Hostinger SMTP geçişi — 2026-10-12
+
+`.env.example`, `.env.dev`, `.env.prod` ve etkin `.env`: `MAIL_PROVIDER=smtp`, `SMTP_HOST=smtp.hostinger.com`, `SMTP_PORT=465`, `SMTP_USERNAME=info@pd-assistant.com`, `SMTP_FROM_ADDRESS=info@pd-assistant.com`, `SMTP_AUTH=true`, `SMTP_SSL=true`, `SMTP_STARTTLS=false`, `CONTACT_RECIPIENT=info@pd-assistant.com`. `SMTP_PASSWORD` güvenli yerel giriş bekler; bu nedenle `MAIL_ENABLED=false`. Şifre doldurulup DNS/gönderen kontrol edilince `MAIL_ENABLED=true` yapın. 587 alternatifi: `SMTP_PORT=587`, `SMTP_SSL=false`, `SMTP_STARTTLS=true`; iki TLS modu aynı anda açılamaz. Compose dosyaları backend `env_file` kullandığından yeni anahtarları da iletir; YAML secret veya yeni aktarım listesi gerekmez. Profil dosyasını düzenledikten sonra `ops/env.ps1 use dev` ile etkin kopyayı eşitleyin. Çalışan container yeni ENV için yeniden oluşturulmalıdır; production deploy bu görevde yapılmadı.
+
+DNS ve manuel teslim adımları: `docs/compliation/2026-10-12-hostinger-corporate-mail.md`.
