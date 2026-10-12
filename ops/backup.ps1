@@ -1,11 +1,11 @@
 <#
 .SYNOPSIS
-  Backs up the PDA database (pg_dump custom format) and the organization media volume from the running Docker Compose stack.
+  Backs up the PDA database (pg_dump custom format) and the private media volume from the running Docker Compose stack.
 
 .DESCRIPTION
   Writes two files into -OutDir (default .local/backups, which Git ignores):
     pda-db-<timestamp>.dump        PostgreSQL custom-format dump (restore with ops/restore.ps1 or pg_restore)
-    pda-media-<timestamp>.tar.gz   Contents of the organization media volume (logos and covers)
+    pda-media-<timestamp>.tar.gz   Contents of the private media volume (organization logos/covers and chat attachments)
   The database alone is NOT a full backup: organization images live on the media volume, the database only references them.
   Project logos, banners, profile photos and task attachments are stored in the database and are inside the dump.
 

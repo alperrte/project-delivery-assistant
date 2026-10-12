@@ -1,8 +1,9 @@
 "use client";
+/* eslint-disable @next/next/no-img-element -- Private cookie-authenticated media and local blob previews cannot use the image proxy. */
 
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
-import { useTranslations } from "next-intl";
-import { PaperPlaneRight, X } from "@phosphor-icons/react";
+import { useLocale, useTranslations } from "next-intl";
+import { PaperPlaneRight, Paperclip, X } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -19,7 +20,7 @@ type Props = {
   initialDraft: string;
   onDraftChange: (text: string) => void;
   /** Hands a valid text over for sending. */
-  onSend: (text: string) => void;
+  onSend: (text: string, file?: File) => Promise<boolean>;
   /** Nothing can be sent right now (no conversation yet, or the connection is down). */
   disabled: boolean;
   disabledReason?: string;
@@ -36,7 +37,21 @@ type Props = {
  */
 export function MessageComposer({ draftKey, initialDraft, onDraftChange, onSend, disabled, disabledReason, autoFocus, reply, onCancelReply, onTyping }: Props) {
   const t = useTranslations("chat");
+  const locale=useLocale();
   const [text, setText] = useState(initialDraft);
+  const [file,setFile]=useState<File>();
+  const [preview,setPreview]=useState<string>();
+  const [uploading,setUploading]=useState(false);
+  const sending=useRef(false);
+  const fileInput=useRef<HTMLInputElement>(null);
+  useEffect(()=>()=>{if(preview)URL.revokeObjectURL(preview);},[preview]);
+  function chooseFile(selected?:File) {
+    if(!selected)return;
+    if(selected.size>2097152){toast.error(t("files.tooLarge"));return;}
+    if(selected.size===0||! /\.(pdf|docx?|jpe?g|png|webp)$/i.test(selected.name)){toast.error(t("files.invalid"));return;}
+    setPreview(selected.type.startsWith("image/")?URL.createObjectURL(selected):undefined);
+    setFile(selected);
+  }
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const hintId = useId();
   const statusId = useId();
@@ -60,13 +75,11 @@ export function MessageComposer({ draftKey, initialDraft, onDraftChange, onSend,
     onTyping?.(value.trim() === "" ? "stopped" : "typing");
   }
 
-  function submit() {
-    if (disabled || !validation.ok) return;
-    onSend(text);
-    onTyping?.("sent");
-    setText("");
-    onDraftChange("");
-    inputRef.current?.focus();
+  async function submit() {
+    if(disabled||sending.current||(!validation.ok&&!file)||problem)return;
+    sending.current=true;setUploading(true);
+    try {if(await onSend(text,file)){onTyping?.("sent");setText("");setFile(undefined);setPreview(undefined);onDraftChange("");inputRef.current?.focus();}}
+    finally{sending.current=false;setUploading(false);}
   }
 
   function keyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
@@ -86,6 +99,12 @@ export function MessageComposer({ draftKey, initialDraft, onDraftChange, onSend,
       className="shrink-0 border-t bg-background p-3"
       onKeyDown={event => { if (event.key === "Escape" && reply && !event.defaultPrevented) { event.preventDefault(); event.stopPropagation(); onCancelReply?.(); } }}
     >
+      {file&&<div className="mb-2 flex min-w-0 items-center gap-2 rounded-md border p-2" data-testid="chat-file-preview">
+        {preview&&<img width={48} height={48} src={preview} alt={file.name} className="size-12 rounded object-cover"/>}
+        <span className="min-w-0 flex-1"><span className="block truncate text-sm">{file.name}</span><span className="text-xs text-muted-foreground">{file.type||file.name.split(".").pop()} · {new Intl.NumberFormat(locale,{style:"unit",unit:"kilobyte",maximumFractionDigits:1}).format(file.size/1024)}</span></span>
+        <Button type="button" variant="ghost" size="icon" aria-label={t("files.remove")} disabled={uploading} onClick={()=>{setFile(undefined);setPreview(undefined);}}><X aria-hidden="true"/></Button>
+      </div>}
+      {uploading&&<p role="status" className="mb-2 text-xs text-muted-foreground">{t("files.sending")}</p>}
       {reply && <div data-testid="chat-reply-context" className="mb-2 flex min-w-0 items-start gap-2">
         <div className="min-w-0 flex-1"><ReplyPreview reply={reply} /></div>
         <Button type="button" variant="ghost" size="icon-sm" aria-label={t("reply.cancel")} data-testid="chat-reply-cancel"
@@ -97,13 +116,15 @@ export function MessageComposer({ draftKey, initialDraft, onDraftChange, onSend,
         </p>
       )}
       <div className="flex items-center gap-2">
+        <input ref={fileInput} type="file" name="attachment" aria-label={t("files.add")} className="hidden" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp" onChange={e=>{chooseFile(e.target.files?.[0]);e.target.value="";}}/>
+        <Button type="button" variant="ghost" size="icon" className="size-11 shrink-0" aria-label={t("files.add")} disabled={disabled||uploading} onClick={()=>fileInput.current?.click()}><Paperclip aria-hidden="true"/></Button>
         <div className="relative min-w-0 flex-1">
         <Textarea
           ref={inputRef}
           value={text}
           onChange={(event) => change(event.target.value)}
           onKeyDown={keyDown}
-          disabled={disabled}
+          disabled={disabled||uploading}
           rows={1}
           aria-label={t("composerLabel")}
           aria-describedby={[problemText ? hintId : null, disabledReason ? statusId : null].filter(Boolean).join(" ") || undefined}
@@ -127,7 +148,7 @@ export function MessageComposer({ draftKey, initialDraft, onDraftChange, onSend,
         <Button
           type="submit"
           size="icon"
-          disabled={disabled || !validation.ok}
+          disabled={disabled || uploading || (!validation.ok&&!file) || !!problem}
           aria-label={t("send")}
           data-testid="chat-send"
           className="size-11 shrink-0"

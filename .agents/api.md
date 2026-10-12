@@ -1,5 +1,13 @@
 # API rehberi
 
+## Merkezi mesajlaşma — 2026-10-12
+
+Güncel kök `/api/v1/chat`; eski `/projects/{id}/chat` yolları uyumluluk için kalır. Merkezi overview `group` (nullable), `groups[]`, `directs[]`, `totalUnread` döner; grup özetleri projectId/projectName/logoVersion/logoShape içerir. `/members` diğer aktif ortak-proje üyelerini e-postasız döner. DM oluşturma global tekildir; var olan DM ortak proje olmasa da açılır.
+
+`POST /conversations/{c}/messages/attachment`: multipart `file`, isteğe bağlı `content` ve `replyToMessageId`; 201 Message + attachment metadata. `GET /conversations/{c}/messages/{m}/attachment`: yetkili private indirme; `inline=true` yalnız görselleri inline gösterir. 2 MiB/file; PDF, DOC/DOCX, JPEG/PNG/WebP.
+
+Merkezi `POST /conversations/{c}/read` artık `{messageIds:[UUID]}` ister (1..100, tümü aynı konuşmada); görünmeyen geçmişi otomatik read yapmaz. `GET /conversations/{c}/messages/{m}/info` yalnız gönderenin erişebildiği `{messageId, readers:[{user,readAt,legacy}]}` döner; null readAt henüz okunmadı. İlk zaman sabittir. Mevcut typing/replies/reactions/delete ve STOMP kuyruğu devam eder. Ayrıntılı yetki/hata ve Swagger yolu SECURITY §11'dedir.
+
 ## Invitations remediation — 2026-10-06
 
 Endpoint/path/auth/request model değişmedi. Manager invitation GET PENDING yalnız expiresAt>now; EXPIRED filtresi physical EXPIRED veya logical elapsed PENDING döndürür; all response etkin status gösterir. POST resend live pending veya expired invitation için fresh ID/token; team active/same-project doğrulanır. DELETE expired invitation204 ile EXPIRED state retained/no grant, live pending→CANCELLED. Başka final state409; expired token accept/reject kapalı. Create expired target row lock+expire/flush sonrası fresh pending INSERT; duplicate current pending409 ve existing DB unique constraint korunur. Client preview404/token-field validation expired;429/network/server separate retry. Legacy membership mutation invalidation reload gerektirmez.

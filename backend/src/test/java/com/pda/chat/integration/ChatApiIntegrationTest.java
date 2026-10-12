@@ -77,6 +77,8 @@ class ChatApiIntegrationTest {
     @Autowired UserAccounts users;
     @Autowired ProjectMembershipService memberships;
     @Autowired ChatService chat;
+    @Autowired com.pda.chat.application.service.ChatAttachmentService attachments;
+    @Autowired com.pda.shared.MediaStorage mediaStorage;
     @Autowired ChatConversationRepository conversationRepository;
     @Autowired ChatMessageRepository messageRepository;
     @Autowired JdbcTemplate jdbc;
@@ -293,7 +295,7 @@ class ChatApiIntegrationTest {
 
         assertEquals(1, Set.copyOf(seen).size());
         long groups = conversationRepository.findAll().stream()
-                .filter(c -> c.getProjectId().equals(f.projectId) && c.getType() == ChatConversationType.PROJECT)
+                .filter(c -> f.projectId.equals(c.getProjectId()) && c.getType() == ChatConversationType.PROJECT)
                 .count();
         assertEquals(1, groups);
     }
@@ -336,7 +338,7 @@ class ChatApiIntegrationTest {
     }
 
     @Test
-    void theSamePairHasSeparateConversationsInDifferentProjects() throws Exception {
+    void theSamePairHasOneConversationAcrossProjects() throws Exception {
         Fixture f = fixture();
         UUID secondProject = createProject(f.manager, "Second project");
         memberships.addMember(f.manager.id(), secondProject, f.member.id(), Set.of(ProjectRole.TESTER));
@@ -344,10 +346,10 @@ class ChatApiIntegrationTest {
         UUID first = openDirect(f.manager, f.projectId, f.member.id());
         UUID second = openDirect(f.manager, secondProject, f.member.id());
 
-        assertTrue(!first.equals(second));
-        // A conversation of project one is not reachable through project two's path.
+        assertEquals(first,second);
+        // The global DM is reachable from either project and the central API.
         mvc.perform(get(messagesUrl(secondProject, first)).cookie(f.manager.access()))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -444,7 +446,7 @@ class ChatApiIntegrationTest {
     }
 
     @Test
-    void aDirectConversationWithSomeoneWhoLeftIsNoLongerOfferedOrWritable() throws Exception {
+    void anExistingDirectConversationSurvivesProjectMembershipRemoval() throws Exception {
         Fixture f = fixture();
         UUID direct = openDirect(f.member, f.projectId, f.otherMember.id());
         send(f.otherMember, f.projectId, direct, "gidiyorum").andExpect(status().isCreated());
@@ -455,10 +457,87 @@ class ChatApiIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.directs.length()").value(0))
                 .andExpect(jsonPath("$.totalUnread").value(0));
-        send(f.member, f.projectId, direct, "orada misin").andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.code").value("CHAT_RECIPIENT"));
+        send(f.member, f.projectId, direct, "orada misin").andExpect(status().isCreated());
+        mvc.perform(get("/api/v1/chat/conversations/"+direct+"/messages").cookie(f.otherMember.access())).andExpect(status().isOk());
+        mvc.perform(get("/api/v1/chat/conversations").cookie(f.otherMember.access())).andExpect(status().isOk()).andExpect(jsonPath("$.directs.length()").value(1));
         mvc.perform(postReq(f.member, base(f.projectId) + "/direct/" + f.otherMember.id(), null))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test void centralDmCreationHasSharedProjectEligibilityRaceProtectionAndExistingCorsPolicy() throws Exception {
+        Fixture f=fixture();
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options("/api/v1/chat/direct/"+f.member.id()).header("Origin","http://localhost:3000").header("Access-Control-Request-Method","POST").header("Access-Control-Request-Headers","Content-Type,X-XSRF-TOKEN")).andExpect(status().isOk()).andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().string("Access-Control-Allow-Origin","http://localhost:3000"));
+        postJson(f.outsider,"/api/v1/chat/direct/"+f.manager.id(),null).andExpect(status().isNotFound());
+        mvc.perform(post("/api/v1/chat/direct/"+f.member.id()).cookie(f.manager.access())).andExpect(status().isForbidden());
+        var ids=runConcurrently(8,()->chat.openDirect(f.manager.id(),null,f.member.id()).id());
+        assertEquals(1,new java.util.HashSet<>(ids).size());
+        postJson(f.manager,"/api/v1/chat/direct/"+f.member.id(),null).andExpect(status().isOk()).andExpect(jsonPath("$.id").value(ids.getFirst().toString()));
+        memberships.removeMember(f.manager.id(),f.projectId,f.member.id());
+        postJson(f.member,"/api/v1/chat/direct/"+f.manager.id(),null).andExpect(status().isOk()).andExpect(jsonPath("$.id").value(ids.getFirst().toString()));
+    }
+
+    @Test void laterGroupMembersAreNotAddedToAnExistingMessagesRecipientSnapshot() throws Exception {
+        Fixture f=fixture();UUID group=groupId(f.manager,f.projectId);
+        UUID message=messageId(send(f.manager,f.projectId,group,"before new join").andExpect(status().isCreated()));
+        memberships.addMember(f.manager.id(),f.projectId,f.outsider.id(),Set.of(ProjectRole.TESTER));
+        postJson(f.outsider,"/api/v1/chat/conversations/"+group+"/read","{\"messageIds\":[\""+message+"\"]}").andExpect(status().isNoContent());
+        assertEquals(0,jdbc.queryForObject("select count(*) from chat_message_receipts where message_id=? and user_id=?",Integer.class,message,f.outsider.id()));
+        assertEquals(2,jdbc.queryForObject("select count(*) from chat_message_receipts where message_id=?",Integer.class,message));
+    }
+
+    @Test void centralOverviewAndExactVisibleReceiptsAreAuthorizedPersistentAndIdempotent() throws Exception {
+        Fixture f=fixture();UUID group=groupId(f.manager,f.projectId);
+        UUID second=createProject(f.manager,"Central second");groupId(f.manager,second);
+        mvc.perform(get("/api/v1/chat/conversations").cookie(f.manager.access())).andExpect(status().isOk()).andExpect(jsonPath("$.groups.length()").value(2));
+        UUID first=messageId(send(f.manager,f.projectId,group,"first").andExpect(status().isCreated()));
+        UUID last=messageId(send(f.manager,f.projectId,group,"last").andExpect(status().isCreated()));
+        String read="/api/v1/chat/conversations/"+group+"/read";
+        postJson(f.member,read,"{\"messageIds\":[\""+first+"\"]}").andExpect(status().isNoContent());
+        Instant initial=jdbc.queryForObject("select read_at from chat_message_receipts where message_id=? and user_id=?",(r,n)->r.getTimestamp(1).toInstant(),first,f.member.id());
+        postJson(f.member,read,"{\"messageIds\":[\""+first+"\"]}").andExpect(status().isNoContent());
+        assertEquals(initial,jdbc.queryForObject("select read_at from chat_message_receipts where message_id=? and user_id=?",(r,n)->r.getTimestamp(1).toInstant(),first,f.member.id()));
+        assertEquals(0,jdbc.queryForObject("select count(*) from chat_message_receipts where message_id=? and read_at is not null",Integer.class,last));
+        mvc.perform(get("/api/v1/chat/conversations/"+group+"/messages/"+first+"/info").cookie(f.manager.access())).andExpect(status().isOk()).andExpect(jsonPath("$.readers.length()").value(2));
+        mvc.perform(get("/api/v1/chat/conversations/"+group+"/messages/"+first+"/info").cookie(f.member.access())).andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/chat/conversations/"+group+"/messages").cookie(f.outsider.access())).andExpect(status().isForbidden());
+        postJson(f.member,read,"{\"messageIds\":[\""+UUID.randomUUID()+"\"]}").andExpect(status().isNotFound());
+        postJson(f.member,read,null).andExpect(status().isBadRequest());
+        mvc.perform(get("/api/v1/chat/conversations")).andExpect(status().isUnauthorized());
+    }
+
+    @Test void invalidAttachmentsConsumeTheSendQuotaBeforeContentParsing() throws Exception {
+        Fixture f=fixture();UUID group=groupId(f.manager,f.projectId);Cookie csrf=csrfCookie();
+        String url="/api/v1/chat/conversations/"+group+"/messages/attachment";
+        for(int i=0;i<30;i++) mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart(url).file(new org.springframework.mock.web.MockMultipartFile("file","empty.pdf","application/pdf",new byte[0])).cookie(csrf,f.manager.access()).header("X-XSRF-TOKEN",csrf.getValue())).andExpect(status().isBadRequest());
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart(url).file(new org.springframework.mock.web.MockMultipartFile("file","empty.pdf","application/pdf",new byte[0])).cookie(csrf,f.manager.access()).header("X-XSRF-TOKEN",csrf.getValue())).andExpect(status().isTooManyRequests());
+    }
+
+    @Test void failedMessageCreationLeavesADurableCleanupRecordAndDeletesTheUnusedObject() throws Exception {
+        Fixture f=fixture();UUID group=groupId(f.manager,f.projectId);Cookie csrf=csrfCookie();
+        byte[] png=java.util.Base64.getDecoder().decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==");
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/api/v1/chat/conversations/"+group+"/messages/attachment").file(new org.springframework.mock.web.MockMultipartFile("file","example.png","image/png",png)).param("content","x".repeat(2001)).cookie(csrf,f.manager.access()).header("X-XSRF-TOKEN",csrf.getValue())).andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("CHAT_MESSAGE_TOO_LONG"));
+        UUID pending=jdbc.queryForObject("select id from chat_attachments where owner_id=? and state='DELETE_PENDING'",UUID.class,f.manager.id());
+        assertEquals(0,jdbc.queryForObject("select count(*) from chat_messages where conversation_id=?",Integer.class,group));
+        attachments.cleanup();
+        assertEquals(0,jdbc.queryForObject("select count(*) from chat_attachments where id=?",Integer.class,pending));
+        assertThrows(java.io.IOException.class,()->mediaStorage.read(pending.toString(),png.length));
+    }
+
+    @Test void fileOnlyMessagesCanBeRepliedToDownloadedAndDeletedOnlyByAuthorizedParticipants() throws Exception {
+        Fixture f=fixture();UUID group=groupId(f.manager,f.projectId);Cookie csrf=csrfCookie();
+        byte[] png=java.util.Base64.getDecoder().decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==");
+        var file=new org.springframework.mock.web.MockMultipartFile("file","../example.png","image/png",png);
+        var result=mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/api/v1/chat/conversations/"+group+"/messages/attachment").file(file).cookie(csrf,f.manager.access()).header("X-XSRF-TOKEN",csrf.getValue())).andExpect(status().isCreated()).andExpect(jsonPath("$.content").value("")).andExpect(jsonPath("$.attachment.filename").value("example.png"));
+        UUID message=messageId(result);
+        postJson(f.member,messagesUrl(f.projectId,group),"{\"content\":\"File reply\",\"replyToMessageId\":\""+message+"\"}").andExpect(status().isCreated()).andExpect(jsonPath("$.replyTo.preview").value("example.png"));
+        String download="/api/v1/chat/conversations/"+group+"/messages/"+message+"/attachment";
+        var response=mvc.perform(get(download).cookie(f.member.access())).andExpect(status().isOk()).andReturn().getResponse();
+        org.junit.jupiter.api.Assertions.assertArrayEquals(png,response.getContentAsByteArray());assertTrue(response.getHeader("Content-Disposition").startsWith("attachment"));
+        mvc.perform(get(download).cookie(f.outsider.access())).andExpect(status().isForbidden());
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/api/v1/chat/conversations/"+group+"/messages/attachment").file(new org.springframework.mock.web.MockMultipartFile("file","huge.pdf","application/pdf",new byte[2097153])).cookie(csrf,f.manager.access()).header("X-XSRF-TOKEN",csrf.getValue())).andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("CHAT_ATTACHMENT_TOO_LARGE"));
+        Cookie deleteCsrf=csrfCookie();mvc.perform(delete(messagesUrl(f.projectId,group)+"/"+message).cookie(deleteCsrf,f.manager.access()).header("X-XSRF-TOKEN",deleteCsrf.getValue())).andExpect(status().isNoContent());
+        mvc.perform(get(download).cookie(f.member.access())).andExpect(status().isNotFound());
+        assertEquals(1,jdbc.queryForObject("select count(*) from chat_attachments where message_id=? and state='DELETE_PENDING'",Integer.class,message));
     }
 
     // ---- sending ------------------------------------------------------------------------------------------------

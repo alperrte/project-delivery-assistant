@@ -15,8 +15,8 @@ const ChatPanel = dynamic(() => import("./chat-panel").then(module => module.Cha
  * underneath is made inert, so keyboard focus and screen readers cannot wander into content the user cannot see.
  */
 export function ChatRoot() {
-  const { mode, projectId } = useChat();
-  const full = !!projectId && mode === "full";
+  const { mode, accountId } = useChat();
+  const full = !!accountId && mode === "full";
   // Explicit X restores focus in the provider. Navigation must leave the next
   // page's focus alone; release inert before it can paint.
   useLayoutEffect(() => {
@@ -26,6 +26,6 @@ export function ChatRoot() {
     return () => main?.removeAttribute("inert");
   }, [full]);
 
-  if (!projectId || mode === "closed") return null;
+  if (!accountId || mode === "closed") return null;
   return mode === "full" ? <ChatPanel /> : <ChatDock />;
 }

@@ -23,6 +23,7 @@ public class ChatApiErrorHandler {
     @ExceptionHandler(ChatException.class)
     ResponseEntity<ProblemDetail> chat(ChatException exception) {
         return switch (exception.kind()) {
+            case UNAVAILABLE -> problem(HttpStatus.SERVICE_UNAVAILABLE,"Temporarily unavailable",exception.code());
             case INVALID -> problem(HttpStatus.BAD_REQUEST, "Invalid request", exception.code());
             case FORBIDDEN -> problem(HttpStatus.FORBIDDEN, "Access denied", exception.code());
             case NOT_FOUND -> problem(HttpStatus.NOT_FOUND, "Resource not found", exception.code());

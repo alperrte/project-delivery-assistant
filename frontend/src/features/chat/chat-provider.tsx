@@ -14,21 +14,20 @@ import {
 import { usePathname, useSearchParams } from "@/i18n/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import { apiUrl } from "@/lib/api/client";
 import { toast } from "sonner";
 import { useSession } from "@/features/auth/hooks/use-session";
-import { projectLogoSource } from "@/features/projects/api";
-import { useSelectedProject } from "@/features/projects/hooks/use-selected-project";
-import type { Project } from "@/features/projects/types";
-import { ApiError } from "@/lib/api/client";
+
+
+
+
 import { errorKey } from "@/lib/api/error-message";
 import { chatApi } from "./api";
 import {
   appendMessages,
   applyMessageToOverview,
-  applyReadToOverview,
   applyReactionSnapshots,
   applyMessageDeleted,
-  applySeen,
   flattenMessages,
   chatKeys,
   newestMessageId,
@@ -70,7 +69,7 @@ export function chatRouteSlug(pathname: string): string | undefined {
 
 /** Key a draft is stored under: stable before and after a direct conversation gets its server id. */
 export function draftKey(active: ActiveConversation): string {
-  return active.kind === "group" ? "group" : `direct:${active.peerId}`;
+  return active.kind === "group" ? `group:${active.conversationId ?? "default"}` : `direct:${active.peerId}`;
 }
 
 type State = {
@@ -89,9 +88,9 @@ const initialState: State = { mode: "closed", active: null, outbox: {} };
 type Action =
   | { type: "context"; slug?: string; ownerKey: string; pageKey: string }
   | { type: "navigation"; pageKey?: string }
-  | { type: "open" }
+  | { type: "open"; initial?: ActiveConversation | null }
   | { type: "mode"; mode: ChatMode }
-  | { type: "select"; active: ActiveConversation }
+  | { type: "select"; active: ActiveConversation | null }
   | { type: "resolveDirect"; peerId: string; conversationId: string }
   | { type: "outboxAdd"; conversationId: string; pending: PendingMessage }
   | { type: "outboxPatch"; conversationId: string; clientId: string; patch: Partial<PendingMessage> }
@@ -104,7 +103,7 @@ function reducer(state: State, action: Action): State {
     case "navigation": return { ...state, pageKey: action.pageKey ?? state.pageKey, mode: state.mode === "full" ? "closed" : state.mode };
     case "open":
       if (!state.slug) return state;
-      return { ...state, mode: "full", active: state.active ?? { kind: "group" } };
+      return { ...state, mode: "full", active: state.active ?? action.initial ?? null };
     case "mode":
       return state.slug ? { ...state, mode: action.mode } : state;
     case "select":
@@ -152,12 +151,11 @@ type ViewState = { conversationId: string | null; atBottom: boolean };
 
 type ChatContextValue = {
   /** The selected workspace project. Undefined while resolving or when access is unavailable. */
-  projectId?: string;
+  accountId?: string;
   /** The project's own name and logo: the project group conversation is shown under them. Undefined while loading. */
   projectName?: string;
   projectLogoSrc: string | null;
   projectLogoShape: import("@/lib/media/logo-shape").LogoShape;
-  contextSlug?: string;
   mode: ChatMode;
   active: ActiveConversation | null;
   activeConversationId?: string;
@@ -179,7 +177,7 @@ type ChatContextValue = {
   expandFull: () => void;
   close: () => void;
   navigatePage: () => void;
-  selectGroup: () => void;
+  selectGroup: (conversationId?: string) => void;
   selectPeer: (peerId: string, conversationId?: string | null) => void;
   getDraft: (key: string) => string;
   setDraft: (key: string, text: string) => void;
@@ -194,7 +192,7 @@ type ChatContextValue = {
   discard: (conversationId: string, clientId: string) => void;
   /** The conversation view reports what is on screen so unread counting and read marking know about it. */
   reportView: (view: ViewState) => void;
-  markRead: (conversationId: string) => void;
+  markRead: (conversationId: string, messageIds: string[]) => Promise<void>;
   /** Other people typing in the active conversation (never the signed-in user). */
   typingPeople: TypingPerson[];
   /** The composer reports its state: keystrokes (`typing`), an emptied box or a left conversation (`stopped`), a sent message (`sent`). */
@@ -219,21 +217,12 @@ export function ChatProvider({ children, disabled = false }: { children: ReactNo
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const pageKey = `${pathname}?section=${searchParams.get("section") ?? ""}`;
-  const routeSlug = chatRouteSlug(pathname);
   const { data: user } = useSession();
-  const { slug, project, error } = useSelectedProject(routeSlug);
-  const unavailable = error instanceof ApiError && (error.status === 403 || error.status === 404);
-  const contextSlug = disabled || unavailable ? undefined : slug;
-  return (
-    <ProjectChatProvider ownerKey={`${user?.id ?? "none"}:${contextSlug ?? "none"}`} slug={contextSlug}
-      project={contextSlug && project?.slug === contextSlug ? project : undefined} selfId={disabled ? undefined : user?.id} pageKey={pageKey}>
-      {children}
-    </ProjectChatProvider>
-  );
+  return <AccountChatProvider ownerKey={disabled ? "disabled" : user?.id ?? "none"} slug={disabled ? undefined : user?.id} selfId={disabled ? undefined : user?.id} pageKey={pageKey}>{children}</AccountChatProvider>;
 }
 
-function ProjectChatProvider({ children, slug, project, selfId, ownerKey, pageKey }: {
-  children: ReactNode; slug?: string; project?: Project; selfId?: string; ownerKey: string; pageKey: string;
+function AccountChatProvider({ children, slug, selfId, ownerKey, pageKey }: {
+  children: ReactNode; slug?: string; selfId?: string; ownerKey: string; pageKey: string;
 }) {
   const te = useTranslations("errors");
   const queryClient = useQueryClient();
@@ -241,14 +230,11 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey, pageKe
   // React rerenders this owner before committing: B never receives A's visible state. Children keep their identity.
   if (state.ownerKey !== ownerKey) dispatch({ type: "context", slug, ownerKey, pageKey });
   else if (state.pageKey !== pageKey) dispatch({ type: "navigation", pageKey });
-  const projectId = project?.id;
-  const projectName = project?.name;
-  const projectLogoShape = project?.logoShape ?? "SQUARE";
-  const projectLogoSrc = project ? projectLogoSource(project) : null;
+  const accountId = selfId; // Actor-scoped central chat cache, independent of workspace selection.
   const shown = state.mode !== "closed";
 
   // ---- refs the socket callbacks read (they must not change identity) ----------------------------------------------
-  const projectIdRef = useRef(projectId);
+  const accountIdRef = useRef(accountId);
   const selfIdRef = useRef(selfId);
   const modeRef = useRef(state.mode);
   const viewRef = useRef<ViewState>({ conversationId: null, atBottom: false });
@@ -266,7 +252,7 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey, pageKe
   const lifetimeRef = useRef(chatLifetime());
   useEffect(() => {
     typingEmitter.setSender((conversationId, typing) => {
-      const pid = projectIdRef.current;
+      const pid = accountIdRef.current;
       const lifetime = lifetimeRef.current;
       // A signal is only worth sending while the socket is up and the project is the one the user sees.
       if (!pid || !lifetime.active || connectionRef.current !== "connected") return;
@@ -279,7 +265,7 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey, pageKe
     return () => { lifetime.active = false; lifetime.abort.abort(); lifetime.reactions.clear(); };
   }, [ownerKey]);
   useEffect(() => {
-    projectIdRef.current = projectId;
+    accountIdRef.current = accountId;
     selfIdRef.current = selfId;
     modeRef.current = state.mode;
   });
@@ -288,26 +274,26 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey, pageKe
 
   // A project switch also drops that project's drafts and loaded history (the state itself reset in the reducer).
   useEffect(() => {
-    if (!projectId) return;
+    if (!accountId) return;
     return () => {
       draftsRef.current = {};
       repliesRef.current = {};
       pendingReactionsRef.current = new Set();
       setReactionPendingKeys(new Set());
       viewRef.current = { conversationId: null, atBottom: false };
-      void queryClient.cancelQueries({ queryKey: chatKeys.all(projectId) });
-      queryClient.removeQueries({ queryKey: chatKeys.all(projectId) });
+      void queryClient.cancelQueries({ queryKey: chatKeys.all(accountId) });
+      queryClient.removeQueries({ queryKey: chatKeys.all(accountId) });
     };
-  }, [projectId, queryClient, ownerKey]);
+  }, [accountId, queryClient, ownerKey]);
 
   const syncReactions = useCallback((conversationId: string) => {
-    const pid = projectIdRef.current;
+    const pid = accountIdRef.current;
     const lifetime = lifetimeRef.current;
     if (!pid || !lifetime.active) return Promise.resolve();
     const running = lifetime.resyncs.get(conversationId);
     if (running) return running;
     const job = resyncReactions(queryClient, pid, conversationId, (ids, signal) => chatApi.reactionSnapshots(pid, conversationId, ids, signal),
-      { signal: lifetime.abort.signal, queue: lifetime.queue, current: () => lifetime.active && lifetimeRef.current === lifetime && projectIdRef.current === pid })
+      { signal: lifetime.abort.signal, queue: lifetime.queue, current: () => lifetime.active && lifetimeRef.current === lifetime && accountIdRef.current === pid })
       .catch(() => { /* Reopen/reconnect retries; keep authoritative newer frames. */ })
       .finally(() => lifetime.resyncs.delete(conversationId));
     lifetime.resyncs.set(conversationId, job);
@@ -317,27 +303,27 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey, pageKe
   // A history page can arrive after its reaction frame. Remove buffered entries
   // before setQueryData, because query-cache notifications are synchronous.
   useEffect(() => {
-    if (!projectId) return;
+    if (!accountId) return;
     const lifetime = lifetimeRef.current;
     return queryClient.getQueryCache().subscribe(event => {
       if (!lifetime.active || event.type !== "updated") return;
       const key = event.query.queryKey;
-      if (key[0] !== "projects" || key[1] !== projectId || key[2] !== "chat" || key[3] !== "messages" || typeof key[4] !== "string") return;
+      if (key[0] !== "accounts" || key[1] !== accountId || key[2] !== "chat" || key[3] !== "messages" || typeof key[4] !== "string") return;
       const data = queryClient.getQueryData<MessagePages>(key);
       const ids = new Set(flattenMessages(data).map(message => message.id));
       const buffered = lifetime.reactions.takeLoaded(key[4], ids);
-      if (buffered.length) applyReactionSnapshots(queryClient, projectId, key[4], buffered);
+      if (buffered.length) applyReactionSnapshots(queryClient, accountId, key[4], buffered);
     });
-  }, [projectId, queryClient, ownerKey]);
+  }, [accountId, queryClient, ownerKey]);
 
   // ---- real-time ---------------------------------------------------------------------------------------------------
   const handleEvent = useCallback(
     (event: ChatSocketEvent) => {
-      const pid = projectIdRef.current;
+      const pid = accountIdRef.current;
       // Another project's event (a stale subscription, a bug, a hostile frame) never touches this project's state.
-      if (!lifetimeRef.current.active || !pid || event.projectId !== pid) return;
+      if (!lifetimeRef.current.active || !pid) return;
       if (event.type === "READ") {
-        applyReadToOverview(queryClient, pid, event.conversationId);
+        void queryClient.invalidateQueries({queryKey:chatKeys.overview(pid)});
         return;
       }
       if (event.type === "TYPING") {
@@ -348,7 +334,8 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey, pageKe
         return;
       }
       if (event.type === "SEEN") {
-        if (event.userId !== selfIdRef.current) applySeen(queryClient, pid, event.conversationId, event.userId, event.readAt);
+        void queryClient.invalidateQueries({queryKey:chatKeys.receipts(pid,event.conversationId)});
+        void queryClient.invalidateQueries({queryKey:chatKeys.infoRoot(pid,event.conversationId)});
         return;
       }
       if (event.type === "DELETED") {
@@ -393,7 +380,7 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey, pageKe
 
   /** Whatever happened while the socket was down is fetched over REST: no message is lost on a reconnect. */
   const handleConnect = useCallback((reconnect: boolean) => {
-    const pid = projectIdRef.current;
+    const pid = accountIdRef.current;
     const lifetime = lifetimeRef.current;
     if (!lifetime.active || !pid) return;
     if (reconnect) {
@@ -401,13 +388,14 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey, pageKe
       // A deletion announced while the socket was down is not part of the "newer messages" catch-up below.
       void queryClient.invalidateQueries({ queryKey: chatKeys.messagesRoot(pid) });
       void queryClient.invalidateQueries({ queryKey: chatKeys.receiptsRoot(pid) });
+      void queryClient.invalidateQueries({ queryKey: chatKeys.infoFamily(pid) });
     }
     const loaded = queryClient.getQueriesData<MessagePages>({ queryKey: chatKeys.messagesRoot(pid) });
     void (async () => {
       for (const [key, data] of loaded) {
         const conversationId = key[4] as string;
         await syncReactions(conversationId);
-        if (!lifetime.active || projectIdRef.current !== pid) return;
+        if (!lifetime.active || accountIdRef.current !== pid) return;
         let cursor = newestMessageId(data);
         if (!data) continue;
         if (!cursor) {
@@ -418,7 +406,7 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey, pageKe
         try {
           for (let round = 0; round < 20 && cursor; round += 1) {
             const page = await chatApi.messages(pid, conversationId, { after: cursor, limit: 100 });
-            if (!lifetime.active || projectIdRef.current !== pid) return;
+            if (!lifetime.active || accountIdRef.current !== pid) return;
             appendMessages(queryClient, pid, conversationId, page.messages);
             if (!page.hasMore || page.messages.length === 0) break;
             cursor = page.messages[page.messages.length - 1].id;
@@ -430,7 +418,7 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey, pageKe
     })();
   }, [queryClient, syncReactions]);
 
-  const connection = useChatSocket({ contextKey: projectId && selfId ? `${selfId}:${projectId}` : undefined, onEvent: handleEvent, onConnect: handleConnect });
+  const connection = useChatSocket({ contextKey: accountId && selfId ? `${selfId}:${accountId}` : undefined, onEvent: handleEvent, onConnect: handleConnect });
 
   useEffect(() => {
     connectionRef.current = connection;
@@ -445,10 +433,11 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey, pageKe
   }, [typingEmitter]);
 
   // ---- data --------------------------------------------------------------------------------------------------------
-  const overviewQuery = useChatOverview(projectId, { poll: connection !== "connected" });
-  const membersQuery = useChatMembers(projectId, shown);
-  const openDirect = useOpenDirect(projectId);
-  const markReadMutation = useMarkRead(projectId, ownerKey);
+  // Membership/project changes do not publish chat events; polling also reconciles that authorization boundary.
+  const overviewQuery = useChatOverview(accountId, { poll: true });
+  const membersQuery = useChatMembers(accountId, shown);
+  const openDirect = useOpenDirect(accountId);
+  const markReadMutation = useMarkRead(accountId, ownerKey);
   const overview = overviewQuery.data;
 
   const active = state.active;
@@ -457,7 +446,7 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey, pageKe
     active === null
       ? undefined
       : active.kind === "group"
-        ? overview?.group.id
+        ? (active.conversationId ? overview?.groups.find(group => group.id === active.conversationId)?.id : overview?.group?.id)
         : (active.conversationId ?? overview?.directs.find((direct) => direct.peer?.userId === active.peerId)?.id);
   const activePeer = useMemo<ChatUser | null>(() => {
     if (!activePeerId) return null;
@@ -466,6 +455,10 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey, pageKe
     return membersQuery.data?.find((member) => member.userId === activePeerId) ?? null;
   }, [activePeerId, overview, membersQuery.data]);
 
+  const activeGroup = overview?.groups.find(g => g.id === activeConversationId);
+  const projectName = activeGroup?.projectName;
+  const projectLogoShape = activeGroup?.logoShape ?? "SQUARE";
+  const projectLogoSrc = activeGroup?.projectId && activeGroup.logoVersion ? apiUrl(`/projects/${activeGroup.projectId}/logo?v=${activeGroup.logoVersion}`) : null;
   const typingPeople = (activeConversationId && typingSnapshot[activeConversationId]) || NO_TYPING;
 
   useEffect(() => {
@@ -475,8 +468,17 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey, pageKe
   // ---- panel state -------------------------------------------------------------------------------------------------
   const open = useCallback(() => {
     if (document.activeElement instanceof HTMLElement) triggerRef.current = document.activeElement;
-    dispatch({ type: "open" });
-  }, []);
+    const actor = accountIdRef.current;
+    const current = actor ? queryClient.getQueryData<ChatOverview>(chatKeys.overview(actor)) : undefined;
+    const group = current?.groups[0];
+    const direct = current?.directs[0];
+    dispatch({ type: "open", initial: group ? { kind: "group", conversationId: group.id }
+      : direct?.peer ? { kind: "direct", peerId: direct.peer.userId, conversationId: direct.id } : null });
+    if (actor) {
+      void queryClient.invalidateQueries({ queryKey: chatKeys.overview(actor) });
+      void queryClient.invalidateQueries({ queryKey: chatKeys.members(actor) });
+    }
+  }, [queryClient]);
   const minimize = useCallback(() => dispatch({ type: "mode", mode: "bar" }), []);
   const navigatePage = useCallback(() => dispatch({ type: "navigation" }), []);
   const expandCompact = useCallback(() => dispatch({ type: "mode", mode: "compact" }), []);
@@ -488,7 +490,12 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey, pageKe
     if (trigger) queueMicrotask(() => trigger.isConnected && trigger.focus());
   }, []);
 
-  const selectGroup = useCallback(() => dispatch({ type: "select", active: { kind: "group" } }), []);
+  const selectGroup = useCallback((conversationId?: string) => {
+    const actor = accountIdRef.current;
+    const current = actor ? queryClient.getQueryData<ChatOverview>(chatKeys.overview(actor)) : undefined;
+    const id = conversationId ?? current?.groups[0]?.id;
+    dispatch({ type: "select", active: id ? { kind: "group", conversationId: id } : null });
+  }, [queryClient]);
   const selectPeer = useCallback(
     (peerId: string, conversationId?: string | null) => {
       if (conversationId) {
@@ -501,21 +508,21 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey, pageKe
         onSuccess: (conversation) => {
           if (!lifetime.active) return;
           dispatch({ type: "resolveDirect", peerId, conversationId: conversation.id });
-          if (projectId) {
-            void queryClient.invalidateQueries({ queryKey: chatKeys.overview(projectId) });
-            void queryClient.invalidateQueries({ queryKey: chatKeys.members(projectId) });
+          if (accountId) {
+            void queryClient.invalidateQueries({ queryKey: chatKeys.overview(accountId) });
+            void queryClient.invalidateQueries({ queryKey: chatKeys.members(accountId) });
           }
         },
         onError: (error) => {
           if (!lifetime.active) return;
           toast.error(te(errorKey(error)));
-          dispatch({ type: "select", active: { kind: "group" } });
+          dispatch({ type: "select", active: null });
         },
       });
     },
     // `openDirect.mutate` is stable; `te` changes only with the locale.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [openDirect.mutate, te, projectId, queryClient],
+    [openDirect.mutate, te, accountId, queryClient],
   );
 
   // ---- drafts, sending, reading ------------------------------------------------------------------------------------
@@ -530,14 +537,14 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey, pageKe
   }, []);
 
   const react = useCallback(async (messageId: string, code: ReactionCode, add: boolean) => {
-    const pid = projectIdRef.current, cid = activeConversationId, lifetime = lifetimeRef.current;
+    const pid = accountIdRef.current, cid = activeConversationId, lifetime = lifetimeRef.current;
     const key = `${cid}:${messageId}:${code}`;
     if (!pid || !cid || !lifetime.active || pendingReactionsRef.current.has(key)) return;
     const pending = pendingReactionsRef.current;
     pending.add(key); setReactionPendingKeys(new Set(pending));
     try {
       const snapshot = await chatApi.react(pid, cid, messageId, code, add, lifetime.abort.signal);
-      if (lifetime.active && projectIdRef.current === pid) applyReactionSnapshots(queryClient, pid, cid, [snapshot]);
+      if (lifetime.active && accountIdRef.current === pid) applyReactionSnapshots(queryClient, pid, cid, [snapshot]);
     } catch (error) {
       if (lifetime.active) throw error;
     } finally {
@@ -549,27 +556,27 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey, pageKe
 
   /** Deletes an own message; the tombstone appears once the server confirmed (errors are the caller's to show). */
   const deleteMessage = useCallback(async (messageId: string) => {
-    const pid = projectIdRef.current, cid = activeConversationId, lifetime = lifetimeRef.current;
+    const pid = accountIdRef.current, cid = activeConversationId, lifetime = lifetimeRef.current;
     if (!pid || !cid || !lifetime.active) return;
     await chatApi.deleteMessage(pid, cid, messageId, lifetime.abort.signal);
-    if (!lifetime.active || projectIdRef.current !== pid) return;
+    if (!lifetime.active || accountIdRef.current !== pid) return;
     applyMessageDeleted(queryClient, pid, cid, messageId);
     void queryClient.invalidateQueries({ queryKey: chatKeys.overview(pid) });
   }, [activeConversationId, queryClient]);
 
   const deliver = useCallback(
     async (conversationId: string, clientId: string, content: string, reply?: ChatReply | null) => {
-      const pid = projectIdRef.current;
+      const pid = accountIdRef.current;
       const lifetime = lifetimeRef.current;
       if (!lifetime.active || !pid) return;
       try {
         const message = await chatApi.send(pid, conversationId, content, reply?.id, lifetime.abort.signal);
-        if (!lifetime.active || projectIdRef.current !== pid) return;
+        if (!lifetime.active || accountIdRef.current !== pid) return;
         appendMessages(queryClient, pid, conversationId, [message]);
         applyMessageToOverview(queryClient, pid, message, { mine: true, viewing: true });
         dispatch({ type: "outboxRemove", conversationId, clientId });
       } catch (error) {
-        if (!lifetime.active || projectIdRef.current !== pid) return;
+        if (!lifetime.active || accountIdRef.current !== pid) return;
         dispatch({
           type: "outboxPatch",
           conversationId,
@@ -623,16 +630,15 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey, pageKe
     viewRef.current = view;
   }, []);
   const markRead = useCallback(
-    (conversationId: string) => markReadMutation.mutate(conversationId),
+    (conversationId: string,messageIds: string[]) => markReadMutation.mutateAsync({conversationId,messageIds}),
     // `mutate` is stable across renders.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [markReadMutation.mutate],
+    [markReadMutation.mutateAsync],
   );
 
   const value = useMemo<ChatContextValue>(
     () => ({
-      projectId,
-      contextSlug: slug,
+      accountId,
       projectName,
       projectLogoSrc,
       projectLogoShape,
@@ -676,7 +682,7 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey, pageKe
     // The query objects change identity every render; their data/status are what matters.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
-      projectId, projectName, projectLogoSrc, projectLogoShape, slug, state.mode, active, activeConversationId, activePeer, connection, overview,
+      accountId, projectName, projectLogoSrc, projectLogoShape, slug, state.mode, active, activeConversationId, activePeer, connection, overview,
       overviewQuery.status, membersQuery.data, membersQuery.status, openDirect.isPending, open,
       minimize, expandCompact, expandFull, close, navigatePage, selectGroup, selectPeer, getDraft, setDraft, outboxFor, send,
       retry, discard, reportView, markRead, getReply, setReply, react, reactionPending, deleteMessage, typingPeople, notifyTyping,

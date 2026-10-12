@@ -5,6 +5,10 @@ import { ApiError } from "./client";
  * coarse per-status fallback below. See `.agents/SECURITY.md` §11 Faz 9 for the source list.
  */
 const CODE_KEYS: Record<string, string> = {
+  CHAT_ATTACHMENT_TOO_LARGE: "chatAttachmentTooLarge",
+  CHAT_ATTACHMENT_INVALID: "chatAttachmentInvalid",
+  CHAT_ATTACHMENT_EMPTY: "chatAttachmentInvalid",
+  CHAT_ATTACHMENT_UNAVAILABLE: "chatAttachmentUnavailable",
   reset_code_invalid: "resetCodeInvalid",
   reset_code_expired: "resetCodeExpired",
   reset_too_many_attempts: "tooManyRequests",

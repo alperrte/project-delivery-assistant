@@ -70,6 +70,12 @@ public class ChatMessage {
         return message;
     }
 
+    public static ChatMessage withAttachment(UUID conversationId,UUID sender,String content,UUID reply,Instant now) {
+        ChatMessage message=create(conversationId,sender,(content==null||content.isBlank())?"attachment":content,reply,now);
+        if(content==null||content.isBlank()) message.content="";
+        return message;
+    }
+
     /**
      * The one validation of message text (the frontend only mirrors it): line endings become a single newline, the
      * outer whitespace is stripped, and the result must be non-empty, at most {@value #CONTENT_LIMIT} characters

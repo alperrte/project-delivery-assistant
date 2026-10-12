@@ -5,15 +5,18 @@ import { newerReactionVersion, normalizeChatMessage } from "./reactions";
 
 /** Query keys of one project's chat. Everything is nested under the project id, so projects never share state. */
 export const chatKeys = {
-  all: (projectId: string) => ["projects", projectId, "chat"] as const,
-  overview: (projectId: string) => ["projects", projectId, "chat", "overview"] as const,
-  members: (projectId: string) => ["projects", projectId, "chat", "members"] as const,
-  receipts: (projectId: string, conversationId: string) =>
-    ["projects", projectId, "chat", "receipts", conversationId] as const,
-  receiptsRoot: (projectId: string) => ["projects", projectId, "chat", "receipts"] as const,
-  messagesRoot: (projectId: string) => ["projects", projectId, "chat", "messages"] as const,
-  messages: (projectId: string, conversationId: string) =>
-    ["projects", projectId, "chat", "messages", conversationId] as const,
+  all: (accountId: string) => ["accounts", accountId, "chat"] as const,
+  overview: (accountId: string) => ["accounts", accountId, "chat", "overview"] as const,
+  members: (accountId: string) => ["accounts", accountId, "chat", "members"] as const,
+  infoFamily: (accountId: string) => ["accounts", accountId, "chat", "info"] as const,
+  infoRoot: (accountId: string, conversationId: string) => ["accounts", accountId, "chat", "info", conversationId] as const,
+  info: (accountId: string, conversationId: string, messageId: string) => ["accounts", accountId, "chat", "info", conversationId, messageId] as const,
+  receipts: (accountId: string, conversationId: string) =>
+    ["accounts", accountId, "chat", "receipts", conversationId] as const,
+  receiptsRoot: (accountId: string) => ["accounts", accountId, "chat", "receipts"] as const,
+  messagesRoot: (accountId: string) => ["accounts", accountId, "chat", "messages"] as const,
+  messages: (accountId: string, conversationId: string) =>
+    ["accounts", accountId, "chat", "messages", conversationId] as const,
 };
 
 export type MessagePages = InfiniteData<ChatMessagePage, unknown>;
@@ -38,8 +41,8 @@ export function flattenMessages(data: MessagePages | undefined): ChatMessage[] {
  * it is opened). Messages are identified by id, so the same message arriving over the socket, the REST response and
  * a reconnect catch-up lands exactly once.
  */
-export function appendMessages(queryClient: QueryClient, projectId: string, conversationId: string, incoming: ChatMessage[]) {
-  queryClient.setQueryData<MessagePages>(chatKeys.messages(projectId, conversationId), (old) => {
+export function appendMessages(queryClient: QueryClient, accountId: string, conversationId: string, incoming: ChatMessage[]) {
+  queryClient.setQueryData<MessagePages>(chatKeys.messages(accountId, conversationId), (old) => {
     if (!old || old.pages.length === 0) return old;
     const known = new Set(old.pages.flatMap((page) => page.messages.map((message) => message.id)));
     const fresh = incoming.map(normalizeChatMessage).filter((message) => message.conversationId === conversationId && !known.has(message.id));
@@ -58,8 +61,8 @@ export function appendMessages(queryClient: QueryClient, projectId: string, conv
 }
 
 /** Absolute, personalized snapshots: no counter increments, no phantom messages. */
-export function applyReactionSnapshots(queryClient: QueryClient, projectId: string, conversationId: string, incoming: ReactionSnapshot[]): Set<string> {
-  const key = chatKeys.messages(projectId, conversationId);
+export function applyReactionSnapshots(queryClient: QueryClient, accountId: string, conversationId: string, incoming: ReactionSnapshot[]): Set<string> {
+  const key = chatKeys.messages(accountId, conversationId);
   const old = queryClient.getQueryData<MessagePages>(key);
   const found = new Set<string>();
   if (!old) return found;
@@ -81,8 +84,8 @@ export function applyReactionSnapshots(queryClient: QueryClient, projectId: stri
  * Turns a message into its tombstone in a loaded conversation (text and reactions dropped) and marks the replies that
  * quote it. Idempotent, so the socket event, the REST answer and a catch-up can all apply it.
  */
-export function applyMessageDeleted(queryClient: QueryClient, projectId: string, conversationId: string, messageId: string) {
-  queryClient.setQueryData<MessagePages>(chatKeys.messages(projectId, conversationId), (old) => {
+export function applyMessageDeleted(queryClient: QueryClient, accountId: string, conversationId: string, messageId: string) {
+  queryClient.setQueryData<MessagePages>(chatKeys.messages(accountId, conversationId), (old) => {
     if (!old) return old;
     let changed = false;
     const pages = old.pages.map((page) => ({
@@ -104,8 +107,8 @@ export function applyMessageDeleted(queryClient: QueryClient, projectId: string,
 }
 
 /** Records that `userId` read the conversation up to `readAt` (markers only move forward). Not-yet-loaded lists are left alone. */
-export function applySeen(queryClient: QueryClient, projectId: string, conversationId: string, userId: string, readAt: string) {
-  queryClient.setQueryData<ChatReceipt[]>(chatKeys.receipts(projectId, conversationId), (old) => {
+export function applySeen(queryClient: QueryClient, accountId: string, conversationId: string, userId: string, readAt: string) {
+  queryClient.setQueryData<ChatReceipt[]>(chatKeys.receipts(accountId, conversationId), (old) => {
     if (!old) return old;
     const known = old.find((receipt) => receipt.userId === userId);
     if (known && Date.parse(known.readAt) >= Date.parse(readAt)) return old;
@@ -120,7 +123,7 @@ export function newestMessageId(data: MessagePages | undefined): string | undefi
 }
 
 function withTotals(overview: ChatOverview): ChatOverview {
-  const totalUnread = overview.group.unread + overview.directs.reduce((sum, direct) => sum + direct.unread, 0);
+  const totalUnread = (overview.groups ?? []).reduce((sum, group) => sum + group.unread, 0) + overview.directs.reduce((sum, direct) => sum + direct.unread, 0);
   return { ...overview, totalUnread };
 }
 
@@ -135,7 +138,7 @@ function mapConversation(
     found = true;
     return update(conversation);
   };
-  const next = { ...overview, group: apply(overview.group), directs: overview.directs.map(apply) };
+  const next = { ...overview, group: overview.group ? apply(overview.group) : null, groups: (overview.groups ?? []).map(apply), directs: overview.directs.map(apply) };
   return { overview: withTotals(next), found };
 }
 
@@ -146,11 +149,11 @@ function mapConversation(
  */
 export function applyMessageToOverview(
   queryClient: QueryClient,
-  projectId: string,
+  accountId: string,
   message: ChatMessage,
   options: { mine: boolean; viewing: boolean },
 ): boolean {
-  const key = chatKeys.overview(projectId);
+  const key = chatKeys.overview(accountId);
   const old = queryClient.getQueryData<ChatOverview>(key);
   if (!old) return true;
   const { overview, found } = mapConversation(old, message.conversationId, (conversation) => ({
@@ -163,8 +166,8 @@ export function applyMessageToOverview(
 }
 
 /** The user read a conversation (here or in another tab): its unread count is zero. */
-export function applyReadToOverview(queryClient: QueryClient, projectId: string, conversationId: string) {
-  queryClient.setQueryData<ChatOverview>(chatKeys.overview(projectId), (old) =>
+export function applyReadToOverview(queryClient: QueryClient, accountId: string, conversationId: string) {
+  queryClient.setQueryData<ChatOverview>(chatKeys.overview(accountId), (old) =>
     old ? mapConversation(old, conversationId, (conversation) => ({ ...conversation, unread: 0 })).overview : old,
   );
 }

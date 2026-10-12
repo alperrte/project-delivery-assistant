@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Backs up the PDA database (pg_dump custom format) and the organization media volume of the PRODUCTION stack
+# Backs up the PDA database (pg_dump custom format) and the private media (organization images and chat attachments) volume of the PRODUCTION stack
 # (docker-compose.prod.yml) on a Linux server. Linux counterpart of ops/backup.ps1 (which serves the local development stack).
 #
 # Writes two files into OUT_DIR (default /var/backups/pda):
 #   pda-db-<timestamp>.dump        PostgreSQL custom-format dump (restore with ops/restore.sh or pg_restore)
-#   pda-media-<timestamp>.tar.gz   Contents of the organization media volume (logos and covers)
+#   pda-media-<timestamp>.tar.gz   Contents of the private media (organization images and chat attachments) volume (logos and covers)
 # The database alone is NOT a full backup: organization images live on the media volume, the database only references them.
 # Project logos, banners, profile photos and task attachments are stored in the database and are inside the dump.
 #
@@ -57,7 +57,7 @@ fi
 [ -s "$DB_FILE" ] || { rm -f "$DB_FILE"; echo "The database dump is empty." >&2; exit 1; }
 
 if [ -n "$("${COMPOSE[@]}" ps -q backend)" ]; then
-  echo "Archiving organization media from $MEDIA_PATH ..."
+  echo "Archiving private media (organization images and chat attachments) from $MEDIA_PATH ..."
   if ! "${COMPOSE[@]}" exec -T backend tar -czf - -C "$MEDIA_PATH" . > "$MEDIA_FILE"; then
     rm -f "$MEDIA_FILE"
     echo "Media archive failed." >&2

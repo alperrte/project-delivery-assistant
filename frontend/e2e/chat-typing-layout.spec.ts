@@ -13,6 +13,7 @@ test.describe.serial("Chat typing indicator and message layout", () => {
     page.getByTestId("chat-message").filter({ has: page.getByTestId("chat-message-text").filter({ hasText: text }) });
   async function open(page: Page) {
     await page.getByTestId("chat-nav-item").click();
+    if(conversation)await page.locator(`[data-conversation-id="${conversation}"]`).click();
     await expect(page.getByTestId("chat-composer")).toBeEnabled();
   }
   async function send(page: Page, text: string) {
@@ -33,9 +34,9 @@ test.describe.serial("Chat typing indicator and message layout", () => {
     expect((await api(b, "POST", `/projects/${project}/invitations/${invitation.invitationId}/accept`, { token: invitation.token })).status).toBe(200);
     await a.goto(`/projects/${slug}`);
     await b.goto(`/projects/${slug}`);
+    conversation = ((await api(a, "GET", `/projects/${project}/chat/conversations`)).json as { group: { id: string } }).group.id;
     await open(a);
     await open(b);
-    conversation = ((await api(a, "GET", `/projects/${project}/chat/conversations`)).json as { group: { id: string } }).group.id;
   });
   test.afterAll(async () => {
     if (a) {

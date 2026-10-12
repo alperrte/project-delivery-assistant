@@ -8,7 +8,7 @@ import java.util.Objects;
  */
 public class ChatException extends RuntimeException {
 
-    public enum Kind { INVALID, FORBIDDEN, NOT_FOUND, RATE_LIMITED }
+    public enum Kind { INVALID, FORBIDDEN, NOT_FOUND, RATE_LIMITED, UNAVAILABLE }
 
     private final Kind kind;
     private final String code;

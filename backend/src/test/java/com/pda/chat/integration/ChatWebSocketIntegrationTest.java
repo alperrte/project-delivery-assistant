@@ -158,7 +158,7 @@ class ChatWebSocketIntegrationTest {
         assertNull(bystander.events.poll(100,TimeUnit.MILLISECONDS));
         memberships.removeMember(f.manager.id(),f.projectId,f.member.id());
         reaction(f.manager,f.projectId,direct,message,"LAUGH",true).andExpect(status().isOk());
-        assertEquals("REACTIONS",manager.next().get("type"));assertNull(member.events.poll(150,TimeUnit.MILLISECONDS));
+        assertEquals("REACTIONS",manager.next().get("type"));assertEquals("REACTIONS",member.next().get("type"));
         assertNull(bystander.events.poll(100,TimeUnit.MILLISECONDS));
     }
 
@@ -276,7 +276,7 @@ class ChatWebSocketIntegrationTest {
 
         Map<String, Object> received = member.next();
         assertEquals("MESSAGE", received.get("type"));
-        assertEquals(f.projectId.toString(), received.get("projectId"));
+        assertNull(received.get("projectId"));
         assertEquals(direct.toString(), received.get("conversationId"));
         assertEquals("DIRECT", received.get("conversationType"));
         Map<String, Object> message = asMap(received.get("message"));
@@ -355,7 +355,7 @@ class ChatWebSocketIntegrationTest {
         Map<String, Object> read = memberTab.next();
         assertEquals("READ", read.get("type"));
         assertEquals(direct.toString(), read.get("conversationId"));
-        assertEquals(f.projectId.toString(), read.get("projectId"));
+        assertNull(read.get("projectId"));
         assertFalse(read.containsKey("message"));
         // The other participant learns that it was seen (and nothing else); the reader's own tab got READ only.
         Map<String, Object> seen = manager.next();
@@ -464,7 +464,7 @@ class ChatWebSocketIntegrationTest {
         Map<String, Object> started = member.next();
         assertEquals("TYPING", started.get("type"));
         assertEquals(direct.toString(), started.get("conversationId"));
-        assertEquals(f.projectId.toString(), started.get("projectId"));
+        assertNull(started.get("projectId"));
         assertEquals(f.manager.id().toString(), started.get("userId"));
         assertEquals(true, started.get("typing"));
         assertFalse(started.toString().contains("@example.test"), "a typing event leaks an email");

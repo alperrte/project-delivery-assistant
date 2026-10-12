@@ -166,7 +166,10 @@
     "ownsResources": "Hand over or delete the projects and organizations you own first.",
     "administratorCannotDelete": "Administrator accounts cannot be deleted here.",
     "adminReauthenticationRequired": "The administration area needs the separate administrator sign-in. Please sign in again there.",
-    "adminTwoFactorRequired": "Two-step verification is mandatory for administrator accounts and cannot be turned off."
+    "adminTwoFactorRequired": "Two-step verification is mandatory for administrator accounts and cannot be turned off.",
+    "chatAttachmentTooLarge": "Each file must be 2 MB or smaller.",
+    "chatAttachmentInvalid": "The file is empty, unsupported or failed content validation.",
+    "chatAttachmentUnavailable": "File storage is temporarily unavailable. Try again."
   },
   "app": {
     "nav": {
@@ -2562,7 +2565,37 @@
     "actions": {
       "open": "Open message actions",
       "label": "Message actions"
-    }
+    },
+    "categories": {
+      "label": "Categories",
+      "all": "All conversations",
+      "direct": "Direct messages",
+      "projects": "Projects",
+      "empty": "No conversations yet",
+      "start": "New direct message"
+    },
+    "files": {
+      "add": "Attach file",
+      "remove": "Remove file",
+      "tooLarge": "Each file must be 2 MB or smaller.",
+      "invalid": "Choose a PDF, Word, JPG, PNG or WebP file.",
+      "sending": "Sending…",
+      "failed": "Could not send file.",
+      "download": "Download",
+      "view": "Expand image",
+      "file": "File"
+    },
+    "info": {
+      "action": "Info",
+      "title": "Message info",
+      "read": "Read by",
+      "unread": "Not yet read",
+      "notRead": "Not yet read",
+      "empty": "Nobody",
+      "failed": "Could not load message info.",
+      "legacy": "Historical read record; first read time unknown"
+    },
+    "selectConversation": "Select a conversation from the list."
   },
   "pageTitles": {
     "dashboard": "Dashboard",

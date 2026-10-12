@@ -25,7 +25,7 @@ class LogoShapeMigrationTest {
             sql.execute("INSERT INTO projects(id,name,slug,created_by,status,priority,visibility,created_at,updated_at) "
                     + "VALUES(gen_random_uuid(),'Old project','old-project',gen_random_uuid(),'PLANNING','MEDIUM','PRIVATE',now(),now())");
             var latest = Flyway.configure().dataSource(postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword())
-                    .locations("classpath:db/migration").load();
+                    .locations("classpath:db/migration").target("42").load();
             assertEquals(1, latest.migrate().migrationsExecuted);
             for (String table : new String[]{"projects", "organizations"}) {
                 try (var rows = sql.executeQuery("SELECT logo_shape FROM " + table)) {

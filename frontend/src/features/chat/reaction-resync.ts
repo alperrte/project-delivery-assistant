@@ -19,10 +19,10 @@ export class ReactionSyncQueue {
   private pump() { while (this.active < 2 && this.waiting.length) this.waiting.shift()!(); }
 }
 
-export async function resyncReactions(queryClient: QueryClient, projectId: string, conversationId: string,
+export async function resyncReactions(queryClient: QueryClient, accountId: string, conversationId: string,
   fetchSnapshots: (ids: string[], signal: AbortSignal) => Promise<ReactionSnapshot[]>,
   options: { signal: AbortSignal; current: () => boolean; queue: ReactionSyncQueue }) {
-  const data = queryClient.getQueryData<MessagePages>(chatKeys.messages(projectId, conversationId));
+  const data = queryClient.getQueryData<MessagePages>(chatKeys.messages(accountId, conversationId));
   const ids = flattenMessages(data).map(message => message.id);
   const requests: Promise<void>[] = [];
   for (let start = 0; start < ids.length; start += 50) {
@@ -30,7 +30,7 @@ export async function resyncReactions(queryClient: QueryClient, projectId: strin
     requests.push(options.queue.run(async () => {
       if (!options.current()) return;
       const snapshots = await fetchSnapshots(batch, options.signal);
-      if (options.current() && !options.signal.aborted) applyReactionSnapshots(queryClient, projectId, conversationId, snapshots);
+      if (options.current() && !options.signal.aborted) applyReactionSnapshots(queryClient, accountId, conversationId, snapshots);
     }, options.signal));
   }
   await Promise.all(requests);

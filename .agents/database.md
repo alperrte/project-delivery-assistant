@@ -1,5 +1,13 @@
 # Veritabanı ve kalıcılık
 
+## V43–V46 merkezi sohbet — 2026-10-12
+
+- V43: DM project_id nullable/global scope; kanonik çift global partial UNIQUE. En eski created_at/id konuşması korunur, diğer konuşmaların mesajları ID, içerik, sender, tarih, quote ve reaction'larıyla taşınır. Composite reply FK migration transaction'ında ertelenir. Eski read kanıtı geçici kalıcı tabloda tutulur; merged marker muhafazakâr minimumdur. Proje silme artık DM'leri cascade etmez.
+- V44: `chat_attachments` UUID storage identifier, message FK, owner, güvenli filename, detected content_type, size (1..2097152), PENDING/ACTIVE/DELETE_PENDING, created_at. Message FK silmede null olur ve cleanup işi dosyayı temizler. Dosya-only boş metin desteklenir; text-only boş metin domain'de reddedilir.
+- V45: `(message_id,user_id)` PK ile alıcı snapshot ve nullable read_at; legacy boolean eski marker tabanlı bilgiyi ayırır. İlk read koşullu update ile sabittir; sender snapshot'a eklenmez. Eski grup audience yalnız mevcut üyelik zaman aralıklarından, DM iki katılımcıdan backfill edilir.
+- V46: eski grup read marker'ı pozitif okuma kanıtı veriyorsa, rejoin/eksik historical membership nedeniyle audience backfill dışında kalan kayıt da korunur. Geçmiş ilk okunma zamanı ve bilinmeyen eski okunmamış katılımcılar çıkarılamaz; yeni mesajlar tam snapshot kullanır.
+- Eski migration'lar/checksum'lar değiştirilmedi; V43–V46 upgrade ve duplicate DM/reply/reaction/read koruması gerçek PostgreSQL testindedir.
+
 ## Ardışık migration numaraları — 2026-10-11
 
 Kullanıcı mevcut runtime dosyalarının V1–V40 olarak ardışık numaralanmasını istedi. SQL byte içerikleri ve CREATE sırası değişmedi; yeni migration V41 olmalıdır. İleri FK konumları V9 (invitation→squad) ve V24 (task→sprint). Eski V1–V71 test-only ZIP fixture numaraları değişmedi. Aşağıdaki eski V25/V45 ve version koruma notları tarihsel ilk consolidation aşamasını anlatır; güncel 40 dosyalık old→new mapping root persistent plandadır. Önceki history uygulanmış normal DB/volume korunur ve yeni sete repair edilmez.

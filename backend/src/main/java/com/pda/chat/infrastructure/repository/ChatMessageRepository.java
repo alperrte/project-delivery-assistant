@@ -72,12 +72,14 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, UUID> 
             from chat_messages m
             join chat_conversations c on c.id = m.conversation_id
             left join chat_read_states r on r.conversation_id = c.id and r.user_id = :userId
-            where c.project_id = :projectId
+            left join chat_message_receipts mr on mr.message_id=m.id and mr.user_id=:userId
+            where ((cast(:projectId as uuid) is null and c.type = 'DIRECT') or c.project_id = :projectId or (c.type = 'DIRECT' and cast(:projectId as uuid) is not null))
               and (c.type = 'PROJECT' or :userId in (c.direct_user_low, c.direct_user_high))
               and m.sender_user_id <> :userId
               and m.deleted_at is null
+              and mr.read_at is null
               and m.created_at > greatest(
-                    coalesce(r.last_read_at, cast('-infinity' as timestamptz)),
+                    cast('-infinity' as timestamptz),
                     case when c.type = 'PROJECT' then cast(:groupFloor as timestamptz)
                          else cast('-infinity' as timestamptz) end)
             group by m.conversation_id

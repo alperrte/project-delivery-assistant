@@ -227,6 +227,34 @@ Because PDA uses cookie-based authentication:
 
 ## 11. API and Swagger Security
 
+### Central account chat, attachments and exact message reads (2026-10-12)
+
+C2PA PDF compatibility correction: embedded `application/c2pa` (and the standard legacy manifest MIME) is allowed only when its decoded bytes have the C2PA manifest-store JUMBF root UUID and `c2pa` label, bounded box lengths/depth/count and a known metadata box structure. Only unfiltered or Flate metadata with no prediction is read through a bounded streaming decoder; total decoded provenance data is capped at 2 MiB. Every other embedded-file MIME/payload remains rejected; external file specifications, JavaScript and launch actions remain blocked. PDF bytes are never rewritten, and C2PA signatures are preserved as uploaded. Format recognition does not claim cryptographic authenticity verification. This corrects false rejection of ordinary Content Credentials metadata, not general permission for embedded documents. Reference: https://spec.c2pa.org/specifications/specifications/2.4/specs/C2PA_Specification.html .
+
+Document compatibility correction: PDF validation uses parsed PDFBox objects instead of raw keyword scans; ordinary OpenAction page/named destinations and internal GoTo are allowed. JavaScript, Launch, remote-file actions, additional automatic actions, embedded content and encryption remain rejected. PDF URI and DOCX external hyperlinks permit only validated HTTP/HTTPS/mailto/tel targets; external images/templates/OLE resources and file/data/javascript links stay blocked. The server does not fetch link targets. MIME parameters and known PDF/Word/ZIP/OLE aliases are accepted only after extension and actual document structure validation; arbitrary type mismatches remain rejected. Macro detection inspects package content types, not ordinary document text. No size, ENV, auth, CSRF or CORS change.
+
+This is the current chat contract and supersedes the historical project-scoped DM and timestamp-only "seen" descriptions below. User-authorized scope: DM centralization, private file sending and per-message reads; new DM eligibility remains at least one shared active project, as confirmed by the user. DM access thereafter is the stored pair, independent of project membership. Groups always require current active membership, with no global ADMIN bypass. The actor comes only from the existing authenticated principal. Cookie, CSRF, origin/header/method allowlists and sessions are unchanged; `/api/v1/chat/**` uses the existing CORS configuration, not a new origin policy. Every mutation requires CSRF. Socket policy remains own queue only, no client SEND; direct event projectId is null/omitted.
+
+| Method/path under `/api/v1/chat` | Input / access | Success | Errors |
+| --- | --- | --- | --- |
+| GET `/conversations` | account's DMs + current projects; groups metadata, no email | 200 overview | 401 |
+| GET `/members` | other active shared-project members | 200 summaries, no email | 401 |
+| POST `/direct/{user}` | shared active project for a new DM; existing pair reusable | 200 canonical DM | 400 self, 401, 403 CSRF, 404 unavailable recipient |
+| GET `/conversations/{c}/messages` | participant; existing before/after/limit cursors | 200 history | 400 cursor, 401, 403 group membership, 404 foreign DM |
+| POST same | `{content,replyToMessageId?}`; plain text <=2000 code points | 201 Message | 400 content, 401, 403, 404, 429 |
+| POST `/conversations/{c}/messages/attachment` | multipart `file`, optional `content`, `replyToMessageId`; participant | 201 Message with attachment | 400 empty/invalid/over 2 MiB/text, 401, 403, 404, 429, 503 storage |
+| GET `/conversations/{c}/messages/{m}/attachment` | participant, non-deleted scoped message; `inline=true` only for images | 200 bytes, otherwise attachment download | 401, 403, 404 missing/foreign/deleted, 503 storage |
+| POST `/conversations/{c}/read` | `{messageIds:[UUID]}` 1..100, all scoped; only actor's receipt rows | 204 idempotent | 400 missing/limit, 401, 403, 404 foreign message |
+| GET `/conversations/{c}/messages/{m}/info` | current conversation access AND message's own sender | 200 readers with user/readAt/legacy | 401, 403 non-sender/group, 404 foreign DM/message |
+| GET `/conversations/{c}/receipts` | participant, exact per-message read evidence for seen display | 200 receipts | 401, 403, 404 |
+| DELETE `/conversations/{c}/messages/{m}` | own sender + access | 204 tombstone; attachment scheduled for durable cleanup | 401, 403, 404 |
+| POST `/conversations/{c}/typing`; PUT/DELETE `/messages/{m}/reactions/{code}`; GET `/messages/reactions` | existing participant, validation/rate limits, batch scope; same route suffixes | 204 typing / 200 reactions | existing 400/401/403/404/429 |
+
+All private downloads/info/history are private/no-store and downloads have nosniff + sandbox CSP. Safe requests: `{"content":"Hello"}`, `{"messageIds":["<visible-message-uuid>"]}`; multipart uses a real supported file, never a storage path or sender field. PDF/DOC/DOCX/JPG/JPEG/PNG/WebP only, extension + claimed MIME + detected content checked, max 2097152 bytes. Server-generated UUID keys only; sanitized display names cannot choose paths. Existing ImageSniffer dimension caps apply. PDFBox 3.0.8 parses PDFs and rejects active actions/embedded/encrypted documents; compound Word/FIB and bounded ZIP/XML inspections reject unsupported structures, macros, embedded active objects and external resources. This is content validation, not a malware scanner; parser diagnostics are suppressed to avoid logging file fragments. Attachment ledger tracks crashes/rollback/delete; shared MediaStorage is reused, no new ENV or storage service. Old read markers are marked legacy and never claimed to be exact first-read times. Group send holds ProjectAccess's public shared membership lock before taking the recipient snapshot.
+
+Swagger with the already approved `API_DOCS_ENABLED=true`: `/swagger-ui/index.html` or `/v3/api-docs`; GET `/api/v1/auth/csrf`, normal cookie login, then `X-XSRF-TOKEN` on mutations. Do not enable docs or alter ENV solely for this task. Test evidence is in the completion record.
+
+
 ### Logo shape metadata (2026-10-12, section 11 API supplement)
 
 Existing authenticated POST/PUT /api/v1/projects[/{id}] and /api/v1/organizations[/{id}] accept logoShape SQUARE/CIRCLE; safe JSON {"name":"Example","logoShape":"CIRCLE"} for create/organization PUT. Project PUT additionally needs priority/status, e.g. {"name":"Example","priority":"MEDIUM","status":"PLANNING","logoShape":"CIRCLE"}. Create 201, update 200; invalid shape 400, anonymous 401, missing CSRF/non-owner/missing PROJECT_UPDATE 403, missing/archived record 404. Existing reads and recipient-scoped /project-invitations/me and /{id}/preview include shape; no extra permission or media access is granted. Missing/null create uses SQUARE; missing/null PUT preserves the stored preference. Jackson rejects unsupported names and numeric ordinals; DB NOT NULL/CHECK also restricts values. File bytes/version are unchanged. Swagger: existing API_DOCS_ENABLED=true, /swagger-ui/index.html or /v3/api-docs; GET /api/v1/auth/csrf, normal cookie login, then X-XSRF-TOKEN for mutations. No environment/auth/cookie/CSRF/CORS changes.
@@ -898,6 +926,8 @@ The Next.js frontend sets `X-Content-Type-Options: nosniff`, `X-Frame-Options: D
 ---
 
 ## 18. File and Path Safety
+
+**Approved chat attachments (2026-10-12, user's messaging prompt):** existing private MediaStorage volume and path configuration are reused. Chat owns its separate attachment ledger and enforces conversation access on every byte read; no public media URL, new ENV or new storage adapter. Keep this shared volume in backups, since it now contains chat files too. Known active content/container checks are described in §11; there is no antivirus service.
 
 **Approved organization media architecture (2026-10-04):** The user selected private filesystem storage on a Docker persistent volume, with `ORGANIZATION_MEDIA_STORAGE_PATH` configuration and a storage port for future adapters. Organization logo/cover use server-generated identifiers, never client paths or filenames. Only metadata/references are stored in PostgreSQL. Access remains active organization owner only; mutations require CSRF. PNG/JPEG/WebP are validated through `ImageSniffer`, with logo 512 KiB and cover 2 MiB limits and the existing pixel limits. Replacement/removal use persistent lifecycle records for retry after crashes; archived references are retained and cannot be served. Storage stays outside public/static directories; containment and symlink checks are required. Existing Project/User BYTEA media is unchanged.
 

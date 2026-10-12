@@ -1,5 +1,15 @@
 ﻿# Mimari kısa özet
 
+## Merkezi mesajlaşma — 2026-10-12
+
+Bu bölüm önceki seçili-proje sohbet açıklamalarının yerini alır. Chat hesabın sahibidir; DM `project_id=NULL` ve kanonik kullanıcı çiftinin global unique index'iyle tekildir. Proje grupları proje kapsamını ve güncel üyelik kontrolünü korur; merkezi ekran tüm erişilebilir grupları ve DM'leri gösterir. Yeni DM yalnız aktif ortak proje üyesiyle başlatılır; mevcut DM ortak üyelik sona erse de katılımcılarına açıktır. Global ADMIN ayrı bir sohbet erişimi kazanmaz.
+
+Tek `ChatProvider` aktör kimliğiyle yaşar; seçili proje veya rota değişimi taslak, history ve socket sahibini değiştirmez. Query ailesi `["accounts", actorId, "chat", ...]`; hesap sınırında eski query/asenkron işler iptal edilip temizlenir. Mesajlaşma global Kişisel navigasyondadır. Mevcut full/bar/compact deneyimi ve kullanıcıya ait STOMP kuyruğu korunur; DM frame'lerinde projectId null/yoktur. Liste açılış ve 60 sn polling ile proje/üyelik değişikliklerini de senkronize eder.
+
+Dosyalar mevcut `shared.MediaStorage` ile özel volume'de; DB `chat_attachments` ledger'ı yarım upload, rollback ve silinmiş mesaj dosyalarını yeniden temizler. Dosya gönderimi tek multipart use-case'tir; metadata mesaj transaction'ında etkinleşir. Yeni ENV veya depolama servisi yoktur. PDFBox yalnız gerçek PDF ayrıştırması içindir; Word ve görsel doğrulamaları bounded container/header kontrolleridir, antivirüs servisi değildir.
+
+`chat_message_receipts` gönderim anındaki alıcı snapshot'ını ve ilk read_at'i tutar. Grup snapshot'ı ProjectAccess public shared membership lock'u altında alınır; üyelik mutation'larıyla aynı proje kilidini kullanır. İstemci aktif belgede görünür message ID'lerini gönderir. İlk okuma koşullu UPDATE ile değişmez; READ/SEEN after-commit ile aynı STOMP kanalından gelir. Bilgi endpoint'i yalnız mesajın gönderenine açıktır. Eski konuşma marker'ları legacy olarak korunur; geçmiş ilk okuma anı ya da kaybolmuş üyelik aralıkları uydurulmaz.
+
 ## Mobil çalışma alanı üst çubuğu — 2026-10-12
 
 `AppHeader` 640 px altında 56 px tek satırdır; tercihler ve native history kontrolleri mevcut `AppShellView` dialog çekmecesindedir. AppHeader/drawer main dışında kalır. Main/fullscreen chat ortak reserve değeri mobilde 80 px, sm üstünde 72 px'tir (`globals.css`); landing demo aynı padding'i okur. Native history capability/oturum sınırı, preference persistence, auth ve modül/API sözleşmeleri değişmez. UI kontrolü `e2e/workspace-mobile-header.spec.ts` içinde açıkça TEST-ONLY REST/WS fixture'larıyla yapılır.

@@ -5,7 +5,7 @@ import { usePathname, useSearchParams } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChatNavItem } from "@/features/chat/components/chat-nav-item";
+
 import { usePendingInvitationCount } from "@/features/invitations/hooks";
 import { useInvitationResponseCount } from "@/features/notifications/hooks/use-invitation-responses";
 import { useCurrentMember } from "@/features/projects/hooks/use-current-member";
@@ -220,7 +220,7 @@ export function ProjectSidebarNav({
 
         {slug && projectPath && (
           <div className="mt-1 border-t border-border pt-1">
-            <ChatNavItem projectId={project?.id} slug={slug} collapsed onNavigate={onNavigate} />
+
           </div>
         )}
       </div>
@@ -355,7 +355,7 @@ export function ProjectSidebarNav({
 
       {slug && projectPath && (
         <div className="ml-2 mt-3 border-l border-border pl-2">
-          <ChatNavItem projectId={project?.id} slug={slug} onNavigate={onNavigate} />
+
         </div>
       )}
     </div>

@@ -166,7 +166,10 @@
     "ownsResources": "Önce sahibi olduğunuz proje ve organizasyonları devredin ya da silin.",
     "administratorCannotDelete": "Yönetici hesapları buradan silinemez.",
     "adminReauthenticationRequired": "Yönetim alanı için yönetici girişi gerekir. Lütfen yönetici girişinden yeniden oturum açın.",
-    "adminTwoFactorRequired": "Yönetici hesaplarında iki adımlı doğrulama zorunludur ve kapatılamaz."
+    "adminTwoFactorRequired": "Yönetici hesaplarında iki adımlı doğrulama zorunludur ve kapatılamaz.",
+    "chatAttachmentTooLarge": "Dosya başına en fazla 2 MB gönderebilirsiniz.",
+    "chatAttachmentInvalid": "Dosya boş, desteklenmiyor veya güvenli içerik kontrolünden geçemedi.",
+    "chatAttachmentUnavailable": "Dosya depolama şu an kullanılamıyor. Tekrar deneyin."
   },
   "app": {
     "nav": {
@@ -2586,7 +2589,37 @@
     "actions": {
       "open": "Mesaj seçeneklerini aç",
       "label": "Mesaj seçenekleri"
-    }
+    },
+    "categories": {
+      "label": "Kategoriler",
+      "all": "Tüm konuşmalar",
+      "direct": "Özel mesajlar",
+      "projects": "Projeler",
+      "empty": "Henüz konuşma yok",
+      "start": "Yeni özel mesaj"
+    },
+    "files": {
+      "add": "Dosya ekle",
+      "remove": "Dosyayı kaldır",
+      "tooLarge": "Dosya başına en fazla 2 MB gönderebilirsiniz.",
+      "invalid": "PDF, Word, JPG, PNG veya WebP dosyası seçin.",
+      "sending": "Gönderiliyor…",
+      "failed": "Dosya gönderilemedi.",
+      "download": "İndir",
+      "view": "Görseli büyüt",
+      "file": "Dosya"
+    },
+    "info": {
+      "action": "Bilgi",
+      "title": "Mesaj bilgisi",
+      "read": "Okuyanlar",
+      "unread": "Henüz okumayanlar",
+      "notRead": "Henüz okunmadı",
+      "empty": "Kimse yok",
+      "failed": "Mesaj bilgisi yüklenemedi.",
+      "legacy": "Eski okuma kaydı; ilk okunma saati bilinmiyor"
+    },
+    "selectConversation": "Listeden bir konuşma seçin."
   },
   "pageTitles": {
     "dashboard": "Genel bakış",

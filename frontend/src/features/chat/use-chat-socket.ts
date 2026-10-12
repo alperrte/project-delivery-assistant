@@ -25,7 +25,7 @@ export function parseChatSocketEvent(body: string): ChatSocketEvent | null {
   try {
     const value = JSON.parse(body) as Partial<ChatSocketEvent> | null;
     if (!value || (value.type !== "MESSAGE" && value.type !== "READ" && value.type !== "REACTIONS" && value.type !== "TYPING" && value.type !== "DELETED" && value.type !== "SEEN")) return null;
-    if (typeof value.projectId !== "string" || !value.projectId.length || value.projectId.length > 128 || typeof value.conversationId !== "string" || !value.conversationId.length || value.conversationId.length > 128) return null;
+    if ((value.projectId != null && (typeof value.projectId !== "string" || !value.projectId.length || value.projectId.length > 128)) || typeof value.conversationId !== "string" || !value.conversationId.length || value.conversationId.length > 128) return null;
     if (value.type === "SEEN") {
       const seen = value as { userId?: unknown; readAt?: unknown };
       return typeof seen.userId === "string" && seen.userId.length > 0 && seen.userId.length <= 128

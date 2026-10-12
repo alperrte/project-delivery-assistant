@@ -7,7 +7,7 @@ import { localizeHref } from "../src/i18n/routing";
 test.describe.serial("Chat replies and reactions", () => {
   let a: Page, b: Page, slug: string, project: string, conversation: string;
   const row = (page: Page, text: string) => page.getByTestId("chat-message").filter({ has: page.getByTestId("chat-message-text").filter({ hasText: text }) });
-  async function open(page: Page) { await page.getByTestId("chat-nav-item").click(); await expect(page.getByTestId("chat-composer")).toBeEnabled(); }
+  async function open(page: Page) { await page.getByTestId("chat-nav-item").click(); if(conversation)await page.locator(`[data-conversation-id="${conversation}"]`).click(); await expect(page.getByTestId("chat-composer")).toBeEnabled(); }
   async function send(page: Page, text: string) { await page.getByTestId("chat-composer").fill(text); await page.getByTestId("chat-composer").press("Enter"); }
 
   test.beforeAll(async ({ browser }) => {
@@ -19,8 +19,9 @@ test.describe.serial("Chat replies and reactions", () => {
     const team=(await api(a,"POST",`/projects/${project}/teams`,{name:"Reply team"})).json as {id:string};
     const invitation=(await api(a,"POST",`/projects/${project}/invitations`,{userId:person.id,teamId:team.id,roles:["TESTER"]})).json as {invitationId:string;token:string};
     expect((await api(b,"POST",`/projects/${project}/invitations/${invitation.invitationId}/accept`,{token:invitation.token})).status).toBe(200);
-    await a.goto(`/projects/${slug}`);await b.goto(`/projects/${slug}`);await open(a);await open(b);
+    await a.goto(`/projects/${slug}`);await b.goto(`/projects/${slug}`);
     conversation=((await api(a,"GET",`/projects/${project}/chat/conversations`)).json as {group:{id:string}}).group.id;
+    await open(a);await open(b);
   });
   test.afterAll(async()=>{if(a){await api(a,"POST",`/projects/${project}/archive`).catch(()=>undefined);await a.context().close();}await b?.context().close();});
 

@@ -38,6 +38,12 @@
     <jackson-bom.version>3.1.7</jackson-bom.version>
   </properties>
   <dependencies>
+    <!-- Parse uploaded PDFs; magic bytes alone cannot validate compressed action dictionaries. -->
+    <dependency>
+      <groupId>org.apache.pdfbox</groupId>
+      <artifactId>pdfbox</artifactId>
+      <version>3.0.8</version>
+    </dependency>
     <!-- MapStruct -->
     <dependency>
       <groupId>org.mapstruct</groupId>
