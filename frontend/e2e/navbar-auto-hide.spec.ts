@@ -4,9 +4,19 @@ import { NAVBAR_IDLE_MS } from "../src/components/layout/use-auto-hide";
 
 const header = (page: Page) => page.locator(".app-shell header").first();
 
+// TEST-ONLY behavior probe: pin the choice without changing the shared QA account's saved defaults.
+// Save/persistence and account boundaries are covered separately by the preferences API/UI tests.
+async function navbarChoice(page: Page, navbarMode: "auto-hide" | "always-visible") {
+  await page.route("**/users/me/preferences", async route => {
+    const response = await route.fetch();
+    await route.fulfill({ response, json: { ...await response.json(), navbarMode } });
+  });
+}
+
 test("desktop upward scroll outside the navbar does not reveal it", async ({ browser }) => {
   const context = await browser.newContext({ storageState: MANAGER_STORAGE, viewport: { width: 1280, height: 400 } });
   const page = await context.newPage();
+  await navbarChoice(page, "auto-hide");
   try {
     await page.goto("/account"); await expect(page.locator("#main-content")).toBeVisible();
     await page.mouse.move(5, 350); await page.mouse.wheel(0, 5000);
@@ -41,6 +51,7 @@ test("desktop upward scroll outside the navbar does not reveal it", async ({ bro
 test("hover, focus and an owned popup hold the header; leaving the interaction resumes idle", async ({ browser }) => {
   const context = await browser.newContext({ storageState: MANAGER_STORAGE, viewport: { width: 1280, height: 400 } });
   const page = await context.newPage();
+  await navbarChoice(page, "auto-hide");
   try {
     await page.goto("/account"); await expect(page.locator("#main-content")).toBeVisible();
     await page.mouse.move(640, 2); await page.mouse.move(640, 30);
@@ -62,6 +73,7 @@ test("hover, focus and an owned popup hold the header; leaving the interaction r
 test("actual touch navbar stays visible after drawer dismissal and focus leaves", async ({ browser }) => {
   const context = await browser.newContext({ storageState: MANAGER_STORAGE, viewport: { width: 390, height: 500 }, hasTouch: true, isMobile: true });
   const page = await context.newPage();
+  await navbarChoice(page, "always-visible");
   try {
     await page.goto("/account"); await expect(page.locator("#main-content")).toBeVisible();
     const menu = header(page).getByRole("button", { name: "Gezinme menüsü", exact: true });
@@ -75,6 +87,7 @@ test("actual touch navbar stays visible after drawer dismissal and focus leaves"
 test("touch scrolling and idle never hide the navbar", async ({ browser }) => {
   const context = await browser.newContext({ storageState: MANAGER_STORAGE, viewport: { width: 390, height: 500 }, hasTouch: true, isMobile: true });
   const page = await context.newPage();
+  await navbarChoice(page, "always-visible");
   try {
     await page.goto("/account"); await expect(page.locator("#main-content")).toBeVisible();
     expect(await page.evaluate(() => matchMedia("(hover: none)").matches)).toBe(true);

@@ -1,5 +1,9 @@
 ﻿# Mimari kısa özet
 
+## Navbar görünürlük tercihi — 2026-10-12
+
+`UserPreference` mevcut hesap tercihlerine nullable `navbarMode` ekler (`always-visible|auto-hide`). Frontend saved-preferences query/cache anahtarı `['preferences', userId]` ile hesap kapsamındadır ve GET AbortSignal taşır; Settings taslak/Kaydet/Vazgeç akışı korunur. Seçilmemiş değer eski cihaz varsayılanını sürdürür, eski PUT istemcileri alanı atladığında kayıtlı seçimi bozmaz. Modül/kimlik/yetki sınırları değişmez; ek migration V47'dir.
+
 ## Merkezi mesajlaşma — 2026-10-12
 
 Bu bölüm önceki seçili-proje sohbet açıklamalarının yerini alır. Chat hesabın sahibidir; DM `project_id=NULL` ve kanonik kullanıcı çiftinin global unique index'iyle tekildir. Proje grupları proje kapsamını ve güncel üyelik kontrolünü korur; merkezi ekran tüm erişilebilir grupları ve DM'leri gösterir. Yeni DM yalnız aktif ortak proje üyesiyle başlatılır; mevcut DM ortak üyelik sona erse de katılımcılarına açıktır. Global ADMIN ayrı bir sohbet erişimi kazanmaz.

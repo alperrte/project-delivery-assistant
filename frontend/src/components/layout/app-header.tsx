@@ -25,6 +25,7 @@ import { ThemeToggle } from "./theme-toggle";
 import { useAutoHide } from "./use-auto-hide";
 import { WorkspaceHistoryControls } from "./workspace-history-controls";
 import { NotificationsMenu } from "@/features/notifications/notifications-menu";
+import { useSavedPreferences } from "@/features/settings/session-preferences";
 
 type SessionUser = { id?: string; nickname?: string; email?: string; globalRole?: string; adminVerified?: boolean; profilePhotoVersion?: number | null } | null | undefined;
 
@@ -57,7 +58,8 @@ export function AppHeader({
   const search = useSearchParams().toString();
   const faqHref = `/account/faq?returnTo=${encodeURIComponent(pathname + (search ? `?${search}` : ""))}`;
   const contactHref = `/account/contact?returnTo=${encodeURIComponent(pathname + (search ? `?${search}` : ""))}`;
-  const { ref, hidden, reveal } = useAutoHide<HTMLElement>(!contained, mobileMenuOpen);
+  const saved = useSavedPreferences(contained ? undefined : user?.id);
+  const { ref, hidden, reveal } = useAutoHide<HTMLElement>(!contained, mobileMenuOpen, saved.data?.navbarMode);
 
   return (
     <div className="pointer-events-none fixed inset-x-3 top-0 z-40 sm:inset-x-auto sm:left-1/2 sm:w-[min(calc(100vw-1.5rem),620px)] sm:-translate-x-1/2 lg:w-[620px] xl:w-[700px] 2xl:w-[760px]">

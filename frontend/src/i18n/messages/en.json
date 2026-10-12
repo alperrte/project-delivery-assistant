@@ -1552,6 +1552,13 @@
       "description": "The default theme: light, dark, or follow your device. It does not change until you press Save.",
       "label": "Theme"
     },
+    "navigation": {
+      "title": "Top navigation bar",
+      "description": "Choose how the top bar behaves on mobile and desktop. Changes apply when you save.",
+      "alwaysVisible": "Always visible",
+      "autoHide": "Auto-hide",
+      "hint": "Auto-hide hides the bar when it is idle. Use the handle at the top to reveal it; on mobile, scrolling up also reveals it."
+    },
     "motion": {
       "title": "Animations",
       "description": "These preferences are saved to your account and apply every time you sign in.",

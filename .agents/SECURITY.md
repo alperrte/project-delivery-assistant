@@ -227,6 +227,10 @@ Because PDA uses cookie-based authentication:
 
 ## 11. API and Swagger Security
 
+### Navbar visibility preference (2026-10-12)
+
+Existing own-account `GET|PUT /api/v1/users/me/preferences` additionally accepts/returns nullable `navbarMode` (`always-visible|auto-hide`). Omitted/null PUT retains the existing value for older clients; the other four required fields are unchanged. Actor comes only from the authenticated principal. GET/PUT return 200 and no-store; invalid mode 400, anonymous 401, missing CSRF on PUT 403. Safe JSON: `{"locale":"tr","theme":"system","motion":"on","themeTransition":true,"navbarMode":"always-visible"}`. Swagger, when already enabled: `/swagger-ui/index.html` or `/v3/api-docs`; normal cookie login plus `GET /api/v1/auth/csrf` and `X-XSRF-TOKEN` on PUT. V47 adds only a nullable allowlisted preference column. No ENV, session, authorization, cookie, CSRF or CORS policy changes.
+
 ### Central account chat, attachments and exact message reads (2026-10-12)
 
 C2PA PDF compatibility correction: embedded `application/c2pa` (and the standard legacy manifest MIME) is allowed only when its decoded bytes have the C2PA manifest-store JUMBF root UUID and `c2pa` label, bounded box lengths/depth/count and a known metadata box structure. Only unfiltered or Flate metadata with no prediction is read through a bounded streaming decoder; total decoded provenance data is capped at 2 MiB. Every other embedded-file MIME/payload remains rejected; external file specifications, JavaScript and launch actions remain blocked. PDF bytes are never rewritten, and C2PA signatures are preserved as uploaded. Format recognition does not claim cryptographic authenticity verification. This corrects false rejection of ordinary Content Credentials metadata, not general permission for embedded documents. Reference: https://spec.c2pa.org/specifications/specifications/2.4/specs/C2PA_Specification.html .
