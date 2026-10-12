@@ -1598,6 +1598,13 @@
         "on": "An",
         "off": "Aus",
         "blocked": "Die Oberflächenanimationen sind aus, daher wechselt das Design sofort."
+      },
+      "language": {
+        "label": "Sprachwechsel-Animation",
+        "hint": "Übergangsanimation beim Wechseln der Anwendungssprache anzeigen.",
+        "on": "An",
+        "off": "Aus",
+        "blocked": "Die Oberflächenanimationen sind aus, daher wechselt die Sprache sofort."
       }
     }
   },

@@ -17,8 +17,10 @@ import { locales, type Locale } from "@/i18n/config";
 import {
   setMotionPreference,
   setThemeTransitionPreference,
+  setLanguageTransitionPreference,
   useMotionPreference,
   useThemeTransitionPreference,
+  useLanguageTransitionPreference,
 } from "@/lib/preferences/motion";
 import { preferencesApi, savedPreferencesKey, type PreferencesDraft, type SavedPreferences, type ThemeChoice } from "../api";
 import { useSavedPreferences, writeBaseline } from "../session-preferences";
@@ -30,7 +32,7 @@ import { useNavbarAutoHideEnabled } from "@/components/layout/use-auto-hide";
 
 const same = (a: PreferencesDraft, b: PreferencesDraft) =>
   a.locale === b.locale && a.theme === b.theme && a.motion === b.motion && a.themeTransition === b.themeTransition
-  && a.navbarMode === b.navbarMode;
+  && a.languageTransition === b.languageTransition && a.navbarMode === b.navbarMode;
 
 /**
  * The interface defaults (language, theme, animations, navbar); the account and the password are on the account page. They are edited as a draft: nothing changes on screen while
@@ -48,6 +50,7 @@ export function SettingsPage() {
   const { select: applyLocale, overlay } = useLocaleSelection();
   const [motion] = useMotionPreference();
   const [themeTransition] = useThemeTransitionPreference();
+  const [languageTransition] = useLanguageTransitionPreference();
   const [draft, setDraft] = useState<PreferencesDraft | null>(null);
 
   // What is saved, or, for somebody who never saved, what the interface has right now.
@@ -58,6 +61,7 @@ export function SettingsPage() {
     theme: stored?.theme ?? ((theme === "light" || theme === "dark" ? theme : "system") as ThemeChoice),
     motion: stored?.motion ?? motion,
     themeTransition: stored?.themeTransition ?? themeTransition,
+    languageTransition: stored?.languageTransition ?? languageTransition,
     navbarMode: stored?.navbarMode ?? (autoHide ? "auto-hide" : "always-visible"),
   };
   const current = draft ?? initial;
@@ -72,6 +76,7 @@ export function SettingsPage() {
       if (user) writeBaseline({ userId: user.id, theme: values.theme, locale: values.locale });
       setMotionPreference(values.motion);
       setThemeTransitionPreference(values.themeTransition);
+      setLanguageTransitionPreference(values.languageTransition);
       setTheme(values.theme);
       if (locales.includes(values.locale)) applyLocale(values.locale);
       toast.success(t("save.done"));
@@ -92,8 +97,10 @@ export function SettingsPage() {
           <MotionSection
             motion={current.motion}
             themeTransition={current.themeTransition}
+            languageTransition={current.languageTransition}
             onMotionChange={(next) => setDraft({ ...current, motion: next })}
             onThemeTransitionChange={(next) => setDraft({ ...current, themeTransition: next })}
+            onLanguageTransitionChange={(next) => setDraft({ ...current, languageTransition: next })}
           />
 
           <div data-sticky-actions className="sticky bottom-0 z-20 -mx-4 -mb-6 mt-10 sm:-mb-8 border-t bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:-mx-8 sm:px-8">

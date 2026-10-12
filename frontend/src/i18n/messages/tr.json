@@ -1598,6 +1598,13 @@
         "on": "Açık",
         "off": "Kapalı",
         "blocked": "Arayüz animasyonları kapalı, bu yüzden tema doğrudan değişir."
+      },
+      "language": {
+        "label": "Dil geçiş animasyonu",
+        "hint": "Uygulama dilini değiştirirken geçiş animasyonunu göster.",
+        "on": "Açık",
+        "off": "Kapalı",
+        "blocked": "Arayüz animasyonları kapalı, bu yüzden dil doğrudan değişir."
       }
     }
   },

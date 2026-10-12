@@ -33,11 +33,12 @@ for (const savedMotion of [undefined, null, "system", "off"]) {
   test(`settings show only on/off, normalize ${savedMotion === null ? "null" : savedMotion ?? "missing"} account preferences and save the explicit choice`, async ({ page, context }) => {
     // Isolated API fixtures: this test does not alter a real account.
     let preferences: Record<string, unknown> = savedMotion === null
-      ? { locale: null, theme: null, motion: null, themeTransition: null }
-      : savedMotion ? { motion: savedMotion, ...(savedMotion === "system" ? { themeTransition: false } : {}) } : {};
+      ? { locale: null, theme: null, motion: null, themeTransition: null, languageTransition: null }
+      : savedMotion ? { motion: savedMotion, ...(savedMotion === "system" ? { themeTransition: false, languageTransition: false } : {}) } : {};
     if (savedMotion === null) await page.addInitScript(() => {
       // Reproduce a previously poisoned local preference in an already-started session too.
       localStorage.setItem("pda:theme-transition", "off");
+      localStorage.setItem("pda:language-transition", "off");
       sessionStorage.setItem("pda:session-baseline", JSON.stringify({ userId: "motion-fixture", theme: "system", locale: "tr" }));
     });
     await page.emulateMedia({ reducedMotion: "reduce" });
@@ -77,6 +78,9 @@ for (const savedMotion of [undefined, null, "system", "off"]) {
     const theme = page.getByRole("radiogroup", { name: "Tema geçiş animasyonu", exact: true });
     await expect(theme.getByRole("radio", { name: savedMotion === "system" ? "Kapalı" : "Açık", exact: true })).toBeChecked();
     await expect.poll(() => page.evaluate(() => localStorage.getItem("pda:theme-transition"))).toBe(savedMotion === "system" ? "off" : "on");
+    const lang = page.getByRole("radiogroup", { name: "Dil geçiş animasyonu", exact: true });
+    await expect(lang.getByRole("radio", { name: savedMotion === "system" ? "Kapalı" : "Açık", exact: true })).toBeChecked();
+    await expect.poll(() => page.evaluate(() => localStorage.getItem("pda:language-transition"))).toBe(savedMotion === "system" ? "off" : "on");
     if (savedMotion === null || savedMotion === undefined) {
       await page.evaluate(() => {
         Object.assign(window, { __defaultThemeAnimated: false });
@@ -93,8 +97,13 @@ for (const savedMotion of [undefined, null, "system", "off"]) {
     }
     const next = savedMotion === "off" ? "Açık" : "Kapalı";
     await motion.getByRole("radio", { name: next, exact: true }).click();
-    if (next === "Kapalı") await expect(theme.getByRole("radio", { name: "Açık", exact: true })).toBeDisabled();
-    else await expect(theme.getByRole("radio", { name: "Açık", exact: true })).toBeEnabled();
+    if (next === "Kapalı") {
+      await expect(theme.getByRole("radio", { name: "Açık", exact: true })).toBeDisabled();
+      await expect(lang.getByRole("radio", { name: "Açık", exact: true })).toBeDisabled();
+    } else {
+      await expect(theme.getByRole("radio", { name: "Açık", exact: true })).toBeEnabled();
+      await expect(lang.getByRole("radio", { name: "Açık", exact: true })).toBeEnabled();
+    }
     await page.getByRole("button", { name: "Kaydet", exact: true }).click();
     await expect.poll(() => preferences.motion).toBe(next === "Kapalı" ? "off" : "on");
     await expect(page.locator("html")).toHaveAttribute("data-motion", String(preferences.motion));

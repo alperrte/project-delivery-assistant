@@ -61,10 +61,16 @@ class UserPreferenceApiIntegrationTest {
                 + "\",\"themeTransition\":" + themeTransition + "}";
     }
 
+    private static String bodyWithLang(String locale, String theme, String motion, String themeTransition, String languageTransition) {
+        return "{\"locale\":\"" + locale + "\",\"theme\":\"" + theme + "\",\"motion\":\"" + motion
+                + "\",\"themeTransition\":" + themeTransition + ",\"languageTransition\":" + languageTransition + "}";
+    }
+
     private static String navbarBody(String mode) {
         String base = body("tr", "system", "on", "true");
         return base.substring(0, base.length() - 1) + ",\"navbarMode\":\"" + mode + "\"}";
     }
+
 
     @Test
     void navbarChoicesPersistAndOlderClientsDoNotResetThem() throws Exception {
@@ -181,6 +187,51 @@ class UserPreferenceApiIntegrationTest {
         String password = UUID.randomUUID().toString();
         users.registerLocal(email, "u" + suffix, password);
         return signIn(email, password);
+    }
+
+    @Test
+    void languageTransitionChoicesPersistAndWorkIndependentlyOfTheme() throws Exception {
+        Cookie csrf = csrfCookie();
+        Cookie user = login("langprefs");
+
+        // Null until saved
+        mvc.perform(get(PATH).cookie(user)).andExpect(jsonPath("$.languageTransition").doesNotExist());
+
+        // Theme transition OFF, Language transition ON
+        mvc.perform(put(PATH).cookie(csrf, user).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content(bodyWithLang("tr", "light", "on", "false", "true")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.themeTransition").value(false))
+                .andExpect(jsonPath("$.languageTransition").value(true));
+
+        mvc.perform(get(PATH).cookie(user))
+                .andExpect(jsonPath("$.themeTransition").value(false))
+                .andExpect(jsonPath("$.languageTransition").value(true));
+
+        // Theme transition ON, Language transition OFF
+        mvc.perform(put(PATH).cookie(csrf, user).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content(bodyWithLang("en", "dark", "on", "true", "false")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.themeTransition").value(true))
+                .andExpect(jsonPath("$.languageTransition").value(false));
+
+        mvc.perform(get(PATH).cookie(user))
+                .andExpect(jsonPath("$.themeTransition").value(true))
+                .andExpect(jsonPath("$.languageTransition").value(false));
+
+        // Both OFF
+        mvc.perform(put(PATH).cookie(csrf, user).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content(bodyWithLang("de", "system", "on", "false", "false")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.themeTransition").value(false))
+                .andExpect(jsonPath("$.languageTransition").value(false));
+
+        // Older client payload omitting languageTransition preserves previous false choice
+        mvc.perform(put(PATH).cookie(csrf, user).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content(body("de", "system", "on", "true")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.themeTransition").value(true))
+                .andExpect(jsonPath("$.languageTransition").value(false));
     }
 
     private Cookie signIn(String email, String password) throws Exception {
