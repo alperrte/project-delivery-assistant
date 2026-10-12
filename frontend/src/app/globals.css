@@ -4,8 +4,8 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* The document viewport of every page (signed-in workspace, landing, auth and public pages) and explicitly owned navigation
-   scrollers, never nested chat/forms/portals. One palette: the label-blue thumb of the active theme. */
+/* The document viewport and explicitly opted-in workspace/chat scrollers share the active theme's label-blue palette.
+   Other nested forms and portals retain native scrollbars. */
 html {
   --workspace-scrollbar-thumb: var(--label-blue);
   --workspace-scrollbar-hover: color-mix(in oklab, var(--label-blue) 80%, var(--foreground));

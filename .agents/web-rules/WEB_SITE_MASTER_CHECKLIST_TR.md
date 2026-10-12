@@ -368,3 +368,7 @@ Dosya doğrulamasındaki yanlış retler giderildi: PDF normal sayfa hedefleri, 
 ## Sohbet PDF Content Credentials düzeltmesi — 2026-10-12 (sınırlı kapsam)
 
 Repodaki 958377 byte CV'nin ret nedeni 24296 byte C2PA metadata'sı olarak doğrudan teşhis edildi. Yeni doğrulayıcı aynı PDF'yi `application/pdf` olarak kabul eder; gerçek dosya yeniden oluşturulmaz. Genel otomatik test koşumu yapılmadı; yalnız dosya üzerinde validator incelemesi ve backend derlemesi yapıldı. Form Validation / Error State genel kutuları bu sınırlı kanıtla değiştirilmedi. Kayıt: `docs/compliation/2026-10-12-chat-pdf-c2pa.md`.
+
+## Sohbet scrollbar paleti — 2026-10-12 (sınırlı kapsam)
+
+Dark Mode / UI tutarlılığı kapsamı: sohbetin altı kaydırılabilir yüzeyi mevcut `data-workspace-scroll` paletine bağlandı; light/dark label-blue token'ı, transparan track, ortak hover ve forced-colors fallback kullanılır. Hedefli ESLint ve production build başarılı; küçük stil değişikliği için genel audit/test koşumu yapılmadı. Global checklist kutuları bu sınırlı kanıtla değiştirilmedi. Kayıt: `docs/compliation/2026-10-12-chat-scrollbar-theme.md`.

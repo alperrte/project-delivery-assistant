@@ -526,3 +526,7 @@ Mesajlaşma girişi global Kişisel navigasyondadır; seçili projenin altında 
 Composer'da 44 px dosya kontrolü, güvenli dosya adı/tür/boyut ve küçük blob preview vardır; upload sırasında çift gönderim engellenir, hatada metin/dosya korunur. Blob URL'leri değişim ve unmount'ta temizlenir. Özel API image'leri cookie gerektirdiği için native img kullanır; proxy yapılmaz. Dosyaların büyük gösterimi ve own-message Bilgi dialogu mevcut Dialog/focus/theme sistemini, viewport sınırı ve overscroll-contain'i kullanır. Escape yalnız dialogu kapatır. Bilgi TR/EN/DE ve Intl tarih/saat formatlarını kullanır; eski okuma kanıtı ayrı legacy açıklaması taşır.
 
 Read isteği aktif belgede IntersectionObserver ile görünür message ID'lerinden oluşur; aynı view'de onaylanan ID yeniden gönderilmez. Okunmamış kayıtlar yalnız liste preview'sinden ya da websocket varışından read yapılmaz.
+
+## Sohbet kaydırma çubukları — 2026-10-12
+
+Sohbet konuşma listesi, mesaj geçmişi, composer textarea, emoji popup, Bilgi ve görsel dialogları `data-workspace-scroll` ile mevcut ortak scrollbar stiline katılır. Thumb aktif temanın `--label-blue` token'ıdır, track transparandır; hover mevcut foreground karışımını kullanır. Ayrı dark/light sabit renk veya yeni token eklenmez. Alt öğelere scrollbar rengi mirası sıfırlanır; forced-colors native fallback korunur.
