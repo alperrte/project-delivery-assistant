@@ -351,8 +351,8 @@
           "description": "Logo, ad ve slogan kartın üst kısmında görünür."
         },
         "type": {
-          "title": "Proje türü",
-          "description": "Tür kartta rozet olarak görünür ve teknoloji önerilerini belirler."
+          "title": "Proje türleri",
+          "description": "Bir veya daha fazla tür seçin. Seçimler kartta görünür ve teknoloji önerilerini belirler."
         },
         "technology": {
           "title": "Teknolojiler",
@@ -611,7 +611,7 @@
       "dangerDescription": "Proje ve içindeki her şey kalıcı olarak silinir. Bu işlem geri alınamaz.",
       "tagline": "Slogan",
       "taglinePlaceholder": "Projeyi tek cümleyle anlatın",
-      "type": "Proje türü",
+      "type": "Proje türleri",
       "logo": {
         "label": "Proje logosu",
         "hint": "PNG, JPEG veya WebP, en fazla 512 KB. Değişiklikler hemen kaydedilir.",

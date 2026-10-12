@@ -109,7 +109,7 @@ async function mockRepository(page: Page): Promise<RepositoryMock> {
 async function fillCreateForm(page: Page, name: string) {
   await page.goto("/projects/new");
   await page.locator("#project-name").fill(name);
-  await page.getByRole("radio", { name: /^Web/ }).click();
+  await page.getByRole("checkbox", { name: /^Web/ }).click();
 }
 
 test.describe.serial("Project repository setup", () => {

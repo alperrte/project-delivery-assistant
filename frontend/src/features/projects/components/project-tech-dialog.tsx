@@ -22,8 +22,8 @@ import { TechPicker } from "./create/tech-picker";
  * change on the server. This holds more than a short confirmation, which the design rules otherwise keep out of
  * dialogs; it is a deliberate, user-approved exception.
  */
-export function ProjectTechDialog({ type, value, onApply }: {
-  type: ProjectType | undefined;
+export function ProjectTechDialog({ types, value, onApply }: {
+  types: readonly (ProjectType | undefined)[] | undefined;
   value: string[];
   onApply: (next: string[]) => void;
 }) {
@@ -49,7 +49,7 @@ export function ProjectTechDialog({ type, value, onApply }: {
             <DialogDescription>{t("description", { max: MAX_TECH_SELECTION })}</DialogDescription>
           </DialogHeader>
           <div className="max-h-[55dvh] overflow-y-auto pr-1">
-            <TechPicker type={type} value={draft} onChange={setDraft} />
+            <TechPicker types={types} value={draft} onChange={setDraft} />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>

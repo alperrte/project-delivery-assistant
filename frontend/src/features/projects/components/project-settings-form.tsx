@@ -37,7 +37,8 @@ import type { ProjectCardData } from "./project-card";
 import { projectPriorities, projectSettingsSchema, projectStatuses, TAGLINE_MAX, type ProjectSettingsValues } from "../schemas";
 import { canonicalTech } from "../tech-catalog";
 import { formatTechStack, parseTechStack } from "../tech-stack";
-import { PROJECT_TYPES, type Project, type OrganizationSummary } from "../types";
+import { getProjectTypes, type Project, type OrganizationSummary } from "../types";
+import { TypePicker } from "./create/type-picker";
 
 const inputClass = "h-10 bg-background px-3";
 const textareaClass = "min-h-20 bg-background px-3 py-2.5 leading-6";
@@ -55,7 +56,7 @@ function toFormValues(project: Project): ProjectSettingsValues {
     targetEndDate: project.targetEndDate ?? "",
     techStack: project.techStack ?? "",
     organizationId: project.organizationId ?? undefined,
-    projectType: project.projectType,
+    projectTypes: getProjectTypes(project),
     tagline: project.tagline ?? "",
   };
 }
@@ -65,7 +66,7 @@ function Field({
 }: { id: string; label: string; hint?: string; error?: string; className?: string; children: ReactNode }) {
   return (
     <div className={cn("space-y-1.5", className)}>
-      <Label htmlFor={id}>{label}</Label>
+      <Label id={`${id}-label`} htmlFor={id}>{label}</Label>
       {children}
       {error ? (
         <p id={`${id}-error`} role="alert" className="text-sm text-destructive">{error}</p>
@@ -78,7 +79,6 @@ function Field({
 
 export function ProjectSettingsForm({ project, organization }: { project: Project; organization?: OrganizationSummary | null }) {
   const t = useTranslations("projects.settings");
-  const tCard = useTranslations("projects.card");
   const tv = useTranslations("validation");
   const te = useTranslations("errors");
   const tp = useTranslations("projects.newPage");
@@ -148,7 +148,8 @@ export function ProjectSettingsForm({ project, organization }: { project: Projec
       projectGoal: project.projectGoal,
       status: watched.status ?? project.status,
       priority: watched.priority ?? project.priority,
-      projectType: watched.projectType ?? project.projectType,
+      projectType: project.projectType,
+      projectTypes: (watched.projectTypes ?? getProjectTypes(project)).filter((type): type is import("../types").ProjectType => !!type),
       techStack: watched.techStack || null,
       logoVersion: project.logoVersion,
       logoShape: watched.logoShape ?? project.logoShape,
@@ -157,7 +158,7 @@ export function ProjectSettingsForm({ project, organization }: { project: Projec
       updatedBy: project.updatedBy,
       updatedAt: project.updatedAt,
     }),
-    [project, watched.logoShape, watched.name, watched.tagline, watched.description, watched.status, watched.priority, watched.projectType, watched.techStack, tp],
+    [project, watched.logoShape, watched.name, watched.tagline, watched.description, watched.status, watched.priority, watched.projectTypes, watched.techStack, tp],
   );
   const updatedLabel = new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(project.updatedAt));
 
@@ -173,7 +174,7 @@ export function ProjectSettingsForm({ project, organization }: { project: Projec
         <div className="min-w-0 lg:col-span-7">
           <SettingsSection title={t("sections.general.title")} description={t("sections.general.description")}>
             <div className="grid gap-5 lg:grid-cols-2">
-              <Field id="settings-name" label={t("name")} error={errors.name && tv(errors.name.message!)}>
+              <Field id="settings-name" label={t("name")} error={errors.name && tv(errors.name.message!)} className="lg:col-span-2">
                 <Input
                   id="settings-name"
                   className={inputClass}
@@ -183,23 +184,12 @@ export function ProjectSettingsForm({ project, organization }: { project: Projec
                   {...register("name")}
                 />
               </Field>
-              <Field id="settings-type" label={t("type")}>
-                <Controller
-                  control={control}
-                  name="projectType"
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger id="settings-type" className={selectClass}>
-                        <SelectValue>{(value: (typeof PROJECT_TYPES)[number]) => tCard(`types.${value}`)}</SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {PROJECT_TYPES.map((type) => (
-                          <SelectItem key={type} value={type}>{tCard(`types.${type}`)}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
+              <Field id="settings-types" label={t("type")} error={errors.projectTypes && tv(errors.projectTypes.message ?? "required")} className="lg:col-span-2">
+                <Controller control={control} name="projectTypes" render={({ field }) => (
+                  <TypePicker id="settings-types" value={field.value} onChange={field.onChange} onBlur={field.onBlur}
+                    labelledBy="settings-types-label" invalid={!!errors.projectTypes}
+                    describedBy={errors.projectTypes ? "settings-types-error" : undefined} />
+                )} />
               </Field>
               <Field id="settings-tagline" label={t("tagline")} error={errors.tagline && tv(errors.tagline.message!)} className="lg:col-span-2">
                 <Input
@@ -348,7 +338,7 @@ export function ProjectSettingsForm({ project, organization }: { project: Projec
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <p id="settings-tech-label" className="text-sm font-medium">{t("techStack")}</p>
                 <ProjectTechDialog
-                  type={watched.projectType}
+                  types={watched.projectTypes}
                   value={techLabels}
                   onApply={(next) => setValue("techStack", formatTechStack(next), { shouldDirty: true, shouldValidate: true })}
                 />

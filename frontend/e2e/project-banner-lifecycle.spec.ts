@@ -73,7 +73,7 @@ test("real create and banner upload persist bytes and version before the warm pr
   await page.locator('input[type="file"]').nth(1).setInputFiles({ name: "persist.png", mimeType: "image/png", buffer: png });
   await expect(page.locator('#project-preview img[src^="blob:"]')).toBeVisible();
   await page.locator("#project-name").fill(`Persist banner QA ${Date.now()}`);
-  await page.getByRole("radio", { name: /^Web/ }).click();
+  await page.getByRole("checkbox", { name: /^Web/ }).click();
   const uploaded = page.waitForResponse(response => /\/projects\/[^/]+\/banner$/.test(new URL(response.url()).pathname) && response.request().method() === "PUT");
   await page.getByRole("button", { name: /^Projeyi oluştur$/ }).click();
   expect((await uploaded).status()).toBe(204);
@@ -96,7 +96,7 @@ test("injected create/upload failures preserve the draft or the genuinely create
   const png = Buffer.from(await page.evaluate(() => { const c = document.createElement("canvas"); c.width=24; c.height=8; return c.toDataURL("image/png").split(",")[1]; }), "base64");
   await page.locator('input[type="file"]').nth(1).setInputFiles({ name: "fail.png", mimeType: "image/png", buffer: png });
   const preview = page.locator('#project-preview img[src^="blob:"]'); await expect(preview).toBeVisible(); const url = await preview.getAttribute("src");
-  await page.locator("#project-name").fill(name); await page.getByRole("radio", { name: /^Web/ }).click();
+  await page.locator("#project-name").fill(name); await page.getByRole("checkbox", { name: /^Web/ }).click();
   // TEST-ONLY negative transport faults. Successful create still goes to the real backend/DB.
   await page.route("**/api/v1/projects", route => route.request().method() === "POST" ? route.abort("failed") : route.continue());
   await page.getByRole("button", { name: /^Projeyi oluştur$/ }).click();

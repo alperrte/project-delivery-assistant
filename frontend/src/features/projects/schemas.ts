@@ -15,7 +15,7 @@ export const createProjectSchema = z
     logoShape: z.enum(LOGO_SHAPES),
     name: z.string().trim().min(1, "required").max(160, "maxLength"),
     tagline: z.string().max(TAGLINE_MAX, "maxLength").optional(),
-    projectType: z.enum(PROJECT_TYPES, { error: "required" }),
+    projectTypes: z.array(z.enum(PROJECT_TYPES)).min(1, "required").max(PROJECT_TYPES.length, "maxLength"),
     techStack: z.array(z.string()).max(MAX_TECH_SELECTION, "maxLength"),
     description: z.string().max(2000, "maxLength").optional(),
     organizationId: z.string().uuid().optional(),
@@ -43,7 +43,7 @@ export const projectSettingsSchema = z
     targetEndDate: z.string().optional(),
     techStack: z.string().max(1000, "maxLength").optional(),
     organizationId: z.string().uuid().optional(),
-    projectType: z.enum(PROJECT_TYPES),
+    projectTypes: z.array(z.enum(PROJECT_TYPES)).min(1, "required").max(PROJECT_TYPES.length, "maxLength"),
     tagline: z.string().max(TAGLINE_MAX, "maxLength").optional(),
   })
   .refine((v) => !v.startDate || !v.targetEndDate || v.targetEndDate >= v.startDate, {
