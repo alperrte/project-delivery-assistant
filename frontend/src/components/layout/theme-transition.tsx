@@ -43,8 +43,13 @@ export function playThemeTransition(from: Scheme, to: Scheme, swap: () => void) 
     const html = document.documentElement;
     const motion = to === "dark" ? "theme-close-in" : "theme-reveal";
     html.classList.add(motion);
-    const transition = document.startViewTransition(swap);
-    transition.finished.finally(() => html.classList.remove(motion));
+    try {
+      const transition = document.startViewTransition(swap);
+      transition.finished.finally(() => html.classList.remove(motion));
+    } catch {
+      html.classList.remove(motion);
+      swap();
+    }
   }, SWAP_AT);
 
   window.setTimeout(() => {
@@ -54,7 +59,7 @@ export function playThemeTransition(from: Scheme, to: Scheme, swap: () => void) 
   return true;
 }
 
-const BODIES = {
+const BODIES: Record<Scheme, { Icon: typeof Sun; className: string; halo: string; style?: React.CSSProperties }> = {
   light: {
     Icon: Sun,
     className: "text-amber-300 drop-shadow-[0_0_14px_rgb(251_191_36/0.55)]",
@@ -64,8 +69,12 @@ const BODIES = {
     Icon: Moon,
     className: "text-(--theme-moon) drop-shadow-[0_0_14px_rgb(47_208_245/0.6)]",
     halo: "rgb(47 208 245 / 0.26)",
+    // Phosphor Moon crescent's optical center of mass is at (21.36px, 26.44px) in the 48px box.
+    // Translating by (+2.64px, -2.44px) aligns its visual weight to the exact geometric center (24px, 24px),
+    // matching Sun and the circle-reveal iris center on Galaxy S24 and all mobile viewports.
+    style: { transform: "translate(2.64px, -2.44px)" },
   },
-} as const;
+};
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -90,7 +99,7 @@ export function ThemeTransitionOverlay() {
           exit={{ opacity: 0, scale: 1.1 }}
           transition={{ duration: 0.25, ease: EASE }}
           style={{ viewTransitionName: "theme-orb" }}
-          className="pointer-events-none fixed left-1/2 top-1/2 z-200 -ml-16 -mt-16 grid size-32 place-items-center"
+          className="pointer-events-none fixed inset-0 z-200 m-auto grid size-32 place-items-center"
         >
           {/* Halo as a gradient, not blur: the view-transition capture would cut a blur off square. */}
           <motion.span
@@ -109,16 +118,16 @@ export function ThemeTransitionOverlay() {
 }
 
 function Body({ scheme, leaving }: { scheme: Scheme; leaving?: boolean }) {
-  const { Icon, className } = BODIES[scheme];
+  const { Icon, className, style } = BODIES[scheme];
   const turn = scheme === "light" ? 90 : -40;
   return (
     <motion.span
-      className={`col-start-1 row-start-1 ${className}`}
+      className={`col-start-1 row-start-1 inline-flex size-12 items-center justify-center ${className}`}
       initial={leaving ? { opacity: 1, scale: 1, rotate: 0 } : { opacity: 0, scale: 0.6, rotate: turn }}
       animate={leaving ? { opacity: 0, scale: 0.6, rotate: -turn } : { opacity: 1, scale: 1, rotate: 0 }}
       transition={leaving ? { duration: 0.3, ease: EASE } : { delay: 0.12, duration: 0.4, ease: EASE }}
     >
-      <Icon size={48} weight="fill" />
+      <Icon size={48} weight="fill" className="block shrink-0" style={style} />
     </motion.span>
   );
 }
