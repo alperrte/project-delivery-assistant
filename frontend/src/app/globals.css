@@ -616,6 +616,7 @@ html.theme-close-in::view-transition-old(root) {
 ::view-transition-group(theme-orb),
 ::view-transition-new(theme-orb) {
   animation: none;
+  z-index: 2;
 }
 ::view-transition-old(theme-orb) {
   display: none;

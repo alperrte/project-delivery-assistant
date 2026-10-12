@@ -115,3 +115,33 @@ test("device reduced motion always suppresses animations, and explicit off is re
     await api(page, "PUT", "/users/me/preferences", PLAIN);
   }
 });
+
+test("mobile theme transition centers the sun and moon icons with the transition origin", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/dashboard");
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  await watchTransitionClasses(page);
+
+  // Open mobile drawer
+  await page.getByRole("button", { name: "Gezinme" }).click();
+  const drawer = page.locator("#workspace-mobile-navigation");
+  await expect(drawer).toBeVisible();
+
+  // Click dark theme in mobile drawer
+  const darkBtn = drawer.locator(".theme-toggle button").nth(1);
+  await darkBtn.click();
+
+  await expect(page.locator("html")).toHaveClass(/dark/);
+  expect(await seenClasses(page)).toEqual(["theme-close-in"]);
+  await expect(page.locator("html")).not.toHaveClass(/theme-close-in/);
+
+  // Click light theme
+  await page.evaluate(() => (window as unknown as { __themeMotion: Set<string> }).__themeMotion.clear());
+  const lightBtn = drawer.locator(".theme-toggle button").nth(0);
+  await lightBtn.click();
+
+  await expect(page.locator("html")).not.toHaveClass(/dark/);
+  expect(await seenClasses(page)).toEqual(["theme-reveal"]);
+  await expect(page.locator("html")).not.toHaveClass(/theme-reveal/);
+});
+
