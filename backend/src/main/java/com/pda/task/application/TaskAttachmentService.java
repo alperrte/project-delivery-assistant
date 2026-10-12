@@ -45,7 +45,6 @@ public class TaskAttachmentService {
         support.requireProject(projectId, actor, true);
         support.requirePermission(projectId, actor, ProjectPermission.TASK_WORK);
         Task task = support.locked(projectId, taskId);
-        support.requireAdvancedTask(task);
         if (bytes == null || bytes.length == 0) {
             throw new TaskValidationException("TASK_ATTACHMENT_INVALID", "Empty file");
         }
@@ -53,6 +52,11 @@ public class TaskAttachmentService {
             throw new TaskValidationException("TASK_ATTACHMENT_TOO_LARGE", "File is too large");
         }
         AttachmentPolicy.Accepted accepted = AttachmentPolicy.check(originalName, bytes);
+        boolean image = AttachmentPolicy.isImage(accepted.contentType());
+        support.requireAttachable(task, image);
+        if (image && bytes.length > TaskAttachment.MAX_IMAGE_BYTES) {
+            throw new TaskValidationException("TASK_ATTACHMENT_IMAGE_TOO_LARGE", "Image exceeds the size limit");
+        }
         if (attachments.countByTaskIdAndDeletedAtIsNull(taskId) >= TaskAttachment.MAX_PER_TASK) {
             throw new TaskConflictException("TASK_ATTACHMENT_LIMIT", "Attachment limit reached");
         }
@@ -87,7 +91,7 @@ public class TaskAttachmentService {
                 && !support.can(projectId, actor, ProjectPermission.TASK_MANAGE)) {
             throw new AccessDeniedException("Attachment permission denied");
         }
-        support.requireAdvancedTask(task);
+        support.requireAttachable(task, AttachmentPolicy.isImage(attachment.getContentType()));
         attachment.delete(actor);
         // The row stays as history, but the stored bytes go with it: nothing reads them again and they would
         // otherwise pile up for good.

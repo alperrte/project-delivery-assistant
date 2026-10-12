@@ -132,6 +132,29 @@ class TaskAttachmentApiIntegrationTest extends TaskTestBase {
         read(url, pm).andExpect(jsonPath("$.length()").value(0));
     }
 
+    @Test void imagesAreCappedAtOneMegabyteWhileOtherFilesKeepTheTenMegabyteLimit() throws Exception {
+        Account pm = account("attimgpm");
+        UUID project = project(pm, "Attachment image size project");
+        UUID task = createTask(project, pm, "{\"title\":\"Sizes\"}");
+        String base = tasksUrl(project) + "/" + task;
+        int oneMb = 1024 * 1024;
+
+        send(multipart(base + "/attachments").file(file("big.png", "image/png", TestImages.pngPaddedTo(oneMb + 1))),
+                pm, null).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("TASK_ATTACHMENT_IMAGE_TOO_LARGE"));
+        read(base + "/attachments", pm).andExpect(jsonPath("$.length()").value(0));
+
+        UUID exact = upload(base, pm, file("exact.png", "image/png", TestImages.pngPaddedTo(oneMb)));
+        read(base + "/attachments", pm).andExpect(jsonPath("$[0].id").value(exact.toString()))
+                .andExpect(jsonPath("$[0].sizeBytes").value(oneMb));
+
+        // Only pictures are capped at 1 MB; a larger non-image file is still fine.
+        byte[] bigText = new byte[oneMb + 1];
+        java.util.Arrays.fill(bigText, (byte) 'a');
+        upload(base, pm, file("big.txt", "text/plain", bigText));
+        read(base + "/attachments", pm).andExpect(jsonPath("$.length()").value(2));
+    }
+
     @Test void aTaskHoldsAtMostTwentyFiles() throws Exception {
         Account pm = account("attlimitpm");
         UUID project = project(pm, "Attachment limit project");

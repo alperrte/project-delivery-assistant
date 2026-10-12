@@ -53,6 +53,10 @@ final class AttachmentPolicy {
         return new Accepted(name, kind.contentType(), kind.inlineSafe());
     }
 
+    static boolean isImage(String contentType) {
+        return contentType.startsWith("image/");
+    }
+
     /** Last path segment only, no control or path-hostile characters, bounded length with the extension kept. */
     static String sanitizeName(String original) {
         String name = original == null ? "" : original;

@@ -56,8 +56,13 @@ public class TaskViewAssembler {
         Set<UUID> ids = list.stream().map(Task::getId).collect(Collectors.toSet());
 
         Map<UUID, List<UUID>> assigneesByTask = new HashMap<>();
+        // Assigner per task and when they last assigned; self-assignment (pool claim, manager taking it) is no assigner.
+        Map<UUID, Map<UUID, Instant>> assignersByTask = new HashMap<>();
         for (TaskAssignment a : assignments.findByTaskIds(ids)) {
             assigneesByTask.computeIfAbsent(a.getTaskId(), k -> new ArrayList<>()).add(a.getUserId());
+            if (a.getAssignedBy() == null || a.getAssignedBy().equals(a.getUserId())) continue;
+            assignersByTask.computeIfAbsent(a.getTaskId(), k -> new HashMap<>())
+                    .merge(a.getAssignedBy(), a.getAssignedAt(), (x, y) -> x.isAfter(y) ? x : y);
         }
 
         Map<UUID, List<UUID>> labelIdsByTask = new HashMap<>();
@@ -97,6 +102,7 @@ public class TaskViewAssembler {
 
         Set<UUID> userIds = new HashSet<>();
         assigneesByTask.values().forEach(userIds::addAll);
+        assignersByTask.values().forEach(m -> userIds.addAll(m.keySet()));
         for (Task t : list) {
             userIds.add(t.getCreatedBy());
             if (t.getUpdatedBy() != null) userIds.add(t.getUpdatedBy());
@@ -110,6 +116,11 @@ public class TaskViewAssembler {
             List<PersonRef> people = assigneeList.stream()
                     .map(id -> new PersonRef(id, nickname(names, id), photoVersion(names, id)))
                     .sorted(Comparator.comparing(p -> p.nickname() == null ? "" : p.nickname().toLowerCase()))
+                    .toList();
+            List<PersonRef> assigners = assignersByTask.getOrDefault(t.getId(), Map.of()).entrySet().stream()
+                    .filter(e -> nickname(names, e.getKey()) != null)
+                    .sorted(Map.Entry.<UUID, Instant>comparingByValue().reversed())
+                    .map(e -> new PersonRef(e.getKey(), nickname(names, e.getKey()), photoVersion(names, e.getKey())))
                     .toList();
             List<LabelRef> labelRefs = labelIdsByTask.getOrDefault(t.getId(), List.of()).stream()
                     .map(labelsById::get).filter(l -> l != null && l.getArchivedAt() == null)
@@ -128,7 +139,7 @@ public class TaskViewAssembler {
                     t.getCreatedBy(), nickname(names, t.getCreatedBy()), t.getCreatedAt(),
                     t.getUpdatedBy(), t.getUpdatedBy() == null ? null : nickname(names, t.getUpdatedBy()),
                     t.getUpdatedAt(), t.getArchivedAt(), t.getVersion(),
-                    Set.copyOf(assigneeList), people, labelRefs,
+                    Set.copyOf(assigneeList), people, assigners, labelRefs,
                     parent == null ? null : new TaskRef(parent.getId(), parent.getTaskKey(), parent.getTitle()),
                     sub[0], sub[1], chk[0], chk[1],
                     commentCounts.getOrDefault(t.getId(), new int[2])[0],

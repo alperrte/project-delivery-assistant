@@ -101,6 +101,9 @@ class TaskPoolAndMyTasksApiIntegrationTest extends TaskTestBase {
         mvc.perform(get("/api/v1/tasks/pool")).andExpect(status().isUnauthorized());
 
         send(post(claim), inTeam, null).andExpect(status().isOk());
+        // Taking a task from the pool is self-assignment: nobody assigned it.
+        read(tasksUrl(project) + "/" + teamTask, pm).andExpect(jsonPath("$.assigneeIds.length()").value(1))
+                .andExpect(jsonPath("$.assigners.length()").value(0));
         read("/api/v1/tasks/mine?projectId=" + project, inTeam).andExpect(jsonPath("$.counts.poolAvailable").value(1));
         send(post(claim), inTeam, null).andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("TASK_ALREADY_CLAIMED"));
@@ -166,6 +169,28 @@ class TaskPoolAndMyTasksApiIntegrationTest extends TaskTestBase {
         // Leaving the project removes its tasks from the list.
         memberships.removeMember(pm.id(), second, a.id());
         read("/api/v1/tasks/mine", a).andExpect(jsonPath("$.totalElements").value(1));
+    }
+
+    @Test void assignersAreWhoAssignedSomeoneElseAndSelfAssignmentIsNotCounted() throws Exception {
+        Account pm = account("assignerpm");
+        UUID project = project(pm, "Assigner project");
+        Account a = member(project, pm, "assignera");
+        UUID assigned = createTask(project, pm, "{\"title\":\"Given\",\"assigneeIds\":[\"" + a.id() + "\"]}");
+        UUID selfTaken = createTask(project, pm, "{\"title\":\"Self\",\"assigneeIds\":[\"" + pm.id() + "\"]}");
+        UUID unassigned = createTask(project, pm, "{\"title\":\"Nobody\"}");
+
+        read(tasksUrl(project) + "/" + assigned, a).andExpect(jsonPath("$.assigners.length()").value(1))
+                .andExpect(jsonPath("$.assigners[0].userId").value(pm.id().toString()))
+                .andExpect(jsonPath("$.assigners[0].nickname").isNotEmpty());
+        read(tasksUrl(project) + "/" + selfTaken, pm).andExpect(jsonPath("$.assigners.length()").value(0));
+        read(tasksUrl(project) + "/" + unassigned, pm).andExpect(jsonPath("$.assigners.length()").value(0));
+
+        String list = read(tasksUrl(project) + "?size=50", pm).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        assertEquals(1, ((List<?>) JsonPath.read(list, "$.content[?(@.id=='" + assigned + "')].assigners[*]")).size());
+        assertEquals(0, ((List<?>) JsonPath.read(list, "$.content[?(@.id=='" + selfTaken + "')].assigners[*]")).size());
+        read("/api/v1/tasks/mine", a).andExpect(jsonPath("$.content[0].id").value(assigned.toString()))
+                .andExpect(jsonPath("$.content[0].assigners[0].userId").value(pm.id().toString()));
     }
 
     @Test void deadlineReminderIsSentOnceAndMovingTheDeadlineStartsANewCycle() throws Exception {

@@ -64,6 +64,12 @@ public class TaskSupport {
             throw new TaskConflictException("TASK_MODE_NOT_ALLOWED", "Advanced features require an advanced task");
     }
 
+    /** Images belong to both task models; every other file type stays an advanced feature. */
+    public void requireAttachable(Task task, boolean image) {
+        if (image && task.getCreationMode() == TaskCreationMode.SIMPLE) requirePoolTask(task);
+        else requireAdvancedTask(task);
+    }
+
     /** Pool assignment is shared by both task models, including tasks retained after a policy change. */
     public void requirePoolTask(Task task) {
         if (projects.taskContext(task.getProjectId()).taskManagementMode() == null)

@@ -3,6 +3,7 @@
   "enableWorkflows": true,
   "permissions": {
     "deny": [
+      "Agent(Explore)",
       "Read(./assets/**)",
       "Read(./backend/target/**)",
       "Read(./backend/HELP.md)",
