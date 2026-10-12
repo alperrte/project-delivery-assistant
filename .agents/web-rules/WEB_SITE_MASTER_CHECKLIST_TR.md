@@ -1,5 +1,13 @@
 # Web Sitesi Kesinlikle Olması Gerekenler — Master Checklist
 
+## Landing mobil menü, scroll animasyonları ve ortak footer — 2026-10-12 (sınırlı kapsam)
+
+Footer kullanıcı takip düzeltmesi: GitHub hesapları yan yana, iletişim + e-posta aynı satırda, kaynak/lisans ve telif/sürüm ortalı; mobil dikey boşluk azaltıldı. Güncel dev sunucusunda 7 Chromium footer testi (TR/EN/DE, iki tema, 320/390/768/1440 px, landing/login/about + link/sürüm) ve Türkçe mobil WebKit matrix testi başarılı. 320/390 px koyu görseller ve aynı-satır geometrisi incelendi. Footer `[x]` kalır; proje geneli responsive/erişilebilirlik kutuları değişmedi. Kayıt: `docs/compliation/2026-10-12-footer-compact-mobile.md`.
+
+Takip görsel düzeltmesi: mobil menü dil/tema kontrol satırının grid kaynaklı uzaması giderildi; dil etiketi, eşit 46 px yükseklik ve ayraç eklendi. 320/390 px koyu ve 390 px açık görüntüler incelendi; mevcut menü klavye/nested dil menüsü/Escape/dış tıklama/desktop geçişi/rota testi Chromium ve mobil WebKit'te birer başarılı. İlk dış-tıklama testi menünün kapladığı hero başlığına tıklıyordu; gerçek dış gutter koordinatıyla düzeltildi, kapanma assertion'ı korunuyor. Önceki geniş production gate bu küçük takip değişikliği için tekrarlanmadı; global kutular değişmedi. Kayıt: `docs/compliation/2026-10-12-mobile-menu-controls.md`.
+
+Landing hamburger disclosure (1024 px altı; dil/tema/linkler, Escape/odak dönüşü, dış tıklama, viewport değişimi), 480 px ve üstü yükseklikte mobil/tablet/kısa laptop scroll hikâyesi, görünür demo alanlarına kamera ve mobil üye kartı animasyonu, kompakt terminal → teknoloji geçişi, reduced-motion/statik geri dönüş ve ortak footer satır kırılması/44 px hedefler doğrulandı. Üretim build üzerinde 45 Chromium + 8 dokunmatik mobil WebKit testi başarılı; TR/EN/DE, light/dark, 320/390/768/1280/1440/1920 px ve kısa yatay ekran kapsamı; ekran görüntüleri incelendi. Lint, TypeScript, production build ve diff kontrolü başarılı. Footer mevcut ortak kapsamını korur; Responsive / Mobil Görünüm / Keyboard Navigation / Focus State global kutuları bu teslimle tamamlanmış sayılmaz. Ayrı mobil WebKit denemesinde mevcut skip-link ilk Tab odağı testi başarısız kaldı; nihai 8 test bu ayrı klavye testini kapsamaz, gerçek iOS klavye kontrolü açıktır. Kayıt: `docs/compliation/2026-10-12-landing-mobile-navigation-motion-footer.md`.
+
 ## Sohbet kullanım ipucu kaldırılması — 2026-10-11
 
 Takip düzenlemesi: Gönder düğmesi 44×44 px ve mesaj alanına dikey ortalıdır. İlgili Responsive / erişilebilirlik global kutuları bu küçük stil değişikliğiyle tamamlanmış sayılmadı.
@@ -106,6 +114,7 @@ Bu checklist uygulanırken:
 # A — Genel / Kurumsal
 
 - [x] **Footer** — Kullanıcının yasal, kurumsal ve önemli bağlantılara site genelinde ulaşmasını sağlar.
+  - 2026-10-12: Güncel kod landing/auth/public sayfalarda aynı `SiteFooter` bileşenini kullanır. Mobil bilgi bağlantıları iki sütun, ekip/iletişim/kaynak/lisans blokları sola hizalıdır; TR/EN/DE, iki tema, 320/390/768/1440 px hedef/taşma ve mevcut footer link/sürüm/odak kontrolleri production build üzerinde doğrulandı. Oturumlu çalışma alanı hesabındaki bilgi bağlantıları korunur.
   - 2026-10-03: Auth ve bilgi sayfalarında SiteFooter, landing’de kompakt LandingFooter bulunur. Kullanıcı tercihiyle çalışma ekranlarında footer yerine hesap menüsündeki “Bilgi ve destek” bağlantıları kullanılır. Public test paketi bu erişimi doğrular.
   - 2026-10-05: Landing footer, login ile aynı ortak CONTRIBUTORS listesinden Alper/Hamza GitHub profillerini ve aynı kaynak kod/Apache 2.0 bağlantısını gösterir. TR/EN/DE, light/dark, 320/390/1440 px hedefli kontrol; doğru href, ikon, metin, 44 px hedef ve klavye odağı doğrulandı.
 - [x] **KVKK** — Kişisel veri işleme süreçleriyle ilgili gerekli bilgilendirme ve kullanıcı hakları erişilebilir olmalıdır.

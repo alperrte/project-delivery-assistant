@@ -50,7 +50,7 @@ export function ProductDemo() {
   const [progress, setProgress] = useState<number | null>(null);
   const [ready, setReady] = useState(false);
   const windowRef = useRef<HTMLDivElement>(null);
-  // One observer for all four chapters: on desktop only the current chapter is displayed, so the others have no box to observe,
+  // One observer for all four chapters: during choreography only the current chapter is displayed, so the others have no box to observe,
   // and they must be ready the moment they are shown.
   useEffect(() => {
     const element = windowRef.current;

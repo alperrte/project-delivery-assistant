@@ -32,7 +32,9 @@ export function OpenSourceScene() {
       if (disposed) return;
       gsap.registerPlugin(ScrollTrigger);
       const media = gsap.matchMedia();
-      media.add("(min-width: 1024px) and (min-height: 800px)", () => {
+      media.add({ active: "(min-height: 480px)", compact: "(max-width: 1023px), (max-height: 799px)" }, context => {
+        if (!context.conditions?.active) return;
+        const compact = context.conditions.compact;
         const groups = Array.from(element.querySelectorAll<HTMLElement>("[data-command-group]"));
         const commands = groups.map(group => group.querySelector<HTMLElement>("[data-command]")!);
         const outputs = groups.map(group => group.querySelector<HTMLElement>("[data-output]")!);
@@ -50,7 +52,7 @@ export function OpenSourceScene() {
           const tick = gsap.utils.clamp(0, 1, progress.value / 0.72) * total;
           const active = starts.reduce((current, start, i) => tick >= start ? i : current, 0);
           groups.forEach((group, i) => {
-            group.hidden = i > active || i < active - 2;
+            group.hidden = i > active || i < active - (compact ? 1 : 2);
             const length = Math.max(0, Math.min(lengths[i], Math.floor(tick - starts[i])));
             const text = (commands[i].dataset.fullText ?? "").slice(0, length);
             if (commands[i].textContent !== text) commands[i].textContent = text;
@@ -62,9 +64,14 @@ export function OpenSourceScene() {
         };
         const timeline = gsap.timeline({ paused: true, defaults: { ease: "none" } });
         timeline.to(progress, { value: 1, duration: 100, onUpdate: render }, 0)
-          .fromTo(element.querySelector("[data-cmd-window]"), { y: 12, opacity: 0 }, { y: 0, opacity: 1, duration: 4 }, 0)
-          .to(element.querySelector("[data-cmd-window]"), { scale: 0.74, xPercent: -29, duration: 10, ease: "power2.inOut" }, 74)
-          .to(facts, { autoAlpha: 1, y: 0, stagger: 2, duration: 5 }, 83);
+          .fromTo(element.querySelector("[data-cmd-window]"), { y: 12, opacity: 0 }, { y: 0, opacity: 1, duration: 4 }, 0);
+        if (compact) {
+          // On phones the facts take the terminal's place, keeping both readable at full width.
+          timeline.to(element.querySelector("[data-cmd-window]"), { autoAlpha: 0, y: -8, duration: 7 }, 74);
+        } else {
+          timeline.to(element.querySelector("[data-cmd-window]"), { scale: 0.74, xPercent: -29, duration: 10, ease: "power2.inOut" }, 74);
+        }
+        timeline.to(facts, { autoAlpha: 1, y: 0, stagger: compact ? 1 : 2, duration: 5 }, 83);
         const update = (scrollProgress: number) => timeline.progress(advanceAnimationProgress("source", scrollProgress));
         const trigger = ScrollTrigger.create({
           id: "landing-source", trigger: element, start: "top top", end: "bottom bottom",

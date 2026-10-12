@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "@/i18n/navigation";
-import { useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { ArrowDown, ArrowUpRight } from "lucide-react";
+import { ArrowDown, ArrowUpRight, Menu, X } from "lucide-react";
 import { Logo } from "@/components/common/logo";
 import { consumeHomeReturn } from "@/components/common/home-link";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
@@ -21,8 +21,35 @@ export function LandingPage() {
   const t = useTranslations("landing");
   const footer = useTranslations("siteFooter");
   const root = useRef<HTMLDivElement>(null);
+  const header = useRef<HTMLElement>(null);
+  const menuButton = useRef<HTMLButtonElement>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
   const returnRequested = useRef<boolean | null>(null);
   const reduce = useReducedMotionPreference();
+  useEffect(() => {
+    const desktop = window.matchMedia("(min-width: 1024px)");
+    const closeOnDesktop = () => { if (desktop.matches) setMenuOpen(false); };
+    desktop.addEventListener("change", closeOnDesktop);
+    return () => desktop.removeEventListener("change", closeOnDesktop);
+  }, []);
+  useEffect(() => {
+    if (!menuOpen) return;
+    const outside = (event: PointerEvent) => {
+      if (event.target instanceof Node && !header.current?.contains(event.target)) setMenuOpen(false);
+    };
+    const escape = (event: KeyboardEvent) => {
+      // Nested language menus consume their own Escape first.
+      if (event.key !== "Escape" || event.defaultPrevented || !(event.target instanceof Node) || !header.current?.contains(event.target)) return;
+      setMenuOpen(false);
+      menuButton.current?.focus();
+    };
+    document.addEventListener("pointerdown", outside);
+    document.addEventListener("keydown", escape);
+    return () => {
+      document.removeEventListener("pointerdown", outside);
+      document.removeEventListener("keydown", escape);
+    };
+  }, [menuOpen]);
   useLayoutEffect(() => {
     if (returnRequested.current === null) returnRequested.current = consumeHomeReturn();
     if (reduce) { returnRequested.current = false; return; }
@@ -38,13 +65,18 @@ export function LandingPage() {
   return (
     <div ref={root} className={styles.landing}>
       <a href="#landing-main" className={styles.skip}>{t("skip")}</a>
-      <header className={styles.header}>
+      <header ref={header} className={styles.header}>
         <Link href="/" aria-label="PDA · Project Delivery Assistant" className={styles.logo}>
           <Logo variant="wordmark" compact plain size={110} />
         </Link>
-        <nav aria-label={t("navigation")} className={styles.controls}>
-          <LocaleSwitcher hideLabelOnMobile triggerClassName="min-h-11" />
-          <ThemeToggle />
+        <button ref={menuButton} type="button" className={styles.menuButton} aria-label={t("navigation")} aria-expanded={menuOpen} aria-controls="landing-navigation" onClick={() => setMenuOpen(open => !open)}>
+          {menuOpen ? <X size={22} aria-hidden="true" /> : <Menu size={22} aria-hidden="true" />}
+        </button>
+        <nav id="landing-navigation" aria-label={t("navigation")} className={styles.controls} data-open={menuOpen} onClick={event => { if ((event.target as HTMLElement).closest("a[href]")) setMenuOpen(false); }}>
+          <div className={styles.preferences}>
+            <LocaleSwitcher triggerClassName={cn("min-h-11", styles.languageTrigger)} />
+            <ThemeToggle />
+          </div>
           <Link href="/about" className={styles.headerLink}>{footer("about")}</Link>
           <Link href="/contact" className={styles.headerLink}>{footer("contact")}</Link>
           <TrackedLink ctaId="header_login" href="/login" className={styles.headerLink}>{t("login")}</TrackedLink>

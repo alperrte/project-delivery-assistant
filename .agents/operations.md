@@ -27,7 +27,7 @@ Linux sunucuda (production compose, `.env.prod`) aynı işi `ops/backup.sh` ve `
 # günlük 03:15 (crontab -e):  15 3 * * * /home/deploy/project-delivery-assistant/ops/backup.sh >> /var/log/pda-backup.log 2>&1
 ```
 
-Sunucu dışı kopya: yedek klasörü, makine kaybında birlikte gideceği için ayrıca başka bir yere taşınmalıdır (ör. `rclone` ile nesne depolama veya bilgisayarınıza `scp`/`rsync`). Hedef depo henüz seçilmedi (`deployment.md` açık karar kaydı).
+Sunucu dışı kopya: yedek klasörü, makine kaybında birlikte gideceği için ayrıca başka bir yere taşınmalıdır. Seçilen yol: geliştiricinin bilgisayarından harici diske çekmek. `.\ops\pull-backups.ps1` (varsayılan hedef `F:\Sunucu-Yedek`, `-Destination` ile değişir) sunucudaki `/var/backups/pda` içinden yalnız henüz inmemiş dosyaları `scp` ile indirir; parola sormaz (SSH anahtarı), yarım inen dosyayı `.part` olarak tutar, hiçbir yeri silmez ve ezmez. Elle ya da Windows Görev Zamanlayıcı ile çalıştırılır; diskteki eski kopyaları kullanıcı kendisi siler. Bilgisayar kapalıyken o gün atlanır, açılınca eksikler indirilir.
 
 Kurallar:
 
@@ -178,3 +178,4 @@ Bunlar kod değil, depo/hesap ayarıdır; yapılmadan ilgili checklist maddeleri
 | 2026-10-12 | OAuth `redirect_uri` Caddy arkasında (sahte istemci kimliğiyle) | `https://<host>/api/v1/auth/oauth2/callback/google`: `https` doğru üretiliyor |
 | 2026-10-12 | `ops/backup.sh` + `ops/restore.sh` (production compose) | `bash -n` temiz; yedek alındı (DB dump + medya arşivi); geçici DB'ye açıldı (56 tablo, 40 Flyway kaydı, 1 kullanıcı) ve silindi. Gerçek Linux sunucuda ve cron ile henüz denenmedi |
 | 2026-10-12 | `ops/env.ps1` profil geçişi (`.env.dev` ↔ `.env.prod` → etkin `.env`) | `status`, `use dev` ve `use prod` çalıştı; elle düzenlenmiş `.env` reddedildi, `-Force` `.env.bak` yedeği aldı; `docker compose -f docker-compose.prod.yml --env-file .env.prod config --quiet` temiz; test artıkları silindi |
+| 2026-10-12 | `ops/pull-backups.ps1` (sunucudan yerel diske yedek çekme) | Sözdizimi temiz; aynı komut elle `scp` ile denendi (2 dosya `F:\Sunucu-Yedek` içine indi, boyutlar sunucuyla aynı). Betiğin kendisi de çalıştırıldı: iki dosya zaten diskte olduğu için `newly downloaded: 0` döndü (yeni dosya indirme yolu, ertesi günkü cron yedeğiyle doğrulanacak) |

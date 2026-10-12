@@ -7,8 +7,9 @@ Karar verildi: tek bir **Hostinger KVM 2 VPS** (2 vCPU, 8 GB RAM, 100 GB NVMe, U
 - **Ortam ayrımı (iki profil).** Gerçek değerler iki profil dosyasındadır: `.env.dev` (yerel geliştirme, `docker-compose.yml`) ve `.env.prod` (production, `docker-compose.prod.yml`). İkisi de Git dışındadır; `.env.prod` için şablon dosya yoktur, her değerin açıklaması `.env.prod` içindeki yorumlardadır (değişken adları `operations.md` §6a'da). `.env` yalnız **etkin profilin kopyasıdır** (`docker-compose.yml`, `pre-push` ve `ops/backup.ps1` onu okur) ve `.\ops\env.ps1 use dev|prod` ile yazılır; değişiklik `.env` içine değil profil dosyasına yapılır. Production değerleri (JWT, HMAC, TOTP anahtarı, DB ve admin parolası) geliştirme değerlerinden farklı üretilmiştir ve asla aynı olmamalıdır. Sunucuda yalnız `.env.prod` bulunur ve doğrudan `--env-file .env.prod` ile kullanılır.
 - **İmajlar sunucuda derlenir** (`up -d --build`); registry yoktur. Bellek sınırları (toplam ≈ 4,75 GB: postgres 1,5 GB, backend 2 GB — JVM heap %70, frontend 1 GB, caddy 256 MB) 8 GB'lık sunucuda derleme için yer bırakır; 2 GB swap önerilir. Her konteynerin logu en çok 5×10 MB tutulur.
 - **Ayrıcalıksız çalışma.** Frontend `node` kullanıcısıyla (Dockerfile `USER node`), backend `10001` kullanıcısıyla çalışır; backend kullanıcısı production compose'ta `user: "10001:10001"` ile verilir (geliştirme compose'u root kalır, eski medya volume'ü bozulmaz). Medya klasörü imajda bu kullanıcıya aittir; **yeni** bir named volume bu sahipliği devralır. Eski, root sahipli bir volume'ü production'a bağlamayın.
-- **Yedek.** Linux sunucuda `ops/backup.sh` ve `ops/restore.sh` (DB + medya); cron ile günlük, son 14 kopya; sunucu dışı kopya ayrıca (bkz. `operations.md` §1 ve §6b). Hostinger haftalık anlık görüntüsü (snapshot) ek güvencedir.
 - **Mail.** Hostinger Email: `smtp.hostinger.com:465`, implicit SSL/TLS; gönderen `info@pd-assistant.com`. Alternatif relay ENV üzerinden seçilir.
+- **Yedek.** Linux sunucuda `ops/backup.sh` ve `ops/restore.sh` (DB + medya); cron ile günlük, son 14 kopya; sunucu dışı kopya `ops/pull-backups.ps1` ile geliştirici bilgisayarından harici diske çekilir (bkz. `operations.md` §1 ve §6b). Hostinger haftalık anlık görüntüsü (snapshot) ek güvencedir.
+- **Mail.** Başlangıçta Gmail uygulama şifresi; spam sorunu çıkarsa alan adına ait bir SMTP servisine (Resend/Brevo) geçilir (yalnız `SMTP_*`/`MAIL_FROM` değişir).
 - **Halka açma kapısı.** Teknik kurulum yayından önce tamamlanabilir; KVKK/Gizlilik/Kullanım Koşulları metinleri bitmeden site duyurulmaz.
 - Adım adım sunucu kurulumu ve yayın kontrolü: `operations.md` §6a, §6b, §7.
 
@@ -94,7 +95,7 @@ Backend profilleri `application-dev.yml`, `application-test.yml`, `application-p
 | Container registry | Yok: imajlar sunucuda derlenir |
 | Deploy tetikleme/workflow | Elle (`git pull` + `up -d --build`); otomasyon sonra değerlendirilir |
 | Free-tier limitleri/sleep davranışı | Geçerli değil (ücretli VPS, sürekli açık) |
-| Backup/restore | `ops/backup.sh` + cron, sunucu dışı kopya, Hostinger snapshot; sunucu dışı depo seçimi açık |
+| Backup/restore | `ops/backup.sh` + cron, sunucu dışı kopya (`ops/pull-backups.ps1` ile harici diske), Hostinger snapshot |
 
 Seçim ölçütleri: ücretsiz veya düşük maliyet, Spring Boot + Docker uyumu, HTTPS ve güvenli secret yönetimi, PostgreSQL bağlantı güvenilirliği, mail stratejisiyle uyum ve açık kaynak kullanıcılar için tekrarlanabilir kurulum.
 
