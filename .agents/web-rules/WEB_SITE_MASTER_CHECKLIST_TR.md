@@ -360,3 +360,11 @@ Yalnız Breadcrumb maddesiyle ilişkili: kullanıcının istediği ekip detay/d�
 ## Proje / organizasyon logo şekli — 2026-10-12 (sınırlı kapsam)
 
 Etkilenen Görsel fallback / Responsive / Dark Mode / Form Validation / Keyboard Navigation / Focus State maddeleri açısından yalnız logo yüzeyleri doğrulandı: ortak native radio seçici, dört formda anlık preview ve API/DB kalıcılığı, Circle 50% kırpma ve Square mevcut radius, kart/başlık/sidebar/ekip/sohbet/davet tutarlılığı. TR/EN/DE, light/dark ve 320/390/768/1440 px overflow/klavye kontrolleri geçti; mobil/masaüstü ekran görüntüleri incelendi. 4 yeni + 25 mevcut Chromium testi, hedefli backend verify 60/0/0/0 ve son lint/type/build exit0. Normal başarılar gerçek API/PostgreSQL/medya; QA hesap hazırlığı ve mevcut regresyon hata/latency senaryoları TEST-ONLY. Global maddeler bu kapsamla [x] yapılmadı; production veya tüm tarayıcı audit'i iddia edilmez. Ayrıntı: docs/compliation/2026-10-12-project-organization-logo-shape.md.
+
+## Sohbet Word/PDF yükleme uyumluluğu — 2026-10-12 (sınırlı kapsam)
+
+Dosya doğrulamasındaki yanlış retler giderildi: PDF normal sayfa hedefleri, Word güvenli hyperlink ilişkileri, bilinen MIME parametre/alias'ları desteklenir; boyut ve etkin içerik engelleri korunur. Frontend görünümü değişmedi. Kullanıcının testleri sonlandırma isteğine uygun olarak yeni otomatik test koşumu yapılmadı; regresyon senaryoları kaynakta eklendi ve derlemede compile edildi. Global Form Validation / Error State kutuları bu sınırlı düzeltmeyle tamamlandı sayılmadı. Kayıt: `docs/compliation/2026-10-12-chat-document-upload-compatibility.md`.
+
+## Sohbet PDF Content Credentials düzeltmesi — 2026-10-12 (sınırlı kapsam)
+
+Repodaki 958377 byte CV'nin ret nedeni 24296 byte C2PA metadata'sı olarak doğrudan teşhis edildi. Yeni doğrulayıcı aynı PDF'yi `application/pdf` olarak kabul eder; gerçek dosya yeniden oluşturulmaz. Genel otomatik test koşumu yapılmadı; yalnız dosya üzerinde validator incelemesi ve backend derlemesi yapıldı. Form Validation / Error State genel kutuları bu sınırlı kanıtla değiştirilmedi. Kayıt: `docs/compliation/2026-10-12-chat-pdf-c2pa.md`.

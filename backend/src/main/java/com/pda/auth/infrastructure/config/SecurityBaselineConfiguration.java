@@ -133,6 +133,7 @@ public class SecurityBaselineConfiguration {
                                     || path.equals("/api/v1/organizations") || path.startsWith("/api/v1/organizations/")
                                     || path.startsWith("/api/v1/tasks/")
                                     || path.startsWith("/api/v1/users/")
+                                    || path.startsWith("/api/v1/chat/")
                                     || path.equals("/api/v1/ws")
                                     || path.equals("/api/v1/project-invitations/me")
                                     || path.startsWith("/api/v1/project-invitations/")
@@ -203,6 +204,12 @@ public class SecurityBaselineConfiguration {
                             // Project chat WebSocket handshake (STOMP over native WebSocket); the PDA_ACCESS cookie is
                             // Path=/api, which is why the endpoint lives under /api.
                             .requestMatchers(HttpMethod.GET, "/api/v1/ws").authenticated()
+                            .requestMatchers(HttpMethod.POST,"/api/v1/chat/conversations/*/messages/attachment").authenticated()
+                            .requestMatchers(HttpMethod.GET,"/api/v1/chat/conversations/*/messages/*/attachment","/api/v1/chat/conversations/*/messages/*/info").authenticated()
+                            .requestMatchers(HttpMethod.GET, "/api/v1/chat/conversations", "/api/v1/chat/members", "/api/v1/chat/conversations/*/messages", "/api/v1/chat/conversations/*/receipts", "/api/v1/chat/conversations/*/messages/reactions").authenticated()
+                            .requestMatchers(HttpMethod.POST, "/api/v1/chat/direct/*", "/api/v1/chat/conversations/*/messages", "/api/v1/chat/conversations/*/read", "/api/v1/chat/conversations/*/typing").authenticated()
+                            .requestMatchers(HttpMethod.PUT, "/api/v1/chat/conversations/*/messages/*/reactions/*").authenticated()
+                            .requestMatchers(HttpMethod.DELETE, "/api/v1/chat/conversations/*/messages/*", "/api/v1/chat/conversations/*/messages/*/reactions/*").authenticated()
                             .requestMatchers(HttpMethod.GET, "/api/v1/projects/*/chat/conversations/*/messages/reactions").authenticated()
                             .requestMatchers(HttpMethod.PUT, "/api/v1/projects/*/chat/conversations/*/messages/*/reactions/*").authenticated()
                             .requestMatchers(HttpMethod.DELETE, "/api/v1/projects/*/chat/conversations/*/messages/*/reactions/*").authenticated()
@@ -336,6 +343,7 @@ public class SecurityBaselineConfiguration {
         source.registerCorsConfiguration("/api/v1/contact", configuration);
         source.registerCorsConfiguration("/api/v1/projects", configuration);
         source.registerCorsConfiguration("/api/v1/projects/**", configuration);
+        source.registerCorsConfiguration("/api/v1/chat/**", configuration);
         source.registerCorsConfiguration("/api/v1/tasks/**", configuration);
         source.registerCorsConfiguration("/api/v1/users/**", configuration);
         source.registerCorsConfiguration("/api/v1/organizations", configuration);

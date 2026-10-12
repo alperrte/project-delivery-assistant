@@ -195,7 +195,7 @@ public class ProjectAccessService implements ProjectAccess {
                 .filter(project -> project.getArchivedAt() == null)
                 .map(project -> new ProjectSummaryView(project.getId(), project.getSlug(), project.getName(),
                         project.getLogoUpdatedAt() == null ? null : project.getLogoUpdatedAt().toEpochMilli(),
-                        RolePolicy.permissions(byProject.get(project.getId()).getRoles()), project.getTaskManagementMode()))
+                        RolePolicy.permissions(byProject.get(project.getId()).getRoles()), project.getTaskManagementMode(),project.getLogoShape()))
                 .sorted(java.util.Comparator.comparing(ProjectSummaryView::name, String.CASE_INSENSITIVE_ORDER))
                 .toList();
     }

@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/projects/{projectId}/chat")
+@RequestMapping({"/api/v1/projects/{projectId}/chat", "/api/v1/chat"})
 public class ChatController {
 
     private final ChatService chat;
@@ -42,7 +42,7 @@ public class ChatController {
             description = "Project members only. The project group (created on first use), the caller's direct "
                     + "conversations with last message preview and unread count, and the project's total unread.")
     public ChatResponses.Overview overview(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
-                                           @PathVariable UUID projectId) {
+                                           @PathVariable(required=false) UUID projectId) {
         return ChatResponses.Overview.from(chat.overview(actorId(principal), projectId));
     }
 
@@ -51,7 +51,7 @@ public class ChatController {
             description = "The other active members of the project (never an email address), with the id of the "
                     + "direct conversation when one exists.")
     public List<ChatResponses.Member> members(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
-                                              @PathVariable UUID projectId) {
+                                              @PathVariable(required=false) UUID projectId) {
         return chat.members(actorId(principal), projectId).stream().map(ChatResponses.Member::from).toList();
     }
 
@@ -60,7 +60,7 @@ public class ChatController {
             description = "Finds or creates the 1:1 conversation with another member of the same project (A to B and "
                     + "B to A are the same conversation). Yourself is 400, a non-member 404. Requires CSRF.")
     public ChatResponses.Conversation openDirect(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
-                                                 @PathVariable UUID projectId, @PathVariable UUID userId) {
+                                                 @PathVariable(required=false) UUID projectId, @PathVariable UUID userId) {
         return ChatResponses.Conversation.from(chat.openDirect(actorId(principal), projectId, userId));
     }
 
@@ -70,7 +70,7 @@ public class ChatController {
                     + "messages oldest first (reconnect catch-up). limit 1..100, default 30. Messages are oldest to "
                     + "newest in every case.")
     public ResponseEntity<ChatResponses.MessagePage> messages(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
-                                              @PathVariable UUID projectId, @PathVariable UUID conversationId,
+                                              @PathVariable(required=false) UUID projectId, @PathVariable UUID conversationId,
                                               @RequestParam(required = false) UUID before,
                                               @RequestParam(required = false) UUID after,
                                               @RequestParam(required = false) Integer limit) {
@@ -84,7 +84,7 @@ public class ChatController {
                     + "to the participants over the WebSocket after commit. 30 messages per minute per user. "
                     + "Requires CSRF.")
     public ResponseEntity<ChatResponses.Message> send(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
-                                                      @PathVariable UUID projectId, @PathVariable UUID conversationId,
+                                                      @PathVariable(required=false) UUID projectId, @PathVariable UUID conversationId,
                                                       @RequestBody SendMessageRequest request) {
         ChatResponses.Message body = ChatResponses.Message.from(
                 chat.send(actorId(principal), projectId, conversationId, request.content(), request.replyToMessageId()));
@@ -95,8 +95,10 @@ public class ChatController {
     @Operation(summary = "Mark a conversation read", description = "Requires CSRF.")
     @ApiResponse(responseCode = "204", description = "Conversation marked read")
     public ResponseEntity<Void> markRead(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
-                                         @PathVariable UUID projectId, @PathVariable UUID conversationId) {
-        chat.markRead(actorId(principal), projectId, conversationId);
+                                         @PathVariable(required=false) UUID projectId, @PathVariable UUID conversationId,
+                                         @RequestBody(required=false) VisibleMessages request) {
+        if(projectId==null) chat.markVisible(actorId(principal),conversationId,request==null?null:request.messageIds());
+        else chat.markRead(actorId(principal), projectId, conversationId);
         return ResponseEntity.noContent().build();
     }
 
@@ -105,7 +107,7 @@ public class ChatController {
             description = "Participants only. The other active members' read markers {userId, readAt}; a message is "
                     + "\"seen\" by someone when readAt is not before its createdAt. Updates arrive as SEEN events.")
     public ResponseEntity<List<ChatResponses.Receipt>> receipts(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
-                                                                @PathVariable UUID projectId, @PathVariable UUID conversationId) {
+                                                                @PathVariable(required=false) UUID projectId, @PathVariable UUID conversationId) {
         return ResponseEntity.ok().header("Cache-Control", "private, no-store").body(
                 chat.receipts(actorId(principal), projectId, conversationId).stream().map(ChatResponses.Receipt::from).toList());
     }
@@ -117,7 +119,7 @@ public class ChatController {
                     + "WebSocket. Requires CSRF.")
     @ApiResponse(responseCode = "204", description = "Message deleted (or already deleted)")
     public ResponseEntity<Void> deleteMessage(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
-                                              @PathVariable UUID projectId, @PathVariable UUID conversationId,
+                                              @PathVariable(required=false) UUID projectId, @PathVariable UUID conversationId,
                                               @PathVariable UUID messageId) {
         chat.deleteMessage(actorId(principal), projectId, conversationId, messageId);
         return ResponseEntity.noContent().build();
@@ -130,7 +132,7 @@ public class ChatController {
                     + "always the authenticated user. 120 signals per minute per user. Requires CSRF.")
     @ApiResponse(responseCode = "204", description = "Signal accepted")
     public ResponseEntity<Void> typing(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
-                                       @PathVariable UUID projectId, @PathVariable UUID conversationId,
+                                       @PathVariable(required=false) UUID projectId, @PathVariable UUID conversationId,
                                        @RequestBody TypingRequest request) {
         chat.typing(actorId(principal), projectId, conversationId, Boolean.TRUE.equals(request.typing()));
         return ResponseEntity.noContent().build();
@@ -139,25 +141,30 @@ public class ChatController {
     @PutMapping("/conversations/{conversationId}/messages/{messageId}/reactions/{emojiCode}")
     @Operation(summary="Add own reaction", description="Idempotent; active project member and conversation participant only. Requires CSRF. Six canonical codes; 60 attempts per minute independently of message sends.")
     public ResponseEntity<ChatResponses.Reactions> react(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
-            @PathVariable UUID projectId,@PathVariable UUID conversationId,@PathVariable UUID messageId,@PathVariable String emojiCode) {
+            @PathVariable(required=false) UUID projectId,@PathVariable UUID conversationId,@PathVariable UUID messageId,@PathVariable String emojiCode) {
         return ResponseEntity.ok().header("Cache-Control","private, no-store").body(
                 ChatResponses.Reactions.from(reactions.put(actorId(principal),projectId,conversationId,messageId,emojiCode)));
     }
     @DeleteMapping("/conversations/{conversationId}/messages/{messageId}/reactions/{emojiCode}")
     @Operation(summary="Remove own reaction", description="Idempotent; cannot remove another user's reaction. Requires CSRF. Returns current versioned snapshot, including an empty list after last removal.")
     public ResponseEntity<ChatResponses.Reactions> unreact(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
-            @PathVariable UUID projectId,@PathVariable UUID conversationId,@PathVariable UUID messageId,@PathVariable String emojiCode) {
+            @PathVariable(required=false) UUID projectId,@PathVariable UUID conversationId,@PathVariable UUID messageId,@PathVariable String emojiCode) {
         return ResponseEntity.ok().header("Cache-Control","private, no-store").body(
                 ChatResponses.Reactions.from(reactions.remove(actorId(principal),projectId,conversationId,messageId,emojiCode)));
     }
     @GetMapping("/conversations/{conversationId}/messages/reactions")
     @Operation(summary="Refresh reactions of loaded messages", description="One scoped batch, 1..50 message UUIDs. Any foreign or missing message is 404; no per-message fetch. Personalized flags and version/count share a SQL snapshot.")
     public ResponseEntity<List<ChatResponses.Reactions>> reactionSnapshots(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
-            @PathVariable UUID projectId,@PathVariable UUID conversationId,@RequestParam List<UUID> messageIds) {
+            @PathVariable(required=false) UUID projectId,@PathVariable UUID conversationId,@RequestParam List<UUID> messageIds) {
         return ResponseEntity.ok().header("Cache-Control","private, no-store").body(
                 reactions.snapshots(actorId(principal),projectId,conversationId,messageIds).stream().map(ChatResponses.Reactions::from).toList());
     }
 
+    public record VisibleMessages(List<UUID> messageIds) {}
+    @GetMapping("/conversations/{conversationId}/messages/{messageId}/info")
+    public ResponseEntity<com.pda.chat.application.service.ChatViews.MessageInfo> info(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,@PathVariable UUID conversationId,@PathVariable UUID messageId) {
+        return ResponseEntity.ok().header("Cache-Control","private, no-store").body(chat.messageInfo(actorId(principal),conversationId,messageId));
+    }
     private static UUID actorId(UserAccounts.AuthenticatedUser principal) {
         if (principal == null || principal.id() == null) {
             throw new AccessDeniedException("Authentication required");

@@ -28,7 +28,7 @@ public class ChatConversation {
     @Id
     private UUID id;
 
-    @Column(name = "project_id", nullable = false, updatable = false)
+    @Column(name = "project_id", updatable = false)
     private UUID projectId;
 
     @Enumerated(EnumType.STRING)
@@ -68,7 +68,7 @@ public class ChatConversation {
         }
         ChatConversation conversation = new ChatConversation();
         conversation.id = UUID.randomUUID();
-        conversation.projectId = Objects.requireNonNull(projectId, "projectId is required");
+        conversation.projectId = null;
         conversation.type = ChatConversationType.DIRECT;
         boolean aFirst = compareLikePostgres(userA, userB) < 0;
         conversation.directUserLow = aFirst ? userA : userB;

@@ -518,3 +518,11 @@ Kullanıcı tercihiyle ekip detay (`/projects/[slug]/teams/[teamId]`), ekip düz
 ## Logo şekli — 2026-10-12
 
 Ortak LogoShapePicker iki görsel örnekli native radio kullanır: ok tuşları, tek Tab durağı, 64 px hedef ve mevcut border/primary/ring token'ları. EntityMark shape, logolu/logosuz/hatalı görselde aynı tercihi taşır. Dış kimlik çerçeveleri data-logo-frame ile işaretlenir; globals.css doğrudan Circle mark içeren çerçeveyi border-radius:50% ve overflow clipping ile değiştirir. Square yüzeyin mevcut radius token'ını korur. Kapak ve kişi avatarları bu sözleşmeye dahil değildir. TR/EN/DE metinleri logoShape namespace'indedir.
+
+## Merkezi sohbet arayüzü — 2026-10-12
+
+Mesajlaşma girişi global Kişisel navigasyondadır; seçili projenin altında değildir. All/DM/Projects kategorileri aynı mevcut Titanium yüzey ve button token'larını kullanır; sıralama son mesaj tarihine göredir. Grup adı/logo/shape konuşmanın kendi proje metadata'sından gelir. Mevcut full/bar/compact, mobil liste→konuşma, emoji/reply/reaction/delete düzeni korunur.
+
+Composer'da 44 px dosya kontrolü, güvenli dosya adı/tür/boyut ve küçük blob preview vardır; upload sırasında çift gönderim engellenir, hatada metin/dosya korunur. Blob URL'leri değişim ve unmount'ta temizlenir. Özel API image'leri cookie gerektirdiği için native img kullanır; proxy yapılmaz. Dosyaların büyük gösterimi ve own-message Bilgi dialogu mevcut Dialog/focus/theme sistemini, viewport sınırı ve overscroll-contain'i kullanır. Escape yalnız dialogu kapatır. Bilgi TR/EN/DE ve Intl tarih/saat formatlarını kullanır; eski okuma kanıtı ayrı legacy açıklaması taşır.
+
+Read isteği aktif belgede IntersectionObserver ile görünür message ID'lerinden oluşur; aynı view'de onaylanan ID yeniden gönderilmez. Okunmamış kayıtlar yalnız liste preview'sinden ya da websocket varışından read yapılmaz.

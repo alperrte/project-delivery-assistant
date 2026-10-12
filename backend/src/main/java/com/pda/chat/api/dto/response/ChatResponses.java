@@ -30,16 +30,16 @@ public final class ChatResponses {
         public static Reactions from(ChatViews.ReactionSnapshot view) { return new Reactions(view.messageId(),view.reactionVersion(),view.reactions().stream().map(Reaction::from).toList()); }
     }
     public record Message(UUID id, UUID conversationId, String content, Instant createdAt, UserSummary sender,
-                          Reply replyTo, String reactionVersion, List<Reaction> reactions, boolean deleted) {
+                          Reply replyTo, String reactionVersion, List<Reaction> reactions, boolean deleted, ChatViews.AttachmentView attachment) {
         public static Message from(ChatViews.MessageView view) {
             return new Message(view.id(), view.conversationId(), view.content(), view.createdAt(),
                     UserSummary.from(view.sender()), view.replyTo()==null?null:new Reply(view.replyTo().id(),UserSummary.from(view.replyTo().sender()),view.replyTo().preview(),view.replyTo().deleted()),
-                    view.reactionVersion(),view.reactions().stream().map(Reaction::from).toList(),view.deleted());
+                    view.reactionVersion(),view.reactions().stream().map(Reaction::from).toList(),view.deleted(),view.attachment());
         }
     }
 
-    public record Receipt(UUID userId, Instant readAt) {
-        public static Receipt from(ChatViews.ReceiptView view) { return new Receipt(view.userId(), view.readAt()); }
+    public record Receipt(UUID userId, Instant readAt, UUID messageId) {
+        public static Receipt from(ChatViews.ReceiptView view) { return new Receipt(view.userId(), view.readAt(),view.messageId()); }
     }
 
     public record LastMessage(String preview, Instant createdAt, UUID senderUserId, boolean deleted) {
@@ -50,17 +50,17 @@ public final class ChatResponses {
 
     /** {@code peer} is null for the project group. */
     public record Conversation(UUID id, ChatConversationType type, UserSummary peer, LastMessage lastMessage,
-                               long unread) {
+                               long unread, UUID projectId, String projectName, Long logoVersion, com.pda.project.LogoShape logoShape) {
         public static Conversation from(ChatViews.ConversationView view) {
             return new Conversation(view.id(), view.type(), UserSummary.from(view.peer()),
-                    LastMessage.from(view.lastMessage()), view.unread());
+                    LastMessage.from(view.lastMessage()), view.unread(), view.projectId(), view.projectName(), view.logoVersion(),view.logoShape());
         }
     }
 
-    public record Overview(Conversation group, List<Conversation> directs, long totalUnread) {
+    public record Overview(Conversation group, List<Conversation> directs, long totalUnread, List<Conversation> groups) {
         public static Overview from(ChatViews.OverviewView view) {
-            return new Overview(Conversation.from(view.group()),
-                    view.directs().stream().map(Conversation::from).toList(), view.totalUnread());
+            return new Overview(view.group()==null?null:Conversation.from(view.group()),
+                    view.directs().stream().map(Conversation::from).toList(), view.totalUnread(),view.groups().stream().map(Conversation::from).toList());
         }
     }
 

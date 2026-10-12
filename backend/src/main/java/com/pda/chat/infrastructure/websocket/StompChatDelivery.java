@@ -152,7 +152,7 @@ class StompChatDelivery implements ChatDelivery {
         Set<UUID> recipients = new LinkedHashSet<>();
         if (type == ChatConversationType.DIRECT) {
             for (UUID participant : directParticipants) {
-                if (projects.isMember(projectId, participant)) {
+                if (projectId == null || projects.isMember(projectId, participant)) {
                     recipients.add(participant);
                 }
             }

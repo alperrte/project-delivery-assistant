@@ -9,7 +9,10 @@ export type ChatUser = {
   profilePhotoVersion: number | null;
 };
 
+export type ChatAttachment = { id: string; filename: string; contentType: string; size: number };
+export type ChatMessageInfo = { messageId: string; readers: {user: ChatUser; readAt: string | null; legacy: boolean}[] };
 export type ChatMessage = {
+  attachment?: ChatAttachment | null;
   id: string;
   conversationId: string;
   content: string;
@@ -41,10 +44,15 @@ export type ChatConversation = {
   peer: ChatUser | null;
   lastMessage: ChatLastMessage | null;
   unread: number;
+  projectId?: string;
+  projectName?: string;
+  logoVersion?: number | null;
+  logoShape?: "SQUARE" | "CIRCLE";
 };
 
 export type ChatOverview = {
-  group: ChatConversation;
+  group: ChatConversation | null;
+  groups: ChatConversation[];
   directs: ChatConversation[];
   totalUnread: number;
 };
@@ -61,7 +69,7 @@ export type ChatMessagePage = {
 };
 
 type ChatEventScope = {
-  projectId: string;
+  projectId?: string | null;
   conversationId: string;
 };
 export type ChatSocketEvent = ChatEventScope & (
@@ -74,14 +82,14 @@ export type ChatSocketEvent = ChatEventScope & (
 );
 
 /** "`userId` has read this conversation up to `readAt`" (ISO instant): a message is seen when `readAt` is not before it. */
-export type ChatReceipt = { userId: string; readAt: string };
+export type ChatReceipt = { userId: string; readAt: string; messageId?: string };
 
 /** Someone who is typing right now in a conversation (ephemeral, browser-only). */
 export type TypingPerson = { userId: string; nickname: string | null };
 
 /** What the user is looking at. A direct conversation gets its id once it was opened on the server. */
 export type ActiveConversation =
-  | { kind: "group" }
+  | { kind: "group"; conversationId?: string }
   | { kind: "direct"; peerId: string; conversationId?: string };
 
 /** The panel's state: `closed` (nothing shown), `full` (main area), `bar` (bottom-right title bar), `compact` (window). */

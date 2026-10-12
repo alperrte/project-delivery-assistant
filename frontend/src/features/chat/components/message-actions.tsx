@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { ArrowBendUpLeft, CaretDown, Smiley, Trash } from "@phosphor-icons/react";
+import { MessageInfoDialog } from "./message-info-dialog";
 import { DeleteMessageDialog } from "./delete-message-dialog";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
@@ -17,9 +18,9 @@ export function MessageActions({ message, own, onReply, onReact, onDelete, disab
   onDelete?:()=>Promise<void>;disabled?:boolean;
 }) {
   const t=useTranslations("chat");
-  const [menuOpen,setMenuOpen]=useState(false),[pickerOpen,setPickerOpen]=useState(false),[deleteOpen,setDeleteOpen]=useState(false);
+  const [menuOpen,setMenuOpen]=useState(false),[pickerOpen,setPickerOpen]=useState(false),[deleteOpen,setDeleteOpen]=useState(false),[infoOpen,setInfoOpen]=useState(false);
   const [handoffActive,setHandoffActive]=useState(false);
-  const trigger=useRef<HTMLButtonElement>(null),intent=useRef<"reply"|"react"|"delete"|null>(null),mounted=useRef(true);
+  const trigger=useRef<HTMLButtonElement>(null),intent=useRef<"reply"|"react"|"delete"|"info"|null>(null),mounted=useRef(true);
   useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;intent.current=null;};},[]);
   function handoff(open:boolean){
     if(open)return;
@@ -27,6 +28,7 @@ export function MessageActions({ message, own, onReply, onReact, onDelete, disab
     if(!mounted.current||!trigger.current?.isConnected)return;
     if(action==="reply")onReply(message);
     else if(action==="react")setPickerOpen(true);
+    else if(action==="info")setInfoOpen(true);
     else if(action==="delete")setDeleteOpen(true);
   }
   const label=t("actions.open");
@@ -46,11 +48,13 @@ export function MessageActions({ message, own, onReply, onReact, onDelete, disab
         <DropdownMenuItem data-testid="chat-message-react" disabled={disabled} onClick={()=>{intent.current="react";setHandoffActive(true);setMenuOpen(false);}}>
           <Smiley size={16} aria-hidden="true" />{t("reactions.action")}
         </DropdownMenuItem>
+        {own&&<DropdownMenuItem data-testid="chat-message-info" onClick={()=>{intent.current="info";setHandoffActive(true);setMenuOpen(false);}}>{t("info.action")}</DropdownMenuItem>}
         {onDelete&&<DropdownMenuItem data-testid="chat-message-delete" variant="destructive" disabled={disabled} onClick={()=>{intent.current="delete";setHandoffActive(true);setMenuOpen(false);}}>
           <Trash size={16} aria-hidden="true" />{t("delete.action")}
         </DropdownMenuItem>}
       </DropdownMenuContent>
     </DropdownMenu>
+    {own&&<MessageInfoDialog message={message} open={infoOpen} onOpenChange={setInfoOpen}/>}
     {onDelete&&<DeleteMessageDialog open={deleteOpen} onOpenChange={setDeleteOpen} onConfirm={onDelete} />}
     <EmojiPicker choices={REACTION_CHOICES} label={t("reactions.action")} testId="chat-message-react" disabled={disabled}
       open={pickerOpen} onOpenChange={setPickerOpen} anchorRef={trigger} showTrigger={false} finalFocus={trigger}

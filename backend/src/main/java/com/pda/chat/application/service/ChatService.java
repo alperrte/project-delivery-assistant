@@ -61,6 +61,7 @@ public class ChatService {
     private static final int MEMBER_PAGE = 100;
     private static final int MAX_MEMBER_PAGES = 10;
 
+    private final org.springframework.jdbc.core.JdbcTemplate jdbc;
     private final ProjectAccess projects;
     private final UserAccounts users;
     private final ChatConversationRepository conversations;
@@ -76,7 +77,8 @@ public class ChatService {
     public ChatService(ProjectAccess projects, UserAccounts users, ChatConversationRepository conversations,
                        ChatMessageRepository messages, ChatReadStateRepository readStates,
                        ChatSendRateLimiter rateLimiter, ChatDelivery delivery, Clock clock, ChatReactionViewReader reactionViews,
-                       ChatTypingRateLimiter typingLimiter, ChatReactionRepository reactionRepository) {
+                       ChatTypingRateLimiter typingLimiter, ChatReactionRepository reactionRepository, org.springframework.jdbc.core.JdbcTemplate jdbc) {
+        this.jdbc=jdbc;
         this.typingLimiter = typingLimiter;
         this.reactionRepository = reactionRepository;
         this.projects = projects;
@@ -95,6 +97,7 @@ public class ChatService {
     /** Not read-only: the project group is created the first time anybody uses the project's chat. */
     @Transactional
     public OverviewView overview(UUID actor, UUID projectId) {
+        if (projectId == null) return centralOverview(actor);
         requireMember(actor, projectId);
         ChatConversation group = groupOf(projectId);
         List<ChatConversation> directs = conversations.findDirectsOf(projectId, actor);
@@ -134,6 +137,11 @@ public class ChatService {
     /** The other active members of the project, with the id of the direct conversation when one exists. */
     @Transactional(readOnly = true)
     public List<MemberView> members(UUID actor, UUID projectId) {
+        if (projectId == null) {
+            Map<UUID,MemberView> all = new HashMap<>();
+            for(var project:projects.activeProjectsForUser(actor)) for(var member:members(actor,project.id())) all.putIfAbsent(member.user().userId(),member);
+            return all.values().stream().sorted(Comparator.comparing(m -> Objects.toString(m.user().nickname(), ""),String.CASE_INSENSITIVE_ORDER)).toList();
+        }
         requireMember(actor, projectId);
         Map<UUID, UUID> directByPeer = new HashMap<>();
         for (ChatConversation direct : conversations.findDirectsOf(projectId, actor)) {
@@ -160,16 +168,32 @@ public class ChatService {
         return result;
     }
 
+    private OverviewView centralOverview(UUID actor) {
+        List<ConversationView> groups = new ArrayList<>();
+        for(var project:projects.activeProjectsForUser(actor)) {
+            var group=overview(actor,project.id()).group();
+            groups.add(new ConversationView(group.id(),group.type(),null,group.lastMessage(),group.unread(),project.id(),project.name(),project.logoVersion(),project.logoShape()));
+        }
+        var directs=conversations.findDirectsOf(null,actor);
+        var counts=unreadByConversation(actor,null);
+        Map<UUID,ChatMessage> last=new HashMap<>();
+        if(!directs.isEmpty()) messages.findLastMessages(directs.stream().map(ChatConversation::getId).toList()).forEach(m -> last.put(m.getConversationId(),m));
+        Set<UUID> peers=new HashSet<>();directs.forEach(c -> peers.add(c.peerOf(actor)));
+        var accounts=peers.isEmpty()?Map.<UUID,UserAccounts.AuthenticatedUser>of():users.findActiveByIds(peers);
+        var views=directs.stream().map(c -> conversationView(c,chatUser(c.peerOf(actor),accounts.get(c.peerOf(actor))),last.get(c.getId()),counts.getOrDefault(c.getId(),0L))).toList();
+        return new OverviewView(groups.isEmpty()?null:groups.getFirst(),views,groups.stream().mapToLong(ConversationView::unread).sum()+views.stream().mapToLong(ConversationView::unread).sum(),groups);
+    }
+
     // ---- direct conversations -----------------------------------------------------------------------------------
 
     /** Finds or creates the 1:1 conversation between the caller and another member of the same project. */
     @Transactional
     public ConversationView openDirect(UUID actor, UUID projectId, UUID targetUserId) {
-        requireMember(actor, projectId);
+        if (projectId != null) requireMember(actor, projectId);
         if (targetUserId == null || targetUserId.equals(actor)) {
             throw ChatException.invalid("CHAT_SELF");
         }
-        if (!projects.isMember(projectId, targetUserId)) {
+        if (users.findActiveByIds(Set.of(targetUserId)).isEmpty() || (projectId != null ? !projects.isMember(projectId,targetUserId) : conversations.findDirectsOf(null,actor).stream().noneMatch(c -> targetUserId.equals(c.peerOf(actor))) && projects.activeProjectsForUser(actor).stream().noneMatch(p -> projects.isMember(p.id(),targetUserId)))) {
             throw ChatException.notFound("CHAT_RECIPIENT");
         }
         ChatConversation conversation = directOf(projectId, actor, targetUserId);
@@ -219,15 +243,24 @@ public class ChatService {
 
     @Transactional
     public MessageView send(UUID actor, UUID projectId, UUID conversationId, String content, UUID replyToMessageId) {
+        return sendAttached(actor,projectId,conversationId,content,replyToMessageId,null);
+    }
+    @Transactional
+    public MessageView sendAttached(UUID actor,UUID projectId,UUID conversationId,String content,UUID replyToMessageId,UUID attachmentId) {
         ChatConversation conversation = accessible(actor, projectId, conversationId);
+        if (conversation.getType() == ChatConversationType.PROJECT) {
+            projects.lockMembershipContext(conversation.getProjectId());
+            requireMember(actor, conversation.getProjectId());
+        }
         if (conversation.getType() == ChatConversationType.DIRECT
-                && !projects.isMember(projectId, conversation.peerOf(actor))) {
+                && users.findActiveByIds(Set.of(conversation.peerOf(actor))).isEmpty()) {
             // The other person left the project: nobody is on the receiving end any more.
             throw ChatException.notFound("CHAT_RECIPIENT");
         }
         // Every attempt counts, also a blank or too long one: otherwise the limit could be probed (or a server kept
         // busy) with messages that are refused anyway. The normal validation answers still come first while within it.
-        if (!rateLimiter.tryAcquire(actor)) {
+        // Attachments already consumed the same quota before their bounded content parsing.
+        if (attachmentId == null && !rateLimiter.tryAcquire(actor)) {
             throw ChatException.rateLimited();
         }
         if (replyToMessageId != null) {
@@ -238,14 +271,23 @@ public class ChatService {
                 throw ChatException.notFound("CHAT_REPLY_NOT_FOUND");
             }
         }
-        ChatMessage message = ChatMessage.create(conversation.getId(), actor, content, replyToMessageId, clock.instant());
+        ChatMessage message = attachmentId==null ? ChatMessage.create(conversation.getId(), actor, content, replyToMessageId, clock.instant()) : ChatMessage.withAttachment(conversation.getId(),actor,content,replyToMessageId,clock.instant());
         messages.saveAndFlush(message);
+        if(attachmentId!=null && jdbc.update("update chat_attachments set message_id=?,state='ACTIVE' where id=? and owner_id=? and state='PENDING'",message.getId(),attachmentId,actor)!=1) throw ChatException.invalid("CHAT_ATTACHMENT_INVALID");
+        Set<UUID> audience=new HashSet<>();
+        if(conversation.getType()==ChatConversationType.DIRECT) audience.add(conversation.peerOf(actor));
+        else for(int page=0;;page++) {
+            var batch=projects.members(conversation.getProjectId(),PageRequest.of(page,MEMBER_PAGE,Sort.by("id")));
+            batch.forEach(m -> audience.add(m.userId()));if(!batch.hasNext())break;
+        }
+        audience.remove(actor);
+        for(UUID recipient:audience) jdbc.update("insert into chat_message_receipts(message_id,user_id) values (?,?)",message.getId(),recipient);
         conversations.touch(conversation.getId(), message.getCreatedAt());
 
         MessageView view = messageViews(List.of(message),actor,conversationId).getFirst();
         Set<UUID> participants = conversation.getType() == ChatConversationType.DIRECT
                 ? Set.of(conversation.getDirectUserLow(), conversation.getDirectUserHigh()) : Set.of();
-        ChatMessageSent event = new ChatMessageSent(projectId, conversation.getId(), conversation.getType(),
+        ChatMessageSent event = new ChatMessageSent(conversation.getProjectId(), conversation.getId(), conversation.getType(),
                 participants, view);
         afterCommit(() -> delivery.messageSent(event));
         return view;
@@ -269,11 +311,12 @@ public class ChatService {
             return;
         }
         message.delete(clock.instant());
+        jdbc.update("update chat_attachments set state='DELETE_PENDING' where message_id=?",messageId);
         reactionRepository.removeAll(messageId);
         messages.flush();
         Set<UUID> participants = conversation.getType() == ChatConversationType.DIRECT
                 ? Set.of(conversation.getDirectUserLow(), conversation.getDirectUserHigh()) : Set.of();
-        ChatDelivery.ChatMessageDeleted event = new ChatDelivery.ChatMessageDeleted(projectId, conversation.getId(),
+        ChatDelivery.ChatMessageDeleted event = new ChatDelivery.ChatMessageDeleted(conversation.getProjectId(), conversation.getId(),
                 conversation.getType(), participants, messageId);
         afterCommit(() -> delivery.messageDeleted(event));
     }
@@ -283,15 +326,41 @@ public class ChatService {
     public void markRead(UUID actor, UUID projectId, UUID conversationId) {
         ChatConversation conversation = accessible(actor, projectId, conversationId);
         Instant readAt = clock.instant().truncatedTo(ChronoUnit.MICROS);
+        jdbc.update("update chat_message_receipts r set read_at=? from chat_messages m where r.message_id=m.id and m.conversation_id=? and r.user_id=? and r.read_at is null",java.sql.Timestamp.from(readAt),conversationId,actor);
         readStates.markRead(conversation.getId(), actor, readAt);
         Set<UUID> participants = conversation.getType() == ChatConversationType.DIRECT
                 ? Set.of(conversation.getDirectUserLow(), conversation.getDirectUserHigh()) : Set.of();
-        ChatDelivery.ChatSeen seen = new ChatDelivery.ChatSeen(projectId, conversation.getId(), conversation.getType(),
+        ChatDelivery.ChatSeen seen = new ChatDelivery.ChatSeen(conversation.getProjectId(), conversation.getId(), conversation.getType(),
                 participants, actor, readAt);
         afterCommit(() -> {
-            delivery.conversationRead(projectId, conversation.getId(), actor);
+            delivery.conversationRead(conversation.getProjectId(), conversation.getId(), actor);
             delivery.seen(seen);
         });
+    }
+
+    @Transactional
+    public void markVisible(UUID actor,UUID conversationId,List<UUID> ids) {
+        var conversation=accessible(actor,null,conversationId);
+        if(ids==null||ids.isEmpty()||ids.size()>100||ids.stream().anyMatch(Objects::isNull))throw ChatException.invalid("CHAT_INVALID_REQUEST");
+        var unique=new HashSet<>(ids);
+        if(messages.findByIdInAndConversationId(unique,conversationId).size()!=unique.size())throw ChatException.notFound("CHAT_NOT_FOUND");
+        Instant readAt=now();int changed=0;
+        for(UUID id:unique) changed+=jdbc.update("update chat_message_receipts set read_at=?,legacy=false where message_id=? and user_id=? and read_at is null",java.sql.Timestamp.from(readAt),id,actor);
+        if(changed==0)return;
+        var participants=conversation.getType()==ChatConversationType.DIRECT?Set.of(conversation.getDirectUserLow(),conversation.getDirectUserHigh()):Set.<UUID>of();
+        afterCommit(()->{delivery.conversationRead(conversation.getProjectId(),conversationId,actor);delivery.seen(new ChatDelivery.ChatSeen(conversation.getProjectId(),conversationId,conversation.getType(),participants,actor,readAt));});
+    }
+
+    @Transactional(readOnly=true)
+    public ChatViews.MessageInfo messageInfo(UUID actor,UUID conversationId,UUID messageId) {
+        accessible(actor,null,conversationId);
+        var message=messages.findByIdAndConversationId(messageId,conversationId).orElseThrow(()->ChatException.notFound("CHAT_NOT_FOUND"));
+        if(!actor.equals(message.getSenderUserId()))throw ChatException.forbidden();
+        record Row(UUID userId,Instant readAt,boolean legacy) {}
+        var rows=jdbc.query("select user_id,read_at,legacy from chat_message_receipts where message_id=? order by read_at nulls last,user_id",(r,n)->new Row(r.getObject(1,UUID.class),r.getTimestamp(2)==null?null:r.getTimestamp(2).toInstant(),r.getBoolean(3)),messageId);
+        Set<UUID> ids=new HashSet<>();rows.forEach(r -> ids.add(r.userId()));
+        var accounts=ids.isEmpty()?Map.<UUID,UserAccounts.AuthenticatedUser>of():users.findActiveByIds(ids);
+        return new ChatViews.MessageInfo(messageId,rows.stream().map(r -> new ChatViews.MessageReader(chatUser(r.userId(),accounts.get(r.userId())),r.readAt(),r.legacy())).toList());
     }
 
     /**
@@ -302,13 +371,14 @@ public class ChatService {
     @Transactional
     public List<ChatViews.ReceiptView> receipts(UUID actor, UUID projectId, UUID conversationId) {
         ChatConversation conversation = accessible(actor, projectId, conversationId);
+        if(projectId==null) return jdbc.query("select r.user_id,r.read_at,r.message_id from chat_message_receipts r join chat_messages m on m.id=r.message_id where m.conversation_id=? and r.user_id<>? and r.read_at is not null",(r,n)->new ChatViews.ReceiptView(r.getObject(1,UUID.class),r.getTimestamp(2).toInstant(),r.getObject(3,UUID.class)),conversationId,actor);
         var rows = readStates.findOthers(conversation.getId(), actor);
         if (rows.isEmpty()) {
             return List.of();
         }
         Set<UUID> ids = new HashSet<>();
         rows.forEach(row -> ids.add(row.getUserId()));
-        Set<UUID> active = projects.activeMemberIds(projectId, ids);
+        Set<UUID> active = conversation.getType()==ChatConversationType.DIRECT ? Set.of(conversation.getDirectUserLow(),conversation.getDirectUserHigh()) : projects.activeMemberIds(conversation.getProjectId(), ids);
         return rows.stream().filter(row -> active.contains(row.getUserId()))
                 .map(row -> new ChatViews.ReceiptView(row.getUserId(), row.getLastReadAt())).toList();
     }
@@ -330,7 +400,7 @@ public class ChatService {
         }
         Set<UUID> participants = conversation.getType() == ChatConversationType.DIRECT
                 ? Set.of(conversation.getDirectUserLow(), conversation.getDirectUserHigh()) : Set.of();
-        delivery.typing(new ChatDelivery.ChatTyping(projectId, conversation.getId(), conversation.getType(),
+        delivery.typing(new ChatDelivery.ChatTyping(conversation.getProjectId(), conversation.getId(), conversation.getType(),
                 participants, actor, account.nickname(), typing));
     }
 
@@ -347,10 +417,13 @@ public class ChatService {
      * its two participants. Everything else is a 404, so a foreign conversation id reveals nothing.
      */
     ChatConversation accessible(UUID actor, UUID projectId, UUID conversationId) {
-        requireMember(actor, projectId);
-        ChatConversation conversation = conversations.findByIdAndProjectId(
-                        Objects.requireNonNull(conversationId, "conversationId is required"), projectId)
+        if (projectId != null) requireMember(actor,projectId);
+        ChatConversation conversation = conversations.findById(Objects.requireNonNull(conversationId))
                 .orElseThrow(() -> ChatException.notFound("CHAT_NOT_FOUND"));
+        if (conversation.getType()==ChatConversationType.PROJECT) {
+            if (projectId!=null && !projectId.equals(conversation.getProjectId())) throw ChatException.notFound("CHAT_NOT_FOUND");
+            requireMember(actor,conversation.getProjectId());
+        }
         if (!conversation.isParticipant(actor)) {
             throw ChatException.notFound("CHAT_NOT_FOUND");
         }
@@ -386,7 +459,7 @@ public class ChatService {
     // ---- mapping ------------------------------------------------------------------------------------------------
 
     private Map<UUID, Long> unreadByConversation(UUID actor, UUID projectId) {
-        ProjectMemberView membership = projects.member(projectId, actor);
+        ProjectMemberView membership = projectId==null ? null : projects.member(projectId, actor);
         Instant floor = membership == null || membership.joinedAt() == null ? Instant.EPOCH : membership.joinedAt();
         Map<UUID, Long> counts = new HashMap<>();
         for (Object[] row : messages.unreadCounts(projectId, actor, floor)) {
@@ -410,19 +483,29 @@ public class ChatService {
         return page.stream().map(message -> {
             var parent = replies.get(message.getReplyToMessageId());
             var quote = parent == null ? null : new ChatViews.ReplyView(parent.getId(),
-                    chatUser(parent.getSenderUserId(),accounts.get(parent.getSenderUserId())),preview(parent.getContent()),
+                    chatUser(parent.getSenderUserId(),accounts.get(parent.getSenderUserId())),messagePreview(parent),
                     parent.isDeleted());
             var reactions = snapshots.get(message.getId());
             return new MessageView(message.getId(),message.getConversationId(),message.getContent(),message.getCreatedAt(),
                     chatUser(message.getSenderUserId(),accounts.get(message.getSenderUserId())),quote,
-                    reactions.reactionVersion(),reactions.reactions(),message.isDeleted());
+                    reactions.reactionVersion(),reactions.reactions(),message.isDeleted(),attachmentView(message.getId()));
         }).toList();
     }
 
-    private static ConversationView conversationView(ChatConversation conversation, ChatUser peer, ChatMessage last,
+    private ChatViews.AttachmentView attachmentView(UUID messageId) {
+        return jdbc.query("select id,filename,content_type,size from chat_attachments where message_id=? and state='ACTIVE'",(r,n)->new ChatViews.AttachmentView(r.getObject(1,UUID.class),r.getString(2),r.getString(3),r.getInt(4)),messageId).stream().findFirst().orElse(null);
+    }
+
+    private String messagePreview(ChatMessage message) {
+        var attachment = message.isDeleted() ? null : attachmentView(message.getId());
+        return preview(message.getContent().isEmpty() && attachment != null ? attachment.filename() : message.getContent());
+    }
+
+    private ConversationView conversationView(ChatConversation conversation, ChatUser peer, ChatMessage last,
                                                      long unread) {
+        var attachment=last==null||last.isDeleted()?null:attachmentView(last.getId());
         LastMessageView lastView = last == null ? null
-                : new LastMessageView(preview(last.getContent()), last.getCreatedAt(), last.getSenderUserId(), last.isDeleted());
+                : new LastMessageView(last.getContent().isEmpty()&&attachment!=null?attachment.filename():preview(last.getContent()), last.getCreatedAt(), last.getSenderUserId(), last.isDeleted());
         return new ConversationView(conversation.getId(), conversation.getType(), peer, lastView, unread);
     }
 

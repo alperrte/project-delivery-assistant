@@ -1,5 +1,6 @@
 "use client";
 
+import { MessageAttachment } from "./message-attachment";
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { ArrowDown, Checks, Prohibit } from "@phosphor-icons/react";
@@ -178,7 +179,7 @@ export function MessageList({
   // "Seen" is shown under the newest own message only (like messengers do), not under every one.
   const lastOwnId = [...messages].reverse().find((message) => message.sender.userId === selfId && !message.deleted)?.id;
   const seenBy = (message: ChatMessage) =>
-    receipts.filter((receipt) => Date.parse(receipt.readAt) >= Date.parse(message.createdAt)).length;
+    receipts.filter((receipt) => receipt.messageId ? receipt.messageId===message.id : Date.parse(receipt.readAt) >= Date.parse(message.createdAt)).length;
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
@@ -257,6 +258,7 @@ export function MessageList({
                           )}
                         >
                           {message.replyTo && <ReplyPreview reply={message.replyTo} />}
+                          {message.attachment&&<MessageAttachment message={message}/>}
                           <span data-testid="chat-message-text">{message.content}</span>
                         </div>
                         <MessageActions own={own} message={message} onReply={onReply} onReact={(code,add)=>onReact(message.id,code,add)}

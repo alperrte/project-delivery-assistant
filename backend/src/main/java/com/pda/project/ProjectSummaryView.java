@@ -9,4 +9,6 @@ import java.util.UUID;
  * stored logo (null = no logo); {@code permissions} are what the user's roles grant in that project.
  */
 public record ProjectSummaryView(UUID id, String slug, String name, Long logoVersion,
-                                 Set<ProjectPermission> permissions, TaskManagementMode taskManagementMode) {}
+                                 Set<ProjectPermission> permissions, TaskManagementMode taskManagementMode, LogoShape logoShape) {
+    public ProjectSummaryView(UUID id,String slug,String name,Long logoVersion,Set<ProjectPermission> permissions,TaskManagementMode taskManagementMode) {this(id,slug,name,logoVersion,permissions,taskManagementMode,LogoShape.SQUARE);}
+}

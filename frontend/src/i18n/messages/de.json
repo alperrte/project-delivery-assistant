@@ -166,7 +166,10 @@
     "ownsResources": "Übertragen oder löschen Sie zuerst die Projekte und Organisationen, die Ihnen gehören.",
     "administratorCannotDelete": "Administratorkonten können hier nicht gelöscht werden.",
     "adminReauthenticationRequired": "Der Verwaltungsbereich erfordert die separate Administratoranmeldung. Bitte melden Sie sich dort erneut an.",
-    "adminTwoFactorRequired": "Die Zwei-Schritt-Bestätigung ist für Administratorkonten verpflichtend und kann nicht ausgeschaltet werden."
+    "adminTwoFactorRequired": "Die Zwei-Schritt-Bestätigung ist für Administratorkonten verpflichtend und kann nicht ausgeschaltet werden.",
+    "chatAttachmentTooLarge": "Jede Datei darf höchstens 2 MB groß sein.",
+    "chatAttachmentInvalid": "Die Datei ist leer, nicht unterstützt oder hat die Inhaltsprüfung nicht bestanden.",
+    "chatAttachmentUnavailable": "Der Dateispeicher ist vorübergehend nicht verfügbar. Erneut versuchen."
   },
   "app": {
     "nav": {
@@ -2586,7 +2589,37 @@
     "actions": {
       "open": "Nachrichtenaktionen öffnen",
       "label": "Nachrichtenaktionen"
-    }
+    },
+    "categories": {
+      "label": "Kategorien",
+      "all": "Alle Gespräche",
+      "direct": "Direktnachrichten",
+      "projects": "Projekte",
+      "empty": "Noch keine Gespräche",
+      "start": "Neue Direktnachricht"
+    },
+    "files": {
+      "add": "Datei anhängen",
+      "remove": "Datei entfernen",
+      "tooLarge": "Jede Datei darf höchstens 2 MB groß sein.",
+      "invalid": "PDF, Word, JPG, PNG oder WebP auswählen.",
+      "sending": "Wird gesendet…",
+      "failed": "Datei konnte nicht gesendet werden.",
+      "download": "Herunterladen",
+      "view": "Bild vergrößern",
+      "file": "Datei"
+    },
+    "info": {
+      "action": "Info",
+      "title": "Nachrichteninfo",
+      "read": "Gelesen von",
+      "unread": "Noch nicht gelesen",
+      "notRead": "Noch nicht gelesen",
+      "empty": "Niemand",
+      "failed": "Nachrichteninfo konnte nicht geladen werden.",
+      "legacy": "Historischer Lesestatus; erste Lesezeit unbekannt"
+    },
+    "selectConversation": "Wähle ein Gespräch aus der Liste."
   },
   "pageTitles": {
     "dashboard": "Übersicht",

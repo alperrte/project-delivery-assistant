@@ -1,5 +1,13 @@
 ﻿# Klasör yapısı kısa rehberi
 
+## Merkezi mesajlaşma — 2026-10-12
+
+- `backend/com.pda.chat`: mevcut controller/service/repository/entity sınırları; `ChatAttachmentController`, `ChatAttachmentService`, `ChatFileValidator`, `LegacyWordInspector` dosya akışını ekler. `ChatViews` message attachment ve MessageInfo DTO'larını taşır.
+- `db/migration/V43__central_chat.sql` DM birleştirme; V44 attachment ledger; V45 mesaj bazlı alıcı/read snapshot; V46 eski grup read kanıtının korunması.
+- `ProjectAccess.lockMembershipContext` ve `ProjectSummaryView.logoShape` yalnız public port üzerinden kullanılır; Chat başka modül repository/entity'sini import etmez.
+- `frontend/src/features/chat/`: hesap kapsamlı provider/API/cache/hooks; kategori listesi, composer, `message-attachment.tsx`, `message-info-dialog.tsx`. Global giriş `components/layout/app-shell.tsx` içindedir.
+- `CentralChatMigrationTest`, `ChatFileValidatorTest`, genişletilen ChatApi/WebSocket testleri; `frontend/e2e/central-messaging.spec.ts` gerçek iki hesaplı akışı doğrular.
+
 ## Mobil çalışma alanı navbar doğrulaması — 2026-10-12
 
 `frontend/e2e/workspace-mobile-header.spec.ts` ortak header/drawer, arama, native history/fallback, popup/odak, auto-hide ve fullscreen chat yerleşimini açıkça TEST-ONLY REST/WS fixture'larıyla kontrol eder. Backend hesabı gerektirmediği için `playwright.public.config.ts` paketine de dahildir. Header/drawer sahipliği `components/layout/{app-header,app-shell}.tsx` içinde kalır; yeni navigasyon veya oturum altyapısı yoktur.
@@ -279,3 +287,7 @@ Public routes now include `(public)/about` and `(public)/license` beside cookies
 - Backend: project/LogoShape.java; db/migration/V42__entity_logo_shape.sql; project ve organization mevcut entity/request/response/service sınırları.
 - Frontend: lib/media/logo-shape.ts, components/common/logo-shape-picker.tsx; EntityMark + data-logo-frame görünümleri; mevcut dört form ve chat/invitation/squad shape aktarımı.
 - Testler: LogoShapeIntegrationTest, LogoShapeMigrationTest, frontend/e2e/logo-shape.spec.ts.
+
+## PDF C2PA uyumluluğu — 2026-10-12
+
+`chat/application/service/C2paMetadata.java` yalnız provenance metadata'sını bounded JUMBF/UUID/label yapısı ve streaming decoded-size sınırıyla tanır; `ChatFileValidator` PDF eklerinde bunu kullanır. Depolanan dosya baytları değişmez.

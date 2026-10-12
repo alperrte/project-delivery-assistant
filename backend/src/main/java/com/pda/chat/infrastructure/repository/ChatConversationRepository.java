@@ -24,19 +24,25 @@ public interface ChatConversationRepository extends JpaRepository<ChatConversati
 
     @Query("""
             select c from ChatConversation c
-            where c.projectId = :projectId and c.type = com.pda.chat.domain.enums.ChatConversationType.DIRECT
+            where c.type = com.pda.chat.domain.enums.ChatConversationType.DIRECT
               and c.directUserLow = :low and c.directUserHigh = :high
             """)
-    Optional<ChatConversation> findDirect(@Param("projectId") UUID projectId, @Param("low") UUID low,
+    Optional<ChatConversation> findGlobalDirect(@Param("low") UUID low,
                                           @Param("high") UUID high);
+    default Optional<ChatConversation> findDirect(UUID projectId, UUID low, UUID high) {
+        return findGlobalDirect(low,high);
+    }
 
     /** The direct conversations the user takes part in, in one project, from either side of the stored pair. */
     @Query("""
             select c from ChatConversation c
-            where c.projectId = :projectId and c.type = com.pda.chat.domain.enums.ChatConversationType.DIRECT
+            where c.type = com.pda.chat.domain.enums.ChatConversationType.DIRECT
               and (c.directUserLow = :userId or c.directUserHigh = :userId)
             """)
-    List<ChatConversation> findDirectsOf(@Param("projectId") UUID projectId, @Param("userId") UUID userId);
+    List<ChatConversation> findGlobalDirectsOf(@Param("userId") UUID userId);
+    default List<ChatConversation> findDirectsOf(UUID projectId, UUID userId) {
+        return findGlobalDirectsOf(userId);
+    }
 
     /**
      * Race-safe create: two concurrent first uses both insert, the unique index lets exactly one row in, and the
@@ -54,11 +60,14 @@ public interface ChatConversationRepository extends JpaRepository<ChatConversati
     @Modifying
     @Query(value = """
             insert into chat_conversations (id, project_id, type, direct_user_low, direct_user_high, created_at)
-            values (:id, :projectId, 'DIRECT', :low, :high, :createdAt)
+            values (:id, null, 'DIRECT', :low, :high, :createdAt)
             on conflict do nothing
             """, nativeQuery = true)
-    int insertDirectIfAbsent(@Param("id") UUID id, @Param("projectId") UUID projectId, @Param("low") UUID low,
+    int insertGlobalDirectIfAbsent(@Param("id") UUID id, @Param("low") UUID low,
                              @Param("high") UUID high, @Param("createdAt") Instant createdAt);
+    default int insertDirectIfAbsent(UUID id,UUID projectId,UUID low,UUID high,Instant createdAt) {
+        return insertGlobalDirectIfAbsent(id,low,high,createdAt);
+    }
 
     /** Monotonic, so two concurrent sends cannot move the timestamp backwards. */
     @Modifying

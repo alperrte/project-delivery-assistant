@@ -43,7 +43,7 @@ public class ChatReactionService {
             target.reactionsChanged();messages.flush();
             var participants=scope.getType()==com.pda.chat.domain.enums.ChatConversationType.DIRECT
                     ?java.util.Set.of(scope.getDirectUserLow(),scope.getDirectUserHigh()):java.util.Set.<UUID>of();
-            var event=new ChatDelivery.ChatReactionsChanged(project,conversation,scope.getType(),participants,message,target.getReactionVersion());
+            var event=new ChatDelivery.ChatReactionsChanged(scope.getProjectId(),conversation,scope.getType(),participants,message,target.getReactionVersion());
             ChatService.afterCommit(()->delivery.reactionsChanged(event));
         }
         return views.forActor(conversation,List.of(message),actor).get(message);

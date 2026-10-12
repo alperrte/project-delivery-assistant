@@ -2,39 +2,45 @@ import { apiRequest, apiUrl } from "@/lib/api/client";
 import type { ChatConversation, ChatMember, ChatReceipt, ChatMessage, ChatMessagePage, ChatOverview, ReactionCode, ReactionSnapshot } from "./types";
 import { normalizeChatMessage, validReactionSnapshot } from "./reactions";
 
-const chatPath = (projectId: string) => `/projects/${projectId}/chat`;
+import type { ChatMessageInfo } from "./types";
+const chatPath = (accountId: string) => { void accountId; return `/chat`; };
 
 export const chatApi = {
+  info: (conversationId: string,messageId: string,signal?:AbortSignal) => apiRequest<ChatMessageInfo>(`/chat/conversations/${conversationId}/messages/${messageId}/info`,{signal}),
+  sendFile: (conversationId: string, file: File, content: string, reply?: string,signal?:AbortSignal) => {
+    const body=new FormData();body.append("file",file);body.append("content",content);if(reply)body.append("replyToMessageId",reply);
+    return apiRequest<ChatMessage>(`/chat/conversations/${conversationId}/messages/attachment`,{method:"POST",body,signal}).then(normalizeChatMessage);
+  },
   /** The project group (created on first use), the caller's direct conversations and the unread total. */
-  overview: (projectId: string, signal?: AbortSignal) => apiRequest<ChatOverview>(`${chatPath(projectId)}/conversations`, { signal }),
+  overview: (accountId: string, signal?: AbortSignal) => apiRequest<ChatOverview>(`${chatPath(accountId)}/conversations`, { signal }),
   /** The other active members of the project. */
-  members: (projectId: string, signal?: AbortSignal) => apiRequest<ChatMember[]>(`${chatPath(projectId)}/members`, { signal }),
+  members: (accountId: string, signal?: AbortSignal) => apiRequest<ChatMember[]>(`${chatPath(accountId)}/members`, { signal }),
   /** Finds or creates the direct conversation with another member of the same project. */
-  openDirect: (projectId: string, userId: string) =>
-    apiRequest<ChatConversation>(`${chatPath(projectId)}/direct/${userId}`, { method: "POST" }),
+  openDirect: (accountId: string, userId: string) =>
+    apiRequest<ChatConversation>(`${chatPath(accountId)}/direct/${userId}`, { method: "POST" }),
   /** Newest page without a cursor; `before` pages back, `after` is the catch-up after a reconnect. */
-  messages: (projectId: string, conversationId: string, params: { before?: string; after?: string; limit?: number } = {}, signal?: AbortSignal) => {
+  messages: (accountId: string, conversationId: string, params: { before?: string; after?: string; limit?: number } = {}, signal?: AbortSignal) => {
     const query = new URLSearchParams();
     if (params.before) query.set("before", params.before);
     if (params.after) query.set("after", params.after);
     if (params.limit) query.set("limit", String(params.limit));
     const queryString = query.toString();
     const suffix = queryString ? `?${queryString}` : "";
-    return apiRequest<ChatMessagePage>(`${chatPath(projectId)}/conversations/${conversationId}/messages${suffix}`, { signal })
+    return apiRequest<ChatMessagePage>(`${chatPath(accountId)}/conversations/${conversationId}/messages${suffix}`, { signal })
       .then(page => ({ ...page, messages: page.messages.map(normalizeChatMessage) }));
   },
   /** The sender is the signed-in user; the body carries nothing but the text. */
-  send: (projectId: string, conversationId: string, content: string, replyToMessageId?: string | null, signal?: AbortSignal) =>
-    apiRequest<ChatMessage>(`${chatPath(projectId)}/conversations/${conversationId}/messages`, {
+  send: (accountId: string, conversationId: string, content: string, replyToMessageId?: string | null, signal?: AbortSignal) =>
+    apiRequest<ChatMessage>(`${chatPath(accountId)}/conversations/${conversationId}/messages`, {
       method: "POST",
       signal,
       body: { content, ...(replyToMessageId ? { replyToMessageId } : {}) },
     }).then(normalizeChatMessage),
-  react: (projectId: string, conversationId: string, messageId: string, code: ReactionCode, add: boolean, signal?: AbortSignal) =>
-    apiRequest<ReactionSnapshot>(`${chatPath(projectId)}/conversations/${conversationId}/messages/${messageId}/reactions/${code}`, { method: add ? "PUT" : "DELETE", signal })
+  react: (accountId: string, conversationId: string, messageId: string, code: ReactionCode, add: boolean, signal?: AbortSignal) =>
+    apiRequest<ReactionSnapshot>(`${chatPath(accountId)}/conversations/${conversationId}/messages/${messageId}/reactions/${code}`, { method: add ? "PUT" : "DELETE", signal })
       .then(snapshot => { if (!validReactionSnapshot(snapshot) || snapshot.messageId !== messageId) throw new Error("Invalid reaction contract"); return snapshot; }),
-  reactionSnapshots: (projectId: string, conversationId: string, messageIds: string[], signal?: AbortSignal) =>
-    apiRequest<ReactionSnapshot[]>(`${chatPath(projectId)}/conversations/${conversationId}/messages/reactions?${new URLSearchParams({ messageIds: messageIds.join(",") })}`, { signal })
+  reactionSnapshots: (accountId: string, conversationId: string, messageIds: string[], signal?: AbortSignal) =>
+    apiRequest<ReactionSnapshot[]>(`${chatPath(accountId)}/conversations/${conversationId}/messages/reactions?${new URLSearchParams({ messageIds: messageIds.join(",") })}`, { signal })
       .then(snapshots => {
         const expected = new Set(messageIds), seen = new Set<string>();
         if (!Array.isArray(snapshots) || snapshots.length !== expected.size || snapshots.some(snapshot => {
@@ -44,16 +50,16 @@ export const chatApi = {
         return snapshots;
       }),
   /** The other members' read markers of a conversation ("seen"). */
-  receipts: (projectId: string, conversationId: string, signal?: AbortSignal) =>
-    apiRequest<ChatReceipt[]>(`${chatPath(projectId)}/conversations/${conversationId}/receipts`, { signal }),
+  receipts: (accountId: string, conversationId: string, signal?: AbortSignal) =>
+    apiRequest<ChatReceipt[]>(`${chatPath(accountId)}/conversations/${conversationId}/receipts`, { signal }),
   /** Only the sender may delete; the text is erased for everybody and a tombstone stays. */
-  deleteMessage: (projectId: string, conversationId: string, messageId: string, signal?: AbortSignal) =>
-    apiRequest<void>(`${chatPath(projectId)}/conversations/${conversationId}/messages/${messageId}`, { method: "DELETE", signal }),
+  deleteMessage: (accountId: string, conversationId: string, messageId: string, signal?: AbortSignal) =>
+    apiRequest<void>(`${chatPath(accountId)}/conversations/${conversationId}/messages/${messageId}`, { method: "DELETE", signal }),
   /** Ephemeral "is typing" signal; the server derives the typist from the session and stores nothing. */
-  typing: (projectId: string, conversationId: string, typing: boolean, signal?: AbortSignal) =>
-    apiRequest<void>(`${chatPath(projectId)}/conversations/${conversationId}/typing`, { method: "POST", signal, body: { typing } }),
-  markRead: (projectId: string, conversationId: string) =>
-    apiRequest<void>(`${chatPath(projectId)}/conversations/${conversationId}/read`, { method: "POST" }),
+  typing: (accountId: string, conversationId: string, typing: boolean, signal?: AbortSignal) =>
+    apiRequest<void>(`${chatPath(accountId)}/conversations/${conversationId}/typing`, { method: "POST", signal, body: { typing } }),
+  markRead: (accountId: string, conversationId: string, messageIds: string[]) =>
+    apiRequest<void>(`${chatPath(accountId)}/conversations/${conversationId}/read`, { method: "POST", body: {messageIds} }),
 };
 
 /**

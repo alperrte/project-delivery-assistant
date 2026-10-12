@@ -15,6 +15,7 @@ import { OfflineNotice } from "./offline-notice";
 import { BreadcrumbLabelsProvider } from "./breadcrumb-labels";
 import { NotificationOwner } from "@/features/notifications/notification-owner";
 import { ProjectSidebarNav } from "./project-sidebar-nav";
+import { ChatNavItem } from "@/features/chat/components/chat-nav-item";
 import { TasksNavLink } from "./tasks-nav-link";
 import { COLLAPSE_KEY, collapseEvent, useSidebarCollapsed } from "./sidebar-collapse";
 import { ChatProvider } from "@/features/chat/chat-provider";
@@ -216,6 +217,7 @@ export function AppShellView({ children, pathname, user, collapsed = false, onLo
               <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">{tw("personal")}</p>
             )}
           </div>
+          <ChatNavItem collapsed={narrow} onNavigate={() => setMenuOpen(false)} />
           <TasksNavLink narrow={narrow} onNavigate={() => setMenuOpen(false)} />
           <Link
             href="/calendar"

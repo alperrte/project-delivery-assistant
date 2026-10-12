@@ -5,7 +5,7 @@ import { ChatsCircle } from "@phosphor-icons/react";
 import { navItemClass } from "@/components/layout/nav-item";
 import { cn } from "@/lib/utils";
 import { useChat } from "../chat-provider";
-import { useChatOverview } from "../hooks";
+
 
 /**
  * "Mesajlaşma" in the selected-project group of the sidebar. It is a button, not a link: it opens the chat panel over
@@ -13,27 +13,22 @@ import { useChatOverview } from "../hooks";
  * the selected context's socket, and refreshed on a timer while that connection is unavailable.
  */
 export function ChatNavItem({
-  projectId,
-  slug,
+
   collapsed,
   onNavigate,
 }: {
-  projectId: string | undefined;
-  slug: string;
   collapsed?: boolean;
   onNavigate: () => void;
 }) {
   const t = useTranslations("chat");
   const chat = useChat();
-  const live = chat.projectId !== undefined && chat.projectId === projectId && chat.connection === "connected";
-  const { data: overview } = useChatOverview(projectId, { poll: !live });
-  const unread = overview?.totalUnread ?? 0;
-  const active = chat.mode === "full" && chat.projectId === projectId;
+  const unread = chat.overview?.totalUnread ?? 0;
+  const active = chat.mode === "full";
   const summary = unread > 0 ? t("nav.unread", { count: unread }) : undefined;
 
   function activate() {
     onNavigate();
-    if (chat.contextSlug === slug) chat.open();
+    chat.open();
   }
 
   if (collapsed) {
