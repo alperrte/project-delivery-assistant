@@ -1,5 +1,11 @@
 # Frontend tasarım kuralları
 
+## Oturum içi mobil navbar — 2026-10-12
+
+640 px altında `AppHeader` tek satır ve 56 px yüksekliktedir: 44 px hamburger, PDA wordmark, arama, bildirim ve hesap tetikleyicileri. Dil/tema ve native geri/ileri kontrolleri mevcut `AppShellView` çekmecesinin altındadır; aynı ortak component'ler ve oturum tercihleri kullanılır. Menü Escape ile odağı tetikleyiciye döndürür, rota seçimi/geçmiş traversali veya desktop kontrol breakpoint'ine geçişte kapanır. Drawer altı safe-area payını gözetir. Desktop navbar viewport merkezindeki konumunu ve 48 px yüksekliğini korur.
+
+`--workspace-header-reserve` mobilde 80 px, sm ve üstünde 72 px'tir; main ve tam ekran sohbet aynı değeri kullanır. Landing demosu kamera inset'ini main'in gerçek padding'inden türetir. Mobil arama 44 px kapatma kontrolü ve odak dönüşü içerir; sonuçlar viewport yüksekliğine sığar. Mevcut 700 ms auto-hide, owned-popup/focus/drawer koruması ve desktop hover/touch scroll davranışı sürer.
+
 ## Landing mobil navbar, hikâye ve footer — 2026-10-12
 
 - Landing navbar 1024 px altında 44 px hamburger disclosure kullanır. Dil/tema ve Hakkımızda/İletişim/Giriş/Kayıt bağlantıları aynı paneldedir; Escape odak döndürür, dış tıklama ve desktop geçişi paneli kapatır. Desktop navbar tek satırını korur.
@@ -100,7 +106,7 @@ Dashboard, Projeler, Organizasyonlar ve proje detayları `app-shell` ile aynı s
 
 Projeler, Organizasyonlar ve proje Ekipler listeleri tablo yerine ortak kart ızgarası kullanır (`components/common/entity-card.tsx`: `EntityCard`, `EntityCardSection`, `EntityCardFooter`, `EntityCardLink`, `EntityStatusPill`, `EntityGrid`). Kart üstünde tonlu bir başlık bandı (durum rengi: aktif → `success`, beklemede → `warning`, diğerleri nötr), harf/ikon karosu, ad, açıklama ve durum hapı bulunur; altında ayraçlı bölümler ve tek bir alt link vardır. Alt linkin `::after` katmanı kartın tamamını kaplar, yani kart tek bir link hedefidir; kart içindeki ek kontroller (ör. ekip düzenle/arşivle) `relative z-10` almalıdır. Veri olmayan alan için sahte içerik üretme: teknoloji `techStack` metninden bölünür (katalogdaki adlar logo olarak, diğerleri metin çipi olarak), ekip sayısı ve baş harf avatarları liste yanıtındaki `team` alanından gelir; kart başına `/home` gibi ek sorgu atma. Izgara en fazla 3 sütundur (`md:2 / xl:3`) ve sayfa başına 12 kart gösterilir; 4 sütun kartın teknoloji ve avatar satırlarını sıkıştırır. Sayfalama numaralıdır (`PaginationBar` `pageSize` ile) ve sayfa URL'de `?page=` olarak tutulur.
 
-Üst çubuk (`app-header.tsx`) fiziksel viewport merkezindeki eski konumunu korur; sidebar expanded/collapsed konumu etkilemez (2026-10-06 kullanıcı düzeltmesi); ≤small viewport iki row kullanır. Birinci row mobil menü, native history geri/ileri ve GlobalSearch; ikinci row dil/tema/bildirim/hesap; sm üstünde tek row. `--workspace-header-reserve` main ve full chat için ortak128px mobile/72px desktop değeridir; autohide reserve değiştirmez. `use-auto-hide.ts` mevcut700ms idle, top24px/scroll-up/focus/Ctrl-K davranışını korur; popup açıkken gizlenmez. PDA okları yalnız güvenilir native same-origin capability ile enabled olur; unsupported görünür disabled ve localized açıklamalıdır; browser history intercept edilmez.
+Üst çubuk (`app-header.tsx`) fiziksel viewport merkezindeki konumunu korur; sidebar expanded/collapsed konumu etkilemez. 640 px altında 56 px tek satırda hamburger/logo/arama/bildirim/hesap vardır; dil/tema/history çekmecededir. Sm üstünde 48 px tek satır desktop düzeni sürer. `--workspace-header-reserve` main ve full chat için mobil 80 px / desktop 72 px'tir; autohide reserve değiştirmez. `use-auto-hide.ts` mevcut 700 ms idle, top 24 px, touch scroll-up, focus/Ctrl-K davranışını korur; popup/drawer açıkken gizlenmez. PDA okları yalnız güvenilir native same-origin capability ile enabled olur; unsupported görünür disabled ve localized açıklamalıdır; browser history intercept edilmez.
 
 ### Avatar ve profil fotoğrafı
 

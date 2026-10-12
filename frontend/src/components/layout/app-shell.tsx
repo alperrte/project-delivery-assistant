@@ -7,6 +7,9 @@ import { useTranslations } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
 import { Buildings, SquaresFour, House, GearSix, CalendarBlank, SidebarSimple, EnvelopeSimple, ShieldCheck } from "@phosphor-icons/react";
 import { AppHeader } from "./app-header";
+import { LocaleSwitcher } from "./locale-switcher";
+import { ThemeToggle } from "./theme-toggle";
+import { WorkspaceHistoryControls } from "./workspace-history-controls";
 import { AppBreadcrumb } from "./app-breadcrumb";
 import { OfflineNotice } from "./offline-notice";
 import { BreadcrumbLabelsProvider } from "./breadcrumb-labels";
@@ -163,6 +166,12 @@ export function AppShellView({ children, pathname, user, collapsed = false, onLo
   const incoming = useIncomingInvitationCount(!contained);
   const ti = useTranslations("invitations");
   const [menuOpen, setMenuOpen] = useState(false);
+  useEffect(() => {
+    const desktopControls = window.matchMedia("(min-width: 640px)");
+    const close = () => { if (desktopControls.matches) setMenuOpen(false); };
+    desktopControls.addEventListener("change", close);
+    return () => desktopControls.removeEventListener("change", close);
+  }, []);
   function renderNavigation(narrow: boolean) {
     return (
       <>
@@ -272,9 +281,21 @@ export function AppShellView({ children, pathname, user, collapsed = false, onLo
         </button>
       </aside>
       <Dialog open={menuOpen} onOpenChange={setMenuOpen}>
-        <DialogContent className="top-0 left-0 h-[100dvh] max-h-[100dvh] w-72 max-w-[85vw] translate-x-0 translate-y-0 gap-0 rounded-none p-0 sm:max-w-72">
+        <DialogContent id="workspace-mobile-navigation" className="top-0 left-0 h-[100dvh] max-h-[100dvh] w-72 max-w-[85vw] translate-x-0 translate-y-0 gap-0 rounded-none p-0 sm:max-w-72 [&>[data-slot=dialog-close]]:size-11">
           <DialogTitle className="sr-only">{tw("navigation")}</DialogTitle>
-          <div data-workspace-scroll={contained ? undefined : "drawer"} className="flex min-h-0 flex-col overflow-y-auto">{renderNavigation(false)}</div>
+          <div data-workspace-scroll={contained ? undefined : "drawer"} className="flex min-h-0 flex-col overflow-y-auto">
+            {renderNavigation(false)}
+            <div className="mx-3 mb-3 space-y-3 border-t border-border pt-3 pb-[env(safe-area-inset-bottom)] sm:hidden" data-mobile-workspace-controls>
+              <div className="flex items-center justify-between gap-3">
+                <LocaleSwitcher triggerClassName="h-11 rounded-full border border-border bg-muted px-3" />
+                <ThemeToggle className="w-fit [&>button]:size-11" />
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs text-muted-foreground">{tw("history.label")}</span>
+                <WorkspaceHistoryControls enabled={!contained} onNavigate={() => setMenuOpen(false)} />
+              </div>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
       <div className="flex min-w-0 flex-1 flex-col">

@@ -1,5 +1,9 @@
 # Web Sitesi Kesinlikle Olması Gerekenler — Master Checklist
 
+## Oturum içi mobil navbar — 2026-10-12 (sınırlı kapsam)
+
+AppHeader 640 px altında tek satır/56 px, 44 px hamburger/arama/bildirim/hesap ve PDA logo kullanır; dil/tema/native history mevcut çekmecededir. Main/fullscreen chat reserve mobil 80 px / desktop 72 px. Arama kapatma/odak, viewporta sığan sonuçlar, drawer Escape/nested dil menüsü/rota/resize, native geri ve dürüst unsupported fallback, auto-hide/drawer hold ve chat inert sınırı doğrulandı. Production build üzerinde 38 Chromium (28 landing/gerçek component + 2 native history + 8 yeni UI) ve 8 dokunmatik mobil WebKit başarılı; lint/TypeScript/build/diff geçti. TR/EN/DE, light/dark, 320/390/640/768/1024/1440 px geometrisi ve ekran görüntüleri incelendi. UI testleri açıkça TEST-ONLY REST/WS fixture kullanır; service worker yalnız fixture routing'i güvenilir kılmak için bu testlerde bloklanır. Gerçek backend hesaplı geniş gate ve gerçek cihaz kontrolü yapılmadı. Responsive / Mobil Görünüm / Keyboard Navigation / Focus State global kutuları değişmedi. Kayıt: `docs/compliation/2026-10-12-workspace-mobile-navbar.md`.
+
 ## Landing mobil menü, scroll animasyonları ve ortak footer — 2026-10-12 (sınırlı kapsam)
 
 Footer kullanıcı takip düzeltmesi: GitHub hesapları yan yana, iletişim + e-posta aynı satırda, kaynak/lisans ve telif/sürüm ortalı; mobil dikey boşluk azaltıldı. Güncel dev sunucusunda 7 Chromium footer testi (TR/EN/DE, iki tema, 320/390/768/1440 px, landing/login/about + link/sürüm) ve Türkçe mobil WebKit matrix testi başarılı. 320/390 px koyu görseller ve aynı-satır geometrisi incelendi. Footer `[x]` kalır; proje geneli responsive/erişilebilirlik kutuları değişmedi. Kayıt: `docs/compliation/2026-10-12-footer-compact-mobile.md`.

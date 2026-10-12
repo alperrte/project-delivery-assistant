@@ -1,5 +1,9 @@
 ﻿# Klasör yapısı kısa rehberi
 
+## Mobil çalışma alanı navbar doğrulaması — 2026-10-12
+
+`frontend/e2e/workspace-mobile-header.spec.ts` ortak header/drawer, arama, native history/fallback, popup/odak, auto-hide ve fullscreen chat yerleşimini açıkça TEST-ONLY REST/WS fixture'larıyla kontrol eder. Backend hesabı gerektirmediği için `playwright.public.config.ts` paketine de dahildir. Header/drawer sahipliği `components/layout/{app-header,app-shell}.tsx` içinde kalır; yeni navigasyon veya oturum altyapısı yoktur.
+
 ## İşletme betikleri, CI ve çevrimdışı sayfa (2026-10-11)
 
 `docker-compose.prod.yml` + `ops/Caddyfile` (Caddy ile production bileşimi) ve `ops/smoke-test.mjs` (yayın sonrası smoke test). `ops/backup.ps1` ve `ops/restore.ps1` DB + medya yedeği ve geri yükleme tatbikatı içindir (kullanım: `.agents/operations.md`). `.github/workflows/ci.yml` (frontend lint/tsc/build/bundle/audit, backend `mvnw verify`, Gitleaks, Docker build) ve `.github/dependabot.yml` bağımlılık güncellemeleri içindir. `frontend/src/lib/security/csp.ts` CSP üretimini, `frontend/src/components/service-worker-registration.tsx` ile `frontend/public/{sw.js,offline.html}` çevrimdışı sayfayı, `frontend/scripts/check-site.mjs` site taramasını tutar.
