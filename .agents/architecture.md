@@ -187,3 +187,19 @@ Mail domain ports remain unchanged; shared `SmtpMailSettings` contains only envi
 ## Proje ve organizasyon logo şekli — 2026-10-12
 
 `project.LogoShape` (`SQUARE`, `CIRCLE`) görsel dosyasından bağımsız kimlik metadata'sıdır. V42 her iki tabloya varsayılan SQUARE, NOT NULL ve CHECK ekler. Create/PUT mevcut yetki ve CSRF kurallarını kullanır; eksik/null create şekli Square, eksik/null PUT şekli kayıtlı tercihi korur. Yanıtlar ve alıcı kapsamlı davet listesi/önizlemesi şekli taşır. EntityMark ve açık data-logo-frame çerçevesi kart, başlık, sidebar, ekip ve önizlemelerde ortak kırpma uygular; sohbet grup avatarı aynı proje tercihinden beslenir. Yeni medya endpoint'i, depolama biçimi veya yetki modeli yoktur.
+
+## Profil menu help / session continuity - 2026-10-12
+
+AppHeader opens FAQ within the authenticated shell without changing routes. Public FAQ shares features/public-info/faq-content.tsx and the same translations; only publicPages.faq is added to the client catalogue. Global ConsentProvider persistence is unchanged; profile-triggered dialogs return focus to the account button. Public layout uses PDA_SESSION only to offer an app return link; API/AppShell authorization, cookies, CSRF/CORS and refresh remain unchanged. Evidence: docs/compliation/2026-10-12-profile-help-session.md.
+
+## Profile FAQ page - 2026-10-12 (supersedes modal)
+
+User requested a full page: /account/faq now renders shared server FAQ within authenticated AppShell. Localized route, app noindex and existing account guard apply. Back uses safe native history or validated internal returnTo; direct entry defaults to dashboard. Client FAQ message exception removed; consent panel unchanged. Evidence: docs/compliation/2026-10-12-profile-faq-page.md.
+
+## Legacy FAQ route - 2026-10-12
+
+Proxy routes public /faq to localized /account/faq with 307/no-store when the existing PDA_SESSION marker is present. This selects the workspace layout only; AppShell/API still verify authentication. Anonymous FAQ remains public. Evidence: docs/compliation/2026-10-12-profile-faq-routing.md.
+
+## Workspace contact page - 2026-10-12
+
+/account/contact reuses ContactPage/ContactForm within AppShell; the profile link carries returnTo. Proxy redirects signed-in public /contact requests to localized account/contact with 307/no-store. Anonymous contact stays public. Shared WorkspaceHelpBack replaces WorkspaceFaqBack for both pages. Existing account guard/auth/cookies/CSRF/CORS/form API unchanged. Evidence: docs/compliation/2026-10-12-profile-contact-page.md.

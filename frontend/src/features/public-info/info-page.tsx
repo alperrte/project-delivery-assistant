@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
-import { CaretDown } from "@phosphor-icons/react/ssr";
+import { FaqContent, type FaqGroup } from "./faq-content";
 import Link from "@/i18n/navigation";
 import { APACHE_LICENSE_TEXT } from "./apache-license";
 import { PageContents } from "./page-contents";
@@ -13,7 +13,6 @@ import { ManageCookiePreferencesButton } from "@/features/consent/manage-cookie-
 
 type SectionTable = { caption: string; headers: string[]; rows: string[][] };
 type Section = { id: string; title: string; paragraphs: string[]; items?: string[]; table?: SectionTable; closing?: string[] };
-type FaqGroup = { id: string; title: string; questions: { question: string; answer: string }[] };
 
 /** Data-protection pages that link to the regulator's own guidance. They are published, indexable pages like the rest. */
 const hasOfficialReferences = (page: InfoPage) => page === "kvkk" || page === "privacy" || page === "cookies";
@@ -78,21 +77,7 @@ export async function PublicInfoPage({ page }: { page: InfoPage }) {
       <div className="mt-10 grid gap-10 lg:grid-cols-[14rem_minmax(0,1fr)] lg:gap-16">
         <PageContents label={common("contents")} items={contents} />
         <div className="min-w-0">
-          {page === "faq" ? groups.map(group => (
-            <section key={group.id} id={group.id} aria-labelledby={group.id + "-title"} className="mb-10 scroll-mt-6">
-              <h2 id={group.id + "-title"} className="mb-4 text-xl font-semibold">{group.title}</h2>
-              <div className="divide-y divide-border border-y border-border">
-                {group.questions.map(({ question, answer }, index) => (
-                  <details key={question} className="group">
-                    <summary aria-controls={group.id + "-answer-" + index} className="flex list-none items-start justify-between gap-4 py-5 text-base font-medium outline-hidden focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring [&::-webkit-details-marker]:hidden">
-                      {question}<CaretDown size={18} aria-hidden="true" className="mt-1 shrink-0 transition-transform group-open:rotate-180" />
-                    </summary>
-                    <p id={group.id + "-answer-" + index} className="pb-5 pr-6 text-base leading-7 text-muted-foreground">{answer}</p>
-                  </details>
-                ))}
-              </div>
-            </section>
-          )) : sections.map(section => (
+          {page === "faq" ? <FaqContent groups={groups} /> : sections.map(section => (
             <section key={section.id} id={section.id} aria-labelledby={section.id + "-title"} className="mb-10 scroll-mt-6">
               <h2 id={section.id + "-title"} className="mb-4 text-xl font-semibold">{section.title}</h2>
               <div className="space-y-4 text-base leading-7 text-muted-foreground">

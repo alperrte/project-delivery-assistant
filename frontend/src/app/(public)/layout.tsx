@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { cookies } from "next/headers";
 import Link from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
 import { ArrowUpRight } from "lucide-react";
@@ -16,6 +17,9 @@ export default async function PublicLayout({ children }: { children: ReactNode }
   const t = await getTranslations("publicPages.common");
   const landing = await getTranslations("landing");
   const footer = await getTranslations("siteFooter");
+  // Presentation hint only; AppShell and the backend still verify the real session.
+  const sessionHint = (await cookies()).has("PDA_SESSION");
+  const app = await getTranslations("app");
   return (
     <div className="flex min-h-[100dvh] flex-col bg-background text-foreground">
       <a href="#public-main" className="sr-only z-50 rounded-md bg-primary p-3 text-primary-foreground focus:not-sr-only focus:fixed focus:top-2 focus:left-2">{t("skip")}</a>
@@ -27,8 +31,10 @@ export default async function PublicLayout({ children }: { children: ReactNode }
             <ThemeToggle />
             <Link href="/about" className={navLink}>{footer("about")}</Link>
             <Link href="/contact" className={navLink}>{footer("contact")}</Link>
-            <TrackedLink ctaId="header_login" href="/login" className={navLink}>{landing("login")}</TrackedLink>
-            <TrackedLink ctaId="header_register" href="/register" className={cn(buttonVariants(), "auth-cta text-(--auth-cta-ink) min-h-11 gap-2 rounded-full px-4 text-sm font-semibold hover:brightness-110")}>{landing("register")}<ArrowUpRight size={15} aria-hidden="true" className="max-sm:hidden" /></TrackedLink>
+            {sessionHint ? <Link href="/dashboard" className={navLink}>{app("nav.home")}</Link> : <>
+              <TrackedLink ctaId="header_login" href="/login" className={navLink}>{landing("login")}</TrackedLink>
+              <TrackedLink ctaId="header_register" href="/register" className={cn(buttonVariants(), "auth-cta text-(--auth-cta-ink) min-h-11 gap-2 rounded-full px-4 text-sm font-semibold hover:brightness-110")}>{landing("register")}<ArrowUpRight size={15} aria-hidden="true" className="max-sm:hidden" /></TrackedLink>
+            </>}
           </nav>
         </div>
       </header>

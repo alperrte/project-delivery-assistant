@@ -380,3 +380,19 @@ Repodaki 958377 byte CV'nin ret nedeni 24296 byte C2PA metadata'sı olarak doğr
 ## Sohbet scrollbar paleti — 2026-10-12 (sınırlı kapsam)
 
 Dark Mode / UI tutarlılığı kapsamı: sohbetin altı kaydırılabilir yüzeyi mevcut `data-workspace-scroll` paletine bağlandı; light/dark label-blue token'ı, transparan track, ortak hover ve forced-colors fallback kullanılır. Hedefli ESLint ve production build başarılı; küçük stil değişikliği için genel audit/test koşumu yapılmadı. Global checklist kutuları bu sınırlı kanıtla değiştirilmedi. Kayıt: `docs/compliation/2026-10-12-chat-scrollbar-theme.md`.
+
+## Profile FAQ / consent session continuity - 2026-10-12 (scoped)
+
+Affected navigation, keyboard/focus, responsive, dark-mode and consent standards: shared FAQ opens within the workspace without route changes; keyboard/Escape/focus return, TR/EN/DE at 320 px, desktop light and mobile dark visuals verified. Real API confirms unchanged authentication cookies during preferences, reload/public/contact return, actual refresh rotation after TEST-ONLY access expiry, and explicit logout. 3 new + 4 existing targeted Chromium tests, lint/type/build PASS. Global boxes remain unchanged. Evidence: docs/compliation/2026-10-12-profile-help-session.md.
+
+## Profile FAQ page - 2026-10-12 (scoped follow-up)
+
+Previous FAQ modal replaced by authenticated /account/faq page. Localized title, noindex/account guard, return navigation after reload, TR/EN/DE 320 px, light/dark and real session/refresh/logout passed in 3 Chromium tests. Lint/type/build PASS. Global boxes unchanged. Latest evidence: docs/compliation/2026-10-12-profile-faq-page.md.
+
+## Legacy FAQ navigation - 2026-10-12 (scoped)
+
+Authenticated legacy FAQ URLs in TR/EN/DE now resolve to workspace layout; anonymous public FAQ and protected-route login guard verified. 3 targeted real-session Chromium tests, lint/build PASS. Global boxes unchanged. Evidence: docs/compliation/2026-10-12-profile-faq-routing.md.
+
+## Workspace contact page - 2026-10-12 (scoped)
+
+Navigation/title/noindex/responsive/dark-mode scope: profile and legacy contact addresses keep signed-in workspace layout, reload/back/cookies verified; anonymous contact and protected login guard preserved. TR/EN/DE at 320 px and desktop/mobile screenshots checked. 3 targeted Chromium tests, lint/type/build PASS. Form/mail delivery unchanged and not retested; global boxes unchanged. Evidence: docs/compliation/2026-10-12-profile-contact-page.md.

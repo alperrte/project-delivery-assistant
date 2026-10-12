@@ -4305,6 +4305,7 @@
   "contact": {
     "title": "İletişim",
     "description": "Soru, öneri ve geri bildirimlerinizi giriş yapmadan bize iletebilirsiniz.",
+    "workspaceDescription": "Soru, öneri ve geri bildirimlerinizi bize iletebilirsiniz.",
     "form": {
       "label": "İletişim formu",
       "firstName": "Ad",

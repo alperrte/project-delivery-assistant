@@ -37,6 +37,8 @@ export const PAGE_ROUTES = [
   "/organizations/[organizationId]/edit",
   "/settings",
   "/account",
+  "/account/faq",
+  "/account/contact",
   "/tasks",
   "/calendar",
   "/calendar/new",

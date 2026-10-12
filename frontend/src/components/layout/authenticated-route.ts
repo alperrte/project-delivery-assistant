@@ -8,7 +8,7 @@ export const AUTHENTICATED_ROUTES = [
   "/projects/[slug]/tasks", "/projects/[slug]/tasks/new", "/projects/[slug]/tasks/board", "/projects/[slug]/tasks/pool", "/projects/[slug]/tasks/[taskId]", "/projects/[slug]/tasks/[taskId]/edit",
   "/projects/[slug]/sprints", "/projects/[slug]/sprints/new", "/projects/[slug]/sprints/[sprintId]", "/projects/[slug]/sprints/[sprintId]/edit", "/projects/[slug]/labels",
   "/organizations", "/organizations/new", "/organizations/[organizationId]", "/organizations/[organizationId]/edit",
-  "/settings", "/account", "/tasks", "/calendar", "/calendar/new", "/calendar/reminders/[reminderId]/edit",
+  "/settings", "/account", "/account/faq", "/account/contact", "/tasks", "/calendar", "/calendar/new", "/calendar/reminders/[reminderId]/edit",
   "/invitations", "/invitations/[projectId]/[invitationId]",
   "/admin", "/admin/users", "/admin/users/[userId]", "/admin/analytics", "/admin/system", "/admin/audit", "/admin/support", "/admin/support/[requestId]",
 ] as const satisfies readonly PageRoute[];
