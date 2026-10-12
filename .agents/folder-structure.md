@@ -1,5 +1,9 @@
 ﻿# Klasör yapısı kısa rehberi
 
+## Navbar görünürlük tercihi — 2026-10-12
+
+`features/settings/components/navigation-section.tsx` ortak radio seçeneklerini sunar; `components/layout/use-auto-hide.ts` hesap tercihi ve seçilmemiş cihaz varsayılanını uygular. Backend mevcut UserPreference controller/service/entity içinde kalır; `db/migration/V47__navbar_visibility_preference.sql` nullable enum CHECK ekler. `NavbarPreferenceMigrationTest` V46→V47 korumasını, `UserPreferenceApiIntegrationTest` kayıt/owner/uyumluluğu ve `workspace-mobile-header.spec.ts` gerçek UI üzerindeki açıkça TEST-ONLY fixture akışını doğrular.
+
 ## Merkezi mesajlaşma — 2026-10-12
 
 - `backend/com.pda.chat`: mevcut controller/service/repository/entity sınırları; `ChatAttachmentController`, `ChatAttachmentService`, `ChatFileValidator`, `LegacyWordInspector` dosya akışını ekler. `ChatViews` message attachment ve MessageInfo DTO'larını taşır.

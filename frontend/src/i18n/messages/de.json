@@ -1576,6 +1576,13 @@
       "description": "Das Standarddesign: hell, dunkel oder dem Gerät folgen. Es ändert sich erst, wenn Sie auf Speichern klicken.",
       "label": "Design"
     },
+    "navigation": {
+      "title": "Obere Navigationsleiste",
+      "description": "Wählen Sie das Verhalten auf Mobilgeräten und am Desktop. Änderungen gelten nach dem Speichern.",
+      "alwaysVisible": "Immer sichtbar",
+      "autoHide": "Automatisch ausblenden",
+      "hint": "Bei Inaktivität wird die Leiste automatisch ausgeblendet. Über den Griff am oberen Rand wird sie wieder sichtbar; auf Mobilgeräten auch beim Scrollen nach oben."
+    },
     "motion": {
       "title": "Animationen",
       "description": "Diese Einstellungen werden in Ihrem Konto gespeichert und gelten bei jeder Anmeldung.",

@@ -1,5 +1,9 @@
 # Veritabanı ve kalıcılık
 
+## V47 navbar görünürlüğü — 2026-10-12
+
+`user_preferences.navbar_mode VARCHAR(16) NULL`; CHECK yalnız `always-visible|auto-hide` veya NULL kabul eder. Mevcut kayıtlar NULL ile cihaz varsayılanını korur; dil/tema/hareket/tarih veya kullanıcı verisi değiştirilmez. Yeni seçim mevcut own-user preference kaydıyla saklanır. V46→V47 upgrade ve DB CHECK gerçek PostgreSQL entegrasyon testiyle doğrulanır; önceki migration'lar değiştirilmez.
+
 ## V43–V46 merkezi sohbet — 2026-10-12
 
 - V43: DM project_id nullable/global scope; kanonik çift global partial UNIQUE. En eski created_at/id konuşması korunur, diğer konuşmaların mesajları ID, içerik, sender, tarih, quote ve reaction'larıyla taşınır. Composite reply FK migration transaction'ında ertelenir. Eski read kanıtı geçici kalıcı tabloda tutulur; merged marker muhafazakâr minimumdur. Proje silme artık DM'leri cascade etmez.

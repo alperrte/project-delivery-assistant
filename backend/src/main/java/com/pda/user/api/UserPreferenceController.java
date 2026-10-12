@@ -29,12 +29,13 @@ public class UserPreferenceController {
             @NotNull @Pattern(regexp = "tr|en|de") String locale,
             @NotNull @Pattern(regexp = "system|light|dark") String theme,
             @NotNull @Pattern(regexp = "system|on|off") String motion,
-            @NotNull Boolean themeTransition) {
+            @NotNull Boolean themeTransition,
+            @Pattern(regexp = "always-visible|auto-hide") String navbarMode) {
     }
 
     @GetMapping
     @Operation(summary = "Get my saved interface defaults",
-            description = "Language, theme, animation and theme-transition choices saved on the Settings page; a field "
+            description = "Language, theme, animation, theme-transition and navbar choices saved on the Settings page; a field "
                     + "is absent until the user has saved. Requires a valid access cookie.")
     public ResponseEntity<UserPreferenceService.Preferences> get(
             @AuthenticationPrincipal UserAccounts.AuthenticatedUser principal) {
@@ -43,12 +44,12 @@ public class UserPreferenceController {
 
     @PutMapping
     @Operation(summary = "Save my interface defaults",
-            description = "Replaces all four choices at once. They apply at every sign-in; the header switches stay "
-                    + "temporary. Requires CSRF.")
+            description = "Replaces interface defaults. Omitted/null navbarMode preserves the previous navbar choice "
+                    + "for older clients. They apply at every sign-in; header switches stay temporary. Requires CSRF.")
     public ResponseEntity<UserPreferenceService.Preferences> save(
             @AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
             @Valid @RequestBody PreferencesRequest request) {
         return ResponseEntity.ok().header("Cache-Control", "no-store").body(preferences.save(principal.id(),
-                request.locale(), request.theme(), request.motion(), request.themeTransition()));
+                request.locale(), request.theme(), request.motion(), request.themeTransition(), request.navbarMode()));
     }
 }

@@ -33,6 +33,10 @@ public class UserPreference {
     @Column(name = "theme_transition")
     private Boolean themeTransition;
 
+    /** Null retains the device defaults until the user explicitly saves a choice. */
+    @Column(name = "navbar_mode", length = 16)
+    private String navbarMode;
+
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
@@ -60,5 +64,7 @@ public class UserPreference {
     public String getTheme() { return theme; }
     public String getMotion() { return motion; }
     public Boolean getThemeTransition() { return themeTransition; }
+    public String getNavbarMode() { return navbarMode; }
+    public void setNavbarMode(String navbarMode) { this.navbarMode = Objects.requireNonNull(navbarMode); }
     public Instant getUpdatedAt() { return updatedAt; }
 }
