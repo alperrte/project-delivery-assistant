@@ -191,6 +191,7 @@ export function MessageList({
         aria-relevant="additions"
         aria-label={t("messagesLabel")}
         data-testid="chat-messages"
+        data-workspace-scroll=""
         tabIndex={0}
         className="min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain px-3 py-4 outline-none focus-visible:ring-3 focus-visible:ring-inset focus-visible:ring-ring/50 sm:px-5"
       >
