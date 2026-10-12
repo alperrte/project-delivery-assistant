@@ -33,6 +33,9 @@ public class UserPreference {
     @Column(name = "theme_transition")
     private Boolean themeTransition;
 
+    @Column(name = "language_transition")
+    private Boolean languageTransition;
+
     /** Null retains the device defaults until the user explicitly saves a choice. */
     @Column(name = "navbar_mode", length = 16)
     private String navbarMode;
@@ -44,18 +47,20 @@ public class UserPreference {
     }
 
     public static UserPreference of(UUID userId, String locale, String theme, String motion, boolean themeTransition,
-                                    Instant at) {
+                                    boolean languageTransition, Instant at) {
         UserPreference preference = new UserPreference();
         preference.userId = Objects.requireNonNull(userId, "userId is required");
-        preference.replace(locale, theme, motion, themeTransition, at);
+        preference.replace(locale, theme, motion, themeTransition, languageTransition, at);
         return preference;
     }
 
-    public void replace(String locale, String theme, String motion, boolean themeTransition, Instant at) {
+    public void replace(String locale, String theme, String motion, boolean themeTransition,
+                        boolean languageTransition, Instant at) {
         this.locale = Objects.requireNonNull(locale, "locale is required");
         this.theme = Objects.requireNonNull(theme, "theme is required");
         this.motion = Objects.requireNonNull(motion, "motion is required");
         this.themeTransition = themeTransition;
+        this.languageTransition = languageTransition;
         this.updatedAt = Objects.requireNonNull(at, "at is required");
     }
 
@@ -64,6 +69,7 @@ public class UserPreference {
     public String getTheme() { return theme; }
     public String getMotion() { return motion; }
     public Boolean getThemeTransition() { return themeTransition; }
+    public Boolean getLanguageTransition() { return languageTransition; }
     public String getNavbarMode() { return navbarMode; }
     public void setNavbarMode(String navbarMode) { this.navbarMode = Objects.requireNonNull(navbarMode); }
     public Instant getUpdatedAt() { return updatedAt; }

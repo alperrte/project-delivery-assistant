@@ -7,7 +7,7 @@ import { useLocale } from "next-intl";
 import { writeLocaleCookie } from "@/i18n/locale-cookie";
 import { locales, type Locale } from "@/i18n/config";
 import { switchLocale } from "@/i18n/routing";
-import { setMotionPreference, setThemeTransitionPreference } from "@/lib/preferences/motion";
+import { setMotionPreference, setThemeTransitionPreference, setLanguageTransitionPreference } from "@/lib/preferences/motion";
 import { preferencesApi, savedPreferencesKey, type ThemeChoice } from "./api";
 
 /**
@@ -75,6 +75,7 @@ export function useApplySavedPreferences(userId: string | undefined) {
     const defaults = saved.data;
     setMotionPreference(defaults.motion ?? "on");
     setThemeTransitionPreference(defaults.themeTransition ?? true);
+    setLanguageTransitionPreference(defaults.languageTransition ?? true);
     if (readBaseline()?.userId === userId) return;
     writeBaseline({ userId, theme: defaults.theme ?? asThemeChoice(theme), locale: defaults.locale ?? locale });
     if (defaults.theme) setTheme(defaults.theme);

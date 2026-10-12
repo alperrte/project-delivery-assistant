@@ -1574,6 +1574,13 @@
         "on": "On",
         "off": "Off",
         "blocked": "Interface animations are off, so the theme changes instantly."
+      },
+      "language": {
+        "label": "Language transition",
+        "hint": "Show transition animation when switching application language.",
+        "on": "On",
+        "off": "Off",
+        "blocked": "Interface animations are off, so the language changes instantly."
       }
     }
   },

@@ -11,6 +11,7 @@ export type SavedPreferences = {
   theme?: ThemeChoice;
   motion?: MotionPreference;
   themeTransition?: boolean;
+  languageTransition?: boolean;
   navbarMode?: NavbarMode;
 };
 
@@ -26,6 +27,7 @@ type PreferencesResponse = {
   theme?: ThemeChoice | null;
   motion?: MotionPreference | "system" | null;
   themeTransition?: boolean | null;
+  languageTransition?: boolean | null;
   navbarMode?: NavbarMode | null;
 };
 
@@ -35,6 +37,7 @@ function normalizePreferences(response: PreferencesResponse): SavedPreferences {
     ...(response.theme != null ? { theme: response.theme } : {}),
     motion: normalizeMotionPreference(response.motion),
     themeTransition: response.themeTransition ?? true,
+    languageTransition: response.languageTransition ?? true,
     ...(response.navbarMode != null ? { navbarMode: response.navbarMode } : {}),
   };
 }

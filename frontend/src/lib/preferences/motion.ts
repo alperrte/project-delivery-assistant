@@ -16,6 +16,7 @@ export function normalizeMotionPreference(value: unknown): MotionPreference {
 
 export const MOTION_KEY = "pda:motion";
 export const THEME_TRANSITION_KEY = "pda:theme-transition";
+export const LANGUAGE_TRANSITION_KEY = "pda:language-transition";
 const CHANGE_EVENT = "pda:preferences-changed";
 
 function read(key: string): string | null {
@@ -60,12 +61,20 @@ function themeTransitionSnapshot(): boolean {
   return stored(THEME_TRANSITION_KEY) !== "off";
 }
 
+function languageTransitionSnapshot(): boolean {
+  return stored(LANGUAGE_TRANSITION_KEY) !== "off";
+}
+
 export function setMotionPreference(next: MotionPreference) {
   write(MOTION_KEY, normalizeMotionPreference(next));
 }
 
 export function setThemeTransitionPreference(next: boolean) {
   write(THEME_TRANSITION_KEY, next ? "on" : "off");
+}
+
+export function setLanguageTransitionPreference(next: boolean) {
+  write(LANGUAGE_TRANSITION_KEY, next ? "on" : "off");
 }
 
 /** The server and the first client render always see the defaults, so hydration never mismatches. */
@@ -78,6 +87,12 @@ export function useMotionPreference() {
 export function useThemeTransitionPreference() {
   const enabled = useSyncExternalStore(subscribe, themeTransitionSnapshot, () => true);
   return [enabled, (next: boolean) => write(THEME_TRANSITION_KEY, next ? "on" : "off")] as const;
+}
+
+/** Whether the flag-flip animation plays when the language changes. Independent of theme and motion choices. */
+export function useLanguageTransitionPreference() {
+  const enabled = useSyncExternalStore(subscribe, languageTransitionSnapshot, () => true);
+  return [enabled, (next: boolean) => write(LANGUAGE_TRANSITION_KEY, next ? "on" : "off")] as const;
 }
 
 const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";

@@ -19,7 +19,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { useReducedMotionPreference } from "@/lib/preferences/motion";
+import { useLanguageTransitionPreference, useReducedMotionPreference } from "@/lib/preferences/motion";
 
 export const FLAGS: Record<Locale, ComponentType<{ className?: string; title?: string }>> = { tr: TR, en: GB, de: DE };
 
@@ -37,20 +37,32 @@ const EASE = [0.22, 1, 0.36, 1] as const;
 export function useLocaleSelection() {
   const current = useLocale() as Locale;
   const reduce = useReducedMotionPreference();
+  const [transitionEnabled] = useLanguageTransitionPreference();
   const [flip, setFlip] = useState<{ from: Locale; to: Locale } | null>(null);
 
   function select(next: string) {
     if (next === current || flip) return;
     const target = next as Locale;
-    setFlip({ from: current, to: target });
     writeLocaleCookie(target);
     const destination = switchLocale(window.location.pathname, window.location.search, target, window.location.hash);
+
+    if (!transitionEnabled || reduce) {
+      window.location.assign(destination);
+      return;
+    }
+
+    setFlip({ from: current, to: target });
     // A client-only route change keeps the existing root <html lang>; a document navigation updates it with the URL.
-    window.setTimeout(() => window.location.assign(destination), reduce ? 0 : MIN_SHOWN);
+    window.setTimeout(() => window.location.assign(destination), MIN_SHOWN);
   }
 
   const overlay = (
-    <LocaleOverlay flip={flip} shown={flip !== null} reduce={reduce} onExited={() => setFlip(null)} />
+    <LocaleOverlay
+      flip={flip}
+      shown={flip !== null && transitionEnabled && !reduce}
+      reduce={reduce}
+      onExited={() => setFlip(null)}
+    />
   );
   return { current, select, overlay };
 }

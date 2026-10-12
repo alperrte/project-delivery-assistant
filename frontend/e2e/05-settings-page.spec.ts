@@ -10,7 +10,7 @@ import { MANAGER_STORAGE, MANAGER_USER_FILE } from "./global-setup";
  *
  * The shared manager account keeps whatever is saved, so every test that saves puts the plain defaults back.
  */
-const PLAIN = { locale: "tr", theme: "system", motion: "on", themeTransition: true };
+const PLAIN = { locale: "tr", theme: "system", motion: "on", themeTransition: true, languageTransition: true };
 
 async function restorePlainDefaults(page: Page) {
   const result = await api(page, "PUT", "/users/me/preferences", PLAIN);
@@ -32,6 +32,7 @@ test.describe("with the shared manager's session", () => {
     await expect(group(page, "Arayüz dili")).toBeVisible();
     await expect(group(page, "Tema")).toBeVisible();
     await expect(group(page, "Arayüz animasyonları")).toBeVisible();
+    await expect(group(page, "Dil geçiş animasyonu")).toBeVisible();
     // Profile and password moved to the account page in the navbar's account menu.
     const main = page.locator("#main-content");
     await expect(main.getByRole("button", { name: "Şifreyi güncelle" })).toHaveCount(0);

@@ -12,7 +12,7 @@ test.use({ storageState: MANAGER_STORAGE });
  * Whether it plays follows the animation choices saved in Settings, which the shared manager account keeps: tests that
  * change them put the plain defaults back.
  */
-const PLAIN = { locale: "tr", theme: "system", motion: "on", themeTransition: true };
+const PLAIN = { locale: "tr", theme: "system", motion: "on", themeTransition: true, languageTransition: true };
 
 async function watchTransitionClasses(page: Page) {
   await page.evaluate(() => {
