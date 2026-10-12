@@ -2,6 +2,7 @@ import { test, expect, type Browser, type Page } from "@playwright/test";
 import { FRESH_VISITOR } from "./consent-state";
 import { promoteToAdmin } from "./db";
 import { adminSignIn, chooseDate, registerUser, uniqueUser } from "./helpers";
+import { localizeHref } from "../src/i18n/routing";
 
 // The administration analytics dashboard. Counts that must move are proven on the real stack; presentation cases
 // (language, duration format, empty/error states) use a simulated API answer ONLY for what the screen shows.
@@ -123,7 +124,7 @@ for (const [locale, expected, zero] of [
     try {
       await admin.context.addCookies([{ name: "NEXT_LOCALE", value: locale.slice(0, 2), url: "http://localhost:3000" }]);
       await simulate(admin.page, dashboard());
-      await admin.page.goto("/admin/analytics");
+      await admin.page.goto(localizeHref("/admin/analytics", locale.slice(0, 2) as "tr" | "en" | "de"));
       const card = admin.page.locator('[data-testid="overview"] > div').filter({ hasText: zero });
       await expect(card.locator("dd")).toHaveText(expected);
       // Every chart is an image with a label and a hidden table with the same numbers.

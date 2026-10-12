@@ -487,3 +487,13 @@ Kenar çubuğu daraltıldığında Ekipler simgesinin alt sayfaları (Tüm Ekipl
 **Durum geçişi.** Yapılıyor, İncelemede, Testte ve Tamamlandı birbirine serbestçe geçer (basit ve gelişmiş görevde aynı; `workflow.ts` ve backend `Task.changeStatus`). Yapılıyor → Sırada ve Birikmiş/Sırada giriş adımları korunur.
 
 **Geçmiş tarih.** Görev formunda başlangıç ve termin tarihi bugünden önce seçilemez (`DatePicker min`, `createTaskFormSchema` → `taskDatePast`). Düzenlemede görevin zaten kayıtlı tarihi değişmediyse eskide kalabilir, yalnızca yeni seçilen tarih denetlenir. Termin başlangıçtan önce olamaz (`taskDateOrder`). Kural şu an yalnız arayüzdedir; backend geçmiş tarihi reddetmez.
+
+
+## Sidebar seçili proje logosu — 2026-10-12
+
+`project-sidebar-nav.tsx` açık/daraltılmış sidebar ve mobil çekmecede mevcut `ProjectMark` + `projectLogoSource` kullanır. Kaydedilmiş logo varsa version parametreli özel API görseli gösterilir; logo yoksa veya yüklenemezse baş harf korunur. Mevcut 28 px kutu, token, gezinme ve proje seçim sözleşmesi değişmez. Ek proje sorgusu veya ayrı medya renderer'ı yoktur.
+
+
+## Ekip sayfaları breadcrumb tercihi — 2026-10-12
+
+Kullanıcı tercihiyle ekip detay (`/projects/[slug]/teams/[teamId]`), ekip düzenleme (`.../edit`) ve üye davet (`/projects/[slug]/team-invitations/new`, query dahil) sayfalarında `AppBreadcrumb` render edilmez. Kural tüm proje/ekip kimlikleri ve yerelleştirilmiş URL eşleri için geçerlidir. Ekip oluşturma, üyeler ve diğer sayfalardaki breadcrumb standardı korunur.

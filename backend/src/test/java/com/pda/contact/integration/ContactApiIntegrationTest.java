@@ -71,11 +71,16 @@ class ContactApiIntegrationTest {
         registry.add("FRONTEND_URL", () -> "http://localhost:3000");
         registry.add("JWT_SECRET", () -> Base64.getEncoder().encodeToString(JWT_KEY));
         registry.add("MAIL_ENABLED", () -> "true");
+        // Pre-push imports the operator's .env. Every transport/address setting must belong to this local sink.
+        registry.add("MAIL_PROVIDER", () -> "smtp");
+        registry.add("SMTP_FROM_ADDRESS", () -> SENDER);
         registry.add("MAIL_FROM", () -> SENDER);
+        registry.add("pda.contact.recipient", () -> "info@pd-assistant.com");
         registry.add("SMTP_HOST", () -> "127.0.0.1");
         registry.add("SMTP_PORT", () -> Integer.toString(GREEN_MAIL.getSmtp().getPort()));
         registry.add("SMTP_AUTH", () -> "false");
         registry.add("SMTP_STARTTLS", () -> "false");
+        registry.add("SMTP_SSL", () -> "false");
         registry.add("contact.rate-limit.max-requests", () -> "9");
     }
 

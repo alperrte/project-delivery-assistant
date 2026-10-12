@@ -1,6 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
-import { login, createProject, createTeam, openProjectListPage } from "./helpers";
+import { openProjectTeamsPage, login, createProject, createTeam, openProjectListPage } from "./helpers";
 import { MANAGER_STORAGE, MEMBER_USER_FILE } from "./global-setup";
 
 /**
@@ -178,7 +178,7 @@ test.describe.serial("Invitation, roles, squad, and denial checks", () => {
     await managerPage.getByRole("dialog").getByRole("button", { name: "Ekipten çıkar" }).click();
     await expect(managerPage.getByRole("row", { name: new RegExp(member.nickname) })).toHaveCount(0);
 
-    await managerPage.getByRole("navigation", { name: "Konum" }).getByRole("link", { name: "Ekipler" }).click();
+    await openProjectTeamsPage(managerPage);
     await expect(managerPage).toHaveURL(`/tr/projeler/${slug}/ekipler`);
   });
 });

@@ -6,6 +6,13 @@ test.use({ storageState: MANAGER_STORAGE });
 type TaskJson = { id: string; creationMode: string; title: string; estimatePoints: number | null; deadlineAt: string | null };
 
 async function projectFixture(page: Page, mode: "SIMPLE" | "ADVANCED" | "BOTH" | null = "BOTH") {
+  if (mode === null) {
+    // The create UI now selects the mode immediately. Exercise the still-supported unconfigured API project separately.
+    await page.goto("/projects");
+    const result = await api(page, "POST", "/projects", { name: `Task models ${Date.now()}`, projectType: "WEB" });
+    expect(result.status).toBe(201);
+    return result.json as { slug: string; id: string };
+  }
   const slug = await createProject(page, `Task models ${Date.now()}`, { taskMode: mode });
   const project = (await api(page, "GET", `/projects/by-slug/${slug}`)).json as { id: string };
   return { slug, id: project.id };

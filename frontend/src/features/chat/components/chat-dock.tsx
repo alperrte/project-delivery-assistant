@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type RefObject } from "react";
 import { useTranslations } from "next-intl";
 import { ArrowsOut, List, Minus, X } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
@@ -18,10 +18,54 @@ import { ConversationList } from "./conversation-list";
 const DOCK_POSITION =
   "fixed right-4 bottom-0 z-30 max-sm:inset-x-3 max-sm:right-3 [body:has([data-sticky-actions])_&]:bottom-[4.75rem]";
 
+/** Form actions can wrap, and the floating settings bar has a zero-height sticky wrapper. Measure its visible box. */
+function useActionBarClearance(ref: RefObject<HTMLElement | null>) {
+  useLayoutEffect(() => {
+    const dock = ref.current;
+    if (!dock) return;
+    const style = dock.style;
+    let frame: number | null = null;
+    let observed = new Set<Element>();
+    const resize = new ResizeObserver(schedule);
+    function measure() {
+      frame = null;
+      const targets = new Set<Element>();
+      let bottom = 0;
+      for (const marker of document.querySelectorAll<HTMLElement>("[data-sticky-actions]")) {
+        const box = marker.querySelector<HTMLElement>('[role="region"]') ?? marker;
+        targets.add(marker);
+        targets.add(box);
+        const height = box.getBoundingClientRect().height;
+        if (height > 0) bottom = Math.max(bottom, height + (parseFloat(getComputedStyle(marker).bottom) || 0) + 8);
+      }
+      for (const target of observed) if (!targets.has(target)) resize.unobserve(target);
+      for (const target of targets) if (!observed.has(target)) resize.observe(target);
+      observed = targets;
+      const value = `${Math.ceil(bottom)}px`;
+      if (style.bottom !== value) style.bottom = value;
+    }
+    function schedule() {
+      if (frame === null) frame = requestAnimationFrame(measure);
+    }
+    const mutations = new MutationObserver(schedule);
+    mutations.observe(document.body, { childList: true, subtree: true });
+    window.addEventListener("resize", schedule);
+    measure();
+    return () => {
+      if (frame !== null) cancelAnimationFrame(frame);
+      resize.disconnect();
+      mutations.disconnect();
+      window.removeEventListener("resize", schedule);
+    };
+  }, [ref]);
+}
+
 /** The title bar: the active conversation, the unread total, expand (to the compact window) and close. */
 function Bar() {
   const t = useTranslations("chat");
   const chat = useChat();
+  const dockRef = useRef<HTMLDivElement>(null);
+  useActionBarClearance(dockRef);
   const expandRef = useRef<HTMLButtonElement>(null);
   const unread = chat.overview?.totalUnread ?? 0;
 
@@ -32,6 +76,7 @@ function Bar() {
 
   return (
     <div
+      ref={dockRef}
       role="region"
       aria-label={t("dock.label")}
       data-testid="chat-bar"
@@ -76,6 +121,7 @@ function Compact() {
   const t = useTranslations("chat");
   const chat = useChat();
   const windowRef = useRef<HTMLDivElement>(null);
+  useActionBarClearance(windowRef);
   const selectorRef = useRef<HTMLButtonElement>(null);
   const [showConversations, setShowConversations] = useState(false);
 

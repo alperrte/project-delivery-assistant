@@ -329,3 +329,13 @@ Kapsam yalnız `(app)/admin/**` ekranlarıdır (kullanıcı detayı + oturumlar,
 ## Kurumsal e-posta geçişi — 2026-10-12 (sınırlı kapsam)
 
 Footer, iletişim/destek, KVKK/Gizlilik/Çerez metinlerindeki kurumsal adres `info@pd-assistant.com`; TR/EN/DE Gmail gönderim ifadeleri Hostinger Email ile güncellendi. Gönderim yapılandırması şifre beklediği için yerel profillerde kapalıdır; üretim posta/DNS teslimi doğrulanmış sayılmaz. Mevcut kutular proje geneli yeni audit kanıtı olarak değiştirilmedi. Doğrulama ve kullanıcı adımları: `docs/compliation/2026-10-12-hostinger-corporate-mail.md`.
+
+
+## Sidebar seçili proje logosu — 2026-10-12 (sınırlı kapsam)
+
+İlgili Görsel fallback / Responsive / Dark Mode / Navigasyon kapsamı: gerçek proje logo API'si açık/daraltılmış sidebar ve mobil çekmecede doğrulandı; logosuz proje ve TEST-ONLY 404 baş harfe döner. Mevcut global kutular bu küçük kapsamla değiştirilmedi. Build/TypeScript ve hedefli lint başarılı. Ayrıntı: `docs/compliation/2026-10-12-sidebar-selected-project-logo.md`.
+
+
+## Ekip breadcrumb kaldırma — 2026-10-12 (sınırlı kapsam)
+
+Yalnız Breadcrumb maddesiyle ilişkili: kullanıcının istediği ekip detay/düzenle/üye davet yollarında breadcrumb kaldırıldı; gerçek QA backend + Chromium ile bu üç sayfada yokluğu, ekip oluşturma sayfasında varlığı doğrulandı. Global Breadcrumb kutusu bu sınırlı kapsam nedeniyle değiştirilmedi. Ayrıntı: `docs/compliation/2026-10-12-team-pages-breadcrumb.md`.

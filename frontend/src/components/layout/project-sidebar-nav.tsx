@@ -9,7 +9,8 @@ import { ChatNavItem } from "@/features/chat/components/chat-nav-item";
 import { usePendingInvitationCount } from "@/features/invitations/hooks";
 import { useInvitationResponseCount } from "@/features/notifications/hooks/use-invitation-responses";
 import { useCurrentMember } from "@/features/projects/hooks/use-current-member";
-import { projectsApi } from "@/features/projects/api";
+import { projectLogoSource, projectsApi } from "@/features/projects/api";
+import { ProjectMark } from "@/features/projects/components/project-mark";
 import { useSelectedProject } from "@/features/projects/hooks/use-selected-project";
 import { allowsAdvanced, allowsPool } from "@/features/tasks/task-model";
 import {
@@ -74,6 +75,7 @@ export function ProjectSidebarNav({
     taskRouteSlug(pathname);
 
   const { slug, project } = useSelectedProject(routeSlug);
+  const projectLogo = project ? projectLogoSource(project) : null;
 
   const { isManager } = useCurrentMember(project?.id ?? "");
 
@@ -151,7 +153,7 @@ export function ProjectSidebarNav({
             aria-hidden="true"
             className="grid size-7 shrink-0 place-items-center rounded-md bg-primary text-[11px] font-semibold text-primary-foreground"
           >
-            {project?.name?.slice(0, 1).toLocaleUpperCase() ?? "P"}
+            <ProjectMark key={projectLogo ?? "none"} name={project?.name ?? "P"} src={projectLogo} />
           </span>
         </Link>
 
@@ -254,7 +256,7 @@ export function ProjectSidebarNav({
             aria-hidden="true"
             className="grid size-7 shrink-0 place-items-center rounded-md bg-primary text-[11px] font-semibold text-primary-foreground"
           >
-            {project?.name?.slice(0, 1).toLocaleUpperCase() ?? "P"}
+            <ProjectMark key={projectLogo ?? "none"} name={project?.name ?? "P"} src={projectLogo} />
           </span>
 
           <span className="truncate">{project?.name ?? slug}</span>
