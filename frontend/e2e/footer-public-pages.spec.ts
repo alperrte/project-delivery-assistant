@@ -2,7 +2,8 @@ import { test, expect, type Locator, type Page } from "@playwright/test";
 import { buildPath } from "../src/i18n/routing";
 
 const infoPaths = ["/about", "/faq", "/kvkk", "/privacy", "/terms", "/cookies", "/accessibility", "/license"] as const;
-const EMAIL = "pdassistant.info@gmail.com";
+const EMAIL = "info@pd-assistant.com";
+const ORIGIN = new URL(process.env.E2E_BASE_URL ?? "http://localhost:3000").origin;
 
 for (const [locale, faqTitle] of [
   ["tr", "Sıkça Sorulan Sorular"],
@@ -155,7 +156,7 @@ test("authenticated app shell has no footer and information links work from the 
       : { content: [], totalElements: 0, totalPages: 0 };
     await route.fulfill({
       status: 200, contentType: "application/json",
-      headers: { "access-control-allow-origin": "http://localhost:3000", "access-control-allow-credentials": "true" },
+      headers: { "access-control-allow-origin": ORIGIN, "access-control-allow-credentials": "true" },
       body: JSON.stringify(data),
     });
   });

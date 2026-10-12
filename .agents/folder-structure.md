@@ -264,3 +264,8 @@ Public routes now include `(public)/about` and `(public)/license` beside cookies
 - `frontend/src/app/(app)/{dashboard,tasks,organizations}/loading.tsx`: iskelet ekranlar.
 - `frontend/e2e/slow-network.spec.ts`: `SLOW_NET=1` ile açılan yavaş ağ kontrolü.
 - `public/images/background/bg-*.webp`, `public/images/branding/yazi-*.webp`, `pda-logo-512.png` (JSON-LD logosu); `pda-full.png` ve `yazı.jpeg` silindi.
+
+
+## Corporate SMTP — 2026-10-12
+
+`shared/SmtpMailSettings.java` and `shared/ProductionMailConfigurationValidator.java` contain transport settings and production startup checks. Existing auth/contact/project mail adapters keep their domain ports. `shared/SmtpMailSettingsTest.java` verifies TLS/configuration and real local SMTP authentication/delivery for all mail flows.

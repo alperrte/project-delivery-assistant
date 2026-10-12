@@ -5,7 +5,7 @@ import { buildPath } from "../src/i18n/routing";
 // facts, the absence of any draft wording, the cookie inventory against the code, and the notice at registration.
 // No backend needed.
 
-const EMAIL = "pdassistant.info@gmail.com";
+const EMAIL = "info@pd-assistant.com";
 const PLACEHOLDERS = /HUKUKİ İÇERİK|teyit edilmemiştir|Yayın öncesi|henüz teyit|Review before launch|not yet confirmed|Prüfung vor Veröffentlichung|noch nicht bestätigt|taslak|Entwurf|TODO|lorem/i;
 
 const locales = ["tr", "en", "de"] as const;
@@ -41,7 +41,7 @@ for (const locale of locales) {
 test("KVKK notice (TR): controllers, legal bases, recipients, retention table, rights, application route and VERBİS", async ({ page }) => {
   const text = await articleText(page, "/kvkk", "tr");
   await expect(page.locator("h1")).toHaveText("KVKK Aydınlatma Metni");
-  for (const fact of ["Hamza Taşbay", "Alper Temiz", "gerçek kişi", "MERSİS", "KEP", "m.5/2(c)", "m.5/2(f)", "m.5/2(ç)", "m.5/2(e)", "m.5/1", "Gmail SMTP", "Google", "GitHub", "ABD", "barındırma sağlayıcısı henüz belirlenmemiştir", "VERBİS", "Google LLC", "GitHub, Inc.", "30 gün", "KVKK / veri talebi", "Kişisel Verileri Koruma Kurulu", "dışa aktarılması henüz uygulama içinden", "açık rıza talebi değildir"]) {
+  for (const fact of ["Hamza Taşbay", "Alper Temiz", "gerçek kişi", "MERSİS", "KEP", "m.5/2(c)", "m.5/2(f)", "m.5/2(ç)", "m.5/2(e)", "m.5/1", "Hostinger Email", "Google", "GitHub", "ABD", "barındırma sağlayıcısı henüz belirlenmemiştir", "VERBİS", "Google LLC", "GitHub, Inc.", "30 gün", "KVKK / veri talebi", "Kişisel Verileri Koruma Kurulu", "dışa aktarılması henüz uygulama içinden", "açık rıza talebi değildir"]) {
     expect(text, fact).toContain(fact);
   }
   // Purposes and bases are a real table with a header row; the retention periods are one too.

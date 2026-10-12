@@ -131,7 +131,7 @@ class ContactApiIntegrationTest {
         MimeMessage[] received = GREEN_MAIL.getReceivedMessages();
         assertEquals(1, received.length);
         MimeMessage mail = received[0];
-        assertEquals(List.of(new InternetAddress("pdassistant.info@gmail.com")), List.of(mail.getRecipients(Message.RecipientType.TO)));
+        assertEquals(List.of(new InternetAddress("info@pd-assistant.com")), List.of(mail.getRecipients(Message.RecipientType.TO)));
         assertEquals(List.of(new InternetAddress(SENDER)), List.of(mail.getFrom()));
         assertEquals(List.of(new InternetAddress("ece@example.com")), List.of(mail.getReplyTo()));
         assertNull(mail.getRecipients(Message.RecipientType.CC));
@@ -165,7 +165,7 @@ class ContactApiIntegrationTest {
         assertTrue(GREEN_MAIL.waitForIncomingEmail(5_000, 1));
         assertEquals(1, GREEN_MAIL.getReceivedMessages().length);
         MimeMessage mail = GREEN_MAIL.getReceivedMessages()[0];
-        assertEquals(List.of(new InternetAddress("pdassistant.info@gmail.com")), List.of(mail.getRecipients(Message.RecipientType.TO)));
+        assertEquals(List.of(new InternetAddress("info@pd-assistant.com")), List.of(mail.getRecipients(Message.RecipientType.TO)));
         assertNull(mail.getRecipients(Message.RecipientType.CC));
         assertNull(mail.getRecipients(Message.RecipientType.BCC));
         assertEquals(List.of(new InternetAddress(SENDER)), List.of(mail.getFrom()));

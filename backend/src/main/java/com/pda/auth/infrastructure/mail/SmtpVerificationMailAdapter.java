@@ -7,8 +7,8 @@ import com.pda.auth.infrastructure.mail.VerificationMailTemplate.Kind;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import java.io.IOException;
-import java.util.Properties;
 import org.springframework.core.env.Environment;
+import com.pda.shared.SmtpMailSettings;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.MailException;
@@ -28,39 +28,9 @@ public class SmtpVerificationMailAdapter implements VerificationMailPort {
     private final String fromAddress;
 
     public SmtpVerificationMailAdapter(Environment environment) {
-        boolean enabled = environment.getProperty("MAIL_ENABLED", Boolean.class, false);
-        if (!enabled) {
-            sender = null;
-            fromAddress = null;
-            return;
-        }
-        if (!"smtp".equalsIgnoreCase(environment.getProperty("MAIL_PROVIDER", "smtp"))) {
-            throw new IllegalStateException("Unsupported mail provider");
-        }
-        String host = required(environment, "SMTP_HOST");
-        String from = required(environment, "MAIL_FROM");
-        int port = environment.getProperty("SMTP_PORT", Integer.class, 587);
-        if (port < 1 || port > 65535) {
-            throw new IllegalStateException("SMTP_PORT is invalid");
-        }
-        boolean authenticate = environment.getProperty("SMTP_AUTH", Boolean.class, true);
-        JavaMailSenderImpl configured = new JavaMailSenderImpl();
-        configured.setHost(host);
-        configured.setPort(port);
-        if (authenticate) {
-            configured.setUsername(required(environment, "SMTP_USERNAME"));
-            configured.setPassword(required(environment, "SMTP_PASSWORD"));
-        }
-        Properties properties = configured.getJavaMailProperties();
-        properties.put("mail.smtp.auth", Boolean.toString(authenticate));
-        properties.put("mail.smtp.starttls.enable", Boolean.toString(
-                environment.getProperty("SMTP_STARTTLS", Boolean.class, true)));
-        properties.put("mail.smtp.connectiontimeout", "5000");
-        properties.put("mail.smtp.timeout", "5000");
-        properties.put("mail.smtp.writetimeout", "5000");
-        configured.setDefaultEncoding("UTF-8");
-        sender = configured;
-        fromAddress = from;
+        SmtpMailSettings settings = SmtpMailSettings.from(environment);
+        sender = settings.sender();
+        fromAddress = settings.fromAddress();
     }
 
     @Override
@@ -95,7 +65,8 @@ public class SmtpVerificationMailAdapter implements VerificationMailPort {
         try {
             MimeMessage message = sender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            helper.setFrom(fromAddress);
+            helper.setFrom(SmtpMailSettings.namedAddress(fromAddress));
+            helper.setReplyTo(fromAddress);
             helper.setTo(recipientEmail);
             helper.setSubject(mail.subject());
             helper.setText(mail.text(), mail.html());
@@ -117,11 +88,4 @@ public class SmtpVerificationMailAdapter implements VerificationMailPort {
         return cached;
     }
 
-    private static String required(Environment environment, String key) {
-        String value = environment.getProperty(key);
-        if (value == null || value.isBlank()) {
-            throw new IllegalStateException(key + " is required when mail is enabled");
-        }
-        return value;
-    }
 }

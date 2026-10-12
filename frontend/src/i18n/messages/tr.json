@@ -2776,7 +2776,7 @@
             },
             {
               "question": "Hesabımı nasıl silerim, verilerime nasıl erişirim?",
-              "answer": "Hesabınızı hesap ekranından kendiniz silebilirsiniz: e-postanıza gelen tek kullanımlık bağlantı ve kendi giriş bilgilerinizle onaylarsınız; hesap anında anonimleştirilir. Bir proje veya organizasyonun sahibiyseniz önce sahipliği devretmeniz ya da silmeniz gerekir. Verilerinize erişme, düzeltme veya dışa aktarım gibi talepleriniz için iletişim formunda “KVKK / veri talebi” kategorisini seçin ya da pdassistant.info@gmail.com adresine yazın; en geç 30 gün içinde yanıtlarız. Ayrıntılar KVKK Aydınlatma Metni ve Gizlilik Politikası'ndadır."
+              "answer": "Hesabınızı hesap ekranından kendiniz silebilirsiniz: e-postanıza gelen tek kullanımlık bağlantı ve kendi giriş bilgilerinizle onaylarsınız; hesap anında anonimleştirilir. Bir proje veya organizasyonun sahibiyseniz önce sahipliği devretmeniz ya da silmeniz gerekir. Verilerinize erişme, düzeltme veya dışa aktarım gibi talepleriniz için iletişim formunda “KVKK / veri talebi” kategorisini seçin ya da info@pd-assistant.com adresine yazın; en geç 30 gün içinde yanıtlarız. Ayrıntılar KVKK Aydınlatma Metni ve Gizlilik Politikası'ndadır."
             }
           ]
         },
@@ -2809,7 +2809,7 @@
           "title": "Kapsam ve sorumlular",
           "paragraphs": [
             "Bu politika PDA web uygulamasının hesap, proje, ekip, görev, sohbet, takvim ve diğer işlevlerini kapsar. Harici GitHub veya Google sayfalarına geçtiğinizde ilgili hizmetin kendi gizlilik koşulları uygulanır.",
-            "Veri sorumluları, açık kaynaklı PDA projesinin sürdürücüleri ve gerçek kişiler olan Hamza Taşbay ve Alper Temiz'dir. Bize iletişim formundan veya pdassistant.info@gmail.com adresinden ulaşabilirsiniz.",
+            "Veri sorumluları, açık kaynaklı PDA projesinin sürdürücüleri ve gerçek kişiler olan Hamza Taşbay ve Alper Temiz'dir. Bize iletişim formundan veya info@pd-assistant.com adresinden ulaşabilirsiniz.",
             "6698 sayılı Kanun kapsamındaki ayrıntılı bilgilendirme (hukuki sebepler, aktarımlar, haklarınız) KVKK Aydınlatma Metni'nde yer alır; bu politika aynı bilgilerin kullanıcı odaklı özetidir."
           ]
         },
@@ -2869,7 +2869,7 @@
           "id": "transfers",
           "title": "Hizmet sağlayıcılar ve yurt dışı aktarım",
           "paragraphs": [
-            "E-postalar Gmail SMTP (Google, ABD) üzerinden gönderilir. İsteğe bağlı Google/GitHub girişi ve GitHub depo özellikleri ilgili sağlayıcılara (ABD) bağlanır. Barındırma sağlayıcısı henüz belirlenmemiştir; belirlendiğinde bu politika güncellenecektir.",
+            "E-postalar Hostinger Email SMTP üzerinden gönderilir. İsteğe bağlı Google/GitHub girişi ve GitHub depo özellikleri ilgili sağlayıcılara (ABD) bağlanır. Barındırma sağlayıcısı henüz belirlenmemiştir; belirlendiğinde bu politika güncellenecektir.",
             "Bu aktarımların ayrıntıları (alıcılar, ülke, hangi verinin nereye gittiği) ve Kanun'un 9. maddesi bakımından mevcut durum KVKK Aydınlatma Metni'nin “Alıcılar ve yurt dışına aktarım” bölümünde anlatılır."
           ]
         },
@@ -2900,7 +2900,7 @@
               [
                 "İletişim formu durum kayıtları ve saklanan destek mesajları (ad, e-posta, kategori, mesaj)",
                 "12 ay",
-                "Otomatik silinir. PDA gelen kutusuna (Gmail) e-posta olarak iletilen kopyalar veri sorumluları tarafından en az yılda bir elle temizlenir: 12 aydan eski mesajlar en geç yıllık temizlikte silinir; talebiniz üzerine (iletişim formunda “KVKK / veri talebi” kategorisi veya e-posta) hemen silinir."
+                "Otomatik silinir. PDA gelen kutusuna (Hostinger Email) e-posta olarak iletilen kopyalar veri sorumluları tarafından en az yılda bir elle temizlenir: 12 aydan eski mesajlar en geç yıllık temizlikte silinir; talebiniz üzerine (iletişim formunda “KVKK / veri talebi” kategorisi veya e-posta) hemen silinir."
               ],
               [
                 "Ziyaret analitiği (oturum, sayfa görüntüleme, düğme tıklaması ve hata olayları)",
@@ -2934,7 +2934,7 @@
           "id": "requests",
           "title": "Haklarınız ve talepler",
           "paragraphs": [
-            "Verilerinize erişme, düzeltme, silme veya diğer hak taleplerinizi iletişim formunda “KVKK / veri talebi” kategorisini seçerek ya da pdassistant.info@gmail.com adresine yazarak iletebilirsiniz. Taleplerinizi en geç 30 gün içinde yanıtlarız. Veri dışa aktarımı henüz uygulama içinden yapılmaz; talep üzerine sağlanır.",
+            "Verilerinize erişme, düzeltme, silme veya diğer hak taleplerinizi iletişim formunda “KVKK / veri talebi” kategorisini seçerek ya da info@pd-assistant.com adresine yazarak iletebilirsiniz. Taleplerinizi en geç 30 gün içinde yanıtlarız. Veri dışa aktarımı henüz uygulama içinden yapılmaz; talep üzerine sağlanır.",
             "Avrupa Birliği veya Avrupa Ekonomik Alanı'ndaysanız GDPR kapsamındaki bilgiler (hukuki dayanaklar, aktarımlar, itiraz ve taşınabilirlik hakkı, denetim makamına şikâyet) bu politikanın İngilizce ve Almanca sürümlerinde ayrıntılı olarak yer alır; haklarınızı aynı kanaldan kullanabilirsiniz."
           ]
         },
@@ -2957,7 +2957,7 @@
           "paragraphs": [
             "Bu metin, 6698 sayılı Kişisel Verilerin Korunması Kanunu'nun (KVKK) 10. maddesi uyarınca, PDA · Project Delivery Assistant'ı (PDA) kullanırken işlenen kişisel verilerinize ilişkin sizi bilgilendirmek için hazırlanmış aydınlatma metnidir.",
             "Veri sorumluları, açık kaynaklı PDA projesinin sürdürücüleri Hamza Taşbay ve Alper Temiz'dir. İkisi de gerçek kişidir; PDA bir şirket veya ticari işletme adına işletilmemektedir, bu nedenle ticaret unvanı, MERSİS numarası ya da KEP adresi bulunmamaktadır.",
-            "Veri sorumlularına sitedeki iletişim formundan veya pdassistant.info@gmail.com adresinden ulaşabilirsiniz. Kişisel veri başvurularının nasıl yapılacağı “Başvuru yolu” bölümünde anlatılır.",
+            "Veri sorumlularına sitedeki iletişim formundan veya info@pd-assistant.com adresinden ulaşabilirsiniz. Kişisel veri başvurularının nasıl yapılacağı “Başvuru yolu” bölümünde anlatılır.",
             "Bu metin bir açık rıza talebi değildir. Açık rızaya dayanan tek işleme faaliyeti isteğe bağlı ziyaret analitiğidir; bu konudaki kararınızı çerez katmanında ayrıca ve serbestçe verirsiniz (bkz. Çerez Politikası)."
           ]
         },
@@ -3037,14 +3037,14 @@
           ],
           "items": [
             "Proje üyeleri: çalışma alanı içeriği ve üyelik bilgileri (e-posta, kullanıcı adı, profil fotoğrafı) ilgili projenin yetkili üyelerine çalışma amacıyla gösterilir; davet önizlemesi davetin alıcısına sunulur.",
-            "E-posta hizmeti (Google, ABD): doğrulama kodları, şifre sıfırlama, davet ve bildirim e-postaları ile iletişim formu mesajları Gmail SMTP üzerinden gönderilir. İletişim formu mesajları ayrıca PDA gelen kutusuna (pdassistant.info@gmail.com, Gmail) iletilir.",
+            "E-posta hizmeti (Hostinger Email): doğrulama kodları, şifre sıfırlama, davet ve iletişim formu mesajları yapılandırılan SMTP hizmeti üzerinden gönderilir. İletişim formu mesajları PDA gelen kutusuna (info@pd-assistant.com) iletilir. Hizmet sağlayıcının güncel veri işleme ve yurt dışı aktarım koşulları ayrıca değerlendirilmelidir.",
             "Google ve GitHub ile giriş (isteğe bağlı): bu yolu seçerseniz kimlik doğrulama ilgili sağlayıcıda (ABD) yapılır; PDA sağlayıcıdan giriş için gerekli temel hesap bilgilerini (hesap kimliği, e-posta adresi, ad) alır.",
             "GitHub API (depo özellikleri): bir projeye herkese açık bir depo bağladığınızda depo bilgileri ve son commitler GitHub API'sinden (ABD) okunur.",
             "Barındırma sağlayıcısı: PDA'nın yayın ortamı için barındırma sağlayıcısı henüz belirlenmemiştir. Belirlendiğinde sağlayıcının adı, veri konumu ve varsa yurt dışı aktarım bilgisi bu metne eklenecektir.",
             "Yetkili kurumlar: yasal bir yükümlülük doğduğunda ilgili kamu kurum ve kuruluşları."
           ],
           "closing": [
-            "Yurt dışına aktarım (m.9): Kişisel veriler ABD'deki şu alıcılara aktarılır: Google LLC (Gmail SMTP ve isteğe bağlı Google ile giriş) ve GitHub, Inc. (GitHub API ve isteğe bağlı GitHub ile giriş). Doğrulama ve sıfırlama kodları ile iletişim mesajı bildirimleri Gmail üzerinden gönderilir; Google veya GitHub'a giriş tanımlayıcılarınız yalnızca bu giriş yolunu seçtiğinizde gider; depo özelliği kullanıldığında GitHub'a depo bilgisi istekleri gönderilir.",
+            "Yurt dışına aktarım (m.9): Kişisel veriler ABD'deki şu alıcılara aktarılır: Google LLC (isteğe bağlı Google ile giriş) ve GitHub, Inc. (GitHub API ve isteğe bağlı GitHub ile giriş). Doğrulama ve sıfırlama kodları ile iletişim mesajı bildirimleri Hostinger Email üzerinden gönderilir; e-posta hizmetinin veri işleme yerleri ve aktarım koşulları sağlayıcı sözleşmesine göre ayrıca değerlendirilir; Google veya GitHub'a giriş tanımlayıcılarınız yalnızca bu giriş yolunu seçtiğinizde gider; depo özelliği kullanıldığında GitHub'a depo bilgisi istekleri gönderilir.",
             "İsteğe bağlı Google/GitHub girişi ve depo özellikleri kullanılmayarak bu aktarımlardan kaçınılabilir; e-posta ve şifreyle de kayıt olabilirsiniz. E-posta gönderimi ise hizmetin çalışması için gereklidir. Veri sorumluları bu aktarımların Kanun'un 9. maddesine uyumunu (standart sözleşmeler ve Kurula bildirim gibi uygun güvenceler) takip etmektedir ve bu güvenceler sağlandıkça bu metni güncelleyecektir. Belirli bir güvencenin veya sözleşmenin hâlihazırda tamamlandığı beyan edilmemektedir."
           ]
         },
@@ -3075,7 +3075,7 @@
               [
                 "İletişim formu durum kayıtları ve saklanan destek mesajları (ad, e-posta, kategori, mesaj)",
                 "12 ay",
-                "Otomatik silinir. PDA gelen kutusuna (Gmail) e-posta olarak iletilen kopyalar veri sorumluları tarafından en az yılda bir elle temizlenir: 12 aydan eski mesajlar en geç yıllık temizlikte silinir; talebiniz üzerine (iletişim formunda “KVKK / veri talebi” kategorisi veya e-posta) hemen silinir."
+                "Otomatik silinir. PDA gelen kutusuna (Hostinger Email) e-posta olarak iletilen kopyalar veri sorumluları tarafından en az yılda bir elle temizlenir: 12 aydan eski mesajlar en geç yıllık temizlikte silinir; talebiniz üzerine (iletişim formunda “KVKK / veri talebi” kategorisi veya e-posta) hemen silinir."
               ],
               [
                 "Ziyaret analitiği (oturum, sayfa görüntüleme, düğme tıklaması ve hata olayları)",
@@ -3116,7 +3116,7 @@
           "id": "requests",
           "title": "Başvuru yolu",
           "paragraphs": [
-            "Haklarınızı kullanmak için iki yoldan birini seçebilirsiniz: iletişim formunda “KVKK / veri talebi” kategorisini seçmek ya da pdassistant.info@gmail.com adresine e-posta göndermek.",
+            "Haklarınızı kullanmak için iki yoldan birini seçebilirsiniz: iletişim formunda “KVKK / veri talebi” kategorisini seçmek ya da info@pd-assistant.com adresine e-posta göndermek.",
             "Başvurunuzda adınızı, hesabınızla ilişkili e-posta adresini ve talebinizi açıkça yazın. Başvurunun size ait olduğunu doğrulamak için hesabınızla ilişkili e-posta adresinden göndermeniz çoğu zaman yeterlidir; gerekirse orantılı bir ek doğrulama isteyebiliriz. Şifre, doğrulama kodu veya davet bağlantısı göndermeyin.",
             "Başvurunuzu talebin niteliğine göre en kısa sürede ve en geç 30 gün içinde ücretsiz olarak sonuçlandırırız. İşlemin ayrıca bir maliyet gerektirmesi halinde Kurulca belirlenen tarifedeki ücret istenebilir.",
             "Cevabı yetersiz bulursanız, cevabı öğrendiğiniz tarihten itibaren 30 gün ve her hâlde başvuru tarihinden itibaren 60 gün içinde Kişisel Verileri Koruma Kurulu'na şikâyette bulunabilirsiniz."
@@ -3208,7 +3208,7 @@
           "id": "feedback",
           "title": "Bir engel bildirin",
           "paragraphs": [
-            "Bir sayfayı veya işlemi kullanamıyorsanız iletişim formunda “Erişilebilirlik” kategorisini seçerek ya da pdassistant.info@gmail.com adresine yazarak bize bildirin. Sayfa adresini, yapmak istediğiniz işlemi, tarayıcı/cihazınızı ve varsa kullandığınız yardımcı teknolojiyi belirtin.",
+            "Bir sayfayı veya işlemi kullanamıyorsanız iletişim formunda “Erişilebilirlik” kategorisini seçerek ya da info@pd-assistant.com adresine yazarak bize bildirin. Sayfa adresini, yapmak istediğiniz işlemi, tarayıcı/cihazınızı ve varsa kullandığınız yardımcı teknolojiyi belirtin.",
             "Bildirimlere en geç 30 gün içinde yanıt veririz ve mümkün olduğunda içeriği alternatif bir biçimde sunarız. Ekran görüntüsü paylaşıyorsanız kişisel verileri ve gizli bilgileri kapatın. Bildirimde bulunmak için tıbbi durumunuzu açıklamanız gerekmez."
           ]
         }
@@ -3378,7 +3378,7 @@
           "title": "Hukuki dayanak ve iletişim",
           "paragraphs": [
             "Zorunlu ve işlevsel kayıtlar, talep ettiğiniz hizmetin sunulması için gerekli olduğundan Kanun'un 5/2(c) ve 5/2(f) maddelerine; analitik ise yalnız 5/1 maddesindeki açık rızanıza dayanır. Çerezler hakkındaki Kurul rehberine sayfanın altındaki resmî kaynaklardan ulaşabilirsiniz.",
-            "Çerezlerle ilgili sorularınızı iletişim formundan veya pdassistant.info@gmail.com adresinden iletebilirsiniz. Veri sorumluları, Hamza Taşbay ve Alper Temiz'dir (ayrıntılar KVKK Aydınlatma Metni'nde)."
+            "Çerezlerle ilgili sorularınızı iletişim formundan veya info@pd-assistant.com adresinden iletebilirsiniz. Veri sorumluları, Hamza Taşbay ve Alper Temiz'dir (ayrıntılar KVKK Aydınlatma Metni'nde)."
           ]
         }
       ]
@@ -4277,7 +4277,7 @@
     },
     "notice": {
       "title": "Göndermeden önce",
-      "text": "Veri sorumluları Hamza Taşbay ve Alper Temiz'dir. Mesajınız size yanıt vermek için işlenir; 12 ay saklanır ve PDA gelen kutusuna (Gmail) e-posta olarak iletilir; gelen kutusundaki kopyalar en az yılda bir elle temizlenir (12 aydan eski mesajlar en geç yıllık temizlikte, talebiniz üzerine hemen silinir). Şifrenizi, doğrulama kodunuzu veya davet bağlantınızdaki gizli bilgileri yazmayın.",
+      "text": "Veri sorumluları Hamza Taşbay ve Alper Temiz'dir. Mesajınız size yanıt vermek için işlenir; 12 ay saklanır ve PDA gelen kutusuna (Hostinger Email) e-posta olarak iletilir; gelen kutusundaki kopyalar en az yılda bir elle temizlenir (12 aydan eski mesajlar en geç yıllık temizlikte, talebiniz üzerine hemen silinir). Şifrenizi, doğrulama kodunuzu veya davet bağlantınızdaki gizli bilgileri yazmayın.",
       "privacy": "Gizlilik Politikası",
       "more": "Ayrıntılar:",
       "kvkk": "KVKK Aydınlatma Metni"

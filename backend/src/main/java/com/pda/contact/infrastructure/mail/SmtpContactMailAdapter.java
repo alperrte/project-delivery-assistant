@@ -6,9 +6,9 @@ import com.pda.contact.application.service.ContactMessage;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
-import java.util.Properties;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.env.Environment;
+import com.pda.shared.SmtpMailSettings;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -24,7 +24,7 @@ import org.springframework.stereotype.Component;
  * </ul>
  * The subject is fixed text plus the category label (a fixed list, never visitor text), the body is plain text, and every
  * submitted value that is not the free-text message is cut to a single line first, so a line break can never add a header.
- * Only the {@code smtp} provider exists; any other {@code MAIL_PROVIDER} value is refused at start-up.
+ * Both smtp and brevo use the configured SMTP relay; no automatic fallback or HTTP API.
  */
 @Component
 @Lazy
@@ -51,41 +51,10 @@ public class SmtpContactMailAdapter implements ContactMailPort {
     private final String recipient;
 
     public SmtpContactMailAdapter(Environment environment) {
-        boolean enabled = environment.getProperty("MAIL_ENABLED", Boolean.class, false);
-        if (!enabled) {
-            sender = null;
-            fromAddress = null;
-            recipient = null;
-            return;
-        }
-        if (!"smtp".equalsIgnoreCase(environment.getProperty("MAIL_PROVIDER", "smtp"))) {
-            throw new IllegalStateException("Unsupported mail provider");
-        }
-        String host = required(environment, "SMTP_HOST");
-        String from = required(environment, "MAIL_FROM");
-        int port = environment.getProperty("SMTP_PORT", Integer.class, 587);
-        if (port < 1 || port > 65535) {
-            throw new IllegalStateException("SMTP_PORT is invalid");
-        }
-        recipient = singleAddress(required(environment, "pda.contact.recipient"));
-        boolean authenticate = environment.getProperty("SMTP_AUTH", Boolean.class, true);
-        JavaMailSenderImpl configured = new JavaMailSenderImpl();
-        configured.setHost(host);
-        configured.setPort(port);
-        configured.setDefaultEncoding("UTF-8");
-        if (authenticate) {
-            configured.setUsername(required(environment, "SMTP_USERNAME"));
-            configured.setPassword(required(environment, "SMTP_PASSWORD"));
-        }
-        Properties properties = configured.getJavaMailProperties();
-        properties.put("mail.smtp.auth", Boolean.toString(authenticate));
-        properties.put("mail.smtp.starttls.enable", Boolean.toString(
-                environment.getProperty("SMTP_STARTTLS", Boolean.class, true)));
-        properties.put("mail.smtp.connectiontimeout", "5000");
-        properties.put("mail.smtp.timeout", "5000");
-        properties.put("mail.smtp.writetimeout", "5000");
-        sender = configured;
-        fromAddress = from;
+        SmtpMailSettings settings = SmtpMailSettings.from(environment);
+        sender = settings.sender();
+        fromAddress = settings.fromAddress();
+        recipient = sender == null ? null : singleAddress(required(environment, "pda.contact.recipient"));
     }
 
     @Override
@@ -109,7 +78,7 @@ public class SmtpContactMailAdapter implements ContactMailPort {
     static MimeMessage compose(MimeMessage mime, String fromAddress, String recipient, ContactMessage message)
             throws MessagingException {
         MimeMessageHelper helper = new MimeMessageHelper(mime, false, "UTF-8");
-        helper.setFrom(fromAddress);
+        helper.setFrom(SmtpMailSettings.namedAddress(fromAddress));
         helper.setTo(recipient);
         helper.setReplyTo(singleAddress(message.email()));
         helper.setSubject(subject(message));

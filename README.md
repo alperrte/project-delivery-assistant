@@ -324,7 +324,7 @@ Copy-Item .env.example .env
 | `EMAIL_VERIFICATION_HMAC_KEY` | `openssl rand -base64 32` çıktısını yazın. |
 | `TOTP_ENCRYPTION_KEY` | Farklı bir `openssl rand -base64 32` çıktısı yazın. Sonradan değiştirirseniz herkesin iki adımlı doğrulaması kapanır. |
 | `ADMIN_EMAIL` ve `ADMIN_INITIAL_PASSWORD` | İlk admin hesabınızın e-postası ve geçici şifresi. |
-| `MAIL_ENABLED`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `MAIL_FROM` | Kayıt akışı için gereklidir; `MAIL_ENABLED=false` iken kayıt `503` döner. Aşağıya bakın. |
+| `MAIL_ENABLED`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM_ADDRESS` | Kayıt akışı için gereklidir; `MAIL_ENABLED=false` iken kayıt `503` döner. Aşağıya bakın. |
 
 Üretilen değerler:
 
@@ -371,29 +371,32 @@ API_DOCS_ENABLED=true
 ADMIN_EMAIL=<admin-e-postasi>
 ADMIN_INITIAL_PASSWORD=<gecici-sifre>
 
-# Mail (Gmail SMTP)
-MAIL_ENABLED=true
+# Mail (Hostinger Email, implicit TLS)
+MAIL_ENABLED=false
 MAIL_PROVIDER=smtp
-MAIL_FROM=<gonderici@gmail.com>
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USERNAME=<gonderici@gmail.com>
-SMTP_PASSWORD=<16-karakterlik-uygulama-sifresi>
+SMTP_FROM_ADDRESS=info@pd-assistant.com
+SMTP_HOST=smtp.hostinger.com
+SMTP_PORT=465
+SMTP_USERNAME=info@pd-assistant.com
+SMTP_PASSWORD=
 SMTP_AUTH=true
-SMTP_STARTTLS=true
+SMTP_STARTTLS=false
+SMTP_SSL=true
+CONTACT_RECIPIENT=info@pd-assistant.com
 
 # Güvenlik anahtarları
 EMAIL_VERIFICATION_HMAC_KEY=<openssl rand -base64 32>
 TOTP_ENCRYPTION_KEY=<baska bir openssl rand -base64 32>
 ```
 
-#### E-posta (Gmail SMTP) nasıl ayarlanır?
+#### E-posta (Hostinger Email) nasıl ayarlanır?
 
-1. Gönderici olarak bir Gmail hesabı kullanın ve hesapta **2 adımlı doğrulamayı** açın (Google Hesabı → Güvenlik).
-2. <https://myaccount.google.com/apppasswords> adresinden bir **uygulama şifresi** oluşturun (16 karakter, yalnızca bir kez gösterilir).
-3. `MAIL_FROM` ve `SMTP_USERNAME` aynı tam adres olmalıdır; `SMTP_PASSWORD` alanına boşluksuz uygulama şifresini yazın, `MAIL_ENABLED=true` yapın.
+1. `info@pd-assistant.com` posta kutusunun SMTP şifresini yalnız yerel `.env.dev` / `.env.prod` dosyasındaki `SMTP_PASSWORD` alanına girin; Git veya sohbet üzerinden paylaşmayın.
+2. Hostinger: `smtp.hostinger.com:465`, `SMTP_SSL=true`, `SMTP_STARTTLS=false`. Alternatif 587 için `SMTP_SSL=false`, `SMTP_STARTTLS=true` kullanın. TLS modları birlikte açılmaz.
+3. Hostinger panelinde gönderen/domain ve MX/SPF/DKIM/DMARC durumunu kontrol edin; ardından `MAIL_ENABLED=true` yapın. Etkin kopyayı `ops/env.ps1 use dev` ile eşitleyin; çalışan backend yeni ENV için yeniden oluşturulmalıdır.
+4. Kayıt ve iletişim mesajıyla gerçek teslimi ve alınan mesajdaki SPF/DKIM/DMARC sonuçlarını doğrulayın.
 
-Gmail dışında bir sağlayıcı da aynı şekilde çalışır (örneğin Resend: `SMTP_HOST=smtp.resend.com`, `SMTP_USERNAME=resend`, `SMTP_PASSWORD=<API anahtarı>`).
+`SMTP_FROM_ADDRESS` görünen göndereni seçer; SMTP kimlik doğrulama kullanıcısı sağlayıcıya göre farklı olabilir. Eski `MAIL_FROM`, yeni anahtar yoksa desteklenir. `MAIL_PROVIDER=brevo` Brevo SMTP rölesini aynı Spring Mail yolu üzerinden kullanır; ilgili hesabın gerçek SMTP host/login/SMTP anahtarı ayrıca girilir. Brevo HTTP API ve otomatik fallback yoktur. Ayrıntılar: [SMTP teslim kaydı](docs/compliation/2026-10-12-hostinger-corporate-mail.md).
 
 #### Opsiyonel ayarlar
 
@@ -465,7 +468,7 @@ Katkı akışı:
 5. Pull Request açın.
 
 - Hata bildirmek ve yeni fikir önermek için GitHub Issue açın.
-- Güvenlik açıklarını public issue yerine [pdassistant.info@gmail.com](mailto:pdassistant.info@gmail.com) adresine bildirin.
+- Güvenlik açıklarını public issue yerine [info@pd-assistant.com](mailto:info@pd-assistant.com) adresine bildirin.
 
 ---
 
