@@ -1,5 +1,12 @@
 # Frontend tasarım kuralları
 
+## Landing mobil navbar, hikâye ve footer — 2026-10-12
+
+- Landing navbar 1024 px altında 44 px hamburger disclosure kullanır. Dil/tema ve Hakkımızda/İletişim/Giriş/Kayıt bağlantıları aynı paneldedir; Escape odak döndürür, dış tıklama ve desktop geçişi paneli kapatır. Desktop navbar tek satırını korur.
+  - Kullanıcı görsel düzeltmesi: dil ve tema ayrı grid hücreleri yerine ortak flex satırındadır. Mobil dil seçimi bayrak + TR/EN/DE + caret gösterir; iki kontrol 46 px yükseklikte, tema seçici içerik genişliğindedir. Kontrol satırı linklerden ince ayraçla ayrılır; desktop kontrol boyutları korunur.
+- Landing scroll hikâyeleri en az 480 px yüksek viewportlarda mobil/tablet/kısa laptopta da çalışır. Dar veya 800 px altı yüksek ekranlarda sticky alan viewporta sığar; terminal küçültülmez, komutlar bittikten sonra teknoloji bilgileri yerini alır. Proje adı/görev başlığı/ekip üyeleri/görev durumu demo içi kamera ile görünür tutulur; mobil üye kartları desktop satırlarıyla aynı sırada belirir. Reduced-motion/animasyon kapalı, JS/chunk yokluğu ve çok kısa yatay ekranlarda tam okunabilir statik içerik korunur.
+- Ortak SiteFooter mobilde iki sütunlu bilgi bağlantıları kullanır. Kullanıcının kompakt düzen tercihiyle GitHub hesapları yan yana, iletişim + e-posta aynı satırda, kaynak kod + lisans ve altındaki telif/sürüm satırı ortalıdır. Dikey boşluklar azaltılmıştır; mobil e-posta 12 px, diğer linkler 14 px ve etkileşim hedefleri en az 44 px'tir. Uzun metinler kırılabilir; sm ve üstünde kompakt yatay düzen sürer. Yeni renk/font token'ı veya bağımlılık yoktur.
+
 ## Sohbet mesaj alanı alt metni — 2026-10-11
 
 Gönder düğmesi 44×44 px boyutundadır ve mesaj kutusuna dikey ortalanır (`items-center`); çok satırda kutu büyürken ortalama korunur.

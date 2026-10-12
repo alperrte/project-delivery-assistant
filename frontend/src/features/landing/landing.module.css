@@ -4,12 +4,14 @@
 .landing :is(a, button) { touch-action: manipulation; }
 .skip { position: absolute; top: 1rem; left: 1rem; z-index: 60; padding: .75rem 1rem; background: var(--primary); color: var(--primary-foreground); transform: translateY(-200%); }
 .skip:focus { transform: none; }
-.header { display: flex; align-items: center; gap: 2rem; max-width: 1440px; min-height: 88px; margin: auto; padding: 1.25rem 4rem; }
+.header { position: relative; z-index: 50; display: flex; align-items: center; gap: 2rem; max-width: 1440px; min-height: 88px; margin: auto; padding: 1.25rem 4rem; }
+.menuButton { display: none; align-items: center; justify-content: center; width: 44px; height: 44px; margin-left: auto; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); color: var(--foreground); }
 .logo { display: flex; align-items: center; width: 110px; min-height: 44px; flex-shrink: 0; }
 .headerLogin { gap: .5rem; height: 44px; min-height: 44px; padding-inline: 1.125rem; border-radius: 999px; font-size: .8125rem; font-weight: 600; }
 .headerLink { display: inline-flex; align-items: center; min-height: 44px; padding-inline: .25rem; border-radius: .375rem; font-size: .8125rem; font-weight: 600; text-underline-offset: 4px; }
 .headerLink:hover { text-decoration: underline; }
 .controls { display: flex; align-items: center; margin-left: auto; gap: 1rem; }
+.preferences { display: flex; align-items: center; gap: 1rem; }
 .eyebrow { font-size: .75rem; font-weight: 500; letter-spacing: .07em; color: var(--muted-foreground); }
 .welcome { min-height: calc(100svh - 88px); max-width: 1440px; margin: auto; padding: 5rem 4rem 1.75rem; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
 .welcome > .eyebrow { margin-top: auto; font-size: .875rem; letter-spacing: .02em; }
@@ -107,15 +109,23 @@
 @media (max-width: 1023px) {
   .header { padding-inline: 2rem; gap: 1rem; }
   .logo { width: 90px; }
+  .menuButton { display: inline-flex; }
+  .controls { display: none; position: absolute; top: calc(100% - .25rem); left: 1rem; right: 1rem; margin: 0; padding: 1rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); box-shadow: 0 16px 32px -16px color-mix(in oklab, var(--foreground) 25%, transparent); max-height: calc(100dvh - 100px); overflow-y: auto; }
+  .controls[data-open="true"] { display: grid; grid-template-columns: 1fr; gap: .75rem; align-items: center; }
+  .preferences { justify-content: space-between; gap: .75rem; padding-bottom: .75rem; border-bottom: 1px solid var(--border); }
+  .preferences .languageTrigger { height: 46px; padding-inline: .875rem; border: 1px solid var(--border); border-radius: 999px; background: var(--muted); }
+  .preferences :global(.theme-toggle) { width: max-content; }
+  .preferences :global(.theme-toggle) > button { width: 36px; height: 36px; }
+  .controls .headerLink { padding: .5rem .75rem; background: var(--muted); font-size: .875rem; white-space: normal; }
+  .controls .headerLogin { justify-content: center; border-radius: var(--radius); font-size: .875rem; }
   .welcome { padding-inline: 2rem; }
   .storyViewport, .sourceViewport { padding-inline: 2rem; }
   .chapter { padding: 1.5rem; }
   .final { padding-inline: 2rem; }
 }
 @media (max-width: 767px) {
-  .header { padding: .75rem 1rem; min-height: 76px; gap: .25rem .5rem; flex-wrap: wrap; }
+  .header { padding: .75rem 1rem; min-height: 76px; gap: .5rem; }
   .logo { width: 70px; }
-  .controls { gap: .35rem; flex-wrap: wrap; justify-content: flex-end; min-width: 0; }
   .headerLogin { font-size: .75rem; padding-inline: .75rem; }
   .headerLink { font-size: .75rem; padding-inline: .125rem; white-space: nowrap; }
   .headerLogin svg { display: none; }
@@ -149,6 +159,44 @@
   .final { padding: 4rem 1.25rem; }
   .final h2 { font-size: clamp(2rem, 8vw, 3.5rem); overflow-wrap: anywhere; }
   .final > p:not(.eyebrow) { font-size: .85rem; }
+}
+/* Keep the same scroll story on phones/tablets and short laptops. The source facts
+   replace the terminal instead of shrinking it into an unreadable side column. */
+@media (max-width: 1023px), (max-height: 799px) {
+  .productStory[data-choreographed] .storyViewport { padding-block: 1.25rem; }
+  .productStory[data-choreographed] .storyIntro { flex-direction: column; align-items: flex-start; gap: .5rem; margin-bottom: .75rem; }
+  .productStory[data-choreographed] .storyIntro h2 { font-size: clamp(1.5rem, 5vw, 2.5rem); }
+  .productStory[data-choreographed] .storyIntro > p { max-width: none; font-size: .75rem; }
+  .productStory[data-choreographed] .chapterNav { margin-bottom: .75rem; flex-shrink: 0; }
+  .productStory[data-choreographed] .demoWindow { flex: 1; min-height: 0; max-height: 650px; display: flex; flex-direction: column; }
+  .productStory[data-choreographed] .demoScenes { height: 100%; min-height: 0; }
+  .productStory[data-choreographed] .chapter { padding: 1rem .85rem; }
+  .productStory[data-choreographed] .chapterHeading { margin-bottom: .75rem; }
+  .productStory[data-choreographed] .chapterHeading h3 { font-size: 1.1rem; }
+  .productStory[data-choreographed] .storyTrack { flex-shrink: 0; margin-top: .75rem; }
+  .openSource[data-choreographed] .sourceViewport { padding-block: 1.25rem; }
+  .openSource[data-choreographed] .sourceIntro { text-align: left; }
+  .openSource[data-choreographed] .sourceIntro h2 { font-size: clamp(1.5rem, 5vw, 2.5rem); }
+  .openSource[data-choreographed] .sourceStage { flex: 1; min-height: 0; max-height: 430px; width: 100%; margin-top: 1.25rem; }
+  .openSource[data-choreographed] .commandPrompt { width: 100%; left: 0; margin-left: 0; height: 100%; }
+  .openSource[data-choreographed] .cmdBody { height: calc(100% - 34px); overflow: hidden; font-size: clamp(.75rem, 1.5vw, .9rem); }
+  .openSource[data-choreographed] .sourceFacts { left: 0; right: 0; top: 0; max-width: none; }
+  .openSource[data-choreographed] .techList { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
+  .openSource[data-choreographed] .techList strong { font-size: .85rem; }
+  .openSource[data-choreographed] .techList li div > span { font-size: .75rem; }
+  .productStory[data-choreographed][data-completed] .demoWindow { flex: none; }
+  .productStory[data-choreographed][data-completed] .demoScenes { height: 500px; }
+  .openSource[data-choreographed][data-completed] .sourceStage { flex: none; height: 370px; }
+}
+@media (max-height: 650px) {
+  .productStory[data-choreographed] .storyViewport, .openSource[data-choreographed] .sourceViewport { padding-block: .75rem; }
+  .productStory[data-choreographed] .storyIntro > p { display: none; }
+  .productStory[data-choreographed] .chapterHeading p { font-size: .65rem; }
+  .openSource[data-choreographed] .sourceIntro > p:last-child { font-size: .75rem; margin-top: .5rem; }
+  .openSource[data-choreographed] .sourceStage { margin-top: .75rem; }
+  .openSource[data-choreographed] .factBrand { font-size: 1.75rem; }
+  .openSource[data-choreographed] .sourceFacts h3 { font-size: 1.1rem; margin-top: .75rem; }
+  .openSource[data-choreographed] .techList { margin-top: .75rem; }
 }
 :global(html[data-motion="off"]) .cursor { animation: none; }
 @media (forced-colors: active) {

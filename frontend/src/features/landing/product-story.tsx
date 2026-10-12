@@ -22,12 +22,12 @@ export function ProductStory() {
     if (!element || reduce) return;
     let disposed = false;
     let cleanup = () => {};
-    // The static, complete story is the default. Enhance only spacious desktop viewports.
+    // The static story remains the fallback for reduced motion and very short landscape screens.
     void Promise.all([import("gsap"), import("gsap/ScrollTrigger")]).then(([{ gsap }, { ScrollTrigger }]) => {
       if (disposed) return;
       gsap.registerPlugin(ScrollTrigger);
       const media = gsap.matchMedia();
-      media.add("(min-width: 1024px) and (min-height: 800px)", () => {
+      media.add("(min-height: 480px)", () => {
         const chapters = Array.from(element.querySelectorAll<HTMLElement>("[data-chapter]"));
         const links = Array.from(element.querySelectorAll<HTMLAnchorElement>("[data-chapter-link]"));
         const progressBar = element.querySelector("[data-progress]");

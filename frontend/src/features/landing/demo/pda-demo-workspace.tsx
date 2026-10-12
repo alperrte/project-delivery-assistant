@@ -35,18 +35,27 @@ function DemoWorkspace({ data, stage, progress }: { data: DemoData; stage: DemoS
     client.setQueriesData({ queryKey: ["projects", data.project.id, "tasks", "all"] }, [task]);
   }, [client, data, status, assigned]);
 
-  const projectCamera = stage === "project" && !created && progress >= 0.08;
-  const taskCamera = stage === "task" && !assigned && progress >= 0.55;
+  const projectCamera = stage === "project" && !created ? progress >= 0.08 ? "tagline" : "name" : null;
+  const taskCamera = stage === "task" && !assigned ? progress >= 0.55 ? "assignment" : "title" : null;
+  const teamCamera = stage === "team" ? Math.min(2, Math.max(0, Math.floor((progress - 0.26) / 0.03))) : null;
   useEffect(() => {
     const viewport = root.current;
     const main = viewport?.querySelector<HTMLElement>("main");
     if (!viewport || !main) return;
     const position = () => {
       main.scrollTop = 0;
-      const target = projectCamera ? viewport.querySelector("#project-tagline") : taskCamera ? viewport.querySelector('[id$="-assignment"]') : null;
+      const compact = viewport.clientWidth < 1024;
+      const members = viewport.querySelectorAll(viewport.clientWidth < 768 ? "main ul[aria-label] > li" : "tbody tr");
+      const target = projectCamera === "tagline" ? viewport.querySelector("#project-tagline")
+        : projectCamera === "name" && compact ? viewport.querySelector("#project-name")
+        : taskCamera === "assignment" ? viewport.querySelector('[id$="-assignment"]')
+        : taskCamera === "title" && compact ? viewport.querySelector("#task-title")
+        : teamCamera !== null && compact ? members[Math.min(teamCamera, members.length - 1)]
+        : (stage === "delivery" || assigned) && compact ? Array.from(viewport.querySelectorAll("[data-task-row]")).find(row => (row as HTMLElement).offsetHeight > 0) : null;
       const scale = viewport.getBoundingClientRect().width / viewport.offsetWidth;
       if (target && scale) {
-        const offset = Math.max(0, (target.getBoundingClientRect().top - viewport.getBoundingClientRect().top) / scale - 84);
+        const inset = viewport.clientWidth < 640 ? 144 : 84;
+        const offset = Math.max(0, (target.getBoundingClientRect().top - viewport.getBoundingClientRect().top) / scale - inset);
         main.scrollTop = offset;
       }
     };
@@ -54,14 +63,17 @@ function DemoWorkspace({ data, stage, progress }: { data: DemoData; stage: DemoS
     const observer = new ResizeObserver(position);
     observer.observe(viewport);
     return () => observer.disconnect();
-  }, [projectCamera, taskCamera]);
+  }, [projectCamera, taskCamera, teamCamera, stage, assigned]);
   useEffect(() => {
     if (stage !== "team") return;
-    root.current?.querySelectorAll<HTMLElement>("tbody tr").forEach((row, index) => {
-      const amount = fraction(progress, 0.26 + index * 0.03, 0.04);
-      row.style.opacity = String(amount);
-      row.style.transform = "translateY(" + (1 - amount) * 12 + "px)";
-    });
+    // The same members are cards below md and table rows above it.
+    for (const selector of ["main ul[aria-label] > li", "tbody tr"]) {
+      root.current?.querySelectorAll<HTMLElement>(selector).forEach((row, index) => {
+        const amount = fraction(progress, 0.26 + index * 0.03, 0.04);
+        row.style.opacity = String(amount);
+        row.style.transform = "translateY(" + (1 - amount) * 12 + "px)";
+      });
+    }
   }, [stage, progress]);
   useEffect(() => {
     const submit = root.current?.querySelector<HTMLElement>('button[type="submit"]');

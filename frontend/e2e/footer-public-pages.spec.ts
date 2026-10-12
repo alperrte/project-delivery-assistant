@@ -1,8 +1,38 @@
 import { test, expect, type Locator, type Page } from "@playwright/test";
 import { buildPath } from "../src/i18n/routing";
+import path from "node:path";
 
 const infoPaths = ["/about", "/faq", "/kvkk", "/privacy", "/terms", "/cookies", "/accessibility", "/license"] as const;
 const EMAIL = "pdassistant.info@gmail.com";
+
+for (const locale of ["tr", "en", "de"] as const) {
+  test(`mobile footer wraps long labels and preserves 44px targets: ${locale}`, async ({ page, context }) => {
+    await context.addCookies([{ name: "NEXT_LOCALE", value: locale, url: "http://localhost:3000" }]);
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    for (const width of [320, 390, 768, 1440]) {
+      await page.setViewportSize({ width, height: 900 });
+      for (const theme of ["light", "dark"]) {
+        await page.addInitScript(value => localStorage.setItem("theme", value), theme);
+        for (const route of ["/", "/login", "/about"]) {
+          // Footer readiness does not depend on photographic/lazy images elsewhere on the page.
+          await page.goto(route, { waitUntil: "domcontentloaded" });
+          const footer = page.locator("footer");
+          await expect(footer.getByRole("button")).toBeEnabled();
+          if (theme === "dark") await expect(page.locator("html")).toHaveClass(/dark/);
+          else await expect(page.locator("html")).not.toHaveClass(/dark/);
+          await footer.scrollIntoViewIfNeeded();
+          const failures = await footer.locator("a, button").evaluateAll(elements => elements.filter(element => {
+            const box = element.getBoundingClientRect();
+            return box.left < 0 || box.right > innerWidth + 1 || box.height < 44 || element.scrollWidth > element.clientWidth + 1;
+          }).map(element => element.textContent));
+          expect(failures).toEqual([]);
+          expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+          if (width === 320 && route === "/") await page.screenshot({ path: path.resolve(`../tmp/landing-qa/footer-${locale}-${theme}-320.png`) });
+        }
+      }
+    }
+  });
+}
 
 for (const [locale, faqTitle] of [
   ["tr", "Sıkça Sorulan Sorular"],
