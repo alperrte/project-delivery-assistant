@@ -281,7 +281,7 @@ export function AppShellView({ children, pathname, user, collapsed = false, onLo
         </button>
       </aside>
       <Dialog open={menuOpen} onOpenChange={setMenuOpen}>
-        <DialogContent id="workspace-mobile-navigation" className="top-0 left-0 h-[100dvh] max-h-[100dvh] w-72 max-w-[85vw] translate-x-0 translate-y-0 gap-0 rounded-none p-0 sm:max-w-72 [&>[data-slot=dialog-close]]:size-11">
+        <DialogContent id="workspace-mobile-navigation" overlayClassName="workspace-navigation-backdrop" className="workspace-navigation-drawer top-0 left-0 h-[100dvh] max-h-[100dvh] w-72 max-w-[85vw] translate-x-0 translate-y-0 gap-0 rounded-none p-0 sm:max-w-72 [&>[data-slot=dialog-close]]:size-11">
           <DialogTitle className="sr-only">{tw("navigation")}</DialogTitle>
           <div data-workspace-scroll={contained ? undefined : "drawer"} className="flex min-h-0 flex-col overflow-y-auto">
             {renderNavigation(false)}
