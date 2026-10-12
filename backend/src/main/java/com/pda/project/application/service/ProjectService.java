@@ -67,6 +67,13 @@ public class ProjectService {
     @Transactional
     public Project create(UUID actorId, String name, String description, UUID organizationId,
                           ProjectType projectType, String tagline, String techStack, com.pda.project.LogoShape logoShape) {
+        return create(actorId, name, description, organizationId, projectType, tagline, techStack, logoShape, null);
+    }
+
+    @Transactional
+    public Project create(UUID actorId, String name, String description, UUID organizationId,
+                          ProjectType projectType, String tagline, String techStack, com.pda.project.LogoShape logoShape,
+                          java.util.List<ProjectType> projectTypes) {
         Objects.requireNonNull(actorId, "actorId is required");
         if (organizationId != null) {
             organizations.lockedOwned(actorId, organizationId);
@@ -74,6 +81,7 @@ public class ProjectService {
         Project project = Project.create(name, SlugGenerator.generate(name),
                 description, actorId, organizationId, projectType, tagline, techStack);
         project.updateLogoShape(logoShape);
+        project.updateProjectTypes(projectTypes);
         project = projects.saveAndFlush(project);
         memberships.saveAndFlush(ProjectMembership.initialManager(project.getId(), actorId));
         events.publishEvent(new ProjectCreatedEvent(project.getId(), actorId));
@@ -169,6 +177,16 @@ public class ProjectService {
                           ProjectPriority priority, ProjectStatus status, LocalDate startDate,
                           LocalDate targetEndDate, String projectGoal, String techStack, UUID organizationId,
                           ProjectType projectType, String tagline, com.pda.project.LogoShape logoShape) {
+        return update(actorId, projectId, name, description, priority, status, startDate, targetEndDate,
+                projectGoal, techStack, organizationId, projectType, tagline, logoShape, null);
+    }
+
+    @Transactional
+    public Project update(UUID actorId, UUID projectId, String name, String description,
+                          ProjectPriority priority, ProjectStatus status, LocalDate startDate,
+                          LocalDate targetEndDate, String projectGoal, String techStack, UUID organizationId,
+                          ProjectType projectType, String tagline, com.pda.project.LogoShape logoShape,
+                          java.util.List<ProjectType> projectTypes) {
         require(actorId, projectId, ProjectPermission.PROJECT_UPDATE);
         Project project = activeProject(projectId);
         // Ownership is checked when the project is linked to an organization, not on every save: a co-manager who
@@ -181,7 +199,8 @@ public class ProjectService {
         }
         project.updateDetails(name, description, priority, startDate, targetEndDate,
                 projectGoal, techStack, organizationId);
-        project.updateIdentity(projectType, tagline);
+        project.updateIdentity(projectTypes == null ? projectType : null, tagline);
+        project.updateProjectTypes(projectTypes);
         project.updateLogoShape(logoShape);
         project.touch(actorId);
         return projects.save(project);

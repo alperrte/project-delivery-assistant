@@ -1,5 +1,16 @@
 ﻿# Klasör yapısı kısa rehberi
 
+<<<<<<< Updated upstream
+=======
+## Çoklu proje türleri — 2026-10-12
+
+Project controller/request/response/service/entity mevcut sınırlarında kalır; `db/migration/V48__project_multiple_types.sql`, `ProjectTypesMigrationTest` ve `ProjectIdentityIntegrationTest` kalıcılık/uyumluluğu doğrular. Frontend `features/projects/types.ts` `getProjectTypes` legacy fallback'ini, ortak `components/create/type-picker.tsx` create/edit checkbox grubunu sağlar; tech-catalog/tech-picker önerileri birleştirir, kart/tablo/önizleme/davet tam diziyi gösterir. `e2e/project-multiple-types.spec.ts` public-config içindeki açıkça TEST-ONLY UI fixture paketidir.
+
+## Navbar görünürlük tercihi — 2026-10-12
+
+`features/settings/components/navigation-section.tsx` ortak radio seçeneklerini sunar; `components/layout/use-auto-hide.ts` hesap tercihi ve seçilmemiş cihaz varsayılanını uygular. Backend mevcut UserPreference controller/service/entity içinde kalır; `db/migration/V47__navbar_visibility_preference.sql` nullable enum CHECK ekler. `NavbarPreferenceMigrationTest` V46→V47 korumasını, `UserPreferenceApiIntegrationTest` kayıt/owner/uyumluluğu ve `workspace-mobile-header.spec.ts` gerçek UI üzerindeki açıkça TEST-ONLY fixture akışını doğrular.
+
+>>>>>>> Stashed changes
 ## Merkezi mesajlaşma — 2026-10-12
 
 - `backend/com.pda.chat`: mevcut controller/service/repository/entity sınırları; `ChatAttachmentController`, `ChatAttachmentService`, `ChatFileValidator`, `LegacyWordInspector` dosya akışını ekler. `ChatViews` message attachment ve MessageInfo DTO'larını taşır.

@@ -1,5 +1,16 @@
 # API rehberi
 
+<<<<<<< Updated upstream
+=======
+## Çoklu proje türü — 2026-10-12
+
+Mevcut POST `/api/v1/projects` ve PUT `/api/v1/projects/{id}` opsiyonel `projectTypes` dizisini alır: 1–5 desteklenen WEB/MOBILE/AI/DESKTOP/OTHER; tekrarlar domain'de tekilleştirilip enum sırasına konur. Dizi scalar `projectType` alanından önceliklidir. POST ikisi yoksa OTHER; PUT eksik/null dizi ve eksik/aynı legacy scalar mevcut seçimi korur. Farklı legacy scalar tekli seçime değiştirir. Tüm Project yanıtları ve recipient-scoped davet preview tam diziyi; scalar ilk kanonik türü döner. Geçersiz/boş/null elemanlı/aşırı dizi 400; mevcut auth/Project permission/CSRF değişmez. Güvenli create `{name:"Example",projectTypes:["WEB","MOBILE"]}`, edit ayrıca zorunlu name/priority/status içerir.
+
+## Navbar görünürlüğü — 2026-10-12
+
+Mevcut `GET|PUT /api/v1/users/me/preferences` opsiyonel `navbarMode` (`always-visible|auto-hide`) taşır. GET seçilmemiş değeri null/absent verir; eski PUT alanı atlar veya null verirse önceki değer korunur. Diğer dört zorunlu alan değişmez. Yalnız principal'ın hesabı, mevcut cookie/CSRF/no-store politikası; geçersiz mode 400. Güvenli body: `{locale:"tr",theme:"system",motion:"on",themeTransition:true,navbarMode:"always-visible"}`.
+
+>>>>>>> Stashed changes
 ## Merkezi mesajlaşma — 2026-10-12
 
 Güncel kök `/api/v1/chat`; eski `/projects/{id}/chat` yolları uyumluluk için kalır. Merkezi overview `group` (nullable), `groups[]`, `directs[]`, `totalUnread` döner; grup özetleri projectId/projectName/logoVersion/logoShape içerir. `/members` diğer aktif ortak-proje üyelerini e-postasız döner. DM oluşturma global tekildir; var olan DM ortak proje olmasa da açılır.

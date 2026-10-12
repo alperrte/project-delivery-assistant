@@ -1,5 +1,16 @@
 ﻿# Mimari kısa özet
 
+<<<<<<< Updated upstream
+=======
+## Çoklu proje türleri — 2026-10-12
+
+Project aynı modülde bounded enum set `projectTypes` taşır; Hibernate ARRAY ile `projects.project_types VARCHAR(16)[]` temel kolonunda tutulur, ek relation/query/N+1 yoktur. V48 eski scalar seçimleri tek elemanlı diziye taşır. Yanıtlar tam diziyi ve eski `projectType` projection'ını verir. POST/PUT'ta dizi önceliklidir; legacy alanı aynı değerle geri göndermek veya iki alanı da atlamak mevcut çoklu seçimi bozmaz. Eski scaları açıkça farklı değere değiştirmek tekli seçimdir. TypePicker create/edit ortak checkbox grubudur; teknoloji önerileri birleşir ve seçili teknolojiler korunur.
+
+## Navbar görünürlük tercihi — 2026-10-12
+
+`UserPreference` mevcut hesap tercihlerine nullable `navbarMode` ekler (`always-visible|auto-hide`). Frontend saved-preferences query/cache anahtarı `['preferences', userId]` ile hesap kapsamındadır ve GET AbortSignal taşır; Settings taslak/Kaydet/Vazgeç akışı korunur. Seçilmemiş değer eski cihaz varsayılanını sürdürür, eski PUT istemcileri alanı atladığında kayıtlı seçimi bozmaz. Modül/kimlik/yetki sınırları değişmez; ek migration V47'dir.
+
+>>>>>>> Stashed changes
 ## Merkezi mesajlaşma — 2026-10-12
 
 Bu bölüm önceki seçili-proje sohbet açıklamalarının yerini alır. Chat hesabın sahibidir; DM `project_id=NULL` ve kanonik kullanıcı çiftinin global unique index'iyle tekildir. Proje grupları proje kapsamını ve güncel üyelik kontrolünü korur; merkezi ekran tüm erişilebilir grupları ve DM'leri gösterir. Yeni DM yalnız aktif ortak proje üyesiyle başlatılır; mevcut DM ortak üyelik sona erse de katılımcılarına açıktır. Global ADMIN ayrı bir sohbet erişimi kazanmaz.

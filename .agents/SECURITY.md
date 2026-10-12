@@ -227,6 +227,17 @@ Because PDA uses cookie-based authentication:
 
 ## 11. API and Swagger Security
 
+<<<<<<< Updated upstream
+=======
+### Multiple project product types (2026-10-12)
+
+Existing POST `/api/v1/projects` and PUT `/api/v1/projects/{id}` additionally accept optional `projectTypes`, 1–5 non-null WEB/MOBILE/AI/DESKTOP/OTHER enums, normalized as a unique canonical set. Explicit array takes precedence over legacy scalar `projectType`. Missing/null array preserves update values unless the legacy scalar is explicitly changed; echoing the same scalar preserves a multi-type selection. Create with neither field defaults to OTHER. Project read/list/create/update/task-mode and recipient-scoped invitation preview responses expose the full array and the legacy scalar projection. Safe create `{"name":"Example","projectTypes":["WEB","MOBILE"]}`; safe edit adds `"priority":"MEDIUM","status":"PLANNING"`. Success 201 create / 200 update/read; invalid arrays 400; anonymous 401; missing CSRF/non-member or missing PROJECT_UPDATE 403; missing/archived project retains existing 404 policy. V48 preserves all existing scalar values. Cookie/CSRF/CORS/ENV/permissions are unchanged. Swagger when already enabled: `/swagger-ui/index.html` or `/v3/api-docs`; normal cookie login + GET `/api/v1/auth/csrf` + `X-XSRF-TOKEN` for mutations.
+
+### Navbar visibility preference (2026-10-12)
+
+Existing own-account `GET|PUT /api/v1/users/me/preferences` additionally accepts/returns nullable `navbarMode` (`always-visible|auto-hide`). Omitted/null PUT retains the existing value for older clients; the other four required fields are unchanged. Actor comes only from the authenticated principal. GET/PUT return 200 and no-store; invalid mode 400, anonymous 401, missing CSRF on PUT 403. Safe JSON: `{"locale":"tr","theme":"system","motion":"on","themeTransition":true,"navbarMode":"always-visible"}`. Swagger, when already enabled: `/swagger-ui/index.html` or `/v3/api-docs`; normal cookie login plus `GET /api/v1/auth/csrf` and `X-XSRF-TOKEN` on PUT. V47 adds only a nullable allowlisted preference column. No ENV, session, authorization, cookie, CSRF or CORS policy changes.
+
+>>>>>>> Stashed changes
 ### Central account chat, attachments and exact message reads (2026-10-12)
 
 C2PA PDF compatibility correction: embedded `application/c2pa` (and the standard legacy manifest MIME) is allowed only when its decoded bytes have the C2PA manifest-store JUMBF root UUID and `c2pa` label, bounded box lengths/depth/count and a known metadata box structure. Only unfiltered or Flate metadata with no prediction is read through a bounded streaming decoder; total decoded provenance data is capped at 2 MiB. Every other embedded-file MIME/payload remains rejected; external file specifications, JavaScript and launch actions remain blocked. PDF bytes are never rewritten, and C2PA signatures are preserved as uploaded. Format recognition does not claim cryptographic authenticity verification. This corrects false rejection of ordinary Content Credentials metadata, not general permission for embedded documents. Reference: https://spec.c2pa.org/specifications/specifications/2.4/specs/C2PA_Specification.html .
