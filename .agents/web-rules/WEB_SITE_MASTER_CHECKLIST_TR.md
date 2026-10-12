@@ -1,5 +1,9 @@
 # Web Sitesi Kesinlikle Olması Gerekenler — Master Checklist
 
+## Sohbet Yeniden Adlandırma ve WhatsApp Benzeri Mesaj Durumları — 2026-10-12
+
+Mesajlaşma bölümü tüm navigasyon, panel, dock, tooltip ve hata metinlerinde "Sohbet" (EN: "Chat", DE: "Chat") olarak yeniden adlandırıldı. Gönderilen mesajlar için WhatsApp benzeri tek tik (SENT), çift tik (DELIVERED) ve mavi çift tik (READ/SEEN) durum simgeleri entegre edildi. Alıcı istemci mesajı aldığında POST /conversations/{conversationId}/delivered ile teslim teyidi iletir, sunucu DELIVERED socket eventi ile gönderenin ekranındaki tiki çift tike çevirir; okunduğunda SEEN socket eventi ile mavi çift tike çevrilir. Hem birebir hem grup sohbet kuralları desteklenir. V49 migration ile delivered_at takibi eklendi. Frontend Turbopack production build ve TypeScript kontrolü başarılı; backend 86 chat/websocket/migration testinin tamamı başarıyla geçti (0 fail/error/skip). Kayıt: `docs/compliation/2026-10-12-chat-rename-and-delivery-status.md`.
+
 ## Çoklu proje türleri — 2026-10-12
 
 Create/edit ortak çoklu checkbox grubu, en az bir seçim, boş seçim hata/focus/aria-describedby, taslak/Vazgeç/kayıt/reload, kart/önizleme rozetleri ve birleşik/tekrarsız teknoloji önerileri doğrulandı. Production kaynakta 4 Chromium + 4 mobil WebKit testi: TR/EN/DE, light/dark, 320/390/768/1440 px, >=44 px label hedefleri, overflow ve hata/retry; mobil görseller incelendi. PostgreSQL integration 30/0 failure/error/skip: çoklu kayıt/update/list, legacy-client koruması, validation/auth/CSRF, V47→V48 tüm beş legacy türün backfill/constraint kontrolü. Lint/TypeScript/frontend build/backend package/diff başarılı. Form Validation / Responsive / Keyboard Navigation / Focus State / Screen Reader / QA global kutuları bu sınırlı kapsamla tamamlanmış sayılmadı. Kayıt: `docs/compliation/2026-10-12-project-multiple-types.md`.

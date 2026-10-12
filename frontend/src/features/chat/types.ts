@@ -11,6 +11,8 @@ export type ChatUser = {
 
 export type ChatAttachment = { id: string; filename: string; contentType: string; size: number };
 export type ChatMessageInfo = { messageId: string; readers: {user: ChatUser; readAt: string | null; legacy: boolean}[] };
+export type MessageDeliveryStatus = "SENT" | "DELIVERED" | "READ";
+
 export type ChatMessage = {
   attachment?: ChatAttachment | null;
   id: string;
@@ -23,6 +25,7 @@ export type ChatMessage = {
   reactions: ChatReaction[];
   /** The sender deleted it: the text is gone, only a tombstone remains. */
   deleted?: boolean;
+  deliveryStatus?: MessageDeliveryStatus;
 };
 
 export type ReactionCode = "THUMBS_UP" | "HEART" | "LAUGH" | "SURPRISED" | "SAD" | "THANKS";
@@ -79,6 +82,7 @@ export type ChatSocketEvent = ChatEventScope & (
   | { type: "TYPING"; userId: string; nickname: string | null; typing: boolean }
   | { type: "DELETED"; messageId: string }
   | { type: "SEEN"; userId: string; readAt: string }
+  | { type: "DELIVERED"; recipientId: string; messageIds: string[] }
 );
 
 /** "`userId` has read this conversation up to `readAt`" (ISO instant): a message is seen when `readAt` is not before it. */

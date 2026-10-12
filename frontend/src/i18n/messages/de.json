@@ -2579,6 +2579,11 @@
       "confirm": "Löschen",
       "deletedMessage": "Diese Nachricht wurde gelöscht"
     },
+    "status": {
+      "sent": "Gesendet",
+      "delivered": "Zugestellt",
+      "read": "Gelesen"
+    },
     "seen": {
       "one": "Gesehen",
       "count": "{count, plural, one {Von # Person gesehen} other {Von # Personen gesehen}}"

@@ -3,7 +3,7 @@
 import { MessageAttachment } from "./message-attachment";
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { ArrowDown, Checks, Prohibit } from "@phosphor-icons/react";
+import { ArrowDown, Check, Checks, Prohibit } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -269,15 +269,39 @@ export function MessageList({
                     </>
                   )}
                   <div className="mt-0.5 flex items-center gap-1">
-                  <time dateTime={message.createdAt} className="px-1 text-[10px] text-muted-foreground tabular-nums">
-                    {formatClock(message.createdAt, locale)}
-                  </time>
-                  {own && message.id === lastOwnId && seenBy(message) > 0 && (
-                    <span data-testid="chat-message-seen" className="flex items-center gap-0.5 text-[10px] text-primary">
-                      <Checks size={12} weight="bold" aria-hidden="true" />
-                      {showSenders ? t("seen.count", { count: seenBy(message) }) : t("seen.one")}
-                    </span>
-                  )}
+                    <time dateTime={message.createdAt} className="px-1 text-[10px] text-muted-foreground tabular-nums">
+                      {formatClock(message.createdAt, locale)}
+                    </time>
+                    {own && !message.deleted && (() => {
+                      const isRead = message.deliveryStatus === "READ" || seenBy(message) > 0;
+                      const isDelivered = !isRead && message.deliveryStatus === "DELIVERED";
+                      return (
+                        <span
+                          data-testid="chat-message-status"
+                          title={isRead ? t("status.read") : isDelivered ? t("status.delivered") : t("status.sent")}
+                          className="inline-flex items-center"
+                        >
+                          {isRead ? (
+                            <span data-testid="chat-message-seen" className="inline-flex items-center text-sky-500 dark:text-sky-400">
+                              <Checks size={13} weight="bold" aria-label={t("status.read")} />
+                            </span>
+                          ) : isDelivered ? (
+                            <span className="inline-flex items-center text-muted-foreground">
+                              <Checks size={13} weight="regular" aria-label={t("status.delivered")} />
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center text-muted-foreground">
+                              <Check size={13} weight="bold" aria-label={t("status.sent")} />
+                            </span>
+                          )}
+                        </span>
+                      );
+                    })()}
+                    {own && message.id === lastOwnId && seenBy(message) > 0 && showSenders && (
+                      <span className="text-[10px] text-muted-foreground">
+                        {t("seen.count", { count: seenBy(message) })}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>

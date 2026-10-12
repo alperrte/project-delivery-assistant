@@ -30,11 +30,13 @@ public final class ChatResponses {
         public static Reactions from(ChatViews.ReactionSnapshot view) { return new Reactions(view.messageId(),view.reactionVersion(),view.reactions().stream().map(Reaction::from).toList()); }
     }
     public record Message(UUID id, UUID conversationId, String content, Instant createdAt, UserSummary sender,
-                          Reply replyTo, String reactionVersion, List<Reaction> reactions, boolean deleted, ChatViews.AttachmentView attachment) {
+                          Reply replyTo, String reactionVersion, List<Reaction> reactions, boolean deleted,
+                          ChatViews.AttachmentView attachment, ChatViews.MessageDeliveryStatus deliveryStatus) {
         public static Message from(ChatViews.MessageView view) {
             return new Message(view.id(), view.conversationId(), view.content(), view.createdAt(),
                     UserSummary.from(view.sender()), view.replyTo()==null?null:new Reply(view.replyTo().id(),UserSummary.from(view.replyTo().sender()),view.replyTo().preview(),view.replyTo().deleted()),
-                    view.reactionVersion(),view.reactions().stream().map(Reaction::from).toList(),view.deleted(),view.attachment());
+                    view.reactionVersion(),view.reactions().stream().map(Reaction::from).toList(),view.deleted(),view.attachment(),
+                    view.deliveryStatus());
         }
     }
 

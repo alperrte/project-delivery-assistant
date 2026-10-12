@@ -116,6 +116,46 @@ export function applySeen(queryClient: QueryClient, accountId: string, conversat
   });
 }
 
+/** Updates the delivery status of given messages to DELIVERED when confirmed by recipient. */
+export function applyMessagesDelivered(queryClient: QueryClient, accountId: string, conversationId: string, messageIds: string[]) {
+  const ids = new Set(messageIds);
+  queryClient.setQueryData<MessagePages>(chatKeys.messages(accountId, conversationId), (old) => {
+    if (!old) return old;
+    let changed = false;
+    const pages = old.pages.map((page) => ({
+      ...page,
+      messages: page.messages.map((message) => {
+        if (ids.has(message.id) && message.deliveryStatus !== "READ" && message.deliveryStatus !== "DELIVERED") {
+          changed = true;
+          return { ...message, deliveryStatus: "DELIVERED" as const };
+        }
+        return message;
+      }),
+    }));
+    return changed ? { ...old, pages } : old;
+  });
+}
+
+/** Updates messages to READ status when the conversation is seen. */
+export function applyMessagesRead(queryClient: QueryClient, accountId: string, conversationId: string, readAt: string) {
+  const readTimestamp = Date.parse(readAt);
+  queryClient.setQueryData<MessagePages>(chatKeys.messages(accountId, conversationId), (old) => {
+    if (!old) return old;
+    let changed = false;
+    const pages = old.pages.map((page) => ({
+      ...page,
+      messages: page.messages.map((message) => {
+        if (Date.parse(message.createdAt) <= readTimestamp && message.deliveryStatus !== "READ") {
+          changed = true;
+          return { ...message, deliveryStatus: "READ" as const };
+        }
+        return message;
+      }),
+    }));
+    return changed ? { ...old, pages } : old;
+  });
+}
+
 /** The id of the newest confirmed message of a loaded conversation, the cursor for a reconnect catch-up. */
 export function newestMessageId(data: MessagePages | undefined): string | undefined {
   const all = flattenMessages(data);

@@ -13,6 +13,14 @@ public final class ChatViews {
     private ChatViews() {
     }
 
+    /**
+     * Per-message delivery status from the sender's perspective.
+     * SENT = saved on server, not yet delivered to all recipients.
+     * DELIVERED = all recipients have confirmed receiving it.
+     * READ = all recipients have read it.
+     */
+    public enum MessageDeliveryStatus { SENT, DELIVERED, READ }
+
     /** Minimum user summary; the photo itself is fetched by the client from the profile photo endpoint. */
     public record ChatUser(UUID userId, String nickname, Long profilePhotoVersion) {
     }
@@ -22,8 +30,18 @@ public final class ChatViews {
     public record ReactionSnapshot(UUID messageId, String reactionVersion, List<ReactionView> reactions) { }
     public record AttachmentView(UUID id,String filename,String contentType,int size) {}
     public record MessageView(UUID id, UUID conversationId, String content, Instant createdAt, ChatUser sender,
-                              ReplyView replyTo, String reactionVersion, List<ReactionView> reactions, boolean deleted, AttachmentView attachment) {
-        public MessageView(UUID id,UUID conversationId,String content,Instant createdAt,ChatUser sender,ReplyView replyTo,String reactionVersion,List<ReactionView> reactions,boolean deleted) { this(id,conversationId,content,createdAt,sender,replyTo,reactionVersion,reactions,deleted,null); }
+                              ReplyView replyTo, String reactionVersion, List<ReactionView> reactions, boolean deleted,
+                              AttachmentView attachment, MessageDeliveryStatus deliveryStatus) {
+        /** Compat: no attachment, SENT status (caller is not the sender, status irrelevant). */
+        public MessageView(UUID id,UUID conversationId,String content,Instant createdAt,ChatUser sender,
+                           ReplyView replyTo,String reactionVersion,List<ReactionView> reactions,boolean deleted) {
+            this(id,conversationId,content,createdAt,sender,replyTo,reactionVersion,reactions,deleted,null,MessageDeliveryStatus.SENT);
+        }
+        /** Compat: no attachment and no delivery status. */
+        public MessageView(UUID id,UUID conversationId,String content,Instant createdAt,ChatUser sender,
+                           ReplyView replyTo,String reactionVersion,List<ReactionView> reactions,boolean deleted,AttachmentView attachment) {
+            this(id,conversationId,content,createdAt,sender,replyTo,reactionVersion,reactions,deleted,attachment,MessageDeliveryStatus.SENT);
+        }
         public MessageView(UUID id, UUID conversationId, String content, Instant createdAt, ChatUser sender) {
             this(id,conversationId,content,createdAt,sender,null,"0",List.of(),false);
         }

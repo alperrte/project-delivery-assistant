@@ -2462,9 +2462,9 @@
     }
   },
   "chat": {
-    "title": "Messaging",
+    "title": "Chat",
     "nav": {
-      "label": "Messaging",
+      "label": "Chat",
       "unread": "{count} unread messages"
     },
     "groupName": "Project group",
@@ -2474,7 +2474,7 @@
     "listFailed": "Conversations could not be loaded.",
     "noMembers": "There are no other members in this project yet.",
     "unreadCount": "{count} unread messages",
-    "messagesLabel": "Messages",
+    "messagesLabel": "Chat",
     "loading": "Loading messages",
     "loadingOlder": "Loading older messages…",
     "loadFailed": "Messages could not be loaded.",
@@ -2500,15 +2500,15 @@
       "invalid": "The message contains control characters that are not allowed."
     },
     "panel": {
-      "label": "Messaging panel",
+      "label": "Chat panel",
       "minimize": "Minimize",
       "close": "Close",
       "fullscreen": "Make full size",
       "back": "Back to conversations"
     },
     "dock": {
-      "label": "Minimized messaging",
-      "open": "Open messaging"
+      "label": "Minimized chat",
+      "open": "Open chat"
     },
     "reply": {
       "action": "Reply",
@@ -2555,6 +2555,11 @@
       "confirm": "Delete",
       "deletedMessage": "This message was deleted"
     },
+    "status": {
+      "sent": "Sent",
+      "delivered": "Delivered",
+      "read": "Read"
+    },
     "seen": {
       "one": "Seen",
       "count": "{count, plural, one {Seen by # person} other {Seen by # people}}"
@@ -2576,10 +2581,10 @@
     "categories": {
       "label": "Categories",
       "all": "All conversations",
-      "direct": "Direct messages",
+      "direct": "Direct chats",
       "projects": "Projects",
       "empty": "No conversations yet",
-      "start": "New direct message"
+      "start": "Start new chat"
     },
     "files": {
       "add": "Attach file",

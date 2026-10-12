@@ -39,7 +39,7 @@ test("the signed-in screens, the API images and the chat socket run without a si
 
   // Chat: opening the dock connects the WebSocket to the API origin (connect-src ws:/wss:).
   await page.goto(`/projects/${slug}`);
-  const chat = page.getByRole("button", { name: "Mesajlaşma" }).first();
+  const chat = page.getByRole("button", { name: "Sohbet" }).first();
   await expect(chat).toBeVisible();
   await chat.click();
   await page.waitForTimeout(1500);
