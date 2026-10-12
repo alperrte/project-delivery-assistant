@@ -8,6 +8,7 @@ import java.util.UUID;
 @Table(name = "task_attachments")
 public class TaskAttachment {
     public static final long MAX_BYTES = 10L * 1024 * 1024;
+    public static final long MAX_IMAGE_BYTES = 1024L * 1024;
     public static final int MAX_PER_TASK = 20;
 
     @Id private UUID id;

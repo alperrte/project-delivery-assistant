@@ -37,6 +37,16 @@ Mimari, klasör düzeni veya kalıcı proje standardı değiştiğinde ilgili k�
 
 ---
 
+## Model orkestrasyonu
+
+- Ana oturum (Opus): plan, mimari ve güvenlik kararları, skill/ADR yorumu.
+- Okuma ve arama işleri → `scout` subagent'ına devret (`.claude/agents/scout.md`, Haiku).
+- Plan modu dahil keşif için yerleşik `Explore` ajanını kullanma; ana oturumun modelini (Opus) devralır. `.claude/settings.json` içinde engellidir, yerine `scout` kullan.
+- Kod yazımı → plan onaylandıktan sonra `coder` subagent'ına devret (`.claude/agents/coder.md`, Sonnet); sonucu ana oturum gözden geçirir.
+- Küçük (tek satırlık) değişiklikleri devretmeden doğrudan yap.
+
+---
+
 # Web standartları ve kalıcı checklist
 
 `.agents/web-rules/WEB_SITE_MASTER_CHECKLIST_TR.md`, projenin web standartları için **kalıcı kontrol durumu** olarak kullanılmalıdır.

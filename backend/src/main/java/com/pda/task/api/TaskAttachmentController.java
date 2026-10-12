@@ -36,8 +36,9 @@ public class TaskAttachmentController {
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "Upload attachment", description = "TASK_WORK; multipart part 'file'; 10 MB, 20 per task; "
-            + "png jpeg webp gif pdf txt csv md zip docx xlsx pptx, verified by content")
+    @Operation(summary = "Upload attachment", description = "TASK_WORK; multipart part 'file'; images 1 MB, other files 10 MB, "
+            + "20 per task; png jpeg webp gif pdf txt csv md zip docx xlsx pptx, verified by content; "
+            + "simple tasks accept images only")
     public ResponseEntity<AttachmentView> upload(@PathVariable UUID projectId, @PathVariable UUID taskId,
             @AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
             @RequestParam("file") MultipartFile file) {

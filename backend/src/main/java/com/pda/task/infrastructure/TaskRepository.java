@@ -17,12 +17,16 @@ import java.util.UUID;
 public interface TaskRepository extends JpaRepository<Task, UUID>, JpaSpecificationExecutor<Task> {
     Optional<Task> findByIdAndProjectId(UUID id, UUID projectId);
 
-    /** Persisted advanced data (including archived children) must never disappear through a model downgrade. */
+    /**
+     * Persisted advanced data (including archived children) must never disappear through a model downgrade.
+     * Image attachments belong to both task models, so only the other file types count here.
+     */
     @Query(value = "select (exists(select 1 from tasks where parent_task_id=:taskId) "
             + "or exists(select 1 from task_labels where task_id=:taskId) "
             + "or exists(select 1 from task_checklist_items where task_id=:taskId) "
             + "or exists(select 1 from task_relations where source_task_id=:taskId or target_task_id=:taskId) "
-            + "or exists(select 1 from task_attachments where task_id=:taskId and deleted_at is null) "
+            + "or exists(select 1 from task_attachments where task_id=:taskId and deleted_at is null "
+            + "and content_type not like 'image/%') "
             + "or exists(select 1 from task_worklogs where task_id=:taskId and deleted_at is null) "
             + "or exists(select 1 from task_watchers where task_id=:taskId and manual_watch))", nativeQuery = true)
     boolean hasAdvancedData(@Param("taskId") UUID taskId);

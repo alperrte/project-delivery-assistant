@@ -4,6 +4,7 @@ import com.jayway.jsonpath.JsonPath;
 import com.pda.project.ProjectAccess;
 import com.pda.project.TaskManagementMode;
 import com.pda.project.application.service.ProjectService;
+import com.pda.shared.TestImages;
 import com.pda.task.application.*;
 import com.pda.task.domain.*;
 import com.pda.user.ProjectRole;
@@ -164,6 +165,15 @@ class TaskModesApiIntegrationTest extends TaskTestBase {
         for (String path : new String[]{"/checklist", "/worklogs", "/relations", "/watchers", "/attachments"}) {
             read(base + path, owner).andExpect(status().isOk());
         }
+        // Images are the one attachment kind both models share; they follow the task model, not the policy.
+        var image = new org.springframework.mock.web.MockMultipartFile("file", "a.png", "image/png", TestImages.png(2, 2));
+        var pdf = new org.springframework.mock.web.MockMultipartFile("file", "a.pdf", "application/pdf", "%PDF-1.4".getBytes());
+        send(multipart(base + "/attachments").file(pdf), owner, null).andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("TASK_MODE_NOT_ALLOWED"));
+        if (scenario.equals("SIMPLE_TASK")) send(multipart(base + "/attachments").file(image), owner, null)
+                .andExpect(status().isCreated());
+        else send(multipart(base + "/attachments").file(image), owner, null).andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("TASK_MODE_NOT_ALLOWED"));
         if (scenario.equals("CLOSED_PROJECT")) {
             send(post("/api/v1/projects/" + project + "/labels"), owner, "{\"name\":\"New\",\"color\":\"blue\"}")
                     .andExpect(status().isConflict());
@@ -172,6 +182,34 @@ class TaskModesApiIntegrationTest extends TaskTestBase {
             read("/api/v1/projects/" + project + "/labels", owner).andExpect(status().isOk());
             read("/api/v1/projects/" + project + "/sprints", owner).andExpect(status().isOk());
         }
+    }
+
+    @Test void simpleTasksTakeImagesOnly() throws Exception {
+        Account owner = account("simpleimg");
+        UUID project = project(owner, "Simple images");
+        Account outsider = account("simpleimgout");
+        UUID task = task(project, owner, "SIMPLE");
+        String base = tasksUrl(project) + "/" + task;
+        byte[] png = TestImages.png(2, 2);
+        var image = new org.springframework.mock.web.MockMultipartFile("file", "shot.png", "image/png", png);
+
+        UUID attachment = id(send(multipart(base + "/attachments").file(image), owner, null)
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString());
+        read(base + "/attachments", owner).andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].contentType").value("image/png"));
+        read(base + "/attachments/" + attachment + "/content", owner).andExpect(status().isOk())
+                .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.startsWith("inline")))
+                .andExpect(header().string("X-Content-Type-Options", "nosniff")).andExpect(content().bytes(png));
+        send(multipart(base + "/attachments").file(new org.springframework.mock.web.MockMultipartFile(
+                "file", "notes.txt", "text/plain", "text".getBytes())), owner, null)
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("TASK_MODE_NOT_ALLOWED"));
+
+        read(base + "/attachments/" + attachment + "/content", outsider).andExpect(deniedToOutsider());
+        send(multipart(base + "/attachments").file(image), outsider, null).andExpect(deniedToOutsider());
+        send(delete(base + "/attachments/" + attachment), outsider, null).andExpect(deniedToOutsider());
+
+        send(delete(base + "/attachments/" + attachment), owner, null).andExpect(status().isNoContent());
+        read(base + "/attachments", owner).andExpect(jsonPath("$.length()").value(0));
     }
 
     @Test void omittedAdvancedFieldsRetainLegacyDataAndExplicitNullRequiresEnabledProject() throws Exception {
@@ -354,6 +392,28 @@ class TaskModesApiIntegrationTest extends TaskTestBase {
         send(patch(base), owner, update(",\"creationMode\":\"SIMPLE\"")).andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("TASK_MODE_CONVERSION_BLOCKED"));
         read(base, owner).andExpect(jsonPath("$.creationMode").value("ADVANCED"));
+    }
+
+    @Test void imagesDoNotBlockConversionToSimpleAndStayOnTheTask() throws Exception {
+        Account owner = account("convertimg");
+        UUID project = project(owner, "Image conversion");
+        UUID task = task(project, owner, "ADVANCED");
+        String base = tasksUrl(project) + "/" + task;
+        UUID image = id(send(multipart(base + "/attachments").file(new org.springframework.mock.web.MockMultipartFile(
+                "file", "shot.png", "image/png", TestImages.png(2, 2))), owner, null)
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString());
+        UUID text = id(send(multipart(base + "/attachments").file(new org.springframework.mock.web.MockMultipartFile(
+                "file", "keep.txt", "text/plain", "Keep".getBytes())), owner, null)
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString());
+
+        send(patch(base), owner, update(",\"creationMode\":\"SIMPLE\"")).andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("TASK_MODE_CONVERSION_BLOCKED"));
+        send(delete(base + "/attachments/" + text), owner, null).andExpect(status().isNoContent());
+        send(patch(base), owner, update(",\"creationMode\":\"SIMPLE\"")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.creationMode").value("SIMPLE")).andExpect(jsonPath("$.attachmentCount").value(1));
+        read(base + "/attachments", owner).andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(image.toString()));
+        send(delete(base + "/attachments/" + image), owner, null).andExpect(status().isNoContent());
     }
 
     @Test void closedPolicyDoesNotAllowEditingDeletingOrReorderingExistingAdvancedData() throws Exception {
