@@ -1,4 +1,10 @@
 {
+  "logoShape": {
+    "label": "Logo shape",
+    "SQUARE": "Square",
+    "CIRCLE": "Circle",
+    "hint": "Choose the logo and initial shape without changing the image."
+  },
   "common": {
     "appName": "Project Delivery Assistant",
     "loading": "Loading",

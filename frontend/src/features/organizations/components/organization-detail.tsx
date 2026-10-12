@@ -71,7 +71,7 @@ export function OrganizationDetail({ organizationId }: { organizationId: string 
       <OrganizationProfileHeader
         name={org.name}
         description={org.description}
-        logoSrc={organizationImageSource(org, "logo")}
+        logoShape={org.logoShape} logoSrc={organizationImageSource(org, "logo")}
         coverSrc={organizationImageSource(org, "cover")}
         badge={
           <EntityStatusPill

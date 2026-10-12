@@ -5,7 +5,10 @@ import type { Project, ProjectHome, ProjectPriority, ProjectStatus, ProjectType,
 /** Cards per list page: divisible by 1, 2 and 3 so the last grid row is never half empty. */
 export const PROJECT_PAGE_SIZE = 12;
 
+import type { LogoShape } from "@/lib/media/logo-shape";
+
 export type CreateProjectBody = {
+  logoShape?: LogoShape;
   name: string;
   description?: string;
   organizationId?: string;
@@ -15,6 +18,7 @@ export type CreateProjectBody = {
 };
 
 export type UpdateProjectValues = {
+  logoShape?: LogoShape;
   name: string;
   description?: string;
   priority: ProjectPriority;

@@ -17,6 +17,7 @@ export function demoData(text: { projectName: string; projectAbout: string; team
     status: "PLANNING", priority: "MEDIUM", startDate: null, targetEndDate: null, projectGoal: text.projectAbout,
     techStack: "Next.js, Spring Boot, PostgreSQL", visibility: "PRIVATE", organizationId: null,
     createdBy: DEMO_USER.id, createdAt: date, updatedAt: date, archivedAt: null, projectType: "WEB", tagline: text.projectAbout,
+    logoShape: "SQUARE",
     logoVersion: null, bannerVersion: null, updatedBy: people[0], team: { memberCount: 3, preview: people },
   };
   const home: ProjectHome = {

@@ -72,6 +72,18 @@ public class Organization {
     @Column(name = "archived_at")
     private Instant archivedAt;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "logo_shape", nullable = false, length = 16)
+    private com.pda.project.LogoShape logoShape = com.pda.project.LogoShape.SQUARE;
+
+    public com.pda.project.LogoShape getLogoShape() { return logoShape; }
+
+    /** Missing shape on legacy updates preserves the saved choice. */
+    public void updateLogoShape(com.pda.project.LogoShape shape) {
+        if (archivedAt != null) throw new IllegalStateException("Archived entities cannot be changed");
+        if (shape != null) this.logoShape = shape;
+    }
+
     protected Organization() {
     }
 

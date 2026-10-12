@@ -514,3 +514,7 @@ Kenar çubuğu daraltıldığında Ekipler simgesinin alt sayfaları (Tüm Ekipl
 ## Ekip sayfaları breadcrumb tercihi — 2026-10-12
 
 Kullanıcı tercihiyle ekip detay (`/projects/[slug]/teams/[teamId]`), ekip düzenleme (`.../edit`) ve üye davet (`/projects/[slug]/team-invitations/new`, query dahil) sayfalarında `AppBreadcrumb` render edilmez. Kural tüm proje/ekip kimlikleri ve yerelleştirilmiş URL eşleri için geçerlidir. Ekip oluşturma, üyeler ve diğer sayfalardaki breadcrumb standardı korunur.
+
+## Logo şekli — 2026-10-12
+
+Ortak LogoShapePicker iki görsel örnekli native radio kullanır: ok tuşları, tek Tab durağı, 64 px hedef ve mevcut border/primary/ring token'ları. EntityMark shape, logolu/logosuz/hatalı görselde aynı tercihi taşır. Dış kimlik çerçeveleri data-logo-frame ile işaretlenir; globals.css doğrudan Circle mark içeren çerçeveyi border-radius:50% ve overflow clipping ile değiştirir. Square yüzeyin mevcut radius token'ını korur. Kapak ve kişi avatarları bu sözleşmeye dahil değildir. TR/EN/DE metinleri logoShape namespace'indedir.

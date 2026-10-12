@@ -227,6 +227,11 @@ Because PDA uses cookie-based authentication:
 
 ## 11. API and Swagger Security
 
+### Logo shape metadata (2026-10-12, section 11 API supplement)
+
+Existing authenticated POST/PUT /api/v1/projects[/{id}] and /api/v1/organizations[/{id}] accept logoShape SQUARE/CIRCLE; safe JSON {"name":"Example","logoShape":"CIRCLE"} for create/organization PUT. Project PUT additionally needs priority/status, e.g. {"name":"Example","priority":"MEDIUM","status":"PLANNING","logoShape":"CIRCLE"}. Create 201, update 200; invalid shape 400, anonymous 401, missing CSRF/non-owner/missing PROJECT_UPDATE 403, missing/archived record 404. Existing reads and recipient-scoped /project-invitations/me and /{id}/preview include shape; no extra permission or media access is granted. Missing/null create uses SQUARE; missing/null PUT preserves the stored preference. Jackson rejects unsupported names and numeric ordinals; DB NOT NULL/CHECK also restricts values. File bytes/version are unchanged. Swagger: existing API_DOCS_ENABLED=true, /swagger-ui/index.html or /v3/api-docs; GET /api/v1/auth/csrf, normal cookie login, then X-XSRF-TOKEN for mutations. No environment/auth/cookie/CSRF/CORS changes.
+
+
 ### Registration verification timing (2026-10-11)
 
 Registration has a fixed 15-minute window from the first code. `POST /api/v1/auth/register/resend` permits a replacement only after 3 minutes; replacing a code invalidates the old hash and resets attempts/cooldown, but preserves `issued_at` and `expires_at`. At expiry verification returns `400 verification_code_expired` and discards the pending account; resend discards it without mailing and still returns the same generic `202` as unknown/active accounts. The existing one-minute cleanup also removes expired pending accounts. Password reset/change timing is unchanged. No ENV, migration, allowlist, cookie, CSRF, CORS or IP rate-limit change.

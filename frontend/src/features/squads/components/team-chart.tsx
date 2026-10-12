@@ -8,7 +8,7 @@ import type { Project } from "@/features/projects/types";
 import { projectLogoSrc } from "../hooks";
 import type { Team } from "../types";
 
-type ChartProject = Pick<Project, "id" | "slug" | "name" | "logoVersion">;
+type ChartProject = Pick<Project, "id" | "slug" | "name" | "logoVersion" | "logoShape">;
 
 type TeamNode = { team: Team; children: TeamNode[] };
 
@@ -61,11 +61,11 @@ export function TeamChart({ project, teams, memberTotal }: { project: ChartProje
     <div className="workspace-panel overflow-x-auto p-4 sm:p-6" role="group" aria-label={t("label")}>
       <div className="flex min-w-max flex-col items-start md:min-w-0 md:items-center">
         <div className="flex items-center gap-3 rounded-lg border bg-card px-4 py-3">
-          <span
+          <span data-logo-frame
             aria-hidden="true"
             className="grid size-8 shrink-0 place-items-center overflow-hidden rounded-md border border-primary/25 bg-primary/10 font-heading text-sm font-semibold text-primary"
           >
-            <ProjectMark key={projectLogoSrc(project) ?? "none"} name={project.name} src={projectLogoSrc(project)} />
+            <ProjectMark shape={project.logoShape} key={projectLogoSrc(project) ?? "none"} name={project.name} src={projectLogoSrc(project)} />
           </span>
           <div className="min-w-0">
             <p className="max-w-56 truncate text-sm font-semibold text-foreground">{project.name}</p>

@@ -4,6 +4,7 @@ import type { QueryClient } from "@tanstack/react-query";
 export async function invalidateProjectMutation(queryClient: QueryClient, ...organizationIds: (string | null | undefined)[]) {
   await Promise.all([
     queryClient.invalidateQueries({ queryKey: ["projects"] }),
+    queryClient.invalidateQueries({ queryKey: ["project-invitations"] }),
     ...[...new Set(organizationIds.filter((id): id is string => !!id))].map(id =>
       queryClient.invalidateQueries({ queryKey: ["organizations", "projects", id] })),
   ]);

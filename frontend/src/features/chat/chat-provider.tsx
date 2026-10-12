@@ -156,6 +156,7 @@ type ChatContextValue = {
   /** The project's own name and logo: the project group conversation is shown under them. Undefined while loading. */
   projectName?: string;
   projectLogoSrc: string | null;
+  projectLogoShape: import("@/lib/media/logo-shape").LogoShape;
   contextSlug?: string;
   mode: ChatMode;
   active: ActiveConversation | null;
@@ -242,6 +243,7 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey, pageKe
   else if (state.pageKey !== pageKey) dispatch({ type: "navigation", pageKey });
   const projectId = project?.id;
   const projectName = project?.name;
+  const projectLogoShape = project?.logoShape ?? "SQUARE";
   const projectLogoSrc = project ? projectLogoSource(project) : null;
   const shown = state.mode !== "closed";
 
@@ -633,6 +635,7 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey, pageKe
       contextSlug: slug,
       projectName,
       projectLogoSrc,
+      projectLogoShape,
       mode: state.mode,
       active,
       activeConversationId,
@@ -673,7 +676,7 @@ function ProjectChatProvider({ children, slug, project, selfId, ownerKey, pageKe
     // The query objects change identity every render; their data/status are what matters.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
-      projectId, projectName, projectLogoSrc, slug, state.mode, active, activeConversationId, activePeer, connection, overview,
+      projectId, projectName, projectLogoSrc, projectLogoShape, slug, state.mode, active, activeConversationId, activePeer, connection, overview,
       overviewQuery.status, membersQuery.data, membersQuery.status, openDirect.isPending, open,
       minimize, expandCompact, expandFull, close, navigatePage, selectGroup, selectPeer, getDraft, setDraft, outboxFor, send,
       retry, discard, reportView, markRead, getReply, setReply, react, reactionPending, deleteMessage, typingPeople, notifyTyping,

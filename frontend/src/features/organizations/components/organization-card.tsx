@@ -11,7 +11,7 @@ import { organizationImageSource } from "../api";
 import type { Organization } from "../types";
 import { OrganizationCover } from "./organization-cover";
 
-export type OrganizationCardData = Pick<Organization, "id" | "name" | "description" | "status" | "updatedAt"> & Partial<Pick<Organization, "logoVersion" | "coverVersion" | "website" | "location">>;
+export type OrganizationCardData = Pick<Organization, "id" | "name" | "description" | "status" | "updatedAt"> & Partial<Pick<Organization, "logoShape" | "logoVersion" | "coverVersion" | "website" | "location">>;
 
 /** Live preview on the create/edit page: the link is inert and the date is a label instead of a real timestamp. */
 export type OrganizationCardPreview = { updatedLabel: string; logoSrc?: string | null; coverSrc?: string | null };
@@ -53,7 +53,7 @@ export function OrganizationCard({ organization, preview }: { organization: Orga
         </Link>
       ) : undefined}
       banner={coverSrc ? <OrganizationCover key={coverSrc} src={coverSrc} className="aspect-auto size-full sm:aspect-auto" /> : undefined}
-      mark={<EntityMark key={logoSrc ?? "none"} name={name} src={logoSrc} />}
+      mark={<EntityMark shape={organization.logoShape} key={logoSrc ?? "none"} name={name} src={logoSrc} />}
       title={name || t("form.preview.namePlaceholder")}
       description={organization.description?.trim() || t("cardNoDescription")}
       badge={

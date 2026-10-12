@@ -25,7 +25,8 @@ public record UpdateProjectRequest(
         @Size(max = 1000) String techStack,
         UUID organizationId,
         ProjectType projectType,
-        @Size(max = 120) String tagline
+        @Size(max = 120) String tagline,
+        com.pda.project.LogoShape logoShape
 ) {
     @AssertTrue(message = "targetEndDate cannot precede startDate")
     public boolean isDateOrderValid() {

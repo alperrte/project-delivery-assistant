@@ -169,3 +169,7 @@ Kayıt: `docs/compliation/2026-10-11-performance-technical-quality.md`.
 ## Corporate SMTP — 2026-10-12
 
 Mail domain ports remain unchanged; shared `SmtpMailSettings` contains only environment-driven JavaMail transport/address validation. SMTP and Brevo relay selections use the same Spring Mail path, no HTTP API/fallback. Hostinger implicit TLS and optional STARTTLS are mutually exclusive. ProductionMailConfigurationValidator checks enabled production mail eagerly without network I/O.
+
+## Proje ve organizasyon logo şekli — 2026-10-12
+
+`project.LogoShape` (`SQUARE`, `CIRCLE`) görsel dosyasından bağımsız kimlik metadata'sıdır. V42 her iki tabloya varsayılan SQUARE, NOT NULL ve CHECK ekler. Create/PUT mevcut yetki ve CSRF kurallarını kullanır; eksik/null create şekli Square, eksik/null PUT şekli kayıtlı tercihi korur. Yanıtlar ve alıcı kapsamlı davet listesi/önizlemesi şekli taşır. EntityMark ve açık data-logo-frame çerçevesi kart, başlık, sidebar, ekip ve önizlemelerde ortak kırpma uygular; sohbet grup avatarı aynı proje tercihinden beslenir. Yeni medya endpoint'i, depolama biçimi veya yetki modeli yoktur.

@@ -1,4 +1,10 @@
 {
+  "logoShape": {
+    "label": "Logo şekli",
+    "SQUARE": "Köşeli",
+    "CIRCLE": "Yuvarlak",
+    "hint": "Görseli değiştirmeden logo ve baş harf görünümünü seçin."
+  },
   "common": {
     "appName": "Project Delivery Assistant",
     "loading": "Yükleniyor",

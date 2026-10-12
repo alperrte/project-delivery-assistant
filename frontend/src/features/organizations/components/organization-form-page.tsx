@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { FormErrorSummary, focusFormSection, type FormErrorSection } from "@/components/common/form-error-summary";
 import { PageContainer } from "@/components/common/page-container";
+import { LogoShapePicker } from "@/components/common/logo-shape-picker";
 import { PageHeader } from "@/components/common/page-header";
 import { StickyFormActions } from "@/components/common/sticky-form-actions";
 import { BreadcrumbLabel } from "@/components/layout/breadcrumb-labels";
@@ -33,7 +34,7 @@ import { OrganizationCard, type OrganizationCardData } from "./organization-card
 import { OrganizationProfileHeader } from "./organization-profile-header";
 
 function formValues(org?: Organization): OrganizationFormValues {
- return { name: org?.name ?? "", description: org?.description ?? "", website: org?.website ?? "", contactEmail: org?.contactEmail ?? "", location: org?.location ?? "", notes: org?.notes ?? "" };
+ return { logoShape: org?.logoShape ?? "SQUARE", name: org?.name ?? "", description: org?.description ?? "", website: org?.website ?? "", contactEmail: org?.contactEmail ?? "", location: org?.location ?? "", notes: org?.notes ?? "" };
 }
 function Section({ id, title, description, icon, violet = false, children }: { id: string; title: string; description: string; icon: ReactNode; violet?: boolean; children: ReactNode }) {
  return <section aria-labelledby={id} className="space-y-4 border-t pt-4 first:border-0 first:pt-0"><div className="flex items-start gap-4"><span aria-hidden="true" className={`grid size-10 shrink-0 place-items-center rounded-lg ${violet ? "bg-label-violet/15 text-label-violet" : "bg-label-blue/15 text-label-blue"}`}>{icon}</span><div className="min-w-0"><h2 id={id} className="text-sm font-semibold">{title}</h2><p className="mt-1 text-xs leading-5 text-muted-foreground">{description}</p></div></div>{children}</section>;
@@ -65,7 +66,7 @@ function OrganizationEditor({ initial }: { initial?: Organization }) {
  const submitted = useRef(false); const busy = useRef(false);
  const logo = useMediaDraft(saved ? organizationImageSource(saved, "logo") : null);
  const cover = useMediaDraft(saved ? organizationImageSource(saved, "cover") : null);
- const { register, handleSubmit, control, reset, formState: { errors, isDirty, submitCount } } = useForm<OrganizationFormValues>({ resolver: zodResolver(organizationFormSchema), shouldFocusError: false, defaultValues: formValues(initial) });
+ const { register, handleSubmit, control, reset, setValue, formState: { errors, isDirty, submitCount } } = useForm<OrganizationFormValues>({ resolver: zodResolver(organizationFormSchema), shouldFocusError: false, defaultValues: formValues(initial) });
  const values = useWatch({ control });
  const dirty = isDirty || ((!logo.applied) && (!!logo.file || logo.removed)) || ((!cover.applied) && (!!cover.file || cover.removed));
  useEffect(() => {
@@ -114,7 +115,7 @@ function OrganizationEditor({ initial }: { initial?: Organization }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
  }, [submitCount]);
  const backHref = editing ? `/organizations/${initial!.id}` : "/organizations";
- const draft: OrganizationCardData = { id: saved?.id ?? "preview", name: values.name ?? "", description: values.description ?? null, status: saved?.status ?? "ACTIVE", updatedAt: saved?.updatedAt ?? "", website: values.website ?? null, location: values.location ?? null };
+ const draft: OrganizationCardData = { logoShape: values.logoShape ?? "SQUARE", id: saved?.id ?? "preview", name: values.name ?? "", description: values.description ?? null, status: saved?.status ?? "ACTIVE", updatedAt: saved?.updatedAt ?? "", website: values.website ?? null, location: values.location ?? null };
  const labels = (kind: "logo" | "cover") => ({ label: tp(kind), choose: tp(kind === "logo" ? "uploadLogo" : "uploadCover"), change: tp("change"), remove: tp("remove"), hint: tp(kind === "logo" ? "logoHint" : "coverHint"), invalidType: tp("invalidType"), tooLarge: tp("tooLarge"), empty: tp("empty"), detail: tp(kind === "logo" ? "logoFallbackHint" : "coverPlacementHint") });
  return <PageContainer width="wide">
   <Link href={backHref} className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground"><ArrowLeft size={16} aria-hidden="true" />{editing ? tf("backToOrganization") : t("backToOrganizations")}</Link>
@@ -138,8 +139,9 @@ function OrganizationEditor({ initial }: { initial?: Organization }) {
       </div>
      </Section>
      <Section violet icon={<ImageSquare size={22}/>} id="org-identity" title={tp("identityTitle")} description={tp("identityDescription")}>
-      <div className="grid gap-4 md:grid-cols-2"><ImagePicker tile name={values.name} src={logo.src} onChange={logo.change} maximum={LOGO_MAX_BYTES} labels={labels("logo")} disabled={saving} removeControl={!logo.file && saved?.logoVersion && !logo.removed ? <ConfirmDialog trigger={<Button type="button" variant="ghost" size="sm" disabled={saving}>{tp("remove")}</Button>} title={tp("removeTitle")} description={tp("removeDescription")} confirmLabel={tp("remove")} cancelLabel={tf("cancel")} destructive onConfirm={async () => logo.change(null)} /> : undefined} />
+      <div className="grid gap-4 md:grid-cols-2"><ImagePicker shape={values.logoShape} tile name={values.name} src={logo.src} onChange={logo.change} maximum={LOGO_MAX_BYTES} labels={labels("logo")} disabled={saving} removeControl={!logo.file && saved?.logoVersion && !logo.removed ? <ConfirmDialog trigger={<Button type="button" variant="ghost" size="sm" disabled={saving}>{tp("remove")}</Button>} title={tp("removeTitle")} description={tp("removeDescription")} confirmLabel={tp("remove")} cancelLabel={tf("cancel")} destructive onConfirm={async () => logo.change(null)} /> : undefined} />
       <ImagePicker tile cover src={cover.src} onChange={cover.change} maximum={COVER_MAX_BYTES} labels={labels("cover")} disabled={saving} removeControl={!cover.file && saved?.coverVersion && !cover.removed ? <ConfirmDialog trigger={<Button type="button" variant="ghost" size="sm" disabled={saving}>{tp("remove")}</Button>} title={tp("removeTitle")} description={tp("removeDescription")} confirmLabel={tp("remove")} cancelLabel={tf("cancel")} destructive onConfirm={async () => cover.change(null)} /> : undefined} /></div>
+      <LogoShapePicker value={values.logoShape ?? "SQUARE"} onChange={shape => setValue("logoShape", shape, { shouldDirty: true })} name={values.name ?? ""} src={logo.src} disabled={saving} />
      </Section>
      <Section icon={<LinkSimple size={22}/>} id="org-contact" title={tp("contactTitle")} description={tp("contactDescription")}>
       <div className="grid gap-4 sm:grid-cols-2">
@@ -156,9 +158,9 @@ function OrganizationEditor({ initial }: { initial?: Organization }) {
     <aside id="organization-preview" aria-label={tf("preview.title")} className="min-w-0 scroll-mt-24 lg:col-span-5"><div className="space-y-4 lg:sticky lg:top-24">
      <div className="space-y-5 rounded-xl border bg-surface-2/60 p-4">
       <div className="flex items-start gap-4"><span aria-hidden="true" className="grid size-9 shrink-0 place-items-center rounded-lg bg-label-blue/15 text-label-blue"><Eye size={22}/></span><div><h2 className="text-base font-semibold">{tf("preview.title")}</h2><p className="mt-1 text-xs leading-5 text-muted-foreground">{tf("preview.caption")}</p></div></div>
-      <OrganizationProfileHeader preview centered name={draft.name} description={draft.description} logoSrc={logo.src} coverSrc={cover.src}/>
+      <OrganizationProfileHeader preview centered name={draft.name} description={draft.description} logoShape={draft.logoShape} logoSrc={logo.src} coverSrc={cover.src}/>
       <section aria-label={tp("cardPreview")}><h2 className="mb-2 text-sm font-medium">{tp("cardPreview")}</h2><OrganizationCard organization={draft} preview={{ updatedLabel: tf("preview.now"), logoSrc: logo.src, coverSrc: cover.src }} /></section>
-      <section aria-label={tp("profilePreview")}><h2 className="mb-2 text-sm font-medium">{tp("profilePreview")}</h2><OrganizationProfileHeader preview name={draft.name} description={draft.description} logoSrc={logo.src} coverSrc={cover.src} /></section>
+      <section aria-label={tp("profilePreview")}><h2 className="mb-2 text-sm font-medium">{tp("profilePreview")}</h2><OrganizationProfileHeader preview name={draft.name} description={draft.description} logoShape={draft.logoShape} logoSrc={logo.src} coverSrc={cover.src} /></section>
      </div>
      <section className="flex items-start gap-4 rounded-xl border border-label-blue/15 bg-label-blue/5 p-4"><span aria-hidden="true" className="grid size-9 shrink-0 place-items-center rounded-lg bg-label-amber/10 text-label-amber"><Lightbulb size={22}/></span><div><h2 className="text-sm font-semibold text-label-blue">{tp("helpTitle")}</h2><p className="mt-2 text-xs leading-5 text-muted-foreground">{tp("helpDescription")}</p></div></section>
     </div></aside>

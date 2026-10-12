@@ -123,7 +123,7 @@ export function ConversationList({ onSelected }: { onSelected?: () => void }) {
             }}
             className={rowClass(groupActive)}
           >
-            <GroupAvatar logoSrc={chat.projectLogoSrc} className="size-9" />
+            <GroupAvatar shape={chat.projectLogoShape} logoSrc={chat.projectLogoSrc} className="size-9" />
             <span className="min-w-0 flex-1">
               <span className="block truncate text-sm font-semibold">{chat.projectName ?? t("groupName")}</span>
               <span className="block truncate text-xs text-muted-foreground">

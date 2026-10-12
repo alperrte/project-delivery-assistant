@@ -1,4 +1,10 @@
 {
+  "logoShape": {
+    "label": "Logoform",
+    "SQUARE": "Eckig",
+    "CIRCLE": "Rund",
+    "hint": "Wählen Sie die Form für Logo und Initiale, ohne das Bild zu ändern."
+  },
   "common": {
     "appName": "Project Delivery Assistant",
     "loading": "Wird geladen",

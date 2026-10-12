@@ -38,6 +38,7 @@ public record ProjectResponse(
         ProjectType projectType,
         String tagline,
         Long logoVersion,
+        com.pda.project.LogoShape logoShape,
         Long bannerVersion,
         Boolean canEdit,
         UserRef updatedBy,
@@ -72,7 +73,7 @@ public record ProjectResponse(
                 project.getTechStack(), project.getVisibility(), project.getOrganizationId(),
                 project.getCreatedBy(), project.getCreatedAt(), project.getUpdatedAt(),
                 project.getArchivedAt(), project.getProjectType(), project.getTagline(),
-                logoUpdatedAt == null ? null : logoUpdatedAt.toEpochMilli(),
+                logoUpdatedAt == null ? null : logoUpdatedAt.toEpochMilli(), project.getLogoShape(),
                 bannerUpdatedAt == null ? null : bannerUpdatedAt.toEpochMilli(), canEdit, updatedBy, team, project.getTaskManagementMode());
     }
 }

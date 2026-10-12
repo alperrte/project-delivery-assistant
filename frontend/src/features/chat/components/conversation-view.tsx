@@ -34,7 +34,7 @@ function useDocumentVisible(): boolean {
 /** Name and avatar of the active conversation, for the headers of the panel and the compact window. */
 export function ActiveConversationIdentity({ avatarClassName }: { avatarClassName?: string }) {
   const t = useTranslations("chat");
-  const { active, activePeer, projectName, projectLogoSrc } = useChat();
+  const { active, activePeer, projectName, projectLogoSrc, projectLogoShape } = useChat();
   if (active?.kind === "direct") {
     return (
       <>
@@ -47,7 +47,7 @@ export function ActiveConversationIdentity({ avatarClassName }: { avatarClassNam
   }
   return (
     <>
-      <GroupAvatar logoSrc={projectLogoSrc} className={avatarClassName} />
+      <GroupAvatar shape={projectLogoShape} logoSrc={projectLogoSrc} className={avatarClassName} />
       <span className="min-w-0 truncate text-sm font-semibold" data-testid="chat-active-name">
         {projectName ?? t("groupName")}
       </span>
