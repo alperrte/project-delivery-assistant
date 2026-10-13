@@ -5,7 +5,7 @@ import type { Member, ProjectRole, UserSearchResult } from "./types";
 export const membersApi = {
   list: (projectId: string, page: number, size = 20) =>
     apiRequest<Page<Member>>(`/projects/${projectId}/members?page=${page}&size=${size}`),
-  detail: (projectId: string, userId: string) => apiRequest<Member>(`/projects/${projectId}/members/${userId}`),
+  detail: (projectId: string, userId: string, signal?: AbortSignal) => apiRequest<Member>(`/projects/${projectId}/members/${userId}`, { signal }),
   search: (projectId: string, query: string) =>
     apiRequest<UserSearchResult[]>(`/projects/${projectId}/members/search?query=${encodeURIComponent(query)}`),
   addRole: (projectId: string, userId: string, role: ProjectRole) =>

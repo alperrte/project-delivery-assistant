@@ -11,7 +11,7 @@ export function ProjectSwitcher({ slug, onSelect }: { slug: string | undefined; 
   const t = useTranslations("calendarPage");
   const { data } = useQuery({
     queryKey: ["projects", "calendar-switcher"],
-    queryFn: projectsApi.allVisible,
+    queryFn: ({ signal }) => projectsApi.allVisible(signal),
   });
   const projects = data ?? [];
 

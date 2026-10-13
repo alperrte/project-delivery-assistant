@@ -54,6 +54,7 @@ export function resolveDemoQuery(key: readonly unknown[], data: DemoData): unkno
   if (key[0] === "projects") {
     if (key[1] === "sidebar-default") return demoPage([data.project]);
     if (key[1] === "by-slug") return key[2] ? data.project : undefined;
+    if (key[1] === "selected") return key[3] ? data.project : undefined;
     if (key[2] === "home") return data.home;
     if (key[2] === "members") return key[3] === "me" ? data.members[0] : key[3] === "all" ? data.members : demoPage(data.members);
     if (key[2] === "invitations") return demoPage([]);

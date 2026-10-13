@@ -550,3 +550,6 @@ Read isteği aktif belgede IntersectionObserver ile görünür message ID'lerind
 ## Sohbet kaydırma çubukları — 2026-10-12
 
 Sohbet konuşma listesi, mesaj geçmişi, composer textarea, emoji popup, Bilgi ve görsel dialogları `data-workspace-scroll` ile mevcut ortak scrollbar stiline katılır. Thumb aktif temanın `--label-blue` token'ıdır, track transparandır; hover mevcut foreground karışımını kullanır. Ayrı dark/light sabit renk veya yeni token eklenmez. Alt öğelere scrollbar rengi mirası sıfırlanır; forced-colors native fallback korunur.
+## Sidebar proje değiştirme — 2026-10-14
+
+Seçili proje başlığındaki “Değiştir” ve daraltılmış raydaki proje logosu arama içeren Base UI Popover açar. Proje kartının mevcut ana sayfa linki korunur; genel Projeler sayfası kaldırılmaz. Popup 320 px, viewport sınırında daralır/konumlanır, kendi scroll alanını kullanır; satır logosu mevcut ProjectMark/EntityMark + gerçek logoSource/fallback/shape'tir. Aktif satır primary/10 ve check, 48 px satır hedefi, mevcut light/dark/custom token'ları, TR/EN/DE metinleri kullanır. Başarılı seçim mobil navigasyonu kapatır; Escape/dış tıklama/tetikleyici popup'ı kapatır, seçim kaydet/onay adımı içermez.

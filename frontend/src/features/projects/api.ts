@@ -48,20 +48,20 @@ export function projectBannerUrl(projectId: string, bannerVersion: number): stri
 }
 
 export const projectsApi = {
-  list: (page: number, size = PROJECT_PAGE_SIZE) => apiRequest<Page<Project>>(`/projects?page=${page}&size=${size}`),
+  list: (page: number, size = PROJECT_PAGE_SIZE, signal?: AbortSignal) => apiRequest<Page<Project>>(`/projects?page=${page}&size=${size}`, { signal }),
   /** Selection controls must include visible projects beyond the first API page. */
-  allVisible: async () => {
+  allVisible: async (signal?: AbortSignal) => {
     const projects = new Map<string, Project>();
     for (let page = 0; ; page++) {
-      const result = await apiRequest<Page<Project>>(`/projects?page=${page}&size=100`);
+      const result = await apiRequest<Page<Project>>(`/projects?page=${page}&size=100`, { signal });
       for (const project of result.content) projects.set(project.id, project);
       if (!result.content.length || page + 1 >= result.totalPages) break;
     }
     return [...projects.values()];
   },
   detail: (projectId: string) => apiRequest<Project>(`/projects/${projectId}`),
-  bySlug: (slug: string) => apiRequest<Project>(`/projects/by-slug/${slug}`),
-  home: (projectId: string) => apiRequest<ProjectHome>(`/projects/${projectId}/home`),
+  bySlug: (slug: string, signal?: AbortSignal) => apiRequest<Project>(`/projects/by-slug/${slug}`, { signal }),
+  home: (projectId: string, signal?: AbortSignal) => apiRequest<ProjectHome>(`/projects/${projectId}/home`, { signal }),
   create: (body: CreateProjectBody) => apiRequest<Project>("/projects", { method: "POST", body }),
   setTaskManagementMode: (projectId: string, mode: TaskManagementMode) =>
     apiRequest<Project>(`/projects/${projectId}/task-management-mode`, { method: "PATCH", body: { mode } }),

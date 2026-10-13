@@ -305,3 +305,6 @@ Public routes now include `(public)/about` and `(public)/license` beside cookies
 - Backend: `chat/{api/ChatController,api/dto/response/ChatResponses,application/service/ChatService,ChatViews,infrastructure/repository/ChatMessageRepository}`; `db/migration/V51__chat_message_search.sql`.
 - Frontend: `features/chat/components/conversation-search.tsx`, `features/chat/search-text.tsx`; mevcut `hooks/api/cache/chat-provider`, `conversation-view/message-list/chat-panel/chat-dock`; TR/EN/DE `chat.search` namespace'i.
 - Doğrulama: `chat/integration/ChatApiIntegrationTest`, `frontend/e2e/chat-search.spec.ts`, `chat-cache.spec.ts`. Kayıt: `docs/compliation/2026-10-14-chat-message-search.md`.
+## Sidebar proje dropdown rotası — 2026-10-14
+
+`components/layout/project-sidebar-switcher.tsx` arama/Popover/erişim doğrulama ve seçim etkileşimidir; `project-sidebar-nav.tsx` mevcut `useSelectedProject` seçimini geçirir. `features/projects/switch-project-href.ts` ortak route/fallback kurallarını, `hooks/use-selected-project.ts` mevcut hatırlama ve actor-scoped doğrulamayı tutar. `projects/api.ts` ve `members-api.ts` mevcut okumalara opsiyonel AbortSignal ekler; calendar çağrısı uyarlanmıştır. `landing/demo/demo-data.ts` aynı query sözleşmesini yalnız izole demo fixture'ında karşılar. Test: `e2e/sidebar-project-switcher.spec.ts`.

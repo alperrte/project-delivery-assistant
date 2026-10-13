@@ -219,3 +219,8 @@ Proxy routes public /faq to localized /account/faq with 307/no-store when the ex
 ## Workspace contact page - 2026-10-12
 
 /account/contact reuses ContactPage/ContactForm within AppShell; the profile link carries returnTo. Proxy redirects signed-in public /contact requests to localized account/contact with 307/no-store. Anonymous contact stays public. Shared WorkspaceHelpBack replaces WorkspaceFaqBack for both pages. Existing account guard/auth/cookies/CSRF/CORS/form API unchanged. Evidence: docs/compliation/2026-10-12-profile-contact-page.md.
+## Sidebar proje seçimi — 2026-10-14
+
+Sidebar “Değiştir” ve daraltılmış rayın proje logosu mevcut Base UI Popover ile `projectsApi.allVisible`'ın bütün sayfalarını listeler. Seçim yine `useSelectedProject.select` → aktöre ait mevcut `sessionStorage` kaydıdır; ikinci aktif proje store'u yoktur. Seçili proje okuması `['projects','selected',userId,slug]` anahtarı ve AbortSignal ile hesap kapsamındadır; yalnız sunucuda doğrulanmış route projesi hatırlanır. 60 sn/odak refetch'inde 403/404 son iyi cache verisini gizler; geçersiz remembered slug silinir ve ilk erişilebilir proje sorgusu yenilenir. Sidebar seçiminde hedef by-slug API'siyle yeniden doğrulanır, geç kalan eski aktör/iptal yanıtı seçim yapamaz.
+
+Proje dışı sayfada URL korunur. Ortak proje sekmesi/listesi yeni slug'a gider; eski filtreler/resource ID'leri taşınmaz. Kaynak ayrıntısı veya uyumsuz görev modu/yönetici/depo yüzeyi yeni proje ana sayfasına düşer. Başarısız geçiş mevcut seçimi korur. Mobil çekmece başarıda kapanır; mevcut merkezi sohbet owner/state'i değişmez, yalnız gerçek route geçişi mevcut navigatePage davranışını kullanır. Backend endpoint/yetki/cookie/CSRF/CORS/ENV değişmedi.

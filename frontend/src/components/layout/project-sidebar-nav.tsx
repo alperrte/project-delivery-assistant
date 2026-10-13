@@ -25,6 +25,7 @@ import { useSession } from "@/features/auth/hooks/use-session";
 import { TeamsSidebarMenu } from "./teams-sidebar-menu";
 import { cn } from "@/lib/utils";
 import { navItemClass } from "./nav-item";
+import { ProjectSidebarSwitcher } from "./project-sidebar-switcher";
 
 export function ProjectSidebarNav({
   onNavigate,
@@ -74,7 +75,7 @@ export function ProjectSidebarNav({
     invitationsRoute?.[1] ??
     taskRouteSlug(pathname);
 
-  const { slug, project } = useSelectedProject(routeSlug);
+  const { slug, project, select } = useSelectedProject(routeSlug);
   const projectLogo = project ? projectLogoSource(project) : null;
 
   const { isManager } = useCurrentMember(project?.id ?? "");
@@ -143,7 +144,7 @@ export function ProjectSidebarNav({
   if (collapsed) {
     return (
       <div className="mt-3 space-y-0.5 border-t border-border pt-3">
-        <Link
+        {!contained ? <ProjectSidebarSwitcher key={actor?.id} project={project} select={select} collapsed onNavigate={onNavigate} /> : <Link
           href={projectPath ?? "/projects"}
           onClick={onNavigate}
           title={project?.name ?? t("chooseProject")}
@@ -155,7 +156,7 @@ export function ProjectSidebarNav({
           >
             <ProjectMark shape={project?.logoShape} key={projectLogo ?? "none"} name={project?.name ?? "P"} src={projectLogo} />
           </span>
-        </Link>
+        </Link>}
 
         {projectPath &&
           sections
@@ -234,7 +235,7 @@ export function ProjectSidebarNav({
           {t("selectedProject")}
         </p>
 
-        {projectPath && pathname !== "/projects" && (
+        {!contained ? <ProjectSidebarSwitcher key={actor?.id} project={project} select={select} onNavigate={onNavigate} /> : projectPath && pathname !== "/projects" && (
           <Link
             href="/projects"
             onClick={onNavigate}
