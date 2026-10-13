@@ -11,7 +11,8 @@ test("reply/reaction/picker preserve viewport, theme and motion preferences at 3
   const project=((await api(page,"GET",`/projects/by-slug/${slug}`)).json as {id:string}).id;
   const directory=path.resolve("../.local/chat-action-nav-implementation/screens/chat");mkdirSync(directory,{recursive:true});
   try {
-    await page.getByTestId("chat-nav-item").click();const input=page.getByTestId("chat-composer");await expect(input).toBeEnabled();
+    const conversation=((await api(page,"GET","/chat/conversations")).json as {groups:{id:string;projectId:string}[]}).groups.find(group=>group.projectId===project)!.id;
+    await page.getByTestId("chat-nav-item").click();await page.locator(`[data-conversation-id="${conversation}"]`).click();const input=page.getByTestId("chat-composer");await expect(input).toBeEnabled();
     await input.fill("Responsive question");await input.press("Enter");
     const question=page.getByTestId("chat-message").filter({has:page.getByTestId("chat-message-text").filter({hasText:"Responsive question"})});
     await question.hover();await chooseMessageAction(question,"reply");await input.fill("Responsive answer");await input.press("Enter");
@@ -30,7 +31,7 @@ test("reply/reaction/picker preserve viewport, theme and motion preferences at 3
     await page.getByTestId("chat-message-reply").press("Escape");await expect(page.getByTestId("chat-message-reply")).toHaveCount(0);await expect(page.getByTestId("chat-panel")).toBeVisible();
     for(const width of [320,390,768,1024,1440])for(const dark of [false,true]){
       await page.setViewportSize({width,height:900});await page.evaluate(value=>document.documentElement.classList.toggle("dark",value),dark);
-      await page.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));if(!await input.isVisible())await page.getByTestId("chat-conversation-group").click();
+      await page.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));if(!await input.isVisible())await page.locator(`[data-testid="chat-conversation-group"][data-conversation-id="${conversation}"]`).click();
       await chooseMessageAction(answer,"reply");await expect(page.getByTestId("chat-reply-context")).toBeVisible();
       expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBe(width);
       await page.getByTestId("chat-composer-emoji").click();const popup=page.getByTestId("chat-composer-emoji-popup");await expect(popup).toBeVisible();

@@ -44,5 +44,8 @@ export function useCompleteLogin() {
     }
     router.replace(me.mustChangePassword ? "/change-password" : invitation
       ? `/register#invitation=${encodeURIComponent(invitation)}` : returnPath ?? "/dashboard");
+    // The API sets cookies outside Next.js; discard anonymous RSC/history data
+    // after the destination navigation so Back also sees the verified session.
+    router.refresh();
   };
 }

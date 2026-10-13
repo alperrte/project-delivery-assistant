@@ -13,6 +13,8 @@ import { LOGO_ACCEPTED_TYPES, logoValidationError } from "../logo-validation";
 import type { Project } from "../types";
 import type { LogoShape } from "@/lib/media/logo-shape";
 import { ProjectMark } from "./project-mark";
+import { useSession } from "@/features/auth/hooks/use-session";
+import { invalidateProjectChatOverview } from "../query-invalidation";
 
 /** Media is saved independently of the settings form; refetch never resets its unsaved text fields. */
 export function ProjectLogoField({ project, shape = project.logoShape }: { project: Project; shape?: LogoShape }) {
@@ -20,23 +22,29 @@ export function ProjectLogoField({ project, shape = project.logoShape }: { proje
   const tv = useTranslations("projects.newPage.logo");
   const te = useTranslations("errors");
   const queryClient = useQueryClient();
+  const { data: user } = useSession();
   const inputRef = useRef<HTMLInputElement>(null);
   const hintId = useId();
   const [error, setError] = useState<string | null>(null);
-  const refresh = () => queryClient.invalidateQueries({ queryKey: ["projects"] });
+  const refresh = (actorId?: string) => Promise.all([
+    queryClient.invalidateQueries({ queryKey: ["projects"] }),
+    invalidateProjectChatOverview(queryClient, actorId),
+  ]);
   const onError = (err: unknown) => {
     const message = te(errorKey(err));
     setError(message);
     toast.error(message);
   };
   const upload = useMutation({
+    onMutate: () => ({ actorId: user?.id }),
     mutationFn: (file: File) => projectsApi.uploadLogo(project.id, file),
-    onSuccess: async () => { await refresh(); toast.success(t("uploaded")); },
+    onSuccess: async (_result, _file, owner) => { await refresh(owner?.actorId); toast.success(t("uploaded")); },
     onError,
   });
   const remove = useMutation({
+    onMutate: () => ({ actorId: user?.id }),
     mutationFn: () => projectsApi.deleteLogo(project.id),
-    onSuccess: async () => { await refresh(); toast.success(t("removed")); },
+    onSuccess: async (_result, _values, owner) => { await refresh(owner?.actorId); toast.success(t("removed")); },
     onError,
   });
   const busy = upload.isPending || remove.isPending;

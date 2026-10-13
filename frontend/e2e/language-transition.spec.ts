@@ -18,10 +18,17 @@ test.describe("Language Transition Preference", () => {
       { name: "XSRF-TOKEN", value: "lang-trans-test", url: "http://localhost:3000" },
     ]);
 
+    await page.routeWebSocket(/\/api\/v1\/ws$/, socket => socket.onMessage(message => {
+      if (String(message).startsWith("CONNECT")) socket.send("CONNECTED\nversion:1.2\nheart-beat:0,0\n\n\0");
+    }));
     await page.route("**/api/v1/**", async route => {
       const request = route.request();
       const pathname = new URL(request.url()).pathname;
-      let body: unknown = {};
+      const noContent = request.method() === "OPTIONS" || pathname.endsWith("/notifications/team-deletions/claim");
+      let body: unknown = { content: [], page: 0, size: 20, totalElements: 0, totalPages: 0 };
+      if (pathname.endsWith("/chat/conversations")) body = { group: null, groups: [], directs: [], totalUnread: 0 };
+      if (pathname.endsWith("/chat/members")) body = [];
+      if (pathname.endsWith("/notifications/unread-count")) body = { count: 0 };
       if (pathname.endsWith("/auth/me")) {
         body = { id: "lang-trans-test", nickname: "LangTester", email: "lang@example.com", globalRole: "USER", mustChangePassword: false };
       } else if (pathname.endsWith("/auth/csrf")) {
@@ -33,15 +40,15 @@ test.describe("Language Transition Preference", () => {
         body = preferences;
       }
       await route.fulfill({
-        status: request.method() === "OPTIONS" ? 204 : 200,
+        status: noContent ? 204 : 200,
         contentType: "application/json",
         headers: {
           "access-control-allow-origin": "http://localhost:3000",
           "access-control-allow-credentials": "true",
           "access-control-allow-headers": "content-type,x-xsrf-token",
-          "access-control-allow-methods": "GET,PUT,OPTIONS",
+          "access-control-allow-methods": "GET,PUT,POST,OPTIONS",
         },
-        body: request.method() === "OPTIONS" ? "" : JSON.stringify(body),
+        body: noContent ? "" : JSON.stringify(body),
       });
     });
 
@@ -85,10 +92,17 @@ test.describe("Language Transition Preference", () => {
       { name: "XSRF-TOKEN", value: "indep-test", url: "http://localhost:3000" },
     ]);
 
+    await page.routeWebSocket(/\/api\/v1\/ws$/, socket => socket.onMessage(message => {
+      if (String(message).startsWith("CONNECT")) socket.send("CONNECTED\nversion:1.2\nheart-beat:0,0\n\n\0");
+    }));
     await page.route("**/api/v1/**", async route => {
       const request = route.request();
       const pathname = new URL(request.url()).pathname;
-      let body: unknown = {};
+      const noContent = request.method() === "OPTIONS" || pathname.endsWith("/notifications/team-deletions/claim");
+      let body: unknown = { content: [], page: 0, size: 20, totalElements: 0, totalPages: 0 };
+      if (pathname.endsWith("/chat/conversations")) body = { group: null, groups: [], directs: [], totalUnread: 0 };
+      if (pathname.endsWith("/chat/members")) body = [];
+      if (pathname.endsWith("/notifications/unread-count")) body = { count: 0 };
       if (pathname.endsWith("/auth/me")) {
         body = { id: "indep-test", nickname: "IndepTester", email: "indep@example.com", globalRole: "USER", mustChangePassword: false };
       } else if (pathname.endsWith("/auth/csrf")) {
@@ -100,15 +114,15 @@ test.describe("Language Transition Preference", () => {
         body = preferences;
       }
       await route.fulfill({
-        status: request.method() === "OPTIONS" ? 204 : 200,
+        status: noContent ? 204 : 200,
         contentType: "application/json",
         headers: {
           "access-control-allow-origin": "http://localhost:3000",
           "access-control-allow-credentials": "true",
           "access-control-allow-headers": "content-type,x-xsrf-token",
-          "access-control-allow-methods": "GET,PUT,OPTIONS",
+          "access-control-allow-methods": "GET,PUT,POST,OPTIONS",
         },
-        body: request.method() === "OPTIONS" ? "" : JSON.stringify(body),
+        body: noContent ? "" : JSON.stringify(body),
       });
     });
 

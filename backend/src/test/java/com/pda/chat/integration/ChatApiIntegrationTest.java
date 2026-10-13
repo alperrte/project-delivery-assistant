@@ -43,6 +43,7 @@ import java.util.concurrent.Future;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -505,6 +506,97 @@ class ChatApiIntegrationTest {
         mvc.perform(get("/api/v1/chat/conversations")).andExpect(status().isUnauthorized());
     }
 
+    @Test void deliveryAcknowledgesOnlyOwnReceiptsWithoutReadingAndIsIdempotent() throws Exception {
+        Fixture f = fixture(); UUID group = groupId(f.manager, f.projectId);
+        UUID first = messageId(send(f.manager, f.projectId, group, "delivery first").andExpect(status().isCreated()));
+        UUID second = messageId(send(f.otherMember, f.projectId, group, "delivery second").andExpect(status().isCreated()));
+        UUID own = messageId(send(f.member, f.projectId, group, "own message").andExpect(status().isCreated()));
+        String url = "/api/v1/chat/conversations/" + group + "/delivered";
+        String ids = "{\"messageIds\":[\"" + first + "\",\"" + second + "\",\"" + first + "\",\"" + own + "\"]}";
+        mvc.perform(get("/api/v1/chat/conversations").cookie(f.member.access())).andExpect(jsonPath("$.totalUnread").value(2));
+        postJson(f.member, url, ids).andExpect(status().isNoContent());
+        java.sql.Timestamp initial = jdbc.queryForObject("select delivered_at from chat_message_receipts where message_id=? and user_id=?", java.sql.Timestamp.class, first, f.member.id());
+        assertNotNull(initial);
+        assertEquals(2, jdbc.queryForObject("select count(*) from chat_message_receipts where user_id=? and delivered_at is not null", Integer.class, f.member.id()));
+        assertNull(jdbc.queryForObject("select delivered_at from chat_message_receipts where message_id=? and user_id=?", java.sql.Timestamp.class, first, f.otherMember.id()));
+        assertEquals(0, jdbc.queryForObject("select count(*) from chat_message_receipts where message_id=? and user_id=?", Integer.class, own, f.member.id()));
+        assertEquals(0, jdbc.queryForObject("select count(*) from chat_message_receipts where user_id=? and read_at is not null", Integer.class, f.member.id()));
+        assertDeliveryStatus(f.manager, group, first, "SENT");
+        postJson(f.member, url, ids).andExpect(status().isNoContent());
+        assertEquals(initial, jdbc.queryForObject("select delivered_at from chat_message_receipts where message_id=? and user_id=?", java.sql.Timestamp.class, first, f.member.id()));
+        mvc.perform(get("/api/v1/chat/conversations").cookie(f.member.access())).andExpect(jsonPath("$.totalUnread").value(2));
+        postJson(f.otherMember, url, "{\"messageIds\":[\"" + first + "\"]}").andExpect(status().isNoContent());
+        assertDeliveryStatus(f.manager, group, first, "DELIVERED");
+        assertEquals(initial, jdbc.queryForObject("select delivered_at from chat_message_receipts where message_id=? and user_id=?", java.sql.Timestamp.class, first, f.member.id()));
+        postJson(f.member, "/api/v1/chat/conversations/" + group + "/read", "{\"messageIds\":[\"" + second + "\"]}").andExpect(status().isNoContent());
+        java.sql.Timestamp readAt = jdbc.queryForObject("select read_at from chat_message_receipts where message_id=? and user_id=?", java.sql.Timestamp.class, second, f.member.id());
+        postJson(f.member, url, ids).andExpect(status().isNoContent());
+        assertEquals(readAt, jdbc.queryForObject("select read_at from chat_message_receipts where message_id=? and user_id=?", java.sql.Timestamp.class, second, f.member.id()));
+        mvc.perform(get("/api/v1/chat/conversations").cookie(f.member.access())).andExpect(jsonPath("$.totalUnread").value(1));
+    }
+
+    @Test void concurrentVisibleReadAndDeliveryUseConsistentReceiptOrderAndPreserveFirstTimestamps() throws Exception {
+        Fixture f = fixture(); UUID group = groupId(f.manager, f.projectId);
+        UUID first = messageId(send(f.manager, f.projectId, group, "parallel receipt first").andExpect(status().isCreated()));
+        UUID second = messageId(send(f.manager, f.projectId, group, "parallel receipt second").andExpect(status().isCreated()));
+        List<UUID> ids = java.util.stream.Stream.of(first, second).sorted().toList();
+        List<UUID> reversed = List.of(ids.getLast(), ids.getFirst());
+        var operation = new java.util.concurrent.atomic.AtomicInteger();
+        runConcurrently(2, () -> {
+            if (operation.getAndIncrement() == 0) chat.markDelivered(f.member.id(), null, group, ids);
+            else chat.markVisible(f.member.id(), group, reversed);
+            return true;
+        });
+        assertEquals(2, jdbc.queryForObject("select count(*) from chat_message_receipts where user_id=? and message_id in (?,?) and read_at is not null and delivered_at is not null", Integer.class, f.member.id(), first, second));
+        assertEquals(0, jdbc.queryForObject("select count(*) from chat_message_receipts where user_id=? and message_id in (?,?) and (read_at is not null or delivered_at is not null)", Integer.class, f.otherMember.id(), first, second));
+        List<java.sql.Timestamp> delivered = jdbc.query("select delivered_at from chat_message_receipts where user_id=? and message_id in (?,?) order by message_id", (row, index) -> row.getTimestamp(1), f.member.id(), first, second);
+        List<java.sql.Timestamp> read = jdbc.query("select read_at from chat_message_receipts where user_id=? and message_id in (?,?) order by message_id", (row, index) -> row.getTimestamp(1), f.member.id(), first, second);
+        chat.markVisible(f.member.id(), group, ids);
+        chat.markDelivered(f.member.id(), null, group, reversed);
+        assertEquals(delivered, jdbc.query("select delivered_at from chat_message_receipts where user_id=? and message_id in (?,?) order by message_id", (row, index) -> row.getTimestamp(1), f.member.id(), first, second));
+        assertEquals(read, jdbc.query("select read_at from chat_message_receipts where user_id=? and message_id in (?,?) order by message_id", (row, index) -> row.getTimestamp(1), f.member.id(), first, second));
+        mvc.perform(get("/api/v1/chat/conversations").cookie(f.member.access())).andExpect(jsonPath("$.totalUnread").value(0));
+    }
+
+    @Test void deliveryRequiresAuthenticationCsrfAndBoundedNonemptyMessageIds() throws Exception {
+        Fixture f = fixture(); UUID group = groupId(f.manager, f.projectId);
+        UUID message = messageId(send(f.manager, f.projectId, group, "undelivered").andExpect(status().isCreated()));
+        String url = "/api/v1/chat/conversations/" + group + "/delivered";
+        String ids = "{\"messageIds\":[\"" + message + "\"]}";
+        Cookie csrf = csrfCookie();
+        mvc.perform(post(url).cookie(csrf).header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON).content(ids)).andExpect(status().isUnauthorized());
+        mvc.perform(post(url).cookie(f.member.access()).contentType(MediaType.APPLICATION_JSON).content(ids)).andExpect(status().isForbidden());
+        postJson(f.outsider, url, ids).andExpect(status().isForbidden());
+        postJson(f.member, url, null).andExpect(status().isBadRequest());
+        for (String invalid : List.of("{}", "{\"messageIds\":null}", "{\"messageIds\":[]}", "{\"messageIds\":[null]}", "{\"messageIds\":[\"invalid-uuid\"]}",
+                "{\"messageIds\":[" + String.join(",", java.util.Collections.nCopies(101, quote(message.toString()))) + "]}")) {
+            postJson(f.member, url, invalid).andExpect(status().isBadRequest());
+        }
+        assertEquals(0, jdbc.queryForObject("select count(*) from chat_message_receipts where message_id=? and delivered_at is not null", Integer.class, message));
+    }
+
+    @Test void mixedForeignDeliveryIdsAndLegacyProjectMismatchNeverPartiallyAcknowledge() throws Exception {
+        Fixture f = fixture(); UUID group = groupId(f.manager, f.projectId);
+        UUID local = messageId(send(f.manager, f.projectId, group, "local").andExpect(status().isCreated()));
+        UUID direct = openDirect(f.manager, f.projectId, f.member.id());
+        UUID foreign = messageId(send(f.manager, f.projectId, direct, "other conversation").andExpect(status().isCreated()));
+        String url = "/api/v1/chat/conversations/" + group + "/delivered";
+        for (UUID invalid : List.of(foreign, UUID.randomUUID())) {
+            postJson(f.member, url, "{\"messageIds\":[\"" + local + "\",\"" + invalid + "\"]}").andExpect(status().isNotFound());
+            assertEquals(0, jdbc.queryForObject("select count(*) from chat_message_receipts where user_id=? and delivered_at is not null", Integer.class, f.member.id()));
+        }
+        UUID otherProject = createProject(f.manager, "Delivery legacy mismatch");
+        memberships.addMember(f.manager.id(), otherProject, f.member.id(), Set.of(ProjectRole.TESTER));
+        // This legacy delivered path remains denied at the URL policy layer.
+        postJson(f.member, base(otherProject) + "/conversations/" + group + "/delivered", "{\"messageIds\":[\"" + local + "\"]}").andExpect(status().isForbidden());
+        var failure = assertThrows(com.pda.chat.domain.ChatException.class, () -> chat.markDelivered(f.member.id(), otherProject, group, List.of(local)));
+        assertEquals("CHAT_NOT_FOUND", failure.code());
+        assertEquals(0, jdbc.queryForObject("select count(*) from chat_message_receipts where delivered_at is not null and message_id in (?,?)", Integer.class, local, foreign));
+        postJson(f.member, url, "{\"messageIds\":[\"" + local + "\"]}").andExpect(status().isNoContent());
+        assertNull(jdbc.queryForObject("select delivered_at from chat_message_receipts where message_id=? and user_id=?", java.sql.Timestamp.class, foreign, f.member.id()));
+        postJson(f.otherMember, "/api/v1/chat/conversations/" + direct + "/delivered", "{\"messageIds\":[\"" + foreign + "\"]}").andExpect(status().isNotFound());
+    }
+
     @Test void invalidAttachmentsConsumeTheSendQuotaBeforeContentParsing() throws Exception {
         Fixture f=fixture();UUID group=groupId(f.manager,f.projectId);Cookie csrf=csrfCookie();
         String url="/api/v1/chat/conversations/"+group+"/messages/attachment";
@@ -858,6 +950,15 @@ class ChatApiIntegrationTest {
 
     private ResultActions send(Account actor, UUID projectId, UUID conversationId, String content) throws Exception {
         return postJson(actor, messagesUrl(projectId, conversationId), "{\"content\":" + quote(content) + "}");
+    }
+
+    private void assertDeliveryStatus(Account actor, UUID conversationId, UUID messageId, String expected) throws Exception {
+        String response = body(mvc.perform(get("/api/v1/chat/conversations/" + conversationId + "/messages").cookie(actor.access()))
+                .andExpect(status().isOk()));
+        List<java.util.Map<String, Object>> rows = JsonPath.read(response, "$.messages");
+        var matches = rows.stream().filter(row -> messageId.toString().equals(row.get("id"))).toList();
+        assertEquals(1, matches.size(), "the actual REST history must contain exactly this message");
+        assertEquals(expected, matches.getFirst().get("deliveryStatus"));
     }
 
     private ResultActions postJson(Account actor, String url, String json) throws Exception {

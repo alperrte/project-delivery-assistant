@@ -15,9 +15,11 @@ async function fixture(page: Page, taskMode: "SIMPLE" | "ADVANCED" = "SIMPLE") {
 test("simple task dates validate, persist, and reopen on the selected month when editing", async ({ page }) => {
   const project = await fixture(page);
   await page.locator("#task-title").fill("Calendar persistence");
-  await choose(page, "task-start", "2030-03-20");
   await choose(page, "task-deadline-date", "2030-03-19");
+  await choose(page, "task-start", "2030-03-20");
+  await page.getByRole("button", { name: "Görevi oluştur", exact: true }).click();
   await expect(page.locator("#task-deadline-date")).toHaveAttribute("aria-invalid", "true");
+  await expect(page.locator("#task-deadline-date")).toBeFocused();
   await expect(page.locator('p[role="alert"]')).toContainText("başlangıç tarihinden önce olamaz");
   await choose(page, "task-deadline-date", "2030-03-25");
   await expect(page.locator("#task-deadline-date")).not.toHaveAttribute("aria-invalid", "true");

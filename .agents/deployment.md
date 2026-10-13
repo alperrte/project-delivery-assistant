@@ -101,7 +101,11 @@ Seçim ölçütleri: ücretsiz veya düşük maliyet, Spring Boot + Docker uyumu
 
 ## E2E stack with a mail sink, and new settings (2026-10-09)
 
+2026-10-13: QA override kullanıldıysa pre-push `finally` bloğu hata veya kontrollü kesintide normal backend'i temel Compose ile yeniden oluşturur. Zorla process kapatma cleanup'ı atlayabilir; teslimden önce `docker compose -f docker-compose.yml up -d --force-recreate backend` ve backend health kontrolü gerekir. ENV ve veriler değişmez; Mailpit silinmez.
+
 `docker-compose.e2e.yml` (Mailpit mail sink and raised rate limits for local browser tests) was removed on 2026-10-10. The Playwright specs that read mail from Mailpit need an equivalent override before they can run again. The stack now always uses the real `MAIL_*`/`SMTP_*` settings.
+
+Pre-push accepts a caller-owned local override: `.\pre-push\pre-push.cmd -QaComposeFile "<local override path>"`. After Maven verify, it builds/starts the current backend and QA services with the base Compose plus this override, requires a successful backend health check, then runs frontend E2E. The override must direct enabled QA mail to Mailpit, explicitly set `SMTP_SSL=false`, `SMTP_AUTH=false`, `SMTP_STARTTLS=false` for the local sink, and provide explicit test rate limits suitable for the full suite. It does not modify `.env` or the profile files; after successful E2E, the final base Compose build/start and smoke restore the normal backend configuration.
 
 New optional settings (defaults are the production values; names only in `.env.example`): `CONTACT_RECIPIENT` (fixed contact inbox, default `info@pd-assistant.com` since 2026-10-12), `ANALYTICS_RATE_LIMIT_MAX_REQUESTS` (600), `CONTACT_RATE_LIMIT_MAX_REQUESTS` (5). Contact mail uses the existing `MAIL_*`/`SMTP_*` settings; without `MAIL_ENABLED=true` the contact form answers `503 CONTACT_UNAVAILABLE`. Behind a reverse proxy set `TRUSTED_PROXY_CIDRS`, otherwise all visitors share one rate-limit bucket.
 

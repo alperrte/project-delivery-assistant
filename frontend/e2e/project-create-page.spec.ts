@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { MANAGER_STORAGE } from "./global-setup";
+import { buildPath, matchPath } from "../src/i18n/routing";
 import { createdProjectSlug, api, chooseDate, createProject, declineTeamPrompt, openProjectListPage } from "./helpers";
 
 test.use({ storageState: MANAGER_STORAGE });
@@ -189,7 +190,8 @@ test.describe("Yeni proje sayfası", () => {
     await expect(page.locator("#create-end-error")).toBeVisible();
     await page.getByRole("button", { name: /^Projeyi oluştur$/ }).click();
     await expect(page.getByRole("alert").filter({ hasText: /tarih/i }).first()).toBeVisible();
-    await expect(page).toHaveURL(/\/projeler\/yeni$/);
+    expect(new URL(page.url()).pathname).toBe(buildPath("/projects/new", {}, "tr"));
+    expect(matchPath(new URL(page.url()).pathname)?.route).toBe("/projects/new");
   });
 
   test("alt çubuk kaydırırken yerinde durur, sayfanın sonunda bile yukarı zıplamaz", async ({ page }) => {

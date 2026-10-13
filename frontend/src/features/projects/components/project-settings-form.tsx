@@ -109,11 +109,12 @@ export function ProjectSettingsForm({ project, organization }: { project: Projec
   });
 
   const save = useMutation({
+    onMutate: () => ({ actorId: user?.id }),
     // The goal is no longer edited here, but the update replaces the whole project: send the stored text back untouched.
     mutationFn: (values: ProjectSettingsValues) =>
       projectsApi.update(project.id, { ...values, projectGoal: project.projectGoal, organizationId: values.organizationId ?? null }),
-    onSuccess: async (updated) => {
-      await invalidateProjectMutation(queryClient, project.organizationId, updated.organizationId);
+    onSuccess: async (updated, _values, owner) => {
+      await invalidateProjectMutation(queryClient, owner?.actorId, project.organizationId, updated.organizationId);
       reset(toFormValues(updated));
       toast.success(t("saved"));
     },
@@ -121,8 +122,9 @@ export function ProjectSettingsForm({ project, organization }: { project: Projec
   });
 
   const remove = useMutation({
+    onMutate: () => ({ actorId: user?.id }),
     mutationFn: () => projectsApi.remove(project.id),
-    onSuccess: async () => {
+    onSuccess: async (_result, _values, owner) => {
       // The project is gone: drop only its own cache entries (everything else stays warm), stop selecting it, and
       // leave with replace so Back does not return to a settings page for a project that no longer exists.
       if (user) forgetSelectedProject(user.id, project.slug);
@@ -131,7 +133,7 @@ export function ProjectSettingsForm({ project, organization }: { project: Projec
       queryClient.removeQueries({ queryKey: ["projects", project.id] });
       toast.success(t("deleted"));
       router.replace("/projects");
-      await invalidateProjectMutation(queryClient, project.organizationId);
+      await invalidateProjectMutation(queryClient, owner?.actorId, project.organizationId);
     },
     onError: (err) => toast.error(te(errorKey(err))),
   });

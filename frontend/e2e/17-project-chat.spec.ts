@@ -20,6 +20,8 @@ const navItemOf = (page: Page) => page.getByTestId("chat-nav-item");
 const composerOf = (page: Page) => page.getByTestId("chat-composer");
 const messagesOf = (page: Page) => page.getByTestId("chat-message");
 const directRow = (page: Page, person: Person) => page.locator(`[data-testid="chat-conversation-direct"][data-peer-id="${person.id}"]`);
+const groupRow = (page: Page, conversationId: string) => page.locator(`[data-testid="chat-conversation-group"][data-conversation-id="${conversationId}"]`);
+const RUN = Date.now();
 const OUTSIDER_USER_FILE = path.join(AUTH_DIR, "chat-outsider-user.json");
 
 async function openPanel(page: Page) {
@@ -37,23 +39,52 @@ async function expectSendEnabled(page: Page) {
   await expect(composerOf(page)).toBeEnabled();
 }
 
+async function totalUnread(page: Page) {
+  const overview = await api(page, "GET", "/chat/conversations");
+  expect(overview.status).toBe(200);
+  return (overview.json as { totalUnread: number }).totalUnread;
+}
+
+async function expectUnreadBadge(page: Page, count: number) {
+  if (count === 0) await expect(page.getByTestId("chat-nav-badge")).toHaveCount(0);
+  else await expect(page.getByTestId("chat-nav-badge")).toHaveText(count > 99 ? "99+" : String(count));
+}
+
 /**
- * Project chat, end to end, with a Project Manager and a normal member in two browser contexts: the sidebar entry,
+ * Account chat, end to end, with a Project Manager and a normal member in two browser contexts: the sidebar entry,
  * the full panel, direct and group messages arriving live, unread counting, the three panel states with navigation in
  * between, project change, avatars, plain-text rendering and the server-side refusal for someone outside the project.
  */
-test.describe.serial("Project chat", () => {
+test.describe.serial("Account chat", () => {
   let managerPage: Page;
   let memberPage: Page;
   let outsiderPage: Page;
   let slug: string;
   let slug2: string;
   let projectId: string;
+  let groupId: string;
+  let project2Id: string;
+  let group2Id: string;
   const projectName = `E2E Chat Project ${Date.now()}`;
   let manager: Person;
   let member: Person;
   const project2Name = `E2E Chat Second ${Date.now()}`;
   const socketStats = { opened: 0, subscribed: 0, closed: 0 };
+
+  async function readExistingDirect(page: Page, peerId: string) {
+    const overview = (await api(page, "GET", "/chat/conversations")).json as { directs: { id: string; peer: { userId: string } }[] };
+    const conversation = overview.directs.find(direct => direct.peer.userId === peerId);
+    if (!conversation) return;
+    let before: string | undefined;
+    do {
+      const history = await api(page, "GET", `/chat/conversations/${conversation.id}/messages?limit=100${before ? `&before=${before}` : ""}`);
+      expect(history.status).toBe(200);
+      const data = history.json as { messages: { id: string }[]; hasMore: boolean };
+      if (data.messages.length === 0) break;
+      expect((await api(page, "POST", `/chat/conversations/${conversation.id}/read`, { messageIds: data.messages.map(message => message.id) })).status).toBe(204);
+      before = data.hasMore ? data.messages[0].id : undefined;
+    } while (before);
+  }
 
   test.beforeAll(async ({ browser }) => {
     managerPage = await (await browser.newContext({ storageState: MANAGER_STORAGE })).newPage();
@@ -105,22 +136,29 @@ test.describe.serial("Project chat", () => {
     const { invitationId, token } = invite.json as { invitationId: string; token: string };
     const accepted = await api(memberPage, "POST", `/projects/${projectId}/invitations/${invitationId}/accept`, { token });
     expect(accepted.status).toBe(200);
+    const overview = await api(managerPage, "GET", "/chat/conversations");
+    expect(overview.status).toBe(200);
+    groupId = (overview.json as { groups: { id: string; projectId: string }[] }).groups.find(group => group.projectId === projectId)!.id;
+    // TEST-ONLY preparation: acknowledge this actor's pre-existing canonical DM
+    // through the real read endpoint; other conversations retain their unread state.
+    await readExistingDirect(memberPage, manager.id);
   });
 
-  test("the Sohbet entry appears in the selected project's navigation", async () => {
+  test("the Sohbet entry appears in the account navigation", async () => {
     await managerPage.goto(`/projects/${slug}`);
     await expect(navItemOf(managerPage)).toBeVisible();
     await expect(navItemOf(managerPage)).toContainText("Sohbet");
-    // It belongs to the selected-project group, not to the global links.
+    // Chat is account-owned and remains available throughout the workspace.
     await expect(managerPage.getByRole("navigation", { name: "Gezinme menüsü" }).getByTestId("chat-nav-item")).toBeVisible();
   });
 
   test("it opens as a full panel that leaves the sidebar usable", async () => {
     await openPanel(managerPage);
-    await expect(managerPage.getByTestId("chat-conversation-group")).toHaveAttribute("aria-current", "true");
+    await groupRow(managerPage, groupId).click();
+    await expect(groupRow(managerPage, groupId)).toHaveAttribute("aria-current", "true");
     // The project group is called like the project itself.
     await expect(managerPage.getByTestId("chat-active-name")).toHaveText(projectName);
-    await expect(managerPage.getByTestId("chat-conversation-group")).toContainText(projectName);
+    await expect(groupRow(managerPage, groupId)).toContainText(projectName);
     await expect(directRow(managerPage, member)).toBeVisible();
     // Yourself is not offered as a conversation.
     await expect(directRow(managerPage, manager)).toHaveCount(0);
@@ -137,33 +175,41 @@ test.describe.serial("Project chat", () => {
   test("a direct message reaches the member live, with an unread badge that clears on opening", async () => {
     await memberPage.goto(`/projects/${slug}`);
     await expect(navItemOf(memberPage)).toBeVisible();
-    await expect(memberPage.getByTestId("chat-nav-badge")).toHaveCount(0);
+    const before = await api(memberPage, "GET", "/chat/conversations");
+    expect(before.status).toBe(200);
+    const overview = before.json as { totalUnread: number; directs: { peer: { userId: string }; unread: number }[] };
+    const previousDirectUnread = overview.directs.find(conversation => conversation.peer.userId === manager.id)?.unread ?? 0;
+    const otherUnread = overview.totalUnread - previousDirectUnread;
+    await expectUnreadBadge(memberPage, overview.totalUnread);
 
     await directRow(managerPage, member).click();
     await expect(managerPage.getByTestId("chat-active-name")).toHaveText(member.nickname);
     await expectSendEnabled(managerPage);
-    await send(managerPage, "Merhaba, bu birebir bir mesaj");
-    await expect(messagesOf(managerPage).filter({ hasText: "Merhaba, bu birebir bir mesaj" })).toHaveAttribute("data-own", "true");
+    await send(managerPage, `Merhaba, bu birebir bir mesaj ${RUN}`);
+    await expect(messagesOf(managerPage).filter({ hasText: `Merhaba, bu birebir bir mesaj ${RUN}` })).toHaveAttribute("data-own", "true");
 
     // The member never reloaded: the badge appears because the message arrived over the socket.
-    await expect(memberPage.getByTestId("chat-nav-badge")).toHaveText("1");
+    await expectUnreadBadge(memberPage, overview.totalUnread + 1);
+    await expect.poll(() => totalUnread(memberPage)).toBe(overview.totalUnread + 1);
     await openPanel(memberPage);
-    await expect(directRow(memberPage, manager)).toContainText("Merhaba, bu birebir bir mesaj");
+    await expect(directRow(memberPage, manager)).toContainText(`Merhaba, bu birebir bir mesaj ${RUN}`);
     await directRow(memberPage, manager).click();
-    const received = messagesOf(memberPage).filter({ hasText: "Merhaba, bu birebir bir mesaj" });
+    const received = messagesOf(memberPage).filter({ hasText: `Merhaba, bu birebir bir mesaj ${RUN}` });
     await expect(received).toBeVisible();
     await expect(received).toHaveAttribute("data-own", "false");
     // Reading it clears the badge (locally at once, confirmed by the server).
-    await expect(memberPage.getByTestId("chat-nav-badge")).toHaveCount(0);
+    await expectUnreadBadge(memberPage, otherUnread);
+    await expect.poll(() => totalUnread(memberPage)).toBe(otherUnread);
 
     // A reply arrives for the manager in the open conversation.
-    await send(memberPage, "Selam, mesaj geldi");
-    await expect(messagesOf(managerPage).filter({ hasText: "Selam, mesaj geldi" })).toBeVisible();
+    await send(memberPage, `Selam, mesaj geldi ${RUN}`);
+    await expect(messagesOf(managerPage).filter({ hasText: `Selam, mesaj geldi ${RUN}` })).toBeVisible();
   });
 
   test("a group message from the manager appears for the member", async () => {
-    await memberPage.getByTestId("chat-conversation-group").click();
-    await managerPage.getByTestId("chat-conversation-group").click();
+    await groupRow(memberPage, groupId).click();
+    await groupRow(managerPage, groupId).click();
+    const before = await totalUnread(memberPage);
     await expectSendEnabled(managerPage);
     await send(managerPage, "Herkese duyuru: yarın demo var");
 
@@ -172,23 +218,27 @@ test.describe.serial("Project chat", () => {
     // In the group, a message shows who wrote it.
     await expect(announcement.getByText(manager.nickname)).toBeVisible();
     // Both are looking at the group, so nothing stays unread.
-    await expect(memberPage.getByTestId("chat-nav-badge")).toHaveCount(0);
+    await expectUnreadBadge(memberPage, before);
+    await expect.poll(() => totalUnread(memberPage)).toBe(before);
   });
 
   test("unread counts in the list while the member is in another conversation", async () => {
     await directRow(memberPage, manager).click();
     await expect(memberPage.getByTestId("chat-active-name")).toHaveText(manager.nickname);
+    const before = await totalUnread(memberPage);
     await send(managerPage, "Grup için ikinci mesaj");
 
-    const groupRow = memberPage.getByTestId("chat-conversation-group");
-    await expect(groupRow).toContainText("Grup için ikinci mesaj");
-    await expect(groupRow).toContainText("1 okunmamış mesaj");
-    await expect(memberPage.getByTestId("chat-nav-badge")).toHaveText("1");
+    const fixtureGroup = groupRow(memberPage, groupId);
+    await expect(fixtureGroup).toContainText("Grup için ikinci mesaj");
+    await expect(fixtureGroup.getByLabel("1 okunmamış mesaj", { exact: true })).toHaveText("1");
+    await expectUnreadBadge(memberPage, before + 1);
+    await expect.poll(() => totalUnread(memberPage)).toBe(before + 1);
 
-    await groupRow.click();
+    await fixtureGroup.click();
     await expect(messagesOf(memberPage).filter({ hasText: "Grup için ikinci mesaj" })).toBeVisible();
-    await expect(memberPage.getByTestId("chat-nav-badge")).toHaveCount(0);
-    await expect(groupRow).not.toContainText("okunmamış");
+    await expectUnreadBadge(memberPage, before);
+    await expect(fixtureGroup.getByLabel("1 okunmamış mesaj", { exact: true })).toHaveCount(0);
+    await expect.poll(() => totalUnread(memberPage)).toBe(before);
   });
 
   test("full closes on page navigation without minimizing; compact keeps the draft", async () => {
@@ -250,7 +300,7 @@ test.describe.serial("Project chat", () => {
     await expectSendEnabled(managerPage);
     const beforeNavigation = { ...socketStats };
     await directRow(managerPage, member).click();
-    await expect(messagesOf(managerPage).filter({ hasText: "Selam, mesaj geldi" })).toBeVisible();
+    await expect(messagesOf(managerPage).filter({ hasText: `Selam, mesaj geldi ${RUN}` })).toBeVisible();
     await composerOf(managerPage).fill("yarım kalan taslak");
 
     // "—" shrinks the full panel to the bottom-right bar ("×" closes it completely, see below).
@@ -301,7 +351,7 @@ test.describe.serial("Project chat", () => {
     expect(socketStats).toEqual(beforeNavigation);
     await directRow(memberPage, manager).click();
     await expectSendEnabled(memberPage);
-    await send(memberPage, "Global sayfada bar bildirimi");
+    await send(memberPage, `Global sayfada bar bildirimi ${RUN}`);
     await expect(managerPage.getByTestId("chat-bar-unread")).toBeVisible();
     await managerPage.locator('nav a[href="/tr/takvim"]').first().click();
     await expect(managerPage.getByTestId("chat-bar-unread")).toBeVisible();
@@ -315,13 +365,13 @@ test.describe.serial("Project chat", () => {
     await managerPage.getByTestId("chat-bar-expand").click();
     await expect(compactOf(managerPage)).toBeVisible();
     await expect(managerPage.getByTestId("chat-active-name")).toHaveText(member.nickname);
-    await expect(messagesOf(managerPage).filter({ hasText: "Selam, mesaj geldi" })).toBeVisible();
+    await expect(messagesOf(managerPage).filter({ hasText: `Selam, mesaj geldi ${RUN}` })).toBeVisible();
     await expect(composerOf(managerPage)).toHaveValue("yarım kalan taslak");
 
     // The compact selector reuses the full panel's conversation list and the same draft slots.
     await compactOf(managerPage).getByTestId("chat-compact-selector").click();
-    await expect(compactOf(managerPage).getByTestId("chat-conversation-group")).toBeVisible();
-    await compactOf(managerPage).getByTestId("chat-conversation-group").click();
+    await expect(groupRow(managerPage, groupId)).toBeVisible();
+    await groupRow(managerPage, groupId).click();
     await expect(compactOf(managerPage).getByTestId("chat-active-name")).toHaveText(projectName);
     await expect(compactOf(managerPage).getByTestId("chat-conversation-direct")).toHaveCount(0);
     await compactOf(managerPage).getByTestId("chat-compact-selector").click();
@@ -332,15 +382,15 @@ test.describe.serial("Project chat", () => {
     // A new message arrives while compact: it shows and (being read) leaves no unread behind.
     await directRow(memberPage, manager).click();
     await expectSendEnabled(memberPage);
-    await send(memberPage, "Compact pencerede de görünür");
-    await expect(messagesOf(managerPage).filter({ hasText: "Compact pencerede de görünür" })).toBeVisible();
+    await send(memberPage, `Compact pencerede de görünür ${RUN}`);
+    await expect(messagesOf(managerPage).filter({ hasText: `Compact pencerede de görünür ${RUN}` })).toBeVisible();
 
     // Back to full size: the conversation is still the active one and the draft survived both trips.
     await managerPage.getByTestId("chat-fullscreen").click();
     await expect(panelOf(managerPage)).toBeVisible();
     await expect(directRow(managerPage, member)).toHaveAttribute("aria-current", "true");
     await expect(composerOf(managerPage)).toHaveValue("yarım kalan taslak");
-    await expect(messagesOf(managerPage).filter({ hasText: "Compact pencerede de görünür" })).toBeVisible();
+    await expect(messagesOf(managerPage).filter({ hasText: `Compact pencerede de görünür ${RUN}` })).toBeVisible();
 
     // The "×" of the full panel closes the chat completely: no bar, no compact window.
     await managerPage.getByTestId("chat-panel-close").click();
@@ -365,40 +415,35 @@ test.describe.serial("Project chat", () => {
     await expect(compactOf(managerPage)).toHaveCount(0);
   });
 
-  test("the project list keeps chat, but another selected project starts clean", async () => {
-    // A second project the member does not belong to (also used for the server-side refusal below).
+  test("project list and selected-project changes preserve account conversation, history, draft and socket", async () => {
     slug2 = await createProject(managerPage, project2Name);
-
+    project2Id = ((await api(managerPage, "GET", `/projects/by-slug/${slug2}`)).json as { id: string }).id;
+    group2Id = ((await api(managerPage, "GET", "/chat/conversations")).json as { groups: { id: string; projectId: string }[] }).groups.find(group => group.projectId === project2Id)!.id;
     await managerPage.goto(`/projects/${slug}/tasks`);
     await openPanel(managerPage);
     await directRow(managerPage, member).click();
-    await composerOf(managerPage).fill("bu taslak başka projeye taşınmamalı");
+    await expectSendEnabled(managerPage);
+    await composerOf(managerPage).fill("account draft across projects");
     await managerPage.getByTestId("chat-minimize").click();
-    await expect(barOf(managerPage)).toBeVisible();
-
-    // The project list still owns the same selection, so it keeps the minimized chat.
+    const beforeSwitch = { ...socketStats };
     await managerPage.getByRole("link", { name: "Değiştir", exact: true }).first().click();
     await expect(managerPage).toHaveURL(/\/tr\/projeler$/);
     await expect(barOf(managerPage)).toBeVisible();
-    const closedBeforeSwitch = socketStats.closed;
-
-    // Opening the other project through the app router (a client-side navigation, like a click on its card; the
-    // list is paged, so the card of a project created minutes ago is not always on the first page).
     await managerPage.evaluate((target) => (window as unknown as { next: { router: { push: (href: string) => void } } }).next.router.push(target), `/projects/${slug2}`);
     await expect(managerPage).toHaveURL(new RegExp(`/tr/projeler/${slug2}/genel-bakis$`));
-    await expect(barOf(managerPage)).toHaveCount(0);
-    await expect.poll(() => socketStats.closed).toBeGreaterThan(closedBeforeSwitch);
-    await openPanel(managerPage);
-    await expect(managerPage.getByTestId("chat-active-name")).toHaveText(project2Name);
-    await expect(composerOf(managerPage)).toHaveValue("");
-    await expect(managerPage.getByText("Selam, mesaj geldi")).toHaveCount(0);
-    await expect(directRow(managerPage, member)).toHaveCount(0);
-    await expect(managerPage.getByText("Bu projede henüz başka üye yok.")).toBeVisible();
-    await managerPage.getByTestId("chat-minimize").click();
-    await managerPage.getByTestId("chat-close").click();
+    await expect(barOf(managerPage)).toBeVisible();
+    await expect(managerPage.getByTestId("chat-bar-title")).toHaveText(member.nickname);
+    await managerPage.getByTestId("chat-bar-expand").click();
+    await expect(composerOf(managerPage)).toHaveValue("account draft across projects");
+    await expect(messagesOf(managerPage).filter({ hasText: `Selam, mesaj geldi ${RUN}` })).toBeVisible();
+    await managerPage.getByTestId("chat-fullscreen").click();
+    await expect(directRow(managerPage, member)).toHaveAttribute("aria-current", "true");
+    await expect(groupRow(managerPage, group2Id)).toBeVisible();
+    expect(socketStats).toEqual(beforeSwitch);
+    await managerPage.getByTestId("chat-panel-close").click();
   });
 
-  test("calendar project selection cleans chat and a late send cannot restore its previous generation", async () => {
+  test("calendar project selection preserves an in-flight real send and account conversation", async () => {
     await managerPage.goto(`/projects/${slug}`);
     await openPanel(managerPage);
     await directRow(managerPage, member).click();
@@ -407,41 +452,38 @@ test.describe.serial("Project chat", () => {
     let entered!: () => void;
     const waiting = new Promise<void>((resolve) => { release = resolve; });
     const started = new Promise<void>((resolve) => { entered = resolve; });
-    const pattern = `**/projects/${projectId}/chat/conversations/*/messages`;
+    const text = `Delayed real send ${RUN}`;
+    const pattern = "**/api/v1/chat/conversations/*/messages";
+    // TEST-ONLY delay: the backend performs the actual authorized send.
     await managerPage.route(pattern, async (route) => {
       if (route.request().method() !== "POST") return route.continue();
-      const conversationId = route.request().url().split("/").at(-2);
+      const response = await route.fetch();
       entered();
       await waiting;
-      await route.fulfill({ json: {
-        id: "11111111-1111-4111-8111-111111111111", conversationId,
-        content: "late generation response", createdAt: new Date().toISOString(),
-        sender: { userId: manager.id, nickname: manager.nickname, profilePhotoVersion: null },
-      } });
+      await route.fulfill({ response });
     });
     try {
-      const abandoned = managerPage.waitForEvent("requestfailed", request => request.method() === "POST" && request.url().includes(`/projects/${projectId}/chat/conversations/`) && request.url().endsWith("/messages"));
-      await send(managerPage, "late generation response");
+      await send(managerPage, text);
       await started;
       await managerPage.getByTestId("chat-minimize").click();
       await managerPage.locator('nav a[href="/tr/takvim"]').first().click();
       await expect(barOf(managerPage)).toBeVisible();
+      const beforeSwitch = { ...socketStats };
       await managerPage.locator("#calendar-project").click();
       await managerPage.getByRole("option", { name: project2Name, exact: true }).click();
-      await expect(barOf(managerPage)).toHaveCount(0);
-      await openPanel(managerPage);
-      await expect(managerPage.getByTestId("chat-active-name")).toHaveText(project2Name);
-      await expect(composerOf(managerPage)).toHaveValue("");
-      await managerPage.getByTestId("chat-panel-close").click();
+      await expect(barOf(managerPage)).toBeVisible();
+      await expect(managerPage.getByTestId("chat-bar-title")).toHaveText(member.nickname);
       await managerPage.locator("#calendar-project").click();
       await managerPage.getByRole("option", { name: projectName, exact: true }).click();
-      await openPanel(managerPage);
-      await directRow(managerPage, member).click();
-      await expectSendEnabled(managerPage);
+      await managerPage.getByTestId("chat-bar-expand").click();
+      await expect(managerPage.getByTestId("chat-active-name")).toHaveText(member.nickname);
+      const response = managerPage.waitForResponse(res => res.request().method() === "POST" && res.url().endsWith("/messages") && res.url().includes("/api/v1/chat/conversations/"));
       release();
-      await abandoned;
-      await expect(messagesOf(managerPage).filter({ hasText: "late generation response" })).toHaveCount(0);
+      expect((await response).status()).toBe(201);
+      await expect(messagesOf(managerPage).filter({ hasText: text })).toHaveCount(1);
       await expect(composerOf(managerPage)).toHaveValue("");
+      expect(socketStats).toEqual(beforeSwitch);
+      await managerPage.getByTestId("chat-close").click();
     } finally {
       release();
       await managerPage.unroute(pattern);
@@ -449,25 +491,26 @@ test.describe.serial("Project chat", () => {
   });
 
   test("a message that looks like HTML is shown as text and nothing runs", async () => {
-    const payload = "<img src=x onerror=\"window.__xss = 1\"><script>window.__xss = 1</script><b>kalın</b>";
+    const payload = `<img src=x onerror="window.__xss = 1"><script>window.__xss = 1</script><b>kalın</b> ${RUN}`;
     await managerPage.goto(`/projects/${slug}`);
     await openPanel(managerPage);
     await directRow(managerPage, member).click();
     await expectSendEnabled(managerPage);
     await send(managerPage, payload);
 
-    const own = messagesOf(managerPage).filter({ hasText: "window.__xss = 1" });
+    const own = messagesOf(managerPage).filter({ hasText: payload });
     await expect(own).toBeVisible();
     await expect(own).toContainText("<script>");
     await expect(own).toContainText("<b>kalın</b>");
-    await expect(managerPage.getByTestId("chat-messages").locator("img, script, b")).toHaveCount(0);
+    await expect(own.locator("img, script, b")).toHaveCount(0);
     expect(await managerPage.evaluate(() => (window as unknown as { __xss?: number }).__xss)).toBeUndefined();
 
     // The receiver renders it as text as well.
     await openPanel(memberPage);
     await directRow(memberPage, manager).click();
-    await expect(messagesOf(memberPage).filter({ hasText: "<script>" })).toBeVisible();
-    await expect(memberPage.getByTestId("chat-messages").locator("img, script, b")).toHaveCount(0);
+    const received = messagesOf(memberPage).filter({ hasText: payload });
+    await expect(received).toBeVisible();
+    await expect(received.locator("img, script, b")).toHaveCount(0);
     expect(await memberPage.evaluate(() => (window as unknown as { __xss?: number }).__xss)).toBeUndefined();
   });
 
@@ -475,7 +518,7 @@ test.describe.serial("Project chat", () => {
     // No logo yet: the group keeps its people icon.
     await managerPage.goto(`/projects/${slug}`);
     await openPanel(managerPage);
-    const groupAvatar = managerPage.getByTestId("chat-conversation-group").locator('[data-slot="group-avatar"]');
+    const groupAvatar = groupRow(managerPage, groupId).locator('[data-slot="group-avatar"]');
     await expect(groupAvatar).toBeVisible();
     await expect(groupAvatar.locator("img")).toHaveCount(0);
 
@@ -500,9 +543,10 @@ test.describe.serial("Project chat", () => {
     for (const page of [managerPage, memberPage]) {
       await page.goto(`/projects/${slug}`);
       await openPanel(page);
+      await groupRow(page, groupId).click();
       for (const avatar of [
-        page.getByTestId("chat-conversation-group").locator('[data-slot="group-avatar"]'),
-        panelOf(page).locator('[data-slot="group-avatar"]').last(),
+        groupRow(page, groupId).locator('[data-slot="group-avatar"]'),
+        page.getByTestId("chat-active-name").locator("..").locator('[data-slot="group-avatar"]'),
       ]) {
         const logo = avatar.locator('img[src*="/logo?v="]');
         await expect(logo).toHaveCount(1);
@@ -557,14 +601,14 @@ test.describe.serial("Project chat", () => {
       await managerPage.locator('[data-testid="chat-nav-item"]:visible').click();
       await expect(panelOf(managerPage)).toBeVisible();
       // The list comes first; no conversation (and so no composer) is on screen yet.
-      await expect(managerPage.getByTestId("chat-conversation-group")).toBeVisible();
+      await expect(groupRow(managerPage, groupId)).toBeVisible();
       await expect(composerOf(managerPage)).toHaveCount(0);
 
       await directRow(managerPage, member).click();
       await expect(composerOf(managerPage)).toBeVisible();
-      await expect(managerPage.getByTestId("chat-conversation-group")).toBeHidden();
+      await expect(groupRow(managerPage, groupId)).toBeHidden();
       await managerPage.getByRole("button", { name: "Konuşmalara dön" }).click();
-      await expect(managerPage.getByTestId("chat-conversation-group")).toBeVisible();
+      await expect(groupRow(managerPage, groupId)).toBeVisible();
       // No horizontal scroll caused by the panel.
       expect(await managerPage.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     } finally {
@@ -572,8 +616,8 @@ test.describe.serial("Project chat", () => {
     }
   });
 
-  test("a late direct-open response cannot select a conversation after A to B to A", async () => {
-    const reads = `**/projects/${projectId}/chat/*`;
+  test("a delayed real direct-open preserves the account conversation across project A to B to A", async () => {
+    const reads = "**/api/v1/chat/*";
     await managerPage.route(reads, async (route) => {
       const response = await route.fetch();
       const data = await response.json();
@@ -584,7 +628,7 @@ test.describe.serial("Project chat", () => {
     let entered!: () => void;
     const gate = new Promise<void>((resolve) => { release = resolve; });
     const started = new Promise<void>((resolve) => { entered = resolve; });
-    const directUrl = `**/projects/${projectId}/chat/direct/${member.id}`;
+    const directUrl = `**/api/v1/chat/direct/${member.id}`;
     await managerPage.route(directUrl, async (route) => {
       const response = await route.fetch();
       entered();
@@ -601,17 +645,17 @@ test.describe.serial("Project chat", () => {
       await managerPage.locator('nav a[href="/tr/takvim"]').first().click();
       await managerPage.locator("#calendar-project").click();
       await managerPage.getByRole("option", { name: project2Name, exact: true }).click();
-      await expect(barOf(managerPage)).toHaveCount(0);
+      await expect(barOf(managerPage)).toBeVisible();
       await managerPage.locator("#calendar-project").click();
       await managerPage.getByRole("option", { name: projectName, exact: true }).click();
-      await openPanel(managerPage);
-      await expect(managerPage.getByTestId("chat-active-name")).toHaveText(projectName);
+      await managerPage.getByTestId("chat-bar-expand").click();
+      await expect(managerPage.getByTestId("chat-active-name")).toHaveText(member.nickname);
       const response = managerPage.waitForResponse((res) => res.request().method() === "POST" && res.url().includes(`/chat/direct/${member.id}`));
       release();
       await response;
-      await expect(managerPage.getByTestId("chat-active-name")).toHaveText(projectName);
+      await expect(managerPage.getByTestId("chat-active-name")).toHaveText(member.nickname);
       await expect(composerOf(managerPage)).toHaveValue("");
-      await managerPage.getByTestId("chat-panel-close").click();
+      await managerPage.getByTestId("chat-close").click();
     } finally { release(); await managerPage.unroute(reads); await managerPage.unroute(directUrl); }
   });
 
@@ -641,6 +685,7 @@ test.describe.serial("Project chat", () => {
       await expect(page).toHaveURL(new RegExp(`/tr/projeler/${slug}/genel-bakis$`));
       await expect(barOf(page)).toHaveCount(0);
       await openPanel(page);
+      await groupRow(page, groupId).click();
       await expect(page.getByTestId("chat-active-name")).toHaveText(projectName);
       await directRow(page, manager).click();
       await expect(composerOf(page)).toHaveValue("");
@@ -648,7 +693,7 @@ test.describe.serial("Project chat", () => {
     } finally { await context.close(); }
   });
 
-  test("selected-project chat survives localized global and nested team navigation", async ({ browser }) => {
+  test("account chat survives localized global and nested team navigation", async ({ browser }) => {
     const teamResult = await api(managerPage, "POST", `/projects/${projectId}/teams`, { name: `Chat team ${Date.now()}`, includeCreator: true });
     expect(teamResult.status).toBe(201);
     const teamId = (teamResult.json as { id: string }).id;
@@ -661,6 +706,7 @@ test.describe.serial("Project chat", () => {
         await page.goto(localizeHref(`/projects/${slug}`, locale));
         await expect(page.locator("html")).toHaveAttribute("lang", locale);
         await openPanel(page);
+        await groupRow(page, groupId).click();
         await expectSendEnabled(page);
         await composerOf(page).fill(`draft ${locale}`);
         await page.getByTestId("chat-minimize").click();
@@ -739,14 +785,14 @@ test.describe.serial("Project chat", () => {
       });
       await page.goto(`/projects/${slug}`);
       await openPanel(page);
+      await groupRow(page, groupId).click();
       await expectSendEnabled(page);
       // Development Strict Mode may have opened and disposed an initial socket. No orphan may remain.
       await expect.poll(() => sockets.filter((entry) => !entry.closed).length).toBe(1);
       const initialSockets = sockets.length;
 
-      const overview = (await api(managerPage, "GET", `/projects/${projectId}/chat/conversations`)).json as { group: { id: string } };
-      await expect.poll(async () => ((await api(page, "GET", `/projects/${projectId}/chat/conversations`)).json as { group: { unread: number } }).group.unread).toBe(0);
-      const unreadBefore = ((await api(page, "GET", `/projects/${projectId}/chat/conversations`)).json as { totalUnread: number }).totalUnread;
+      await expect.poll(async () => ((await api(page, "GET", "/chat/conversations")).json as { groups: { id: string; unread: number }[] }).groups.find(group => group.id === groupId)!.unread).toBe(0);
+      const unreadBefore = ((await api(page, "GET", "/chat/conversations")).json as { totalUnread: number }).totalUnread;
       const expectedUnread = unreadBefore + 1;
       await page.getByTestId("chat-minimize").click();
       await overlap;
@@ -754,19 +800,19 @@ test.describe.serial("Project chat", () => {
       await page.waitForTimeout(100);
       expect(sockets.filter((entry) => !entry.closed && entry.subscribed)).toHaveLength(2);
       const overlapText = `Overlap unread ${Date.now()}`;
-      const overlapSent = await api(managerPage, "POST", `/projects/${projectId}/chat/conversations/${overview.group.id}/messages`, { content: overlapText });
+      const overlapSent = await api(managerPage, "POST", `/chat/conversations/${groupId}/messages`, { content: overlapText });
       expect(overlapSent.status).toBe(201);
       await expect.poll(() => sockets.filter((entry) => entry.messages.some((frame) => frame.includes(overlapText))).length).toBe(2);
       await expect(page.getByTestId("chat-bar-unread")).toHaveText(String(expectedUnread));
       await page.waitForTimeout(350);
-      expect(((await api(page, "GET", `/projects/${projectId}/chat/conversations`)).json as { totalUnread: number }).totalUnread).toBe(expectedUnread);
+      expect(((await api(page, "GET", "/chat/conversations")).json as { totalUnread: number }).totalUnread).toBe(expectedUnread);
       await expect(page.getByTestId("chat-bar-unread")).toHaveText(String(expectedUnread));
       await page.getByTestId("chat-bar-expand").click();
       await expect(messagesOf(page).filter({ hasText: overlapText })).toHaveCount(1);
 
       const overlapId=(overlapSent.json as {id:string}).id;
       expect(sockets.filter(entry=>!entry.closed&&entry.subscribed)).toHaveLength(2);
-      expect((await api(managerPage,"PUT",`/projects/${projectId}/chat/conversations/${overview.group.id}/messages/${overlapId}/reactions/THUMBS_UP`)).status).toBe(200);
+      expect((await api(managerPage,"PUT",`/chat/conversations/${groupId}/messages/${overlapId}/reactions/THUMBS_UP`)).status).toBe(200);
       await expect.poll(()=>sockets.filter(entry=>entry.messages.some(frame=>frame.includes('"type":"REACTIONS"')&&frame.includes(overlapId))).length).toBe(2);
       const reacted=messagesOf(page).filter({hasText:overlapText}).getByTestId("chat-reaction-THUMBS_UP");
       await expect(reacted).toHaveText("👍1");
@@ -783,7 +829,7 @@ test.describe.serial("Project chat", () => {
 
       // The new socket really is the live one: a message from the manager arrives without any reload.
       const text = `Yenilenen bağlantıdan geldi ${Date.now()}`;
-      const sent = await api(managerPage, "POST", `/projects/${projectId}/chat/conversations/${overview.group.id}/messages`, { content: text });
+      const sent = await api(managerPage, "POST", `/chat/conversations/${groupId}/messages`, { content: text });
       expect(sent.status).toBe(201);
       // Exactly once as a message (the list preview shows the text too): the two sockets never double a delivery.
       await expect(messagesOf(page).filter({ hasText: text })).toHaveCount(1);
@@ -806,6 +852,7 @@ test.describe.serial("Project chat", () => {
       await login(page, credentials.email, credentials.password);
       await page.goto(`/projects/${slug}`);
       await openPanel(page);
+      await groupRow(page, groupId).click();
       await expectSendEnabled(page);
       // Let the page finish what it does after opening (it marks the conversation read a moment later), so that it
       // sends nothing of its own while its session is ended: only the server can tell it.
@@ -831,24 +878,25 @@ test.describe.serial("Project chat", () => {
     }
   });
 
-  test("someone outside the project is refused by the server, whatever the UI shows", async () => {
-    // No account may read or write another project's chat: 403 for the person without any project...
-    expect((await api(outsiderPage, "GET", `/projects/${projectId}/chat/conversations`)).status).toBe(403);
-    expect((await api(outsiderPage, "GET", `/projects/${projectId}/chat/members`)).status).toBe(403);
-    expect((await api(outsiderPage, "POST", `/projects/${projectId}/chat/direct/${manager.id}`)).status).toBe(403);
-
-    // ...and for a member of a different project (the member is not in the second project).
-    const project2Id = ((await api(managerPage, "GET", `/projects/by-slug/${slug2}`)).json as { id: string }).id;
-    expect((await api(memberPage, "GET", `/projects/${project2Id}/chat/conversations`)).status).toBe(403);
-
-    // A member cannot reach a conversation of one project through another project's path either.
-    const groupId = ((await api(managerPage, "GET", `/projects/${projectId}/chat/conversations`)).json as { group: { id: string } }).group.id;
+  test("foreign group access and new DM eligibility are enforced by the server", async ({ browser }) => {
+    expect((await api(outsiderPage, "GET", `/chat/conversations/${groupId}/messages`)).status).toBe(403);
+    expect((await api(outsiderPage, "POST", `/chat/conversations/${groupId}/messages`, { content: "forbidden" })).status).toBe(403);
+    expect((await api(memberPage, "GET", `/chat/conversations/${group2Id}/messages`)).status).toBe(403);
+    // Legacy project-scoped compatibility paths still prevent cross-project access.
     expect((await api(managerPage, "GET", `/projects/${project2Id}/chat/conversations/${groupId}/messages`)).status).toBe(404);
-
-    // The member list never carries an email address.
-    const members = await api(managerPage, "GET", `/projects/${projectId}/chat/members`);
+    const members = await api(managerPage, "GET", "/chat/members");
     expect(members.status).toBe(200);
     expect(JSON.stringify(members.json)).not.toContain("@");
+    // A reused outsider may legitimately retain an existing DM from an older
+    // project. A fresh real account proves the new-DM eligibility boundary.
+    const context = await browser.newContext({ locale: "tr-TR" });
+    try {
+      const page = await context.newPage();
+      await registerAndLogin(page, "chatdeny");
+      const stranger = (await api(page, "GET", "/auth/me")).json as Person;
+      expect((await api(page, "POST", `/chat/direct/${manager.id}`)).status).toBe(404);
+      expect((members.json as { userId: string }[]).some(person => person.userId === stranger.id)).toBe(false);
+    } finally { await context.close(); }
   });
 
   test("compact selector moves between two people and the group without losing drafts", async () => {
@@ -876,11 +924,11 @@ test.describe.serial("Project chat", () => {
     await expectSendEnabled(managerPage);
     await composerOf(managerPage).fill("third draft");
     await compact.getByTestId("chat-compact-selector").click();
-    await compact.getByTestId("chat-conversation-group").click();
+    await groupRow(managerPage, groupId).click();
     await expect(compact.getByTestId("chat-active-name")).toHaveText(projectName);
     await expectSendEnabled(managerPage);
-    await send(managerPage, "Compact group message");
-    await expect(messagesOf(managerPage).filter({ hasText: "Compact group message" })).toBeVisible();
+    await send(managerPage, `Compact group message ${RUN}`);
+    await expect(messagesOf(managerPage).filter({ hasText: `Compact group message ${RUN}` })).toBeVisible();
     await compact.getByTestId("chat-compact-selector").click();
     await directRow(managerPage, member).click();
     await expect(composerOf(managerPage)).toHaveValue("member draft");

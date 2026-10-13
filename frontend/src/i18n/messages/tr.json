@@ -2560,7 +2560,9 @@
       "minimize": "Küçült",
       "close": "Kapat",
       "fullscreen": "Tam ekran yap",
-      "back": "Konuşmalara dön"
+      "back": "Konuşmalara dön",
+      "resize": "Konuşmalar panelini yeniden boyutlandır",
+      "resizeHint": "Genişliği ayarlamak için sürükleyin, varsayılana sıfırlamak için çift tıklayın"
     },
     "dock": {
       "label": "Küçültülmüş sohbet",

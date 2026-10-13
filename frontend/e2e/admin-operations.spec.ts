@@ -1,6 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import { promoteToAdmin, psql } from "./db";
 import { matchPath } from "../src/i18n/routing";
+import type { AuditPage } from "../src/features/admin/api";
 import { api, chooseDate, login } from "./helpers";
 import { meId, newAdmin, newUser, sendContact } from "./admin-fixtures";
 
@@ -340,15 +341,41 @@ test("the audit tab shows what this test did (sign-in, disable, enable, a refuse
     const kinds = await page.locator("tr[data-audit-row]").evaluateAll((rows) => rows.map((row) => row.getAttribute("data-audit-row")));
     expect(new Set(kinds)).toEqual(new Set(["USER_ENABLE"]));
 
-    // Date range: today shows the events, a range that ended yesterday shows the filtered empty state.
+    // Date range: today shows this run; a past range may contain earlier QA audit records.
     await chooseDate(page, "admin-audit-from", today());
     await chooseDate(page, "admin-audit-to", today());
     await expect.poll(() => requests.at(-1)!.searchParams.get("from")).toBe(today());
     expect(requests.at(-1)!.searchParams.get("to")).toBe(today());
     await expect(page.locator("tr[data-audit-row]").first()).toBeVisible();
-    await chooseDate(page, "admin-audit-from", daysAgo(10));
-    await chooseDate(page, "admin-audit-to", daysAgo(1));
-    await expect(page.getByRole("heading", { name: "Bu filtreyle kayıt yok" })).toBeVisible();
+    const pastFrom = daysAgo(10), pastTo = daysAgo(1);
+    const zone = await page.evaluate(() => Intl.DateTimeFormat().resolvedOptions().timeZone);
+    const pastResponse = page.waitForResponse((response) => {
+      const url = new URL(response.url());
+      return url.pathname.endsWith("/admin/audit-events") && url.searchParams.get("action") === "USER_ENABLE"
+        && url.searchParams.get("from") === pastFrom && url.searchParams.get("to") === pastTo
+        && url.searchParams.get("zone") === zone;
+    });
+    await chooseDate(page, "admin-audit-from", pastFrom);
+    await chooseDate(page, "admin-audit-to", pastTo);
+    const response = await pastResponse;
+    expect(response.status()).toBe(200);
+    const past = await response.json() as AuditPage;
+    const dateFormat = new Intl.DateTimeFormat("en-CA", { timeZone: zone, year: "numeric", month: "2-digit", day: "2-digit" });
+    for (const event of past.items) {
+      const parts = dateFormat.formatToParts(new Date(event.occurredAt));
+      const part = (type: string) => parts.find((value) => value.type === type)!.value;
+      const eventDay = `${part("year")}-${part("month")}-${part("day")}`;
+      expect(eventDay >= pastFrom && eventDay <= pastTo).toBe(true);
+      expect(event.action).toBe("USER_ENABLE");
+      expect(event.actorUserId).not.toBe(adminId);
+      expect(event.targetId).not.toBe(targetId);
+    }
+    await expect(page.locator("tr[data-audit-row]")).toHaveCount(past.items.length);
+    await expect(page.locator("tr[data-audit-row]", { hasText: target.user.nickname })).toHaveCount(0);
+    await expect(page.locator("tr[data-audit-row]", { hasText: admin.user.nickname })).toHaveCount(0);
+    for (const event of past.items) {
+      await expect(page.locator(`tr[data-audit-row="USER_ENABLE"] time[datetime="${event.occurredAt}"]`)).toHaveCount(1);
+    }
     await page.getByRole("button", { name: "Filtreleri temizle" }).first().click();
     await expect(page.locator("tr[data-audit-row]").first()).toBeVisible();
     await expect(page.getByRole("button", { name: "Filtreleri temizle" })).toBeDisabled();

@@ -99,6 +99,7 @@ class ChatWebSocketIntegrationTest {
     @Autowired UserSessions userSessions;
     @Autowired com.pda.chat.application.service.ChatReactionService reactions;
     @Autowired com.pda.chat.application.service.ChatDelivery delivery;
+    @Autowired com.pda.chat.application.service.ChatService chat;
     @Autowired org.springframework.transaction.support.TransactionTemplate transactions;
     @Autowired org.springframework.jdbc.core.JdbcTemplate jdbc;
     @Autowired tools.jackson.databind.ObjectMapper jsonMapper;
@@ -160,6 +161,119 @@ class ChatWebSocketIntegrationTest {
         reaction(f.manager,f.projectId,direct,message,"LAUGH",true).andExpect(status().isOk());
         assertEquals("REACTIONS",manager.next().get("type"));assertEquals("REACTIONS",member.next().get("type"));
         assertNull(bystander.events.poll(100,TimeUnit.MILLISECONDS));
+    }
+
+    @Test void deliveredEventsReachOnlyEachOriginalSendersOwnQueueAndNeverAcknowledgerOrOutsider() throws Exception {
+        Fixture f = fixture(); UUID group = groupId(f.manager, f.projectId);
+        UUID first = UUID.fromString(JsonPath.read(send(f.manager, f.projectId, group, "manager delivery").andExpect(status().isCreated()).andReturn().getResponse().getContentAsString(), "$.id"));
+        UUID second = UUID.fromString(JsonPath.read(send(f.otherMember, f.projectId, group, "other delivery").andExpect(status().isCreated()).andReturn().getResponse().getContentAsString(), "$.id"));
+        String url = "/api/v1/chat/conversations/" + group + "/delivered";
+        // Each message has two original recipients; the batching actor below is the final one for both.
+        postJson(f.otherMember, url, "{\"messageIds\":[\"" + first + "\"]}").andExpect(status().isNoContent());
+        postJson(f.manager, url, "{\"messageIds\":[\"" + second + "\"]}").andExpect(status().isNoContent());
+        Socket manager = connect(f.manager), member = connect(f.member), other = connect(f.otherMember), outsider = connect(f.outsider);
+        for (Socket socket : List.of(manager, member, other, outsider)) socket.subscribeToOwnQueue();
+        String ids = "{\"messageIds\":[\"" + first + "\",\"" + second + "\",\"" + first + "\"]}";
+        postJson(f.member, url, ids).andExpect(status().isNoContent());
+        Map<String, Object> managerEvent = manager.next(), otherEvent = other.next();
+        for (Map<String, Object> event : List.of(managerEvent, otherEvent)) {
+            assertEquals("DELIVERED", event.get("type"));
+            assertEquals(group.toString(), event.get("conversationId"));
+            assertEquals(f.projectId.toString(), event.get("projectId"));
+            assertEquals(f.member.id().toString(), event.get("recipientId"));
+            assertFalse(event.containsKey("senderId"), "internal routing metadata is not part of the wire contract");
+        }
+        assertEquals(List.of(first.toString()), managerEvent.get("messageIds"));
+        assertEquals(List.of(second.toString()), otherEvent.get("messageIds"));
+        assertNull(member.events.poll(200, TimeUnit.MILLISECONDS));
+        assertNull(outsider.events.poll(200, TimeUnit.MILLISECONDS));
+        postJson(f.member, url, ids).andExpect(status().isNoContent());
+        for (Socket socket : List.of(manager, member, other, outsider)) assertNull(socket.events.poll(200, TimeUnit.MILLISECONDS));
+        assertEquals(0, jdbc.queryForObject("select count(*) from chat_message_receipts where user_id=? and read_at is not null", Integer.class, f.member.id()));
+        mvc.perform(get("/api/v1/chat/conversations").cookie(f.member.access())).andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.totalUnread").value(2));
+    }
+
+    @Test void partialGroupAcknowledgementStaysSentAndDirectDeliveryNeedsOnlyItsOnePeer() throws Exception {
+        Fixture f = fixture(); UUID group = groupId(f.manager, f.projectId);
+        UUID message = UUID.fromString(JsonPath.read(send(f.manager, f.projectId, group, "partial group").andExpect(status().isCreated()).andReturn().getResponse().getContentAsString(), "$.id"));
+        Socket manager = connect(f.manager), member = connect(f.member), other = connect(f.otherMember);
+        for (Socket socket : List.of(manager, member, other)) socket.subscribeToOwnQueue();
+        String url = "/api/v1/chat/conversations/" + group + "/delivered", ids = "{\"messageIds\":[\"" + message + "\"]}";
+        postJson(f.member, url, ids).andExpect(status().isNoContent());
+        java.sql.Timestamp firstAt = jdbc.queryForObject("select delivered_at from chat_message_receipts where message_id=? and user_id=?", java.sql.Timestamp.class, message, f.member.id());
+        assertNotNull(firstAt);
+        for (Socket socket : List.of(manager, member, other)) assertNull(socket.events.poll(200, TimeUnit.MILLISECONDS));
+        assertDeliveryStatus(f.manager, group, message, "SENT");
+        postJson(f.otherMember, url, ids).andExpect(status().isNoContent());
+        Map<String, Object> completed = manager.next();
+        assertEquals("DELIVERED", completed.get("type"));
+        assertEquals(List.of(message.toString()), completed.get("messageIds"));
+        assertEquals(f.otherMember.id().toString(), completed.get("recipientId"));
+        assertEquals(firstAt, jdbc.queryForObject("select delivered_at from chat_message_receipts where message_id=? and user_id=?", java.sql.Timestamp.class, message, f.member.id()));
+        assertDeliveryStatus(f.manager, group, message, "DELIVERED");
+        postJson(f.otherMember, url, ids).andExpect(status().isNoContent());
+        for (Socket socket : List.of(manager, member, other)) assertNull(socket.events.poll(200, TimeUnit.MILLISECONDS));
+
+        UUID direct = openDirect(f.manager, f.projectId, f.member.id());
+        UUID directMessage = UUID.fromString(JsonPath.read(send(f.manager, f.projectId, direct, "one peer").andExpect(status().isCreated()).andReturn().getResponse().getContentAsString(), "$.id"));
+        assertEquals("MESSAGE", manager.next().get("type"));
+        assertEquals("MESSAGE", member.next().get("type"));
+        postJson(f.member, "/api/v1/chat/conversations/" + direct + "/delivered", "{\"messageIds\":[\"" + directMessage + "\"]}").andExpect(status().isNoContent());
+        Map<String, Object> directEvent = manager.next();
+        assertEquals("DELIVERED", directEvent.get("type"));
+        assertEquals(direct.toString(), directEvent.get("conversationId"));
+        assertEquals(List.of(directMessage.toString()), directEvent.get("messageIds"));
+        assertEquals(f.member.id().toString(), directEvent.get("recipientId"));
+        assertNull(member.events.poll(200, TimeUnit.MILLISECONDS));
+        assertNull(other.events.poll(200, TimeUnit.MILLISECONDS));
+        assertEquals(0, jdbc.queryForObject("select count(*) from chat_message_receipts where message_id in (?,?) and read_at is not null", Integer.class, message, directMessage));
+    }
+
+    @Test void concurrentRecipientAcknowledgementsEmitExactlyOneAggregateDelivery() throws Exception {
+        Fixture f = fixture(); UUID group = groupId(f.manager, f.projectId);
+        UUID message = UUID.fromString(JsonPath.read(send(f.manager, f.projectId, group, "concurrent delivery").andExpect(status().isCreated()).andReturn().getResponse().getContentAsString(), "$.id"));
+        Socket manager = connect(f.manager); manager.subscribeToOwnQueue();
+        var pool = java.util.concurrent.Executors.newFixedThreadPool(2);
+        CountDownLatch start = new CountDownLatch(1);
+        try {
+            var first = pool.submit(() -> { start.await(); chat.markDelivered(f.member.id(), null, group, List.of(message)); return null; });
+            var second = pool.submit(() -> { start.await(); chat.markDelivered(f.otherMember.id(), null, group, List.of(message)); return null; });
+            start.countDown();
+            first.get(10, TimeUnit.SECONDS); second.get(10, TimeUnit.SECONDS);
+            Map<String, Object> event = manager.next();
+            assertEquals("DELIVERED", event.get("type"));
+            assertEquals(List.of(message.toString()), event.get("messageIds"));
+            assertTrue(Set.of(f.member.id().toString(), f.otherMember.id().toString()).contains(event.get("recipientId")));
+            assertNull(manager.events.poll(200, TimeUnit.MILLISECONDS));
+            assertEquals(2, jdbc.queryForObject("select count(*) from chat_message_receipts where message_id=? and delivered_at is not null and read_at is null", Integer.class, message));
+            java.sql.Timestamp memberAt = jdbc.queryForObject("select delivered_at from chat_message_receipts where message_id=? and user_id=?", java.sql.Timestamp.class, message, f.member.id());
+            java.sql.Timestamp otherAt = jdbc.queryForObject("select delivered_at from chat_message_receipts where message_id=? and user_id=?", java.sql.Timestamp.class, message, f.otherMember.id());
+            chat.markDelivered(f.member.id(), null, group, List.of(message));
+            chat.markDelivered(f.otherMember.id(), null, group, List.of(message));
+            assertEquals(memberAt, jdbc.queryForObject("select delivered_at from chat_message_receipts where message_id=? and user_id=?", java.sql.Timestamp.class, message, f.member.id()));
+            assertEquals(otherAt, jdbc.queryForObject("select delivered_at from chat_message_receipts where message_id=? and user_id=?", java.sql.Timestamp.class, message, f.otherMember.id()));
+            assertNull(manager.events.poll(200, TimeUnit.MILLISECONDS));
+        } finally { start.countDown(); pool.shutdownNow(); }
+    }
+
+    @Test void deliveredPushesWaitForCommitAndRespectRemovalOfTheOriginalGroupSender() throws Exception {
+        Fixture f = fixture(); UUID group = groupId(f.manager, f.projectId);
+        UUID message = UUID.fromString(JsonPath.read(send(f.member, f.projectId, group, "sender later removed").andExpect(status().isCreated()).andReturn().getResponse().getContentAsString(), "$.id"));
+        postJson(f.otherMember, "/api/v1/chat/conversations/" + group + "/delivered", "{\"messageIds\":[\"" + message + "\"]}").andExpect(status().isNoContent());
+        Socket manager = connect(f.manager), member = connect(f.member), other = connect(f.otherMember);
+        for (Socket socket : List.of(manager, member, other)) socket.subscribeToOwnQueue();
+        transactions.executeWithoutResult(status -> {
+            chat.markDelivered(f.manager.id(), null, group, List.of(message));
+            status.setRollbackOnly();
+        });
+        assertNull(jdbc.queryForObject("select delivered_at from chat_message_receipts where message_id=? and user_id=?", java.sql.Timestamp.class, message, f.manager.id()));
+        for (Socket socket : List.of(manager, member, other)) assertNull(socket.events.poll(200, TimeUnit.MILLISECONDS));
+        transactions.executeWithoutResult(status -> {
+            chat.markDelivered(f.manager.id(), null, group, List.of(message));
+            memberships.removeMember(f.manager.id(), f.projectId, f.member.id());
+        });
+        assertNotNull(jdbc.queryForObject("select delivered_at from chat_message_receipts where message_id=? and user_id=?", java.sql.Timestamp.class, message, f.manager.id()));
+        for (Socket socket : List.of(manager, member, other)) assertNull(socket.events.poll(200, TimeUnit.MILLISECONDS));
     }
 
     private ResultActions reaction(Account actor,UUID project,UUID conversation,UUID message,String code,boolean add) throws Exception {
@@ -748,6 +862,15 @@ class ChatWebSocketIntegrationTest {
     private ResultActions send(Account actor, UUID projectId, UUID conversationId, String content) throws Exception {
         return postJson(actor, messagesUrl(projectId, conversationId),
                 "{\"content\":\"" + content.replace("\"", "\\\"") + "\"}");
+    }
+
+    private void assertDeliveryStatus(Account actor, UUID conversationId, UUID messageId, String expected) throws Exception {
+        String response = mvc.perform(get("/api/v1/chat/conversations/" + conversationId + "/messages").cookie(actor.access()))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        List<Map<String, Object>> rows = JsonPath.read(response, "$.messages");
+        var matches = rows.stream().filter(row -> messageId.toString().equals(row.get("id"))).toList();
+        assertEquals(1, matches.size(), "the actual REST history must contain exactly this message");
+        assertEquals(expected, matches.getFirst().get("deliveryStatus"));
     }
 
     private ResultActions postJson(Account actor, String url, String json) throws Exception {

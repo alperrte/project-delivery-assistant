@@ -2560,7 +2560,9 @@
       "minimize": "Verkleinern",
       "close": "Schließen",
       "fullscreen": "Vollbild",
-      "back": "Zurück zu den Unterhaltungen"
+      "back": "Zurück zu den Unterhaltungen",
+      "resize": "Unterhaltungsbereich anpassen",
+      "resizeHint": "Ziehen zum Ändern der Größe, Doppelklick zum Zurücksetzen"
     },
     "dock": {
       "label": "Verkleinerte Nachrichten",

@@ -123,8 +123,8 @@ test.describe.serial("İlk hataya yönlendirme: giriş gerektiren formlar", () =
   test("yeni görev: son tarih başlangıçtan önceyse son tarih alanı odaklanır", async () => {
     await page.goto(`/projects/${slug}/tasks/new`);
     await page.locator("#task-title").fill("Tarih sırası görevi");
-    await chooseDate(page, "task-start", "2030-06-10");
     await chooseDate(page, "task-deadline-date", "2030-06-05");
+    await chooseDate(page, "task-start", "2030-06-10");
     await page.locator('form button[type="submit"]').click();
     await expect(alertWith(page, tr.validation.taskDateOrder)).toBeVisible();
     await expect(page.locator("#task-deadline-date")).toBeFocused();

@@ -1,6 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import { api } from "./helpers";
 import { newAdmin, sendAnalytics } from "./admin-fixtures";
+import { buildPath } from "../src/i18n/routing";
 
 // The behaviour reports of the analytics page. Numbers come from events posted to the real public analytics endpoint
 // (exactly what the consented tracker sends); the screen is compared with what the administrator API answers.
@@ -212,7 +213,10 @@ for (const [locale, code, expectations] of [
       await expect.poll(() => page.evaluate(() => sessionStorage.getItem("pda:session-baseline"))).not.toBeNull();
       await admin.context.addCookies([{ name: "NEXT_LOCALE", value: code, url: "http://localhost:3000" }]);
       await simulate(page, simulated());
-      await page.goto("/admin/analytics");
+      const analyticsPath = buildPath("/admin/analytics", {}, code);
+      await page.goto(analyticsPath);
+      await expect(page).toHaveURL(`http://localhost:3000${analyticsPath}`);
+      await expect(page.locator("html")).toHaveAttribute("lang", code);
       await expect(page.getByRole("heading", { name: expectations.pages, level: 2, exact: true })).toBeVisible();
       await expect(page.locator('tr[data-cta="landing_register"]')).toContainText(expectations.cta);
       // An id the page does not know yet is shown as it is, not as a broken translation key.

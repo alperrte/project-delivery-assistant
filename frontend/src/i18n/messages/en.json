@@ -2536,7 +2536,9 @@
       "minimize": "Minimize",
       "close": "Close",
       "fullscreen": "Make full size",
-      "back": "Back to conversations"
+      "back": "Back to conversations",
+      "resize": "Resize conversations panel",
+      "resizeHint": "Drag to resize, double-click to reset"
     },
     "dock": {
       "label": "Minimized chat",

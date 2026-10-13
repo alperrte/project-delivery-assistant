@@ -1,7 +1,30 @@
+param(
+    [string]$QaComposeFile
+)
+
 $ErrorActionPreference = "Stop"
 
 $Root = Split-Path -Parent $PSScriptRoot
 Set-Location $Root
+$script:QaStackActive = $false
+
+function Restore-NormalBackend {
+    if (-not $script:QaStackActive) { return }
+
+    Write-Host "QA ayarlari kaldiriliyor; normal backend yapilandirmasi geri yukleniyor..." -ForegroundColor Cyan
+    try {
+        docker compose -f (Join-Path $Root "docker-compose.yml") up -d --force-recreate backend
+        if ($LASTEXITCODE -eq 0) {
+            $script:QaStackActive = $false
+        }
+        else {
+            Write-Warning 'Normal backend geri yuklenemedi. Repo kokunde docker compose -f docker-compose.yml up -d --force-recreate backend calistirin.'
+        }
+    }
+    catch {
+        Write-Warning 'Normal backend geri yuklenemedi. Repo kokunde docker compose -f docker-compose.yml up -d --force-recreate backend calistirin.'
+    }
+}
 
 function Fail {
     param([string]$Message)
@@ -72,6 +95,8 @@ function Wait-Http {
 # Required files
 # ------------------------------------------------------------
 
+try {
+
 if (-not (Test-Path ".env")) {
     Fail "Root .env bulunamadi."
 }
@@ -94,6 +119,18 @@ if (-not (Test-Path "frontend\package.json")) {
 
 if (-not (Test-Path "docker-compose.yml")) {
     Fail "docker-compose.yml bulunamadi."
+}
+
+$QaComposeArgs = @("-f", (Join-Path $Root "docker-compose.yml"))
+if (-not $QaComposeFile -and (Test-Path (Join-Path $Root "tmp\docker-compose.e2e.yml"))) {
+    $QaComposeFile = Join-Path $Root "tmp\docker-compose.e2e.yml"
+}
+if ($QaComposeFile) {
+    if (-not (Test-Path -LiteralPath $QaComposeFile -PathType Leaf)) {
+        Fail "QA Compose override dosyasi bulunamadi: $QaComposeFile"
+    }
+    $ResolvedQaComposeFile = (Resolve-Path -LiteralPath $QaComposeFile).Path
+    $QaComposeArgs += @("-f", $ResolvedQaComposeFile)
 }
 
 # ------------------------------------------------------------
@@ -158,6 +195,12 @@ Run-Step "Docker daemon kontrolu" {
 
 Run-Step "Docker Compose config validation" {
     docker compose config --quiet
+}
+
+if ($QaComposeFile) {
+    Run-Step "QA Docker Compose config validation" {
+        docker compose @QaComposeArgs config --quiet
+    }
 }
 
 # ------------------------------------------------------------
@@ -228,6 +271,18 @@ foreach ($key in $SavedOAuth.Keys) {
 
 $env:DB_URL = $OriginalDbUrl
 
+# E2E must use the current backend, not the image left by an earlier run.
+# A caller-supplied QA override can start its mail sink without changing .env.
+$script:QaStackActive = [bool]$QaComposeFile
+Run-Step "QA Docker stack build + start before E2E" {
+    docker compose @QaComposeArgs up -d --build --force-recreate
+}
+
+$BackendPort = if ($env:BACKEND_PORT) { $env:BACKEND_PORT } else { "8080" }
+Write-Host ""
+Write-Host "E2E backend health bekleniyor..." -ForegroundColor Cyan
+Wait-Http -Url "http://localhost:$BackendPort/actuator/health" -TimeoutSeconds 120
+
 # ------------------------------------------------------------
 # Frontend
 # ------------------------------------------------------------
@@ -297,10 +352,9 @@ Pop-Location
 # ------------------------------------------------------------
 
 Run-Step "Docker stack build + start" {
-    docker compose up -d --build
+    docker compose -f (Join-Path $Root "docker-compose.yml") up -d --build
 }
-
-$BackendPort = if ($env:BACKEND_PORT) { $env:BACKEND_PORT } else { "8080" }
+$script:QaStackActive = $false
 
 Write-Host ""
 Write-Host "Backend health bekleniyor..." -ForegroundColor Cyan
@@ -330,3 +384,10 @@ Write-Host "==================================================" -ForegroundColor
 Write-Host ""
 
 exit 0
+}
+finally {
+    if ($script:FrontendTestServer -and -not $script:FrontendTestServer.HasExited) {
+        Stop-Process -Id $script:FrontendTestServer.Id -Force -ErrorAction SilentlyContinue
+    }
+    Restore-NormalBackend
+}

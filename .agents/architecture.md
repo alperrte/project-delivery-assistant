@@ -1,5 +1,13 @@
 ﻿# Mimari kısa özet
 
+## Oturum ve sohbet doğrulama sınırları - 2026-10-13
+
+Başarılı cookie API login/logout sınırında Next Router Cache refresh edilir; frontend görünümü backend oturumunun yerine geçmez. Merkezi sohbet teslim bildirimi yalnız principal'ın aynı konuşmadaki receipt'lerini değiştirir; bütün orijinal alıcılar onaylayınca commit sonrasında yalnız yetkili gönderene aggregate olay gider. Mesaj/receipt kilitleri UUID sırasındadır. SEEN timestamp'i exact READ kanıtı sayılmaz; istemci mevcut authoritative message/receipt/info sorgularını yeniler. Silme sırasında eski history sorgusu iptal edilip aynı aktör/lifetime korunur. Endpoint/auth/cookie/CSRF/CORS/ENV/migration mimarisi değiştirilmedi. Kanıt ve kullanıcı tarafından ertelenmiş tam gate: `docs/compliation/2026-10-13-pre-push-oncesi-duzeltmeler.md`.
+
+## Merkezi sohbet proje metadata senkronizasyonu — 2026-10-13
+
+Proje oluşturma, ayar kaydı/silme ve bağımsız logo yükleme/silme başarıları mevcut proje önbelleği geçersizleştirmesine ek olarak yalnız `chatKeys.overview(actorId)` sunum metadata'sını yeniler. Mutation başladığında yakalanan aktör, yenileme öncesinde `sessionQueryKey` içindeki güncel aktörle eşleşmelidir; geç gelen eski hesap sonucu sohbet overview isteği başlatmaz. Ortak yardımcı `features/projects/query-invalidation.ts` içindedir. Sohbet mesajları, taslakları, aktif konuşma, socket ve hesap sahipliği sıfırlanmaz; API/kimlik/yetki sözleşmesi değişmez.
+
 ## Çoklu proje türleri — 2026-10-12
 
 Project aynı modülde bounded enum set `projectTypes` taşır; Hibernate ARRAY ile `projects.project_types VARCHAR(16)[]` temel kolonunda tutulur, ek relation/query/N+1 yoktur. V48 eski scalar seçimleri tek elemanlı diziye taşır. Yanıtlar tam diziyi ve eski `projectType` projection'ını verir. POST/PUT'ta dizi önceliklidir; legacy alanı aynı değerle geri göndermek veya iki alanı da atlamak mevcut çoklu seçimi bozmaz. Eski scaları açıkça farklı değere değiştirmek tekli seçimdir. TypePicker create/edit ortak checkbox grubudur; teknoloji önerileri birleşir ve seçili teknolojiler korunur.

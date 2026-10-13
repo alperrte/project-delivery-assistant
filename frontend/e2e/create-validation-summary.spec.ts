@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { MANAGER_STORAGE } from "./global-setup";
+import tr from "../src/i18n/messages/tr.json";
 import { declineTeamPrompt, createdProjectSlug } from "./helpers";
 
 test.use({ storageState: MANAGER_STORAGE });
@@ -21,7 +22,7 @@ test.describe("Validation summary on create forms", () => {
     await expect(summary).toBeVisible();
     await expect(summary).toContainText("Eksik bölümler:");
     await expect(summary.getByRole("button", { name: "Kimlik" })).toBeVisible();
-    await expect(summary.getByRole("button", { name: "Proje türü" })).toBeVisible();
+    await expect(summary.getByRole("button", { name: tr.projects.newPage.sections.type.title })).toBeVisible();
     await expect(summary.getByRole("button")).toHaveCount(2);
     // The summary is announced (role alert) but never takes focus: the first invalid field in page order does.
     await expect(summary).not.toBeFocused();
@@ -29,7 +30,7 @@ test.describe("Validation summary on create forms", () => {
     await expect(submitProject(page)).toHaveAttribute("aria-describedby", /.+/);
 
     // Entries scroll to and focus the first invalid control of their section.
-    await summary.getByRole("button", { name: "Proje türü" }).click();
+    await summary.getByRole("button", { name: tr.projects.newPage.sections.type.title }).click();
     await expect(page.getByRole("checkbox").first()).toBeFocused();
     await summary.getByRole("button", { name: "Kimlik" }).click();
     await expect(page.locator("#project-name")).toBeFocused();

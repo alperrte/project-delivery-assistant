@@ -123,6 +123,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       restoreBaseline();
       queryClient.removeQueries({ queryKey: sessionQueryKey });
       router.replace("/login");
+      router.refresh();
     }
   }
 

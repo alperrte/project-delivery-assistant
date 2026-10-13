@@ -106,7 +106,15 @@ test("landing and header buttons and the source link are counted, in order, afte
     const views = analyticsSession(id)!.page_views;
     await page.goto("/");
     await expect.poll(() => analyticsSession(id)!.page_views).toBeGreaterThan(views);
-    await page.locator(selector).first().scrollIntoViewIfNeeded();
+    if (selector.startsWith("#open-source ")) {
+      await page.locator("#open-source").evaluate(element => {
+        const start = element.getBoundingClientRect().top + window.scrollY;
+        window.scrollTo(0, start + element.getBoundingClientRect().height - innerHeight);
+      });
+    } else {
+      await page.locator(selector).first().scrollIntoViewIfNeeded();
+    }
+    await expect(page.locator(selector).first()).toBeVisible();
     await page.locator(selector).first().click();
     clicks.push(expected);
     await expect.poll(() => analyticsCtaClicks(id), { timeout: 15_000 }).toEqual(clicks);

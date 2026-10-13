@@ -104,15 +104,13 @@ public class ChatController {
 
     @PostMapping("/conversations/{conversationId}/delivered")
     @Operation(summary = "Acknowledge message delivery",
-            description = "Acknowledges that the client has received the given messages. Updates delivered_at and notifies senders. Requires CSRF.")
+            description = "Body {messageIds:[UUID]}, 1 to 100 messages in this conversation. Updates only the authenticated recipient's first delivered_at and notifies original senders after commit. Never marks messages read. Requires CSRF.")
     @ApiResponse(responseCode = "204", description = "Delivery acknowledged")
     public ResponseEntity<Void> markDelivered(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
                                               @PathVariable(required = false) UUID projectId,
                                               @PathVariable UUID conversationId,
                                               @RequestBody(required = false) VisibleMessages request) {
-        if (request != null && request.messageIds() != null && !request.messageIds().isEmpty()) {
-            chat.markDelivered(actorId(principal), conversationId, request.messageIds());
-        }
+        chat.markDelivered(actorId(principal), projectId, conversationId, request == null ? null : request.messageIds());
         return ResponseEntity.noContent().build();
     }
 
