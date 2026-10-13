@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useSyncExternalStore } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "@/features/auth/hooks/use-session";
 import { ApiError } from "@/lib/api/client";
 import { projectsApi } from "../api";
@@ -44,6 +44,7 @@ const isUnavailable = (error: unknown) => error instanceof ApiError && (error.st
  * switching project in one is reflected in the other.
  */
 export function useSelectedProject(routeSlug?: string) {
+  const client = useQueryClient();
   const { data: user } = useSession();
   const userId = user?.id;
   const rememberedSlug = useSyncExternalStore(
@@ -53,14 +54,15 @@ export function useSelectedProject(routeSlug?: string) {
   );
   const { data: projectList, isPending: listPending } = useQuery({
     queryKey: ["projects", "sidebar-default", userId],
-    queryFn: () => projectsApi.list(0, 1),
+    queryFn: ({ signal }) => projectsApi.list(0, 1, signal),
     enabled: !!userId,
   });
   const slug = routeSlug ?? rememberedSlug ?? projectList?.content[0]?.slug;
-  const { data, isError, error } = useQuery({
-    queryKey: ["projects", "by-slug", slug],
-    queryFn: () => projectsApi.bySlug(slug!),
-    enabled: !!slug,
+  const { data, isError, error, isPending } = useQuery({
+    queryKey: ["projects", "selected", userId, slug],
+    queryFn: ({ signal }) => projectsApi.bySlug(slug!, signal),
+    enabled: !!userId && !!slug,
+    refetchInterval: 60_000,
   });
   // A failed refetch keeps the last good data; for a deleted/forbidden project that would keep it selected.
   const unavailable = isError && isUnavailable(error);
@@ -68,19 +70,22 @@ export function useSelectedProject(routeSlug?: string) {
   const staleRemembered = unavailable && !routeSlug && !!slug && slug === rememberedSlug;
 
   useEffect(() => {
-    if (userId && staleRemembered) forgetSelectedProject(userId, rememberedSlug!);
-  }, [userId, staleRemembered, rememberedSlug]);
+    if (userId && staleRemembered) {
+      forgetSelectedProject(userId, rememberedSlug!);
+      void client.invalidateQueries({ queryKey: ["projects", "sidebar-default", userId] });
+    }
+  }, [userId, staleRemembered, rememberedSlug, client]);
 
   useEffect(() => {
-    if (userId && routeSlug) rememberProject(userId, routeSlug);
-  }, [routeSlug, userId]);
+    if (userId && routeSlug && project?.slug === routeSlug) rememberProject(userId, routeSlug);
+  }, [routeSlug, userId, project?.slug]);
 
   const select = useCallback((next: string) => {
     if (userId) rememberProject(userId, next);
   }, [userId]);
 
   // No slug yet only means "still looking" while the user's project list is on its way.
-  const isResolving = !slug && (!userId || listPending);
+  const isResolving = !userId || (!slug && listPending) || (!!slug && isPending);
 
-  return { slug: unavailable ? undefined : slug, project, isError, error, isResolving, select };
+  return { slug: project?.slug, project, isError, error, isResolving, select };
 }

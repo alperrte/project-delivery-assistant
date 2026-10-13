@@ -306,6 +306,21 @@
     }
   },
   "projects": {
+    "switcher": {
+      "open": "Switch project",
+      "title": "My Projects",
+      "search": "Search projects",
+      "placeholder": "Search projects...",
+      "close": "Close project selector",
+      "active": "Active project",
+      "loading": "Loading projects…",
+      "loadFailed": "Could not load projects. Try again.",
+      "switchFailed": "Could not switch projects. Your current project was kept.",
+      "switching": "Switching project…",
+      "retry": "Try again",
+      "empty": "You do not have access to any projects yet.",
+      "noResults": "No projects found"
+    },
     "card": {
       "technology": "Technology",
       "noTechnology": "No technology specified",

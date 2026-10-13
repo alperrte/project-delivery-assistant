@@ -306,6 +306,21 @@
     }
   },
   "projects": {
+    "switcher": {
+      "open": "Proje değiştir",
+      "title": "Projelerim",
+      "search": "Projelerde ara",
+      "placeholder": "Proje ara...",
+      "close": "Proje seçiciyi kapat",
+      "active": "Aktif proje",
+      "loading": "Projeler yükleniyor…",
+      "loadFailed": "Projeler yüklenemedi. Yeniden deneyin.",
+      "switchFailed": "Proje değiştirilemedi. Mevcut projeniz korundu.",
+      "switching": "Proje değiştiriliyor…",
+      "retry": "Yeniden dene",
+      "empty": "Henüz erişebildiğiniz bir proje yok.",
+      "noResults": "Proje bulunamadı"
+    },
     "card": {
       "technology": "Teknoloji",
       "noTechnology": "Teknoloji belirtilmedi",
