@@ -8,6 +8,7 @@ import { useSidebarCollapsed } from "@/components/layout/sidebar-collapse";
 import { cn } from "@/lib/utils";
 import { useChat, draftKey } from "../chat-provider";
 import { ActiveConversationIdentity, ConversationView } from "./conversation-view";
+import { ConversationSearchButton, type ConversationHandle } from "./conversation-search";
 import { ConversationList } from "./conversation-list";
 
 const DESKTOP_QUERY = "(min-width: 768px)";
@@ -50,6 +51,8 @@ export function ChatPanel() {
   const collapsed = useSidebarCollapsed();
   const panelRef = useRef<HTMLElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const conversationRef = useRef<ConversationHandle>(null);
+  const searchTriggerRef = useRef<HTMLButtonElement>(null);
   // On a narrow screen the list comes first; picking a conversation shows it.
   const [pane, setPane] = useState<"list" | "conversation">("list");
   const desktop = useIsDesktop();
@@ -91,6 +94,10 @@ export function ChatPanel() {
   }, [isResizing]);
 
   function keyDown(event: KeyboardEvent<HTMLElement>) {
+    if (!event.defaultPrevented && (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "f"
+        && chat.activeConversationId && (event.target as HTMLElement).closest("[data-chat-active]")) {
+      event.preventDefault(); conversationRef.current?.openSearch();
+    }
     if (event.key === "Escape" && !event.defaultPrevented) {
       event.stopPropagation();
       chat.minimize();
@@ -240,15 +247,16 @@ export function ChatPanel() {
           />
         </div>
 
-        <div className={cn("min-h-0 min-w-0 flex-1 flex-col md:flex", showConversation ? "flex" : "hidden")}>
+        <div data-chat-active="" className={cn("min-h-0 min-w-0 flex-1 flex-col md:flex", showConversation ? "flex" : "hidden")}>
           <div className="flex h-14 shrink-0 items-center gap-2 border-b bg-card/40 px-3 sm:px-5">
             <Button variant="ghost" size="icon-sm" className="md:hidden" aria-label={t("panel.back")} onClick={() => setPane("list")}>
               <ArrowLeft size={16} aria-hidden="true" />
             </Button>
             <ActiveConversationIdentity avatarClassName="size-9" />
+            <div className="ml-auto"><ConversationSearchButton triggerRef={searchTriggerRef} disabled={!chat.activeConversationId} onClick={() => conversationRef.current?.openSearch()} /></div>
           </div>
           {/* Not mounted behind the list on a phone: a hidden conversation must not count as read. */}
-          {(desktop || showConversation) && <ConversationView key={conversationKey} autoFocus />}
+          {(desktop || showConversation) && <ConversationView key={conversationKey} ref={conversationRef} searchTriggerRef={searchTriggerRef} autoFocus />}
         </div>
       </div>
     </section>

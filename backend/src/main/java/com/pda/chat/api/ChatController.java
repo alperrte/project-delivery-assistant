@@ -78,6 +78,25 @@ public class ChatController {
                 ChatResponses.MessagePage.from(chat.messages(actorId(principal), projectId, conversationId, before, after, limit)));
     }
 
+    @GetMapping("/conversations/{conversationId}/messages/search")
+    @Operation(summary = "Search this conversation's entire accessible history",
+            description = "Literal case-insensitive substring, Turkish I variants folded, deleted messages excluded. q 1..200 code points; page >=0, size 1..50 (default 20). Newest first; participant access only.")
+    public ResponseEntity<ChatResponses.SearchPage> search(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
+            @PathVariable(required=false) UUID projectId, @PathVariable UUID conversationId,
+            @RequestParam String q, @RequestParam(defaultValue="0") int page, @RequestParam(defaultValue="20") int size) {
+        return ResponseEntity.ok().header("Cache-Control", "private, no-store")
+                .body(ChatResponses.SearchPage.from(chat.search(actorId(principal), projectId, conversationId, q, page, size)));
+    }
+
+    @GetMapping("/conversations/{conversationId}/messages/{messageId}/context")
+    @Operation(summary = "Load a message and up to 30 neighbours in each direction",
+            description = "Same participant access as history; foreign/missing/deleted target returns 404. Continue with the existing before/after history cursors.")
+    public ResponseEntity<ChatResponses.MessageContext> context(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
+            @PathVariable(required=false) UUID projectId, @PathVariable UUID conversationId, @PathVariable UUID messageId) {
+        return ResponseEntity.ok().header("Cache-Control", "private, no-store")
+                .body(ChatResponses.MessageContext.from(chat.context(actorId(principal), projectId, conversationId, messageId)));
+    }
+
     @PostMapping("/conversations/{conversationId}/messages")
     @Operation(summary = "Send a message",
             description = "Plain text, 1 to 2000 characters. The sender is always the authenticated user. Delivered "

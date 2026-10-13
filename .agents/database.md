@@ -214,3 +214,6 @@ Organization hard delete (2026-10-11): no schema or migration change. `Organizat
 ## V42 logo şekli — 2026-10-12
 
 projects.logo_shape ve organizations.logo_shape VARCHAR(16) NOT NULL DEFAULT 'SQUARE'; CHECK yalnız SQUARE/CIRCLE kabul eder. Eski kayıtlar Square olur, görsel baytları/referansları/sürümleri değişmez. Shape seçimi dosya yüklemeden bağımsızdır. V41 → V42 backfill ve constraint testi gerçek PostgreSQL 18 üzerinde çalışır; konsolidasyon karşılaştırma testi orijinal V40 şemasına sabitlenir, yeni migration testi ayrı çalışır.
+## V51 — Sohbet mesaj araması (2026-10-14)
+
+`pg_trgm` extension + immutable/strict/parallel-safe `pda_chat_search_text(text)` (NFC, I/İ/ı/i folding, lower) + `chat_messages` üzerinde yalnız `deleted_at IS NULL` kayıtları içeren expression GIN `ix_chat_message_search`. Mevcut conversation/tarih/UUID btree imleçleri korunur. Veri silme/dönüştürme, yeni tablo veya dış arama servisi yoktur. Migration hesabının trusted extension yaratma yetkisi gerekir. Çok kısa/yaygın sorgular ve derin offset sayfaları deployment verisinde ayrıca ölçülmelidir; trigram her sorgunun sabit süreli olmasını garanti etmez.

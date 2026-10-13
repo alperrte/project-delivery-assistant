@@ -112,3 +112,5 @@ export type PendingMessage = {
   sentAt: number;
   replyTo?: ChatReply | null;
 };
+export type ChatSearchPage = { messages: ChatMessage[]; total: number; page: number; size: number };
+export type ChatMessageContext = { messages: ChatMessage[]; hasOlder: boolean; hasNewer: boolean };

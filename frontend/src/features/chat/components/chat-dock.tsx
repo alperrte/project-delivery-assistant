@@ -9,6 +9,7 @@ import { useChat, draftKey } from "../chat-provider";
 import { ActiveConversationIdentity, ConversationView } from "./conversation-view";
 import { GroupAvatar, PersonAvatar } from "./person-avatar";
 import { ConversationList } from "./conversation-list";
+import { ConversationSearchButton, type ConversationHandle } from "./conversation-search";
 
 /**
  * Where the dock sits: the bottom-right corner. Pages with a sticky save bar mark it `data-sticky-actions`, and the
@@ -124,8 +125,13 @@ function Compact() {
   useActionBarClearance(windowRef);
   const selectorRef = useRef<HTMLButtonElement>(null);
   const [showConversations, setShowConversations] = useState(false);
+  const conversationRef = useRef<ConversationHandle>(null);
+  const searchTriggerRef = useRef<HTMLButtonElement>(null);
 
   function keyDown(event: KeyboardEvent<HTMLElement>) {
+    if (!event.defaultPrevented && !showConversations && chat.activeConversationId && (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "f") {
+      event.preventDefault(); conversationRef.current?.openSearch();
+    }
     if (event.key === "Escape" && !event.defaultPrevented) {
       event.stopPropagation();
       if (showConversations) {
@@ -151,6 +157,7 @@ function Compact() {
       <header className="flex h-12 shrink-0 items-center gap-2 border-b px-3">
         <ActiveConversationIdentity avatarClassName="size-8" />
         <div className="ml-auto flex shrink-0 items-center gap-0.5">
+          {!showConversations && <ConversationSearchButton triggerRef={searchTriggerRef} disabled={!chat.activeConversationId} onClick={() => conversationRef.current?.openSearch()} />}
           <Button ref={selectorRef} variant="ghost" size="icon-sm" aria-label={t("conversations")} aria-expanded={showConversations} aria-controls="compact-conversations" data-testid="chat-compact-selector" onClick={() => setShowConversations((open) => !open)}>
             <List size={16} aria-hidden="true" />
           </Button>
@@ -168,7 +175,7 @@ function Compact() {
       <div id="compact-conversations" className={cn("min-h-0 flex-1 flex-col", showConversations ? "flex" : "hidden")} aria-hidden={!showConversations}>
         {showConversations && <ConversationList onSelected={() => { setShowConversations(false); selectorRef.current?.focus(); }} />}
       </div>
-      {!showConversations && <ConversationView key={conversationKey} autoFocus />}
+      {!showConversations && <ConversationView key={conversationKey} ref={conversationRef} searchTriggerRef={searchTriggerRef} autoFocus />}
     </section>
   );
 }

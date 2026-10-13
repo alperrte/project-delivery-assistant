@@ -18,6 +18,8 @@ import { ReplyPreview } from "./reply-preview";
 const BOTTOM_SLACK_PX = 48;
 
 type Props = {
+  jump?: { id: string; sequence: number };
+  browsingHistory?: boolean;
   conversationId: string;
   messages: ChatMessage[];
   outbox: PendingMessage[];
@@ -51,6 +53,8 @@ type Props = {
  * and renders every message as plain text: nothing is ever interpreted as markup.
  */
 export function MessageList({
+  jump,
+  browsingHistory,
   conversationId,
   messages,
   outbox,
@@ -81,6 +85,8 @@ export function MessageList({
   const initializedRef = useRef(false);
   const previous = useRef<{ firstId?: string; lastId?: string; height: number; outbox: number }>({ height: 0, outbox: 0 });
   const [atBottom, setAtBottom] = useState(true);
+  const [highlight, setHighlight] = useState<string>();
+  const lastJump = useRef<number>(-1);
   // The id of the newest message the reader has seen: anything newer while they are scrolled up is "new".
   const [seenLastId, setSeenLastId] = useState<string | undefined>(undefined);
   const lastId = messages.length > 0 ? messages[messages.length - 1].id : undefined;
@@ -122,7 +128,7 @@ export function MessageList({
     } else if (before.firstId && firstId !== before.firstId && before.lastId === lastId) {
       el.scrollTop += el.scrollHeight - before.height;
     } else if (lastId !== before.lastId || outboxGrew) {
-      if (stickRef.current || outboxGrew || newest?.sender.userId === selfId) {
+      if (!browsingHistory && (stickRef.current || outboxGrew || newest?.sender.userId === selfId)) {
         el.scrollTop = el.scrollHeight;
       }
     } else if (stickRef.current && el.scrollHeight !== before.height) {
@@ -130,7 +136,29 @@ export function MessageList({
       el.scrollTop = el.scrollHeight;
     }
     previous.current = { firstId, lastId, height: el.scrollHeight, outbox: outbox.length };
-  }, [messages, outbox, lastId, loading, selfId]);
+  }, [messages, outbox, lastId, loading, selfId, browsingHistory]);
+
+  useLayoutEffect(() => {
+    const scroller = scrollerRef.current;
+    if (!scroller || !jump || lastJump.current === jump.sequence) return;
+    const row = [...scroller.querySelectorAll<HTMLElement>("[data-message-id]")].find(element => element.dataset.messageId === jump.id);
+    if (!row) return;
+    lastJump.current = jump.sequence;
+    stickRef.current = false;
+    const top = row.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop - (scroller.clientHeight - row.clientHeight) / 2;
+    scroller.scrollTo({ top, behavior: "instant" });
+    if ((scroller.closest('[data-testid="chat-conversation"]')?.clientWidth ?? 0) < 700) row.focus({ preventScroll: true });
+    setHighlight(jump.id);
+    const bottom = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight <= BOTTOM_SLACK_PX;
+    stickRef.current = bottom;
+    setAtBottom(bottom);
+    onAtBottomChangeRef.current(bottom);
+  }, [jump, messages, loading]);
+  useEffect(() => {
+    if (!highlight) return;
+    const timer = setTimeout(() => setHighlight(undefined), 2200);
+    return () => clearTimeout(timer);
+  }, [highlight, jump?.sequence]);
 
   // Older messages load when the top of the list comes into view (never before the first jump to the end).
   useEffect(() => {
@@ -174,7 +202,7 @@ export function MessageList({
   }
 
   const labels = { today: t("today"), yesterday: t("yesterday") };
-  const showNewMessages = !atBottom && lastId !== undefined && lastId !== seenLastId;
+  const showNewMessages = !browsingHistory && !atBottom && lastId !== undefined && lastId !== seenLastId;
   const empty = messages.length === 0 && outbox.length === 0;
   // "Seen" is shown under the newest own message only (like messengers do), not under every one.
   const lastOwnId = [...messages].reverse().find((message) => message.sender.userId === selfId && !message.deleted)?.id;
@@ -219,7 +247,9 @@ export function MessageList({
                 data-testid="chat-message"
                 data-own={own ? "true" : "false"}
                 data-message-id={message.id}
-                className={cn("group/message flex items-start gap-2", own ? "justify-end" : "justify-start", newRun && "pt-2")}
+                tabIndex={-1}
+                data-search-highlight={highlight === message.id ? "true" : undefined}
+                className={cn("group/message flex items-start gap-2 rounded-lg transition-colors duration-500", own ? "justify-end" : "justify-start", newRun && "pt-2", highlight === message.id && "bg-primary/15 ring-2 ring-primary/40")}
               >
                 {/* The avatar is pinned to the top of the row: reactions and the time sit below the bubble and must not move it. */}
                 {!own && showSenders && (

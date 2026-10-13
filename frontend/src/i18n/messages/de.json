@@ -2518,6 +2518,29 @@
     }
   },
   "chat": {
+    "search": {
+      "opening": "Nachricht wird geöffnet…",
+      "open": "Im Gespräch suchen",
+      "title": "Nachrichten durchsuchen",
+      "input": "Gesprächsnachrichten durchsuchen",
+      "placeholder": "Nachrichten in diesem Gespräch suchen...",
+      "close": "Suche schließen",
+      "back": "Zurück zum Gespräch",
+      "clear": "Suche leeren",
+      "start": "Durchsuchen Sie den Nachrichtenverlauf dieses Gesprächs.",
+      "loading": "Suche läuft…",
+      "empty": "Keine passenden Nachrichten gefunden.",
+      "failed": "Nachrichten konnten nicht durchsucht werden. Versuchen Sie es erneut.",
+      "jumpFailed": "Nachricht konnte nicht geöffnet werden. Sie wurde möglicherweise gelöscht; suchen Sie erneut oder versuchen Sie es noch einmal.",
+      "tooLong": "Suchen Sie mit höchstens 200 Zeichen.",
+      "count": "{current} / {total} Ergebnisse",
+      "previous": "Vorheriges Ergebnis",
+      "next": "Nächstes Ergebnis",
+      "more": "Weitere Ergebnisse",
+      "latest": "Zu den neuesten Nachrichten",
+      "newer": "Neuere Nachrichten laden",
+      "returnResults": "Zurück zu den Suchergebnissen"
+    },
     "title": "Nachrichten",
     "nav": {
       "label": "Nachrichten",

@@ -73,6 +73,9 @@ public final class ChatViews {
     }
 
     /** Messages oldest to newest; {@code hasMore} tells whether more exist in the direction that was paged. */
+    public record SearchPage(List<MessageView> messages, long total, int page, int size) { }
+    public record MessageContext(List<MessageView> messages, boolean hasOlder, boolean hasNewer) { }
+
     public record MessagePage(List<MessageView> messages, boolean hasMore) {
     }
 }

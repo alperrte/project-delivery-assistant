@@ -323,6 +323,15 @@ function AccountChatProvider({ children, slug, selfId, ownerKey, pageKey }: {
       const pid = accountIdRef.current;
       const lifetime = lifetimeRef.current;
       if (!lifetime.active || !pid) return;
+      if (event.type !== "TYPING") {
+        void queryClient.invalidateQueries({ queryKey: chatKeys.contextRoot(pid, event.conversationId) });
+        if (event.type === "MESSAGE" || event.type === "DELETED") {
+          void queryClient.cancelQueries({ queryKey: chatKeys.searchRoot(pid, event.conversationId) }).then(() => {
+            if (lifetime.active && lifetimeRef.current === lifetime && accountIdRef.current === pid)
+              void queryClient.invalidateQueries({ queryKey: chatKeys.searchRoot(pid, event.conversationId) });
+          });
+        }
+      }
       if (event.type === "READ") {
         void queryClient.invalidateQueries({queryKey:chatKeys.overview(pid)});
         return;
@@ -404,6 +413,8 @@ function AccountChatProvider({ children, slug, selfId, ownerKey, pageKey }: {
       void queryClient.invalidateQueries({ queryKey: chatKeys.messagesRoot(pid) });
       void queryClient.invalidateQueries({ queryKey: chatKeys.receiptsRoot(pid) });
       void queryClient.invalidateQueries({ queryKey: chatKeys.infoFamily(pid) });
+      void queryClient.invalidateQueries({ queryKey: chatKeys.searchRoot(pid) });
+      void queryClient.invalidateQueries({ queryKey: chatKeys.contextRoot(pid) });
     }
     const loaded = queryClient.getQueriesData<MessagePages>({ queryKey: chatKeys.messagesRoot(pid) });
     void (async () => {
@@ -578,6 +589,10 @@ function AccountChatProvider({ children, slug, selfId, ownerKey, pageKey }: {
     await queryClient.cancelQueries({ queryKey: chatKeys.messages(pid, cid) });
     if (!lifetime.active || lifetimeRef.current !== lifetime || accountIdRef.current !== pid) return;
     applyMessageDeleted(queryClient, pid, cid, messageId);
+    await queryClient.cancelQueries({ queryKey: chatKeys.searchRoot(pid, cid) });
+    if (!lifetime.active || lifetimeRef.current !== lifetime || accountIdRef.current !== pid) return;
+    void queryClient.invalidateQueries({ queryKey: chatKeys.searchRoot(pid, cid) });
+    void queryClient.invalidateQueries({ queryKey: chatKeys.contextRoot(pid, cid) });
     void queryClient.invalidateQueries({ queryKey: chatKeys.overview(pid) });
   }, [activeConversationId, queryClient]);
 

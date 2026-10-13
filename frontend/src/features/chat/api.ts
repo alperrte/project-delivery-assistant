@@ -6,6 +6,12 @@ import type { ChatMessageInfo } from "./types";
 const chatPath = (accountId: string) => { void accountId; return `/chat`; };
 
 export const chatApi = {
+  search: (conversationId: string, q: string, page: number, signal?: AbortSignal) =>
+    apiRequest<import("./types").ChatSearchPage>(`/chat/conversations/${conversationId}/messages/search?${new URLSearchParams({ q, page: String(page), size: "20" })}`, { signal })
+      .then(result => ({ ...result, messages: result.messages.map(normalizeChatMessage) })),
+  context: (conversationId: string, messageId: string, signal?: AbortSignal) =>
+    apiRequest<import("./types").ChatMessageContext>(`/chat/conversations/${conversationId}/messages/${messageId}/context`, { signal })
+      .then(result => ({ ...result, messages: result.messages.map(normalizeChatMessage) })),
   info: (conversationId: string,messageId: string,signal?:AbortSignal) => apiRequest<ChatMessageInfo>(`/chat/conversations/${conversationId}/messages/${messageId}/info`,{signal}),
   sendFile: (conversationId: string, file: File, content: string, reply?: string,signal?:AbortSignal) => {
     const body=new FormData();body.append("file",file);body.append("content",content);if(reply)body.append("replyToMessageId",reply);
