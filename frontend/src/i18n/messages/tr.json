@@ -2518,6 +2518,29 @@
     }
   },
   "chat": {
+    "search": {
+      "opening": "Mesaj açılıyor…",
+      "open": "Sohbette ara",
+      "title": "Mesajlarda Ara",
+      "input": "Sohbette mesaj arama",
+      "placeholder": "Bu sohbette mesaj ara...",
+      "close": "Aramayı kapat",
+      "back": "Sohbete dön",
+      "clear": "Aramayı temizle",
+      "start": "Bu sohbetin mesaj geçmişinde arayın.",
+      "loading": "Aranıyor…",
+      "empty": "Eşleşen mesaj bulunamadı.",
+      "failed": "Mesajlar aranamadı. Yeniden deneyin.",
+      "jumpFailed": "Mesaj açılamadı. Silinmiş olabilir; yeniden arayın veya tekrar deneyin.",
+      "tooLong": "En fazla 200 karakterle arama yapabilirsiniz.",
+      "count": "{current} / {total} sonuç",
+      "previous": "Önceki sonuç",
+      "next": "Sonraki sonuç",
+      "more": "Daha fazla sonuç",
+      "latest": "Son mesajlara dön",
+      "newer": "Daha yeni mesajları yükle",
+      "returnResults": "Arama sonuçlarına dön"
+    },
     "title": "Sohbet",
     "nav": {
       "label": "Sohbet",

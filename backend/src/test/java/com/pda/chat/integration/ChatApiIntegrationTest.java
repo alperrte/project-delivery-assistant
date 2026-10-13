@@ -89,6 +89,85 @@ class ChatApiIntegrationTest {
     @org.springframework.test.context.bean.override.mockito.MockitoSpyBean
     com.pda.chat.infrastructure.repository.ChatReactionRepository reactionRepository;
 
+    @Test void conversationSearchIsLiteralTurkishAwarePagedAndExcludesDeletedAndForeignMessages() throws Exception {
+        Fixture f = fixture(); UUID group = groupId(f.manager, f.projectId);
+        UUID direct = openDirect(f.manager, f.projectId, f.member.id());
+        Instant start = Instant.parse("2020-01-01T12:00:00Z");
+        for (int i = 0; i < 45; i++) messageRepository.saveAndFlush(com.pda.chat.domain.entity.ChatMessage.create(
+                group, f.manager.id(), "API entegrasyonu İSTANBUL ışık ÇĞÖŞÜ " + i, start.plusSeconds(i)));
+        messageRepository.saveAndFlush(com.pda.chat.domain.entity.ChatMessage.create(direct, f.manager.id(), "API foreign scope", start));
+        UUID literal = messageRepository.saveAndFlush(com.pda.chat.domain.entity.ChatMessage.create(group, f.manager.id(),
+                "100%_! API e\u0301", start.plusSeconds(60))).getId();
+        var erased = messageRepository.saveAndFlush(com.pda.chat.domain.entity.ChatMessage.create(group, f.manager.id(), "API deleted", start));
+        jdbc.update("update chat_messages set deleted_at=?, content='' where id=?", java.sql.Timestamp.from(start), erased.getId());
+        String url = "/api/v1/chat/conversations/" + group + "/messages/search";
+        mvc.perform(get(url).cookie(f.member.access()).param("q", "api entegrasyonu").param("size", "20"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.total").value(45)).andExpect(jsonPath("$.messages.length()").value(20))
+                .andExpect(jsonPath("$.messages[0].content").value("API entegrasyonu İSTANBUL ışık ÇĞÖŞÜ 44"));
+        mvc.perform(get(url).cookie(f.member.access()).param("q", "API entegrasyonu").param("page", "2"))
+                .andExpect(jsonPath("$.messages.length()").value(5)).andExpect(jsonPath("$.messages[4].content").value("API entegrasyonu İSTANBUL ışık ÇĞÖŞÜ 0"));
+        for (String term : List.of("istanbul", "IŞIK", "çğöşü", "İSTANBUL", "ıstanbul"))
+            mvc.perform(get(url).cookie(f.member.access()).param("q", term)).andExpect(status().isOk()).andExpect(jsonPath("$.total").value(45));
+        for (String term : List.of("%_!", "é"))
+            mvc.perform(get(url).cookie(f.member.access()).param("q", term)).andExpect(jsonPath("$.total").value(1)).andExpect(jsonPath("$.messages[0].id").value(literal.toString()));
+        for (String term : List.of("not present", "' OR 1=1 --", "deleted", "foreign scope"))
+            mvc.perform(get(url).cookie(f.member.access()).param("q", term)).andExpect(jsonPath("$.total").value(0));
+        mvc.perform(get("/api/v1/chat/conversations/" + direct + "/messages/search").cookie(f.member.access()).param("q", "api"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.total").value(1));
+        assertNoEmail(body(mvc.perform(get(url).cookie(f.member.access()).param("q", "api"))));
+    }
+
+    @Test void searchAndContextEnforcePrincipalScopeAndInputBounds() throws Exception {
+        Fixture f = fixture(); UUID group = groupId(f.manager, f.projectId), direct = openDirect(f.manager, f.projectId, f.member.id());
+        UUID message = messageRepository.saveAndFlush(com.pda.chat.domain.entity.ChatMessage.create(group, f.manager.id(), "private", Instant.now())).getId();
+        String url = "/api/v1/chat/conversations/" + group + "/messages/search";
+        mvc.perform(get(url).param("q", "private")).andExpect(status().isUnauthorized());
+        mvc.perform(get(url).cookie(f.outsider.access()).param("q", "private")).andExpect(status().isForbidden());
+        jdbc.update("update users set global_role='ADMIN' where id=?", f.outsider.id());
+        mvc.perform(get(url).cookie(f.outsider.access()).param("q", "private")).andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/chat/conversations/" + direct + "/messages/search").cookie(f.outsider.access()).param("q", "private"))
+                .andExpect(status().isNotFound());
+        for (String term : List.of("", "   ", "x".repeat(201), "a\u0000b", "a\nb"))
+            mvc.perform(get(url).cookie(f.member.access()).param("q", term)).andExpect(status().isBadRequest());
+        for (String size : List.of("0", "51", "-1"))
+            mvc.perform(get(url).cookie(f.member.access()).param("q", "private").param("size", size)).andExpect(status().isBadRequest());
+        mvc.perform(get(url).cookie(f.member.access()).param("q", "private").param("page", "-1")).andExpect(status().isBadRequest());
+        String context = "/api/v1/chat/conversations/" + group + "/messages/" + message + "/context";
+        mvc.perform(get(context)).andExpect(status().isUnauthorized());
+        mvc.perform(get(context).cookie(f.outsider.access())).andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/chat/conversations/" + direct + "/messages/" + message + "/context").cookie(f.member.access())).andExpect(status().isNotFound());
+        memberships.removeMember(f.manager.id(), f.projectId, f.member.id());
+        mvc.perform(get(url).cookie(f.member.access()).param("q", "private")).andExpect(status().isForbidden());
+        mvc.perform(get(context).cookie(f.member.access())).andExpect(status().isForbidden());
+    }
+
+    @Test void oldMessageContextIsBoundedAndCanPageBothDirectionsWithStableTiedTimestamps() throws Exception {
+        Fixture f = fixture(); UUID group = groupId(f.manager, f.projectId);
+        Instant time = Instant.parse("2020-01-01T12:00:00Z");
+        for (int i = 0; i < 95; i++) messageRepository.saveAndFlush(com.pda.chat.domain.entity.ChatMessage.create(group, f.manager.id(), "history " + i, time));
+        var ordered = messagesInOrder(group);
+        UUID target = ordered.get(45);
+        String base = "/api/v1/chat/conversations/" + group + "/messages";
+        mvc.perform(get(base + "/search").cookie(f.member.access()).param("q", "history"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.total").value(95));
+        String window = body(mvc.perform(get(base + "/" + target + "/context").cookie(f.member.access()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.messages.length()").value(61))
+                .andExpect(jsonPath("$.messages[30].id").value(target.toString()))
+                .andExpect(jsonPath("$.hasOlder").value(true)).andExpect(jsonPath("$.hasNewer").value(true)));
+        List<String> ids = JsonPath.read(window, "$.messages[*].id");
+        String older = body(mvc.perform(get(base).cookie(f.member.access()).param("before", ids.getFirst()).param("limit", "30")).andExpect(status().isOk()));
+        String newer = body(mvc.perform(get(base).cookie(f.member.access()).param("after", ids.getLast()).param("limit", "30")).andExpect(status().isOk()));
+        List<String> all = new ArrayList<>(JsonPath.<List<String>>read(older, "$.messages[*].id")); all.addAll(ids); all.addAll(JsonPath.read(newer, "$.messages[*].id"));
+        assertEquals(ordered.stream().map(UUID::toString).toList(), all);
+        jdbc.update("update chat_messages set deleted_at=?, content='' where id=?", java.sql.Timestamp.from(time), target);
+        mvc.perform(get(base + "/" + target + "/context").cookie(f.member.access())).andExpect(status().isNotFound());
+        assertEquals(1, jdbc.queryForObject("select count(*) from pg_indexes where indexname='ix_chat_message_search'", Integer.class));
+    }
+
+    private List<UUID> messagesInOrder(UUID conversation) {
+        return jdbc.query("select id from chat_messages where conversation_id=? order by created_at,id", (rs, row) -> rs.getObject(1, UUID.class), conversation);
+    }
+
     @Test void repliesAreScopedPersistedAndBoundedWithoutChangingPlainEmojiMessages() throws Exception {
         Fixture f=fixture(); UUID group=groupId(f.manager,f.projectId);
         UUID original=messageId(send(f.manager,f.projectId,group,"😀".repeat(300)).andExpect(status().isCreated()));

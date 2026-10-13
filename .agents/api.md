@@ -220,3 +220,6 @@ Organization delete (2026-10-11): `POST /api/v1/organizations/{id}/archive` no l
 ## Logo shape — 2026-10-12
 
 POST /projects, PUT /projects/{id}, POST /organizations, PUT /organizations/{id} accept optional logoShape: SQUARE | CIRCLE. Missing/null create defaults to SQUARE; missing/null update preserves the saved shape for legacy clients. Invalid strings, numeric ordinals, booleans, arrays and objects return 400. Project/organization detail/list/by-slug and invitation recipient list/preview responses include logoShape. Shape changes do not rewrite media or its version. Existing PROJECT_UPDATE / organization owner and CSRF checks remain in force.
+## Sohbet içi arama — 2026-10-14
+
+Merkezi GET `/api/v1/chat/conversations/{id}/messages/search?q&page=0&size=20`: aynı history yetkisi, tüm erişilebilir geçmiş, silinenler hariç literal NFC/case-insensitive substring; I/İ/ı/i birlikte eşleşir. 1–200 code point sorgu; page >=0, size 1–50. Yanıt `{messages,total,page,size}`, en yeni önce, total/page aynı repeatable-read snapshot. GET `/messages/{messageId}/context`: hedef + iki yanda en çok 30 mesaj, `{messages,hasOlder,hasNewer}`; devam mevcut before/after cursor API'siyle. İki GET private/no-store; 400 validation, 401 anonymous, 403 grup erişimi, 404 yabancı DM/hedef veya silinen hedef. Yetki/hata/Swagger: `SECURITY.md` §11.

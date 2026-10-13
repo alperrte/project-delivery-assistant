@@ -6,6 +6,29 @@ import { chatApi } from "./api";
 import { chatKeys, flattenMessages } from "./cache";
 import type { ChatMessagePage } from "./types";
 
+type WindowCursor = { around: string } | { before: string } | { after: string };
+/** Kept separate from the live history cache: an old jump never introduces a gap in that cache. */
+export function useChatWindow(accountId: string | undefined, conversationId: string | undefined, target: string | undefined) {
+  const query = useInfiniteQuery({
+    queryKey: [...chatKeys.contextRoot(accountId ?? "", conversationId ?? ""), target],
+    initialPageParam: { around: target ?? "" } as WindowCursor,
+    queryFn: async ({ pageParam, signal }) => {
+      if ("around" in pageParam) return chatApi.context(conversationId!, pageParam.around, signal);
+      const page = await chatApi.messages(accountId!, conversationId!, { ...pageParam, limit: 30 }, signal);
+      return { messages: page.messages, hasOlder: "before" in pageParam ? page.hasMore : true,
+        hasNewer: "after" in pageParam ? page.hasMore : true };
+    },
+    getNextPageParam: page => page.hasOlder && page.messages.length ? { before: page.messages[0].id } : undefined,
+    getPreviousPageParam: page => page.hasNewer && page.messages.length ? { after: page.messages[page.messages.length - 1].id } : undefined,
+    enabled: !!accountId && !!conversationId && !!target,
+    gcTime: 0,
+  });
+  const seen = new Set<string>();
+  const messages = [...(query.data?.pages ?? [])].reverse().flatMap(page => page.messages)
+    .filter(message => { if (seen.has(message.id)) return false; seen.add(message.id); return true; });
+  return { ...query, messages };
+}
+
 /**
  * The conversation list of a project (project group, own direct conversations, unread). `poll` is for when no socket
  * keeps it fresh (the sidebar badge outside the project's own pages).

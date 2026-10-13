@@ -299,3 +299,9 @@ Public routes now include `(public)/about` and `(public)/license` beside cookies
 ## PDF C2PA uyumluluğu — 2026-10-12
 
 `chat/application/service/C2paMetadata.java` yalnız provenance metadata'sını bounded JUMBF/UUID/label yapısı ve streaming decoded-size sınırıyla tanır; `ChatFileValidator` PDF eklerinde bunu kullanır. Depolanan dosya baytları değişmez.
+
+## Sohbet araması dosya rotası — 2026-10-14
+
+- Backend: `chat/{api/ChatController,api/dto/response/ChatResponses,application/service/ChatService,ChatViews,infrastructure/repository/ChatMessageRepository}`; `db/migration/V51__chat_message_search.sql`.
+- Frontend: `features/chat/components/conversation-search.tsx`, `features/chat/search-text.tsx`; mevcut `hooks/api/cache/chat-provider`, `conversation-view/message-list/chat-panel/chat-dock`; TR/EN/DE `chat.search` namespace'i.
+- Doğrulama: `chat/integration/ChatApiIntegrationTest`, `frontend/e2e/chat-search.spec.ts`, `chat-cache.spec.ts`. Kayıt: `docs/compliation/2026-10-14-chat-message-search.md`.

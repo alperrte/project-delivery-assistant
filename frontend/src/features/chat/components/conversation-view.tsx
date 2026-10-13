@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useImperativeHandle, useRef, useState, useSyncExternalStore, type Ref, type RefObject } from "react";
 import { useTranslations } from "next-intl";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSession } from "@/features/auth/hooks/use-session";
 import { useChat, draftKey } from "../chat-provider";
-import { useChatMessages, useChatReceipts } from "../hooks";
+import { useChatMessages, useChatReceipts, useChatWindow } from "../hooks";
+import { ConversationSearch, type ConversationHandle } from "./conversation-search";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { MessageComposer } from "./message-composer";
 import { GroupAvatar, PersonAvatar } from "./person-avatar";
 import { MessageList } from "./message-list";
@@ -63,7 +66,7 @@ export function ActiveConversationIdentity({ avatarClassName }: { avatarClassNam
  * conversation, so scrolling, read marking and the composer start fresh whenever the conversation changes, while
  * the loaded messages and the draft live on in the query cache and the provider.
  */
-export function ConversationView({ autoFocus }: { autoFocus?: boolean }) {
+export function ConversationView({ autoFocus, ref, searchTriggerRef }: { autoFocus?: boolean; ref?: Ref<ConversationHandle>; searchTriggerRef?: RefObject<HTMLButtonElement | null> }) {
   const t = useTranslations("chat");
   const te = useTranslations("errors");
   const chat = useChat();
@@ -71,6 +74,15 @@ export function ConversationView({ autoFocus }: { autoFocus?: boolean }) {
   const selfId = user?.id;
   const { accountId, activeConversationId: conversationId, active, reportView, markRead, notifyTyping } = chat;
   const query = useChatMessages(accountId, conversationId);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [mobileResult, setMobileResult] = useState(false);
+  const [target, setTarget] = useState<string>();
+  const [jump, setJump] = useState<{ id: string; sequence: number }>();
+  const windowQuery = useChatWindow(accountId, conversationId, target);
+  const history = target ? windowQuery : query;
+  const openSearch = () => { setSearchOpen(true); setMobileResult(false); };
+  useImperativeHandle(ref, () => ({ openSearch }));
+  function closeSearch() { setSearchOpen(false); setMobileResult(false); searchTriggerRef?.current?.focus(); }
   const receipts = useChatReceipts(accountId, conversationId);
   const key = active ? draftKey(active) : "none";
   const [reply, setReply] = useState<ChatReply | null>(() => chat.getReply(key));
@@ -87,14 +99,34 @@ export function ConversationView({ autoFocus }: { autoFocus?: boolean }) {
   const rootRef=useRef<HTMLDivElement>(null);
   const queryClient=useQueryClient();
   const uploadAbort=useRef(new AbortController());
-  useEffect(()=>()=>uploadAbort.current.abort(),[]);
+  useEffect(() => {
+    const lifetime = new AbortController();
+    uploadAbort.current = lifetime;
+    return () => lifetime.abort();
+  }, []);
 
-  const messages = query.messages;
+  const messages = history.messages;
+  async function selectResult(id: string, signal: AbortSignal) {
+    if (!conversationId || !accountId) return;
+    // A loaded target can use its existing contiguous history; older targets get a bounded separate window.
+    if (!messages.some(message => message.id === id && !message.deleted)) {
+      const context = await chatApi.context(conversationId, id, AbortSignal.any([signal, uploadAbort.current.signal]));
+      if (signal.aborted || uploadAbort.current.signal.aborted) return;
+      queryClient.setQueryData([...chatKeys.contextRoot(accountId, conversationId), id], {
+        pages: [context], pageParams: [{ around: id }],
+      });
+      setTarget(id);
+    }
+    if (signal.aborted || uploadAbort.current.signal.aborted) return;
+    setJump(previous => ({ id, sequence: (previous?.sequence ?? 0) + 1 }));
+    if ((rootRef.current?.clientWidth ?? 0) < 700) setMobileResult(true);
+  }
   // Tell the provider what is on screen: an incoming message is only "read" when the reader is at the bottom.
   useEffect(() => {
-    reportView({ conversationId: conversationId ?? null, atBottom: atBottom && visible });
+    const searchingOnNarrowScreen = searchOpen && !mobileResult && (rootRef.current?.clientWidth ?? 0) < 700;
+    reportView({ conversationId: conversationId ?? null, atBottom: atBottom && visible && !target && !searchingOnNarrowScreen });
     return () => reportView({ conversationId: null, atBottom: false });
-  }, [reportView, conversationId, atBottom, visible]);
+  }, [reportView, conversationId, atBottom, visible, target, searchOpen, mobileResult]);
 
   // Only the actually visible message bubbles in an active document are read. Lists/previews never call this.
   useEffect(()=>{
@@ -129,7 +161,21 @@ export function ConversationView({ autoFocus }: { autoFocus?: boolean }) {
   const opening = !conversationId;
 
   return (
-    <div ref={rootRef} className="flex min-h-0 flex-1 flex-col" data-testid="chat-conversation">
+    <div ref={rootRef} className="@container/chat relative flex min-h-0 min-w-0 flex-1" data-testid="chat-conversation" onKeyDown={event => {
+      if (event.defaultPrevented || event.nativeEvent.isComposing) return;
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "f" && conversationId) {
+        event.preventDefault(); openSearch();
+      } else if (event.key === "Escape" && searchOpen) {
+        event.preventDefault(); event.stopPropagation(); closeSearch();
+      }
+    }}>
+    <div className={cn("flex min-h-0 min-w-0 flex-1 flex-col", searchOpen && !mobileResult && "hidden @min-[700px]/chat:flex")}>
+      {searchOpen && mobileResult && <Button variant="ghost" className="min-h-11 shrink-0 @min-[700px]/chat:hidden" onClick={openSearch}>{t("search.returnResults")}</Button>}
+      {target && <div className="flex shrink-0 flex-wrap items-center justify-between gap-1 border-b px-3 py-1">
+        <Button variant="ghost" size="sm" className="min-h-11" data-testid="chat-search-latest" onClick={() => { setTarget(undefined); setJump(undefined); }}>{t("search.latest")}</Button>
+        {windowQuery.hasPreviousPage && <Button variant="ghost" size="sm" className="min-h-11" disabled={windowQuery.isFetching} onClick={() => void windowQuery.fetchPreviousPage()}>{t("search.newer")}</Button>}
+      </div>}
+      {target && windowQuery.isError && messages.length > 0 && <div role="alert" className="flex shrink-0 flex-wrap items-center justify-between gap-2 p-3 text-sm"><p>{t("loadFailed")}</p><Button variant="outline" onClick={() => void windowQuery.refetch()}>{t("retry")}</Button></div>}
       {opening && active?.kind !== "direct" ? <p className="flex-1 p-6 text-sm text-muted-foreground">{t("selectConversation")}</p> : opening ? (
         <div className="flex-1 space-y-3 p-4" aria-busy="true" aria-label={t("openingDirect")}>
           <Skeleton className="h-10 w-2/3 rounded-2xl" />
@@ -142,15 +188,17 @@ export function ConversationView({ autoFocus }: { autoFocus?: boolean }) {
           outbox={chat.outboxFor(conversationId)}
           selfId={selfId}
           showSenders={active?.kind === "group"}
-          loading={query.isPending}
-          error={query.isError && messages.length === 0}
-          onRetryLoad={() => void query.refetch()}
-          hasOlder={query.hasNextPage}
-          loadingOlder={query.isFetchingNextPage}
+          loading={history.isPending}
+          error={history.isError && messages.length === 0}
+          onRetryLoad={() => void history.refetch()}
+          hasOlder={history.hasNextPage}
+          loadingOlder={history.isFetchingNextPage}
+          jump={jump}
+          browsingHistory={!!target}
           onLoadOlder={() => {
-            if (query.hasNextPage && !query.isFetchingNextPage) void query.fetchNextPage();
+            if (history.hasNextPage && !history.isFetching) void history.fetchNextPage();
           }}
-          onAtBottomChange={setAtBottom}
+          onAtBottomChange={bottom => setAtBottom(bottom && !target)}
           onRetrySend={(clientId) => chat.retry(conversationId, clientId)}
           onDiscard={(clientId) => chat.discard(conversationId, clientId)}
           errorLabel={(errorKey) => te(errorKey)}
@@ -171,13 +219,13 @@ export function ConversationView({ autoFocus }: { autoFocus?: boolean }) {
         onDraftChange={(text) => chat.setDraft(key, text)}
         onSend={async (text,file) => {
           if(!conversationId)return false;
-          if(!file) {const valid=chat.send(conversationId,text,reply).ok;if(valid)cancelReply();return valid;}
+          if(!file) {const valid=chat.send(conversationId,text,reply).ok;if(valid){cancelReply();setTarget(undefined);setJump(undefined);}return valid;}
           try {
             const message=await chatApi.sendFile(conversationId,file,text,reply?.id,uploadAbort.current.signal);
             if(uploadAbort.current.signal.aborted)return false;
             appendMessages(queryClient,accountId!,conversationId,[message]);
             void queryClient.invalidateQueries({queryKey:chatKeys.overview(accountId!)});
-            cancelReply();return true;
+            cancelReply();setTarget(undefined);setJump(undefined);return true;
           }catch(error){if(!uploadAbort.current.signal.aborted)toast.error(`${t("files.failed")} ${te(errorKey(error))}`);return false;}
         }}
         disabled={opening || chat.sendBlocked}
@@ -186,6 +234,8 @@ export function ConversationView({ autoFocus }: { autoFocus?: boolean }) {
         reply={reply}
         onCancelReply={cancelReply}
       />
+    </div>
+    {searchOpen && accountId && conversationId && <ConversationSearch accountId={accountId} conversationId={conversationId} onClose={closeSearch} onSelect={selectResult} hidden={mobileResult} />}
     </div>
   );
 }

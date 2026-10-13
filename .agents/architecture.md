@@ -1,5 +1,9 @@
 ﻿# Mimari kısa özet
 
+## Sohbet içi mesaj arama — 2026-10-14
+
+Chat aynı participant erişim denetimiyle tüm okunabilir geçmişte literal substring araması ve bounded mesaj çevresi sunar. PostgreSQL NFC + I/İ/ı/i folding ve V51 partial trigram GIN kullanılır; yeni servis/bağımlılık yoktur. İstemcide aktöre özgü `search` ve `context` query aileleri normal `messages` cache'inden ayrıdır: eski sonuca geçiş live history'ye boşluk eklemez. Çevrede mevcut before/after imleçleri iki yönde çalışır; son mesajlara dönüş ve gönderim live history'yi kullanır. Socket/reconnect arama ve çevreyi yeniler, silme cache'lerden metin/ek/alıntıyı temizler; hesap/conversation sınırları AbortSignal ile korunur. Masaüstünde yan panel, konuşma alanı 700 px altında sonuç/mesaj arasında geri dönüşlü tek görünüm ve visualViewport klavye yüksekliği kullanılır. Cookie/CSRF/CORS/yetki modeli değişmedi.
+
 ## Oturum ve sohbet doğrulama sınırları - 2026-10-13
 
 Başarılı cookie API login/logout sınırında Next Router Cache refresh edilir; frontend görünümü backend oturumunun yerine geçmez. Merkezi sohbet teslim bildirimi yalnız principal'ın aynı konuşmadaki receipt'lerini değiştirir; bütün orijinal alıcılar onaylayınca commit sonrasında yalnız yetkili gönderene aggregate olay gider. Mesaj/receipt kilitleri UUID sırasındadır. SEEN timestamp'i exact READ kanıtı sayılmaz; istemci mevcut authoritative message/receipt/info sorgularını yeniler. Silme sırasında eski history sorgusu iptal edilip aynı aktör/lifetime korunur. Endpoint/auth/cookie/CSRF/CORS/ENV/migration mimarisi değiştirilmedi. Kanıt ve kullanıcı tarafından ertelenmiş tam gate: `docs/compliation/2026-10-13-pre-push-oncesi-duzeltmeler.md`.

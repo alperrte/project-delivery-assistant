@@ -5,6 +5,8 @@ import { newerReactionVersion, normalizeChatMessage } from "./reactions";
 
 /** One account's chat queries; conversation IDs retain their own histories within that account. */
 export const chatKeys = {
+  searchRoot: (accountId: string, conversationId?: string) => ["accounts", accountId, "chat", "search", ...(conversationId ? [conversationId] : [])] as const,
+  contextRoot: (accountId: string, conversationId?: string) => ["accounts", accountId, "chat", "context", ...(conversationId ? [conversationId] : [])] as const,
   all: (accountId: string) => ["accounts", accountId, "chat"] as const,
   overview: (accountId: string) => ["accounts", accountId, "chat", "overview"] as const,
   members: (accountId: string) => ["accounts", accountId, "chat", "members"] as const,
@@ -85,6 +87,18 @@ export function applyReactionSnapshots(queryClient: QueryClient, accountId: stri
  * quote it. Idempotent, so the socket event, the REST answer and a catch-up can all apply it.
  */
 export function applyMessageDeleted(queryClient: QueryClient, accountId: string, conversationId: string, messageId: string) {
+  // Search windows are independent contiguous histories and must erase content immediately too.
+  queryClient.setQueriesData<import("@tanstack/react-query").InfiniteData<import("./types").ChatMessageContext>>(
+    { queryKey: chatKeys.contextRoot(accountId, conversationId) }, old => old ? { ...old, pages: old.pages.map(page => ({
+      ...page, messages: page.messages.map(message => message.id === messageId
+        ? { ...message, deleted: true, content: "", attachment: null, reactions: [], replyTo: null }
+        : message.replyTo?.id === messageId ? { ...message, replyTo: { ...message.replyTo, deleted: true, preview: "" } } : message),
+    })) } : old);
+  queryClient.setQueriesData<import("@tanstack/react-query").InfiniteData<import("./types").ChatSearchPage>>(
+    { queryKey: chatKeys.searchRoot(accountId, conversationId) }, old => {
+      if (!old || !old.pages.some(page => page.messages.some(message => message.id === messageId))) return old;
+      return { ...old, pages: old.pages.map(page => ({ ...page, total: Math.max(0, page.total - 1), messages: page.messages.filter(message => message.id !== messageId) })) };
+    });
   queryClient.setQueryData<MessagePages>(chatKeys.messages(accountId, conversationId), (old) => {
     if (!old) return old;
     let changed = false;
@@ -93,7 +107,7 @@ export function applyMessageDeleted(queryClient: QueryClient, accountId: string,
       messages: page.messages.map((message) => {
         if (message.id === messageId && !message.deleted) {
           changed = true;
-          return { ...message, deleted: true, content: "", reactions: [], replyTo: null };
+          return { ...message, deleted: true, content: "", attachment: null, reactions: [], replyTo: null };
         }
         if (message.replyTo?.id === messageId && !message.replyTo.deleted) {
           changed = true;

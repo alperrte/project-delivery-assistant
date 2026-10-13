@@ -74,6 +74,17 @@ public final class ChatResponses {
         }
     }
 
+    public record SearchPage(List<Message> messages, long total, int page, int size) {
+        public static SearchPage from(ChatViews.SearchPage view) {
+            return new SearchPage(view.messages().stream().map(Message::from).toList(), view.total(), view.page(), view.size());
+        }
+    }
+    public record MessageContext(List<Message> messages, boolean hasOlder, boolean hasNewer) {
+        public static MessageContext from(ChatViews.MessageContext view) {
+            return new MessageContext(view.messages().stream().map(Message::from).toList(), view.hasOlder(), view.hasNewer());
+        }
+    }
+
     public record MessagePage(List<Message> messages, boolean hasMore) {
         public static MessagePage from(ChatViews.MessagePage page) {
             return new MessagePage(page.messages().stream().map(Message::from).toList(), page.hasMore());

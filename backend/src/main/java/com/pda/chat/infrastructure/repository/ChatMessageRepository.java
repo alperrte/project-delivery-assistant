@@ -15,6 +15,22 @@ import java.util.UUID;
 
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, UUID> {
 
+    @Query(value = """
+            select * from chat_messages
+            where conversation_id = :conversationId and deleted_at is null
+              and pda_chat_search_text(content) like :pattern escape '!'
+            order by created_at desc, id desc limit :limit offset :offset
+            """, nativeQuery = true)
+    List<ChatMessage> search(@Param("conversationId") UUID conversationId, @Param("pattern") String pattern,
+                             @Param("limit") int limit, @Param("offset") long offset);
+
+    @Query(value = """
+            select count(*) from chat_messages
+            where conversation_id = :conversationId and deleted_at is null
+              and pda_chat_search_text(content) like :pattern escape '!'
+            """, nativeQuery = true)
+    long countSearch(@Param("conversationId") UUID conversationId, @Param("pattern") String pattern);
+
     /** Cursor lookup: the cursor message must belong to the conversation being read. */
     Optional<ChatMessage> findByIdAndConversationId(UUID id, UUID conversationId);
 

@@ -2494,6 +2494,29 @@
     }
   },
   "chat": {
+    "search": {
+      "opening": "Opening message…",
+      "open": "Search in conversation",
+      "title": "Search Messages",
+      "input": "Search conversation messages",
+      "placeholder": "Search messages in this conversation...",
+      "close": "Close search",
+      "back": "Back to conversation",
+      "clear": "Clear search",
+      "start": "Search this conversation’s message history.",
+      "loading": "Searching…",
+      "empty": "No matching messages found.",
+      "failed": "Could not search messages. Try again.",
+      "jumpFailed": "Could not open this message. It may have been deleted; search again or retry.",
+      "tooLong": "Search with up to 200 characters.",
+      "count": "{current} / {total} results",
+      "previous": "Previous result",
+      "next": "Next result",
+      "more": "More results",
+      "latest": "Back to latest messages",
+      "newer": "Load newer messages",
+      "returnResults": "Back to search results"
+    },
     "title": "Chat",
     "nav": {
       "label": "Chat",

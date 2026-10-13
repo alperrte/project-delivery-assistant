@@ -237,6 +237,36 @@ public class ChatService {
         return new MessagePage(messageViews(page, actor, conversationId), hasMore);
     }
 
+    /** Literal substring search over the same history visible to participants, never deleted content. */
+    @Transactional(readOnly = true, isolation = org.springframework.transaction.annotation.Isolation.REPEATABLE_READ)
+    public ChatViews.SearchPage search(UUID actor, UUID projectId, UUID conversationId, String query, int page, int size) {
+        accessible(actor, projectId, conversationId);
+        String term = query == null ? "" : java.text.Normalizer.normalize(query.strip(), java.text.Normalizer.Form.NFC);
+        if (term.isEmpty() || term.codePointCount(0, term.length()) > 200 || page < 0 || size < 1 || size > 50
+                || term.codePoints().anyMatch(Character::isISOControl)) throw ChatException.invalid("CHAT_INVALID_REQUEST");
+        // I/İ/ı/i are folded together for mixed Turkish/English technical terms such as API.
+        String folded = term.replace('İ', 'i').replace('ı', 'i').replace('I', 'i').toLowerCase(java.util.Locale.ROOT);
+        String pattern = "%" + folded.replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";
+        long total = messages.countSearch(conversationId, pattern);
+        var found = messages.search(conversationId, pattern, size, (long) page * size);
+        return new ChatViews.SearchPage(messageViews(found, actor, conversationId), total, page, size);
+    }
+
+    /** A bounded window with independently pageable older/newer neighbours. */
+    @Transactional(readOnly = true)
+    public ChatViews.MessageContext context(UUID actor, UUID projectId, UUID conversationId, UUID messageId) {
+        var conversation = accessible(actor, projectId, conversationId);
+        var target = messages.findByIdAndConversationId(messageId, conversationId)
+                .filter(message -> !message.isDeleted()).orElseThrow(() -> ChatException.notFound("CHAT_NOT_FOUND"));
+        var older = messages.findBefore(conversation.getId(), target.getCreatedAt(), target.getId(), 31);
+        var newer = messages.findAfter(conversation.getId(), target.getCreatedAt(), target.getId(), 31);
+        var window = new ArrayList<>(older.subList(0, Math.min(30, older.size())));
+        java.util.Collections.reverse(window);
+        window.add(target);
+        window.addAll(newer.subList(0, Math.min(30, newer.size())));
+        return new ChatViews.MessageContext(messageViews(window, actor, conversationId), older.size() > 30, newer.size() > 30);
+    }
+
     @Transactional
     public MessageView send(UUID actor, UUID projectId, UUID conversationId, String content) {
         return send(actor,projectId,conversationId,content,null);

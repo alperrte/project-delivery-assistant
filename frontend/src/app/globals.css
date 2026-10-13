@@ -4,6 +4,12 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@keyframes chat-search-enter {
+  from { transform: translateX(1rem); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+.chat-search-panel { animation: chat-search-enter 200ms cubic-bezier(0.22, 1, 0.36, 1); }
+
 /* The document viewport and explicitly opted-in workspace/chat scrollers share the active theme's label-blue palette.
    Other nested forms and portals retain native scrollbars. */
 html {

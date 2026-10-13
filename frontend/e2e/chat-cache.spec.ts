@@ -11,6 +11,27 @@ import { insertEmoji } from "../src/features/chat/emoji-catalog";
 const message = (id: string, conversationId = "c"): ChatMessage => ({ id, conversationId, content: "text", createdAt: "2026-10-05T10:00:00Z", sender: { userId: "u", nickname: "User", profilePhotoVersion: null }, replyTo: null, reactionVersion: "0", reactions: [] });
 const snapshot = (id: string, version: string, count = 1): ReactionSnapshot => ({ messageId: id, reactionVersion: version, reactions: count ? [{ code: "THUMBS_UP", emoji: "👍", count, reactedByCurrentUser: true }] : [] });
 
+test("deletion erases private content from search and old windows while preserving unrelated conversation data", () => {
+  const q = new QueryClient();
+  const original = { ...message("m"), attachment: { id: "file", filename: "private.pdf", contentType: "application/pdf", size: 12 } };
+  const reply = { ...message("reply"), replyTo: { id: "m", sender: original.sender, preview: "private quote" } };
+  seed(q, "c", [original, reply]);
+  const windowKey = [...chatKeys.contextRoot("p", "c"), "m"];
+  const searchKey = [...chatKeys.searchRoot("p", "c"), "text"];
+  const otherKey = [...chatKeys.searchRoot("p", "other"), "text"];
+  q.setQueryData(windowKey, { pages: [{ messages: [original, reply], hasOlder: true, hasNewer: true }], pageParams: [{ around: "m" }] });
+  const results = { pages: [{ messages: [original], total: 1, page: 0, size: 20 }], pageParams: [0] };
+  q.setQueryData(searchKey, results); q.setQueryData(otherKey, results);
+  applyMessageDeleted(q, "p", "c", "m");
+  const context = q.getQueryData<{ pages: { messages: ChatMessage[]; hasOlder: boolean }[] }>(windowKey)!;
+  expect(context.pages[0].messages[0]).toMatchObject({ id: "m", deleted: true, content: "", attachment: null });
+  expect(context.pages[0].messages[1].replyTo).toMatchObject({ preview: "", deleted: true });
+  expect(context.pages[0].hasOlder).toBe(true);
+  expect(q.getQueryData(searchKey)).toMatchObject({ pages: [{ messages: [], total: 0 }] });
+  expect(q.getQueryData(otherKey)).toEqual(results);
+  expect(current(q)[0].attachment).toBeNull(); q.clear();
+});
+
 test("emoji insertion respects DOM UTF-16 selection and never splits surrogate pairs", () => {
   expect(insertEmoji("A😀B",1,3,"😂")).toEqual({text:"A😂B",caret:3});
   expect(insertEmoji("A😀B",2,2,"❤️")).toEqual({text:"A❤️😀B",caret:3});
