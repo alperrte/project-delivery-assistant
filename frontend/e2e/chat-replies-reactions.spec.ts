@@ -6,6 +6,8 @@ import { localizeHref } from "../src/i18n/routing";
 
 test.describe.serial("Chat replies and reactions", () => {
   let a: Page, b: Page, slug: string, project: string, conversation: string;
+  const runId = `reply-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const directQuestion = `Direct question ${runId}`, directAnswer = `Direct answer ${runId}`;
   const row = (page: Page, text: string) => page.getByTestId("chat-message").filter({ has: page.getByTestId("chat-message-text").filter({ hasText: text }) });
   async function open(page: Page) { await page.getByTestId("chat-nav-item").click(); if(conversation)await page.locator(`[data-conversation-id="${conversation}"]`).click(); await expect(page.getByTestId("chat-composer")).toBeEnabled(); }
   async function send(page: Page, text: string) { await page.getByTestId("chat-composer").fill(text); await page.getByTestId("chat-composer").press("Enter"); }
@@ -20,7 +22,7 @@ test.describe.serial("Chat replies and reactions", () => {
     const invitation=(await api(a,"POST",`/projects/${project}/invitations`,{userId:person.id,teamId:team.id,roles:["TESTER"]})).json as {invitationId:string;token:string};
     expect((await api(b,"POST",`/projects/${project}/invitations/${invitation.invitationId}/accept`,{token:invitation.token})).status).toBe(200);
     await a.goto(`/projects/${slug}`);await b.goto(`/projects/${slug}`);
-    conversation=((await api(a,"GET",`/projects/${project}/chat/conversations`)).json as {group:{id:string}}).group.id;
+    conversation=((await api(a,"GET",`/chat/conversations`)).json as {groups:{id:string;projectId:string}[]}).groups.find(group=>group.projectId===project)!.id;
     await open(a);await open(b);
   });
   test.afterAll(async()=>{if(a){await api(a,"POST",`/projects/${project}/archive`).catch(()=>undefined);await a.context().close();}await b?.context().close();});
@@ -41,7 +43,7 @@ test.describe.serial("Chat replies and reactions", () => {
     await expect(row(a,"14:00").locator("b")).toHaveCount(0);
     await a.reload();await open(a);
     await expect(row(a,"14:00").getByTestId("chat-reply-quote")).toContainText("Meeting time?");
-    const history=(await api(a,"GET",`/projects/${project}/chat/conversations/${conversation}/messages`)).json as {messages:{content:string;replyTo:{id:string}|null}[]};
+    const history=(await api(a,"GET",`/chat/conversations/${conversation}/messages`)).json as {messages:{content:string;replyTo:{id:string}|null}[]};
     expect(history.messages.find(m=>m.content==="14:00")?.replyTo?.id).toBe(originalId);
   });
 
@@ -51,12 +53,12 @@ test.describe.serial("Chat replies and reactions", () => {
     await a.locator(`[data-testid="chat-conversation-direct"][data-peer-id="${actorB.id}"]`).click();
     await b.locator(`[data-testid="chat-conversation-direct"][data-peer-id="${actorA.id}"]`).click();
     await expect(a.getByTestId("chat-composer")).toBeEnabled();await expect(b.getByTestId("chat-composer")).toBeEnabled();
-    await send(a,"Direct question");const target=row(b,"Direct question");await expect(target).toBeVisible();
-    await target.hover();await chooseMessageAction(target,"reply");await send(b,"Direct answer");
-    await expect(row(a,"Direct answer").getByTestId("chat-reply-quote")).toContainText("Direct question");
+    await send(a,directQuestion);const target=row(b,directQuestion);await expect(target).toBeVisible();
+    await target.hover();await chooseMessageAction(target,"reply");await send(b,directAnswer);
+    await expect(row(a,directAnswer).getByTestId("chat-reply-quote")).toContainText(directQuestion);
     await a.reload();await open(a);await a.locator(`[data-testid="chat-conversation-direct"][data-peer-id="${actorB.id}"]`).click();
-    await expect(row(a,"Direct answer").getByTestId("chat-reply-quote")).toContainText("Direct question");
-    await a.getByTestId("chat-conversation-group").click();await b.getByTestId("chat-conversation-group").click();
+    await expect(row(a,directAnswer).getByTestId("chat-reply-quote")).toContainText(directQuestion);
+    await a.locator(`[data-testid="chat-conversation-group"][data-conversation-id="${conversation}"]`).click();await b.locator(`[data-testid="chat-conversation-group"][data-conversation-id="${conversation}"]`).click();
   });
 
   test("failed reply retries its captured target even after reply mode is cleared", async () => {
@@ -76,8 +78,9 @@ test.describe.serial("Chat replies and reactions", () => {
     await send(a,"React meeting");const original=row(b,"React meeting");await expect(original).toBeVisible();
     async function choose(page:Page,code:string){const message=row(page,"React meeting");await message.hover();await chooseMessageAction(message,"react");await page.getByTestId(`emoji-${code}`).click();}
     // Stabilize the existing read debounce before measuring reaction-only effects.
-    expect((await api(a,"POST",`/projects/${project}/chat/conversations/${conversation}/read`)).status).toBe(204);
-    const before=(await api(a,"GET",`/projects/${project}/chat/conversations`)).json as {totalUnread:number};
+    const visibleMessageIds = await a.getByTestId("chat-message").evaluateAll(elements => elements.map(element => element.getAttribute("data-message-id")!));
+    expect((await api(a,"POST",`/chat/conversations/${conversation}/read`, {messageIds: visibleMessageIds})).status).toBe(204);
+    const before=(await api(a,"GET",`/chat/conversations`)).json as {totalUnread:number};
     await choose(b,"THUMBS_UP");
     await expect(row(a,"React meeting").getByTestId("chat-reaction-THUMBS_UP")).toContainText("1");
     await expect(original.getByTestId("chat-reaction-THUMBS_UP")).toHaveAttribute("aria-pressed","true");
@@ -88,7 +91,7 @@ test.describe.serial("Chat replies and reactions", () => {
     await row(a,"React meeting").getByTestId("chat-reaction-THUMBS_UP").click();
     await expect(original.getByTestId("chat-reaction-THUMBS_UP")).toContainText("2");
     await expect(row(a,"React meeting").getByTestId("chat-reaction-HEART")).toContainText("1");
-    expect(((await api(a,"GET",`/projects/${project}/chat/conversations`)).json as {totalUnread:number}).totalUnread).toBe(before.totalUnread);
+    expect(((await api(a,"GET",`/chat/conversations`)).json as {totalUnread:number}).totalUnread).toBe(before.totalUnread);
     await a.reload();await open(a);
     await expect(row(a,"React meeting").getByTestId("chat-reaction-THUMBS_UP")).toContainText("2");
     await expect(row(a,"React meeting").getByTestId("chat-reaction-THUMBS_UP")).toHaveAttribute("aria-pressed","true");
@@ -147,7 +150,7 @@ test.describe.serial("Chat replies and reactions", () => {
       await page.goto(`/tr/projeler/${slug}`);await open(page);await expect(row(page,"Old message for reaction resync")).toBeVisible();
       await page.getByTestId("chat-composer").fill("resync draft");
       dropReactions=true;
-      expect((await api(b,"PUT",`/projects/${project}/chat/conversations/${conversation}/messages/${id}/reactions/THANKS`)).status).toBe(200);
+      expect((await api(b,"PUT",`/chat/conversations/${conversation}/messages/${id}/reactions/THANKS`)).status).toBe(200);
       await expect(row(page,"Old message for reaction resync").getByTestId("chat-reactions")).toHaveCount(0);
       await page.getByTestId("chat-panel-close").click();dropReactions=false;
       await open(page);
@@ -155,7 +158,7 @@ test.describe.serial("Chat replies and reactions", () => {
       expect(snapshots.some(batch=>batch.includes(id))).toBe(true);
       const before=snapshots.length;
       pauseConnections=true;await clientSocket!.close({code:1001,reason:"QA reconnect"});
-      expect((await api(b,"PUT",`/projects/${project}/chat/conversations/${conversation}/messages/${id}/reactions/SAD`)).status).toBe(200);
+      expect((await api(b,"PUT",`/chat/conversations/${conversation}/messages/${id}/reactions/SAD`)).status).toBe(200);
       pauseConnections=false;
       await expect(row(page,"Old message for reaction resync").getByTestId("chat-reaction-SAD")).toContainText("1",{timeout:15000});
       await expect(page.getByTestId("chat-composer")).toHaveValue("resync draft");
@@ -185,7 +188,7 @@ test.describe.serial("Chat replies and reactions", () => {
         await b.evaluate(dark=>document.documentElement.classList.toggle("dark",dark),dark);
         await b.setViewportSize({width:390,height:844});
         // Full mobile starts on its list; switch to the same group conversation.
-        if(!await b.getByTestId("chat-composer").isVisible())await b.getByTestId("chat-conversation-group").click();
+        if(!await b.getByTestId("chat-composer").isVisible())await b.locator(`[data-testid="chat-conversation-group"][data-conversation-id="${conversation}"]`).click();
         await expect(b.getByTestId("chat-reply-context")).toBeVisible();
         expect(await b.evaluate(()=>document.documentElement.scrollWidth)).toBe(390);
       }

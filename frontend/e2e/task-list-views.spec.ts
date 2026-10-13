@@ -1,6 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import { api, createProject } from "./helpers";
 import { MANAGER_STORAGE } from "./global-setup";
+import tr from "../src/i18n/messages/tr.json";
 
 test.use({ storageState: MANAGER_STORAGE });
 
@@ -53,7 +54,7 @@ test("Görevler: table or cards, the choice is remembered, and overdue lives in 
   await expect(page.getByRole("button", { name: /^Atanan/ })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Gecikmiş", exact: true })).toHaveCount(0);
 
-  await page.getByRole("button", { name: /^Durum/ }).click();
+  await page.getByRole("button", { name: tr.tasks.filters.status, exact: true }).click();
   await expect(page.getByRole("menuitemcheckbox", { name: "Gecikmiş", exact: true })).toBeVisible();
   await page.getByRole("menuitemcheckbox", { name: "Gecikmiş", exact: true }).click();
   await expect(page).toHaveURL(/overdue=1/);
@@ -79,7 +80,7 @@ test("Görevlerim: Tümü / Açık / Tamamlanan, no pool or blocked, overdue ins
   await expect(page.getByText("Havuzda", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Gecikmiş", exact: true })).toHaveCount(0);
 
-  await page.getByRole("button", { name: /^Durum/ }).click();
+  await page.getByRole("button", { name: tr.tasks.my.filters.status, exact: true }).click();
   await expect(page.getByRole("menuitemcheckbox", { name: "Gecikmiş", exact: true })).toBeVisible();
   await page.keyboard.press("Escape");
 

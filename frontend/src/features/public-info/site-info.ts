@@ -3,7 +3,7 @@ export const CONTACT_HREF = "/contact";
 export const CONTACT_EMAIL = "info@pd-assistant.com";
 export const REPOSITORY_URL = "https://github.com/alperrte/project-delivery-assistant";
 /** Release shown in the footer. Keep in sync with the git tag and the package versions when a release is cut. */
-export const APP_VERSION = "1.0";
+export const APP_VERSION = "1.1.0";
 export const CONTRIBUTORS = [
   {
     name: "Alper Temiz",

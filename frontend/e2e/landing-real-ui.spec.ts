@@ -27,8 +27,12 @@ async function mockRealApp(page: Page) {
     let body: unknown = {};
     if (pathname === "/auth/me") body = DEMO_USER;
     else if (pathname === "/auth/csrf") body = { headerName: "X-XSRF-TOKEN" };
+    else if (pathname === "/users/me/preferences") body = { locale: null, theme: null, motion: null, themeTransition: null, languageTransition: null, navbarMode: null };
+    else if (pathname === "/chat/conversations") body = { group: null, groups: [], directs: [], totalUnread: 0 };
+    else if (pathname === "/chat/members") body = [];
     else if (pathname === "/notifications/unread-count") body = { count: 0 };
     else if (pathname === "/notifications") body = demoPage([]);
+    else if (pathname === "/project-invitations/me") body = demoPage([]);
     else if (pathname === "/projects") body = demoPage([data.project]);
     else if (pathname.includes("/by-slug/")) body = data.project;
     else if (pathname.endsWith("/home")) body = data.home;
@@ -42,7 +46,6 @@ async function mockRealApp(page: Page) {
     else if (pathname.endsWith("/invitations")) body = demoPage([]);
     else if (pathname.endsWith("/criteria") || pathname.endsWith("/sprints") || pathname.endsWith("/labels")) body = [];
     else if (pathname === "/organizations") body = demoPage([]);
-    else if (pathname.includes("/chat/")) body = { totalUnread: 0, conversations: [] };
     if (pathname.endsWith("/events")) return route.fulfill({ status: 200, headers, contentType: "text/event-stream", body: ": fixture\n\n" });
     return route.fulfill({ status: 200, headers, contentType: "application/json", body: JSON.stringify(body) });
   });

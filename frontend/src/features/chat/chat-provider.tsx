@@ -29,8 +29,6 @@ import {
   applyReactionSnapshots,
   applyMessageDeleted,
   applyMessagesDelivered,
-  applyMessagesRead,
-  applySeen,
   flattenMessages,
   chatKeys,
   newestMessageId,
@@ -323,8 +321,8 @@ function AccountChatProvider({ children, slug, selfId, ownerKey, pageKey }: {
   const handleEvent = useCallback(
     (event: ChatSocketEvent) => {
       const pid = accountIdRef.current;
-      // Another project's event (a stale subscription, a bug, a hostile frame) never touches this project's state.
-      if (!lifetimeRef.current.active || !pid) return;
+      const lifetime = lifetimeRef.current;
+      if (!lifetime.active || !pid) return;
       if (event.type === "READ") {
         void queryClient.invalidateQueries({queryKey:chatKeys.overview(pid)});
         return;
@@ -341,16 +339,20 @@ function AccountChatProvider({ children, slug, selfId, ownerKey, pageKey }: {
         return;
       }
       if (event.type === "SEEN") {
-        applySeen(queryClient, pid, event.conversationId, event.userId, event.readAt);
-        applyMessagesRead(queryClient, pid, event.conversationId, event.readAt);
+        // SEEN is a conversation timestamp signal, not proof of exact IDs or all recipients.
+        void queryClient.invalidateQueries({queryKey:chatKeys.messages(pid,event.conversationId)});
         void queryClient.invalidateQueries({queryKey:chatKeys.receipts(pid,event.conversationId)});
         void queryClient.invalidateQueries({queryKey:chatKeys.infoRoot(pid,event.conversationId)});
         return;
       }
       if (event.type === "DELETED") {
-        applyMessageDeleted(queryClient, pid, event.conversationId, event.messageId);
-        // Previews and unread counts of the conversation list came from the server; refresh them.
-        void queryClient.invalidateQueries({ queryKey: chatKeys.overview(pid) });
+        // A history request started before deletion must not replace the confirmed tombstone.
+        void queryClient.cancelQueries({ queryKey: chatKeys.messages(pid, event.conversationId) }).then(() => {
+          if (!lifetime.active || lifetimeRef.current !== lifetime || accountIdRef.current !== pid) return;
+          applyMessageDeleted(queryClient, pid, event.conversationId, event.messageId);
+          // Previews and unread counts of the conversation list came from the server; refresh them.
+          void queryClient.invalidateQueries({ queryKey: chatKeys.overview(pid) });
+        });
         return;
       }
       if (event.type === "REACTIONS") {
@@ -572,7 +574,9 @@ function AccountChatProvider({ children, slug, selfId, ownerKey, pageKey }: {
     const pid = accountIdRef.current, cid = activeConversationId, lifetime = lifetimeRef.current;
     if (!pid || !cid || !lifetime.active) return;
     await chatApi.deleteMessage(pid, cid, messageId, lifetime.abort.signal);
-    if (!lifetime.active || accountIdRef.current !== pid) return;
+    if (!lifetime.active || lifetimeRef.current !== lifetime || accountIdRef.current !== pid) return;
+    await queryClient.cancelQueries({ queryKey: chatKeys.messages(pid, cid) });
+    if (!lifetime.active || lifetimeRef.current !== lifetime || accountIdRef.current !== pid) return;
     applyMessageDeleted(queryClient, pid, cid, messageId);
     void queryClient.invalidateQueries({ queryKey: chatKeys.overview(pid) });
   }, [activeConversationId, queryClient]);

@@ -3,7 +3,7 @@ import { previewOf } from "./limits";
 import type { ChatConversation, ChatMessage, ChatReceipt, ChatMessagePage, ChatOverview, ReactionSnapshot } from "./types";
 import { newerReactionVersion, normalizeChatMessage } from "./reactions";
 
-/** Query keys of one project's chat. Everything is nested under the project id, so projects never share state. */
+/** One account's chat queries; conversation IDs retain their own histories within that account. */
 export const chatKeys = {
   all: (accountId: string) => ["accounts", accountId, "chat"] as const,
   overview: (accountId: string) => ["accounts", accountId, "chat", "overview"] as const,
@@ -109,7 +109,7 @@ export function applyMessageDeleted(queryClient: QueryClient, accountId: string,
 /** Records that `userId` read the conversation up to `readAt` (markers only move forward). Not-yet-loaded lists are left alone. */
 export function applySeen(queryClient: QueryClient, accountId: string, conversationId: string, userId: string, readAt: string) {
   queryClient.setQueryData<ChatReceipt[]>(chatKeys.receipts(accountId, conversationId), (old) => {
-    if (!old) return old;
+    if (!old || old.some(receipt => receipt.messageId != null)) return old;
     const known = old.find((receipt) => receipt.userId === userId);
     if (known && Date.parse(known.readAt) >= Date.parse(readAt)) return old;
     return known ? old.map((receipt) => (receipt.userId === userId ? { userId, readAt } : receipt)) : [...old, { userId, readAt }];
@@ -128,26 +128,6 @@ export function applyMessagesDelivered(queryClient: QueryClient, accountId: stri
         if (ids.has(message.id) && message.deliveryStatus !== "READ" && message.deliveryStatus !== "DELIVERED") {
           changed = true;
           return { ...message, deliveryStatus: "DELIVERED" as const };
-        }
-        return message;
-      }),
-    }));
-    return changed ? { ...old, pages } : old;
-  });
-}
-
-/** Updates messages to READ status when the conversation is seen. */
-export function applyMessagesRead(queryClient: QueryClient, accountId: string, conversationId: string, readAt: string) {
-  const readTimestamp = Date.parse(readAt);
-  queryClient.setQueryData<MessagePages>(chatKeys.messages(accountId, conversationId), (old) => {
-    if (!old) return old;
-    let changed = false;
-    const pages = old.pages.map((page) => ({
-      ...page,
-      messages: page.messages.map((message) => {
-        if (Date.parse(message.createdAt) <= readTimestamp && message.deliveryStatus !== "READ") {
-          changed = true;
-          return { ...message, deliveryStatus: "READ" as const };
         }
         return message;
       }),

@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { QueryClient } from "@tanstack/react-query";
-import { appendMessages, applyReactionSnapshots, chatKeys, flattenMessages, type MessagePages } from "../src/features/chat/cache";
+import { appendMessages, applyMessagesDelivered, applySeen, applyMessageDeleted, applyReactionSnapshots, chatKeys, flattenMessages, type MessagePages } from "../src/features/chat/cache";
 import { ReactionBuffer, validReactionSnapshot } from "../src/features/chat/reactions";
 import { ReactionSyncQueue, resyncReactions } from "../src/features/chat/reaction-resync";
 import { parseChatSocketEvent } from "../src/features/chat/use-chat-socket";
@@ -101,4 +101,106 @@ test("socket union validates reactions and normalizes legacy messages instead of
   const parsed=parseChatSocketEvent(JSON.stringify({...scope,type:"MESSAGE",message:old}));
   expect(parsed?.type).toBe("MESSAGE");if(parsed?.type==="MESSAGE"){expect(parsed.message.reactionVersion).toBe("0");expect(parsed.message.replyTo).toBeNull();}
   expect(parseChatSocketEvent(JSON.stringify({...scope,type:"UNKNOWN"}))).toBeNull();
+});
+
+test("delivery acknowledgements accept the bounded central wire contract and reject malformed IDs", () => {
+  const delivery = { type: "DELIVERED", projectId: null, conversationId: "conversation", recipientId: "recipient", messageIds: ["first", "second"] };
+  expect(parseChatSocketEvent(JSON.stringify(delivery))).toEqual(delivery);
+  expect(parseChatSocketEvent(JSON.stringify({ ...delivery, messageIds: Array.from({ length: 100 }, (_, index) => `message-${index}`) }))?.type).toBe("DELIVERED");
+  for (const invalid of [
+    { ...delivery, recipientId: "" }, { ...delivery, recipientId: 1 }, { ...delivery, recipientId: "x".repeat(129) },
+    { ...delivery, messageIds: [] }, { ...delivery, messageIds: null }, { ...delivery, messageIds: "first" },
+    { ...delivery, messageIds: [null] }, { ...delivery, messageIds: [1] }, { ...delivery, messageIds: [""] },
+    { ...delivery, messageIds: ["x".repeat(129)] }, { ...delivery, messageIds: Array(101).fill("first") },
+    { ...delivery, conversationId: "" }, { ...delivery, projectId: 1 },
+  ]) expect(parseChatSocketEvent(JSON.stringify(invalid))).toBeNull();
+});
+
+
+test("mixed delivery replay and authoritative read snapshots retain every page entry and exact evidence", () => {
+  const q = new QueryClient();
+  const oldRead = { ...message("read"), deliveryStatus: "READ" as const };
+  const oldDelivered = { ...message("delivered"), deliveryStatus: "DELIVERED" as const };
+  const legacy = message("legacy");
+  const fresh = { ...message("fresh"), deliveryStatus: "SENT" as const };
+  const untouched = { ...message("untouched"), deliveryStatus: "SENT" as const };
+  const seeded: MessagePages = { pages: [
+    { messages: [fresh, untouched], hasMore: true },
+    { messages: [oldRead, oldDelivered, legacy], hasMore: false },
+  ], pageParams: [undefined, "older-cursor"] };
+  q.setQueryData(chatKeys.messages("p", "c"), seeded);
+  seed(q, "other", [message("fresh", "other")]);
+  const originalOrder = current(q).map(value => value.id);
+  const deliveredIds = ["read", "delivered", "legacy", "fresh", "missing"];
+  applyMessagesDelivered(q, "p", "c", deliveredIds);
+  expect(current(q).map(value => [value.id, value.deliveryStatus])).toEqual([
+    ["read", "READ"], ["delivered", "DELIVERED"], ["legacy", "DELIVERED"], ["fresh", "DELIVERED"], ["untouched", "SENT"],
+  ]);
+  const delivered = q.getQueryData<MessagePages>(chatKeys.messages("p", "c"));
+  applyMessagesDelivered(q, "p", "c", deliveredIds);
+  expect(q.getQueryData(chatKeys.messages("p", "c"))).toBe(delivered);
+  appendMessages(q, "p", "c", [{ ...oldRead, deliveryStatus: "READ" }, { ...fresh, deliveryStatus: "READ" }]);
+  expect(current(q).map(value => [value.id, value.deliveryStatus])).toEqual([
+    ["read", "READ"], ["delivered", "DELIVERED"], ["legacy", "DELIVERED"], ["fresh", "READ"], ["untouched", "SENT"],
+  ]);
+  const read = q.getQueryData<MessagePages>(chatKeys.messages("p", "c"));
+  appendMessages(q, "p", "c", [{ ...oldRead, deliveryStatus: "READ" }, { ...fresh, deliveryStatus: "READ" }]);
+  applyMessagesDelivered(q, "p", "c", deliveredIds);
+  expect(q.getQueryData(chatKeys.messages("p", "c"))).toBe(read);
+  expect(read!.pageParams).toEqual(seeded.pageParams);
+  expect(read!.pages.map(page => page.messages.length)).toEqual([2, 3]);
+  expect(current(q).map(value => value.id)).toEqual(originalOrder);
+  expect(current(q).every(value => !!value && typeof value.id === "string")).toBe(true);
+  expect(current(q, "other")[0].deliveryStatus).toBeUndefined();
+  appendMessages(q, "other-account", "c", [{ ...untouched, deliveryStatus: "READ" }]);
+  expect(q.getQueryData(chatKeys.messages("other-account", "c"))).toBeUndefined();
+  q.clear();
+});
+
+test("exact receipt evidence is never replaced by a timestamp marker; legacy markers remain compatible", () => {
+  const q = new QueryClient();
+  const exact = [{ userId: "reader", messageId: "first", readAt: "2026-10-05T10:00:00Z" }];
+  q.setQueryData(chatKeys.receipts("p", "c"), exact);
+  applySeen(q, "p", "c", "reader", "2026-10-05T12:00:00Z");
+  applySeen(q, "p", "c", "another-reader", "2026-10-05T13:00:00Z");
+  expect(q.getQueryData(chatKeys.receipts("p", "c"))).toEqual(exact);
+  q.setQueryData(chatKeys.receipts("p", "legacy"), [{ userId: "reader", readAt: "2026-10-05T10:00:00Z" }]);
+  applySeen(q, "p", "legacy", "reader", "2026-10-05T12:00:00Z");
+  applySeen(q, "p", "legacy", "reader", "2026-10-05T09:00:00Z");
+  expect(q.getQueryData(chatKeys.receipts("p", "legacy"))).toEqual([{ userId: "reader", readAt: "2026-10-05T12:00:00Z" }]);
+  q.clear();
+});
+
+test("duplicate confirmed message append after read/delivery replay retains order and a deletable row", () => {
+  const q = new QueryClient();
+  seed(q, "c", [message("first"), message("second")]);
+  applyMessagesDelivered(q, "p", "c", ["first", "second"]);
+  appendMessages(q, "p", "c", [{ ...message("first"), deliveryStatus: "READ" }]);
+  appendMessages(q, "p", "c", [{ ...message("second"), deliveryStatus: "DELIVERED" }]);
+  appendMessages(q, "p", "c", [{ ...message("second"), deliveryStatus: "DELIVERED" }]);
+  applyMessagesDelivered(q, "p", "c", ["first", "second"]);
+  expect(current(q).map(value => [value.id, value.deliveryStatus])).toEqual([["first", "READ"], ["second", "DELIVERED"]]);
+  applyMessageDeleted(q, "p", "c", "first");
+  applyMessageDeleted(q, "p", "c", "first");
+  expect(current(q).map(value => value.id)).toEqual(["first", "second"]);
+  expect(current(q)[0]).toMatchObject({ id: "first", deleted: true, content: "", reactions: [] });
+  q.clear();
+});
+
+test("canceling stale history before a tombstone prevents a late pre-delete response from resurrecting it", async () => {
+  const q = new QueryClient();
+  const key = chatKeys.messages("p", "c");
+  seed(q, "c", [message("target")]);
+  let release!: (value: MessagePages) => void;
+  let started!: () => void;
+  const ready = new Promise<void>(resolve => { started = resolve; });
+  const pending = q.fetchQuery({ queryKey: key, queryFn: () => { started(); return new Promise<MessagePages>(resolve => { release = resolve; }); }, staleTime: 0 }).catch(() => undefined);
+  await ready;
+  await q.cancelQueries({ queryKey: key });
+  applyMessageDeleted(q, "p", "c", "target");
+  release({ pages: [{ messages: [message("target")], hasMore: false }], pageParams: [undefined] });
+  await pending;
+  await Promise.resolve();
+  expect(current(q)[0]).toMatchObject({ id: "target", deleted: true, content: "" });
+  q.clear();
 });

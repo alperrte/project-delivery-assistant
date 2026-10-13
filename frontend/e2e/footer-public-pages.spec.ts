@@ -1,5 +1,5 @@
 import { test, expect, type Locator, type Page } from "@playwright/test";
-import { buildPath } from "../src/i18n/routing";
+import { buildPath, matchPath } from "../src/i18n/routing";
 import path from "node:path";
 
 const infoPaths = ["/about", "/faq", "/kvkk", "/privacy", "/terms", "/cookies", "/accessibility", "/license"] as const;
@@ -109,13 +109,13 @@ test("footer links open the correct information and contributor targets", async 
   }
 });
 
-for (const [locale, label] of [["tr", "Sürüm 1.0"], ["en", "Version 1.0"], ["de", "Version 1.0"]] as const) {
+for (const [locale, label] of [["tr", "Sürüm 1.1.0"], ["en", "Version 1.1.0"], ["de", "Version 1.1.0"]] as const) {
   test(`footer shows the release version on every page type: ${locale}`, async ({ page, context }) => {
     await context.addCookies([{ name: "NEXT_LOCALE", value: locale, url: "http://localhost:3000" }]);
     for (const path of ["/login", "/register", "/about", "/"]) {
       await page.goto(path);
       const copyright = page.locator("footer p").first();
-      await expect(copyright).toContainText("v1.0");
+      await expect(copyright).toContainText("v1.1.0");
       await expect(copyright.locator(".sr-only")).toHaveText(", " + label);
     }
   });
@@ -182,6 +182,11 @@ test("authenticated app shell has no footer and information links work from the 
     const path = new URL(route.request().url()).pathname;
     const data = path === "/api/v1/auth/me"
       ? { id: "footer-test-user", nickname: "FooterTest", email: "footer@example.com", globalRole: "USER", mustChangePassword: false }
+      : path === "/api/v1/users/me/profile" ? { id: "footer-test-user", nickname: "FooterTest", email: "footer@example.com", globalRole: "USER", mustChangePassword: false }
+      : path === "/api/v1/users/me/preferences" ? { locale: "tr", theme: "system", motion: "on", themeTransition: true, languageTransition: true, navbarMode: "always-visible" }
+      : path === "/api/v1/chat/conversations" ? { groups: [], directs: [], totalUnread: 0 }
+      : path === "/api/v1/chat/members" ? []
+      : path === "/api/v1/notifications/unread-count" ? { count: 0 }
       : path === "/api/v1/tasks/mine" ? { content: [], counts: {}, totalElements: 0, totalPages: 0 }
       : { content: [], totalElements: 0, totalPages: 0 };
     await route.fulfill({
@@ -197,9 +202,18 @@ test("authenticated app shell has no footer and information links work from the 
   await page.getByRole("button", { name: /Hesap menüsü/ }).click();
   const menu = page.getByRole("menu");
   await expect(menu).toBeVisible();
-  // The menu keeps only the FAQ, the contact page and the cookie preferences; the policy pages live in the public footer.
-  await expect(menu.locator('a[href="/tr/sss"]')).toHaveText("Sıkça Sorulan Sorular");
-  await expect(menu.locator('a[href="/tr/iletisim"]')).toBeVisible();
+  // Authenticated help uses the workspace routes and carries the current page as returnTo.
+  const faq = menu.getByRole("menuitem", { name: "Sıkça Sorulan Sorular", exact: true });
+  const contact = menu.getByRole("menuitem", { name: "İletişim", exact: true });
+  for (const [link, route] of [[faq, "/account/faq"], [contact, "/account/contact"]] as const) {
+    const href = new URL((await link.getAttribute("href"))!, ORIGIN);
+    expect(href.pathname).toBe(buildPath(route, {}, "tr"));
+    expect(matchPath(href.pathname)?.route).toBe(route);
+    const returnTo = href.searchParams.get("returnTo");
+    expect(returnTo).toBe(buildPath("/settings", {}, "tr"));
+    expect(matchPath(returnTo!)?.route).toBe("/settings");
+    await expect(link).toBeVisible();
+  }
   await expect(menu.getByRole("menuitem")).toHaveText(["Hesap ayarları", "Sıkça Sorulan Sorular", "Çerez tercihlerini yönet", "İletişim", "Çıkış yap"]);
   await expect(menu.locator('a[href^="mailto:"]')).toHaveCount(0);
   await expect(menu.getByRole("menuitem", { name: "Çerez tercihlerini yönet" })).toBeVisible();
@@ -208,7 +222,7 @@ test("authenticated app shell has no footer and information links work from the 
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await page.getByRole("button", { name: /Hesap menüsü/ }).click();
-  await menu.locator('a[href="/tr/sss"]').click();
-  await expect(page).toHaveURL(/\/tr\/sss$/);
+  await faq.click();
+  await expect.poll(() => new URL(page.url()).pathname).toBe(buildPath("/account/faq", {}, "tr"));
   await expect(page.locator("h1")).toHaveText("Sıkça Sorulan Sorular");
 });

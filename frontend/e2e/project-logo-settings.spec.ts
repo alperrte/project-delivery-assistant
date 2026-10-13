@@ -45,7 +45,10 @@ test.describe.serial("Project settings logo", () => {
   test("pencil shows the current logo; replace keeps dirty text and refreshes header, chat and card", async () => {
     await card().getByRole("link", { name: `${name} ayarlarını düzenle` }).click();
     await loaded(mark(page).locator("img"));
+    const overview = (await api(page, "GET", "/chat/conversations")).json as { groups: { id: string; projectId: string }[] };
+    const groupId = overview.groups.find(group => group.projectId === projectId)!.id;
     await page.getByTestId("chat-nav-item").click();
+    await page.locator(`[data-testid="chat-conversation-group"][data-conversation-id="${groupId}"]`).click();
     await expect(page.getByTestId("chat-composer")).toBeEnabled();
     await page.getByTestId("chat-minimize").click();
     await page.locator("#settings-tagline").fill("unsaved logo test");

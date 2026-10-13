@@ -46,5 +46,7 @@ export function useCompleteAdminLogin() {
     clearPrivateAuth(queryClient);
     queryClient.setQueryData(sessionQueryKey, me);
     router.replace(adminLandingPath(window.location.search));
+    // API cookie changes do not invalidate Next.js's anonymous route data.
+    router.refresh();
   };
 }

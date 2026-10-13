@@ -1,5 +1,13 @@
 # Frontend tasarım kuralları
 
+## Sohbet konuşmalar paneli dinamik genişlik — 2026-10-13
+
+Kullanıcı tercihiyle sohbet panelindeki konuşmalar listesi (`ChatPanel`) masaüstünde sabit genişlik yerine dinamik olarak yeniden boyutlandırılabilir. Ayırıcı tutamaç (`role="separator"`) imleçle (pointer) sürüklenerek genişlik 240 px ile 560 px arasında ayarlanabilir, çift tıklamayla varsayılan 320 px değerine sıfırlanabilir ve yön tuşlarıyla klavyeden yönetilebilir. Tercih edilen genişlik `localStorage` (`pda:chat:sidebar-width`) ile oturumlar arasında korunur; mobil tek sütunlu düzen değişmez.
+
+## Ayarlar ve hesap ayarları sayfa yerleşimi — 2026-10-13
+
+Kullanıcı tercihiyle Ayarlar (`/settings`) ve Hesap ayarları (`/account`) sayfalarının içeriği çalışma alanı ana içerik bölgesinde yatay olarak ortalanır (`PageContainer width="form"` → `mx-auto w-full max-w-5xl`). Geniş ekranlarda sola yatık kalmaz; mobil ve dar ekranlarda tam genişlik davranışı korunur.
+
 ## Çoklu proje türü seçimi — 2026-10-12
 
 Create ve edit aynı `TypePicker` native checkbox kartlarını kullanır: Web, Mobil, AI, Masaüstü, Diğer bağımsız seçilir; en az bir tür gerekir. Grup yerelleştirilmiş başlıkla, checkbox'lar ad/açıklamayla etiketlidir; klavye Space, focus-visible kart halkası ve hata açıklaması desteklenir. Edit grup genel bilgilerde tam satırdır; eski projeler kendi türü seçili açılır. Kart/tablo ve create/edit/davet önizlemeleri tüm türleri gösterir. Teknoloji grupları seçimlerin birleşimidir, tekrarlar tekilleşir; Diğer/no selection tüm kataloğu açar, türü kaldırmak eski teknoloji seçimlerini silmez. Mevcut renk/font/radius/44 px hedef token'ları korunur.

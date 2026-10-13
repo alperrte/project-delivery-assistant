@@ -9,6 +9,8 @@
     "/about": 395,
     "/accessibility": 395,
     "/account": 630,
+    "/account/contact": 635,
+    "/account/faq": 510,
     "/admin": 500,
     "/admin/analytics": 525,
     "/admin/audit": 520,

@@ -10,7 +10,23 @@ Repository kökünde:
 .\pre-push\pre-push.cmd
 ```
 
+Tam browser paketi, gerçek güncel backend ve kayıt/şifre/iletişim senaryoları için Mailpit posta yakalayıcısı gerektirir. Yerel QA Compose override dosyasını şu parametreyle verin (yol repository köküne göre veya mutlak olabilir):
+
+```powershell
+.\pre-push\pre-push.cmd -QaComposeFile "<yerel-QA-override-dosyasi>"
+```
+
+Override, temel `docker-compose.yml` üzerine eklenir; dosyanın varlığı ve birleşik Compose yapılandırması doğrulanır. Mevcut QA dosyanız backend SMTP bağlantısını Mailpit'e yönlendirmeli, testlerin beklediği Mailpit HTTP adresini ve mevcut backend portunu sağlamalıdır. Parametre verilmezse yalnız temel Compose kullanılır; ortam Mailpit gereksinimini sağlamıyorsa mail kullanan E2E testleri başarılı olamaz. Script `.env` veya profil dosyalarını değiştirmez. Frontend Docker dışında Node.js ile çalışır; frontend portunda başka sunucu olmamalıdır.
+
 Herhangi bir adım başarısız olursa script `exit 1` ile durur ve push yapılmamalıdır.
+
+QA override kullanıldığında normal çıkış, hata ve PowerShell'in işleyebildiği kesintilerde `finally` temizliği temel Compose ile backend ayarını geri yükler; Mailpit/QA SMTP ayarı normal uygulamada bırakılmaz. Process'in zorla öldürülmesi veya terminalin kapanması bu temizliği atlayabilir. Böyle bir kesintiden sonra teslimden önce repo kökünde şu komutu çalıştırın ve etkin backend SMTP ayarını doğrulayın:
+
+```powershell
+docker compose -f docker-compose.yml up -d --force-recreate backend
+```
+
+Bu komut ENV dosyalarını değiştirmez; mevcut normal SMTP yapılandırmasını yeniden uygular. Test verisi veya Mailpit container'ı silinmez.
 
 ## Her push öncesi zorunlu kontroller
 
@@ -21,6 +37,7 @@ Herhangi bir adım başarısız olursa script `exit 1` ile durur ve push yapılm
 
 2. Docker erişimi
    - Docker daemon erişilebilir olmalı.
+   - Temel Compose ve varsa temel + QA override için `config --quiet` başarılı olmalı.
 
 3. PostgreSQL
    - `docker compose up -d postgres`
@@ -32,25 +49,31 @@ Herhangi bir adım başarısız olursa script `exit 1` ile durur ve push yapılm
    - JaCoCo `verify` aşamasında rapor üretir.
    - Maven aşamasında operatörün OAuth kimlik bilgileri geçici olarak temizlenir ve `MAIL_ENABLED=false` olur. Mail testleri kendi GreenMail ayarlarını açıkça sağlar; Docker/E2E öncesinde özgün mail/OAuth ayarları geri yüklenir. `.env` dosyası değişmez.
 
-5. Frontend
+5. E2E için güncel backend
+   - Maven sonrasında, frontend E2E öncesinde temel Compose + varsa QA override ile `up -d --build` çalışır.
+   - Backend ve override içindeki Mailpit gibi QA servisleri başlatılır.
+   - Backend `http://localhost:${BACKEND_PORT}/actuator/health` kontrolü başarılı olmadan frontend aşamasına geçilmez.
+   - Önceki çalıştırmadan kalan backend image'ı ile yeni frontend test edilmez.
+
+6. Frontend
    - Gerekirse `npm ci`
    - `npm run lint`
    - `npx tsc --noEmit`
    - `npm run build`
+   - Bundle bütçeleri uyarı olarak raporlanır; bu kontrol gate'i durdurmaz.
+   - Yeni production build, geçici Node.js sunucusuyla çalıştırılır.
+   - Mevcut `test:e2e` npm scripti üzerinden Playwright paketi zorunlu çalışır; hata gate'i durdurur.
 
-6. Docker Compose
-   - `docker compose config --quiet`
+7. Temel Docker Compose'a dönüş
    - `docker compose up -d --build`
-   - Backend ve frontend image'ları build edilir ve stack ayağa kaldırılır.
+   - E2E sonrasında QA override olmadan temel backend/PostgreSQL stack'i yeniden başlatılır; backend'in normal `.env` ayarları kullanılır.
+   - Frontend image'ı bu yerel Compose'da yoktur; smoke sırasında aynı Node.js production sunucusu kullanılır.
 
-7. Runtime smoke test
+8. Runtime smoke test
    - Backend: `http://localhost:${BACKEND_PORT}/actuator/health`
-   - Frontend: `http://localhost:${FRONTEND_PORT}`
+   - Frontend: `http://localhost:${FRONTEND_PORT}/tr/ana-sayfa`
    - Her iki HTTP kontrolü de başarılı olmalıdır.
-
-8. Playwright
-   - Projeye Playwright eklendiğinde script otomatik olarak `test:e2e` npm scriptini çalıştırır.
-   - Şu an `test:e2e` yoksa bu adım skip edilir.
+   - Frontend test sunucusu başarıda ve kontrollü hata çıkışında durdurulur.
 
 ## Her push'ta çalıştırılmayacak testler
 

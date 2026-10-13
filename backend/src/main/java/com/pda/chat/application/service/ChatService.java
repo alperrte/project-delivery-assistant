@@ -346,7 +346,7 @@ public class ChatService {
         var unique=new HashSet<>(ids);
         if(messages.findByIdInAndConversationId(unique,conversationId).size()!=unique.size())throw ChatException.notFound("CHAT_NOT_FOUND");
         Instant readAt=now();int changed=0;
-        for(UUID id:unique) changed+=jdbc.update("update chat_message_receipts set read_at=?,legacy=false where message_id=? and user_id=? and read_at is null",java.sql.Timestamp.from(readAt),id,actor);
+        for(UUID id:unique.stream().sorted().toList()) changed+=jdbc.update("update chat_message_receipts set read_at=?,legacy=false where message_id=? and user_id=? and read_at is null",java.sql.Timestamp.from(readAt),id,actor);
         if(changed==0)return;
         var participants=conversation.getType()==ChatConversationType.DIRECT?Set.of(conversation.getDirectUserLow(),conversation.getDirectUserHigh()):Set.<UUID>of();
         afterCommit(()->{delivery.conversationRead(conversation.getProjectId(),conversationId,actor);delivery.seen(new ChatDelivery.ChatSeen(conversation.getProjectId(),conversationId,conversation.getType(),participants,actor,readAt));});
@@ -358,45 +358,53 @@ public class ChatService {
      * ignored (the DB WHERE clause handles this). A read message is already treated as delivered, so
      * backfilling delivered_at from read_at during the V49 migration is correct.
      *
-     * <p>After-commit: the senders of the newly delivered messages receive a DELIVERED socket push so their
-     * tick icons can advance from single to double.
+     * <p>After-commit: only original senders of messages whose entire original recipient set is now
+     * delivered receive a DELIVERED socket push. Partial group delivery never advances the aggregate tick.
      */
     @Transactional
-    public void markDelivered(UUID actor, UUID conversationId, List<UUID> messageIds) {
+    public void markDelivered(UUID actor, UUID projectId, UUID conversationId, List<UUID> messageIds) {
         if (messageIds == null || messageIds.isEmpty() || messageIds.size() > 100 || messageIds.stream().anyMatch(Objects::isNull)) {
             throw ChatException.invalid("CHAT_INVALID_REQUEST");
         }
-        accessible(actor, null, conversationId);
-        Instant deliveredAt = now();
-        // Only update rows where this user IS the recipient and delivered_at is still null.
-        List<UUID> unique = messageIds.stream().distinct().toList();
-        int changed = 0;
-        for (UUID id : unique) {
-            changed += jdbc.update(
-                "UPDATE chat_message_receipts SET delivered_at = ? WHERE message_id = ? AND user_id = ? AND delivered_at IS NULL",
-                java.sql.Timestamp.from(deliveredAt), id, actor);
+        ChatConversation conversation = accessible(actor, projectId, conversationId);
+        List<UUID> unique = messageIds.stream().distinct().sorted().toList();
+        // Validate the complete request before any receipt write, including mixed foreign IDs.
+        if (messages.findByIdInAndConversationId(unique, conversationId).size() != unique.size()) {
+            throw ChatException.notFound("CHAT_NOT_FOUND");
         }
-        if (changed == 0) return;
-        // Notify the senders of newly-delivered messages so their ticks can update in real time.
-        // We look up which messages were just marked to find their senders.
+        // Serialize recipients of the same messages so concurrent final acknowledgements
+        // cannot both miss the other's uncommitted receipt. Stable ordering avoids lock cycles.
+        for (UUID id : unique) {
+            messages.lockByIdAndConversationId(id, conversationId)
+                    .orElseThrow(() -> ChatException.notFound("CHAT_NOT_FOUND"));
+        }
+        Instant deliveredAt = now();
+        // RETURNING identifies only rows this transaction actually changed, not earlier timestamps.
         record SenderMsg(UUID senderId, UUID messageId) {}
         List<SenderMsg> affected = new ArrayList<>();
         for (UUID id : unique) {
             jdbc.query(
-                "SELECT m.sender_user_id FROM chat_messages m JOIN chat_message_receipts r ON r.message_id = m.id WHERE m.id = ? AND r.user_id = ? AND r.delivered_at = ?",
+                "UPDATE chat_message_receipts r SET delivered_at = ? FROM chat_messages m "
+                        + "WHERE r.message_id = m.id AND m.id = ? AND m.conversation_id = ? "
+                        + "AND r.user_id = ? AND r.delivered_at IS NULL RETURNING m.sender_user_id",
                 (rs, n) -> new SenderMsg(rs.getObject(1, UUID.class), id),
-                id, actor, java.sql.Timestamp.from(deliveredAt)).forEach(affected::add);
+                java.sql.Timestamp.from(deliveredAt), id, conversationId, actor).forEach(affected::add);
         }
+        if (affected.isEmpty()) return;
+        // MessageView defines DELIVERED as every original recipient having acknowledged.
+        // A per-recipient acknowledgement alone must not advance the sender's group tick.
+        affected.removeIf(message -> !Boolean.TRUE.equals(jdbc.queryForObject(
+                "SELECT count(*) > 0 AND count(*) FILTER (WHERE delivered_at IS NULL) = 0 "
+                        + "FROM chat_message_receipts WHERE message_id = ?", Boolean.class, message.messageId())));
+        if (affected.isEmpty()) return;
         // Group by sender so we fire one event per sender.
         Map<UUID, List<UUID>> bySender = new HashMap<>();
         affected.forEach(sm -> bySender.computeIfAbsent(sm.senderId(), k -> new ArrayList<>()).add(sm.messageId()));
-        ChatConversation conversation = conversations.findById(conversationId)
-                .orElseThrow(() -> ChatException.notFound("CHAT_NOT_FOUND"));
         Set<UUID> participants = conversation.getType() == ChatConversationType.DIRECT
                 ? Set.of(conversation.getDirectUserLow(), conversation.getDirectUserHigh()) : Set.of();
         bySender.forEach((senderId, msgs) -> {
             ChatDelivery.ChatDelivered event = new ChatDelivery.ChatDelivered(
-                    conversation.getProjectId(), conversationId, conversation.getType(), participants, actor, msgs);
+                    conversation.getProjectId(), conversationId, conversation.getType(), participants, actor, senderId, List.copyOf(msgs));
             afterCommit(() -> delivery.delivered(event));
         });
     }

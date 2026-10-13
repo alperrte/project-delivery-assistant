@@ -47,7 +47,7 @@ public interface ChatDelivery {
      * {@code recipientId} is the user who acknowledged, {@code messageIds} are the messages now delivered.
      */
     record ChatDelivered(UUID projectId, UUID conversationId, ChatConversationType type,
-                         Set<UUID> directParticipants, UUID recipientId, java.util.List<UUID> messageIds) {
+                         Set<UUID> directParticipants, UUID recipientId, UUID senderId, java.util.List<UUID> messageIds) {
     }
 
     void delivered(ChatDelivered event);

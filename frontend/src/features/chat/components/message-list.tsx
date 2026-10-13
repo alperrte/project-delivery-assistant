@@ -179,7 +179,7 @@ export function MessageList({
   // "Seen" is shown under the newest own message only (like messengers do), not under every one.
   const lastOwnId = [...messages].reverse().find((message) => message.sender.userId === selfId && !message.deleted)?.id;
   const seenBy = (message: ChatMessage) =>
-    receipts.filter((receipt) => receipt.messageId ? receipt.messageId===message.id : Date.parse(receipt.readAt) >= Date.parse(message.createdAt)).length;
+    receipts.filter((receipt) => receipt.messageId ? receipt.messageId===message.id : message.deliveryStatus === undefined && Date.parse(receipt.readAt) >= Date.parse(message.createdAt)).length;
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
@@ -273,7 +273,7 @@ export function MessageList({
                       {formatClock(message.createdAt, locale)}
                     </time>
                     {own && !message.deleted && (() => {
-                      const isRead = message.deliveryStatus === "READ" || seenBy(message) > 0;
+                      const isRead = message.deliveryStatus === undefined ? seenBy(message) > 0 : message.deliveryStatus === "READ";
                       const isDelivered = !isRead && message.deliveryStatus === "DELIVERED";
                       return (
                         <span

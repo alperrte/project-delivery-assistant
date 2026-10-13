@@ -1,6 +1,10 @@
 import { test, expect, type Page } from "@playwright/test";
-import { api, createProject } from "./helpers";
+import { api, createProject, revealWorkspaceHeader } from "./helpers";
 import { MANAGER_STORAGE, MEMBER_STORAGE } from "./global-setup";
+import tr from "../src/i18n/messages/tr.json";
+import en from "../src/i18n/messages/en.json";
+import de from "../src/i18n/messages/de.json";
+const catalogs = { tr, en, de };
 
 test.use({ storageState: MANAGER_STORAGE });
 type Task = { id: string; taskKey: string; title: string; status: string };
@@ -111,9 +115,14 @@ test("advanced personal task status menu keeps review steps and asks before chan
   await api(page, "PATCH", `/projects/${f.projectId}/tasks/${f.task.id}/status`, { status: "IN_PROGRESS" });
   await openList(page, f.projectId);
   const card = page.locator(`[data-task-card="${f.task.id}"]`);
-  await expect(card.getByRole("button", { name: "Tamamla", exact: true })).toHaveCount(0);
+  await expect(card.getByRole("button", { name: "Tamamla", exact: true })).toBeVisible();
+  await card.getByRole("button", { name: "Tamamla", exact: true }).click();
+  await expect(confirmDialog(page)).toBeVisible();
+  await confirmDialog(page).getByRole("button", { name: tr.tasks.common.confirmStatus.cancel, exact: true }).click();
+  await expect(confirmDialog(page)).toHaveCount(0);
+  expect((await api(page, "GET", `/projects/${f.projectId}/tasks/${f.task.id}`)).json).toMatchObject({ status: "IN_PROGRESS" });
   await card.getByRole("button", { name: /Durumu değiştir/ }).click();
-  await expect(page.getByRole("menuitem", { name: "Tamamlandı", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("menuitem", { name: "Tamamlandı", exact: true })).toBeVisible();
   await page.getByRole("menuitem", { name: "İncelemede", exact: true }).click();
   await expect(confirmDialog(page)).toBeVisible();
   await confirmDialog(page).getByRole("button", { name: "Durumu güncelle", exact: true }).click();
@@ -181,7 +190,7 @@ test("cards and dialog fit small screens in TR/EN/DE and both themes without run
     ["tr", "/tr/gorevler", "Görevlerim", `${f.task.title}, ${f.task.taskKey} görevini aç`, "Görev detayını kapat"],
     ["en", "/en/tasks", "My tasks", `${f.task.title}, Open task ${f.task.taskKey}`, "Close task details"],
     ["de", "/de/aufgaben", "Meine Aufgaben", `${f.task.title}, Aufgabe ${f.task.taskKey} öffnen`, "Aufgabendetails schließen"],
-  ]) {
+  ] as const) {
     for (const dark of [false, true]) {
       for (const width of [320, 390, 768, 1440]) {
         await page.setViewportSize({ width, height: 900 });
@@ -189,8 +198,17 @@ test("cards and dialog fit small screens in TR/EN/DE and both themes without run
         await page.goto(`${route}?project=${f.projectId}`);
         await expect(page.getByRole("heading", { name: heading, exact: true })).toBeVisible();
         const themeButton = locale === "tr" ? dark ? "Koyu" : "Açık" : locale === "en" ? dark ? "Dark" : "Light" : dark ? "Dunkel" : "Hell";
-        await page.mouse.move(width / 2, 8);
-        await page.getByRole("button", { name: themeButton, exact: true }).click();
+        await revealWorkspaceHeader(page);
+        if (width < 640) {
+          await page.locator(".app-shell header").getByRole("button", { name: catalogs[locale].workspace.navigation, exact: true }).click();
+          const navigation = page.locator("#workspace-mobile-navigation");
+          await expect(navigation).toBeVisible();
+          await navigation.getByRole("button", { name: themeButton, exact: true }).click();
+          await page.keyboard.press("Escape");
+          await expect(navigation).not.toBeVisible();
+        } else {
+          await page.locator(".app-shell header").getByRole("button", { name: themeButton, exact: true }).click();
+        }
         await expect.poll(() => page.locator("html").evaluate(el => el.classList.contains("dark"))).toBe(dark);
         await expect(page.locator("html")).not.toHaveClass(/theme-close-in|theme-reveal/);
         const card = page.locator(`[data-task-card="${f.task.id}"]`);

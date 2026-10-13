@@ -207,7 +207,7 @@ public class SecurityBaselineConfiguration {
                             .requestMatchers(HttpMethod.POST,"/api/v1/chat/conversations/*/messages/attachment").authenticated()
                             .requestMatchers(HttpMethod.GET,"/api/v1/chat/conversations/*/messages/*/attachment","/api/v1/chat/conversations/*/messages/*/info").authenticated()
                             .requestMatchers(HttpMethod.GET, "/api/v1/chat/conversations", "/api/v1/chat/members", "/api/v1/chat/conversations/*/messages", "/api/v1/chat/conversations/*/receipts", "/api/v1/chat/conversations/*/messages/reactions").authenticated()
-                            .requestMatchers(HttpMethod.POST, "/api/v1/chat/direct/*", "/api/v1/chat/conversations/*/messages", "/api/v1/chat/conversations/*/read", "/api/v1/chat/conversations/*/typing").authenticated()
+                            .requestMatchers(HttpMethod.POST, "/api/v1/chat/direct/*", "/api/v1/chat/conversations/*/messages", "/api/v1/chat/conversations/*/read", "/api/v1/chat/conversations/*/delivered", "/api/v1/chat/conversations/*/typing").authenticated()
                             .requestMatchers(HttpMethod.PUT, "/api/v1/chat/conversations/*/messages/*/reactions/*").authenticated()
                             .requestMatchers(HttpMethod.DELETE, "/api/v1/chat/conversations/*/messages/*", "/api/v1/chat/conversations/*/messages/*/reactions/*").authenticated()
                             .requestMatchers(HttpMethod.GET, "/api/v1/projects/*/chat/conversations/*/messages/reactions").authenticated()

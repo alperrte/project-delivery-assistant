@@ -10,6 +10,11 @@ async function mockApi(page: Page, failure: (path: string) => number) {
     const status = failure(path);
     const data = status !== 200 ? { status, detail: "Internal diagnostic must not be displayed", code: "ERROR_TEST" }
       : path.endsWith("/auth/me") ? user
+      : path.endsWith("/users/me/profile") ? user
+      : path.endsWith("/users/me/preferences") ? { locale: "tr", theme: "system", motion: "on", themeTransition: true, languageTransition: true, navbarMode: "always-visible" }
+      : path.endsWith("/chat/conversations") ? { groups: [], directs: [], totalUnread: 0 }
+      : path.endsWith("/chat/members") ? []
+      : path.endsWith("/notifications/unread-count") ? { count: 0 }
       : path.endsWith("/auth/csrf") ? { headerName: "X-XSRF-TOKEN" }
       : path.endsWith("/tasks/mine") ? { content: [], counts: {}, totalElements: 0, totalPages: 0 }
       : { content: [], totalElements: 0, totalPages: 0 };
@@ -109,8 +114,8 @@ test("expired session still redirects to login instead of a 403 screen", async (
 });
 
 test("development crash reaches the real 500 boundary and retry recovers", async ({ page }) => {
-  await page.goto("/dev/error-test");
-  test.skip(await page.locator('[data-error-code="404"]').count() > 0, "Controlled crash route is disabled in production.");
+  const response = await page.goto("/dev/error-test");
+  test.skip(response?.status() === 404, "Controlled crash route is disabled in production.");
   await page.getByRole("button", { name: "Test hatası oluştur", exact: true }).click();
   await expect(page.locator('[data-error-code="500"]')).toBeVisible();
   await page.getByRole("button", { name: "Yeniden dene", exact: true }).click();

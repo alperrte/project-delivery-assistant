@@ -135,10 +135,11 @@ class StompChatDelivery implements ChatDelivery {
         try {
             DeliveredSocketEvent payload = new DeliveredSocketEvent("DELIVERED", event.projectId(),
                     event.conversationId(), event.recipientId(), event.messageIds());
-            for (UUID recipient : recipients(event.projectId(), event.type(), event.directParticipants())) {
-                if (!recipient.equals(event.recipientId())) {
-                    messaging.convertAndSendToUser(recipient.toString(), ChatWebSocketConfiguration.USER_QUEUE, payload);
-                }
+            // Acknowledgements contain message IDs private to their original sender.
+            // Retain the current group-membership / direct-participant delivery guard.
+            if (!event.senderId().equals(event.recipientId())
+                    && recipients(event.projectId(), event.type(), event.directParticipants()).contains(event.senderId())) {
+                messaging.convertAndSendToUser(event.senderId().toString(), ChatWebSocketConfiguration.USER_QUEUE, payload);
             }
         } catch (RuntimeException failure) {
             log.warn("Chat delivered delivery failed: project={} conversation={} ({})", event.projectId(),

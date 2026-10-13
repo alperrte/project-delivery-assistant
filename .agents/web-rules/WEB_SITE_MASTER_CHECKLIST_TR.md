@@ -404,3 +404,11 @@ Authenticated legacy FAQ URLs in TR/EN/DE now resolve to workspace layout; anony
 ## Workspace contact page - 2026-10-12 (scoped)
 
 Navigation/title/noindex/responsive/dark-mode scope: profile and legacy contact addresses keep signed-in workspace layout, reload/back/cookies verified; anonymous contact and protected login guard preserved. TR/EN/DE at 320 px and desktop/mobile screenshots checked. 3 targeted Chromium tests, lint/type/build PASS. Form/mail delivery unchanged and not retested; global boxes unchanged. Evidence: docs/compliation/2026-10-12-profile-contact-page.md.
+
+## Pre-push öncesi regresyon düzeltmeleri - 2026-10-13 (sınırlı kapsam)
+
+Etkilenen navigasyon/oturum, logo fallback, sohbet read/delete/focus ve API hata durumu kapsamları doğrulandı. Giriş/çıkış Next Router Cache sınırı, aktör kapsamlı chat overview yenilemesi, bounded teslim bildirimi yetki/konuşma/receipt sınırları ve authoritative mesaj durumları korundu. Son hedefli backend 62/0/0/0 ve Chromium sohbet/cache 17/0/0; lint/type/build/strict bundle/diff geçti. Global kutular bu sınırlı kanıtla değiştirilmedi. Kullanıcı son tam pre-push'a geçilmemesini istedi; başlatılan koşu durduruldu, kanonik PASSED/production onayı yok. Kapsam, önceki keşif koşuları, mevcut development bağımlılık borcu ve manuel adımlar: `docs/compliation/2026-10-13-pre-push-oncesi-duzeltmeler.md`.
+
+## Pre-push öncesi regresyon düzeltmeleri - 2026-10-13 (sınırlı kapsam)
+
+Etkilenen navigasyon/oturum, logo fallback, sohbet read/delete/focus ve API hata durumu kapsamları doğrulandı. Giriş/çıkış Next Router Cache sınırı, aktör kapsamlı chat overview yenilemesi, bounded teslim bildirimi yetki/konuşma/receipt sınırları ve authoritative mesaj durumları korundu. Son hedefli backend 62/0/0/0 ve Chromium sohbet/cache 17/0/0; lint/type/build/strict bundle/diff geçti. Global kutular bu sınırlı kanıtla değiştirilmedi. Kullanıcı son tam pre-push'a geçilmemesini istedi; başlatılan koşu durduruldu, kanonik PASSED/production onayı yok. Kapsam, önceki keşif koşuları, mevcut development bağımlılık borcu ve manuel adımlar: `docs/compliation/2026-10-13-pre-push-oncesi-duzeltmeler.md`.

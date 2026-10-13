@@ -126,6 +126,7 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
   const dirty = isDirty || logoFile !== null || bannerFile !== null || repositoryUrl.trim() !== "";
 
   const mutation = useMutation({
+    onMutate: () => ({ actorId: user?.id }),
     mutationFn: async (form: CreateProjectValues) => {
       const project = await projectsApi.create({
         name: form.name.trim(),
@@ -192,9 +193,9 @@ export function ProjectCreatePage({ presentationValues }: { presentationValues?:
       }
       return { project, planningFailed, taskModeFailed, logoFailed, bannerFailed, repositoryFailed };
     },
-    onSuccess: async ({ project, planningFailed, taskModeFailed, logoFailed, bannerFailed, repositoryFailed }) => {
+    onSuccess: async ({ project, planningFailed, taskModeFailed, logoFailed, bannerFailed, repositoryFailed }, _values, owner) => {
       created.current = true;
-      await invalidateProjectMutation(queryClient, project.organizationId);
+      await invalidateProjectMutation(queryClient, owner?.actorId, project.organizationId);
       toast.success(t("actions.created"));
       if (planningFailed) toast.warning(t("actions.planningFailed"));
       if (taskModeFailed) toast.warning(t("actions.taskModeFailed"));

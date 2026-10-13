@@ -148,8 +148,12 @@ test("team, chat and recipient invitation surfaces use the project's own shape",
   await frameShape(page.locator("main [data-logo-frame]").first(), true);
   await page.goto(`/projects/${project.slug}/teams/${team.id}`);
   await frameShape(page.locator("main [data-logo-frame]").first(), true);
+  const overview = (await api(page, "GET", "/chat/conversations")).json as { groups: { id: string; projectId: string }[] };
+  const groupId = overview.groups.find(group => group.projectId === project.id)!.id;
   await page.getByTestId("chat-nav-item").filter({ visible: true }).click();
-  await expect(page.locator('[data-slot="group-avatar"]').first()).toHaveCSS("border-radius", "50%");
+  const group = page.locator(`[data-testid="chat-conversation-group"][data-conversation-id="${groupId}"]`);
+  await group.click();
+  await expect(group.locator('[data-slot="group-avatar"]')).toHaveCSS("border-radius", "50%");
   await page.getByTestId("chat-panel-close").click();
   const context = await browser.newContext({ storageState: MEMBER_STORAGE });
   const recipient = await context.newPage();
