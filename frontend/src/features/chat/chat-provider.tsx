@@ -324,6 +324,7 @@ function AccountChatProvider({ children, slug, selfId, ownerKey, pageKey }: {
       const lifetime = lifetimeRef.current;
       if (!lifetime.active || !pid) return;
       if (event.type !== "TYPING") {
+        if (event.type === "REACTIONS" || event.type === "DELETED") void queryClient.invalidateQueries({ queryKey: chatKeys.reactionDetailsRoot(pid, event.conversationId) });
         void queryClient.invalidateQueries({ queryKey: chatKeys.contextRoot(pid, event.conversationId) });
         if (event.type === "MESSAGE" || event.type === "DELETED") {
           void queryClient.cancelQueries({ queryKey: chatKeys.searchRoot(pid, event.conversationId) }).then(() => {
@@ -408,6 +409,7 @@ function AccountChatProvider({ children, slug, selfId, ownerKey, pageKey }: {
     const lifetime = lifetimeRef.current;
     if (!lifetime.active || !pid) return;
     if (reconnect) {
+      void queryClient.invalidateQueries({ queryKey: chatKeys.reactionDetailsRoot(pid) });
       void queryClient.invalidateQueries({ queryKey: chatKeys.overview(pid) });
       // A deletion announced while the socket was down is not part of the "newer messages" catch-up below.
       void queryClient.invalidateQueries({ queryKey: chatKeys.messagesRoot(pid) });
@@ -570,7 +572,7 @@ function AccountChatProvider({ children, slug, selfId, ownerKey, pageKey }: {
     pending.add(key); setReactionPendingKeys(new Set(pending));
     try {
       const snapshot = await chatApi.react(pid, cid, messageId, code, add, lifetime.abort.signal);
-      if (lifetime.active && accountIdRef.current === pid) applyReactionSnapshots(queryClient, pid, cid, [snapshot]);
+      if (lifetime.active && accountIdRef.current === pid) { applyReactionSnapshots(queryClient, pid, cid, [snapshot]); void queryClient.invalidateQueries({ queryKey: chatKeys.reactionDetailsRoot(pid, cid) }); }
     } catch (error) {
       if (lifetime.active) throw error;
     } finally {

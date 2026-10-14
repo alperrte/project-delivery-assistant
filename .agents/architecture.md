@@ -1,5 +1,13 @@
 ﻿# Mimari kısa özet
 
+## Ana sidebar, tepki detayları ve çoklu sohbet ekleri — 2026-10-14
+
+Ana sidebar genişliği hesap bazlı `pda:sidebar-width:v1:{accountId}` istemci UI tercihidir. Ortak `sidebar-width.ts` SSR snapshot, bellek/storage fallback ve viewport sınırlarını yönetir; AppShell ve ayrı ChatPanel aynı genişliği okur. Collapsed rail/mobil drawer korunur; sidebar'a yeni konuşma listesi eklenmez.
+
+Mevcut reaction batch GET, `details=true` ile tek mesaj için sayfalı kullanıcı özetleri döner. Sayım/sürüm/sayfa repeatable-read snapshot'ındadır; User public contract tek toplu sorguyla kullanılır, e-posta verilmez. Normal batch/STOMP payload'ları büyütülmez. Hesap kapsamlı detay query'si mutation/socket/reconnect ile yenilenir; desktop Popover ve mobil Dialog aynı veriyi gösterir.
+
+Chooser/drop/paste tek geçici ek kuyruğunu kullanır. Mevcut tek dosya multipart endpoint'iyle sırayla ayrı mesajlar gönderilir; metin/yanıt ilk başarılı eke aittir. Onaylanan ek çıkarılır; hata sonrası kalanlar tekrar denenir. Konuşma/hesap/view ömrü bitince ekler temizlenir ve upload iptal edilir. Yeni endpoint/migration/bağımlılık/ENV veya dosya güvenlik politikası yoktur.
+
 ## Sohbet içi mesaj arama — 2026-10-14
 
 Chat aynı participant erişim denetimiyle tüm okunabilir geçmişte literal substring araması ve bounded mesaj çevresi sunar. PostgreSQL NFC + I/İ/ı/i folding ve V51 partial trigram GIN kullanılır; yeni servis/bağımlılık yoktur. İstemcide aktöre özgü `search` ve `context` query aileleri normal `messages` cache'inden ayrıdır: eski sonuca geçiş live history'ye boşluk eklemez. Çevrede mevcut before/after imleçleri iki yönde çalışır; son mesajlara dönüş ve gönderim live history'yi kullanır. Socket/reconnect arama ve çevreyi yeniler, silme cache'lerden metin/ek/alıntıyı temizler; hesap/conversation sınırları AbortSignal ile korunur. Masaüstünde yan panel, konuşma alanı 700 px altında sonuç/mesaj arasında geri dönüşlü tek görünüm ve visualViewport klavye yüksekliği kullanılır. Cookie/CSRF/CORS/yetki modeli değişmedi.

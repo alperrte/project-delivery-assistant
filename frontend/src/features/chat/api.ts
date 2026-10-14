@@ -6,6 +6,8 @@ import type { ChatMessageInfo } from "./types";
 const chatPath = (accountId: string) => { void accountId; return `/chat`; };
 
 export const chatApi = {
+  reactionDetails: (conversationId: string, messageId: string, code: ReactionCode | null, page: number, signal?: AbortSignal) =>
+    apiRequest<import("./types").ReactionDetails>(`/chat/conversations/${conversationId}/messages/reactions?${new URLSearchParams({ messageIds: messageId, details: "true", page: String(page), size: "30", ...(code ? { code } : {}) })}`, { signal }),
   search: (conversationId: string, q: string, page: number, signal?: AbortSignal) =>
     apiRequest<import("./types").ChatSearchPage>(`/chat/conversations/${conversationId}/messages/search?${new URLSearchParams({ q, page: String(page), size: "20" })}`, { signal })
       .then(result => ({ ...result, messages: result.messages.map(normalizeChatMessage) })),

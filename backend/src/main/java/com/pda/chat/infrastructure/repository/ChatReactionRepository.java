@@ -20,6 +20,20 @@ public class ChatReactionRepository {
     private final NamedParameterJdbcTemplate jdbc;
     public ChatReactionRepository(NamedParameterJdbcTemplate jdbc) { this.jdbc = jdbc; }
     public record Row(UUID messageId, long version, ChatReactionCode code, long count, Set<UUID> viewers) { }
+    public record Reactor(UUID userId, ChatReactionCode code) { }
+
+    public List<Reactor> reactors(UUID conversation, UUID message, ChatReactionCode code, int page, int size) {
+        var params = new org.springframework.jdbc.core.namedparam.MapSqlParameterSource()
+                .addValue("conversation", conversation).addValue("message", message)
+                .addValue("limit", size).addValue("offset", (long) page * size);
+        if (code != null) params.addValue("code", code.name());
+        return jdbc.query("""
+                select r.user_id, r.emoji_code from chat_message_reactions r
+                join chat_messages m on m.id=r.message_id
+                where m.conversation_id=:conversation and m.id=:message and m.deleted_at is null
+                """ + (code == null ? "" : " and r.emoji_code=:code ") + " order by r.emoji_code, r.user_id limit :limit offset :offset",
+                params, (rs, row) -> new Reactor(rs.getObject("user_id", UUID.class), ChatReactionCode.valueOf(rs.getString("emoji_code"))));
+    }
 
     /** A deleted message keeps no reactions. */
     public int removeAll(UUID messageId) {

@@ -1735,7 +1735,8 @@
         "boundary": "Diese Richtung verlässt den Workspace.",
         "noSafeEntry": "Kein sicherer Workspace-Eintrag in dieser Richtung."
       }
-    }
+    },
+    "resizeSidebar": "Seitenleiste vergrößern oder verkleinern"
   },
   "tasks": {
     "nav": {
@@ -2668,7 +2669,17 @@
     "reactions": {
       "action": "Reagieren",
       "chip": "{emoji}, {count} Reaktionen",
-      "error": "Reaktion konnte nicht gespeichert werden."
+      "error": "Reaktion konnte nicht gespeichert werden.",
+      "details": "Reaktionen",
+      "detailsFailed": "Reaktionen konnten nicht geladen werden. Versuche es erneut.",
+      "all": "Alle",
+      "you": "Du",
+      "remove": "Reaktion entfernen",
+      "empty": "Noch keine Reaktionen.",
+      "unknown": "Unbekannter Nutzer",
+      "total": "{count} Reaktionen",
+      "previous": "Zurück",
+      "next": "Weiter"
     },
     "actions": {
       "open": "Nachrichtenaktionen öffnen",
@@ -2691,7 +2702,8 @@
       "failed": "Datei konnte nicht gesendet werden.",
       "download": "Herunterladen",
       "view": "Bild vergrößern",
-      "file": "Datei"
+      "file": "Datei",
+      "drop": "Dateien hier ablegen"
     },
     "info": {
       "action": "Info",
@@ -3515,7 +3527,7 @@
           ],
           "items": [
             "Design: Ihre Wahl zwischen hellem, dunklem oder Systemdesign. Bleibt, bis Sie es löschen.",
-            "Animations- und Darstellungseinstellungen: Ihre Animationseinstellungen und ob die Seitenleiste eingeklappt ist. Bleiben, bis Sie sie löschen.",
+            "Animations- und Darstellungseinstellungen: Ihre Animationseinstellungen, ob die Seitenleiste eingeklappt ist und die Seitenleistenbreite für Ihr Konto. Bleiben, bis Sie sie löschen.",
             "Seiteneinstellungen: Ihre Ansicht auf der Teamseite und Ihre Wahl, die Hilfe zur Aufgabenart auszublenden. Bleiben, bis Sie sie löschen.",
             "Angemeldet bleiben: Wählen Sie diese Option auf dem Anmeldebildschirm, wird Ihre E-Mail-Adresse gemerkt; bleibt, bis Sie die Option ausschalten.",
             "Auswahl innerhalb der Sitzung: das zuletzt gewählte Projekt sowie Sprache und Design zu Beginn der Sitzung. Werden gelöscht, wenn Sie den Tab schließen."

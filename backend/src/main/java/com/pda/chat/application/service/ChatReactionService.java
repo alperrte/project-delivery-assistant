@@ -21,10 +21,12 @@ public class ChatReactionService {
     private final ChatReactionRateLimiter limits;
     private final Clock clock;
     private final ChatDelivery delivery;
+    private final com.pda.user.UserAccounts users;
     public ChatReactionService(ChatService access,ChatMessageRepository messages,ChatReactionRepository reactions,
-                               ChatReactionViewReader views,ChatReactionRateLimiter limits,Clock clock,ChatDelivery delivery) {
+                               ChatReactionViewReader views,ChatReactionRateLimiter limits,Clock clock,ChatDelivery delivery,com.pda.user.UserAccounts users) {
         this.access=access;this.messages=messages;this.reactions=reactions;this.views=views;this.limits=limits;this.clock=clock;
         this.delivery=delivery;
+        this.users=users;
     }
     @Transactional public ReactionSnapshot put(UUID actor,UUID project,UUID conversation,UUID message,String code) {
         return change(actor,project,conversation,message,code,true);
@@ -55,5 +57,30 @@ public class ChatReactionService {
         var found=views.forActor(conversation,unique,actor);
         if(found.size()!=unique.size())throw ChatException.notFound("CHAT_NOT_FOUND");
         return unique.stream().map(found::get).toList();
+    }
+
+    public record ReactorView(String code, ChatViews.ChatUser user) { }
+    public record Details(UUID messageId, String reactionVersion, List<ChatViews.ReactionView> reactions,
+                          List<ReactorView> users, long total, int page, int size) { }
+
+    @Transactional(readOnly=true, isolation=org.springframework.transaction.annotation.Isolation.REPEATABLE_READ)
+    public Details details(UUID actor, UUID project, UUID conversation, List<UUID> ids, String rawCode, int page, int size) {
+        access.accessible(actor, project, conversation);
+        if (ids == null || ids.size() != 1 || ids.getFirst() == null || page < 0 || size < 1 || size > 50)
+            throw ChatException.invalid("CHAT_INVALID_REQUEST");
+        UUID message = ids.getFirst();
+        var target = messages.findByIdAndConversationId(message, conversation).orElseThrow(() -> ChatException.notFound("CHAT_NOT_FOUND"));
+        if (target.isDeleted()) throw ChatException.notFound("CHAT_NOT_FOUND");
+        var code = rawCode == null ? null : ChatReactionCode.parse(rawCode);
+        var snapshot = views.forActor(conversation, ids, actor).get(message);
+        long total = snapshot.reactions().stream().filter(r -> code == null || r.code() == code).mapToLong(ChatViews.ReactionView::count).sum();
+        var rows = reactions.reactors(conversation, message, code, page, size);
+        var accounts = rows.isEmpty() ? java.util.Map.<UUID, com.pda.user.UserAccounts.AuthenticatedUser>of()
+                : users.findActiveByIds(rows.stream().map(ChatReactionRepository.Reactor::userId).collect(java.util.stream.Collectors.toSet()));
+        var people = rows.stream().map(row -> {
+            var user = accounts.get(row.userId());
+            return new ReactorView(row.code().name(), new ChatViews.ChatUser(row.userId(), user == null ? null : user.nickname(), user == null ? null : user.profilePhotoVersion()));
+        }).toList();
+        return new Details(message, snapshot.reactionVersion(), snapshot.reactions(), people, total, page, size);
     }
 }
