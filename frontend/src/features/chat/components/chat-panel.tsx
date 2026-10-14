@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { ArrowLeft, Minus, X } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { useSidebarCollapsed } from "@/components/layout/sidebar-collapse";
+import { useSidebarWidth } from "@/components/layout/sidebar-width";
 import { cn } from "@/lib/utils";
 import { useChat, draftKey } from "../chat-provider";
 import { ActiveConversationIdentity, ConversationView } from "./conversation-view";
@@ -49,6 +50,7 @@ export function ChatPanel() {
   const t = useTranslations("chat");
   const chat = useChat();
   const collapsed = useSidebarCollapsed();
+  const workspaceSidebar = useSidebarWidth();
   const panelRef = useRef<HTMLElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const conversationRef = useRef<ConversationHandle>(null);
@@ -179,13 +181,14 @@ export function ChatPanel() {
   return (
     <section
       ref={panelRef}
+      style={{ "--workspace-sidebar-width": collapsed ? "64px" : `${workspaceSidebar.width}px` } as import("react").CSSProperties}
       tabIndex={-1}
       aria-label={t("panel.label")}
       data-testid="chat-panel"
       onKeyDown={keyDown}
       className={cn(
         "fixed inset-x-0 top-(--workspace-header-reserve) bottom-0 z-30 flex min-h-0 flex-col border-t bg-background outline-none lg:border-l",
-        collapsed ? "lg:left-16" : "lg:left-60",
+        "lg:left-(--workspace-sidebar-width)",
       )}
     >
       <header className="flex min-h-14 shrink-0 items-center gap-3 border-b bg-card/70 px-3 sm:px-5">
@@ -240,7 +243,7 @@ export function ChatPanel() {
         >
           <div
             className={cn(
-              "h-8 w-1 rounded-full bg-border transition-all group-hover:h-12 group-hover:bg-primary group-hover:w-1.5",
+              "absolute top-[calc(50dvh-var(--workspace-header-reserve)-3.5rem-1px)] h-8 w-1 -translate-y-1/2 rounded-full bg-border transition-[height,width,background-color] duration-150 motion-reduce:transition-none group-hover:h-12 group-hover:bg-primary group-hover:w-1.5",
               isResizing && "h-14 bg-primary w-1.5",
             )}
             aria-hidden="true"

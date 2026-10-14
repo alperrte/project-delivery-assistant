@@ -32,6 +32,7 @@ export type ReactionCode = "THUMBS_UP" | "HEART" | "LAUGH" | "SURPRISED" | "SAD"
 export type ChatReply = { id: string; sender: ChatUser; preview: string; deleted?: boolean };
 export type ChatReaction = { code: ReactionCode; emoji: string; count: number; reactedByCurrentUser: boolean };
 export type ReactionSnapshot = { messageId: string; reactionVersion: string; reactions: ChatReaction[] };
+export type ReactionDetails = ReactionSnapshot & { users: { code: ReactionCode; user: ChatUser }[]; total: number; page: number; size: number };
 
 export type ChatLastMessage = {
   preview: string;

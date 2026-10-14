@@ -18,6 +18,7 @@ import { ProjectSidebarNav } from "./project-sidebar-nav";
 import { ChatNavItem } from "@/features/chat/components/chat-nav-item";
 import { TasksNavLink } from "./tasks-nav-link";
 import { COLLAPSE_KEY, collapseEvent, useSidebarCollapsed } from "./sidebar-collapse";
+import { useSidebarWidth } from "./sidebar-width";
 import { ChatProvider } from "@/features/chat/chat-provider";
 import { ChatRoot } from "@/features/chat/components/chat-root";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -168,6 +169,15 @@ export function AppShellView({ children, pathname, user, collapsed = false, onLo
   const incoming = useIncomingInvitationCount(!contained);
   const ti = useTranslations("invitations");
   const [menuOpen, setMenuOpen] = useState(false);
+  const sidebar = useSidebarWidth();
+  const [resizing, setResizing] = useState(false);
+  const resizeStart = useRef<{ x: number; width: number } | null>(null);
+  useEffect(() => {
+    if (!resizing) return;
+    const cursor = document.body.style.cursor, selection = document.body.style.userSelect;
+    document.body.style.cursor = "col-resize"; document.body.style.userSelect = "none";
+    return () => { document.body.style.cursor = cursor; document.body.style.userSelect = selection; };
+  }, [resizing]);
   useEffect(() => {
     const desktopControls = window.matchMedia("(min-width: 640px)");
     const close = () => { if (desktopControls.matches) setMenuOpen(false); };
@@ -264,9 +274,18 @@ export function AppShellView({ children, pathname, user, collapsed = false, onLo
   }
 
   const shell = (
-    <div style={{height:contained?"var(--demo-height)":undefined,"--workspace-sidebar-width":collapsed?"4rem":"15rem"} as CSSProperties} className={cn("flex bg-background", contained ? "workspace-preview min-h-full" : "app-shell min-h-[100dvh]")}>
+    <div style={{height:contained?"var(--demo-height)":undefined,"--workspace-sidebar-width":collapsed?"4rem":`${contained?240:sidebar.width}px`} as CSSProperties} className={cn("flex bg-background", contained ? "workspace-preview min-h-full" : "app-shell min-h-[100dvh]")}>
       {!contained && <a href="#main-content" className="sr-only z-50 rounded bg-primary p-3 text-primary-foreground focus:not-sr-only focus:fixed focus:top-2 focus:left-2">{tw("skip")}</a>}
-      <aside style={contained ? { height: "var(--demo-height)" } : undefined} className={cn("sticky top-0 hidden h-[100dvh] shrink-0 flex-col border-r bg-surface-2 transition-[width] duration-300 lg:flex", collapsed ? "w-16" : "w-60")}>
+      <aside style={{ height: contained ? "var(--demo-height)" : undefined, width: "var(--workspace-sidebar-width)" }} className="sticky top-0 hidden h-[100dvh] shrink-0 flex-col border-r bg-surface-2 lg:flex">
+        {!contained && !collapsed && <div role="separator" aria-orientation="vertical" aria-label={tw("resizeSidebar")} aria-valuenow={sidebar.width} aria-valuemin={200} aria-valuemax={sidebar.max} tabIndex={0} data-testid="workspace-sidebar-resize"
+          className="group absolute inset-y-0 -right-1 z-20 flex w-2 cursor-col-resize touch-none items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          onPointerDown={event => { if (event.button !== 0) return; event.preventDefault(); resizeStart.current = { x: event.clientX, width: sidebar.width }; setResizing(true); event.currentTarget.setPointerCapture(event.pointerId); }}
+          onPointerMove={event => { if (resizeStart.current) sidebar.setWidth(resizeStart.current.width + event.clientX - resizeStart.current.x, false); }}
+          onPointerUp={event => { if (!resizeStart.current) return; sidebar.setWidth(resizeStart.current.width + event.clientX - resizeStart.current.x); resizeStart.current = null; setResizing(false); event.currentTarget.releasePointerCapture(event.pointerId); }}
+          onLostPointerCapture={() => { resizeStart.current = null; setResizing(false); }} onPointerCancel={() => { sidebar.setWidth(sidebar.width); resizeStart.current = null; setResizing(false); }}
+          onDoubleClick={() => sidebar.setWidth(240)} onKeyDown={event => { const next = event.key === "ArrowLeft" ? sidebar.width - 16 : event.key === "ArrowRight" ? sidebar.width + 16 : event.key === "Home" ? 200 : event.key === "End" ? sidebar.max : undefined; if (next === undefined) return; event.preventDefault(); sidebar.setWidth(next); }}>
+          <span aria-hidden="true" className={cn("h-8 w-1 rounded-full bg-border transition-[height,width,background-color] duration-150 motion-reduce:transition-none group-hover:h-12 group-hover:w-1.5 group-hover:bg-primary group-focus-visible:bg-primary", resizing && "h-14 w-1.5 bg-primary")} />
+        </div>}
         {renderNavigation(collapsed)}
         <button
           type="button"

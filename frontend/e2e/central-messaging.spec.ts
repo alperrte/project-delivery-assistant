@@ -32,10 +32,16 @@ test('central messaging keeps a DM across projects, uploads a real file and publ
   await manager.getByRole('navigation',{name:tr.chat.conversations}).locator(`[aria-label="${tr.chat.categories.label}"]`).getByRole('button',{name:tr.chat.categories.direct,exact:true}).click();await manager.locator(`[data-peer-id="${peer.id}"]`).click();
   await expect(manager.getByTestId('chat-composer')).toBeEnabled();
   const text=`Central message ${Date.now()}`;await manager.getByTestId('chat-composer').fill(text);await manager.getByTestId('chat-send').click();await expect(manager.getByTestId('chat-message-text').filter({hasText:text})).toBeVisible();
-  await manager.getByTestId('chat-minimize').click();await manager.getByRole('link',{name:'Projeler',exact:true}).click();await manager.locator('a[href*="/central-a-"]:not([href*="?"])').first().click();await manager.getByTestId('chat-nav-item').click();await expect(manager.getByTestId('chat-message-text').filter({hasText:text})).toBeVisible();
+  await manager.getByTestId('chat-minimize').click();await manager.getByRole('link',{name:'Projeler',exact:true}).click();
+  await expect(manager).toHaveURL(/\/projeler$/);
+  await manager.locator(`a[href$="/${slugs[0]}/genel-bakis"]`).first().click();
+  await expect(manager).toHaveURL(url=>url.pathname.endsWith(`/${slugs[0]}/genel-bakis`));
+  await expect(manager.getByRole('heading',{name:names[0],exact:true})).toBeVisible();
+  await manager.getByTestId('chat-nav-item').click();await expect(manager.getByTestId('chat-message-text').filter({hasText:text})).toBeVisible();
   const info=await api(manager,'GET',`/chat/conversations/${dm.id}/messages`);const message=(info.json as {messages:{id:string;content:string}[]}).messages.find(m=>m.content===text)!;
   const initial=await api(manager,'GET',`/chat/conversations/${dm.id}/messages/${message.id}/info`);expect((initial.json as {readers:{readAt:string|null}[]}).readers[0].readAt).toBeNull();
   await manager.getByTestId('chat-conversation').locator('input[type="file"]').setInputFiles({name:'central.png',mimeType:'image/png',buffer:png});await expect(manager.getByTestId('chat-file-preview')).toContainText('central.png');await manager.getByTestId('chat-send').click();await expect(manager.getByTestId('chat-message-attachment').last()).toBeVisible();
+  await expect(manager.getByTestId('chat-conversation').locator('input[type="file"]')).toBeEnabled();
   await manager.getByTestId('chat-conversation').locator('input[type="file"]').setInputFiles({name:'huge.pdf',mimeType:'application/pdf',buffer:Buffer.alloc(2097153)});await expect(manager.getByText('Dosya başına en fazla 2 MB gönderebilirsiniz.')).toBeVisible();
   await member.getByTestId('chat-nav-item').click();await member.getByRole('navigation',{name:tr.chat.conversations}).locator(`[aria-label="${tr.chat.categories.label}"]`).getByRole('button',{name:tr.chat.categories.direct,exact:true}).click();await member.locator(`[data-peer-id="${me.id}"]`).click();await expect(member.getByTestId('chat-message-text').filter({hasText:text})).toBeVisible();
   await expect.poll(async()=>{const r=await api(manager,'GET',`/chat/conversations/${dm.id}/messages/${message.id}/info`);return (r.json as {readers:{readAt:string|null}[]}).readers[0].readAt;}).not.toBeNull();

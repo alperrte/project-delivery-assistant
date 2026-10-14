@@ -1,5 +1,13 @@
 # Frontend tasarım kuralları
 
+## Ana sidebar ve sohbet ek/tepki yüzeyleri — 2026-10-14
+
+Görünür resize grip: ana sidebar ve sohbet ayırıcısında 32 × 4 px yuvarlatılmış `bg-border` tutamaç, hover/odak/sürükleme primary vurgusu vardır. İki grip ekranın dikey orta noktasına hizalıdır; sohbet panelinin reserve/header/1 px border farkı CSS hesabına dahil edilir. Hareket azaltma tercihi korunur.
+
+Ana sidebar'ın tamamı sağ kenardan yatay yeniden boyutlandırılır: 200–420 px, kullanılabilir viewport'un en fazla %40'ı; pointer capture, yön tuşları/Home/End ve çift tıklama ile 240 px sıfırlama. Tercih hesap bazlıdır; rail 64 px ve mobil drawer korunur. Sidebar ve açık sohbet panelinin konumu anlık aynı ölçüdedir. Ayrı Sohbetler başlığı/liste eklenmez.
+
+Emoji chip tıklaması yalnız detay açar; kendi tepki kaldırma ve mevcut picker paneldedir. Masaüstü Popover/mobil Dialog, 30 satırlık sayfa, gerçek Avatar/fallback, bağımsız scroll, Escape/odak dönüşü ve TR/EN/DE kullanılır. Çoklu dosya preview'leri sınırlı scroll alanındadır; chooser/drop/paste aynı state'e ekler, overlay mevcut primary/background token'larıyla yalnız aktif konuşmayı kaplar. Token/font/renk sistemi değişmez.
+
 ## Sohbet konuşmalar paneli dinamik genişlik — 2026-10-13
 
 Kullanıcı tercihiyle sohbet panelindeki konuşmalar listesi (`ChatPanel`) masaüstünde sabit genişlik yerine dinamik olarak yeniden boyutlandırılabilir. Ayırıcı tutamaç (`role="separator"`) imleçle (pointer) sürüklenerek genişlik 240 px ile 560 px arasında ayarlanabilir, çift tıklamayla varsayılan 320 px değerine sıfırlanabilir ve yön tuşlarıyla klavyeden yönetilebilir. Tercih edilen genişlik `localStorage` (`pda:chat:sidebar-width`) ile oturumlar arasında korunur; mobil tek sütunlu düzen değişmez.

@@ -1711,7 +1711,8 @@
         "boundary": "This direction leaves the workspace.",
         "noSafeEntry": "No safe workspace entry in this direction."
       }
-    }
+    },
+    "resizeSidebar": "Resize sidebar"
   },
   "tasks": {
     "nav": {
@@ -2644,7 +2645,17 @@
     "reactions": {
       "action": "React",
       "chip": "{emoji}, {count} reactions",
-      "error": "Reaction could not be saved."
+      "error": "Reaction could not be saved.",
+      "details": "Reactions",
+      "detailsFailed": "Reactions could not be loaded. Try again.",
+      "all": "All",
+      "you": "You",
+      "remove": "Remove reaction",
+      "empty": "No reactions yet.",
+      "unknown": "Unknown user",
+      "total": "{count} reactions",
+      "previous": "Previous",
+      "next": "Next"
     },
     "actions": {
       "open": "Open message actions",
@@ -2667,7 +2678,8 @@
       "failed": "Could not send file.",
       "download": "Download",
       "view": "Expand image",
-      "file": "File"
+      "file": "File",
+      "drop": "Drop files here"
     },
     "info": {
       "action": "Info",
@@ -3491,7 +3503,7 @@
           ],
           "items": [
             "Theme: your light, dark or system theme choice. Kept until you delete it.",
-            "Animation and layout preferences: your animation settings and whether the sidebar is collapsed. Kept until you delete them.",
+            "Animation and layout preferences: your animation settings, whether the sidebar is collapsed and the sidebar width for your account. Kept until you delete them.",
             "Page preferences: your view on the Teams page and your choice to hide the task-type help. Kept until you delete them.",
             "Remember me: if you tick this option on the sign-in screen, your e-mail address is remembered; kept until you turn the option off.",
             "In-session choices: the project you selected last and the language and theme at the start of the session. Deleted when you close the tab."

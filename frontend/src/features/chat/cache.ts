@@ -5,6 +5,7 @@ import { newerReactionVersion, normalizeChatMessage } from "./reactions";
 
 /** One account's chat queries; conversation IDs retain their own histories within that account. */
 export const chatKeys = {
+  reactionDetailsRoot: (accountId: string, conversationId?: string) => ["accounts", accountId, "chat", "reaction-details", ...(conversationId ? [conversationId] : [])] as const,
   searchRoot: (accountId: string, conversationId?: string) => ["accounts", accountId, "chat", "search", ...(conversationId ? [conversationId] : [])] as const,
   contextRoot: (accountId: string, conversationId?: string) => ["accounts", accountId, "chat", "context", ...(conversationId ? [conversationId] : [])] as const,
   all: (accountId: string) => ["accounts", accountId, "chat"] as const,

@@ -1735,7 +1735,8 @@
         "boundary": "Bu yön uygulama alanının dışına çıkar.",
         "noSafeEntry": "Bu yönde güvenli uygulama geçmişi yok."
       }
-    }
+    },
+    "resizeSidebar": "Kenar çubuğu genişliğini ayarla"
   },
   "tasks": {
     "nav": {
@@ -2668,7 +2669,17 @@
     "reactions": {
       "action": "Tepki ver",
       "chip": "{emoji}, {count} tepki",
-      "error": "Tepki gönderilemedi."
+      "error": "Tepki gönderilemedi.",
+      "details": "Tepkiler",
+      "detailsFailed": "Tepkiler yüklenemedi. Tekrar deneyin.",
+      "all": "Tümü",
+      "you": "Sen",
+      "remove": "Tepkiyi kaldır",
+      "empty": "Henüz tepki yok.",
+      "unknown": "Bilinmeyen kullanıcı",
+      "total": "{count} tepki",
+      "previous": "Önceki",
+      "next": "Sonraki"
     },
     "actions": {
       "open": "Mesaj seçeneklerini aç",
@@ -2691,7 +2702,8 @@
       "failed": "Dosya gönderilemedi.",
       "download": "İndir",
       "view": "Görseli büyüt",
-      "file": "Dosya"
+      "file": "Dosya",
+      "drop": "Dosyaları buraya bırak"
     },
     "info": {
       "action": "Bilgi",
@@ -3469,7 +3481,7 @@
           ],
           "items": [
             "Tema: açık, koyu veya sistem teması tercihiniz. Siz silene kadar saklanır.",
-            "Animasyon ve görünüm tercihleri: animasyon ayarlarınız ve kenar çubuğunun daraltılmış olup olmadığı. Siz silene kadar saklanır.",
+            "Animasyon ve görünüm tercihleri: animasyon ayarlarınız, kenar çubuğunun daraltılmış olup olmadığı ve hesabınıza özel kenar çubuğu genişliği. Siz silene kadar saklanır.",
             "Sayfa tercihleri: Ekipler sayfasındaki görünümünüz ve görev türü yardımını gizleme seçiminiz. Siz silene kadar saklanır.",
             "Beni hatırla: giriş ekranında bu seçeneği siz işaretlerseniz e-posta adresiniz hatırlanır; seçeneği kapatana kadar saklanır.",
             "Oturum içi seçimler: son seçtiğiniz proje ile oturum başındaki dil ve tema. Sekmeyi kapattığınızda silinir."

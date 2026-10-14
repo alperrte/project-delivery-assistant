@@ -8,6 +8,10 @@ Mevcut POST `/api/v1/projects` ve PUT `/api/v1/projects/{id}` opsiyonel `project
 
 Mevcut `GET|PUT /api/v1/users/me/preferences` opsiyonel `navbarMode` (`always-visible|auto-hide`) taşır. GET seçilmemiş değeri null/absent verir; eski PUT alanı atlar veya null verirse önceki değer korunur. Diğer dört zorunlu alan değişmez. Yalnız principal'ın hesabı, mevcut cookie/CSRF/no-store politikası; geçersiz mode 400. Güvenli body: `{locale:"tr",theme:"system",motion:"on",themeTransition:true,navbarMode:"always-visible"}`.
 
+## Reaction detay okuması — 2026-10-14
+
+Mevcut GET `/chat/conversations/{c}/messages/reactions` normal batch sözleşmesini korur. `details=true` için `messageIds` tam bir UUID, `code` opsiyonel kanonik reaction kodu, `page>=0`, `size=1..50` (varsayılan 30) gerekir. Yanıt `{messageId,reactionVersion,reactions,users:[{code,user:{userId,nickname,profilePhotoVersion}}],total,page,size}`; aynı kişinin farklı kodları ayrı satırlardır. E-posta yoktur. Sayım/sürüm/sayfa tek repeatable-read snapshot'ındadır; mevcut grup/DM erişimi, private/no-store, 400/401/403/404 ve own PUT/DELETE CSRF politikası korunur. Ayrıntı ve Swagger yolu SECURITY §11'dedir. Çoklu ekler yeni API gerektirmez; istemci mevcut tek dosya multipart yolunu sırayla kullanır.
+
 ## Merkezi mesajlaşma — 2026-10-12
 
 Güncel kök `/api/v1/chat`; eski `/projects/{id}/chat` yolları uyumluluk için kalır. Merkezi overview `group` (nullable), `groups[]`, `directs[]`, `totalUnread` döner; grup özetleri projectId/projectName/logoVersion/logoShape içerir. `/members` diğer aktif ortak-proje üyelerini e-postasız döner. DM oluşturma global tekildir; var olan DM ortak proje olmasa da açılır.

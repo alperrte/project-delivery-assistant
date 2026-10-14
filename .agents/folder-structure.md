@@ -1,5 +1,13 @@
 ﻿# Klasör yapısı kısa rehberi
 
+## Sidebar genişliği ve sohbet geliştirmeleri — 2026-10-14
+
+- `frontend/src/components/layout/sidebar-width.ts`: hesap kapsamlı genişlik tercihi; AppShell sağ kenar tutamacı ve ChatPanel aynı ölçüyü kullanır.
+- `features/chat/components/reaction-details.tsx`: sayfalı gerçek kullanıcı detayları, desktop Popover/mobil Dialog; mevcut reaction-chips/API/cache/provider genişletilir.
+- `components/message-composer.tsx`: ortak çoklu ek kuyruğu, clipboard ve imperative drop girişi; `conversation-view.tsx`: aktif alan overlay/drop ve mevcut upload.
+- Backend `ChatController`, `ChatReactionService`, `ChatReactionRepository`: mevcut reaction GET için opsiyonel detay/sayfalama; yeni tablo veya migration yoktur.
+- Doğrulama: `ChatApiIntegrationTest`, `e2e/chat-enhancements.spec.ts`; mevcut central/replies/reactions testleri yeni tıklama ve işlem ömrünü izler.
+
 ## Çoklu proje türleri — 2026-10-12
 
 Project controller/request/response/service/entity mevcut sınırlarında kalır; `db/migration/V48__project_multiple_types.sql`, `ProjectTypesMigrationTest` ve `ProjectIdentityIntegrationTest` kalıcılık/uyumluluğu doğrular. Frontend `features/projects/types.ts` `getProjectTypes` legacy fallback'ini, ortak `components/create/type-picker.tsx` create/edit checkbox grubunu sağlar; tech-catalog/tech-picker önerileri birleştirir, kart/tablo/önizleme/davet tam diziyi gösterir. `e2e/project-multiple-types.spec.ts` public-config içindeki açıkça TEST-ONLY UI fixture paketidir.

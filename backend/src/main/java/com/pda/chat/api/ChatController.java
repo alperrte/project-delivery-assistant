@@ -184,9 +184,13 @@ public class ChatController {
                 ChatResponses.Reactions.from(reactions.remove(actorId(principal),projectId,conversationId,messageId,emojiCode)));
     }
     @GetMapping("/conversations/{conversationId}/messages/reactions")
-    @Operation(summary="Refresh reactions of loaded messages", description="One scoped batch, 1..50 message UUIDs. Any foreign or missing message is 404; no per-message fetch. Personalized flags and version/count share a SQL snapshot.")
-    public ResponseEntity<List<ChatResponses.Reactions>> reactionSnapshots(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
-            @PathVariable(required=false) UUID projectId,@PathVariable UUID conversationId,@RequestParam List<UUID> messageIds) {
+    @Operation(summary="Refresh reactions or inspect their users", description="Default: scoped batch, 1..50 message UUIDs. details=true: exactly one message UUID, optional canonical code, page >= 0, size 1..50; paged user summaries without email and counts in one repeatable-read snapshot. Foreign/missing/deleted detail target is 404. Existing participant access applies.")
+    public ResponseEntity<?> reactionSnapshots(@AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
+            @PathVariable(required=false) UUID projectId,@PathVariable UUID conversationId,@RequestParam List<UUID> messageIds,
+            @RequestParam(defaultValue="false") boolean details, @RequestParam(required=false) String code,
+            @RequestParam(defaultValue="0") int page, @RequestParam(defaultValue="30") int size) {
+        if (details) return ResponseEntity.ok().header("Cache-Control","private, no-store").body(
+                reactions.details(actorId(principal),projectId,conversationId,messageIds,code,page,size));
         return ResponseEntity.ok().header("Cache-Control","private, no-store").body(
                 reactions.snapshots(actorId(principal),projectId,conversationId,messageIds).stream().map(ChatResponses.Reactions::from).toList());
     }

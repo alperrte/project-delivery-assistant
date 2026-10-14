@@ -39,7 +39,7 @@ export const INFO_LINKS = [
  * default. Update the entry when the text of a page changes; the legal pages show it as "Last updated".
  */
 export const PAGE_UPDATED: Partial<Record<InfoPage, string>> = {
-  kvkk: "2026-10-11", privacy: "2026-10-11", terms: "2026-10-11", cookies: "2026-10-11", accessibility: "2026-10-11", faq: "2026-10-11",
+  kvkk: "2026-10-11", privacy: "2026-10-11", terms: "2026-10-11", cookies: "2026-10-14", accessibility: "2026-10-11", faq: "2026-10-11",
 };
 export const DEFAULT_PAGE_UPDATED = "2026-10-09";
 

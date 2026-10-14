@@ -83,19 +83,21 @@ test.describe.serial("Chat replies and reactions", () => {
     const before=(await api(a,"GET",`/chat/conversations`)).json as {totalUnread:number};
     await choose(b,"THUMBS_UP");
     await expect(row(a,"React meeting").getByTestId("chat-reaction-THUMBS_UP")).toContainText("1");
-    await expect(original.getByTestId("chat-reaction-THUMBS_UP")).toHaveAttribute("aria-pressed","true");
-    await expect(row(a,"React meeting").getByTestId("chat-reaction-THUMBS_UP")).toHaveAttribute("aria-pressed","false");
+    await expect(original.getByTestId("chat-reaction-THUMBS_UP")).toHaveAttribute("data-own-reaction","true");
+    await expect(row(a,"React meeting").getByTestId("chat-reaction-THUMBS_UP")).toHaveAttribute("data-own-reaction","false");
     await original.getByTestId("chat-reaction-THUMBS_UP").click();
+    await b.getByTestId("chat-reaction-details").getByRole("button",{name:"Tepkiyi kald\u0131r"}).click();
+    await b.keyboard.press("Escape");
     await expect(row(a,"React meeting").getByTestId("chat-reactions")).toHaveCount(0);
     await choose(b,"THUMBS_UP");await choose(b,"HEART");
-    await row(a,"React meeting").getByTestId("chat-reaction-THUMBS_UP").click();
+    await choose(a,"THUMBS_UP");
     await expect(original.getByTestId("chat-reaction-THUMBS_UP")).toContainText("2");
     await expect(row(a,"React meeting").getByTestId("chat-reaction-HEART")).toContainText("1");
     expect(((await api(a,"GET",`/chat/conversations`)).json as {totalUnread:number}).totalUnread).toBe(before.totalUnread);
     await a.reload();await open(a);
     await expect(row(a,"React meeting").getByTestId("chat-reaction-THUMBS_UP")).toContainText("2");
-    await expect(row(a,"React meeting").getByTestId("chat-reaction-THUMBS_UP")).toHaveAttribute("aria-pressed","true");
-    await expect(row(a,"React meeting").getByTestId("chat-reaction-HEART")).toHaveAttribute("aria-pressed","false");
+    await expect(row(a,"React meeting").getByTestId("chat-reaction-THUMBS_UP")).toHaveAttribute("data-own-reaction","true");
+    await expect(row(a,"React meeting").getByTestId("chat-reaction-HEART")).toHaveAttribute("data-own-reaction","false");
   });
 
   test("composer emoji insertion preserves caret and sends real Unicode; picker Escape does not cancel reply", async () => {
@@ -176,6 +178,7 @@ test.describe.serial("Chat replies and reactions", () => {
       await expect(b.getByTestId("chat-reply-context")).toContainText("Retry question");
       await b.getByTestId("chat-fullscreen").click();
       await b.locator(`.app-shell a[href="${localizeHref("/settings",locale)}"]`).first().click();
+      await expect(b).toHaveURL(url=>url.pathname===localizeHref("/settings",locale));
       await expect(b.getByTestId("chat-panel")).toHaveCount(0);await open(b);
       await expect(b.getByTestId("chat-reply-context")).toBeVisible();
       const emojiLabels={tr:"Emoji seç",en:"Choose emoji",de:"Emoji auswählen"};

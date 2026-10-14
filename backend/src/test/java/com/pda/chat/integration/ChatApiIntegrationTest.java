@@ -86,6 +86,44 @@ class ChatApiIntegrationTest {
     @Autowired org.springframework.transaction.support.TransactionTemplate transactions;
     @Autowired com.pda.chat.application.service.ChatReactionService reactionService;
     @Autowired jakarta.persistence.EntityManagerFactory entityManagerFactory;
+
+    @Test void reactionDetailsPageRealUsersAndKeepCountsConsistent() throws Exception {
+        Fixture f = fixture(); UUID group = groupId(f.manager, f.projectId);
+        UUID message = chat.send(f.manager.id(), null, group, "Reaction details", null).id();
+        reactionService.put(f.manager.id(), null, group, message, "HEART");
+        reactionService.put(f.member.id(), null, group, message, "HEART");
+        reactionService.put(f.member.id(), null, group, message, "THUMBS_UP");
+        reactionService.put(f.member.id(), null, group, message, "THUMBS_UP");
+        String url = "/api/v1/chat/conversations/" + group + "/messages/reactions";
+        mvc.perform(get(url).cookie(f.member.access()).param("messageIds", message.toString()).param("details", "true").param("size", "1"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.total").value(3)).andExpect(jsonPath("$.users.length()").value(1))
+                .andExpect(jsonPath("$.users[0].user.userId").exists()).andExpect(jsonPath("$.users[0].user.nickname").exists())
+                .andExpect(jsonPath("$.users[0].user.email").doesNotExist()).andExpect(jsonPath("$.reactions.length()").value(2));
+        mvc.perform(get(url).cookie(f.member.access()).param("messageIds", message.toString()).param("details", "true").param("code", "HEART").param("page", "1").param("size", "1"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.total").value(2)).andExpect(jsonPath("$.users.length()").value(1)).andExpect(jsonPath("$.users[0].code").value("HEART"));
+        reactionService.remove(f.member.id(), null, group, message, "THUMBS_UP");
+        mvc.perform(get(url).cookie(f.member.access()).param("messageIds", message.toString()).param("details", "true").param("code", "THUMBS_UP"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.total").value(0)).andExpect(jsonPath("$.users.length()").value(0));
+        mvc.perform(get(url).cookie(f.member.access()).param("messageIds", message.toString()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$[0].messageId").value(message.toString()));
+    }
+
+    @Test void reactionDetailsEnforceConversationScopeAndBoundedInput() throws Exception {
+        Fixture f = fixture(); UUID group = groupId(f.manager, f.projectId);
+        UUID message = chat.send(f.manager.id(), null, group, "Scoped reactions", null).id();
+        UUID direct = openDirect(f.manager, f.projectId, f.member.id());
+        String url = "/api/v1/chat/conversations/" + group + "/messages/reactions";
+        mvc.perform(get(url).param("messageIds", message.toString()).param("details", "true")).andExpect(status().isUnauthorized());
+        mvc.perform(get(url).cookie(f.outsider.access()).param("messageIds", message.toString()).param("details", "true")).andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/chat/conversations/" + direct + "/messages/reactions").cookie(f.otherMember.access()).param("messageIds", message.toString()).param("details", "true")).andExpect(status().isNotFound());
+        for (String size : List.of("0", "51")) mvc.perform(get(url).cookie(f.member.access()).param("messageIds", message.toString()).param("details", "true").param("size", size)).andExpect(status().isBadRequest());
+        mvc.perform(get(url).cookie(f.member.access()).param("messageIds", message.toString()).param("details", "true").param("page", "-1")).andExpect(status().isBadRequest());
+        mvc.perform(get(url).cookie(f.member.access()).param("messageIds", message.toString()).param("details", "true").param("code", "INVALID")).andExpect(status().isBadRequest());
+        mvc.perform(get(url).cookie(f.member.access()).param("messageIds", message + "," + message).param("details", "true")).andExpect(status().isBadRequest());
+        mvc.perform(get("/api/v1/chat/conversations/" + direct + "/messages/reactions").cookie(f.member.access()).param("messageIds", message.toString()).param("details", "true")).andExpect(status().isNotFound());
+        jdbc.update("update chat_messages set deleted_at=now(), content='' where id=?", message);
+        mvc.perform(get(url).cookie(f.member.access()).param("messageIds", message.toString()).param("details", "true")).andExpect(status().isNotFound());
+    }
     @org.springframework.test.context.bean.override.mockito.MockitoSpyBean
     com.pda.chat.infrastructure.repository.ChatReactionRepository reactionRepository;
 

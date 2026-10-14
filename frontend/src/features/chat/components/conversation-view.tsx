@@ -9,7 +9,8 @@ import { useChatMessages, useChatReceipts, useChatWindow } from "../hooks";
 import { ConversationSearch, type ConversationHandle } from "./conversation-search";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { MessageComposer } from "./message-composer";
+import { MessageComposer, type ComposerHandle } from "./message-composer";
+import { UploadSimple } from "@phosphor-icons/react";
 import { GroupAvatar, PersonAvatar } from "./person-avatar";
 import { MessageList } from "./message-list";
 import { TypingIndicator } from "./typing-indicator";
@@ -99,6 +100,14 @@ export function ConversationView({ autoFocus, ref, searchTriggerRef }: { autoFoc
   const rootRef=useRef<HTMLDivElement>(null);
   const queryClient=useQueryClient();
   const uploadAbort=useRef(new AbortController());
+  const composer=useRef<ComposerHandle>(null),dragDepth=useRef(0);
+  const [dragging,setDragging]=useState(false);
+  useEffect(()=>{
+    const stop=(event:DragEvent)=>{if(event.dataTransfer?.types.includes("Files"))event.preventDefault();dragDepth.current=0;setDragging(false);};
+    const over=(event:DragEvent)=>{if(event.dataTransfer?.types.includes("Files"))event.preventDefault();};
+    document.addEventListener("dragover",over);document.addEventListener("drop",stop);document.addEventListener("dragend",stop);
+    return()=>{document.removeEventListener("dragover",over);document.removeEventListener("drop",stop);document.removeEventListener("dragend",stop);};
+  },[]);
   useEffect(() => {
     const lifetime = new AbortController();
     uploadAbort.current = lifetime;
@@ -169,7 +178,12 @@ export function ConversationView({ autoFocus, ref, searchTriggerRef }: { autoFoc
         event.preventDefault(); event.stopPropagation(); closeSearch();
       }
     }}>
-    <div className={cn("flex min-h-0 min-w-0 flex-1 flex-col", searchOpen && !mobileResult && "hidden @min-[700px]/chat:flex")}>
+    <div className={cn("relative flex min-h-0 min-w-0 flex-1 flex-col", searchOpen && !mobileResult && "hidden @min-[700px]/chat:flex")}
+      onDragEnter={event=>{if(!event.dataTransfer.types.includes("Files"))return;event.preventDefault();if(!opening&&!chat.sendBlocked&&composer.current?.acceptsFiles()){dragDepth.current++;setDragging(true);}}}
+      onDragOver={event=>{if(event.dataTransfer.types.includes("Files")){event.preventDefault();event.dataTransfer.dropEffect=opening||chat.sendBlocked||!composer.current?.acceptsFiles()?"none":"copy";}}}
+      onDragLeave={event=>{if(!event.dataTransfer.types.includes("Files"))return;dragDepth.current=Math.max(0,dragDepth.current-1);if(!dragDepth.current)setDragging(false);}}
+      onDrop={event=>{if(!event.dataTransfer.types.includes("Files"))return;event.preventDefault();dragDepth.current=0;setDragging(false);if(!opening&&!chat.sendBlocked)composer.current?.addFiles(Array.from(event.dataTransfer.files));}}>
+      {dragging&&<div data-testid="chat-drop-overlay" className="pointer-events-none absolute inset-1 z-20 flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-primary bg-background/95 text-primary"><UploadSimple size={40} aria-hidden="true"/><p className="text-center text-sm font-semibold">{t("files.drop")}</p></div>}
       {searchOpen && mobileResult && <Button variant="ghost" className="min-h-11 shrink-0 @min-[700px]/chat:hidden" onClick={openSearch}>{t("search.returnResults")}</Button>}
       {target && <div className="flex shrink-0 flex-wrap items-center justify-between gap-1 border-b px-3 py-1">
         <Button variant="ghost" size="sm" className="min-h-11" data-testid="chat-search-latest" onClick={() => { setTarget(undefined); setJump(undefined); }}>{t("search.latest")}</Button>
@@ -212,16 +226,17 @@ export function ConversationView({ autoFocus, ref, searchTriggerRef }: { autoFoc
       )}
       <TypingIndicator people={chat.typingPeople} />
       <MessageComposer
+        ref={composer}
         key={key}
         onTyping={(state) => { if (conversationId) notifyTyping(conversationId, state); }}
         draftKey={key}
         initialDraft={chat.getDraft(key)}
         onDraftChange={(text) => chat.setDraft(key, text)}
-        onSend={async (text,file) => {
+        onSend={async (text,file,includeReply=true) => {
           if(!conversationId)return false;
           if(!file) {const valid=chat.send(conversationId,text,reply).ok;if(valid){cancelReply();setTarget(undefined);setJump(undefined);}return valid;}
           try {
-            const message=await chatApi.sendFile(conversationId,file,text,reply?.id,uploadAbort.current.signal);
+            const message=await chatApi.sendFile(conversationId,file,text,includeReply?reply?.id:undefined,uploadAbort.current.signal);
             if(uploadAbort.current.signal.aborted)return false;
             appendMessages(queryClient,accountId!,conversationId,[message]);
             void queryClient.invalidateQueries({queryKey:chatKeys.overview(accountId!)});
