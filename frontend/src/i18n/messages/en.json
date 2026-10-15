@@ -2673,7 +2673,7 @@
       "add": "Attach file",
       "remove": "Remove file",
       "tooLarge": "Each file must be 2 MB or smaller.",
-      "invalid": "Choose a PDF, Word, JPG, PNG or WebP file.",
+      "invalid": "Choose a PDF, Word, JPG, PNG, WebP, .env or .md file.",
       "sending": "Sending…",
       "failed": "Could not send file.",
       "download": "Download",

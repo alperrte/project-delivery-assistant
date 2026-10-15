@@ -2697,7 +2697,7 @@
       "add": "Dosya ekle",
       "remove": "Dosyayı kaldır",
       "tooLarge": "Dosya başına en fazla 2 MB gönderebilirsiniz.",
-      "invalid": "PDF, Word, JPG, PNG veya WebP dosyası seçin.",
+      "invalid": "PDF, Word, JPG, PNG, WebP veya .env dosyası seçin.",
       "sending": "Gönderiliyor…",
       "failed": "Dosya gönderilemedi.",
       "download": "İndir",

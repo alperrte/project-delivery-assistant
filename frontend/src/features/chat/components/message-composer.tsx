@@ -57,7 +57,7 @@ export function MessageComposer({ ref, draftKey, initialDraft, onDraftChange, on
     const added:DraftAttachment[]=[];
     for(const selected of files){
       if(selected.size>2097152){toast.error(t("files.tooLarge"));continue;}
-      if(selected.size===0||! /\.(pdf|docx?|jpe?g|png|webp)$/i.test(selected.name)){toast.error(t("files.invalid"));continue;}
+      if(selected.size===0||! /\.(pdf|docx?|jpe?g|png|webp|env|md)$/i.test(selected.name)){toast.error(t("files.invalid"));continue;}
       if([...attachmentRef.current,...added].some(item=>item.file.name===selected.name&&item.file.size===selected.size&&item.file.lastModified===selected.lastModified&&item.file.type===selected.type))continue;
       added.push({id:++nextId.current,file:selected,preview:selected.type.startsWith("image/")?URL.createObjectURL(selected):undefined});
     }
@@ -137,7 +137,7 @@ export function MessageComposer({ ref, draftKey, initialDraft, onDraftChange, on
         </p>
       )}
       <div className="flex items-center gap-2">
-        <input ref={fileInput} type="file" multiple disabled={disabled||uploading} name="attachment" aria-label={t("files.add")} className="hidden" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp" onChange={e=>{addFiles(Array.from(e.target.files??[]));e.target.value="";}}/>
+        <input ref={fileInput} type="file" multiple disabled={disabled||uploading} name="attachment" aria-label={t("files.add")} className="hidden" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp,.env,.md" onChange={e=>{addFiles(Array.from(e.target.files??[]));e.target.value="";}}/>
         <Button type="button" variant="ghost" size="icon" className="size-11 shrink-0" aria-label={t("files.add")} disabled={disabled||uploading} onClick={()=>fileInput.current?.click()}><Paperclip aria-hidden="true"/></Button>
         <div className="relative min-w-0 flex-1">
         <Textarea

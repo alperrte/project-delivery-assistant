@@ -20,7 +20,7 @@ async function conversation(page: Page) {
   await expect(page.getByTestId("chat-composer")).toBeEnabled();
   return { id, project: project.id };
 }
-async function filesEvent(page: Page, type: "drop" | "paste", names: string[]) {
+async function filesEvent(page: Page, type: "drop" | "paste", names: string[], bytes = png) {
   await page.evaluate(({ type, names, bytes }) => {
     const transfer = new DataTransfer();
     for (const name of names) transfer.items.add(new File([new Uint8Array(bytes)], name, { type: name.endsWith(".png") ? "image/png" : "application/octet-stream", lastModified: 1 }));
@@ -29,7 +29,31 @@ async function filesEvent(page: Page, type: "drop" | "paste", names: string[]) {
       target.dispatchEvent(new DragEvent("dragenter", { bubbles: true, cancelable: true, dataTransfer: transfer }));
       target.dispatchEvent(new DragEvent("drop", { bubbles: true, cancelable: true, dataTransfer: transfer }));
     } else target.dispatchEvent(new ClipboardEvent("paste", { bubbles: true, cancelable: true, clipboardData: transfer }));
-  }, { type, names, bytes: Array.from(png) });
+  }, { type, names, bytes: Array.from(bytes) });
+}
+
+for (const format of [
+  { extension: "env", chosen: ".env", dropped: "dropped.env", pasted: "pasted.ENV", invalid: ".env.dev", mime: "text/plain" },
+  { extension: "md", chosen: "README.md", dropped: "notes.md", pasted: "pasted.MD", invalid: "README.md.exe", mime: "text/markdown" },
+]) {
+test(`${format.extension} chooser, drop and paste share the attachment queue and upload as text`, async ({ page }) => {
+  const { id, project } = await conversation(page);
+  try {
+    const text = Buffer.from("# Example only\nAPP_MODE=demo\n", "utf8");
+    const chooser = page.locator('input[type="file"][name="attachment"]');
+    expect((await chooser.getAttribute("accept"))?.split(",")).toContain(`.${format.extension}`);
+    await chooser.setInputFiles({ name: format.chosen, mimeType: format.mime, buffer: text });
+    await filesEvent(page, "drop", [format.dropped, format.invalid], text);
+    await filesEvent(page, "paste", [format.pasted], text);
+    await expect(page.getByTestId("chat-file-preview")).toHaveCount(3);
+    await expect(page.getByText(tr.chat.files.invalid, { exact: true })).toBeVisible();
+    await page.getByTestId("chat-send").click();
+    await expect(page.getByTestId("chat-file-preview")).toHaveCount(0);
+    const history = (await api(page, "GET", `/chat/conversations/${id}/messages`)).json as { messages: { attachment: { filename: string; contentType: string } }[] };
+    expect(history.messages.map(m => m.attachment.filename).sort()).toEqual([format.chosen, format.dropped, format.pasted].sort());
+    expect(history.messages.every(m => m.attachment.contentType === "text/plain")).toBe(true);
+  } finally { await api(page, "DELETE", `/projects/${project}`); }
+});
 }
 
 test("file drag feedback stays inside active conversation and nested enter/leave does not flicker", async ({ page }) => {

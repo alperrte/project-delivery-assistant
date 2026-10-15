@@ -6,6 +6,35 @@ import java.util.zip.ZipOutputStream;
 import java.util.zip.ZipEntry;
 import static org.junit.jupiter.api.Assertions.*;
 class ChatFileValidatorTest {
+ @Test void markdownFilesAcceptUtf8AsPlainTextAndOnlyKnownMarkdownMimeAliases() {
+  byte[] text="\uFEFF# Örnek\r\n\tUnicode: ✓\n<script>example only</script>\n".getBytes(StandardCharsets.UTF_8);
+  for(String name:new String[]{".md","README.md","NOTES.MD"})
+   for(String mime:new String[]{null,""," ","text/plain","text/plain; charset=UTF-8","application/octet-stream","binary/octet-stream","text/markdown","text/x-markdown; charset=UTF-8"})
+    assertEquals("text/plain",ChatFileValidator.inspect(text,name,mime));
+  for(String mime:new String[]{"text/html","application/pdf","text/anything"})
+   assertThrows(com.pda.chat.domain.ChatException.class,()->ChatFileValidator.inspect(text,"README.md",mime));
+  for(String name:new String[]{"md","README.md.exe","README.markdown"})
+   assertThrows(com.pda.chat.domain.ChatException.class,()->ChatFileValidator.inspect(text,name,"text/plain"));
+  for(String mime:new String[]{"text/markdown","text/x-markdown"})
+   assertThrows(com.pda.chat.domain.ChatException.class,()->ChatFileValidator.inspect(text,".env",mime));
+ }
+ @Test void envFilesAcceptUtf8TextWithOnlyExplicitOrGenericMimeTypes() {
+  byte[] text="\uFEFF# Example only\r\nAPP_LABEL=Örnek\nAPP_MODE=demo\t\n".getBytes(StandardCharsets.UTF_8);
+  for(String name:new String[]{".env","example.env","EXAMPLE.ENV"}) {
+   for(String mime:new String[]{null,""," ","text/plain","text/plain; charset=UTF-8","application/octet-stream","binary/octet-stream"}) {
+    assertEquals("text/plain",ChatFileValidator.inspect(text,name,mime));
+   }
+  }
+  assertThrows(com.pda.chat.domain.ChatException.class,()->ChatFileValidator.inspect(text,".env","application/pdf"));
+  assertThrows(com.pda.chat.domain.ChatException.class,()->ChatFileValidator.inspect(text,".env","text/html"));
+  for(String name:new String[]{"env",".env.dev",".env.prod","example.txt","example.env.exe"})
+   assertThrows(com.pda.chat.domain.ChatException.class,()->ChatFileValidator.inspect(text,name,"text/plain"));
+ }
+ @Test void textFilesRejectMalformedUtf8BinaryControlsEmptyAndOversizeContent() {
+  for(byte[] invalid:new byte[][]{new byte[0],new byte[2097153],{(byte)0xc3,0x28},{(byte)0xc3},{(byte)0xff,(byte)0xfe,0x41,0},"APP_MODE=demo\0".getBytes(StandardCharsets.UTF_8),"APP_MODE=demo\u007f".getBytes(StandardCharsets.UTF_8),"APP_MODE=demo\u0085".getBytes(StandardCharsets.UTF_8)})
+   for(String name:new String[]{".env","README.md"})
+    assertThrows(com.pda.chat.domain.ChatException.class,()->ChatFileValidator.inspect(invalid,name,"text/plain"));
+ }
  @Test void realImageAndContentTypeMustMatchAndNamesCannotInjectHeaders() {
   byte[] png=java.util.Base64.getDecoder().decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==");
   assertEquals("image/png",ChatFileValidator.inspect(png,"photo.png","image/png"));

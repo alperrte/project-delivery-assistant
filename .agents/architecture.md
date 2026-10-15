@@ -1,5 +1,11 @@
 ﻿# Mimari kısa özet
 
+## Sohbet .env ekleri — 2026-10-15
+
+Markdown takip kapsamı: `.md` dosyaları da aynı UTF-8 metin doğrulaması ve özel indirme hattından geçer; Markdown/HTML önizleme veya yeni ayrıştırıcı yoktur. `text/markdown` ve `text/x-markdown` MIME alias'ları yalnız `.md` için `text/plain` olarak normalize edilir.
+
+Mevcut sohbet ek hattı `.env` ve `.env` ile biten dosya adlarını UTF-8 metin olarak kabul eder; içerik yapılandırma olarak uygulanmaz veya çalıştırılmaz. `ChatFileValidator` metin/boyut/MIME kontrolünün sahibidir; chooser/drop/paste ortak composer doğrulamasını kullanır. Özel depolama, katılımcı erişimi ve indirme mimarisi korunur; yeni servis, migration veya ENV değişkeni yoktur.
+
 ## Ana sidebar, tepki detayları ve çoklu sohbet ekleri — 2026-10-14
 
 Ana sidebar genişliği hesap bazlı `pda:sidebar-width:v1:{accountId}` istemci UI tercihidir. Ortak `sidebar-width.ts` SSR snapshot, bellek/storage fallback ve viewport sınırlarını yönetir; AppShell ve ayrı ChatPanel aynı genişliği okur. Collapsed rail/mobil drawer korunur; sidebar'a yeni konuşma listesi eklenmez.

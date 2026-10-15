@@ -2697,7 +2697,7 @@
       "add": "Datei anhängen",
       "remove": "Datei entfernen",
       "tooLarge": "Jede Datei darf höchstens 2 MB groß sein.",
-      "invalid": "PDF, Word, JPG, PNG oder WebP auswählen.",
+      "invalid": "PDF, Word, JPG, PNG, WebP oder .env auswählen.",
       "sending": "Wird gesendet…",
       "failed": "Datei konnte nicht gesendet werden.",
       "download": "Herunterladen",
