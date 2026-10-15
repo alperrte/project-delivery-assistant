@@ -749,6 +749,23 @@ class ChatApiIntegrationTest {
         assertEquals(1,jdbc.queryForObject("select count(*) from chat_attachments where message_id=? and state='DELETE_PENDING'",Integer.class,message));
     }
 
+    @Test void envAttachmentRoundTripsAsPrivateDownloadWithoutChangingItsBytes() throws Exception {
+        Fixture f=fixture();UUID group=groupId(f.manager,f.projectId);Cookie csrf=csrfCookie();
+        byte[] bytes="# Example only\r\nAPP_MODE=demo\r\n".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        var file=new org.springframework.mock.web.MockMultipartFile("file",".env","application/octet-stream",bytes);
+        var result=mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/api/v1/chat/conversations/"+group+"/messages/attachment")
+                .file(file).cookie(csrf,f.manager.access()).header("X-XSRF-TOKEN",csrf.getValue()))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.attachment.filename").value(".env"));
+        String download="/api/v1/chat/conversations/"+group+"/messages/"+messageId(result)+"/attachment?inline=true";
+        var response=mvc.perform(get(download).cookie(f.member.access())).andExpect(status().isOk()).andReturn().getResponse();
+        org.junit.jupiter.api.Assertions.assertArrayEquals(bytes,response.getContentAsByteArray());
+        assertEquals("text/plain",response.getContentType());
+        assertTrue(response.getHeader("Content-Disposition").startsWith("attachment"));
+        assertEquals("nosniff",response.getHeader("X-Content-Type-Options"));
+        assertTrue(response.getHeader("Cache-Control").contains("no-store"));
+        mvc.perform(get(download).cookie(f.outsider.access())).andExpect(status().isForbidden());
+    }
+
     // ---- sending ------------------------------------------------------------------------------------------------
 
     @Test

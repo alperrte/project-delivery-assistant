@@ -3,6 +3,9 @@ package com.pda.chat.application.service;
 import com.pda.chat.domain.ChatException;
 import com.pda.shared.ImageSniffer;
 import java.io.ByteArrayInputStream;
+import java.nio.ByteBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.HashSet;
@@ -35,6 +38,10 @@ final class ChatFileValidator {
                 case "pdf" -> { pdf(bytes); yield "application/pdf"; }
                 case "docx" -> { docx(bytes); yield "application/vnd.openxmlformats-officedocument.wordprocessingml.document"; }
                 case "doc" -> { LegacyWordInspector.inspect(bytes); yield "application/msword"; }
+                case "env", "md" -> {
+                    if (!name.toLowerCase(Locale.ROOT).endsWith("." + extension)) throw invalid();
+                    text(bytes); yield "text/plain";
+                }
                 default -> throw invalid();
             };
         } catch (ImageSniffer.RejectedImageException e) { throw invalid(); }
@@ -45,11 +52,25 @@ final class ChatFileValidator {
                 case "pdf" -> mime.equals("application/x-pdf");
                 case "docx" -> mime.equals("application/zip")||mime.equals("application/x-zip-compressed")||mime.equals("application/vnd.ms-word.document.12");
                 case "doc" -> mime.equals("application/x-ole-storage")||mime.equals("application/vnd.ms-word");
+                case "md" -> mime.equals("text/markdown")||mime.equals("text/x-markdown");
                 default -> false;
             };
             if(!mime.equals(type)&&!generic&&!alias)throw invalid();
         }
         return type;
+    }
+
+    private static void text(byte[] bytes) {
+        try {
+            String text = StandardCharsets.UTF_8.newDecoder()
+                    .onMalformedInput(CodingErrorAction.REPORT)
+                    .onUnmappableCharacter(CodingErrorAction.REPORT)
+                    .decode(ByteBuffer.wrap(bytes)).toString();
+            if (text.codePoints().anyMatch(c -> Character.isISOControl(c) && c != '\r' && c != '\n' && c != '\t'))
+                throw invalid();
+        } catch (CharacterCodingException e) {
+            throw invalid();
+        }
     }
 
     private static void pdf(byte[] data) {

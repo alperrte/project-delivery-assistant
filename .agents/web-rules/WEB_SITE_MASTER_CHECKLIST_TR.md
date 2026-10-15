@@ -1,5 +1,15 @@
 # Web Sitesi Kesinlikle Olması Gerekenler — Master Checklist
 
+## Sohbet Markdown ekleri — 2026-10-15 (sınırlı kapsam)
+
+Form Validation / Error State kapsamında ortak dosya seçici/drop/paste uzantı listesi ve TR/EN/DE hata metni `.md` desteğiyle güncellendi. Strict UTF-8 ve 2 MiB sınırı korunur; dosya HTML olarak render edilmez. Güncel yerel backend üzerinde `.md` ve `.env` gerçek Chromium gönderimleri 2/2 başarılı, validator 9/9, lint/TypeScript/diff başarılı. Global kutular bu dar kapsamla değiştirilmedi. Ayrıntı: `docs/compliation/2026-10-15-chat-markdown-attachments.md`.
+
+## Sohbet .env ekleri — 2026-10-15 (sınırlı kapsam)
+
+Yerel çalışma zamanı takip doğrulaması: eski 14 Ekim backend imajı güncellenip yalnız dev backend yeniden oluşturuldu. Mevcut QA hesaplarıyla normal login sonrası gerçek Chromium chooser/drop/paste `.env` gönderimi 1/1 başarılı; health UP ve frontend HTTP 200. Global kutular değiştirilmedi. Ayrıntı aynı completion kaydındadır.
+
+Etkilenen Form Validation / Error State kapsamı yalnız sohbet ek türü doğrulamasıdır: ortak chooser/drop/paste filtresi ve TR/EN/DE hata metni `.env` desteğiyle güncellendi; sunucu strict UTF-8, boyut ve MIME denetimi uygular. Görünüm veya navigasyon değişmedi. Global kutular bu dar kapsamla değiştirilmedi; hedefli test sonuçları ve manuel kontroller `docs/compliation/2026-10-15-chat-env-attachments.md` içindedir.
+
 ## Sohbet Yeniden Adlandırma ve WhatsApp Benzeri Mesaj Durumları — 2026-10-12
 
 Mesajlaşma bölümü tüm navigasyon, panel, dock, tooltip ve hata metinlerinde "Sohbet" (EN: "Chat", DE: "Chat") olarak yeniden adlandırıldı. Gönderilen mesajlar için WhatsApp benzeri tek tik (SENT), çift tik (DELIVERED) ve mavi çift tik (READ/SEEN) durum simgeleri entegre edildi. Alıcı istemci mesajı aldığında POST /conversations/{conversationId}/delivered ile teslim teyidi iletir, sunucu DELIVERED socket eventi ile gönderenin ekranındaki tiki çift tike çevirir; okunduğunda SEEN socket eventi ile mavi çift tike çevrilir. Hem birebir hem grup sohbet kuralları desteklenir. V49 migration ile delivered_at takibi eklendi. Frontend Turbopack production build ve TypeScript kontrolü başarılı; backend 86 chat/websocket/migration testinin tamamı başarıyla geçti (0 fail/error/skip). Kayıt: `docs/compliation/2026-10-12-chat-rename-and-delivery-status.md`.

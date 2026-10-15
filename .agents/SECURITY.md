@@ -227,6 +227,12 @@ Because PDA uses cookie-based authentication:
 
 ## 11. API and Swagger Security
 
+### Chat .env attachments (2026-10-15)
+
+Markdown extension (2026-10-15): `.md` files use the same bounded strict UTF-8 text validation, private storage and forced attachment download. Stored MIME is `text/plain`; `text/markdown` and `text/x-markdown` claimed MIME aliases are accepted for `.md` only, in addition to the text/plain/generic rules. Markdown is never rendered as HTML or executed. No additional extension, access or configuration policy changes.
+
+The user-authorized chat attachment allowlist additionally accepts `.env` and names ending in `.env` (case-insensitive), as strict UTF-8 text. Malformed UTF-8 and control characters other than TAB/CR/LF are rejected; bytes are never executed, interpolated or applied as server configuration. The stored MIME is `text/plain`; claimed MIME must be absent, blank, `text/plain` (optional parameters), or an existing generic octet-stream alias. The existing 2097152-byte limit, participant authorization, CSRF, private storage, safe filenames and download headers remain in force. Environment files are downloaded as attachments even with `inline=true`. This extends the historical format list below; it does not authorize reading or modifying the application's environment profiles or logging uploaded contents.
+
 ### Reaction user details and shared attachment queue (2026-10-14)
 
 Existing authenticated GET `/api/v1/chat/conversations/{c}/messages/reactions` adds optional `details=true`: exactly one `messageIds` UUID, optional canonical `code`, `page>=0`, `size=1..50` (default 30). Response `{messageId,reactionVersion,reactions,users:[{code,user:{userId,nickname,profilePhotoVersion}}],total,page,size}` has no email. Counts/version/paged rows share a repeatable-read snapshot; user summaries use UserAccounts in one batch. Default 1..50-message snapshot response and socket frames remain unchanged. Every detail read checks existing group active membership/no ADMIN bypass or stored DM pair. Anonymous 401, denied group 403, foreign DM/message and deleted target 404, invalid bounds/code/multiple detail IDs 400. SQL values are bound and only the parsed enum controls the optional filter. Response remains private/no-store. Own mutation PUT/DELETE keeps CSRF, uniqueness and rate limits.

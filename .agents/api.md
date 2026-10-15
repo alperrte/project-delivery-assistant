@@ -14,9 +14,11 @@ Mevcut GET `/chat/conversations/{c}/messages/reactions` normal batch sözleşmes
 
 ## Merkezi mesajlaşma — 2026-10-12
 
+2026-10-15 Markdown eki: `.md` uzantısı mevcut multipart endpoint'inde `.env` ile aynı UTF-8/boyut/kontrol karakteri doğrulamasını kullanır. Ek MIME alias'ları `text/markdown` ve `text/x-markdown` yalnız `.md` için kabul edilir; kayıt ve indirme `text/plain` olarak yapılır, Markdown render edilmez.
+
 Güncel kök `/api/v1/chat`; eski `/projects/{id}/chat` yolları uyumluluk için kalır. Merkezi overview `group` (nullable), `groups[]`, `directs[]`, `totalUnread` döner; grup özetleri projectId/projectName/logoVersion/logoShape içerir. `/members` diğer aktif ortak-proje üyelerini e-postasız döner. DM oluşturma global tekildir; var olan DM ortak proje olmasa da açılır.
 
-`POST /conversations/{c}/messages/attachment`: multipart `file`, isteğe bağlı `content` ve `replyToMessageId`; 201 Message + attachment metadata. `GET /conversations/{c}/messages/{m}/attachment`: yetkili private indirme; `inline=true` yalnız görselleri inline gösterir. 2 MiB/file; PDF, DOC/DOCX, JPEG/PNG/WebP.
+`POST /conversations/{c}/messages/attachment`: multipart `file`, isteğe bağlı `content` ve `replyToMessageId`; 201 Message + attachment metadata. `GET /conversations/{c}/messages/{m}/attachment`: yetkili private indirme; `inline=true` yalnız görselleri inline gösterir. 2 MiB/file; PDF, DOC/DOCX, JPEG/PNG/WebP ve UTF-8 metin `.env` / `*.env` (2026-10-15). ENV içeriği çalıştırılmaz veya yapılandırmaya uygulanmaz; MIME `text/plain`, geçersiz UTF-8 ve TAB/CR/LF dışındaki kontrol karakterleri reddedilir. `.env.dev` gibi farklı son uzantılar bu kapsama dahil değildir.
 
 Merkezi `POST /conversations/{c}/read` artık `{messageIds:[UUID]}` ister (1..100, tümü aynı konuşmada); görünmeyen geçmişi otomatik read yapmaz. `GET /conversations/{c}/messages/{m}/info` yalnız gönderenin erişebildiği `{messageId, readers:[{user,readAt,legacy}]}` döner; null readAt henüz okunmadı. İlk zaman sabittir. Mevcut typing/replies/reactions/delete ve STOMP kuyruğu devam eder. Ayrıntılı yetki/hata ve Swagger yolu SECURITY §11'dedir.
 
