@@ -1,5 +1,9 @@
 ﻿# Mimari kısa özet
 
+## Tam boy sohbet ve sayfa kaydırması — 2026-10-15
+
+`ChatRoot` tam boy modda `display: contents` sarmalayıcısındaki `data-chat-full` işaretiyle document kaydırma kilidinin sahibidir. `globals.css` kök `html:has([data-chat-full])` kuralı yalnız bu modda dış kaydırmayı kapatır; sohbet iç kaydırmaları ve mevcut `main` inert sınırı korunur. İşaret panel chunk'ı yüklenirken de render edilir; kapatma/küçültme/navigasyon/oturum sonu/unmount işareti kaldırır. Body inline stilleri veya zorunlu scrollTo cleanup'ı kullanılmaz; Base UI dialog kilitleriyle ve navigasyon scroll yönetimiyle çakışmaz.
+
 ## Görev listelerinde sayfalama — 2026-10-15
 
 Proje Görevler ve kişisel Görevlerim listeleri ayrı `TASK_LIST_PAGE_SIZE=9` ile mevcut sunucu sayfalamasını kullanır; grid/tablo ve proje gruplaması aynı sayfadaki kayıtları gösterir. Genel API varsayılanı ve Kanban/havuz gibi tüm kayıt gerektiren akışlar değişmez. URL filtre/sayfa state'i korunur; kesin sunucu sonucunda artık bulunmayan sayfa son geçerli sayfaya alınır. Atanana göre gruplamadaki çok atananlı görevin her ilgili grupta görünmesi korunur; sınır benzersiz görev kayıtlarına aittir.

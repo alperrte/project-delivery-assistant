@@ -1,5 +1,9 @@
 # Frontend tasarım kuralları
 
+## Tam boy sohbet kaydırma sınırı — 2026-10-15
+
+Sohbet tam boy açıkken alttaki sayfanın viewport scrollbar'ı gizlenir ve kullanıcı document'ı kaydıramaz. Sohbet geçmişi, konuşma listesi ve arama kendi scroll alanlarında çalışır; sidebar/header kullanılabilir kalır. Kapatma/küçültme sonrası sayfanın önceki scroll konumu korunur; bar/compact modlarında sayfa kaydırması açıktır. Root kilidi semantik `data-chat-full` varlığına bağlı CSS'tir; ortak dialog/drawer inline stillerini değiştirmez.
+
 ## Görev listelerinde sayfa boyutu — 2026-10-15
 
 Görevler ve Görevlerim listeleri grid/tablo görünümünde sayfa başına 9 benzersiz görev kaydı gösterir. Proje listesinde gruplama aynı sunucu sayfası üzerinde uygulanır; sayfalama gruplu görünümde de gösterilir. Mevcut PaginationBar, tasarım token'ları, filtre sıfırlama ve URL sayfa state'i kullanılır. Atanana göre gruplamada çok atananlı görev ilgili gruplarda tekrar görünebilir; benzersiz kayıt sınırı değişmez.

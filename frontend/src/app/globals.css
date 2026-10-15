@@ -18,6 +18,10 @@ html {
   scrollbar-color: var(--workspace-scrollbar-thumb) transparent;
   scrollbar-width: thin;
 }
+html:has([data-chat-full]) {
+  overflow-y: hidden;
+  overscroll-behavior-y: none;
+}
 /* scrollbar-color inherits: stop viewport color at body, then opt the actual nav boxes back in. */
 html > body,
 [data-workspace-scroll] > * {

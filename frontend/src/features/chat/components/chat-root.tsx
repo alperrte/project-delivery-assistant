@@ -27,5 +27,5 @@ export function ChatRoot() {
   }, [full]);
 
   if (!accountId || mode === "closed") return null;
-  return mode === "full" ? <ChatPanel /> : <ChatDock />;
+  return mode === "full" ? <div data-chat-full="" className="contents"><ChatPanel /></div> : <ChatDock />;
 }
