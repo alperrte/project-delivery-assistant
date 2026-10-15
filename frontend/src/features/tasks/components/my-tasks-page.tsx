@@ -17,7 +17,7 @@ import { useSession } from "@/features/auth/hooks/use-session";
 import { projectsApi } from "@/features/projects/api";
 import { errorKey } from "@/lib/api/error-message";
 import { cn } from "@/lib/utils";
-import { TASK_PAGE_SIZE } from "../api";
+import { TASK_LIST_PAGE_SIZE } from "../api";
 import { deadlineBucket, type DeadlineBucket } from "../deadline";
 import { useMyTaskCounts, useMyTasks } from "../hooks";
 import { activeMyFilterCount, MY_TABS, toMyTasksParams, useMyTaskFilters, type MyTab } from "../my-filters";
@@ -125,7 +125,7 @@ function BucketedList({ tasks, render }: { tasks: Task[]; render: (items: Task[]
 function TasksPanel({ tab, view, userId, onClear, filtered, onOpen }: { tab: MyTab; view: TaskView; userId: string; onClear: () => void; filtered: boolean; onOpen: OpenTask }) {
   const t = useTranslations("tasks.my");
   const { filters, update } = useMyTaskFilters();
-  const query = useMyTasks(toMyTasksParams(filters));
+  const query = useMyTasks({ ...toMyTasksParams(filters), size: TASK_LIST_PAGE_SIZE });
   useEffect(() => {
     if (query.data && !query.isPlaceholderData && filters.page > 0 && filters.page >= query.data.totalPages) {
       update({ page: Math.max(0, query.data.totalPages - 1) });
@@ -174,7 +174,7 @@ function TasksPanel({ tab, view, userId, onClear, filtered, onOpen }: { tab: MyT
         page={Math.min(filters.page, totalPages - 1)}
         totalPages={totalPages}
         totalElements={totalElements}
-        pageSize={TASK_PAGE_SIZE}
+        pageSize={TASK_LIST_PAGE_SIZE}
         onPageChange={(page) => {
           update({ page });
           window.scrollTo({ top: 0 });

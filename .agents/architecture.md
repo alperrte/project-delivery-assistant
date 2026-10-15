@@ -1,5 +1,9 @@
 ﻿# Mimari kısa özet
 
+## Görev listelerinde sayfalama — 2026-10-15
+
+Proje Görevler ve kişisel Görevlerim listeleri ayrı `TASK_LIST_PAGE_SIZE=9` ile mevcut sunucu sayfalamasını kullanır; grid/tablo ve proje gruplaması aynı sayfadaki kayıtları gösterir. Genel API varsayılanı ve Kanban/havuz gibi tüm kayıt gerektiren akışlar değişmez. URL filtre/sayfa state'i korunur; kesin sunucu sonucunda artık bulunmayan sayfa son geçerli sayfaya alınır. Atanana göre gruplamadaki çok atananlı görevin her ilgili grupta görünmesi korunur; sınır benzersiz görev kayıtlarına aittir.
+
 ## Sohbet .env ekleri — 2026-10-15
 
 Markdown takip kapsamı: `.md` dosyaları da aynı UTF-8 metin doğrulaması ve özel indirme hattından geçer; Markdown/HTML önizleme veya yeni ayrıştırıcı yoktur. `text/markdown` ve `text/x-markdown` MIME alias'ları yalnız `.md` için `text/plain` olarak normalize edilir.
