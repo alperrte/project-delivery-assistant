@@ -1,5 +1,9 @@
 # Web Sitesi Kesinlikle Olması Gerekenler — Master Checklist
 
+## Tam boy sohbet dış kaydırma kilidi — 2026-10-15 (sınırlı kapsam)
+
+Responsive / Keyboard Navigation / Focus State / Navigasyon kapsamı yalnız full sohbet scroll sınırıdır: uzun gerçek Görevler sayfasında 120 px arka plan konumu desktop/mobile wheel, sidebar wheel, PageDown/Space, mesaj bilgisi dialogu ve mobil drawer boyunca korunur. İç mesaj kaydırması çalışır; bar/compact/close sonrası root kaydırması açılır, route değişiminde inert/kilit temizlenir. Gerçek API/Chromium hedefli test 1/1, lint/TypeScript/diff başarılı; desktop/mobile görüntüleri incelendi. Global kutular bu kapsamla değiştirilmedi. Kayıt: `docs/compliation/2026-10-15-chat-document-scroll-lock.md`.
+
 ## Görevler / Görevlerim sayfalama — 2026-10-15 (sınırlı kapsam)
 
 Etkilenen Pagination / Navigasyon / Form Validation / Empty State / Responsive kapsamı yalnız iki görev listesidir: sayfa başına 9 benzersiz görev, gruplu proje listesinde de sayfa kontrolleri, URL sayfası/filtre sıfırlama ve küçülen son sayfada son geçerli sayfaya dönüş doğrulandı. Gerçek API ile Chromium kart/tablo 19 görevde 9/9/1, önceki/sonraki/numara/reload, mobil 390 px taşmasız geçişler ve son satır tamamlama/açık detay regresyonu başarılı. Desktop gruplu tablo ve mobil kart ekran görüntüleri incelendi. Global kutular bu sınırlı kanıtla değiştirilmedi; ayrıntı `docs/compliation/2026-10-15-task-list-pagination.md`.
