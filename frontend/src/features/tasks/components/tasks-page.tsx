@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Link from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { CaretDown, Plus } from "@phosphor-icons/react";
@@ -14,10 +14,10 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { errorKey } from "@/lib/api/error-message";
 import { cn } from "@/lib/utils";
-import { TASK_PAGE_SIZE } from "../api";
+import { TASK_LIST_PAGE_SIZE } from "../api";
 import { activeFilterCount, toListParams, useTaskFilters } from "../filters";
 import { groupTasks, type TaskGroup } from "../grouping";
-import { useAllTasks, useTaskList } from "../hooks";
+import { useTaskList } from "../hooks";
 import { taskPermissions } from "../permissions";
 import { allowsAdvanced } from "../task-model";
 import type { Task } from "../types";
@@ -112,14 +112,16 @@ function TasksView({ slug, project, projectId, isManager, userId }: ProjectGateC
   const params = toListParams(filters);
   const filtered = activeFilterCount(filters) > 0;
 
-  // Grouping needs every match at once; the flat list pages on the server.
-  const paged = useTaskList(grouped ? "" : projectId, { ...params, page: filters.page, size: TASK_PAGE_SIZE });
-  const all = useAllTasks(projectId, params, grouped);
-  const query = grouped ? all : paged;
+  const query = useTaskList(projectId, { ...params, page: filters.page, size: TASK_LIST_PAGE_SIZE });
+  const tasks = query.data?.content ?? [];
+  const total = query.data?.totalElements ?? 0;
+  const totalPages = query.data?.totalPages ?? 1;
 
-  const tasks = grouped ? (all.data ?? []) : (paged.data?.content ?? []);
-  const total = grouped ? tasks.length : (paged.data?.totalElements ?? 0);
-  const totalPages = paged.data?.totalPages ?? 1;
+  useEffect(() => {
+    if (query.data && !query.isPlaceholderData && filters.page > 0 && filters.page >= query.data.totalPages) {
+      update({ page: Math.max(0, query.data.totalPages - 1) });
+    }
+  }, [query.data, query.isPlaceholderData, filters.page, update]);
 
   const hrefOf = (task: Task) => `/projects/${slug}/tasks/${task.id}`;
   const canChange = (task: Task) => taskPermissions(task, userId, isManager).work;
@@ -174,16 +176,16 @@ function TasksView({ slug, project, projectId, isManager, userId }: ProjectGateC
             ) : (
               <EmptyState title={t("emptyTitle")} description={isManager ? t("emptyDescription") : t("emptyViewerDescription")} action={createLink || undefined} />
             )
-          ) : grouped ? (
-            <GroupedList groups={groupTasks(tasks, filters.group as Exclude<typeof filters.group, "none">)} body={list} />
           ) : (
             <>
-              <div className={cn("transition-opacity", query.isFetching && "opacity-70")}>{list(tasks)}</div>
+              <div className={cn("transition-opacity", query.isFetching && "opacity-70")}>
+                {grouped ? <GroupedList groups={groupTasks(tasks, filters.group as Exclude<typeof filters.group, "none">)} body={list} /> : list(tasks)}
+              </div>
               <PaginationBar
                 page={Math.min(filters.page, totalPages - 1)}
                 totalPages={totalPages}
                 totalElements={total}
-                pageSize={TASK_PAGE_SIZE}
+                pageSize={TASK_LIST_PAGE_SIZE}
                 onPageChange={(page) => {
                   update({ page });
                   window.scrollTo({ top: 0 });

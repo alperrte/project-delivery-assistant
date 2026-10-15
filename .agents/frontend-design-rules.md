@@ -1,5 +1,9 @@
 # Frontend tasarım kuralları
 
+## Görev listelerinde sayfa boyutu — 2026-10-15
+
+Görevler ve Görevlerim listeleri grid/tablo görünümünde sayfa başına 9 benzersiz görev kaydı gösterir. Proje listesinde gruplama aynı sunucu sayfası üzerinde uygulanır; sayfalama gruplu görünümde de gösterilir. Mevcut PaginationBar, tasarım token'ları, filtre sıfırlama ve URL sayfa state'i kullanılır. Atanana göre gruplamada çok atananlı görev ilgili gruplarda tekrar görünebilir; benzersiz kayıt sınırı değişmez.
+
 ## Ana sidebar ve sohbet ek/tepki yüzeyleri — 2026-10-14
 
 Görünür resize grip: ana sidebar ve sohbet ayırıcısında 32 × 4 px yuvarlatılmış `bg-border` tutamaç, hover/odak/sürükleme primary vurgusu vardır. İki grip ekranın dikey orta noktasına hizalıdır; sohbet panelinin reserve/header/1 px border farkı CSS hesabına dahil edilir. Hareket azaltma tercihi korunur.

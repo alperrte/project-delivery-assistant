@@ -164,7 +164,7 @@ test("board menu and drag moves require confirmation and cancellation preserves 
 
 test("completing the final row of page two returns to page one and keeps its detail open", async ({ page }) => {
   const f = await fixture(page);
-  for (let i = 0; i < 25; i++) {
+  for (let i = 0; i < 9; i++) {
     expect((await api(page, "POST", `/projects/${f.projectId}/tasks`, { title: `Pagination task ${i}`, creationMode: "SIMPLE", assigneeIds: [f.me.id] })).status).toBe(201);
   }
   await page.goto(`/tasks?project=${f.projectId}&page=2`);
@@ -180,7 +180,7 @@ test("completing the final row of page two returns to page one and keeps its det
   await expect(taskDialog(page)).toBeVisible();
   await expect(taskDialog(page).getByText("Tamamlandı", { exact: true }).first()).toBeVisible();
   await taskDialog(page).getByRole("button", { name: "Görev detayını kapat", exact: true }).click();
-  await expect(page.locator("[data-task-card]")).toHaveCount(25);
+  await expect(page.locator("[data-task-card]")).toHaveCount(9);
 });
 
 test("cards and dialog fit small screens in TR/EN/DE and both themes without runtime errors", async ({ page }) => {

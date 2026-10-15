@@ -1,5 +1,9 @@
 # Web Sitesi Kesinlikle Olması Gerekenler — Master Checklist
 
+## Görevler / Görevlerim sayfalama — 2026-10-15 (sınırlı kapsam)
+
+Etkilenen Pagination / Navigasyon / Form Validation / Empty State / Responsive kapsamı yalnız iki görev listesidir: sayfa başına 9 benzersiz görev, gruplu proje listesinde de sayfa kontrolleri, URL sayfası/filtre sıfırlama ve küçülen son sayfada son geçerli sayfaya dönüş doğrulandı. Gerçek API ile Chromium kart/tablo 19 görevde 9/9/1, önceki/sonraki/numara/reload, mobil 390 px taşmasız geçişler ve son satır tamamlama/açık detay regresyonu başarılı. Desktop gruplu tablo ve mobil kart ekran görüntüleri incelendi. Global kutular bu sınırlı kanıtla değiştirilmedi; ayrıntı `docs/compliation/2026-10-15-task-list-pagination.md`.
+
 ## Sohbet Markdown ekleri — 2026-10-15 (sınırlı kapsam)
 
 Form Validation / Error State kapsamında ortak dosya seçici/drop/paste uzantı listesi ve TR/EN/DE hata metni `.md` desteğiyle güncellendi. Strict UTF-8 ve 2 MiB sınırı korunur; dosya HTML olarak render edilmez. Güncel yerel backend üzerinde `.md` ve `.env` gerçek Chromium gönderimleri 2/2 başarılı, validator 9/9, lint/TypeScript/diff başarılı. Global kutular bu dar kapsamla değiştirilmedi. Ayrıntı: `docs/compliation/2026-10-15-chat-markdown-attachments.md`.
