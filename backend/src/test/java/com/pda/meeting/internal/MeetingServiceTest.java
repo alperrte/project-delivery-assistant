@@ -42,6 +42,40 @@ class MeetingServiceTest {
         when(media.listParticipants(anyString())).thenReturn(List.of());
         when(media.roomExists(anyString())).thenReturn(true);
     }
+    @Test void previewValidatesCapabilityWithoutConsumingOrCreatingSession() {
+        MeetingInvite invite=new MeetingInvite(); invite.id=UUID.randomUUID(); invite.meetingId=meeting.id;
+        invite.expiresAt=now.plusSeconds(60); invite.maxUses=1;
+        MeetingInviteRepository.InviteScope scope=mock(MeetingInviteRepository.InviteScope.class);
+        when(scope.getId()).thenReturn(invite.id); when(scope.getMeetingId()).thenReturn(meeting.id);
+        when(invites.scopeByTokenHash(MeetingService.hash("test-invite"))).thenReturn(Optional.of(scope));
+        when(invites.findById(invite.id)).thenReturn(Optional.of(invite));
+        assertEquals(meeting.title,service.guestPreview(new PreviewRequest("test-invite")).title());
+        assertEquals(0,invite.uses); verify(participants,never()).save(any()); verifyNoInteractions(media);
+        invite.revoked=true;
+        assertEquals("MEETING_INVITE_INVALID",assertThrows(MeetingException.class,()->service.guestPreview(new PreviewRequest("test-invite"))).code());
+        invite.revoked=false; invite.expiresAt=now;
+        assertThrows(MeetingException.class,()->service.guestPreview(new PreviewRequest("test-invite")));
+        invite.expiresAt=now.plusSeconds(60); invite.uses=1;
+        assertThrows(MeetingException.class,()->service.guestPreview(new PreviewRequest("test-invite")));
+    }
+    @Test void guestStateRequiresMatchingLiveSessionAndExposesClosedStatusForCleanup() {
+        var participant=new MeetingParticipant(); participant.meetingId=meeting.id; participant.sessionExpiresAt=now.plusSeconds(60);
+        when(participants.findBySessionHash(MeetingService.hash("test-session"))).thenReturn(Optional.of(participant));
+        meeting.status=Meeting.Status.ENDED; meeting.roomEpoch=3;
+        assertEquals(Meeting.Status.ENDED,service.guestState(meeting.id,"test-session").status());
+        assertEquals(3,service.guestState(meeting.id,"test-session").roomEpoch());
+        verifyNoInteractions(invites);
+        participant.meetingId=UUID.randomUUID(); assertThrows(MeetingException.class,()->service.guestState(meeting.id,"test-session"));
+        participant.meetingId=meeting.id; participant.revoked=true; assertThrows(MeetingException.class,()->service.guestState(meeting.id,"test-session"));
+    }
+    @Test void inviteMetadataRequiresOrganizerAndHasBoundedPagination() {
+        meeting.organizerId=UUID.randomUUID();
+        assertEquals(403,assertThrows(MeetingException.class,()->service.listInvites(project,meeting.id,actor,0,20)).status());
+        verify(invites,never()).findByMeetingId(any(),any());
+        meeting.organizerId=actor;
+        assertEquals(400,assertThrows(MeetingException.class,()->service.listInvites(project,meeting.id,actor,-1,20)).status());
+        assertEquals(400,assertThrows(MeetingException.class,()->service.listInvites(project,meeting.id,actor,0,101)).status());
+    }
     @Test void nonManagerOrganizerCannotMuteOrKick() {
         assertEquals("MEETING_MANAGER_REQUIRED",assertThrows(MeetingException.class,()->service.mute(project,meeting.id,actor,UUID.randomUUID())).code());
         assertEquals("MEETING_MANAGER_REQUIRED",assertThrows(MeetingException.class,()->service.stageKick(project,meeting.id,actor,UUID.randomUUID())).code());

@@ -20,7 +20,12 @@ public final class MeetingDtos {
     @Schema(name="MeetingJoin") public record Join(UUID participantId,String identity,MeetingMediaPort.MediaJoin media,boolean chatRetained,int roomEpoch,String status) {}
     public record InviteRequest(@NotNull Instant expiresAt,@Min(1) @Max(100) int maxUses) {}
     public record InviteView(UUID id,String token,Instant expiresAt,int maxUses) {}
+    @Schema(name="MeetingInviteMetadata") public record InviteMetadata(UUID id,Instant expiresAt,int maxUses,int uses,boolean revoked) {}
     public record GuestRequest(@NotBlank @Size(max=100) String inviteToken,@NotBlank @Size(max=80) String displayName) {}
+    public record PreviewRequest(@NotBlank @Size(max=100) String inviteToken) {}
+    @Schema(name="MeetingGuestView") public record GuestView(UUID id,String title,Instant startsAt,Instant endsAt,
+        String zoneId,Meeting.Status status,Instant openedAt,boolean overtime,boolean chatRetained,
+        List<String> agenda,int roomEpoch,boolean reconnectRequired) {}
     public record GuestSession(UUID meetingId,UUID participantId,String secret,Instant expiresAt) {}
     public record ChatRequest(@NotBlank @Size(max=2000) String content,@NotNull @Size(max=20) Set<@NotNull UUID> mentionIds) {}
     @Schema(name="MeetingChatView") public record ChatView(UUID id,UUID participantId,String displayName,String content,Instant sentAt,Set<UUID> mentionIds) {}

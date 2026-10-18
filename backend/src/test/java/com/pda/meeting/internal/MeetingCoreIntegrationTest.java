@@ -54,6 +54,20 @@ class MeetingCoreIntegrationTest {
         UUID member=UUID.randomUUID(); db.update("INSERT INTO project_memberships(id,project_id,user_id,joined_at) VALUES (?,?,?,now())",member,project,actor);
         db.update("INSERT INTO project_membership_roles(membership_id,role) VALUES (?,'PROJECT_MANAGER')",member);
     }
+    @Test void guestPreviewAndInviteMetadataUseRealPersistenceWithoutExposingSecrets() throws Exception {
+        UUID id=scheduled();
+        InviteView invite=service.invite(project,id,actor,new InviteRequest(Instant.now().plusSeconds(3600),2));
+        GuestView preview=service.guestPreview(new PreviewRequest(invite.token()));
+        assertEquals(id,preview.id()); assertEquals(Meeting.Status.SCHEDULED,preview.status());
+        assertEquals(0,db.queryForObject("SELECT uses FROM meeting_invites WHERE id=?",Integer.class,invite.id()));
+        var metadata=service.listInvites(project,id,actor,0,10);
+        assertEquals(1,metadata.totalElements()); assertEquals(invite.id(),metadata.content().getFirst().id());
+        assertEquals(0,metadata.content().getFirst().uses());
+        assertFalse(Arrays.stream(InviteMetadata.class.getRecordComponents()).anyMatch(c->c.getName().toLowerCase().contains("token")||c.getName().toLowerCase().contains("hash")));
+        service.revokeInvite(project,id,actor,invite.id());
+        assertTrue(service.listInvites(project,id,actor,0,10).content().getFirst().revoked());
+        assertEquals(403,assertThrows(MeetingException.class,()->service.guestPreview(new PreviewRequest(invite.token()))).status());
+    }
     @Test void replicasSerializeDueOpeningAndOvertimeWarning() throws Exception {
         UUID id=scheduled(); db.update("UPDATE meetings SET starts_at=now()-interval '2 hours',ends_at=now()-interval '1 hour' WHERE id=?",id);
         try(var executor=Executors.newFixedThreadPool(2)) {

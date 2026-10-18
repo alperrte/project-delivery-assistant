@@ -21,11 +21,12 @@ final class MeetingHttpLimitFilter extends OncePerRequestFilter {
         String path=path(request);
         boolean webhook=path.equals("/api/v1/meetings/media/webhook");
         boolean project=projectMeeting(path);
-        if(!webhook && !project && !allow(request.getRemoteAddr(),path.endsWith("/guest/session"))) {
+        boolean admission=path.endsWith("/guest/session")||path.endsWith("/guest/preview");
+        if(!webhook && !project && !allow(request.getRemoteAddr(),admission)) {
             refuse(response,429,"MEETING_RATE_LIMITED");response.setHeader("Retry-After","60");return;
         }
         if(!Set.of("POST","PUT","PATCH").contains(request.getMethod())) {chain.doFilter(request,response);return;}
-        int limit=project?196_608:webhook?65_536:path.endsWith("/guest/session")?2_048:16_384;
+        int limit=project?196_608:webhook?65_536:admission?2_048:16_384;
         if(request.getContentLengthLong()>limit) {refuse(response,413,"MEETING_BODY_TOO_LARGE");return;}
         byte[] body=request.getInputStream().readNBytes(limit+1);
         if(body.length>limit) {refuse(response,413,"MEETING_BODY_TOO_LARGE");return;}

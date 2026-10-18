@@ -163,11 +163,11 @@ public class SecurityBaselineConfiguration {
                         }
                     }
                     authorize.requestMatchers(HttpMethod.GET, "/actuator/health", "/api/v1/auth/csrf").permitAll()
-                            .requestMatchers(HttpMethod.POST, "/api/v1/meetings/media/webhook", "/api/v1/meetings/guest/session",
+                            .requestMatchers(HttpMethod.POST, "/api/v1/meetings/media/webhook", "/api/v1/meetings/guest/session", "/api/v1/meetings/guest/preview",
                                     "/api/v1/meetings/guest/*/join", "/api/v1/meetings/guest/*/leave", "/api/v1/meetings/guest/*/chat").permitAll()
-                            .requestMatchers(HttpMethod.GET, "/api/v1/meetings/guest/*/chat", "/api/v1/meetings/guest/*/participants").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/v1/meetings/guest/*/chat", "/api/v1/meetings/guest/*/participants", "/api/v1/meetings/guest/*/state").permitAll()
                             .requestMatchers(HttpMethod.GET, "/api/v1/projects/*/meetings", "/api/v1/projects/*/meetings/*",
-                                    "/api/v1/projects/*/meetings/*/participants", "/api/v1/projects/*/meetings/*/chat").authenticated()
+                                    "/api/v1/projects/*/meetings/*/participants", "/api/v1/projects/*/meetings/*/chat", "/api/v1/projects/*/meetings/*/invites").authenticated()
                             .requestMatchers(HttpMethod.POST, "/api/v1/projects/*/meetings", "/api/v1/projects/*/meetings/*/cancel",
                                     "/api/v1/projects/*/meetings/*/start", "/api/v1/projects/*/meetings/*/end", "/api/v1/projects/*/meetings/*/join",
                                     "/api/v1/projects/*/meetings/*/leave", "/api/v1/projects/*/meetings/*/invites", "/api/v1/projects/*/meetings/*/chat",
@@ -347,7 +347,7 @@ public class SecurityBaselineConfiguration {
         // The browser client reads how long the access token stays valid to renew the session before it runs out.
         // The commit history reads X-Has-Next-Page to decide whether to offer a following page.
         configuration.setExposedHeaders(List.of(JwtCookieAuthenticationFilter.ACCESS_EXPIRES_IN_HEADER,
-                "X-Has-Next-Page"));
+                "X-Has-Next-Page", "Retry-After"));
         configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/v1/auth/**", configuration);
@@ -364,6 +364,8 @@ public class SecurityBaselineConfiguration {
         source.registerCorsConfiguration("/api/v1/notifications/**", configuration);
         source.registerCorsConfiguration("/api/v1/notifications", configuration);
         source.registerCorsConfiguration("/api/v1/project-invitations/**", configuration);
+        // Same approved frontend origin and CSRF headers; signed webhooks are not browser endpoints.
+        source.registerCorsConfiguration("/api/v1/meetings/guest/**", configuration);
         return source;
     }
 

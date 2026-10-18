@@ -22,6 +22,14 @@ public class MeetingGuestController {
         this.service=service; this.production="prod".equalsIgnoreCase(appEnv)||"production".equalsIgnoreCase(appEnv);
     }
     public record SessionView(UUID meetingId,UUID participantId,Instant expiresAt) {}
+    @PostMapping("/preview")
+    public GuestView preview(@Valid @RequestBody PreviewRequest body,HttpServletResponse response) {
+        noStore(response); return service.guestPreview(body);
+    }
+    @GetMapping("/{meetingId}/state")
+    public GuestView state(@PathVariable UUID meetingId,HttpServletRequest request,HttpServletResponse response) {
+        noStore(response); return service.guestState(meetingId,secret(request));
+    }
     @PostMapping("/session") @ResponseStatus(HttpStatus.CREATED)
     public SessionView session(@Valid @RequestBody GuestRequest body,HttpServletRequest request,HttpServletResponse response) {
         GuestSession session=service.guestSession(body);

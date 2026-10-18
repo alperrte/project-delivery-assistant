@@ -227,6 +227,10 @@ Because PDA uses cookie-based authentication:
 
 ## 11. API and Swagger Security
 
+### Meeting guest UI contract extension — approved 2026-10-18
+
+POST `/api/v1/meetings/guest/preview` accepts an invitation capability only in its CSRF-protected JSON body, validates its hash/expiry/revocation/use budget and returns minimal meeting presentation state without consuming a use or issuing a cookie. It shares the session admission bucket/body cap. GET `/api/v1/meetings/guest/{id}/state` requires the existing matching unrevoked/unexpired scoped guest cookie. GET project meeting `/invites` requires current membership plus organizer/PROJECT_MANAGER and returns paged metadata without capabilities or hashes. All are private/no-store. The existing exact frontend-origin CORS policy now also covers guest browser paths; no origins or CSRF exemptions were added. Existing `Retry-After` is exposed for bounded retries. Contract/Swagger details: `docs/meeting-guest-contract.md`.
+
 ### Meeting backend — approved security contract (2026-10-18)
 
 The user approved the meeting ENV contract, a separate meeting-scoped HttpOnly guest cookie, narrowly allowlisted guest endpoints and a signed LiveKit webhook. Cookie authentication, the existing chat WebSocket, CORS and the platform/project role model remain authoritative. All project meeting routes require current project membership; manual mute, kick and end require that project's `PROJECT_MANAGER`, with no global ADMIN or organizer bypass. Organizers may create/start/edit/cancel their own scheduled meetings and manage their invites; members may create meetings. There is no remote-unmute endpoint and participant media tokens never grant room administration, room creation or data publishing.

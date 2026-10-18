@@ -37,6 +37,8 @@ public class MeetingController {
     public void mute(@PathVariable UUID projectId,@PathVariable UUID meetingId,@PathVariable UUID participantId,@AuthenticationPrincipal UserAccounts.AuthenticatedUser actor) { service.mute(projectId,meetingId,actor(actor),participantId); }
     @PostMapping("/{meetingId}/participants/{participantId}/kick") @ResponseStatus(HttpStatus.NO_CONTENT)
     public void kick(@PathVariable UUID projectId,@PathVariable UUID meetingId,@PathVariable UUID participantId,@AuthenticationPrincipal UserAccounts.AuthenticatedUser actor) { moderation.kick(projectId,meetingId,actor(actor),participantId); }
+    @GetMapping("/{meetingId}/invites")
+    public ResponseEntity<PageView<InviteMetadata>> invites(@PathVariable UUID projectId,@PathVariable UUID meetingId,@AuthenticationPrincipal UserAccounts.AuthenticatedUser actor,@RequestParam(defaultValue="0") int page,@RequestParam(defaultValue="20") int size) { return ResponseEntity.ok().header(HttpHeaders.CACHE_CONTROL,"private, no-store").body(service.listInvites(projectId,meetingId,actor(actor),page,size)); }
     @PostMapping("/{meetingId}/invites") @ResponseStatus(HttpStatus.CREATED)
     public InviteView invite(@PathVariable UUID projectId,@PathVariable UUID meetingId,@AuthenticationPrincipal UserAccounts.AuthenticatedUser actor,@Valid @RequestBody InviteRequest request) { return service.invite(projectId,meetingId,actor(actor),request); }
     @DeleteMapping("/{meetingId}/invites/{inviteId}") @ResponseStatus(HttpStatus.NO_CONTENT)

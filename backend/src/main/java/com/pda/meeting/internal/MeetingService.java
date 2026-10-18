@@ -121,12 +121,33 @@ public class MeetingService {
         Meeting m=load(project,id,actor); moderate(m,actor); requireOpen(m); MeetingParticipant p=target(m,target);
         media.muteParticipant(m.roomName,p.identity); audit(m,actor,target,"MUTED");
     }
+    public PageView<InviteMetadata> listInvites(UUID project,UUID id,UUID actor,int page,int size) {
+        Meeting meeting=load(project,id,actor); edit(meeting,actor);
+        if(page<0||page>10000||size<1||size>100) throw error(400,"MEETING_INVALID_PAGE");
+        return PageView.of(invites.findByMeetingId(id,PageRequest.of(page,size,Sort.by(Sort.Direction.DESC,"expiresAt","id")))
+            .map(invite->new InviteMetadata(invite.id,invite.expiresAt,invite.maxUses,invite.uses,invite.revoked)));
+    }
     public InviteView invite(UUID project,UUID id,UUID actor,InviteRequest request) {
         Meeting m=load(project,id,actor); edit(m,actor); if(m.status==Meeting.Status.ENDED||m.status==Meeting.Status.CANCELLED) throw error(409,"MEETING_CLOSED");
         Instant now=clock.instant(); if(request.expiresAt()==null||!request.expiresAt().isAfter(now)||request.expiresAt().isAfter(now.plus(Duration.ofDays(30)))||request.maxUses()<1||request.maxUses()>100) throw error(400,"MEETING_INVALID_INVITE");
         MeetingInvite i=new MeetingInvite(); i.id=UUID.randomUUID(); i.meetingId=id; String secret=randomSecret(); i.tokenHash=hash(secret);
         i.expiresAt=request.expiresAt(); i.maxUses=request.maxUses(); invites.save(i); audit(m,actor,i.id,"INVITE_CREATED");
         return new InviteView(i.id,secret,i.expiresAt,i.maxUses);
+    }
+    public GuestView guestPreview(PreviewRequest request) {
+        enabled();
+        var scope=invites.scopeByTokenHash(hash(request.inviteToken())).orElseThrow(()->error(403,"MEETING_INVITE_INVALID"));
+        Meeting m=locked(scope.getMeetingId());
+        MeetingInvite invite=invites.findById(scope.getId()).orElseThrow(()->error(403,"MEETING_INVITE_INVALID"));
+        if(invite.revoked||!invite.expiresAt.isAfter(clock.instant())||invite.uses>=invite.maxUses) throw error(403,"MEETING_INVITE_INVALID");
+        return guestView(m);
+    }
+    public GuestView guestState(UUID meetingId,String secret) {
+        Meeting m=locked(meetingId); guest(m,secret); return guestView(m);
+    }
+    private GuestView guestView(Meeting m) {
+        return new GuestView(m.id,m.title,m.startsAt,m.endsAt,m.zoneId,m.status,m.openedAt,m.overtimeAt!=null,policy.isRetainChat(),
+            List.copyOf(m.agenda),m.roomEpoch,m.rotationPending);
     }
     public GuestSession guestSession(GuestRequest request) {
         enabled(); if(request.inviteToken()==null||request.inviteToken().length()>100) throw error(403,"MEETING_INVITE_INVALID");

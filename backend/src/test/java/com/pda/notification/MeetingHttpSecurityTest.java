@@ -45,6 +45,28 @@ class MeetingHttpSecurityTest {
     static final byte[] KEY=new byte[48]; static {new SecureRandom().nextBytes(KEY);}
     @BeforeEach void media(){when(media.isEnabled()).thenReturn(true);when(media.getApiKey()).thenReturn("test-only");when(media.getApiSecret()).thenReturn(Base64.getEncoder().encodeToString(KEY));}
 
+    @Test void guestCorsUsesOnlyExistingFrontendOriginAndExposesRetryDelay() throws Exception {
+        mvc.perform(options("/api/v1/meetings/guest/preview").header("Origin","http://localhost:3000")
+            .header("Access-Control-Request-Method","POST").header("Access-Control-Request-Headers","content-type,x-xsrf-token"))
+            .andExpect(status().isOk()).andExpect(header().string("Access-Control-Allow-Origin","http://localhost:3000"))
+            .andExpect(header().string("Access-Control-Allow-Credentials","true"));
+        mvc.perform(options("/api/v1/meetings/guest/preview").header("Origin","https://untrusted.invalid")
+            .header("Access-Control-Request-Method","POST")).andExpect(status().isForbidden());
+    }
+    @Test void guestPreviewIsBoundedCsrfProtectedAndDoesNotCreateCookieOrPrincipal() throws Exception {
+        String body="{\"inviteToken\":\"test-only\"}";
+        mvc.perform(post("/api/v1/meetings/guest/preview").contentType("application/json").content(body)).andExpect(status().isForbidden());
+        Cookie csrf=csrf();
+        when(service.guestPreview(any())).thenReturn(new MeetingDtos.GuestView(UUID.randomUUID(),"Planning",Instant.now(),Instant.now().plusSeconds(3600),"UTC",com.pda.meeting.internal.Meeting.Status.OPEN,Instant.now(),false,false,List.of("Agenda"),0,false));
+        mvc.perform(post("/api/v1/meetings/guest/preview").cookie(csrf).header("X-XSRF-TOKEN",csrf.getValue()).contentType("application/json").content(body))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.title").value("Planning"))
+            .andExpect(jsonPath("$.projectId").doesNotExist()).andExpect(jsonPath("$.organizerId").doesNotExist())
+            .andExpect(jsonPath("$.token").doesNotExist()).andExpect(header().string("Cache-Control","private, no-store"))
+            .andExpect(header().doesNotExist("Set-Cookie"));
+        mvc.perform(post("/api/v1/meetings/guest/preview").content("x".repeat(2049))).andExpect(status().isPayloadTooLarge());
+        mvc.perform(get("/api/v1/meetings/guest/"+UUID.randomUUID()+"/state")).andExpect(status().isUnauthorized());
+        verify(service,times(1)).guestPreview(any());
+    }
     @Test void guestInitializationKeepsCsrfAndOnlyWritesScopedHttpOnlySecureCookie() throws Exception {
         UUID meeting=UUID.randomUUID(),participant=UUID.randomUUID();
         String secret=Base64.getUrlEncoder().withoutPadding().encodeToString(KEY);
