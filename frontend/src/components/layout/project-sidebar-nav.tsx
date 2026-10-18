@@ -26,6 +26,7 @@ import { TeamsSidebarMenu } from "./teams-sidebar-menu";
 import { cn } from "@/lib/utils";
 import { navItemClass } from "./nav-item";
 import { ProjectSidebarSwitcher } from "./project-sidebar-switcher";
+import { MeetingSidebar } from "@/features/meetings/meeting-sidebar";
 
 export function ProjectSidebarNav({
   onNavigate,
@@ -69,6 +70,7 @@ export function ProjectSidebarNav({
   const taskActive = taskNavActive(pathname);
 
   const routeSlug =
+    /^\/projects\/([^/]+)\/meetings(?:\/|$)/.exec(pathname)?.[1] ??
     (detailSlug === "new" ? undefined : detailSlug) ??
     teamsRoute?.[1] ??
     criteriaRoute?.[1] ??
@@ -116,7 +118,7 @@ export function ProjectSidebarNav({
       ? "invitations"
       : criteriaRoute
         ? "criteria"
-        : taskActive
+        : taskActive || pathname.includes("/meetings")
           ? null
           : projectSection(searchParams.get("section"), isManager);
 
@@ -219,6 +221,7 @@ export function ProjectSidebarNav({
           </div>
         )}
 
+        {projectPath && !contained && <MeetingSidebar projectPath={projectPath} pathname={pathname} collapsed onNavigate={onNavigate} />}
         {slug && projectPath && (
           <div className="mt-1 border-t border-border pt-1">
 
@@ -354,6 +357,7 @@ export function ProjectSidebarNav({
         </div>
       )}
 
+      {projectPath && !contained && <MeetingSidebar projectPath={projectPath} pathname={pathname} onNavigate={onNavigate} />}
       {slug && projectPath && (
         <div className="ml-2 mt-3 border-l border-border pl-2">
 

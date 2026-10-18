@@ -1,5 +1,9 @@
 # Web Sitesi Kesinlikle Olması Gerekenler — Master Checklist
 
+## Toplantı frontend — 2026-10-18 (sınırlı kapsam)
+
+Etkilenen Navigasyon / Pagination / Form Validation / Loading-Empty-Error-Forbidden / Responsive / Dark Mode / Focus / kritik işlem onayı / noindex ve cihaz güvenliği yüzeyleri gözden geçirildi. Gerçek API/PostgreSQL/LiveKit ile 3 kapsamlı Chromium kabulü ve 24 mevcut dil/oturum/route regresyonu geçti; 320/390/768/1440 görüntüleri, TR/EN/DE ve form light/dark axe doğrulandı. RTC ses byte/sample ve video decode kanıtı vardır; capture kaynağı TEST-ONLY tarayıcı cihazlarıdır. Donanım/screen reader/tüm tarayıcı/üretim TLS-TURN veya tam WCAG sonucu çıkarılmaz. Global kutular bu sınırlı kapsamla `[x]` yapılmadı. Lint/type/build/bundle geçti; API eki ayrı backend worktree'sindedir. Kayıt: `docs/compliation/2026-10-18-meeting-frontend.md`.
+
 ## Toplantı backend — 2026-10-18 (sınırlı kapsam)
 
 Yalnız yeni API'lerin validation/pagination/error state, cookie/CSRF ve proje kapsamlı authorization sözleşmeleri etkilenir. Frontend route, component, CSS, metadata, footer ve görsel davranış değiştirilmez; önceki global kutular yeniden audit edilmez veya bu backend teslimiyle `[x]` yapılmaz. Hedefli PostgreSQL/concurrency/OpenAPI/SFU ve güvenlik kanıtları completion kaydında tutulur. Sonraki frontend görevinde loading/empty/error/forbidden, otomatik yeniden bağlantı, cihaz izinleri ve guest cookie/medya veri akışı açıklamaları uygulanmalıdır. Üretim TLS/TURN ve gerçek cihaz/ağ doğrulaması bu teslimden çıkarılamaz. API devir belgesi: `docs/meeting-backend-handoff.md`.

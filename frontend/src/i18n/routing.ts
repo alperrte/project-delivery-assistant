@@ -31,6 +31,14 @@ export const PAGE_ROUTES = [
   "/projects/[slug]/sprints/[sprintId]",
   "/projects/[slug]/sprints/[sprintId]/edit",
   "/projects/[slug]/labels",
+  "/projects/[slug]/meetings",
+  "/projects/[slug]/meetings/new",
+  "/projects/[slug]/meetings/calendar",
+  "/projects/[slug]/meetings/[meetingId]",
+  "/projects/[slug]/meetings/[meetingId]/edit",
+  "/projects/[slug]/meetings/[meetingId]/room",
+  "/meeting-guest",
+  "/meeting-guest/[meetingId]",
   "/organizations",
   "/organizations/new",
   "/organizations/[organizationId]",
@@ -85,6 +93,7 @@ export const ADMIN_ENTRY_PATH = "/pd-admin";
 const SEGMENTS: Record<Locale, Record<string, string>> = {
   en: {},
   tr: {
+    meetings: "toplantilar", room: "oda", "meeting-guest": "toplanti-misafir",
     dashboard: "genel-bakis", projects: "projeler", teams: "ekipler", members: "uyeler",
     tasks: "gorevler", new: "yeni", edit: "duzenle", board: "pano", pool: "havuz",
     sprints: "sprintler", labels: "etiketler", organizations: "organizasyonlar",
@@ -98,6 +107,7 @@ const SEGMENTS: Record<Locale, Record<string, string>> = {
     overview: "genel-bakis", criteria: "kriterler", "team-invitations": "ekip-davetleri", repository: "depo",
   },
   de: {
+    meetings: "besprechungen", room: "raum", "meeting-guest": "besprechung-gast",
     dashboard: "uebersicht", projects: "projekte", teams: "teams", members: "mitglieder",
     tasks: "aufgaben", new: "neu", edit: "bearbeiten", board: "board", pool: "pool",
     sprints: "sprints", labels: "labels", organizations: "organisationen",

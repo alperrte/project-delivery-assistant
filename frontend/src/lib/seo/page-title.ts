@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 
 export type PageTitleKey =
+  | "meetings" | "meetingNew" | "meetingDetail" | "meetingEdit" | "meetingRoom" | "meetingCalendar"
   | "dashboard" | "projects" | "projectNew"
   | "projectOverview" | "projectCriteria" | "projectTeams" | "projectInvitations" | "projectRepository" | "projectEdit"
   | "criterionNew" | "criterionEdit"
@@ -18,6 +19,8 @@ export type PageTitleKey =
  * and page requests carry no access cookie.
  */
 export async function pageTitle(key: PageTitleKey): Promise<Metadata> {
+  const meetings: Record<string, string> = { meetings: "myMeetings", meetingNew: "create", meetingDetail: "detail", meetingEdit: "edit", meetingRoom: "group", meetingCalendar: "calendar" };
+  if (meetings[key]) { const t = await getTranslations("meetings"); return { title: t(meetings[key]) }; }
   const t = await getTranslations("pageTitles");
   return { title: t(key) };
 }

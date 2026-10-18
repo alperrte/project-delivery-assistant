@@ -11,7 +11,7 @@ const responseLabel = (count: number) => tr.invitations.responseCount.replace("{
 const pendingLabel = (count: number) => tr.invitations.pendingCount.replace("{count}", String(count));
 
 type Account = { page: Page; id: string; email: string; password: string; nickname: string };
-type Project = { id: string; slug: string; teamId: string };
+type Project = { id: string; slug: string; teamId: string; name: string };
 
 /** The app listens to online/offline for reconnect refetches; this is the same nudge the other badge specs use. */
 const refresh = async (page: Page) => {
@@ -35,7 +35,15 @@ async function project(page: Page, name: string): Promise<Project> {
   const { id, slug } = made.json as { id: string; slug: string };
   const team = await api(page, "POST", `/projects/${id}/teams`, { name: "Yanıt ekibi", includeCreator: true });
   expect(team.status).toBe(201);
-  return { id, slug, teamId: (team.json as { id: string }).id };
+  return { id, slug, name, teamId: (team.json as { id: string }).id };
+}
+/** The sidebar's searchable project dropdown (client-side navigation, no reload). */
+async function switchProject(page: Page, target: Project) {
+  await page.locator('[data-testid="project-switcher-trigger"]:visible').click();
+  await expect(page.getByTestId("project-switcher-popup")).toBeVisible();
+  await page.getByTestId("project-switcher-search").fill(target.name);
+  await page.locator(`[data-project-choice="${target.id}"]`).click();
+  await expect(page.getByTestId("project-switcher-popup")).toBeHidden();
 }
 async function invite(manager: Page, target: Project, userId: string, roles: string[]) {
   const made = await api(manager, "POST", `/projects/${target.id}/invitations`, { userId, teamId: target.teamId, roles });
@@ -91,10 +99,9 @@ test("inviter's +N follows unread answers per project, read state and account; p
     await expect(responseBadge(child)).toHaveAttribute("aria-label", responseLabel(2));
 
     // Project B has its own value (nothing answered yet), never project A's.
-    await sidebar.getByRole("link", { name: tr.projects.detail.changeProject, exact: true }).click();
-    await a.getByRole("link", { name: new RegExp(`Yanıt rozeti B`) }).first().click();
+    await switchProject(a, projectB);
     await expect(a).toHaveURL(new RegExp(`/${projectB.slug}`));
-    await parent.click();
+    if ((await parent.getAttribute("aria-expanded")) !== "true") await parent.click();
     await expect(sidebar.getByRole("link", { name: "Ekip Davetleri", exact: true })).toBeVisible();
     await expect(pendingBadge(parent)).toHaveAttribute("data-pending-invitation-count", "1");
     await expect(responseBadge(parent)).toHaveCount(0);
@@ -104,8 +111,7 @@ test("inviter's +N follows unread answers per project, read state and account; p
     expect(await unread(a, `?projectId=${projectA.id}&${RESPONSES}`)).toBe(2);
 
     // Back to project A through the client router (no hard reload), then to its invitations page.
-    await sidebar.getByRole("link", { name: tr.projects.detail.changeProject, exact: true }).click();
-    await a.getByRole("link", { name: new RegExp(`Yanıt rozeti A`) }).first().click();
+    await switchProject(a, projectA);
     await expect(a).toHaveURL(new RegExp(`/${projectA.slug}`));
     await expect(responseBadge(parent)).toHaveAttribute("data-invitation-response-count", "2");
     await expect(pendingBadge(parent)).toHaveAttribute("data-pending-invitation-count", "1");

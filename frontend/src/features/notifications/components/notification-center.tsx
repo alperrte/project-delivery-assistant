@@ -30,6 +30,13 @@ function RepositoryLink({ projectId, label, onOpen }: { projectId: string; label
     className="mt-2 inline-flex min-h-11 items-center text-sm font-medium underline underline-offset-4" onClick={event => { if (!onOpen()) event.preventDefault(); }}>{label}</Link>;
 }
 
+function MeetingLink({ projectId, id, actorId, onOpen }: { projectId: string; id: string; actorId: string; onOpen: () => boolean }) {
+  const t = useTranslations("meetings");
+  const project = useQuery({ queryKey: ["accounts", actorId, "meeting-project", projectId], queryFn: () => projectsApi.detail(projectId), retry: false });
+  if (!project.data?.slug) return null;
+  return <Link href={`/projects/${project.data.slug}/meetings/${id}`} className="mt-2 inline-flex min-h-11 items-center text-sm font-medium underline underline-offset-4" onClick={event => { if (!onOpen()) event.preventDefault(); }}>{t("openMeeting")}</Link>;
+}
+
 export function NotificationCenter({ expectedUserId, disabled = false }: { expectedUserId?: string; disabled?: boolean } = {}) {
   const context = useNotificationOwner();
   const owner = disabled || (expectedUserId && context?.userId !== expectedUserId) ? null : context;
@@ -43,6 +50,8 @@ export function NotificationCenter({ expectedUserId, disabled = false }: { expec
   const restoreTrashFocus = useRef<string | null>(null);
   const userId = owner?.userId;
   const t = useTranslations("notifications");
+  const tm = useTranslations("meetings");
+  const meetingTitles: Record<string, string> = { MEETING_CREATED: "notificationCreated", MEETING_UPDATED: "notificationUpdated", MEETING_CANCELLED: "notificationCancelled", MEETING_OPENED: "notificationOpened", MEETING_OVERTIME: "notificationOvertime", MEETING_ENDED: "notificationEnded" };
   const tw = useTranslations("workspace");
   const te = useTranslations("errors");
   const ts = useTranslations("tasks.common.status");
@@ -150,12 +159,15 @@ export function NotificationCenter({ expectedUserId, disabled = false }: { expec
   }
 
   function title(n: Notification) {
+    if (meetingTitles[n.type]) return tm(meetingTitles[n.type]);
     if (n.teamDeletion) return t("teamDeleted");
     if (n.statusChange?.newStatus === "IN_PROGRESS") return t("taskStarted");
     if (n.statusChange?.newStatus === "DONE") return t("taskCompleted");
     return t.has(`types.${n.type}`) ? t(`types.${n.type}`) : n.title;
   }
   function body(n: Notification) {
+    // Backend snapshot format is '<event title>: <meeting title>'; preserve its title without translating user content.
+    if (meetingTitles[n.type] && n.message.startsWith(`${n.title}: `)) return n.message.slice(n.title.length + 2);
     if (n.invitationContext && ["PROJECT_INVITATION_CREATED", "PROJECT_INVITATION_ACCEPTED", "PROJECT_INVITATION_REJECTED"].includes(n.type)) {
       return t(`invitationContext.${n.type}`, { project: n.invitationContext.projectName });
     }
@@ -235,6 +247,11 @@ ${c.headAuthor ? t("repositoryCommitsHeadBy", { message: c.headMessage, author: 
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0"><h3 id={`notification-title-${n.id}`} className="break-words text-sm font-medium">{title(n)}</h3><p className="mt-1 whitespace-pre-wrap break-words text-sm text-muted-foreground">{body(n)}</p>
                     <p className="mt-2 text-xs text-muted-foreground"><time dateTime={n.createdAt} title={Number.isFinite(Date.parse(n.createdAt)) ? date.format(new Date(n.createdAt)) : undefined}>{Number.isFinite(Date.parse(n.createdAt)) ? format.relative(n.createdAt) : ""}</time> · {n.read ? t("read") : t("unread")}</p>
+                    {n.resourceType === "MEETING" && n.projectId && !!userId && <MeetingLink projectId={n.projectId} id={n.resourceId} actorId={userId} onOpen={() => {
+                      if (!owner?.current()) return false;
+                      if (!n.read && !read.execute({ kind: "read", id: n.id })) return false;
+                      navigatingTask.current = true; setOpen(false); return true;
+                    }} />}
                     {n.resourceType === "TASK" && n.projectId && !!userId && <Link
                       href={`/tasks?task=${encodeURIComponent(n.resourceId)}&taskProject=${encodeURIComponent(n.projectId)}`}
                       className="mt-2 inline-flex min-h-11 items-center text-sm font-medium underline underline-offset-4"

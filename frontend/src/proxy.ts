@@ -32,13 +32,21 @@ const PROTECTED_PATHS = ["/dashboard", "/projects", "/organizations", "/settings
  */
 function withCsp(request: NextRequest, options: { rewriteTo?: URL; headers?: Headers } = {}) {
   const nonce = createNonce();
-  const policy = buildCsp(nonce);
+  const internal = matchPath(request.nextUrl.pathname)?.internalPath ?? "";
+  const meeting = /^\/projects\/[^/]+\/meetings\/[^/]+\/room$/.test(internal) || /^\/meeting-guest(?:\/[^/]+)?$/.test(internal);
+  const policy = buildCsp(nonce, { meeting });
   const requestHeaders = new Headers(options.headers ?? request.headers);
   requestHeaders.set("x-nonce", nonce);
   requestHeaders.set("Content-Security-Policy", policy);
   const init = { request: { headers: requestHeaders } };
   const response = options.rewriteTo ? NextResponse.rewrite(options.rewriteTo, init) : NextResponse.next(init);
   response.headers.set("Content-Security-Policy", policy);
+  response.headers.set("Permissions-Policy", meeting ? "camera=(self), microphone=(self), display-capture=(self), geolocation=()" : "camera=(), microphone=(), display-capture=(), geolocation=()");
+  if (internal.startsWith("/meeting-guest")) {
+    response.headers.set("Referrer-Policy", "no-referrer");
+    response.headers.set("Cache-Control", "private, no-store");
+    response.headers.set("X-Robots-Tag", "noindex, nofollow");
+  }
   return response;
 }
 

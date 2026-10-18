@@ -219,11 +219,15 @@ test("the accessibility statement states the target, the date, the method, the l
   expect(text).toContain("tam uygunluk beyan etmiyoruz");
 });
 
-test("the 'last updated' date of every changed information page is 11 October 2026", async ({ page }) => {
+test("the 'last updated' date of every changed information page matches its last edit (cookie policy: 14 October, the rest: 11 October 2026)", async ({ page }) => {
   await page.context().addCookies([{ name: "NEXT_LOCALE", value: "tr", url: "http://localhost:3000" }]);
-  for (const route of ["/kvkk", "/privacy", "/terms", "/cookies", "/accessibility", "/faq"]) {
+  const updated: Record<string, string> = {
+    "/kvkk": "11 Ekim 2026", "/privacy": "11 Ekim 2026", "/terms": "11 Ekim 2026",
+    "/cookies": "14 Ekim 2026", "/accessibility": "11 Ekim 2026", "/faq": "11 Ekim 2026",
+  };
+  for (const [route, date] of Object.entries(updated)) {
     await page.goto(route);
-    await expect(page.locator("header p").filter({ hasText: "Son güncelleme" })).toContainText("11 Ekim 2026");
+    await expect(page.locator("header p").filter({ hasText: "Son güncelleme" }), route).toContainText(date);
   }
 });
 
