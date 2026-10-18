@@ -6,6 +6,22 @@ import java.util.UUID;
 
 @Component
 public class NotificationFactory {
+    public Notification meeting(UUID recipient, com.pda.meeting.MeetingEvents.Changed event) {
+        NotificationType type = NotificationType.valueOf("MEETING_" + event.type().name());
+        String title = switch (event.type()) {
+            case CREATED -> "Meeting created";
+            case UPDATED -> "Meeting updated";
+            case CANCELLED -> "Meeting cancelled";
+            case OPENED -> "Meeting opened";
+            case OVERTIME -> "Meeting planned end time passed";
+            case ENDED -> "Meeting ended";
+        };
+        String message = title + ": " + java.util.Objects.requireNonNull(event.title());
+        if (message.length() > 500) message = message.substring(0, 500);
+        return Notification.meeting(recipient, event.actorId(), event.projectId(), event.meetingId(),
+                event.eventId(), type, title, message, event.occurredAt());
+    }
+
     public Notification invitation(UUID recipient, UUID actor, UUID projectId, UUID invitationId,
                                    NotificationType type, String projectName) {
         Notification notification = create(recipient, actor, projectId, ResourceType.PROJECT_INVITATION,
@@ -58,6 +74,7 @@ public class NotificationFactory {
             case PROJECT_ROLE_CHANGED -> "Project role changed";
             case SQUAD_MEMBER_ADDED -> "Added to team";
             case SQUAD_MEMBER_REMOVED -> "Removed from team";
+            case MEETING_CREATED, MEETING_UPDATED, MEETING_CANCELLED, MEETING_OPENED, MEETING_OVERTIME, MEETING_ENDED -> throw new IllegalArgumentException("Meeting notifications require an event");
             case SQUAD_DELETED -> throw new IllegalArgumentException("Team deletion requires a snapshot");
             case REPOSITORY_COMMITS_PUSHED -> throw new IllegalArgumentException("Repository commits require a snapshot");
             case PROJECT_INVITATION_CREATED -> "Project invitation";
@@ -82,6 +99,7 @@ public class NotificationFactory {
             case PROJECT_ROLE_CHANGED -> "Your project role was changed.";
             case SQUAD_MEMBER_ADDED -> "You were added to a team.";
             case SQUAD_MEMBER_REMOVED -> "You were removed from a team.";
+            case MEETING_CREATED, MEETING_UPDATED, MEETING_CANCELLED, MEETING_OPENED, MEETING_OVERTIME, MEETING_ENDED -> throw new IllegalArgumentException("Meeting notifications require an event");
             case SQUAD_DELETED -> throw new IllegalArgumentException("Team deletion requires a snapshot");
             case REPOSITORY_COMMITS_PUSHED -> throw new IllegalArgumentException("Repository commits require a snapshot");
             case PROJECT_INVITATION_CREATED -> "You were invited to a project.";

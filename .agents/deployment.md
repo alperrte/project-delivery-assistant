@@ -1,5 +1,9 @@
 # Kurulum ve deployment
 
+## Toplantı SFU hazırlığı — 2026-10-18
+
+Yeni `docker-compose.meeting.yml` yalnız isteğe bağlı yerel LiveKit overlay'idir; üretim dört servisli bileşimi değiştirilmez. Dokuz onaylı meeting ENV anahtarı `.env.example` ve gerçek profillerde varsayılan kapalı/boş secret olarak tanımlanır. `MEETING_MEDIA_ENABLED=true` için gerçek key/secret ve doğru backend API/browser WSS adresleri gerekir. SFU `auto_create=false`, `enable_remote_unmute=false` güvenlik sınırları korunmalıdır. Üretim medya DNS/TLS, doğrudan UDP/TCP firewall/NAT ve olası TURN altyapısı ayrıca hazırlanır; aynı KVM 2 üzerindeki mevcut kaynak bütçesi toplantı kapasitesi garantisi değildir. Tam kurulum/healthcheck/smoke/rollback: `docs/meeting-media-operations.md`. Uzak ağ veya tarayıcı medya doğrulaması backend testlerinden çıkarılamaz.
+
 ## Production kararı (2026-10-12)
 
 Karar verildi: tek bir **Hostinger KVM 2 VPS** (2 vCPU, 8 GB RAM, 100 GB NVMe, Ubuntu 24.04), üzerinde `docker-compose.prod.yml` ile dört servis: PostgreSQL 18, Spring Boot backend, Next.js frontend ve Caddy. Alan adı **pd-assistant.com** (ana adres); `www.pd-assistant.com` Caddy tarafından ana adrese 308 ile yönlendirilir. Caddy sertifikayı (Let's Encrypt/ZeroSSL) kendisi alır ve yeniler; tek origin olduğu için CORS yoktur.

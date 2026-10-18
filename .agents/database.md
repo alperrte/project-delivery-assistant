@@ -1,5 +1,11 @@
 # Veritabanı ve kalıcılık
 
+## V52–V53 toplantı backend — 2026-10-18
+
+V52 `meetings`, agenda/attendee, invite, participant/guest-session hash, chat/mention, audit, webhook dedup ve bağımsız `meeting_room_cleanup` tablolarını ekler. UTC TIMESTAMPTZ, meeting row write lock, unique oda/identity/secret hash ve FK/check/index sınırları kullanılır. Kalıcı proje silme meeting ilişkilerini cascade ile kaldırır; SFU odalarının doğrulanmış silinmesi için bağımsız cleanup tombstone'u kalır. Kick pending eski oda adı/epoch ve ban transaction'ı remote silmeden önce commit edilir. Davet redemption öncesi yalnız scalar ID sorgulanır, meeting kilidinden sonra güncel davet okunur; first-level cache ile eski kullanım/revoke snapshot'ı kullanılmaz.
+
+V53 mevcut notification event-recipient unique index'ini kullanır ve team-deletion CHECK kuralını meeting event ailesini de kabul edecek şekilde genişletir. Önceki migration'lar değiştirilmez. Mevcut veritabanına ileri Flyway migration uygulanır; üretimde geri dönüş için schema history silme/repair yerine yedek ve ileri düzeltme kullanılır. Kurulum/kurtarma ayrıntıları `docs/meeting-media-operations.md`, API/kalıcılık tercihleri `docs/meeting-backend-handoff.md` içindedir.
+
 ## V48 çoklu proje türü — 2026-10-12
 
 `projects.project_types VARCHAR(16)[] NOT NULL DEFAULT ARRAY['OTHER']`; mevcut `project_type` her satırda tek elemanlı diziye backfill edilir. CHECK: 1–5 öğe, tek boyut, NULL/tekrar/yabancı enum yok; kanonik WEB/MOBILE/AI/DESKTOP/OTHER sırası. ORM String[] temel alanı domain'de immutable enum listesine dönüştürür. Legacy `project_type` ilk kanonik öğe projection'ı olarak korunur. Diğer proje verileri, timestamp/medya/üyelikler ve eski migration'lar değişmez; PostgreSQL 18 V47→V48 upgrade + tüm beş legacy tür/constraint testi vardır.

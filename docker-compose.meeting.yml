@@ -1,0 +1,46 @@
+# Optional development SFU overlay. Supply deployment credentials before activating it:
+# docker compose -f docker-compose.yml -f docker-compose.meeting.yml --profile meeting up -d
+# This is a local-machine topology, not the production TLS/TURN/firewall configuration.
+services:
+  backend:
+    environment:
+      LIVEKIT_API_URL: http://livekit:7880
+    depends_on:
+      livekit:
+        condition: service_healthy
+        required: false
+
+  livekit:
+    image: livekit/livekit-server:v1.13.10
+    profiles: [meeting]
+    restart: unless-stopped
+    environment:
+      # Official LiveKit env interfaces. Never print expanded compose configuration.
+      LIVEKIT_KEYS: "${LIVEKIT_API_KEY:?Set the meeting media API key}: ${LIVEKIT_API_SECRET:?Set the meeting media API secret}"
+      LIVEKIT_CONFIG: |
+        port: 7880
+        bind_addresses: ["0.0.0.0"]
+        rtc:
+          tcp_port: 7881
+          udp_port: 7882
+          node_ip: 127.0.0.1
+          use_external_ip: false
+        room:
+          auto_create: false
+          enable_remote_unmute: false
+        webhook:
+          api_key: "${LIVEKIT_API_KEY:?Set the meeting media API key}"
+          urls:
+            - http://backend:8080/api/v1/meetings/media/webhook
+        logging:
+          level: warn
+    ports:
+      - "127.0.0.1:7880:7880"
+      - "127.0.0.1:7881:7881"
+      - "127.0.0.1:7882:7882/udp"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:7880/"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s

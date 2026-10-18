@@ -1,5 +1,9 @@
 # Web Sitesi Kesinlikle Olması Gerekenler — Master Checklist
 
+## Toplantı backend — 2026-10-18 (sınırlı kapsam)
+
+Yalnız yeni API'lerin validation/pagination/error state, cookie/CSRF ve proje kapsamlı authorization sözleşmeleri etkilenir. Frontend route, component, CSS, metadata, footer ve görsel davranış değiştirilmez; önceki global kutular yeniden audit edilmez veya bu backend teslimiyle `[x]` yapılmaz. Hedefli PostgreSQL/concurrency/OpenAPI/SFU ve güvenlik kanıtları completion kaydında tutulur. Sonraki frontend görevinde loading/empty/error/forbidden, otomatik yeniden bağlantı, cihaz izinleri ve guest cookie/medya veri akışı açıklamaları uygulanmalıdır. Üretim TLS/TURN ve gerçek cihaz/ağ doğrulaması bu teslimden çıkarılamaz. API devir belgesi: `docs/meeting-backend-handoff.md`.
+
 ## Tam boy sohbet dış kaydırma kilidi — 2026-10-15 (sınırlı kapsam)
 
 Responsive / Keyboard Navigation / Focus State / Navigasyon kapsamı yalnız full sohbet scroll sınırıdır: uzun gerçek Görevler sayfasında 120 px arka plan konumu desktop/mobile wheel, sidebar wheel, PageDown/Space, mesaj bilgisi dialogu ve mobil drawer boyunca korunur. İç mesaj kaydırması çalışır; bar/compact/close sonrası root kaydırması açılır, route değişiminde inert/kilit temizlenir. Gerçek API/Chromium hedefli test 1/1, lint/TypeScript/diff başarılı; desktop/mobile görüntüleri incelendi. Global kutular bu kapsamla değiştirilmedi. Kayıt: `docs/compliation/2026-10-15-chat-document-scroll-lock.md`.

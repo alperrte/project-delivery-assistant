@@ -1,5 +1,13 @@
 # API rehberi
 
+## Toplantı misafir UI sözleşmesi — 2026-10-18
+
+Public fakat CSRF korumalı POST `/meetings/guest/preview`, scoped cookie isteyen GET `/meetings/guest/{id}/state` ve organizer/manager'a açık sayfalı GET `/projects/{p}/meetings/{m}/invites` eklendi. Metadata secret/hash içermez. Aynı frontend-origin CORS politikası guest yollarına uygulandı; `Retry-After` expose edildi. Yeni migration/ENV/CSRF istisnası yoktur. Tam alan/izin/hata/kota/Swagger: `docs/meeting-guest-contract.md`; sonuçlar: `docs/compliation/2026-10-18-meeting-guest-contract.md`.
+
+## Toplantı backend — 2026-10-18
+
+Yeni proje kapsamlı kök `/api/v1/projects/{projectId}/meetings` CRUD, calendar, start/cancel/end, join/leave, participant mute/kick, invite ve chat uçlarını sağlar. Ayrı `/api/v1/meetings/guest/**` yolları yalnız meeting-scoped HttpOnly cookie ile çalışır; PDA principal'ı vermez. Public `POST /api/v1/meetings/media/webhook` raw-body imza/hash doğrular ve tek yeni CSRF istisnasıdır. Tam gerçek route/DTO/izin/hata/kota/reconnect sözleşmesi: `docs/meeting-backend-handoff.md`. Swagger yalnız mevcut geliştirme/test docs ayarı açıkken kullanılır. Frontend teslimi ayrıdır.
+
 ## Çoklu proje türü — 2026-10-12
 
 Mevcut POST `/api/v1/projects` ve PUT `/api/v1/projects/{id}` opsiyonel `projectTypes` dizisini alır: 1–5 desteklenen WEB/MOBILE/AI/DESKTOP/OTHER; tekrarlar domain'de tekilleştirilip enum sırasına konur. Dizi scalar `projectType` alanından önceliklidir. POST ikisi yoksa OTHER; PUT eksik/null dizi ve eksik/aynı legacy scalar mevcut seçimi korur. Farklı legacy scalar tekli seçime değiştirir. Tüm Project yanıtları ve recipient-scoped davet preview tam diziyi; scalar ilk kanonik türü döner. Geçersiz/boş/null elemanlı/aşırı dizi 400; mevcut auth/Project permission/CSRF değişmez. Güvenli create `{name:"Example",projectTypes:["WEB","MOBILE"]}`, edit ayrıca zorunlu name/priority/status içerir.
