@@ -12,7 +12,7 @@ import { MeetingError, MeetingStatus, useMeetingProject } from "./shared";
 import type { MeetingStatus as Status } from "./types";
 
 export function MeetingsPage({ slug }: { slug: string }) {
-  const t = useTranslations("meetings"), locale = useLocale();
+  const t = useTranslations("meetings"), tw = useTranslations("workspace"), locale = useLocale();
   const context = useMeetingProject(slug);
   const [status, setStatus] = useState<Status | "">(""), [page, setPage] = useState(0);
   const query = useQuery({ queryKey: [...context.keys, "list", status, page], enabled: !!context.project,
@@ -20,7 +20,7 @@ export function MeetingsPage({ slug }: { slug: string }) {
   return <div className="min-w-0 space-y-5"><PageHeader title={t("myMeetings")} description={context.project?.name} action={<Link href={`/projects/${slug}/meetings/new`} className={buttonVariants()}><Plus size={16} />{t("create")}</Link>} />
     <nav className="flex flex-wrap gap-2" aria-label={t("filter")}>
       {(["", "SCHEDULED", "OPEN", "ENDED", "CANCELLED"] as const).map(value => <Button key={value} variant={status === value ? "default" : "outline"} aria-pressed={status === value} onClick={() => { setStatus(value); setPage(0); }}>{t(value ? `status.${value}` : "all")}</Button>)}
-      <Link href={`/projects/${slug}/meetings/calendar`} className={buttonVariants({ variant: "ghost", className: "ml-auto" })}><CalendarDays size={16} />{t("calendar")}</Link>
+      <Link href={`/calendar?project=${encodeURIComponent(slug)}`} className={buttonVariants({ variant: "ghost", className: "ml-auto" })}><CalendarDays size={16} />{tw("calendar")}</Link>
     </nav>
     {context.isError ? <MeetingError error={context.error} /> : query.isError ? <MeetingError error={query.error} retry={() => void query.refetch()} /> : query.isPending ? <p role="status" className="workspace-panel p-8 text-muted-foreground">{t("loading")}</p> : !query.data.content.length ? <EmptyState title={t("empty")} description={t("emptyHint")} /> : <>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{query.data.content.map(meeting => <Link key={meeting.id} href={`/projects/${slug}/meetings/${meeting.id}`} className="workspace-panel flex min-w-0 flex-col gap-4 p-5 transition-colors hover:border-primary focus-visible:outline-2 focus-visible:outline-ring">

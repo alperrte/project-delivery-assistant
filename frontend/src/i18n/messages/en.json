@@ -1438,7 +1438,7 @@
     "verifying": "Verifying..."
   },
   "calendarPage": {
-    "description": "Follow the selected project's reminders, your assigned tasks and target end date month by month.",
+    "description": "Follow the selected project's meetings, reminders, your assigned tasks and target end date month by month.",
     "today": "Today",
     "create": "Create reminder",
     "project": "Project",
@@ -1669,7 +1669,7 @@
     "expandSidebar": "Expand sidebar",
     "previousMonth": "Previous month",
     "nextMonth": "Next month",
-    "calendarScope": "The calendar shows the selected project's reminders, the start and due dates of your assigned tasks, and its target end date.",
+    "calendarScope": "The calendar shows the selected project's meetings, reminders, the start and due dates of your assigned tasks, and its target end date.",
     "create": "Create project",
     "updates": "Recent updates",
     "projectUpdated": "Project updated",

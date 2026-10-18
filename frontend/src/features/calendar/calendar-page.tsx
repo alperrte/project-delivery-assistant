@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "@/i18n/navigation";
+import Link, { useSearchParams, useRouter } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { CalendarBlank, CaretLeft, CaretRight, Plus } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/common/empty-state";
@@ -23,11 +23,14 @@ import { MeetingError } from "@/features/meetings/shared";
 
 export function CalendarPage() {
   const t = useTranslations("calendarPage");
+  const tm = useTranslations("meetings");
   const tw = useTranslations("workspace");
   const te = useTranslations("errors");
   const locale = useLocale();
+  const search = useSearchParams();
+  const router = useRouter();
   const { data: user } = useSession();
-  const { slug, project, isError: projectError, isResolving, select } = useSelectedProject();
+  const { slug, project, isError: projectError, isResolving, select } = useSelectedProject(search.get("project") || undefined);
   const { isManager } = useCurrentMember(project?.id ?? "");
   const [today] = useState(() => todayKey());
   const [month, setMonth] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
@@ -61,6 +64,10 @@ export function CalendarPage() {
           hasProject && (
             <div className="flex flex-wrap gap-2">
               <Button variant="outline" onClick={goToday}>{t("today")}</Button>
+              <Link href={`/projects/${slug}/meetings/new`} className={buttonVariants({ variant: "outline" })}>
+                <Plus data-icon="inline-start" size={16} aria-hidden="true" />
+                {tm("create")}
+              </Link>
               <Link href={`/calendar/new?date=${selected}`} className={buttonVariants()}>
                 <Plus data-icon="inline-start" size={16} aria-hidden="true" />
                 {t("create")}
@@ -80,7 +87,7 @@ export function CalendarPage() {
         />
       ) : (
         <div className="space-y-5">
-          <ProjectSwitcher slug={slug} onSelect={select} />
+          <ProjectSwitcher slug={slug} onSelect={next => { select(next); router.replace(`/calendar?project=${encodeURIComponent(next)}`); }} />
 
           {!hasProject ? (
             <div role="alert" className="workspace-panel max-w-xl p-6 text-sm text-muted-foreground">{t("projectNotFound")}</div>
@@ -101,7 +108,7 @@ export function CalendarPage() {
               )}
 
               <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
-                <section aria-label={monthTitle} aria-busy={reminders.isFetching} className="workspace-panel min-w-0 p-4 sm:p-5">
+                <section aria-label={monthTitle} aria-busy={reminders.isFetching || tasks.isFetching || meetings.isFetching} className="workspace-panel min-w-0 p-4 sm:p-5">
                   <div className="mb-4 flex items-center justify-between">
                     <h2 className="flex items-center gap-2 text-base font-semibold capitalize" aria-live="polite">
                       <CalendarBlank size={18} className="text-muted-foreground" aria-hidden="true" />

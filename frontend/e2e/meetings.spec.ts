@@ -9,9 +9,13 @@ import { localizeHref, matchPath } from "../src/i18n/routing";
 import type { Project } from "../src/features/projects/types";
 import type { Meeting, MeetingInvite } from "../src/features/meetings/types";
 import tr from "../src/i18n/meetings/tr.json";
+import messages from "../src/i18n/messages/tr.json";
 import AxeBuilder from "@axe-core/playwright";
 
-test.use({ storageState: REJECTED_STATE, trace: "off", video: "off" });
+// The suite-wide config has no media flags: without a fake camera/microphone/screen the room cannot publish anything on a
+// machine with no (or a busy) device. Same flags as playwright.meetings.config.ts, so both entry points behave alike.
+const FAKE_MEDIA = ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream", "--auto-select-desktop-capture-source=Entire screen", "--enable-usermedia-screen-capturing"];
+test.use({ storageState: REJECTED_STATE, trace: "off", video: "off", launchOptions: { args: FAKE_MEDIA } });
 test.describe.configure({ mode: "serial" });
 const base = "http://localhost:8080/api/v1";
 let managerFile: string, memberFile: string;
@@ -43,6 +47,9 @@ test("real create/edit/cancel, sidebar, calendars, localized responsive form and
   test.setTimeout(180000); await login(context, managerFile); const project = await createProject(page);
   try {
     await page.goto(href(project.slug, "/new"));
+    await expect(page.locator("#meeting-title")).toBeVisible();
+    await expect(page.getByRole("link", { name: tr.back, exact: true })).toHaveCount(0);
+    await expect(page.getByRole("navigation", { name: messages.common.breadcrumb, exact: true })).toHaveCount(0);
     await page.getByLabel(tr.title, { exact: true }).fill("Frontend scheduled meeting");
     await page.getByLabel(tr.description, { exact: true }).fill("Agenda created through the real form");
     await page.getByLabel(tr.agendaItem.replace("{number}", "1"), { exact: true }).fill("Delivery review");
@@ -214,4 +221,43 @@ test("saved invite metadata survives reload without secrets; invalid guest link 
   page.on("request", request => { if (new URL(request.url()).pathname === "/api/v1/auth/refresh") refreshCalls++; });
   await page.goto(localizeHref("/meeting-guest/00000000-0000-0000-0000-000000000001", "tr"));
   await expect(page.getByText(tr.sessionExpired, { exact: true })).toBeVisible(); expect(refreshCalls).toBe(0);
+});
+
+
+test("unified calendar preserves legacy project links and project switching", async ({ page, context }) => {
+  test.setTimeout(120000);
+  await login(context, managerFile);
+  const first = await createProject(page);
+  const second = await createProject(page);
+  try {
+    const meeting = await createMeeting(page, first.id, false);
+    for (const locale of ["tr", "en", "de"] as const) {
+      await page.goto(localizeHref(`/projects/${first.slug}/meetings/calendar`, locale));
+      await expect.poll(() => matchPath(new URL(page.url()).pathname)?.route).toBe("/calendar");
+      expect(new URL(page.url()).searchParams.get("project")).toBe(first.slug);
+      await expect(page.locator("#calendar-project")).toContainText(first.name);
+      await page.locator('button:has([data-calendar-meetings])').first().click();
+      const detail = page.locator(`a[href="${localizeHref(`/projects/${first.slug}/meetings/${meeting.id}`, locale)}"]`);
+      await expect(detail).toBeVisible();
+      await expect(page.locator(`a[href="${localizeHref(`/projects/${first.slug}/meetings/calendar`, locale)}"]`)).toHaveCount(0);
+      await page.setViewportSize({ width: locale === "tr" ? 1440 : locale === "en" ? 320 : 390, height: 900 });
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+      await screenshot(page, `unified-calendar-${locale}`);
+      await page.reload();
+      await expect(page.locator("#calendar-project")).toContainText(first.name);
+    }
+    await page.locator("#calendar-project").click();
+    await page.getByRole("option", { name: second.name, exact: true }).click();
+    await expect.poll(() => new URL(page.url()).searchParams.get("project")).toBe(second.slug);
+    await expect(page.locator("#calendar-project")).toContainText(second.name);
+    await expect(page.locator("[data-calendar-meetings]")).toHaveCount(0);
+    await page.reload();
+    await expect(page.locator("#calendar-project")).toContainText(second.name);
+    await page.goto(href(first.slug));
+    await page.locator(`a[href="${localizeHref(`/calendar?project=${encodeURIComponent(first.slug)}`, "tr")}"]`).click();
+    await expect(page.locator("#calendar-project")).toContainText(first.name);
+  } finally {
+    await api(page, "POST", `/projects/${first.id}/archive`);
+    await api(page, "POST", `/projects/${second.id}/archive`);
+  }
 });
