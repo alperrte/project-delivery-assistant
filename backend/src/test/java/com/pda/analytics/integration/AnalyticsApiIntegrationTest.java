@@ -13,6 +13,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.pda.BackendApplication;
 import jakarta.servlet.http.Cookie;
 import java.security.SecureRandom;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -199,20 +201,25 @@ class AnalyticsApiIntegrationTest {
     void engagementIsCappedByServerSideElapsedTime() throws Exception {
         UUID visitor = UUID.randomUUID(), session = UUID.randomUUID();
         String address = address();
+        Instant started = Instant.now();
         send(address, event("PAGE_VIEW", visitor, session, "/dashboard", "")).andExpect(status().isNoContent());
 
-        // Immediately after the page view the browser cannot have been active for 100 seconds.
+        // Immediately after the page view the browser cannot have been active for 100 seconds. The server credits the
+        // seconds that really passed (+5 tolerance), so a slow machine may legitimately add a second or two.
         send(address, event("ENGAGEMENT", visitor, session, "/dashboard", "\"engagedSeconds\":100"))
                 .andExpect(status().isNoContent());
         int immediate = (int) session(session).get("engaged_seconds");
-        assertTrue(immediate <= 5, "credited " + immediate);
+        long immediateSlack = Duration.between(started, Instant.now()).toSeconds() + 1;
+        assertTrue(immediate <= 5 + immediateSlack, "credited " + immediate + " after at most " + immediateSlack + " s");
 
         // After 30 real seconds, up to 30 (+5 tolerance) are believable, never the 200 claimed.
         jdbc.update("UPDATE analytics_sessions SET last_seen_at = now() - interval '30 seconds', engaged_seconds = 0 WHERE id = ?", session);
+        started = Instant.now();
         send(address, event("ENGAGEMENT", visitor, session, "/dashboard", "\"engagedSeconds\":200"))
                 .andExpect(status().isNoContent());
         int afterWait = (int) session(session).get("engaged_seconds");
-        assertTrue(afterWait >= 35 && afterWait <= 36, "credited " + afterWait);
+        long waitSlack = Duration.between(started, Instant.now()).toSeconds() + 1;
+        assertTrue(afterWait >= 35 && afterWait <= 35 + waitSlack, "credited " + afterWait + " after at most " + waitSlack + " s");
     }
 
     @Test

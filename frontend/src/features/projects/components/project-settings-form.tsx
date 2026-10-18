@@ -389,7 +389,6 @@ export function ProjectSettingsForm({ project, organization }: { project: Projec
                   value: project.name,
                   label: t.rich("deleteTypeName", {
                     name: project.name,
-    logoShape: project.logoShape ?? "SQUARE",
                     strong: (chunks) => <strong className="font-semibold text-foreground">{chunks}</strong>,
                   }),
                 }}

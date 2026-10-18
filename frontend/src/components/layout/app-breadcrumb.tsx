@@ -32,7 +32,9 @@ export function AppBreadcrumb() {
   const isTeamDetailOrEdit = second === "teams" && teamId && teamId !== "new"
     && (rest.length === 1 || (rest.length === 2 && teamAction === "edit"));
   const isMemberInvite = second === "team-invitations" && rest.length === 1 && teamId === "new";
-  if (slug && (isTeamDetailOrEdit || isMemberInvite)) return null;
+  const isMeetingCreate = second === "meetings" && rest.length === 1 && teamId === "new";
+  const isMeetingsList = second === "meetings" && rest.length === 0;
+  if (slug && (isTeamDetailOrEdit || isMemberInvite || isMeetingCreate || isMeetingsList)) return null;
 
   const projectCrumb: Crumb = {
     label: project.data?.name ?? <><span aria-hidden="true" className="inline-block h-3.5 w-24 animate-pulse rounded bg-muted align-middle" /><span className="sr-only">{common("loading")}</span></>,

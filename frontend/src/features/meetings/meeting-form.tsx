@@ -74,7 +74,7 @@ export function MeetingForm({ slug, meeting }: { slug: string; meeting?: Meeting
   const canEdit = !meeting || context.isManager || context.user?.id === meeting.organizerId;
   if (!canEdit || (meeting && meeting.status !== "SCHEDULED")) return <p role="alert">{t("forbidden")}</p>;
   return <PageContainer width="form">
-    <Link href={`/projects/${slug}/meetings`} className="mb-4 inline-flex min-h-11 items-center text-sm text-muted-foreground underline underline-offset-4">{t("back")}</Link>
+    {meeting && <Link href={`/projects/${slug}/meetings`} className="mb-4 inline-flex min-h-11 items-center text-sm text-muted-foreground underline underline-offset-4">{t("back")}</Link>}
     <PageHeader title={t(meeting ? "edit" : "create")} description={context.project?.name ?? t("loading")} />
     <form data-meeting-form onChange={() => setDirty(true)} onSubmit={submit} className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
       <div className="workspace-panel min-w-0 divide-y">

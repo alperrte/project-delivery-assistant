@@ -199,8 +199,11 @@ test.describe.serial("Silme ve kritik eylem onayı", () => {
       });
     };
     try {
-      await page.goto(`/projects/${slug}/edit`);
+      // The route goes in BEFORE the page loads. Installed right after a fresh load it sometimes was not in effect yet
+      // for the first request: the browser sent the DELETE (and its CORS preflight) straight to the backend, the handler
+      // never ran and the project really was deleted (about one run in eight).
       await route("fail");
+      await page.goto(`/projects/${slug}/edit`);
       await page.getByRole("button", { name: tr.projects.settings.delete, exact: true }).click();
       const dialog = page.getByRole("dialog");
       const confirm = dialog.getByRole("button", { name: tr.projects.settings.deleteConfirm, exact: true });

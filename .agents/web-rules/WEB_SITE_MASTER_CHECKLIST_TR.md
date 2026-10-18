@@ -1,5 +1,13 @@
 # Web Sitesi Kesinlikle Olması Gerekenler — Master Checklist
 
+## Tek takvim — 2026-10-18 (sınırlı kapsam)
+
+Toplantılarım liste sayfası için de breadcrumb kaldırıldı; hedefli ESLint/whitespace kontrolleri geçti. Bu takip değişikliğinde tarayıcı testi tekrarlanmadı; global kutular değişmedi.
+
+Toplantı oluşturma sayfası takip düzeltmesi: yalnız `/projects/[slug]/meetings/new` için breadcrumb ve form üstü geri bağlantısı kaldırıldı. Düzenleme sayfasının geri bağlantısı korundu. Etkilenen Breadcrumb/Navigasyon kapsamı için hedefli ESLint ve whitespace kontrolü geçti; güncel geliştirme sunucusunda iki öğenin yokluğu dahil mevcut gerçek servis Chromium regresyonu 1 PASS verdi. Global kutular değişmedi. Kayıt: `docs/compliation/2026-10-18-meeting-create-navigation.md`.
+
+Navigasyon, yönlendirme, yerelleştirme ve responsive maddeleri açısından: ayrı toplantı takvimi girişi/renderer'ı kaldırıldı; ortak takvimde toplantı verisi ve detay bağlantıları korundu. TR/EN/DE eski URL → ortak takvim, proje bağlamı, yenileme ve proje değişimi gerçek API/PostgreSQL + Chromium ile doğrulandı. 320/390/1440 px görüntülerinde taşma yok; mevcut form light/dark axe kontrolleri de hedefli regresyonda geçti. Yeni ortak takvime özel tam ekran okuyucu/çok tarayıcı/tema matrisi iddia edilmez. Global kutular değiştirilmedi. Sonuçlar: `docs/compliation/2026-10-18-unified-calendar.md`.
+
 ## Toplantı frontend — 2026-10-18 (sınırlı kapsam)
 
 Etkilenen Navigasyon / Pagination / Form Validation / Loading-Empty-Error-Forbidden / Responsive / Dark Mode / Focus / kritik işlem onayı / noindex ve cihaz güvenliği yüzeyleri gözden geçirildi. Gerçek API/PostgreSQL/LiveKit ile 3 kapsamlı Chromium kabulü ve 24 mevcut dil/oturum/route regresyonu geçti; 320/390/768/1440 görüntüleri, TR/EN/DE ve form light/dark axe doğrulandı. RTC ses byte/sample ve video decode kanıtı vardır; capture kaynağı TEST-ONLY tarayıcı cihazlarıdır. Donanım/screen reader/tüm tarayıcı/üretim TLS-TURN veya tam WCAG sonucu çıkarılmaz. Global kutular bu sınırlı kapsamla `[x]` yapılmadı. Lint/type/build/bundle geçti; API eki ayrı backend worktree'sindedir. Kayıt: `docs/compliation/2026-10-18-meeting-frontend.md`.

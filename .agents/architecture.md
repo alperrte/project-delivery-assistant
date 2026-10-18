@@ -1,5 +1,9 @@
 ﻿# Mimari kısa özet
 
+## Tek takvim — 2026-10-18
+
+Kişisel `/calendar`, toplantı, anımsatıcı, atanmış görev ve proje hedef tarihinin ortak takvimidir. Toplantılar sidebar'ında ayrı takvim bulunmaz. Eski proje toplantı takvimi rotası dili ve `?project=<slug>` bağlamını koruyarak ortak takvime yönlenir; proje değişimi bu URL bağlamını da günceller. Ayrı toplantı takvimi renderer'ı kaldırıldı, ortak meeting veri hook'u ve gün listesi korundu. Backend sözleşmesi değişmedi. Kayıt: `docs/compliation/2026-10-18-unified-calendar.md`.
+
 ## Toplantı frontend — 2026-10-18
 
 `features/meetings` typed REST istemcisi, hesap/proje kapsamlı sorgular, form/liste/detay/takvim ve ayrı ömür sahibi LiveKit Room hook'u içerir. Token'lar yalnız bellektedir; merkezi sohbet değişmez. Epoch değişiminde yeni yetki/token/SDK Room alınır; erişim kaybında retry durur. `(public-meeting)` misafir rotaları fragment'ı hemen temizler; HttpOnly guest cookie PDA principal'ı değildir. Global takvim aynı meeting kaynağını okur. Cihaz izni/CSP medya origin'i yalnız meeting yüzeyine daraltılır. Onaylı guest preview/state ve davet metadata API ekleri ayrı `meeting-system-backend` worktree'sindedir. Devir: `docs/meeting-frontend-handoff.md`.
