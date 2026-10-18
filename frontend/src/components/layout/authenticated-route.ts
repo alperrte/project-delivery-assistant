@@ -7,6 +7,7 @@ export const AUTHENTICATED_ROUTES = [
   "/projects/[slug]/teams/new", "/projects/[slug]/teams/[teamId]", "/projects/[slug]/teams/[teamId]/edit", "/projects/[slug]/teams/[teamId]/members",
   "/projects/[slug]/tasks", "/projects/[slug]/tasks/new", "/projects/[slug]/tasks/board", "/projects/[slug]/tasks/pool", "/projects/[slug]/tasks/[taskId]", "/projects/[slug]/tasks/[taskId]/edit",
   "/projects/[slug]/sprints", "/projects/[slug]/sprints/new", "/projects/[slug]/sprints/[sprintId]", "/projects/[slug]/sprints/[sprintId]/edit", "/projects/[slug]/labels",
+  "/projects/[slug]/meetings", "/projects/[slug]/meetings/new", "/projects/[slug]/meetings/calendar", "/projects/[slug]/meetings/[meetingId]", "/projects/[slug]/meetings/[meetingId]/edit", "/projects/[slug]/meetings/[meetingId]/room",
   "/organizations", "/organizations/new", "/organizations/[organizationId]", "/organizations/[organizationId]/edit",
   "/settings", "/account", "/account/faq", "/account/contact", "/tasks", "/calendar", "/calendar/new", "/calendar/reminders/[reminderId]/edit",
   "/invitations", "/invitations/[projectId]/[invitationId]",

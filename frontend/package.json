@@ -23,6 +23,7 @@
     "clsx": "^2.1.1",
     "country-flag-icons": "^1.6.20",
     "gsap": "^3.15.0",
+    "livekit-client": "2.23.0",
     "lucide-react": "^1.48.0",
     "motion": "^13.4.4",
     "next": "16.3.8",

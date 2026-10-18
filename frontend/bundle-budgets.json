@@ -1,6 +1,7 @@
 {
   "$comment": "Initial client JS per route, gzip KB (npm run check:bundle). Budget = measured size after the 2026-10-11 performance pass + ~10% headroom, rounded up to 5. Raise a value only with a reason in the commit; the landing target is 350.",
   "unit": "gzip KB",
+  "$meetingComment": "Meeting routes measured 2026-10-18 with the same ~10% headroom rounded up to 5. LiveKit SDK is confined to room routes; no existing route budget is raised.",
   "default": null,
   "routes": {
     "/": 405,
@@ -26,6 +27,14 @@
     "/contact": 535,
     "/cookies": 395,
     "/dashboard": 520,
+    "/meeting-guest": 410,
+    "/meeting-guest/[meetingId]": 575,
+    "/projects/[slug]/meetings": 520,
+    "/projects/[slug]/meetings/new": 520,
+    "/projects/[slug]/meetings/calendar": 525,
+    "/projects/[slug]/meetings/[meetingId]": 525,
+    "/projects/[slug]/meetings/[meetingId]/edit": 525,
+    "/projects/[slug]/meetings/[meetingId]/room": 680,
     "/delete-account": 530,
     "/dev/error-test": 390,
     "/errors/[code]": 390,

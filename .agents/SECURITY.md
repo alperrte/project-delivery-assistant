@@ -905,6 +905,10 @@ The in-memory limiters (`AuthRateLimitFilter`, `ProjectInvitationRateLimitFilter
 
 ## 15. Security Headers
 
+### Meeting frontend — approved scope (2026-10-18)
+
+The user approved same-origin camera/microphone/display-capture only on meeting room and public guest UI routes. Other rendered pages retain denied device permissions. The existing nonce CSP adds only the configured public `NEXT_PUBLIC_LIVEKIT_URL` WS/WSS origin and HTTP(S) counterpart on those routes, with blob media; no production wildcard or script-policy relaxation is added. Origin parsing rejects credentials/path/query/fragment and insecure non-loopback signaling. Guest UI is no-referrer/no-store/noindex, consumes invitation fragments into memory and clears them immediately, and never turns a guest 401 into PDA refresh. SDK logs are silent; media tokens and invitation capabilities never enter caches, storage or analytics. Local media activation/generated credentials were approved; `.env.prod` was not changed. The separate backend contract worktree and verification limits are documented in `docs/meeting-frontend-handoff.md`.
+
 Spring Security secure defaults should be preserved unless there is a documented reason to change them.
 
 Where appropriate, production should use protections such as:

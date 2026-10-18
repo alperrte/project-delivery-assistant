@@ -18,6 +18,8 @@ import { useCalendarTasks } from "./hooks/use-calendar-tasks";
 import { DayAgenda } from "./components/day-agenda";
 import { MonthGrid } from "./components/month-grid";
 import { ProjectSwitcher } from "./components/project-switcher";
+import { useMonthMeetings, MeetingDayList, meetingsOnDate } from "@/features/meetings/meeting-calendar";
+import { MeetingError } from "@/features/meetings/shared";
 
 export function CalendarPage() {
   const t = useTranslations("calendarPage");
@@ -32,6 +34,7 @@ export function CalendarPage() {
   const [selected, setSelected] = useState(today);
   const reminders = useMonthReminders(project?.id, month);
   const tasks = useCalendarTasks(project?.id, user?.id);
+  const meetings = useMonthMeetings(project?.id, month);
 
   function moveMonth(delta: number) {
     const next = new Date(month.getFullYear(), month.getMonth() + delta, 1);
@@ -109,19 +112,21 @@ export function CalendarPage() {
                       <Button variant="ghost" size="icon-sm" aria-label={tw("nextMonth")} onClick={() => moveMonth(1)}><CaretRight size={16} /></Button>
                     </div>
                   </div>
+                  {meetings.isError && <MeetingError error={meetings.error} retry={() => void meetings.refetch()} />}
                   <MonthGrid
                     month={month}
                     selected={selected}
                     today={today}
                     byDate={reminders.byDate}
                     tasksByDate={tasks.byDate}
+                    meetings={meetings.data ?? []}
                     deadline={project.targetEndDate}
                     onSelect={setSelected}
                   />
                   <p className="mt-3 text-xs leading-5 text-muted-foreground">{tw("calendarScope")}</p>
                 </section>
 
-                <DayAgenda
+                <div className="min-w-0 space-y-5"><MeetingDayList meetings={meetingsOnDate(meetings.data ?? [], selected)} slug={slug} /><DayAgenda
                   selected={selected}
                   reminders={reminders.byDate.get(selected) ?? []}
                   tasks={tasks.byDate.get(selected) ?? []}
@@ -131,7 +136,7 @@ export function CalendarPage() {
                   isManager={isManager}
                   isDeadline={project.targetEndDate === selected}
                   actions
-                />
+                /></div>
               </div>
             </>
           )}

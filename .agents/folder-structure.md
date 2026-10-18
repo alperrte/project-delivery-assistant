@@ -1,5 +1,9 @@
 ﻿# Klasör yapısı kısa rehberi
 
+## Toplantı frontend — 2026-10-18
+
+`frontend/src/features/meetings/` typed API/DTO, form/liste/detay/takvim, misafir giriş ve LiveKit oda ömrünün sahibidir. Proje rotaları `(app)/projects/[slug]/meetings/`, public misafir rotaları `(public-meeting)/meeting-guest/`, TR/EN/DE namespace'i `src/i18n/meetings/` içindedir. `e2e/meetings.spec.ts`, test-only `meeting-fixture.ts` ve bağımsız `playwright.meetings.config.ts` gerçek yerel servis kabulünü sağlar. Devir: `docs/meeting-frontend-handoff.md`.
+
 ## Toplantı backend — 2026-10-18
 
 - `backend/src/main/java/com/pda/meeting/`: public event/media/policy sözleşmeleri; `internal/` entity, repository, servis, lifecycle, scheduler ve REST; `internal/http/` ayrı guest cookie ve imzalı webhook uçları; `media/` gerçek LiveKit adaptörü.

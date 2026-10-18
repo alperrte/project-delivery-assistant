@@ -426,7 +426,14 @@ test.describe.serial("Account chat", () => {
     await composerOf(managerPage).fill("account draft across projects");
     await managerPage.getByTestId("chat-minimize").click();
     const beforeSwitch = { ...socketStats };
-    await managerPage.getByRole("link", { name: "Değiştir", exact: true }).first().click();
+    // The sidebar's searchable project dropdown switches the project client-side; the chat must not reconnect.
+    await managerPage.locator('[data-testid="project-switcher-trigger"]:visible').click();
+    await managerPage.getByTestId("project-switcher-search").fill(project2Name);
+    await managerPage.locator(`[data-project-choice="${project2Id}"]`).click();
+    await expect(managerPage.getByTestId("project-switcher-popup")).toBeHidden();
+    await expect(managerPage).toHaveURL(new RegExp(`/tr/projeler/${slug2}/gorevler$`));
+    await expect(barOf(managerPage)).toBeVisible();
+    await managerPage.locator('nav a[href="/tr/projeler"]').first().click();
     await expect(managerPage).toHaveURL(/\/tr\/projeler$/);
     await expect(barOf(managerPage)).toBeVisible();
     await managerPage.evaluate((target) => (window as unknown as { next: { router: { push: (href: string) => void } } }).next.router.push(target), `/projects/${slug2}`);
@@ -816,7 +823,7 @@ test.describe.serial("Account chat", () => {
       await expect.poll(()=>sockets.filter(entry=>entry.messages.some(frame=>frame.includes('"type":"REACTIONS"')&&frame.includes(overlapId))).length).toBe(2);
       const reacted=messagesOf(page).filter({hasText:overlapText}).getByTestId("chat-reaction-THUMBS_UP");
       await expect(reacted).toHaveText("👍1");
-      await expect(reacted).toHaveAttribute("aria-pressed","false");
+      await expect(reacted).toHaveAttribute("data-own-reaction","false");
       await page.waitForTimeout(350);
       await expect(reacted).toHaveText("👍1");
 

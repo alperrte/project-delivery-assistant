@@ -38,6 +38,7 @@ async function loadCatalog(locale: Locale): Promise<Messages> {
     ...(await import(`./messages/${locale}.json`)).default,
     errorPages: (await import(`./errors/${locale}.json`)).default,
     landing: (await import(`./landing/${locale}.json`)).default,
+    meetings: (await import(`./meetings/${locale}.json`)).default,
   };
 }
 

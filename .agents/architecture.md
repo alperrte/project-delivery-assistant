@@ -1,5 +1,9 @@
 ﻿# Mimari kısa özet
 
+## Toplantı frontend — 2026-10-18
+
+`features/meetings` typed REST istemcisi, hesap/proje kapsamlı sorgular, form/liste/detay/takvim ve ayrı ömür sahibi LiveKit Room hook'u içerir. Token'lar yalnız bellektedir; merkezi sohbet değişmez. Epoch değişiminde yeni yetki/token/SDK Room alınır; erişim kaybında retry durur. `(public-meeting)` misafir rotaları fragment'ı hemen temizler; HttpOnly guest cookie PDA principal'ı değildir. Global takvim aynı meeting kaynağını okur. Cihaz izni/CSP medya origin'i yalnız meeting yüzeyine daraltılır. Onaylı guest preview/state ve davet metadata API ekleri ayrı `meeting-system-backend` worktree'sindedir. Devir: `docs/meeting-frontend-handoff.md`.
+
 ## Toplantı backend modülü — 2026-10-18
 
 `com.pda.meeting` Spring Modulith modülüdür. Public kök `MeetingMediaPort`, `MeetingMediaEvents`, `MeetingEvents` ve `MeetingPolicy` sözleşmelerini; `internal` kalıcı toplantı/katılım/davet/sohbet/denetim, REST ve DB kilitli scheduler'ı; `media` gerçek LiveKit Twirp/JWT/webhook adaptörünü içerir. Project ve User'a yalnız public sözleşmeler üzerinden erişilir. Notification, kalıcı Modulith olaylarını event/recipient dedup ile işler; merkezi Chat/STOMP değişmez.

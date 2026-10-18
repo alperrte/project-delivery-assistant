@@ -26,6 +26,7 @@ export class ApiError extends Error {
     public readonly invalidFields?: Record<string, string>,
     /** The whole ProblemDetail body, for errors that carry extra properties (e.g. `members`). */
     public readonly body?: Record<string, unknown>,
+    public readonly retryAfter?: number,
   ) {
     super(code ?? `http_${status}`);
     this.name = "ApiError";
@@ -136,7 +137,9 @@ async function toApiError(res: Response): Promise<ApiError> {
   } else if (body.invalidFields) {
     fields = body.invalidFields;
   }
-  return new ApiError(res.status, body.code, fields, body);
+  const retry = res.headers.get("Retry-After");
+  const seconds = retry === null ? NaN : Number(retry);
+  return new ApiError(res.status, body.code, fields, body, Number.isFinite(seconds) && seconds >= 0 ? seconds : undefined);
 }
 
 async function send(path: string, init: RequestInit, method: string, guard?: () => boolean, timeoutMs?: number): Promise<Response> {
@@ -284,7 +287,7 @@ export async function apiRequestWithHeaders<T = void>(
     }
   }
 
-  if (res.status === 401 && !NO_REFRESH.includes(path)) {
+  if (res.status === 401 && !NO_REFRESH.includes(path) && !path.startsWith("/meetings/guest/")) {
     if (await refreshSession()) {
       res = await send(path, init, method, options.guard, options.timeoutMs);
     }

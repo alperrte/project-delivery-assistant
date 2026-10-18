@@ -25,7 +25,17 @@ export function apiOrigins(apiUrl: string | undefined = process.env.NEXT_PUBLIC_
   }
 }
 
-export function buildCsp(nonce: string, options: { development?: boolean } = {}): string {
+export function meetingMediaOrigins(value = process.env.NEXT_PUBLIC_LIVEKIT_URL): string[] {
+  if (!value) return [];
+  try {
+    const url = new URL(value);
+    const local = ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
+    if (url.username || url.password || url.search || url.hash || !["", "/"].includes(url.pathname) || !(url.protocol === "wss:" || (local && url.protocol === "ws:"))) return [];
+    return [url.origin, `${url.protocol === "wss:" ? "https:" : "http:"}//${url.host}`];
+  } catch { return []; }
+}
+
+export function buildCsp(nonce: string, options: { development?: boolean; meeting?: boolean } = {}): string {
   const development = options.development ?? process.env.NODE_ENV !== "production";
   const [apiOrigin, apiSocket] = apiOrigins();
   const api = [apiOrigin, apiSocket].filter(Boolean);
@@ -35,10 +45,10 @@ export function buildCsp(nonce: string, options: { development?: boolean } = {})
     "style-src": ["'self'", "'unsafe-inline'"],
     "img-src": ["'self'", "data:", "blob:", ...(apiOrigin ? [apiOrigin] : [])],
     "font-src": ["'self'"],
-    "connect-src": ["'self'", ...api, ...(development ? ["ws:", "http:"] : [])],
+    "connect-src": ["'self'", ...api, ...(options.meeting ? meetingMediaOrigins() : []), ...(development ? ["ws:", "http:"] : [])],
     "worker-src": ["'self'"],
     "manifest-src": ["'self'"],
-    "media-src": ["'self'"],
+    "media-src": ["'self'", ...(options.meeting ? ["blob:"] : [])],
     "object-src": ["'none'"],
     "base-uri": ["'self'"],
     "form-action": ["'self'"],

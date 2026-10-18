@@ -8,6 +8,7 @@ import { dateFromKey, dateKey } from "@/features/reminders/dates";
 import { ReminderMarkers } from "@/features/reminders/components/reminder-markers";
 import type { Reminder } from "@/features/reminders/types";
 import type { CalendarTaskEntry } from "../hooks/use-calendar-tasks";
+import type { Meeting } from "@/features/meetings/types";
 
 type MonthGridProps = {
   month: Date;
@@ -16,6 +17,7 @@ type MonthGridProps = {
   byDate: Map<string, Reminder[]>;
   /** The signed-in user's assigned tasks by the day they start or are due; omitted where tasks are not shown. */
   tasksByDate?: Map<string, CalendarTaskEntry[]>;
+  meetings?: Meeting[];
   /** The selected project's target end date, drawn as a flag. */
   deadline: string | null;
   onSelect: (key: string) => void;
@@ -61,10 +63,11 @@ function TaskDayMarker({ entries, compact }: { entries: CalendarTaskEntry[]; com
  * the number's place (several: a few icons, or one with a "+N" count in narrow cells). Pure view: it fetches nothing
  * and owns no state. The day button's accessible name always carries the full date and every reminder.
  */
-export function MonthGrid({ month, selected, today, byDate, tasksByDate, deadline, onSelect, compact = false }: MonthGridProps) {
+export function MonthGrid({ month, selected, today, byDate, tasksByDate, meetings = [], deadline, onSelect, compact = false }: MonthGridProps) {
   const t = useTranslations("reminders");
   const tc = useTranslations("calendarPage");
   const locale = useLocale();
+  const tm = useTranslations("meetings");
   const year = month.getFullYear();
   const monthIndex = month.getMonth();
   const offset = (month.getDay() + 6) % 7;
@@ -87,6 +90,9 @@ export function MonthGrid({ month, selected, today, byDate, tasksByDate, deadlin
         const reminders = byDate.get(key) ?? [];
         const hasReminders = reminders.length > 0;
         const dayTasks = tasksByDate?.get(key) ?? [];
+        const dayStart = new Date(year, monthIndex, day).getTime();
+        const dayEnd = new Date(year, monthIndex, day + 1).getTime();
+        const dayMeetings = meetings.filter(m => Date.parse(m.startsAt) < dayEnd && Date.parse(m.endsAt) > dayStart);
         const isDeadline = deadline === key;
         const isToday = key === today;
         const isSelected = key === selected;
@@ -95,6 +101,7 @@ export function MonthGrid({ month, selected, today, byDate, tasksByDate, deadlin
           ...reminders.map((reminder) => `${t(`types.${reminder.type}`)}: ${reminder.title}`),
           ...(isDeadline ? [tc("projectDeadline")] : []),
           ...dayTasks.map(({ task, kind }) => `${tc(`tasks.${kind}`)}: ${task.taskKey} ${task.title}`),
+          ...dayMeetings.map(meeting => `${tm("group")}: ${meeting.title}`),
         ].join(", ");
 
         return (
@@ -113,6 +120,7 @@ export function MonthGrid({ month, selected, today, byDate, tasksByDate, deadlin
               isSelected && (compact ? "bg-primary/10 ring-1 ring-primary" : "bg-primary/10 ring-1 ring-inset ring-primary"),
             )}
           >
+            {dayMeetings.length > 0 && <span data-calendar-meetings={dayMeetings.length} className="absolute right-1 top-1 rounded bg-primary/15 px-1 text-[10px] text-primary" aria-hidden="true">{dayMeetings.length}</span>}
             {hasReminders ? (
               <span className={cn("flex min-w-0 flex-wrap items-center gap-1", compact && "justify-center")}>
                 {compact ? (

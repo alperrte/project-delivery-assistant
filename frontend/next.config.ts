@@ -15,7 +15,7 @@ const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+  // Route-scoped camera/microphone policy is emitted alongside the nonce CSP in src/proxy.ts.
 ];
 
 // Cache policy of the static files in `public/` (see .agents/architecture.md "Caching"). `/_next/static/*` is content-hashed and
