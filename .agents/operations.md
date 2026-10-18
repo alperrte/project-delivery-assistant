@@ -2,6 +2,10 @@
 
 Bu belge yayın ortamında ve yerel kurulumda uygulanacak işletme adımlarını toplar: yedekleme, olay müdahalesi, geri dönüş, migration, bakım, izleme, sertifika ve yayın sonrası kontrol. Production tek bir Hostinger KVM 2 VPS'tir (`deployment.md` "Production kararı"); sunucuda yapılacak adımlar §6b'dedir ve gerçek sunucuda uygulanana kadar uygulanmış sayılmaz. Güvenlik kuralları için `SECURITY.md` esastır.
 
+## Toplantı medya işletimi — 2026-10-18
+
+Meeting metadata/katılım/davet hash/sohbet tercihi/audit/oda cleanup ledger'ı PostgreSQL yedeğine dahildir; canlı SFU odası kalıcı yedek kaynağı değildir. Yeni feature bayrağını kapatmak mevcut SFU bağlantılarını kesmez: önce toplantıları bitirin ve gerçek RoomService ile odaların silindiğini doğrulayın. Rotation/cleanup pending kayıtlarını veya Flyway geçmişini silmeyin; worker restart sonrası yeniden dener. Proje kalıcı silme sonrasında bağımsız `meeting_room_cleanup` tombstone'ları kalır. Sağlık kontrolü ve API smoke, DNS/TLS/TURN/NAT hazırlığı, çok ağlı manuel test, kesinti/rollback adımları `docs/meeting-media-operations.md` içindedir. Production SFU ve gerçek kimlik bilgileri bu görevde kurulmuş sayılmaz.
+
 ## 1. Yedekleme ve geri yükleme
 
 Neyin yedeği alınır:

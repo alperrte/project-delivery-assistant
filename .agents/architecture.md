@@ -1,5 +1,11 @@
 ﻿# Mimari kısa özet
 
+## Toplantı backend modülü — 2026-10-18
+
+`com.pda.meeting` Spring Modulith modülüdür. Public kök `MeetingMediaPort`, `MeetingMediaEvents`, `MeetingEvents` ve `MeetingPolicy` sözleşmelerini; `internal` kalıcı toplantı/katılım/davet/sohbet/denetim, REST ve DB kilitli scheduler'ı; `media` gerçek LiveKit Twirp/JWT/webhook adaptörünü içerir. Project ve User'a yalnız public sözleşmeler üzerinden erişilir. Notification, kalıcı Modulith olaylarını event/recipient dedup ile işler; merkezi Chat/STOMP değişmez.
+
+Toplantı kaydı ve UTC takvim API kaynağı kalıcı, SFU odası geçicidir. Planlanan bitiş overtime uyarısıdır. Kullanıcı onaylı kick güvenliği kalıcı ban + eski odayı doğrulanmış silme + roomEpoch yenilemedir; invite revoke yalnız yeni guest session'ları engeller. Guest cookie yalnız ilgili meeting path'ine aittir, PDA principal'ı oluşturmaz. Oturum süre sonu/üyelik kaybı uzlaştırılır. Proje kalıcı silinince oda cleanup ledger'ı cascade dışında kalır. V52 meeting şemasını, V53 notification kısıtlarını ekler. Feature ve credential'lar varsayılan kapalı/boştur; üretim DNS/TLS/TURN hazırlığı ayrıca gerekir. Frontend otomatik yeniden bağlantı bu teslimde uygulanmaz. Sözleşme: `docs/meeting-backend-handoff.md`; işletim: `docs/meeting-media-operations.md`.
+
 ## Tam boy sohbet ve sayfa kaydırması — 2026-10-15
 
 `ChatRoot` tam boy modda `display: contents` sarmalayıcısındaki `data-chat-full` işaretiyle document kaydırma kilidinin sahibidir. `globals.css` kök `html:has([data-chat-full])` kuralı yalnız bu modda dış kaydırmayı kapatır; sohbet iç kaydırmaları ve mevcut `main` inert sınırı korunur. İşaret panel chunk'ı yüklenirken de render edilir; kapatma/küçültme/navigasyon/oturum sonu/unmount işareti kaldırır. Body inline stilleri veya zorunlu scrollTo cleanup'ı kullanılmaz; Base UI dialog kilitleriyle ve navigasyon scroll yönetimiyle çakışmaz.

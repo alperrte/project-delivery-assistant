@@ -79,6 +79,17 @@ public class Notification {
         return notification;
     }
 
+    public static Notification meeting(UUID recipient, UUID actor, UUID project, UUID meeting,
+                                       UUID eventId, NotificationType type, String title, String message,
+                                       Instant occurredAt) {
+        if (!type.name().startsWith("MEETING_")) throw new IllegalArgumentException("Meeting type required");
+        var n = new Notification(recipient, type, title, message, actor,
+                java.util.Objects.requireNonNull(project), ResourceType.MEETING, java.util.Objects.requireNonNull(meeting));
+        n.sourceEventId = java.util.Objects.requireNonNull(eventId);
+        n.createdAt = java.util.Objects.requireNonNull(occurredAt);
+        return n;
+    }
+
     /** New default-branch commits seen on GitHub; no actor (GitHub authors are not PDA users). */
     public static Notification repositoryCommits(UUID recipient, UUID project, RepositoryCommits commits) {
         java.util.Objects.requireNonNull(commits, "commits");

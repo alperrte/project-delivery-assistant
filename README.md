@@ -3,6 +3,8 @@
   <a href="README_EN.md">🇬🇧 English</a>
 </p>
 
+> Toplantı backend genişletmesi: [API ve frontend devir sözleşmesi](docs/meeting-backend-handoff.md), [LiveKit kurulumu ve işletimi](docs/meeting-media-operations.md). Medya varsayılan kapalıdır; üretim kimlik bilgileri, DNS/TLS/TURN ve sonraki frontend entegrasyonu ayrıca hazırlanmalıdır.
+
 <p align="center">
   <img src="assets/git_images/hero-banner.tr.png" alt="PDA - Project Delivery Assistant" width="100%" />
 </p>

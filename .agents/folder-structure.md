@@ -1,5 +1,13 @@
 ﻿# Klasör yapısı kısa rehberi
 
+## Toplantı backend — 2026-10-18
+
+- `backend/src/main/java/com/pda/meeting/`: public event/media/policy sözleşmeleri; `internal/` entity, repository, servis, lifecycle, scheduler ve REST; `internal/http/` ayrı guest cookie ve imzalı webhook uçları; `media/` gerçek LiveKit adaptörü.
+- `backend/src/main/resources/db/migration/V52__meeting_core.sql`, `V53__meeting_notifications.sql`: meeting/bağımsız oda cleanup şeması ve mevcut notification event dedup kısıtları.
+- `notification/application/MeetingNotification*`, `MeetingPublicationRecovery`: mevcut bildirim modülünde dayanıklı fanout/recovery. `auth/infrastructure/config/MeetingHttpLimitFilter`: guest/webhook ingress boyut/kota sınırı.
+- `backend/src/test/java/com/pda/meeting/`, notification altındaki Meeting testleri ve `auth/infrastructure/config/MeetingProxyRateLimitTest`: gerçek PostgreSQL, concurrency, authorization, OpenAPI, gerçek SFU ve webhook kontrolleri.
+- `docker-compose.meeting.yml`: isteğe bağlı yerel LiveKit overlay; `docs/meeting-backend-handoff.md`, `docs/meeting-media-operations.md`: frontend API ve operasyon sözleşmeleri. Frontend route/component/CSS dosyası eklenmez.
+
 ## Sidebar genişliği ve sohbet geliştirmeleri — 2026-10-14
 
 - `frontend/src/components/layout/sidebar-width.ts`: hesap kapsamlı genişlik tercihi; AppShell sağ kenar tutamacı ve ChatPanel aynı ölçüyü kullanır.
