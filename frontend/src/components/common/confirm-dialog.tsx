@@ -18,7 +18,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 type ConfirmDialogProps = {
-  trigger: ReactNode;
+  /** Omit when the dialog is opened from elsewhere (a menu item) through `open` / `onOpenChange`. */
+  trigger?: ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   title: string;
   description?: string;
   confirmLabel: string;
@@ -37,6 +40,8 @@ type ConfirmDialogProps = {
 
 export function ConfirmDialog({
   trigger,
+  open: controlledOpen,
+  onOpenChange,
   title,
   description,
   confirmLabel,
@@ -47,7 +52,9 @@ export function ConfirmDialog({
   requireText,
   finalFocus,
 }: ConfirmDialogProps) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = (next: boolean) => { setInternalOpen(next); onOpenChange?.(next); };
   const [pending, setPending] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
   const [typed, setTyped] = useState("");
@@ -74,7 +81,7 @@ export function ConfirmDialog({
 
   return (
     <Dialog open={open} onOpenChange={next => { if (!inFlight.current) { setOpen(next); setFailure(null); setTyped(""); } }}>
-      <DialogTrigger render={trigger as React.ReactElement} />
+      {trigger && <DialogTrigger render={trigger as React.ReactElement} />}
       <DialogContent finalFocus={finalFocus}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>

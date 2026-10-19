@@ -115,7 +115,10 @@ public class MeetingService {
         media.removeParticipant(m.roomName,p.identity); p.connected=false; p.leftAt=clock.instant();
     }
     public List<ParticipantView> participants(UUID project,UUID id,UUID actor) {
-        load(project,id,actor); return participants.findByMeetingId(id).stream().map(this::participantView).toList();
+        load(project,id,actor); List<MeetingParticipant> rows=participants.findByMeetingId(id);
+        // Photos are only for signed-in members: the avatar endpoint needs a PDA session, which guests do not have.
+        Map<UUID,ProjectMemberView> members=projects.membersByUserIds(project,rows.stream().map(p->p.userId).filter(Objects::nonNull).collect(java.util.stream.Collectors.toSet()));
+        return rows.stream().map(p->participantView(p,p.userId==null?null:members.get(p.userId))).toList();
     }
     public void mute(UUID project,UUID id,UUID actor,UUID target) {
         Meeting m=load(project,id,actor); moderate(m,actor); requireOpen(m); MeetingParticipant p=target(m,target);
@@ -176,7 +179,7 @@ public class MeetingService {
         Meeting m=locked(id); requireOpen(m); active(m,guest(m,secret)); if(page<0||page>1000||size<1||size>100) throw error(400,"MEETING_INVALID_PAGE");
         return PageView.of(chats.findByMeetingId(id,PageRequest.of(page,size,Sort.by(Sort.Direction.DESC,"sentAt","id"))).map(this::chatView));
     }
-    public List<ParticipantView> guestParticipants(UUID id,String secret) { Meeting m=locked(id); requireOpen(m); guest(m,secret); return participants.findByMeetingId(id).stream().map(this::participantView).toList(); }
+    public List<ParticipantView> guestParticipants(UUID id,String secret) { Meeting m=locked(id); requireOpen(m); guest(m,secret); return participants.findByMeetingId(id).stream().map(p->participantView(p,null)).toList(); }
     public void guestLeave(UUID id,String secret) { Meeting m=locked(id); var p=guest(m,secret); media.removeParticipant(m.roomName,p.identity); p.connected=false; p.leftAt=clock.instant(); p.revoked=true; }
     public ChatView chat(UUID project,UUID id,UUID actor,ChatRequest request) {
         Meeting m=load(project,id,actor); return sendChat(m,activeUser(m,actor),request);
@@ -221,7 +224,11 @@ public class MeetingService {
         events.publishEvent(new MeetingEvents.Changed(UUID.randomUUID(),m.id,m.projectId,actor,type,m.title,recipients,clock.instant()));
     }
     View view(Meeting m) { return new View(m.id,m.projectId,m.organizerId,m.title,m.description,m.startsAt,m.endsAt,m.zoneId,m.status,m.openedAt,m.endedAt,m.overtimeAt!=null,policy.isRetainChat(),m.version,List.copyOf(m.agenda),Set.copyOf(m.attendeeIds),m.roomEpoch,m.rotationPending,m.cleanupPending); }
-    ParticipantView participantView(MeetingParticipant p) { return new ParticipantView(p.id,p.identity,p.displayName,p.userId==null,p.connected,p.revoked,p.joinedAt,p.leftAt); }
+    /** {@code member} is the participant's active project membership; null (guests, guest callers, ex-members) exposes no user id or photo. */
+    ParticipantView participantView(MeetingParticipant p,ProjectMemberView member) {
+        return new ParticipantView(p.id,p.identity,p.displayName,p.userId==null,p.connected,p.revoked,p.joinedAt,p.leftAt,
+            member==null?null:member.userId(),member==null?null:member.profilePhotoVersion());
+    }
     ChatView chatView(MeetingChatMessage m) { return new ChatView(m.id,m.participantId,m.displayName,m.content,m.sentAt,Set.copyOf(m.mentionIds)); }
     static String randomSecret() { byte[] bytes=new byte[32]; RANDOM.nextBytes(bytes); return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes); }
     static String hash(String secret) { try { return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(secret.getBytes(StandardCharsets.UTF_8))); } catch(NoSuchAlgorithmException e) { throw new IllegalStateException(e); } }

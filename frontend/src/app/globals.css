@@ -3,6 +3,12 @@
 @import "../styles/shadcn-compat.css";
 
 @custom-variant dark (&:is(.dark *));
+/* Phone-sized meeting layouts: narrow screens, and phones held sideways (wide but only a few hundred pixels tall). */
+@custom-variant compact {
+  @media (max-width: 767px), (orientation: landscape) and (max-height: 500px) {
+    @slot;
+  }
+}
 
 @keyframes chat-search-enter {
   from { transform: translateX(1rem); opacity: 0; }

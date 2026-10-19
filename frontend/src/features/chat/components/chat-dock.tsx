@@ -80,7 +80,7 @@ function Bar() {
       ref={dockRef}
       role="region"
       aria-label={t("dock.label")}
-      data-testid="chat-bar"
+      data-testid="chat-bar" data-chat-dock=""
       className={cn(DOCK_POSITION, "flex items-center rounded-t-xl border border-b-0 bg-card shadow-lg sm:w-72")}
     >
       <button
@@ -147,11 +147,13 @@ function Compact() {
     <section
       ref={windowRef}
       aria-label={t("dock.label")}
-      data-testid="chat-compact"
+      data-testid="chat-compact" data-chat-dock=""
       onKeyDown={keyDown}
       className={cn(
         DOCK_POSITION,
         "flex h-[460px] max-h-[calc(100dvh-5.5rem)] flex-col overflow-hidden rounded-t-xl border border-b-0 bg-card shadow-xl sm:w-[360px] max-sm:h-[70dvh]",
+        // A running meeting's mini bar (it sits above this window) keeps its room: the window never grows into it.
+        "max-xl:max-h-[calc(100dvh-5.5rem-var(--meeting-mini-height,0px))] max-sm:h-[min(70dvh,calc(100dvh-5.5rem-var(--meeting-mini-height,0px)))]",
       )}
     >
       <header className="flex h-12 shrink-0 items-center gap-2 border-b px-3">

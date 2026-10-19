@@ -166,7 +166,7 @@ test("two real participants: media, mention/chat, guest revoke semantics, modera
     await a.locator("[data-meeting-room] li").filter({ hasText: member.nickname }).getByRole("button", { name: tr.muteParticipant, exact: true }).click();
     await expect(b.getByRole("button", { name: tr.micOn, exact: true })).toBeVisible();
     await a.getByRole("button", { name: tr.screen, exact: true }).click(); await expect(b.locator("video")).toHaveCount(2, { timeout: 15000 });
-    await a.getByRole("button", { name: tr.screen, exact: true }).click();
+    await a.getByRole("button", { name: tr.screenShareStop, exact: true }).click(); await expect(b.locator("video")).toHaveCount(1, { timeout: 15000 });
     await a.locator("[data-meeting-room]").getByRole("button", { name: tr.chat, exact: true }).click(); await b.locator("[data-meeting-room]").getByRole("button", { name: tr.chat, exact: true }).click();
     await a.getByRole("textbox", { name: tr.message, exact: true }).fill("@");
     await a.getByRole("group", { name: tr.mentions, exact: true }).getByRole("button", { name: member.nickname, exact: true }).click();

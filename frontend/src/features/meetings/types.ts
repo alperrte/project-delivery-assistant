@@ -12,6 +12,8 @@ export type Meeting = MeetingInput & {
 export type MeetingParticipant = {
   id: string; identity: string; displayName: string; guest: boolean;
   connected: boolean; revoked: boolean; joinedAt: string | null; leftAt: string | null;
+  /** Set for signed-in members only; with the photo version it builds the PDA avatar URL. Guests and guest callers get null. */
+  userId: string | null; profilePhotoVersion: number | null;
 };
 export type MeetingJoin = {
   participantId: string; identity: string; roomEpoch: number; status: MeetingStatus;

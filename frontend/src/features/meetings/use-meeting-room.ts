@@ -21,6 +21,7 @@ export function useMeetingRoom(meetingId: string, projectId?: string) {
   const [selfId, setSelfId] = useState("");
   const [retained, setRetained] = useState(false);
   const [hasOlder, setHasOlder] = useState(false);
+  const [chatLoaded, setChatLoaded] = useState(false);
   const controls = useRef<{ join: () => void; retry: () => void; leave: () => void; older: () => Promise<void>; refreshChat: () => Promise<void> } | null>(null);
   const intended = useRef({ mic: false, camera: false });
   const devices = useRef<Partial<Record<MediaDeviceKind, string>>>({});
@@ -52,6 +53,7 @@ export function useMeetingRoom(meetingId: string, projectId?: string) {
         return [...merged.values()].sort((a, b) => a.sentAt.localeCompare(b.sentAt) || a.id.localeCompare(b.id));
       });
       if (!historyPage) setHasOlder(response.totalPages > 1);
+      setChatLoaded(true);
     }
     async function loadState() {
       const state = projectId ? await meetingsApi.detail(projectId, meetingId, abort.signal) : await guestMeetingState(meetingId, abort.signal);
@@ -118,6 +120,8 @@ export function useMeetingRoom(meetingId: string, projectId?: string) {
         await restoreOwnMedia(next); update(); refreshed();
       } catch (failure) { if (alive && !stopped) schedule(failure); }
       finally { joining = false; }
+      // Names and profile photos arrive with the participant list; fetch it now instead of at the next 4 s tick.
+      if (currentRoom && joined && !stopped) void poll();
     }
     async function poll() {
       if (polling || !joined || stopped || joining) return;
@@ -138,7 +142,8 @@ export function useMeetingRoom(meetingId: string, projectId?: string) {
     controls.current = {
       retry: () => { if (!alive || joining) return; stopped = false; attempts = 0; setError(undefined); setPhase("connecting"); void connect(); },
       join: () => { if (!joined) { setPhase("connecting"); void connect(); } },
-      leave: () => { const wasJoined = joined; stop("left"); if (wasJoined) void api.leave().catch(() => {}); },
+      // A second call (double tap, or a confirmation that fires twice) must not send another leave request.
+      leave: () => { if (stopped) return; const wasJoined = joined; stop("left"); if (wasJoined) void api.leave().catch(() => {}); },
       refreshChat,
       older: async () => { const response = await api.chat(historyPage + 1, abort.signal); if (!alive || stopped) return; historyPage++; setHasOlder(historyPage + 1 < response.totalPages); setMessages(previous => [...new Map([...response.content, ...previous].map(m => [m.id, m])).values()].sort((a,b) => a.sentAt.localeCompare(b.sentAt) || a.id.localeCompare(b.id))); },
     };
@@ -153,7 +158,7 @@ export function useMeetingRoom(meetingId: string, projectId?: string) {
     return () => { alive = false; stopped = true; abort.abort(); clearInterval(timer); clearTimeout(retryTimer); window.removeEventListener("pagehide", unload); window.removeEventListener("pageshow", resume); dispose(); controls.current = null; };
   }, [api, meetingId, projectId]);
 
-  return { phase, room, revision, participants, messages, meeting, selfId, retained, error, setError, hasOlder,
+  return { phase, room, revision, participants, messages, meeting, selfId, retained, error, setError, hasOlder, chatLoaded,
     setIntent: (kind: "mic" | "camera", enabled: boolean) => { intended.current[kind] = enabled; },
     switchDevice: async (kind: MediaDeviceKind, deviceId: string) => { if (room && await room.switchActiveDevice(kind, deviceId)) devices.current[kind] = deviceId; },
     join: () => controls.current?.join(), leave: () => controls.current?.leave(),

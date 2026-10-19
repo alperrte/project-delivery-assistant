@@ -7,6 +7,8 @@ import { Video, CalendarDays, ListChecks, Users } from "lucide-react";
 import { PageContainer } from "@/components/common/page-container";
 import { PageHeader } from "@/components/common/page-header";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
+import { TimePicker } from "@/components/ui/time-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,13 +19,18 @@ import type { Meeting, MeetingInput } from "./types";
 import { meetingsApi } from "./api";
 import { localDateTime, MeetingError, useMeetingProject } from "./shared";
 
+const splitLocal = (value: string) => ({ date: value.slice(0, 10), time: value.slice(11, 16) });
+const joinLocal = ({ date, time }: { date: string; time: string }) => date && time ? `${date}T${time}` : "";
+
 export function MeetingForm({ slug, meeting }: { slug: string; meeting?: Meeting }) {
   const t = useTranslations("meetings"), router = useRouter(), client = useQueryClient();
   const context = useMeetingProject(slug);
   const [title, setTitle] = useState(meeting?.title ?? "");
   const [description, setDescription] = useState(meeting?.description ?? "");
-  const [startsAt, setStartsAt] = useState(() => localDateTime(meeting?.startsAt ?? new Date(Date.now() + 3600_000).toISOString()));
-  const [endsAt, setEndsAt] = useState(() => localDateTime(meeting?.endsAt ?? new Date(Date.now() + 7200_000).toISOString()));
+  // The shared pickers edit a calendar day and a clock time separately; the meeting still validates and sends one local date-time.
+  const [start, setStart] = useState(() => splitLocal(localDateTime(meeting?.startsAt ?? new Date(Date.now() + 3600_000).toISOString())));
+  const [end, setEnd] = useState(() => splitLocal(localDateTime(meeting?.endsAt ?? new Date(Date.now() + 7200_000).toISOString())));
+  const startsAt = joinLocal(start), endsAt = joinLocal(end);
   const [agenda, setAgenda] = useState(meeting?.agenda ?? [""]);
   const [attendees, setAttendees] = useState(meeting?.attendeeIds ?? []);
   const [search, setSearch] = useState("");
@@ -78,7 +85,7 @@ export function MeetingForm({ slug, meeting }: { slug: string; meeting?: Meeting
     <PageHeader title={t(meeting ? "edit" : "create")} description={context.project?.name ?? t("loading")} />
     <form data-meeting-form onChange={() => setDirty(true)} onSubmit={submit} className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
       <div className="workspace-panel min-w-0 divide-y">
-        {invalid && <div ref={summary} tabIndex={-1} role="alert" className="p-5 text-sm text-destructive">{t("formInvalid")} <a href="#meeting-title" className="underline">{t("basic")}</a> · <a href="#meeting-start" className="underline">{t("schedule")}</a></div>}
+        {invalid && <div ref={summary} tabIndex={-1} role="alert" className="p-5 text-sm text-destructive">{t("formInvalid")} <a href="#meeting-title" className="underline">{t("basic")}</a> · <a href="#meeting-start-date" className="underline">{t("schedule")}</a></div>}
         {error != null && <MeetingError error={error} />}
         {created && <p role="status" className="p-5 text-sm">{t("createdRecovery")} <Link className="underline" href={`/projects/${slug}/meetings/${created.id}`}>{t("detail")}</Link></p>}
         <section className="space-y-5 p-5 sm:p-6"><h2 className="flex items-center gap-2 font-semibold"><Video size={18} className="text-primary" />{t("basic")}</h2>
@@ -88,8 +95,12 @@ export function MeetingForm({ slug, meeting }: { slug: string; meeting?: Meeting
         </section>
         <section className="space-y-5 p-5 sm:p-6"><h2 className="flex items-center gap-2 font-semibold"><CalendarDays size={18} className="text-primary" />{t("schedule")}</h2>
           <p className="text-sm text-muted-foreground">{t("timezone", { zone: zoneId })}</p>
-          <div className="grid gap-4 sm:grid-cols-2"><div className="min-w-0 space-y-2"><Label htmlFor="meeting-start">{t("start")}</Label><Input id="meeting-start" type="datetime-local" required value={startsAt} disabled={!!created} onChange={e => setStartsAt(e.target.value)} className="min-w-0" /></div>
-          <div className="min-w-0 space-y-2"><Label htmlFor="meeting-end">{t("end")}</Label><Input id="meeting-end" type="datetime-local" required value={endsAt} disabled={!!created} onChange={e => setEndsAt(e.target.value)} className="min-w-0" /></div></div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="min-w-0 space-y-2"><Label htmlFor="meeting-start-date">{t("startDate")}</Label><DatePicker id="meeting-start-date" label={t("startDate")} value={start.date} min={localDateTime(new Date().toISOString()).slice(0, 10)} disabled={!!created} onChange={date => { setStart(previous => ({ ...previous, date })); setDirty(true); }} invalid={invalid && !start.date} /></div>
+            <div className="min-w-0 space-y-2"><Label htmlFor="meeting-start-time">{t("startTime")}</Label><TimePicker id="meeting-start-time" label={t("startTime")} value={start.time} disabled={!!created} onChange={time => { setStart(previous => ({ ...previous, time })); setDirty(true); }} invalid={invalid && !start.time} /></div>
+            <div className="min-w-0 space-y-2"><Label htmlFor="meeting-end-date">{t("endDate")}</Label><DatePicker id="meeting-end-date" label={t("endDate")} value={end.date} min={start.date || undefined} disabled={!!created} onChange={date => { setEnd(previous => ({ ...previous, date })); setDirty(true); }} invalid={invalid && !end.date} /></div>
+            <div className="min-w-0 space-y-2"><Label htmlFor="meeting-end-time">{t("endTime")}</Label><TimePicker id="meeting-end-time" label={t("endTime")} value={end.time} disabled={!!created} onChange={time => { setEnd(previous => ({ ...previous, time })); setDirty(true); }} invalid={invalid && !end.time} /></div>
+          </div>
         </section>
         <section className="space-y-4 p-5 sm:p-6"><h2 className="flex items-center gap-2 font-semibold"><ListChecks size={18} className="text-primary" />{t("agenda")}</h2>
           {agenda.map((item, index) => <div key={index} className="flex items-center gap-2"><span aria-hidden="true" className="text-sm tabular-nums text-muted-foreground">{index + 1}.</span><Input aria-label={t("agendaItem", { number: index + 1 })} maxLength={1000} value={item} disabled={!!created} onChange={e => setAgenda(previous => previous.map((a, i) => i === index ? e.target.value : a))} /><Button type="button" variant="ghost" disabled={!!created} aria-label={t("removeAgenda", { number: index + 1 })} onClick={() => setAgenda(previous => previous.filter((_, i) => i !== index))}>×</Button></div>)}
