@@ -51,6 +51,9 @@ public interface ProjectAccess {
     /** Active project members, paginated at the database. */
     Page<ProjectMemberView> members(UUID projectId, Pageable pageable);
 
+    /** Safe active membership views by user id for the supplied users, in one lookup; non-members are absent. */
+    Map<UUID, ProjectMemberView> membersByUserIds(UUID projectId, Set<UUID> userIds);
+
     /** Active membership id by user id for the supplied users, in one lookup; non-members are absent. */
     Map<UUID, UUID> activeMembershipIds(UUID projectId, Set<UUID> userIds);
 

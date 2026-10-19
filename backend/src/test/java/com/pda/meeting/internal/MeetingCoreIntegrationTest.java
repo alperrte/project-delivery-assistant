@@ -185,7 +185,7 @@ class MeetingCoreIntegrationTest {
         Map<String,Object> view=com.jayway.jsonpath.JsonPath.read(body,"$.components.schemas.MeetingView.properties");
         assertTrue(view.containsKey("roomEpoch")); assertTrue(view.containsKey("reconnectRequired")); assertTrue(view.containsKey("cleanupPending"));
         Map<String,Object> participant=com.jayway.jsonpath.JsonPath.read(body,"$.components.schemas.MeetingParticipantView.properties");
-        assertTrue(participant.containsKey("identity"));
+        assertTrue(participant.containsKey("identity")); assertTrue(participant.containsKey("profilePhotoVersion")); assertTrue(participant.containsKey("userId"));
         String responseRef=com.jayway.jsonpath.JsonPath.read(body,"$.paths['/api/v1/meetings/guest/session'].post.responses['201'].content['*/*'].schema['$ref']");
         String schemaName=responseRef.substring(responseRef.lastIndexOf('/')+1);
         Map<String,Object> guestView=com.jayway.jsonpath.JsonPath.read(body,"$.components.schemas['"+schemaName+"'].properties");

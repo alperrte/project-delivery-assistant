@@ -170,6 +170,15 @@ public class ProjectAccessService implements ProjectAccess {
 
     @Override
     @Transactional(readOnly = true)
+    public Map<UUID, ProjectMemberView> membersByUserIds(UUID projectId, Set<UUID> userIds) {
+        if (projectId == null || userIds == null || userIds.isEmpty()
+                || projects.findByIdAndArchivedAtIsNull(projectId).isEmpty()) return Map.of();
+        return views(memberships.findActiveByUserIds(projectId, userIds)).stream()
+                .collect(Collectors.toMap(ProjectMemberView::userId, Function.identity(), (a, b) -> a));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Map<UUID, UUID> activeMembershipIds(UUID projectId, Set<UUID> userIds) {
         if (projectId == null || userIds == null || userIds.isEmpty()) return Map.of();
         return memberships.findActiveByUserIds(projectId, userIds).stream()

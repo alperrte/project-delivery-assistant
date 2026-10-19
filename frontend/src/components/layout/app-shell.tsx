@@ -21,6 +21,8 @@ import { COLLAPSE_KEY, collapseEvent, useSidebarCollapsed } from "./sidebar-coll
 import { useSidebarWidth } from "./sidebar-width";
 import { ChatProvider } from "@/features/chat/chat-provider";
 import { ChatRoot } from "@/features/chat/components/chat-root";
+import { MeetingSessionProvider } from "@/features/meetings/session/meeting-session";
+import { MeetingMiniBar } from "@/features/meetings/session/meeting-mini-bar";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Logo } from "@/components/common/logo";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -150,12 +152,14 @@ export function AppShell({ children }: { children: ReactNode }) {
     );
   }
 
-  return <NotificationOwner key={user?.id ?? "none"} userId={user?.id}><ChatProvider><AppShellView pathname={pathname} user={user} collapsed={collapsed} onLogout={handleLogout} onToggleCollapsed={toggleCollapsed}><BreadcrumbLabelsProvider><AppBreadcrumb />{children}</BreadcrumbLabelsProvider></AppShellView><ChatRoot /></ChatProvider></NotificationOwner>;
+  return <NotificationOwner key={user?.id ?? "none"} userId={user?.id}><MeetingSessionProvider><ChatProvider><AppShellView pathname={pathname} user={user} collapsed={collapsed} onLogout={handleLogout} onToggleCollapsed={toggleCollapsed} overlay={<MeetingMiniBar />}><BreadcrumbLabelsProvider><AppBreadcrumb />{children}</BreadcrumbLabelsProvider></AppShellView><ChatRoot /></ChatProvider></MeetingSessionProvider></NotificationOwner>;
 }
 
 /** Shared workspace presentation; authentication and API state stay in AppShell. */
-export function AppShellView({ children, pathname, user, collapsed = false, onLogout, onToggleCollapsed, contained = false }: {
+export function AppShellView({ children, pathname, user, collapsed = false, onLogout, onToggleCollapsed, contained = false, overlay }: {
   children: ReactNode;
+  /** Fixed-position extras that must inherit the shell's layout variables (e.g. the sidebar width). */
+  overlay?: ReactNode;
   pathname: string;
   user: ComponentProps<typeof AppHeader>["user"];
   collapsed?: boolean;
@@ -325,6 +329,7 @@ export function AppShellView({ children, pathname, user, collapsed = false, onLo
         <main id={contained ? undefined : "main-content"} style={contained ? { height: "var(--demo-height)", overflowY: "auto" } : undefined} tabIndex={-1} className={cn("w-full min-w-0 flex-1 pt-(--workspace-header-reserve)", pathname === "/dashboard" ? "" : "mx-auto max-w-[1560px] px-4 pb-6 sm:px-8 sm:pb-8")}>{children}</main>
         {!contained && <OfflineNotice />}
       </div>
+      {overlay}
     </div>
   );
 

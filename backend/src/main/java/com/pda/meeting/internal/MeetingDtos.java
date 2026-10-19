@@ -16,7 +16,7 @@ public final class MeetingDtos {
         Instant startsAt,Instant endsAt,String zoneId,Meeting.Status status,Instant openedAt,Instant endedAt,
         boolean overtime,boolean chatRetained,long version,List<String> agenda,Set<UUID> attendeeIds,int roomEpoch,boolean reconnectRequired,boolean cleanupPending) {}
     @Schema(name="MeetingParticipantView") public record ParticipantView(UUID id,String identity,String displayName,boolean guest,boolean connected,boolean revoked,
-        Instant joinedAt,Instant leftAt) {}
+        Instant joinedAt,Instant leftAt,UUID userId,Long profilePhotoVersion) {}
     @Schema(name="MeetingJoin") public record Join(UUID participantId,String identity,MeetingMediaPort.MediaJoin media,boolean chatRetained,int roomEpoch,String status) {}
     public record InviteRequest(@NotNull Instant expiresAt,@Min(1) @Max(100) int maxUses) {}
     public record InviteView(UUID id,String token,Instant expiresAt,int maxUses) {}

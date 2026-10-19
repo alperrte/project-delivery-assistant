@@ -187,7 +187,7 @@ export function ChatPanel() {
       data-testid="chat-panel"
       onKeyDown={keyDown}
       className={cn(
-        "fixed inset-x-0 top-(--workspace-header-reserve) bottom-0 z-30 flex min-h-0 flex-col border-t bg-background outline-none lg:border-l",
+        "fixed inset-x-0 top-(--workspace-header-reserve) bottom-[var(--meeting-mini-reserve,0px)] z-30 flex min-h-0 flex-col border-t bg-background outline-none lg:border-l",
         "lg:left-(--workspace-sidebar-width)",
       )}
     >

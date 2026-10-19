@@ -4,13 +4,17 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "@/i18n/navigation";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { TimePicker } from "@/components/ui/time-picker";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { PageHeader } from "@/components/common/page-header";
 import { PageContainer } from "@/components/common/page-container";
 import { meetingsApi, meetingConnectionApi } from "./api";
 import { localDateTime, MeetingError, MeetingStatus, useMeeting } from "./shared";
 import { MeetingForm } from "./meeting-form";
+import { isInCallPhase, useOptionalMeetingSession } from "./session/meeting-session";
 import type { MeetingInvite } from "./types";
 import { localizeHref } from "@/i18n/routing";
 import type { Locale } from "@/i18n/config";
@@ -20,9 +24,16 @@ export function MeetingDetail({ slug, id, edit = false }: { slug: string; id: st
   const context = useMeeting(slug, id), t = useTranslations("meetings"), locale = useLocale(), client = useQueryClient();
   const [error, setError] = useState<unknown>(), [busy, setBusy] = useState(false);
   const [invites, setInvites] = useState<MeetingInvite[]>([]), [copied, setCopied] = useState<string>();
-  const [expiresAt, setExpiresAt] = useState(() => localDateTime(new Date(Date.now() + 86400_000).toISOString()));
+  // Same shared pickers as the meeting form; the invite still sends one local date-time converted to an ISO instant.
+  const [expiry, setExpiry] = useState(() => { const value = localDateTime(new Date(Date.now() + 86400_000).toISOString()); return { date: value.slice(0, 10), time: value.slice(11, 16) }; });
+  // The backend accepts an expiry from now to 30 days ahead; the calendar offers just those days.
+  const [expiryBounds] = useState(() => ({ min: localDateTime(new Date().toISOString()).slice(0, 10), max: localDateTime(new Date(Date.now() + 30 * 86400_000).toISOString()).slice(0, 10) }));
+  const expiresAt = expiry.date && expiry.time ? `${expiry.date}T${expiry.time}` : "";
   const [maxUses, setMaxUses] = useState(1);
   const [invitePage, setInvitePage] = useState(0);
+  const session = useOptionalMeetingSession(), activeCall = session?.target;
+  const callLive = !!session?.live && isInCallPhase(session.live.phase);
+  const inThisCall = callLive && activeCall?.id === id, inOtherCall = callLive && !!activeCall && activeCall.id !== id;
   const canManageInvites = !!context.query.data && (context.isManager || context.user?.id === context.query.data.organizerId);
   const inviteMetadata = useQuery({ queryKey: [...context.keys, id, "invites", invitePage], enabled: !!context.project && canManageInvites && !edit,
     queryFn: ({ signal }) => meetingsApi.invites(context.project!.id, id, invitePage, signal), retry: false });
@@ -66,13 +77,21 @@ export function MeetingDetail({ slug, id, edit = false }: { slug: string; id: st
       </div>
       <aside className="space-y-5"><div className="workspace-panel space-y-3 p-5">
         {/* Media CSP and Permissions-Policy belong to the document, so entering a room requires a full navigation. */}
-        {meeting.status === "OPEN" && <a href={localizeHref(`/projects/${slug}/meetings/${id}/room`, locale as Locale)} className={buttonVariants({ className: "min-h-11 w-full" })}>{t("join")}</a>}
+        {meeting.status === "OPEN" && (inThisCall
+          // A call already running in this tab is resumed in place: a full page load would hang it up.
+          ? <Link href={`/projects/${slug}/meetings/${id}/room`} className={buttonVariants({ className: "min-h-11 w-full" })}>{t("returnToMeeting")}</Link>
+          : inOtherCall && activeCall
+            ? <div role="status" className="space-y-2 rounded-lg bg-muted/50 p-3 text-sm"><p>{t("otherMeetingBody", { title: session?.live?.meeting?.title ?? t("group") })}</p><Link href={activeCall.roomHref} className={buttonVariants({ variant: "outline", className: "min-h-11 w-full" })}>{t("returnToActive")}</Link></div>
+            : <a href={localizeHref(`/projects/${slug}/meetings/${id}/room`, locale as Locale)} className={buttonVariants({ className: "min-h-11 w-full" })}>{t("join")}</a>)}
         {meeting.status === "SCHEDULED" && canEdit && <><Button className="min-h-11 w-full" disabled={busy} onClick={async () => { setBusy(true); try { await action("start"); } catch (failure) { setError(failure); } finally { setBusy(false); } }}>{t("startNow")}</Button><Link href={`/projects/${slug}/meetings/${id}/edit`} className={buttonVariants({ variant: "outline", className: "min-h-11 w-full" })}>{t("edit")}</Link><ConfirmDialog trigger={<Button variant="ghost" className="w-full">{t("cancelMeeting")}</Button>} title={t("cancelMeeting")} confirmLabel={t("confirm")} cancelLabel={t("cancel")} onConfirm={() => action("cancel")} /></>}
         {meeting.status === "OPEN" && context.isManager && <ConfirmDialog trigger={<Button variant="destructive" className="min-h-11 w-full">{t("endForAll")}</Button>} title={t("endForAll")} description={t("endConfirm")} confirmLabel={t("confirm")} cancelLabel={t("cancel")} destructive onConfirm={() => action("end")} />}
         <h2 className="pt-3 font-semibold">{t("participants")}</h2>{participants.isError ? <MeetingError error={participants.error} retry={() => void participants.refetch()} /> : participants.isPending ? <p role="status">{t("loading")}</p> : <ul className="max-h-60 space-y-3 overflow-y-auto text-sm">{participants.data.map(p => <li key={p.id} className="flex items-center gap-2"><span className={`size-2 shrink-0 rounded-full ${p.connected ? "bg-live" : "bg-muted-foreground"}`} /><span className="break-words">{p.displayName}{p.guest ? ` (${t("guest")})` : ""}</span></li>)}{!participants.data.length && <li className="text-muted-foreground">{t("noParticipants")}</li>}</ul>}
       </div>
       {canEdit && (meeting.status === "OPEN" || meeting.status === "SCHEDULED") && <section className="workspace-panel space-y-4 p-5"><h2 className="font-semibold">{t("guestInvites")}</h2><p className="text-xs leading-5 text-muted-foreground">{t("invitePolicy")}</p>
-        <label className="block space-y-2 text-sm">{t("inviteExpiry")}<Input type="datetime-local" value={expiresAt} onChange={e => setExpiresAt(e.target.value)} /></label>
+        <div className="space-y-3" role="group" aria-label={t("inviteExpiry")}>
+          <div className="space-y-2"><Label htmlFor="invite-expiry-date" className="text-sm">{t("inviteExpiryDate")}</Label><DatePicker id="invite-expiry-date" label={t("inviteExpiryDate")} value={expiry.date} min={expiryBounds.min} max={expiryBounds.max} onChange={date => setExpiry(previous => ({ ...previous, date }))} /></div>
+          <div className="space-y-2"><Label htmlFor="invite-expiry-time" className="text-sm">{t("inviteExpiryTime")}</Label><TimePicker id="invite-expiry-time" label={t("inviteExpiryTime")} value={expiry.time} onChange={time => setExpiry(previous => ({ ...previous, time }))} /></div>
+        </div>
         <label className="block space-y-2 text-sm">{t("maxUses")}<Input type="number" min={1} max={100} value={maxUses} onChange={e => setMaxUses(Number(e.target.value))} /></label>
         <Button variant="outline" className="min-h-11 w-full" disabled={busy || !expiresAt || maxUses < 1 || maxUses > 100} onClick={() => void createInvite()}>{t("createInvite")}</Button>
         {inviteMetadata.isError && <MeetingError error={inviteMetadata.error} retry={() => void inviteMetadata.refetch()} />}
