@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import path from "node:path";
+import type { ChatOverview } from "../src/features/chat/types";
 
 const captures = path.resolve("../tmp/landing-qa");
 async function scrollScene(page: Page, id: string, progress: number) {
@@ -167,8 +168,19 @@ test("CTA and information links reach existing routes", async ({ page }) => {
 
 test("session hint continues to the verified app shell", async ({ page, context }) => {
   await context.addCookies([{ name: "PDA_SESSION", value: "1", url: "http://localhost:3000" }]);
-  await page.route("**/api/v1/**", route => route.fulfill({ status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "http://localhost:3000", "access-control-allow-credentials": "true" }, body: JSON.stringify(new URL(route.request().url()).pathname.endsWith("/auth/me") ? { id: "landing-test", nickname: "LandingTest", email: "landing@example.com", globalRole: "USER", mustChangePassword: false } : { content: [], totalElements: 0, totalPages: 0, counts: {} }) }));
+  // TEST-ONLY: a chat overview is not a generic paged response. Returning one
+  // used to crash ChatProvider after the shell had briefly appeared.
+  const overview: ChatOverview = { group: null, groups: [], directs: [], totalUnread: 0 };
+  await page.route("**/api/v1/**", route => {
+    const pathname = new URL(route.request().url()).pathname;
+    const body = pathname.endsWith("/auth/me")
+      ? { id: "landing-test", nickname: "LandingTest", email: "landing@example.com", globalRole: "USER", mustChangePassword: false }
+      : pathname.endsWith("/chat/conversations") ? overview : { content: [], totalElements: 0, totalPages: 0, counts: {} };
+    return route.fulfill({ status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "http://localhost:3000", "access-control-allow-credentials": "true" }, body: JSON.stringify(body) });
+  });
+  const chatLoaded = page.waitForResponse(response => new URL(response.url()).pathname.endsWith("/chat/conversations") && response.status() === 200);
   await page.goto("/");
+  await chatLoaded;
   await expect(page).toHaveURL(/\/tr\/genel-bakis$/);
   await expect(page.locator(".app-shell")).toBeVisible();
   await expect(page.locator("footer")).toHaveCount(0);

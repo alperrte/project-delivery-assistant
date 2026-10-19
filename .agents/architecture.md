@@ -2,6 +2,8 @@
 
 ## Tek takvim — 2026-10-18
 
+Üretim medya hazırlığı: tek VPS/tek SFU, opt-in `docker-compose.meeting.prod.yml`, TLS/SNI için aynı Caddy'de Layer4 ve dahili web listener'ı. İç web bağlantısında loopback-restricted PROXY v2; media query'leri için access log yok. Backend mevcut HTTPS RoomService kuralı korunur. Hedef 2×5 katılımcı; canlı/gerçek cihaz/kapasite onayı açık. Operasyon sözleşmesi: `.agents/meeting-release-readiness.md`.
+
 Kişisel `/calendar`, toplantı, anımsatıcı, atanmış görev ve proje hedef tarihinin ortak takvimidir. Toplantılar sidebar'ında ayrı takvim bulunmaz. Eski proje toplantı takvimi rotası dili ve `?project=<slug>` bağlamını koruyarak ortak takvime yönlenir; proje değişimi bu URL bağlamını da günceller. Ayrı toplantı takvimi renderer'ı kaldırıldı, ortak meeting veri hook'u ve gün listesi korundu. Backend sözleşmesi değişmedi. Kayıt: `docs/compliation/2026-10-18-unified-calendar.md`.
 
 ## Toplantı frontend — 2026-10-18

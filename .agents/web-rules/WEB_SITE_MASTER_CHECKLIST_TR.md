@@ -458,3 +458,7 @@ Yalnız etkilenen Responsive/Keyboard Navigation/Focus State/Loading/Empty/Error
 ## Sidebar proje dropdown — 2026-10-14 (sınırlı kapsam)
 
 Etkilenen Loading/Empty/Error/Responsive/Keyboard Navigation/Focus State/Dark Mode/Görsel fallback/Navigasyon yüzeyi yalnız yeni sidebar seçicisidir. TR/EN/DE, light/dark, 320/390/768/1440, klavye/Enter/Escape/odak, mobil drawer kapanışı, collapsed rail, gerçek API/PostgreSQL/üyelik kaybı/kalıcılık ve 102 QA projesiyle sonraki sayfalarda arama doğrulandı; ekran görüntüleri incelendi. Son hedefli Chromium 12 PASS + 3 demo izolasyonu PASS, lint/type/build/diff-check başarılıdır. Backend/API/yetki politikası değişmedi. Global kutular bu sınırlı kanıtla değiştirilmedi; tam pre-push ve gerçek mobil/diğer tarayıcı kanıtı değildir. Ayrıntı ve manuel kontroller: `docs/compliation/2026-10-14-sidebar-project-dropdown.md`.
+
+## Toplantı odasına belge geçişi — 2026-10-19 (sınırlı kapsam)
+
+Yalnız oda giriş navigasyonu ve route kapsamlı medya izinleri etkilendi. Katıl bağlantısı yerelleştirilmiş normal bağlantı olarak yeni belge yükler; CSP/Permissions-Policy genişletilmedi. Gerçek yerel API/PostgreSQL/LiveKit üzerinde belge, kamera/mikrofon izinleri ve iki katılımcılı medya/sohbet/moderasyon/reconnect kontrolleri 2 Chromium testinde PASS; hedefli lint, TypeScript/production Docker derlemesi ve diff kontrolü PASS. Global kutular değiştirilmedi. Production dağıtımı onay bekliyor; fiziksel cihaz kabulü ve diğer tarayıcılar tamamlanmış sayılmaz. Ayrıntı: `.agents/meeting-launch-remaining.md`.

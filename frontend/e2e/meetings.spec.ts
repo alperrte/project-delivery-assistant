@@ -43,6 +43,30 @@ const href = (slug: string, suffix = "") => localizeHref(`/projects/${slug}/meet
 async function join(page: Page) { await page.getByRole("button", { name: tr.join, exact: true }).click(); await expect(page.getByRole("status").filter({ hasText: new RegExp(`^${tr.phase.connected}$`) })).toBeVisible({ timeout: 30000 }); }
 async function screenshot(page: Page, name: string) { mkdirSync(path.join(__dirname, "../test-results/meetings-visual"), { recursive: true }); await page.screenshot({ path: path.join(__dirname, `../test-results/meetings-visual/${name}.png`), fullPage: true }); }
 
+test("room entry reloads the document to apply route-scoped media permissions", async ({ page, context }) => {
+  test.setTimeout(60000);
+  await login(context, managerFile);
+  const project = await createProject(page);
+  try {
+    const meeting = await createMeeting(page, project.id);
+    await page.goto(href(project.slug, `/${meeting.id}`));
+    await expect(page.getByRole("link", { name: tr.join, exact: true })).toBeVisible();
+    expect(await page.evaluate(() => (document as unknown as { featurePolicy: { allowsFeature: (name: string) => boolean } }).featurePolicy.allowsFeature("camera"))).toBe(false);
+    await page.evaluate(() => { Object.assign(window, { meetingEntryOldDocument: true }); });
+    const roomPath = href(project.slug, `/${meeting.id}/room`);
+    const documentResponse = page.waitForResponse(response => response.request().resourceType() === "document" && new URL(response.url()).pathname === roomPath, { timeout: 10000 });
+    await page.getByRole("link", { name: tr.join, exact: true }).click();
+    expect((await documentResponse).status()).toBe(200);
+    await expect(page.locator("[data-meeting-room]")).toBeVisible();
+    expect(await page.evaluate(() => (window as unknown as { meetingEntryOldDocument?: boolean }).meetingEntryOldDocument)).toBeUndefined();
+    expect(await page.evaluate(() => {
+      const policy = (document as unknown as { featurePolicy: { allowsFeature: (name: string) => boolean } }).featurePolicy;
+      return policy.allowsFeature("camera") && policy.allowsFeature("microphone");
+    })).toBe(true);
+    await join(page);
+  } finally { await api(page, "POST", `/projects/${project.id}/archive`); }
+});
+
 test("real create/edit/cancel, sidebar, calendars, localized responsive form and security headers", async ({ page, context }) => {
   test.setTimeout(180000); await login(context, managerFile); const project = await createProject(page);
   try {
@@ -119,7 +143,10 @@ test("two real participants: media, mention/chat, guest revoke semantics, modera
     // TEST-ONLY fixture membership, restricted to this newly created QA project/account.
     psql(`WITH membership AS (INSERT INTO project_memberships(id,project_id,user_id,joined_at) VALUES(gen_random_uuid(),'${uuid(project.id)}','${uuid(member.id)}',now()) RETURNING id) INSERT INTO project_membership_roles(membership_id,role) SELECT id,'TESTER' FROM membership`);
     const meeting = await createMeeting(a, project.id);
-    await a.goto(href(project.slug, `/${meeting.id}/room`)); await b.goto(href(project.slug, `/${meeting.id}/room`));
+    await a.goto(href(project.slug, `/${meeting.id}/room`));
+    await b.goto(href(project.slug, `/${meeting.id}`));
+    await b.getByRole("link", { name: tr.join, exact: true }).click();
+    await expect(b.locator("[data-meeting-room]")).toBeVisible();
     await join(a); await join(b);
     await a.getByRole("button", { name: tr.micOn, exact: true }).click(); await a.getByRole("button", { name: tr.cameraOn, exact: true }).click();
     await expect(a.getByRole("button", { name: tr.micOff, exact: true })).toBeVisible();

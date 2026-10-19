@@ -140,10 +140,15 @@ test("notification center supports three languages, theme, mobile keyboard and r
         }
       }
     }
-    await f.b.goto("/tr/projeler");
     // TEST-ONLY network failure, then retry receives the actual server history.
-    await f.b.route("**/api/v1/notifications?**", route => route.abort("failed"));
-    const panel = await center(f.b); await expect(panel.getByRole("alert")).toBeVisible({ timeout: 15_000 });
+    // Install before navigation so an already-started successful read cannot
+    // populate the panel while the test expects a failed request.
+    let failedReads = 0;
+    await f.b.route("**/api/v1/notifications?**", route => { failedReads++; return route.abort("failed"); });
+    await f.b.goto("/tr/projeler");
+    const panel = await center(f.b);
+    await expect.poll(() => failedReads).toBeGreaterThan(0);
+    await expect(panel.getByRole("alert")).toBeVisible({ timeout: 15_000 });
     await f.b.unroute("**/api/v1/notifications?**");
     await panel.getByRole("button", { name: "Tekrar dene", exact: true }).click(); await expect(panel).toContainText(f.teamName);
   } finally { await api(f.a, "POST", `/projects/${f.p.id}/archive`); await f.ac.close(); await f.bc.close(); }

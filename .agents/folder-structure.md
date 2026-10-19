@@ -2,6 +2,8 @@
 
 ## Toplantı frontend — 2026-10-18
 
+Production hazırlığı: `docker-compose.meeting.prod.yml`, `ops/caddy/meeting.json`, salt okunur `ops/check-meeting-production.ps1`, Docker Desktop izole smoke `ops/verify-meeting-edge.py`. `ops/verify-meeting-backup.sh` onaylı restore tatbikatını canlı DB yerine ağa kapalı/geçici PostgreSQL konteynerinde yürütür; production üzerinde ayrıca açık onay gerekir. Uygulama/kapasite/rollback runbook'u `.agents/meeting-release-readiness.md`, kabul durumu `.agents/meeting-remaining-checklist.md`.
+
 `frontend/src/features/meetings/` typed API/DTO, form/liste/detay/takvim, misafir giriş ve LiveKit oda ömrünün sahibidir. Proje rotaları `(app)/projects/[slug]/meetings/`, public misafir rotaları `(public-meeting)/meeting-guest/`, TR/EN/DE namespace'i `src/i18n/meetings/` içindedir. `e2e/meetings.spec.ts`, test-only `meeting-fixture.ts` ve bağımsız `playwright.meetings.config.ts` gerçek yerel servis kabulünü sağlar. Devir: `docs/meeting-frontend-handoff.md`.
 
 ## Toplantı backend — 2026-10-18
