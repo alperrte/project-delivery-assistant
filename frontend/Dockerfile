@@ -25,6 +25,9 @@ ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 # The public site address (https://...): metadata, sitemap and the Content-Security-Policy (upgrade-insecure-requests) use it.
 ARG NEXT_PUBLIC_SITE_URL
 ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
+# Public signaling origin, also used by the request-time meeting CSP.
+ARG NEXT_PUBLIC_LIVEKIT_URL
+ENV NEXT_PUBLIC_LIVEKIT_URL=${NEXT_PUBLIC_LIVEKIT_URL}
 
 RUN npm run build
 
@@ -37,6 +40,8 @@ FROM node:22-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
+ARG NEXT_PUBLIC_LIVEKIT_URL
+ENV NEXT_PUBLIC_LIVEKIT_URL=${NEXT_PUBLIC_LIVEKIT_URL}
 
 COPY package.json package-lock.json ./
 

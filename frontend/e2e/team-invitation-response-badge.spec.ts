@@ -44,6 +44,11 @@ async function switchProject(page: Page, target: Project) {
   await page.getByTestId("project-switcher-search").fill(target.name);
   await page.locator(`[data-project-choice="${target.id}"]`).click();
   await expect(page.getByTestId("project-switcher-popup")).toBeHidden();
+  // This fixture switches between invitation pages. Wait for the new route's
+  // automatically expanded menu instead of toggling a transitional old menu.
+  await expect(page).toHaveURL(new RegExp(`/${target.slug}/ekip-davetleri$`));
+  await expect(page.getByRole("heading", { name: target.name, exact: true })).toBeVisible();
+  await expect(page.locator("aside").getByRole("button", { name: "Ekipler", exact: true })).toHaveAttribute("aria-expanded", "true");
 }
 async function invite(manager: Page, target: Project, userId: string, roles: string[]) {
   const made = await api(manager, "POST", `/projects/${target.id}/invitations`, { userId, teamId: target.teamId, roles });
@@ -101,7 +106,6 @@ test("inviter's +N follows unread answers per project, read state and account; p
     // Project B has its own value (nothing answered yet), never project A's.
     await switchProject(a, projectB);
     await expect(a).toHaveURL(new RegExp(`/${projectB.slug}`));
-    if ((await parent.getAttribute("aria-expanded")) !== "true") await parent.click();
     await expect(sidebar.getByRole("link", { name: "Ekip Davetleri", exact: true })).toBeVisible();
     await expect(pendingBadge(parent)).toHaveAttribute("data-pending-invitation-count", "1");
     await expect(responseBadge(parent)).toHaveCount(0);
@@ -115,7 +119,6 @@ test("inviter's +N follows unread answers per project, read state and account; p
     await expect(a).toHaveURL(new RegExp(`/${projectA.slug}`));
     await expect(responseBadge(parent)).toHaveAttribute("data-invitation-response-count", "2");
     await expect(pendingBadge(parent)).toHaveAttribute("data-pending-invitation-count", "1");
-    if ((await parent.getAttribute("aria-expanded")) !== "true") await parent.click();
     await sidebar.getByRole("link", { name: "Ekip Davetleri", exact: true }).click();
     await expect(a).toHaveURL(/ekip-davetleri$/);
 

@@ -2,6 +2,8 @@
 
 ## Toplantı SFU hazırlığı — 2026-10-18
 
+Üretim hazırlığı eki: `docker-compose.meeting.prod.yml` isteğe bağlı SFU overlay'idir; varsayılan dört servisli production bileşimi değişmedi. `ops/caddy/meeting.json` resmî digest-pinli Caddy Layer4 ile site/medya/TURN TLS'i tek TCP 443'te ayırır; PROXY v2 client-IP'yi korur. Frontend Docker public medya origin'ini build/runtime'a alır. `MEDIA_ADDRESS`, `TURN_ADDRESS`, `LIVEKIT_NODE_IP` örnek sözleşmeye eklendi. Hedef ölçüm 2 oda × 5 kişi; kapasite garantisi değil. Gerçek production profili/DNS/firewall/deployment değiştirilmedi. Salt okunur kontroller: `ops/check-meeting-production.ps1 -Template`, `ops/verify-meeting-edge.py`. Tam uygulama/rollback ve açık kabul: `.agents/meeting-release-readiness.md`.
+
 Yeni `docker-compose.meeting.yml` yalnız isteğe bağlı yerel LiveKit overlay'idir; üretim dört servisli bileşimi değiştirilmez. Dokuz onaylı meeting ENV anahtarı `.env.example` ve gerçek profillerde varsayılan kapalı/boş secret olarak tanımlanır. `MEETING_MEDIA_ENABLED=true` için gerçek key/secret ve doğru backend API/browser WSS adresleri gerekir. SFU `auto_create=false`, `enable_remote_unmute=false` güvenlik sınırları korunmalıdır. Üretim medya DNS/TLS, doğrudan UDP/TCP firewall/NAT ve olası TURN altyapısı ayrıca hazırlanır; aynı KVM 2 üzerindeki mevcut kaynak bütçesi toplantı kapasitesi garantisi değildir. Tam kurulum/healthcheck/smoke/rollback: `docs/meeting-media-operations.md`. Uzak ağ veya tarayıcı medya doğrulaması backend testlerinden çıkarılamaz.
 
 ## Production kararı (2026-10-12)

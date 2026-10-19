@@ -8,6 +8,10 @@ Meeting metadata/katılım/davet hash/sohbet tercihi/audit/oda cleanup ledger'ı
 
 ## 1. Yedekleme ve geri yükleme
 
+**2026-10-19 güncellemesi:** ayrı açık onaylı izole gerçek restore testi geçti (58 tablo, 51 başarılı migration, exit 0). Kendi geçici konteyneri temizlendi; canlı DB/servis/volume/ENV değiştirilmedi. Önceki günün "henüz restore yapılmadı" kayıtları tarihsel durumdur. Sunucu dışı ve secret yedeği kabulü açık; güvenli hedef/yöntem ayrıca onaylanmadan veri aktarılmayacak. Kanıt: `docs/compliation/2026-10-19-meeting-backup-restore.md`.
+
+2026-10-18 salt okunur production envanteri: 14 DB + 14 medya, 14 tam çift; en son 03:15 UTC, günlük cron mevcut. `KEEP_LAST=14` gün değil kopya sayısıdır; manuel ek yedekler tarih aralığını kısaltır (mevcut en eski çift 2026-10-11). `ops/backup.sh` yalnız DB/medyayı kapsar; sunucu dışı kopya, ENV/TOTP şifreleme anahtarı ve Caddy ACME kurtarma güvencesi ayrıca doğrulanmalıdır. Kullanıcı bunları mevcut kabul etmememizi ve gerçek restore'u bakım penceresi + ayrı onay sonrasına bırakmamızı istedi. Gerçek envanter ve kanıt sınırları: `docs/compliation/2026-10-18-meeting-production-access.md`. İzole restore aracı: `ops/verify-meeting-backup.sh`; production'da çalıştırılmadı.
+
 Neyin yedeği alınır:
 
 | Veri | Nerede | Yedek |

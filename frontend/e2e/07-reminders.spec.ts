@@ -65,6 +65,15 @@ test.describe.serial("Project reminders", () => {
     await memberPage.close();
   });
 
+  async function selectProject(page: Page) {
+    await page.goto(`/projects/${slug}`);
+    // Navigation can finish before the selected-project query/effect commits.
+    // Wait for the actual selection before leaving for the global calendar.
+    await expect.poll(() => page.evaluate((selectedSlug) =>
+      Object.keys(sessionStorage).some((key) => key.startsWith("pda:last-project:") && sessionStorage.getItem(key) === selectedSlug),
+    slug)).toBe(true);
+  }
+
   async function createReminder(page: Page, title: string, type: string, scopeLabel?: string) {
     await page.goto("/calendar");
     await page.getByRole("link", { name: "Anımsatıcı oluştur" }).click();
@@ -99,7 +108,8 @@ test.describe.serial("Project reminders", () => {
     expect(accepted.status).toBe(200);
 
     // Opening the project makes it the member's selected project, which is what the calendar follows.
-    await memberPage.goto(`/projects/${slug}`);
+    await selectProject(managerPage);
+    await selectProject(memberPage);
   });
 
   test("a member creates a personal reminder: no scope choice, icon on the day, title on hover", async () => {

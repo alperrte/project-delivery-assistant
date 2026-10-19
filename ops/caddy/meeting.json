@@ -1,0 +1,77 @@
+{
+  "admin": { "listen": "localhost:2019" },
+  "storage": { "module": "file_system", "root": "/data/caddy" },
+  "logging": { "logs": { "default": { "level": "WARN" } } },
+  "apps": {
+    "tls": {
+      "certificates": {
+        "automate": ["{env.SITE_ADDRESS}", "{env.WWW_ADDRESS}", "{env.MEDIA_ADDRESS}", "{env.TURN_ADDRESS}"]
+      }
+    },
+    "layer4": {
+      "servers": {
+        "shared_tls": {
+          "listen": [":443"],
+          "routes": [
+            {
+              "match": [{ "tls": { "sni": ["{env.TURN_ADDRESS}"] } }],
+              "handle": [
+                { "handler": "tls" },
+                { "handler": "proxy", "upstreams": [{ "dial": ["livekit:5349"] }] }
+              ]
+            },
+            {
+              "match": [{ "tls": { "sni": ["{env.MEDIA_ADDRESS}"] } }],
+              "handle": [
+                { "handler": "tls", "connection_policies": [{ "alpn": ["http/1.1"] }] },
+                { "handler": "proxy", "upstreams": [{ "dial": ["livekit:7880"] }] }
+              ]
+            },
+            {
+              "handle": [{ "handler": "proxy", "proxy_protocol": "v2", "upstreams": [{ "dial": ["localhost:8443"] }] }]
+            }
+          ]
+        }
+      }
+    },
+    "http": {
+      "servers": {
+        "redirect": {
+          "listen": [":80"],
+          "routes": [{
+            "match": [{ "host": ["{env.SITE_ADDRESS}", "{env.WWW_ADDRESS}", "{env.MEDIA_ADDRESS}", "{env.TURN_ADDRESS}"] }],
+            "handle": [{ "handler": "static_response", "status_code": 308, "headers": { "Location": ["https://{http.request.host}{http.request.uri}"] } }]
+          }]
+        },
+        "web": {
+          "listen": ["127.0.0.1:8443"],
+          "listener_wrappers": [
+            { "wrapper": "proxy_protocol", "allow": ["127.0.0.1/32"], "fallback_policy": "reject" },
+            { "wrapper": "tls" }
+          ],
+          "protocols": ["h1", "h2"],
+          "tls_connection_policies": [{}],
+          "automatic_https": { "disable_redirects": true },
+          "routes": [
+            {
+              "match": [{ "host": ["{env.WWW_ADDRESS}"] }],
+              "handle": [{ "handler": "static_response", "status_code": 308, "headers": { "Location": ["https://{env.SITE_ADDRESS}{http.request.uri}"] } }],
+              "terminal": true
+            },
+            {
+              "match": [{ "host": ["{env.SITE_ADDRESS}"] }],
+              "handle": [{
+                "handler": "subroute",
+                "routes": [
+                  { "match": [{ "path": ["/api/*"] }], "handle": [{ "handler": "reverse_proxy", "upstreams": [{ "dial": "backend:8080" }] }], "terminal": true },
+                  { "handle": [{ "handler": "reverse_proxy", "upstreams": [{ "dial": "frontend:3000" }] }] }
+                ]
+              }],
+              "terminal": true
+            }
+          ]
+        }
+      }
+    }
+  }
+}
