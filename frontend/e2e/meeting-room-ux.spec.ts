@@ -215,7 +215,7 @@ test("room layout, call bar, chat and participant panels at phone and tablet siz
     await room(page).getByRole("button", { name: tr.more, exact: true }).click();
     await expect(page.getByRole("menuitem", { name: tr.devices, exact: true })).toBeVisible();
     await page.getByRole("menuitem", { name: tr.endForAll, exact: true }).click();
-    await expect(page.getByRole("dialog", { name: tr.endForAll })).toBeVisible();
+    await expect(page.getByRole("dialog", { name: tr.endTitle })).toBeVisible();
     await page.keyboard.press("Escape");
     await room(page).getByRole("button", { name: tr.leave, exact: true }).click();
     await expect(page.getByRole("dialog", { name: tr.leaveTitle })).toBeVisible();

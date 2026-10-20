@@ -164,10 +164,13 @@ function MeetingRoomView({ live, id, projectId, userId, isManager = false, retur
       try { setDevices(await navigator.mediaDevices.enumerateDevices()); } catch (failure) { showDeviceError(failure); }
     }
   }
+  // The lock is a ref: two Enter presses in the same tick must not both pass a `sending` state that has not re-rendered yet.
+  const sendLock = useRef(false);
   async function send() {
-    if (!content.trim() || sending) return; setSending(true);
+    if (!content.trim() || sendLock.current) return;
+    sendLock.current = true; setSending(true);
     try { await live.send(content.trim(), mentions); setContent(""); setMentions([]); live.setError(undefined); }
-    catch (failure) { live.setError(failure); } finally { setSending(false); }
+    catch (failure) { live.setError(failure); } finally { sendLock.current = false; setSending(false); }
   }
   const tiles = people.map((p, index) => <ParticipantTile key={p.identity} participant={p} monitor={monitor}
     name={nameOf(p)} label={`${lookup.get(p.identity)?.displayName ?? p.name ?? t("member")}${p === room?.localParticipant ? ` (${t("you")})` : ""}`}
@@ -219,7 +222,7 @@ function MeetingRoomView({ live, id, projectId, userId, isManager = false, retur
         canEndForAll={Boolean(endProjectId)}
         onMic={() => void media("mic")} onCamera={() => void media("camera")} onScreen={() => void toggleScreen()} onPanel={next => void togglePanel(next)}
         onEndForAll={() => setEndOpen(true)} onLeave={async () => { stopPreview(); live.leave(); }} />
-      {endProjectId && <ConfirmDialog open={endOpen} onOpenChange={setEndOpen} title={t("endForAll")} description={t("endConfirm")} confirmLabel={t("confirm")} cancelLabel={t("cancel")} destructive
+      {endProjectId && <ConfirmDialog open={endOpen} onOpenChange={setEndOpen} title={t("endTitle")} description={t("endConfirm")} confirmLabel={t("endConfirmLabel")} cancelLabel={t("endCancel")} destructive
         onConfirm={async () => { await meetingsApi.action(endProjectId, id, "end"); live.leave(); }} />}
     </>}
   </div>;

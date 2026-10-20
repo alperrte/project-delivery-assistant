@@ -54,7 +54,8 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const open = controlledOpen ?? internalOpen;
-  const setOpen = (next: boolean) => { setInternalOpen(next); onOpenChange?.(next); };
+  // Closing by any route (Cancel, Escape, backdrop, success) forgets the last error and typed text, so a reopened dialog starts clean.
+  const setOpen = (next: boolean) => { setInternalOpen(next); onOpenChange?.(next); if (!next) { setFailure(null); setTyped(""); } };
   const [pending, setPending] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
   const [typed, setTyped] = useState("");

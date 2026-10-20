@@ -133,7 +133,13 @@ export function useMeetingRoom(meetingId: string, projectId?: string) {
         const people = await api.participants(abort.signal);
         if (!alive || stopped) return;
         setParticipants(people);
-        if (people.some(p => p.id === currentId && p.revoked)) { stop("removed"); return; }
+        if (people.some(p => p.id === currentId && p.revoked)) {
+          // Ending a meeting revokes every participant. If the meeting state fetched above predates the end, this is not a
+          // removal: look again, and only a meeting that is still open means this participant really was removed.
+          const latest = await loadState();
+          if (!latest || !alive || stopped) return;
+          stop("removed"); return;
+        }
         if (state.reconnectRequired || state.roomEpoch !== epoch) { schedule(); return; }
         if (currentRoom) await refreshChat().catch(() => {});
       } catch (failure) {

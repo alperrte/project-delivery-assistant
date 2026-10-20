@@ -57,7 +57,7 @@
   "cancelMeeting": "Besprechung absagen",
   "confirm": "Bestätigen",
   "endForAll": "Für alle beenden",
-  "endConfirm": "Alle Verbindungen werden beendet. Der Verlauf bleibt erhalten.",
+  "endConfirm": "Dadurch wird die Besprechung für alle Teilnehmenden beendet. Nach dem Ende kann niemand erneut beitreten. Dies kann nicht rückgängig gemacht werden.",
   "participants": "Teilnehmende",
   "guest": "Gast",
   "noParticipants": "Noch keine Teilnehmenden.",
@@ -166,6 +166,9 @@
   "endTime": "Endzeit",
   "inviteExpiryDate": "Ablaufdatum der Einladung",
   "inviteExpiryTime": "Ablaufzeit der Einladung",
+  "endTitle": "Möchten Sie die Besprechung wirklich für alle beenden?",
+  "endConfirmLabel": "Für alle beenden",
+  "endCancel": "Abbrechen",
   "status": {
     "SCHEDULED": "Geplant",
     "OPEN": "Live",
