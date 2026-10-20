@@ -3,6 +3,7 @@ import { useRef, type Dispatch, type SetStateAction } from "react";
 import { useTranslations } from "next-intl";
 import type { Room } from "livekit-client";
 import { toast } from "sonner";
+import { useTouchPrimaryInput } from "@/hooks/use-touch-primary-input";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
@@ -52,6 +53,15 @@ export function ChatPanel({ live, active, content, setContent, mentions, setMent
 }) {
   const t = useTranslations("meetings"), tc = useTranslations("chat");
   const input = useRef<HTMLTextAreaElement>(null);
+  const touch = useTouchPrimaryInput();
+  // Enter sends, Shift+Enter starts a new line. Not while an IME candidate is being confirmed, and not on touch devices,
+  // where Enter on the soft keyboard stays a new line and sending goes through the button (as in task comments).
+  function keyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (touch || event.key !== "Enter" || event.shiftKey || event.ctrlKey || event.altKey || event.metaKey) return;
+    if (event.nativeEvent.isComposing || event.keyCode === 229) return;
+    event.preventDefault();
+    if (content.trim() && !sending) onSend();
+  }
   const mentionQuery = /(?:^|\s)@([^@\n]*)$/.exec(content)?.[1];
   const suggestions = mentionQuery === undefined ? [] : live.participants.filter(p => p.connected && !p.revoked && p.id !== live.selfId && p.displayName.toLocaleLowerCase().includes(mentionQuery.toLocaleLowerCase())).slice(0, 8);
   return <>
@@ -68,7 +78,7 @@ export function ChatPanel({ live, active, content, setContent, mentions, setMent
       <label htmlFor="meeting-message" className="sr-only">{t("message")}</label>
       {/* 16px on phones: smaller text makes iOS Safari zoom the page when the field gets focus. */}
       <div className="relative">
-        <textarea ref={input} id="meeting-message" className="min-h-20 w-full resize-y rounded-md border bg-background p-3 pr-12 text-sm focus-visible:outline-2 focus-visible:outline-ring compact:min-h-12 compact:text-base" maxLength={2000} value={content} onChange={event => setContent(event.target.value)} disabled={!active || sending} />
+        <textarea ref={input} id="meeting-message" className="min-h-20 w-full resize-y rounded-md border bg-background p-3 pr-12 text-sm focus-visible:outline-2 focus-visible:outline-ring compact:min-h-12 compact:text-base" maxLength={2000} value={content} onChange={event => setContent(event.target.value)} onKeyDown={keyDown} enterKeyHint={touch ? "enter" : "send"} disabled={!active || sending} />
         <div className="absolute right-1 bottom-1">
           {/* The chat's own emoji picker; the caret position and surrogate pairs are handled by `insertEmoji`. */}
           <EmojiPicker choices={COMPOSER_CHOICES} label={tc("emoji.action")} testId="meeting-chat-emoji" disabled={!active || sending} finalFocus={input}

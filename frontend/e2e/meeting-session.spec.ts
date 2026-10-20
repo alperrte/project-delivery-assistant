@@ -725,8 +725,8 @@ test("ending a meeting for everyone belongs only to its creator: UI, API, leave 
 
     // The creator's confirmation can be declined: the meeting goes on for everyone.
     await room(b).getByRole("button", endLabel).click();
-    await expect(b.getByRole("dialog", { name: tr.endForAll })).toBeVisible();
-    await b.getByRole("dialog").getByRole("button", { name: tr.cancel, exact: true }).click();
+    await expect(b.getByRole("dialog", { name: tr.endTitle })).toBeVisible();
+    await b.getByRole("dialog").getByRole("button", { name: tr.endCancel, exact: true }).click();
     await expect(b.getByRole("dialog")).toHaveCount(0);
     expect(await status(a)).toBe("OPEN"); await expect(connected(a)).toBeVisible(); await expect(connected(b)).toBeVisible();
 
@@ -741,7 +741,7 @@ test("ending a meeting for everyone belongs only to its creator: UI, API, leave 
 
     // The creator ends it for everyone: all rooms close, the state is ENDED and nobody can join again.
     await room(b).getByRole("button", endLabel).click();
-    await b.getByRole("dialog").getByRole("button", { name: tr.confirm, exact: true }).click();
+    await b.getByRole("dialog").getByRole("button", { name: tr.endConfirmLabel, exact: true }).click();
     await expect(a.getByRole("heading", { name: tr.phase.closed, exact: true })).toBeVisible({ timeout: 30000 });
     // A guest's access is revoked together with the meeting, so the guest room reports either state.
     await expect(g.getByRole("heading", { name: new RegExp(`^(${tr.phase.closed}|${tr.phase.removed})$`) })).toBeVisible({ timeout: 30000 });
@@ -788,5 +788,264 @@ test("a meeting created by a project manager is owned by that manager, not by ot
   } finally {
     await archive(a, [project]);
     await managerContext.close(); await memberContext.close();
+  }
+});
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Chat keyboard (Enter sends), meeting detail page without breadcrumb/back link, confirmation for "end for everyone".
+// ---------------------------------------------------------------------------------------------------------------------
+/** Counts chat POSTs of one meeting, so "was anything sent" is observed on the wire. */
+function watchChatPosts(page: Page, meetingId: string) {
+  const posts: string[] = [];
+  page.on("request", request => { if (request.method() === "POST" && request.url().endsWith(`/meetings/${meetingId}/chat`)) posts.push(request.postData() ?? ""); });
+  return posts;
+}
+const afterRateLimit = (page: Page) => page.waitForTimeout(900); // the server allows one chat message per 750 ms
+
+test("meeting chat: Enter sends, Shift+Enter breaks the line, and every guard keeps the draft safe", async ({ browser }) => {
+  test.setTimeout(240000);
+  const managerContext = await browser.newContext({ storageState: REJECTED_STATE, permissions: ["camera", "microphone"], viewport: { width: 1280, height: 900 } });
+  const memberContext = await browser.newContext({ storageState: REJECTED_STATE, permissions: ["camera", "microphone"], viewport: { width: 1280, height: 800 } });
+  const a = await managerContext.newPage(), b = await memberContext.newPage();
+  let project: Project | undefined;
+  try {
+    await login(managerContext, managerFile); await login(memberContext, memberFile);
+    project = await createProject(a); await b.goto("/dashboard");
+    addMember(project.id, ((await api(b, "GET", "/auth/me")).json as { id: string }).id);
+    const meeting = await createMeeting(a, project.id);
+    const posts = watchChatPosts(a, meeting.id);
+    await a.goto(roomHref(project.slug, meeting.id)); await b.goto(roomHref(project.slug, meeting.id));
+    await join(a); await join(b);
+    await room(a).getByRole("button", { name: tr.chat, exact: true }).click(); await room(b).getByRole("button", { name: tr.chat, exact: true }).click();
+    const box = a.getByRole("textbox", { name: tr.message, exact: true });
+
+    // Enter sends and clears; the box gets no stray new line.
+    await box.fill("hello from enter"); await box.press("Enter");
+    await expect(b.getByText("hello from enter", { exact: true })).toBeVisible({ timeout: 15000 });
+    await expect(box).toHaveValue(""); expect(posts).toHaveLength(1);
+
+    // Shift+Enter is a line break, nothing is sent.
+    await box.pressSequentially("first line"); await box.press("Shift+Enter"); await box.pressSequentially("second line");
+    await expect(box).toHaveValue("first line\nsecond line"); expect(posts).toHaveLength(1);
+    await afterRateLimit(a); await box.press("Enter");
+    await expect(b.locator("[data-meeting-room] article p", { hasText: "first line" })).toBeVisible({ timeout: 15000 });
+    expect(posts).toHaveLength(2); expect(posts[1]).toContain("first line\\nsecond line");
+
+    // Empty and whitespace-only: Enter sends nothing (and leaves the whitespace alone).
+    await box.press("Enter"); await box.fill("   "); await box.press("Enter");
+    await a.waitForTimeout(500); expect(posts).toHaveLength(2); await expect(box).toHaveValue("   ");
+    await box.fill("");
+
+    // IME: Enter that confirms a composition candidate never sends.
+    await box.fill("composing"); await box.focus();
+    await box.evaluate(element => element.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", isComposing: true, bubbles: true, cancelable: true })));
+    await a.waitForTimeout(500); expect(posts).toHaveLength(2); await expect(box).toHaveValue("composing");
+
+    // The emoji picker: choosing and closing never sends; Enter afterwards sends an emoji message intact.
+    await box.fill("");
+    await room(a).getByTestId("meeting-chat-emoji").click(); await a.getByTestId("emoji-SMILE").press("Enter");
+    await expect(box).toHaveValue("😀"); expect(posts).toHaveLength(2);
+    await room(a).getByTestId("meeting-chat-emoji").click(); await a.keyboard.press("Escape");
+    await expect(a.getByTestId("meeting-chat-emoji-popup")).toHaveCount(0); expect(posts).toHaveLength(2);
+    await afterRateLimit(a); await box.focus(); await box.press("Enter");
+    await expect(b.getByText("😀", { exact: true })).toBeVisible({ timeout: 15000 }); expect(posts).toHaveLength(3);
+
+    // Pressing Enter twice at once produces one message.
+    await afterRateLimit(a); await box.fill("only once");
+    await box.press("Enter"); await a.keyboard.press("Enter");
+    await expect(b.getByText("only once", { exact: true })).toHaveCount(1, { timeout: 15000 });
+    await a.waitForTimeout(500); expect(posts.filter(post => post.includes("only once"))).toHaveLength(1);
+
+    // A failed send keeps the text and shows the error; the next Enter sends it.
+    await afterRateLimit(a);
+    await a.route("**/meetings/*/chat", route => route.request().method() === "POST" ? route.fulfill({ status: 500, contentType: "application/json", body: "{}" }) : route.continue());
+    await box.fill("keep this draft"); await box.press("Enter");
+    await expect(a.getByRole("alert").first()).toBeVisible(); await expect(box).toHaveValue("keep this draft");
+    await a.unroute("**/meetings/*/chat"); await afterRateLimit(a);
+    await box.press("Enter");
+    await expect(b.getByText("keep this draft", { exact: true })).toBeVisible({ timeout: 15000 }); await expect(box).toHaveValue("");
+
+    // The session draft (kept while away) still works with Enter: an unsent draft survives a page change.
+    await box.fill("draft kept across pages");
+    await a.getByRole("link", { name: messages.app.nav.projects, exact: true }).first().click();
+    await expect(mini(a)).toBeVisible();
+    await mini(a).getByRole("link", { name: tr.returnToMeeting, exact: true }).click();
+    await room(a).getByRole("button", { name: tr.chat, exact: true }).click();
+    const back = a.getByRole("textbox", { name: tr.message, exact: true });
+    await expect(back).toHaveValue("draft kept across pages");
+    await afterRateLimit(a); await back.press("Enter");
+    await expect(b.getByText("draft kept across pages", { exact: true })).toBeVisible({ timeout: 15000 });
+  } finally {
+    await archive(a, [project]);
+    await managerContext.close(); await memberContext.close();
+  }
+});
+
+test("on a touch phone Enter stays a new line and the Send button sends", async ({ browser }) => {
+  test.setTimeout(150000);
+  const context = await browser.newContext({ storageState: REJECTED_STATE, permissions: ["camera", "microphone"], viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  const page = await context.newPage();
+  let project: Project | undefined;
+  try {
+    await login(context, managerFile);
+    project = await createProject(page);
+    const meeting = await createMeeting(page, project.id);
+    const posts = watchChatPosts(page, meeting.id);
+    await page.goto(roomHref(project.slug, meeting.id)); await join(page);
+    await room(page).getByRole("button", { name: tr.chat, exact: true }).tap();
+    const box = page.getByRole("textbox", { name: tr.message, exact: true });
+    await box.fill("one"); await box.press("Enter"); await box.pressSequentially("two");
+    await expect(box).toHaveValue("one\ntwo"); expect(posts).toHaveLength(0);
+    await page.getByRole("button", { name: tr.send, exact: true }).tap();
+    await expect(page.getByText("one", { exact: false }).first()).toBeVisible({ timeout: 15000 });
+    expect(posts).toHaveLength(1); await expect(box).toHaveValue("");
+  } finally {
+    await archive(page, [project]);
+    await context.close();
+  }
+});
+
+test("meeting detail page has no breadcrumb and no back link, and keeps everything else", async ({ page, context }) => {
+  test.setTimeout(150000);
+  await login(context, managerFile);
+  const project = await createProject(page);
+  try {
+    const scheduled = await createMeeting(page, project.id, false), open = await createMeeting(page, project.id);
+    const breadcrumb = page.getByRole("navigation", { name: messages.common.breadcrumb, exact: true });
+    // Reach the page the way a person does: through the project's meeting list.
+    await page.goto(localizeHref(`/projects/${project.slug}/meetings`, "tr"));
+    await page.getByRole("link", { name: new RegExp(scheduled.title) }).first().click().catch(() => {});
+    if (!page.url().includes(scheduled.id)) await appPush(page, detailHref(project.slug, scheduled.id));
+    await expect(page.getByRole("heading", { name: scheduled.title, exact: true })).toBeVisible();
+    await expect(breadcrumb).toHaveCount(0);
+    await expect(page.getByRole("link", { name: tr.back, exact: true })).toHaveCount(0);
+    // Content and actions of a planned meeting are all still there.
+    await expect(page.getByText(tr.status.SCHEDULED, { exact: true }).first()).toBeVisible();
+    await expect(page.getByText(`${tr.createdBy}:`, { exact: false })).toBeVisible();
+    await expect(page.getByText(`${tr.plannedAttendees}:`, { exact: false })).toBeVisible();
+    await expect(page.getByRole("heading", { name: tr.agenda, exact: true })).toBeVisible();
+    await expect(page.getByText(tr.timezone.replace("{zone}", ""), { exact: false }).first()).toBeVisible();
+    for (const name of [tr.startNow, tr.edit, tr.cancelMeeting]) await expect(page.getByRole("button", { name, exact: true }).or(page.getByRole("link", { name, exact: true })).first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: tr.guestInvites, exact: true })).toBeVisible();
+    await expect(page.locator("#invite-expiry-date")).toBeVisible();
+    // No empty band where the breadcrumb and back link were: the title sits where it does on the (trail-less) create page.
+    const detailTop = (await page.getByRole("heading", { name: scheduled.title, exact: true }).boundingBox())!.y;
+    await page.goto(localizeHref(`/projects/${project.slug}/meetings/new`, "tr"));
+    const createTop = (await page.getByRole("heading", { name: tr.create, exact: true }).first().boundingBox())!.y;
+    await page.goto(detailHref(project.slug, scheduled.id));
+    const settled = (await page.getByRole("heading", { name: scheduled.title, exact: true }).boundingBox())!.y;
+    expect(Math.abs(settled - createTop), `title offset ${settled} vs ${createTop} (client nav ${detailTop})`).toBeLessThanOrEqual(6);
+    await page.goto(detailHref(project.slug, open.id));
+    await expect(page.getByRole("link", { name: tr.join, exact: true })).toBeVisible();
+    await screenshot(page, "meeting-detail-desktop");
+
+    // Phone and dark theme: same page, same rule, no overflow.
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.evaluate(() => localStorage.setItem("theme", "dark")); await page.reload();
+    await expect(page.locator("html")).toHaveClass(/dark/);
+    await expect(breadcrumb).toHaveCount(0); await expect(page.getByRole("link", { name: tr.back, exact: true })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: tr.join, exact: true })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await screenshot(page, "meeting-detail-390-dark");
+    await page.evaluate(() => localStorage.removeItem("theme"));
+
+    // Other pages keep their trail: a project criterion form and the meeting edit page.
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto(localizeHref(`/projects/${project.slug}/criteria/new`, "tr"));
+    await expect(breadcrumb).toBeVisible();
+    await page.goto(localizeHref(`/projects/${project.slug}/meetings/${scheduled.id}/edit`, "tr"));
+    await expect(page.locator("#meeting-title")).toBeVisible();
+  } finally { await api(page, "POST", `/projects/${project.id}/archive`).catch(() => {}); }
+});
+
+test("ending for everyone always asks first: dialog, cancel, Escape, failure, double click, phone menu and detail page", async ({ browser }) => {
+  test.setTimeout(300000);
+  const managerContext = await browser.newContext({ storageState: REJECTED_STATE, permissions: ["camera", "microphone"], viewport: { width: 1440, height: 900 } });
+  const ownerContext = await browser.newContext({ storageState: REJECTED_STATE, permissions: ["camera", "microphone"], viewport: { width: 1280, height: 800 } });
+  await ownerContext.addInitScript(trackScript);
+  const a = await managerContext.newPage(), b = await ownerContext.newPage();
+  let project: Project | undefined;
+  try {
+    await login(managerContext, managerFile); await login(ownerContext, memberFile);
+    project = await createProject(a); await b.goto("/dashboard");
+    addMember(project.id, ((await api(b, "GET", "/auth/me")).json as { id: string }).id);
+    const meeting = await createMeeting(b, project.id), detailMeeting = await createMeeting(b, project.id);
+    const status = async (id: string) => ((await api(b, "GET", `/projects/${project!.id}/meetings/${id}`)).json as Meeting).status;
+    const endRequests: string[] = [];
+    b.on("request", request => { if (request.method() === "POST" && request.url().endsWith("/end")) endRequests.push(request.url()); });
+    await a.goto(roomHref(project.slug, meeting.id)); await b.goto(roomHref(project.slug, meeting.id));
+    await join(a); await join(b);
+    await room(b).getByRole("button", { name: tr.micOn, exact: true }).click();
+    await expect(room(b).getByRole("button", { name: tr.micOff, exact: true })).toBeVisible();
+    const dialog = b.getByRole("dialog", { name: tr.endTitle });
+
+    // The first click only opens the dialog, with the agreed texts; nothing is sent.
+    await room(b).getByRole("button", { name: tr.endForAll, exact: true }).click();
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByText(tr.endConfirm, { exact: true })).toBeVisible();
+    await expect(dialog.getByRole("button", { name: tr.endCancel, exact: true })).toBeVisible();
+    await expect(dialog.getByRole("button", { name: tr.endConfirmLabel, exact: true })).toBeVisible();
+    await screenshot(b, "end-for-all-dialog-desktop");
+    expect(endRequests).toHaveLength(0); expect(await status(meeting.id)).toBe("OPEN");
+
+    // Escape and Cancel both keep the call, the microphone and the other participant's room.
+    await b.keyboard.press("Escape"); await expect(dialog).toHaveCount(0);
+    await room(b).getByRole("button", { name: tr.endForAll, exact: true }).click(); await dialog.getByRole("button", { name: tr.endCancel, exact: true }).click(); await expect(dialog).toHaveCount(0);
+    expect(endRequests).toHaveLength(0); expect(await status(meeting.id)).toBe("OPEN");
+    await expect(connected(a)).toBeVisible(); await expect(connected(b)).toBeVisible();
+    await expect(room(b).getByRole("button", { name: tr.micOff, exact: true })).toBeVisible();
+    expect(await b.evaluate(() => (window as unknown as { qaTracks: MediaStreamTrack[] }).qaTracks.every(track => track.readyState === "live"))).toBe(true);
+
+    // A failing request is reported inside the dialog; the meeting is not shown (or treated) as ended.
+    await b.route("**/meetings/*/end", route => route.fulfill({ status: 500, contentType: "application/json", body: "{}" }));
+    await room(b).getByRole("button", { name: tr.endForAll, exact: true }).click();
+    await dialog.getByRole("button", { name: tr.endConfirmLabel, exact: true }).click();
+    await expect(dialog.getByRole("alert")).toBeVisible(); await expect(dialog).toBeVisible();
+    expect(await status(meeting.id)).toBe("OPEN");
+    expect(endRequests).toHaveLength(1); endRequests.length = 0; // the one (failed) attempt
+    await b.unroute("**/meetings/*/end");
+    await dialog.getByRole("button", { name: tr.endCancel, exact: true }).click(); await expect(dialog).toHaveCount(0);
+    await expect(connected(b)).toBeVisible(); await expect(connected(a)).toBeVisible();
+
+    // Phone layout: the "More" menu item opens the very same dialog.
+    await b.setViewportSize({ width: 390, height: 844 });
+    await room(b).getByRole("button", { name: tr.more, exact: true }).click();
+    await b.getByRole("menuitem", { name: tr.endForAll, exact: true }).click();
+    await expect(dialog).toBeVisible(); await expect(dialog.getByText(tr.endConfirm, { exact: true })).toBeVisible();
+    await expect(dialog.getByRole("alert"), "the earlier failure is not shown again").toHaveCount(0);
+    await b.waitForTimeout(400);
+    const box = (await dialog.boundingBox())!;
+    expect(box.x).toBeGreaterThanOrEqual(0); expect(box.x + box.width).toBeLessThanOrEqual(390.5); expect(box.y + box.height).toBeLessThanOrEqual(844.5);
+    await screenshot(b, "end-for-all-dialog-390");
+    await b.keyboard.press("Escape"); await expect(dialog).toHaveCount(0);
+    expect(endRequests).toHaveLength(0); await b.setViewportSize({ width: 1280, height: 800 });
+
+    // Confirm with a double click: one request, everybody's room closes, nobody can join again.
+    await room(b).getByRole("button", { name: tr.endForAll, exact: true }).click();
+    await dialog.getByRole("button", { name: tr.endConfirmLabel, exact: true }).dblclick();
+    await expect(a.getByRole("heading", { name: tr.phase.closed, exact: true })).toBeVisible({ timeout: 30000 });
+    expect(endRequests).toHaveLength(1); expect(await status(meeting.id)).toBe("ENDED");
+    expect((await api(a, "POST", `/projects/${project.id}/meetings/${meeting.id}/join`)).status).toBe(409);
+
+    // The detail page's button asks too, with the same texts, and is the same single-request action.
+    endRequests.length = 0;
+    await b.goto(detailHref(project.slug, detailMeeting.id));
+    await b.getByRole("button", { name: tr.endForAll, exact: true }).click();
+    await expect(dialog).toBeVisible(); await expect(dialog.getByText(tr.endConfirm, { exact: true })).toBeVisible();
+    expect(endRequests).toHaveLength(0); expect(await status(detailMeeting.id)).toBe("OPEN");
+    await b.keyboard.press("Escape"); await expect(dialog).toHaveCount(0); expect(await status(detailMeeting.id)).toBe("OPEN");
+    await b.getByRole("button", { name: tr.endForAll, exact: true }).click();
+    await dialog.getByRole("button", { name: tr.endConfirmLabel, exact: true }).dblclick();
+    await expect.poll(() => status(detailMeeting.id), { timeout: 20000 }).toBe("ENDED");
+    expect(endRequests).toHaveLength(1);
+
+    // The manager who is not the creator never gets the button on the detail page of an open meeting.
+    const another = await createMeeting(b, project.id);
+    await a.goto(detailHref(project.slug, another.id));
+    await expect(a.getByRole("link", { name: tr.join, exact: true })).toBeVisible();
+    await expect(a.getByRole("button", { name: tr.endForAll, exact: true })).toHaveCount(0);
+  } finally {
+    await archive(a, [project]);
+    await managerContext.close(); await ownerContext.close();
   }
 });

@@ -57,7 +57,7 @@
   "cancelMeeting": "Cancel meeting",
   "confirm": "Confirm",
   "endForAll": "End for everyone",
-  "endConfirm": "Everyone will be disconnected. Meeting history is preserved.",
+  "endConfirm": "This will end the meeting for all participants. Once it has ended, participants cannot rejoin. This cannot be undone.",
   "participants": "Participants",
   "guest": "Guest",
   "noParticipants": "No participants yet.",
@@ -166,6 +166,9 @@
   "endTime": "End time",
   "inviteExpiryDate": "Invite expiry date",
   "inviteExpiryTime": "Invite expiry time",
+  "endTitle": "Are you sure you want to end the meeting for everyone?",
+  "endConfirmLabel": "End for everyone",
+  "endCancel": "Cancel",
   "status": {
     "SCHEDULED": "Scheduled",
     "OPEN": "Live",

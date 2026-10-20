@@ -57,7 +57,7 @@
   "cancelMeeting": "Toplantıyı iptal et",
   "confirm": "Onayla",
   "endForAll": "Herkes için bitir",
-  "endConfirm": "Tüm katılımcıların bağlantısı kesilir. Toplantı geçmişi korunur.",
+  "endConfirm": "Bu işlem toplantıyı tüm katılımcılar için sonlandıracaktır. Toplantı sona erdikten sonra katılımcılar yeniden katılamaz. Bu işlem geri alınamaz.",
   "participants": "Katılımcılar",
   "guest": "Misafir",
   "noParticipants": "Henüz katılım yok.",
@@ -166,6 +166,9 @@
   "endTime": "Bitiş saati",
   "inviteExpiryDate": "Davet son kullanma tarihi",
   "inviteExpiryTime": "Davet son kullanma saati",
+  "endTitle": "Toplantıyı herkes için bitirmek istediğinize emin misiniz?",
+  "endConfirmLabel": "Herkes İçin Bitir",
+  "endCancel": "İptal",
   "status": {
     "SCHEDULED": "Planlandı",
     "OPEN": "Canlı",
