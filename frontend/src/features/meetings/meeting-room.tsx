@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from 
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Track, type Participant } from "livekit-client";
-import { Users, Video, X } from "lucide-react";
+import { Users, X } from "lucide-react";
 import Link from "@/i18n/navigation";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { meetingsApi } from "./api";
 import { MeetingError, useMeetingProject } from "./shared";
 import { deviceErrorKey, isInCallPhase, useMeetingSessionRuntime, useOptionalMeetingSession, type SessionLive } from "./session/meeting-session";
+import { PreJoinCheck } from "./room/device-check";
 import { ParticipantTile } from "./room/participant-tile";
 import { RoomControls, type RoomPanel } from "./room/room-controls";
 import { ChatPanel, DevicesPanel, ParticipantsPanel, participantPhoto } from "./room/room-panels";
@@ -101,8 +102,6 @@ function MeetingRoomView({ live, id, projectId, userId, isManager = false, retur
   const [deviceError, setDeviceError] = useState<string>();
   const [notice, setNotice] = useState<string>();
   const [seenAt, setSeenAt] = useState<string | null>(null);
-  const preview = useRef<HTMLVideoElement>(null), previewTracks = useRef<MediaStream | undefined>(undefined);
-  const previewGeneration = useRef(0);
   const active = live.phase === "connected", room = live.room;
   const inCall = !["ready", "left", "closed", "removed", "failed"].includes(live.phase);
   const people: Participant[] = room ? [room.localParticipant, ...room.remoteParticipants.values()] : [];
@@ -128,13 +127,6 @@ function MeetingRoomView({ live, id, projectId, userId, isManager = false, retur
     navigator.mediaDevices.addEventListener("devicechange", refresh);
     return () => { alive = false; navigator.mediaDevices.removeEventListener("devicechange", refresh); };
   }, [panel]);
-  function stopPreview() { previewGeneration.current++; previewTracks.current?.getTracks().forEach(track => track.stop()); previewTracks.current = undefined; if (preview.current) preview.current.srcObject = null; }
-  useEffect(() => { const tracks = previewTracks, generation = previewGeneration; return () => { generation.current++; tracks.current?.getTracks().forEach(track => track.stop()); }; }, []);
-  async function startPreview(microphone = false) {
-    stopPreview(); const generation = previewGeneration.current;
-    try { const stream = await navigator.mediaDevices.getUserMedia({ video: !microphone, audio: microphone }); if (generation !== previewGeneration.current) { stream.getTracks().forEach(track => track.stop()); return; } previewTracks.current = stream; if (preview.current) preview.current.srcObject = stream; setDeviceError(undefined); setNotice(microphone ? t("microphoneReady") : undefined); }
-    catch (failure) { showDeviceError(failure); }
-  }
   function showDeviceError(failure: unknown) { setDeviceError(deviceErrorKey(failure)); }
   async function media(kind: "mic" | "camera") {
     if (!room) return;
@@ -194,7 +186,7 @@ function MeetingRoomView({ live, id, projectId, userId, isManager = false, retur
       {sharingSelf && <p role="status" className="rounded-lg border border-live/30 bg-live/10 px-3 py-2 text-sm">{t("screenSharing")}</p>}
       {room && !room.canPlaybackAudio && <Button variant="outline" className="min-h-11" onClick={() => void room.startAudio().catch(showDeviceError)}>{t("enableAudio")}</Button>}
     </div>
-    {live.phase === "ready" ? <div className="workspace-panel mx-auto grid max-w-3xl gap-6 p-4 sm:p-6 md:grid-cols-2"><div><div className="flex aspect-video items-center justify-center overflow-hidden rounded-xl bg-surface-2"><video ref={preview} autoPlay muted playsInline className="h-full w-full object-contain" /></div><div className="mt-3 flex flex-wrap gap-2"><Button variant="outline" className="min-h-11" onClick={() => void startPreview()}>{t("previewCamera")}</Button><Button variant="outline" className="min-h-11" onClick={() => void startPreview(true)}>{t("testMicrophone")}</Button><Button variant="ghost" className="min-h-11" onClick={stopPreview}>{t("stopPreview")}</Button></div></div><div className="flex flex-col items-start gap-4"><Video size={28} className="text-primary" /><h2 className="text-lg font-semibold">{t("readyTitle")}</h2><p className="text-sm leading-6 text-muted-foreground">{t("joinPrivacy")}</p><Button className="min-h-11" onClick={() => { stopPreview(); live.join(); }}>{t("join")}</Button></div></div>
+    {live.phase === "ready" ? <div className="workspace-panel mx-auto max-w-3xl p-4 sm:p-6"><PreJoinCheck onJoin={live.join} onPrefer={live.setPreferredDevice} /></div>
     : !inCall ? <section className="workspace-panel space-y-4 p-8"><h2 className="font-semibold">{t(`phase.${live.phase}`)}</h2>{live.phase === "failed" && <Button onClick={live.retry}>{t("retry")}</Button>}{returnHref && <Link href={returnHref} className="inline-flex min-h-11 items-center underline">{t("back")}</Link>}</section>
     : <>
       <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row compact:flex-col compact:gap-0">
@@ -221,7 +213,7 @@ function MeetingRoomView({ live, id, projectId, userId, isManager = false, retur
         sharing={sharingSelf} screenBusy={screenBusy} screenSupported={canShareScreen()} panel={panel} unread={unread} keyboard={viewport.keyboard}
         canEndForAll={Boolean(endProjectId)}
         onMic={() => void media("mic")} onCamera={() => void media("camera")} onScreen={() => void toggleScreen()} onPanel={next => void togglePanel(next)}
-        onEndForAll={() => setEndOpen(true)} onLeave={async () => { stopPreview(); live.leave(); }} />
+        onEndForAll={() => setEndOpen(true)} onLeave={async () => { live.leave(); }} />
       {endProjectId && <ConfirmDialog open={endOpen} onOpenChange={setEndOpen} title={t("endTitle")} description={t("endConfirm")} confirmLabel={t("endConfirmLabel")} cancelLabel={t("endCancel")} destructive
         onConfirm={async () => { await meetingsApi.action(endProjectId, id, "end"); live.leave(); }} />}
     </>}
