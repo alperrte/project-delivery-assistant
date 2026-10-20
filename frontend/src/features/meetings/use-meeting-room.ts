@@ -167,6 +167,8 @@ export function useMeetingRoom(meetingId: string, projectId?: string) {
 
   return { phase, room, revision, participants, messages, meeting, selfId, retained, error, setError, hasOlder, chatLoaded,
     setIntent: (kind: "mic" | "camera", enabled: boolean) => { intended.current[kind] = enabled; },
+    /** The device chosen on the ready screen; the room opens it when the person turns the microphone/camera on. */
+    setPreferredDevice: (kind: "audioinput" | "videoinput", deviceId: string | undefined) => { devices.current[kind] = deviceId; },
     switchDevice: async (kind: MediaDeviceKind, deviceId: string) => { if (room && await room.switchActiveDevice(kind, deviceId)) devices.current[kind] = deviceId; },
     join: () => controls.current?.join(), leave: () => controls.current?.leave(),
     retry: () => controls.current?.retry(),

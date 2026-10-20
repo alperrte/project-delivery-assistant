@@ -1,4 +1,4 @@
-import { test, expect, type BrowserContext, type Page } from "@playwright/test";
+import { test, expect, type Browser, type BrowserContext, type Page } from "@playwright/test";
 import { readFileSync, mkdirSync } from "node:fs";
 import path from "node:path";
 import { api, chooseDate, chooseTime } from "./helpers";
@@ -1047,5 +1047,251 @@ test("ending for everyone always asks first: dialog, cancel, Escape, failure, do
   } finally {
     await archive(a, [project]);
     await managerContext.close(); await ownerContext.close();
+  }
+});
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Ready screen: real camera and microphone checks (fake Chromium devices; not a substitute for physical hardware).
+// ---------------------------------------------------------------------------------------------------------------------
+type GumMode = "real" | "denied" | "missing" | "busy" | "silent";
+/** Wraps getUserMedia: records every call and stream, and can fail, delay or silence on demand. */
+const mediaProbeScript = () => {
+  const streams: MediaStream[] = [], calls: { audio?: unknown; video?: unknown }[] = [];
+  Object.assign(window, { qaStreams: streams, qaCalls: calls, qaGum: { mode: "real", delay: 0 } });
+  const original = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+  navigator.mediaDevices.getUserMedia = async constraints => {
+    calls.push({ audio: constraints?.audio, video: constraints?.video });
+    const gum = (window as unknown as { qaGum: { mode: string; delay: number } }).qaGum;
+    if (gum.delay) await new Promise(resolve => setTimeout(resolve, gum.delay));
+    const fail = (name: string): never => { throw Object.assign(new Error(name), { name }); };
+    if (gum.mode === "denied") fail("NotAllowedError");
+    if (gum.mode === "missing") fail("NotFoundError");
+    if (gum.mode === "busy") fail("NotReadableError");
+    const stream = gum.mode === "silent" && constraints?.audio ? new AudioContext().createMediaStreamDestination().stream : await original(constraints);
+    streams.push(stream); return stream;
+  };
+};
+const setGum = (page: Page, mode: GumMode, delay = 0) => page.evaluate(([m, d]) => { Object.assign((window as unknown as { qaGum: object }).qaGum, { mode: m, delay: d }); }, [mode, delay] as const);
+const liveTracks = (page: Page) => page.evaluate(() => (window as unknown as { qaStreams: MediaStream[] }).qaStreams.flatMap(stream => stream.getTracks()).filter(track => track.readyState === "live").length);
+const gumCalls = (page: Page, kind: "audio" | "video") => page.evaluate(k => (window as unknown as { qaCalls: Record<string, unknown>[] }).qaCalls.filter(call => call[k]).length, kind);
+const cameraCheck = (page: Page) => page.getByRole("region", { name: tr.cameraCheck });
+const micCheck = (page: Page) => page.getByRole("region", { name: tr.micCheck });
+const level = async (page: Page) => Number(await page.getByTestId("mic-level").getAttribute("data-level"));
+
+async function openReadyScreen(browser: Browser, viewport = { width: 1280, height: 900 }, touch = false) {
+  const context = await browser.newContext({ storageState: REJECTED_STATE, permissions: ["camera", "microphone"], viewport, ...(touch ? { hasTouch: true, isMobile: true } : {}) });
+  await context.addInitScript(mediaProbeScript);
+  const page = await context.newPage();
+  await login(context, managerFile);
+  const project = await createProject(page), meeting = await createMeeting(page, project.id);
+  const counts = watchConnections(page, meeting.id);
+  await page.goto(roomHref(project.slug, meeting.id));
+  await expect(page.getByRole("heading", { name: tr.readyTitle, exact: true })).toBeVisible();
+  return { context, page, project, meeting, counts };
+}
+
+test("camera test: real live preview, device switch, double click, stop; never joins or publishes", async ({ browser }) => {
+  test.setTimeout(120000);
+  const { context, page, project, counts } = await openReadyScreen(browser);
+  try {
+    const start = cameraCheck(page).getByRole("button", { name: tr.previewCamera, exact: true });
+    // A double click opens the camera once (the button is busy while it starts).
+    await start.dblclick();
+    await expect(cameraCheck(page).getByText(tr.camActive)).toBeVisible({ timeout: 15000 });
+    expect(await gumCalls(page, "video")).toBe(1);
+    // The picture is a real, moving camera stream: frames keep arriving.
+    const frames = () => page.getByTestId("camera-check-video").evaluate(element => (element as HTMLVideoElement).getVideoPlaybackQuality().totalVideoFrames);
+    await expect.poll(() => page.getByTestId("camera-check-video").evaluate(video => (video as HTMLVideoElement).videoWidth)).toBeGreaterThan(0);
+    const before = await frames(); await page.waitForTimeout(700); expect(await frames()).toBeGreaterThan(before);
+    await screenshot(page, "device-check-camera-desktop");
+    // Choosing a device restarts the preview on exactly that device and closes the previous stream.
+    const select = cameraCheck(page).getByRole("combobox", { name: tr.videoinput });
+    const options = await select.locator("option").evaluateAll(list => (list as HTMLOptionElement[]).map(option => option.value).filter(Boolean));
+    expect(options.length).toBeGreaterThan(0);
+    const liveBefore = await liveTracks(page);
+    await select.selectOption(options.at(-1)!);
+    await expect.poll(() => gumCalls(page, "video")).toBe(2);
+    await expect(cameraCheck(page).getByText(tr.camActive)).toBeVisible();
+    expect(await liveTracks(page), "one camera stream open after the switch").toBe(liveBefore);
+    expect(await page.evaluate(() => JSON.stringify((window as unknown as { qaCalls: { video?: unknown }[] }).qaCalls.at(-1)?.video))).toContain(options.at(-1)!);
+    // Stop: the stream is closed and the screen is idle again, with a message instead of a black box.
+    await cameraCheck(page).getByRole("button", { name: tr.stopTest, exact: true }).click();
+    await expect(cameraCheck(page).getByText(tr.camIdleHint)).toBeVisible();
+    expect(await liveTracks(page)).toBe(0);
+    // The microphone check is independent: it works while the camera is stopped, and stopping it leaves nothing open.
+    expect(counts.joins).toBe(0); expect(counts.sockets, "no LiveKit connection for a camera test").toBe(0);
+    await expect(page.getByRole("status").filter({ hasText: new RegExp(`^${tr.phase.connected}$`) })).toHaveCount(0);
+  } finally {
+    await archive(page, [project]); await context.close();
+  }
+});
+
+test("microphone test: live level from real samples, heard state, silence is not a success, independent of the camera, no join", async ({ browser }) => {
+  test.setTimeout(120000);
+  const { context, page, project, counts } = await openReadyScreen(browser);
+  try {
+    const start = micCheck(page).getByRole("button", { name: tr.testMicrophone, exact: true });
+    await start.dblclick();
+    await expect(micCheck(page).getByText(tr.micActive)).toBeVisible({ timeout: 15000 });
+    expect(await gumCalls(page, "audio")).toBe(1);
+    // The Chromium fake microphone beeps periodically: the meter follows it and the check reports that sound arrived.
+    const seen = new Set<number>();
+    const deadline = Date.now() + 8000;
+    while (Date.now() < deadline && !(await micCheck(page).getByText(tr.micHeard).isVisible())) { seen.add(await level(page)); await page.waitForTimeout(40); }
+    await expect(micCheck(page).getByText(tr.micHeard)).toBeVisible();
+    for (let i = 0; i < 40; i++) { seen.add(await level(page)); await page.waitForTimeout(40); }
+    expect(seen.size, `meter levels seen: ${[...seen].join(",")}`).toBeGreaterThan(2);
+    expect(Math.max(...seen)).toBeGreaterThan(3);
+    await screenshot(page, "device-check-mic-desktop");
+    // The camera is untouched by the microphone check, and the other way around.
+    expect(await gumCalls(page, "video")).toBe(0);
+    await cameraCheck(page).getByRole("button", { name: tr.previewCamera, exact: true }).click();
+    await expect(cameraCheck(page).getByText(tr.camActive)).toBeVisible({ timeout: 15000 });
+    await expect(micCheck(page).getByText(tr.micActive)).toBeVisible();
+    await cameraCheck(page).getByRole("button", { name: tr.stopTest, exact: true }).click();
+    await expect(micCheck(page).getByText(tr.micActive)).toBeVisible();
+    // Stop: the stream is closed, the meter falls to zero and the check is idle.
+    await micCheck(page).getByRole("button", { name: tr.stopTest, exact: true }).click();
+    await expect(micCheck(page).getByText(tr.micActive)).toHaveCount(0);
+    expect(await liveTracks(page)).toBe(0); expect(await level(page)).toBe(0);
+    expect(counts.joins).toBe(0); expect(counts.sockets, "no LiveKit connection for a microphone test").toBe(0);
+
+    // Silence never counts as success: a live but silent input shows a flat meter and, after a while, a hint (not "broken").
+    await setGum(page, "silent");
+    await micCheck(page).getByRole("button", { name: tr.testMicrophone, exact: true }).click();
+    await expect(micCheck(page).getByText(tr.micActive)).toBeVisible();
+    await expect(micCheck(page).getByText(tr.micSilent, { exact: false })).toBeVisible({ timeout: 8000 });
+    expect(await level(page)).toBe(0); await expect(micCheck(page).getByText(tr.micHeard)).toHaveCount(0);
+    await micCheck(page).getByRole("button", { name: tr.stopTest, exact: true }).click();
+    expect(await liveTracks(page)).toBe(0);
+  } finally {
+    await archive(page, [project]); await context.close();
+  }
+});
+
+test("device checks report every failure in place and never leave a device open", async ({ browser }) => {
+  test.setTimeout(150000);
+  const { context, page, project } = await openReadyScreen(browser);
+  try {
+    const failures: [GumMode, string][] = [["denied", tr.testDenied], ["missing", tr.testMissing], ["busy", tr.testBusy]];
+    for (const [mode, template] of failures) {
+      await setGum(page, mode);
+      await cameraCheck(page).getByRole("button", { name: tr.previewCamera, exact: true }).click();
+      await expect(cameraCheck(page).getByRole("alert")).toHaveText(template.replace("{device}", tr.videoinput));
+      await micCheck(page).getByRole("button", { name: tr.testMicrophone, exact: true }).click();
+      await expect(micCheck(page).getByRole("alert")).toHaveText(template.replace("{device}", tr.audioinput));
+      expect(await liveTracks(page)).toBe(0);
+    }
+    // After a refusal the very same buttons work again once access is possible.
+    await setGum(page, "real");
+    await cameraCheck(page).getByRole("button", { name: tr.previewCamera, exact: true }).click();
+    await expect(cameraCheck(page).getByText(tr.camActive)).toBeVisible({ timeout: 15000 });
+    await expect(cameraCheck(page).getByRole("alert")).toHaveCount(0);
+
+    // A device that disappears mid-test (unplugged) ends the check with an explanation and closes the stream.
+    await micCheck(page).getByRole("button", { name: tr.testMicrophone, exact: true }).click();
+    await expect(micCheck(page).getByText(tr.micActive)).toBeVisible({ timeout: 15000 });
+    await page.evaluate(() => {
+      const streams = (window as unknown as { qaStreams: MediaStream[] }).qaStreams;
+      for (const stream of streams.slice(-2)) for (const track of stream.getTracks()) track.dispatchEvent(new Event("ended"));
+    });
+    await expect(cameraCheck(page).getByRole("alert")).toHaveText(tr.testLost.replace("{device}", tr.videoinput));
+    await expect(micCheck(page).getByRole("alert")).toHaveText(tr.testLost.replace("{device}", tr.audioinput));
+    expect(await liveTracks(page)).toBe(0);
+
+    // No media API at all (old browser / insecure page): an explanation, not a silent button.
+    await page.evaluate(() => { Object.defineProperty(navigator.mediaDevices, "getUserMedia", { value: undefined, configurable: true }); });
+    await micCheck(page).getByRole("button", { name: tr.testMicrophone, exact: true }).click();
+    await expect(micCheck(page).getByRole("alert")).toHaveText(/./);
+    const text = await micCheck(page).getByRole("alert").innerText();
+    expect([tr.testUnsupported, tr.testInsecure]).toContain(text);
+  } finally {
+    await archive(page, [project]); await context.close();
+  }
+});
+
+test("a permission answer that arrives after joining is discarded and its devices closed; joining after tests is clean and keeps the chosen devices", async ({ browser }) => {
+  test.setTimeout(180000);
+  const { context, page, project, meeting } = await openReadyScreen(browser);
+  try {
+    // 1. A slow permission prompt is still pending when the person joins: the late stream must be stopped on arrival.
+    await setGum(page, "real", 1500);
+    await micCheck(page).getByRole("button", { name: tr.testMicrophone, exact: true }).click();
+    await cameraCheck(page).getByRole("button", { name: tr.previewCamera, exact: true }).click();
+    await page.getByRole("button", { name: tr.join, exact: true }).click();
+    await expect(connected(page)).toBeVisible({ timeout: 30000 });
+    await page.waitForTimeout(2500);
+    expect(await liveTracks(page), "late test streams are closed, nothing else is open").toBe(0);
+    await expect(room(page).getByRole("button", { name: tr.micOn, exact: true })).toBeVisible();
+    await expect(room(page).getByRole("button", { name: tr.cameraOn, exact: true })).toBeVisible();
+    // Leaving returns to a clean slate; start again with real tests on chosen devices.
+    await room(page).getByRole("button", { name: tr.leave, exact: true }).click();
+    await page.getByRole("dialog").getByRole("button", { name: tr.leaveConfirm, exact: true }).click();
+    await expect(page.getByRole("heading", { name: tr.phase.left, exact: true })).toBeVisible();
+    await setGum(page, "real", 0);
+    await page.goto(roomHref(project.slug, meeting.id));
+    await expect(page.getByRole("heading", { name: tr.readyTitle, exact: true })).toBeVisible();
+
+    // 2. Both tests, then join: test devices are closed at once, the person joins with microphone and camera off and
+    //    the devices they picked are the ones the room opens when they turn them on.
+    await micCheck(page).getByRole("button", { name: tr.testMicrophone, exact: true }).click();
+    await cameraCheck(page).getByRole("button", { name: tr.previewCamera, exact: true }).click();
+    await expect(micCheck(page).getByText(tr.micActive)).toBeVisible({ timeout: 15000 }); await expect(cameraCheck(page).getByText(tr.camActive)).toBeVisible({ timeout: 15000 });
+    const pick = async (region: ReturnType<typeof cameraCheck>, name: string) => {
+      const select = region.getByRole("combobox", { name });
+      const values = await select.locator("option").evaluateAll(list => (list as HTMLOptionElement[]).map(option => option.value).filter(Boolean));
+      await select.selectOption(values.at(-1)!); return values.at(-1)!;
+    };
+    const micDevice = await pick(micCheck(page), tr.audioinput), cameraDevice = await pick(cameraCheck(page), tr.videoinput);
+    await expect(micCheck(page).getByText(tr.micActive)).toBeVisible(); await expect(cameraCheck(page).getByText(tr.camActive)).toBeVisible();
+    await page.getByRole("button", { name: tr.join, exact: true }).click();
+    await expect(connected(page)).toBeVisible({ timeout: 30000 });
+    expect(await liveTracks(page), "joining closes every test stream, and opens nothing").toBe(0);
+    await expect(room(page).getByRole("button", { name: tr.micOn, exact: true })).toBeVisible();
+    await expect(room(page).getByRole("button", { name: tr.cameraOn, exact: true })).toBeVisible();
+    await room(page).getByRole("button", { name: tr.micOn, exact: true }).click(); await room(page).getByRole("button", { name: tr.cameraOn, exact: true }).click();
+    await expect(room(page).getByRole("button", { name: tr.micOff, exact: true })).toBeVisible();
+    await expect(room(page).getByRole("button", { name: tr.cameraOff, exact: true })).toBeVisible();
+    const opened = await page.evaluate(() => (window as unknown as { qaStreams: MediaStream[] }).qaStreams.flatMap(stream => stream.getTracks()).filter(track => track.readyState === "live").map(track => `${track.kind}:${track.getSettings().deviceId}`));
+    expect(opened).toEqual(expect.arrayContaining([`audio:${micDevice}`, `video:${cameraDevice}`]));
+    expect(opened.filter(entry => entry.startsWith("audio:"))).toHaveLength(1); expect(opened.filter(entry => entry.startsWith("video:"))).toHaveLength(1);
+    // Leaving releases them.
+    await room(page).getByRole("button", { name: tr.leave, exact: true }).click();
+    await page.getByRole("dialog").getByRole("button", { name: tr.leaveConfirm, exact: true }).click();
+    await expect(page.getByRole("heading", { name: tr.phase.left, exact: true })).toBeVisible();
+    expect(await liveTracks(page)).toBe(0);
+
+    // 3. Straight to the meeting without any test: joins with both off and opens nothing.
+    await page.goto(roomHref(project.slug, meeting.id));
+    await page.getByRole("button", { name: tr.join, exact: true }).click();
+    await expect(connected(page)).toBeVisible({ timeout: 30000 });
+    expect(await liveTracks(page)).toBe(0);
+    await expect(room(page).getByRole("button", { name: tr.micOn, exact: true })).toBeVisible();
+  } finally {
+    await archive(page, [project]); await context.close();
+  }
+});
+
+test("ready screen on a phone: both checks usable, nothing overflows", async ({ browser }) => {
+  test.setTimeout(120000);
+  for (const [width, height] of [[320, 640], [390, 844], [768, 1024]] as const) {
+    const { context, page, project } = await openReadyScreen(browser, { width, height }, width < 768);
+    try {
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `no horizontal overflow at ${width}`).toBe(true);
+      for (const button of await page.locator("[data-meeting-room] button").all()) { const box = (await button.boundingBox())!; expect(box.height).toBeGreaterThanOrEqual(43.5); }
+      await cameraCheck(page).getByRole("button", { name: tr.previewCamera, exact: true }).click();
+      await expect(cameraCheck(page).getByText(tr.camActive)).toBeVisible({ timeout: 15000 });
+      await micCheck(page).getByRole("button", { name: tr.testMicrophone, exact: true }).click();
+      await expect(micCheck(page).getByText(tr.micActive)).toBeVisible({ timeout: 15000 });
+      const video = (await page.getByTestId("camera-check-video").boundingBox())!;
+      expect(video.width / video.height, "16:9 preview box").toBeCloseTo(16 / 9, 1);
+      expect(video.x + video.width).toBeLessThanOrEqual(width + 0.5);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+      await screenshot(page, `device-check-${width}`);
+      await page.getByRole("button", { name: tr.join, exact: true }).scrollIntoViewIfNeeded();
+      await expect(page.getByRole("button", { name: tr.join, exact: true })).toBeVisible();
+    } finally {
+      await archive(page, [project]); await context.close();
+    }
   }
 });
