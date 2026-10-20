@@ -1076,6 +1076,21 @@ const liveTracks = (page: Page) => page.evaluate(() => (window as unknown as { q
 const gumCalls = (page: Page, kind: "audio" | "video") => page.evaluate(k => (window as unknown as { qaCalls: Record<string, unknown>[] }).qaCalls.filter(call => call[k]).length, kind);
 const cameraCheck = (page: Page) => page.getByRole("region", { name: tr.cameraCheck });
 const micCheck = (page: Page) => page.getByRole("region", { name: tr.micCheck });
+/** Opens a device dropdown (the shared Select, not a native menu) and returns the real deviceIds it offers, default excluded. */
+async function deviceOptions(page: Page, region: ReturnType<typeof cameraCheck>, name: string) {
+  const trigger = region.getByRole("combobox", { name });
+  await trigger.click();
+  await expect(page.getByRole("listbox", { name })).toBeVisible();
+  return trigger.page().locator('[role="option"]').evaluateAll(list => (list as HTMLElement[]).map(option => option.dataset.deviceId ?? "").filter(Boolean));
+}
+/** Picks the last real device of a dropdown with the mouse and returns its deviceId. */
+async function pickDevice(page: Page, region: ReturnType<typeof cameraCheck>, name: string) {
+  const ids = await deviceOptions(page, region, name);
+  expect(ids.length).toBeGreaterThan(0);
+  await page.locator(`[role="option"][data-device-id="${ids.at(-1)}"]`).click();
+  await expect(page.getByRole("listbox", { name })).toHaveCount(0);
+  return ids.at(-1)!;
+}
 const level = async (page: Page) => Number(await page.getByTestId("mic-level").getAttribute("data-level"));
 
 async function openReadyScreen(browser: Browser, viewport = { width: 1280, height: 900 }, touch = false) {
@@ -1105,11 +1120,9 @@ test("camera test: real live preview, device switch, double click, stop; never j
     const before = await frames(); await page.waitForTimeout(700); expect(await frames()).toBeGreaterThan(before);
     await screenshot(page, "device-check-camera-desktop");
     // Choosing a device restarts the preview on exactly that device and closes the previous stream.
-    const select = cameraCheck(page).getByRole("combobox", { name: tr.videoinput });
-    const options = await select.locator("option").evaluateAll(list => (list as HTMLOptionElement[]).map(option => option.value).filter(Boolean));
-    expect(options.length).toBeGreaterThan(0);
     const liveBefore = await liveTracks(page);
-    await select.selectOption(options.at(-1)!);
+    const chosenCamera = await pickDevice(page, cameraCheck(page), tr.videoinput);
+    const options = [chosenCamera];
     await expect.poll(() => gumCalls(page, "video")).toBe(2);
     await expect(cameraCheck(page).getByText(tr.camActive)).toBeVisible();
     expect(await liveTracks(page), "one camera stream open after the switch").toBe(liveBefore);
@@ -1237,12 +1250,7 @@ test("a permission answer that arrives after joining is discarded and its device
     await micCheck(page).getByRole("button", { name: tr.testMicrophone, exact: true }).click();
     await cameraCheck(page).getByRole("button", { name: tr.previewCamera, exact: true }).click();
     await expect(micCheck(page).getByText(tr.micActive)).toBeVisible({ timeout: 15000 }); await expect(cameraCheck(page).getByText(tr.camActive)).toBeVisible({ timeout: 15000 });
-    const pick = async (region: ReturnType<typeof cameraCheck>, name: string) => {
-      const select = region.getByRole("combobox", { name });
-      const values = await select.locator("option").evaluateAll(list => (list as HTMLOptionElement[]).map(option => option.value).filter(Boolean));
-      await select.selectOption(values.at(-1)!); return values.at(-1)!;
-    };
-    const micDevice = await pick(micCheck(page), tr.audioinput), cameraDevice = await pick(cameraCheck(page), tr.videoinput);
+    const micDevice = await pickDevice(page, micCheck(page), tr.audioinput), cameraDevice = await pickDevice(page, cameraCheck(page), tr.videoinput);
     await expect(micCheck(page).getByText(tr.micActive)).toBeVisible(); await expect(cameraCheck(page).getByText(tr.camActive)).toBeVisible();
     await page.getByRole("button", { name: tr.join, exact: true }).click();
     await expect(connected(page)).toBeVisible({ timeout: 30000 });
@@ -1293,5 +1301,81 @@ test("ready screen on a phone: both checks usable, nothing overflows", async ({ 
     } finally {
       await archive(page, [project]); await context.close();
     }
+  }
+});
+
+test("device dropdowns use the shared Select: custom panel, keyboard, long names, themes, phone, real deviceIds", async ({ browser }) => {
+  test.setTimeout(150000);
+  const longMic = "Microphone Array (Realtek High Definition Audio(SST)) with a very long vendor-supplied device name that keeps going";
+  const { context, page, project } = await openReadyScreen(browser);
+  try {
+    // A device with a very long name is added to the lists (it is never opened here, only listed).
+    await page.evaluate(label => {
+      const original = navigator.mediaDevices.enumerateDevices.bind(navigator.mediaDevices);
+      navigator.mediaDevices.enumerateDevices = async () => [...await original(), { deviceId: "long-fake-id", groupId: "g", kind: "audioinput", label, toJSON: () => ({}) } as MediaDeviceInfo];
+    }, longMic);
+    await micCheck(page).getByRole("button", { name: tr.testMicrophone, exact: true }).click();
+    await expect(micCheck(page).getByText(tr.micActive)).toBeVisible({ timeout: 15000 });
+    await cameraCheck(page).getByRole("button", { name: tr.previewCamera, exact: true }).click();
+    await expect(cameraCheck(page).getByText(tr.camActive)).toBeVisible({ timeout: 15000 });
+
+    // No native <select>: the trigger is the app's own, with the default choice first and the real ids untouched.
+    await expect(page.locator("[data-meeting-room] select")).toHaveCount(0);
+    const trigger = micCheck(page).getByRole("combobox", { name: tr.audioinput });
+    await expect(trigger).toContainText(tr.defaultDevice);
+    expect(await trigger.evaluate(element => element.getBoundingClientRect().height)).toBeGreaterThanOrEqual(43.5);
+    const ids = await deviceOptions(page, micCheck(page), tr.audioinput);
+    const labels = await page.locator('[role="option"]').allInnerTexts();
+    expect(labels[0]).toBe(tr.defaultDevice);
+    expect(ids).toContain("long-fake-id"); expect(ids, "the browser's own default entry is not listed twice").not.toContain("default");
+    expect(new Set(ids).size).toBe(ids.length);
+    // The panel is inside the screen, scrolls if needed, and the long name wraps instead of widening it.
+    const panel = page.getByRole("listbox", { name: tr.audioinput });
+    const box = (await panel.boundingBox())!, viewport = page.viewportSize()!;
+    expect(box.x).toBeGreaterThanOrEqual(0); expect(box.x + box.width).toBeLessThanOrEqual(viewport.width + 0.5); expect(box.y + box.height).toBeLessThanOrEqual(viewport.height + 0.5);
+    const longOption = page.locator('[role="option"][data-device-id="long-fake-id"]');
+    expect(await longOption.evaluate(element => element.scrollWidth <= element.clientWidth + 1), "long device name does not overflow its row").toBe(true);
+    expect((await longOption.boundingBox())!.height, "the long name wraps onto several lines").toBeGreaterThan(44);
+    const current = page.locator('[role="option"][aria-selected="true"]');
+    await expect(current).toHaveCount(1); await expect(current).toContainText(tr.defaultDevice);
+    await page.waitForTimeout(400); await screenshot(page, "device-dropdown-open-light");
+    await page.keyboard.press("Escape"); await expect(panel).toHaveCount(0);
+
+    // Keyboard only: open, move, choose the first real device; the test restarts on exactly that device.
+    const first = ids.find(id => id !== "long-fake-id")!;
+    const callsBefore = await gumCalls(page, "audio");
+    await trigger.focus(); await page.keyboard.press("Enter");
+    await expect(panel).toBeVisible();
+    for (let i = 0; i < 40 && !(await page.locator(`[role="option"][data-device-id="${first}"][data-highlighted]`).count()); i++) await page.keyboard.press("ArrowDown");
+    await page.keyboard.press("Enter");
+    await expect(panel).toHaveCount(0);
+    await expect.poll(() => gumCalls(page, "audio")).toBe(callsBefore + 1);
+    expect(await page.evaluate(() => JSON.stringify((window as unknown as { qaCalls: { audio?: unknown }[] }).qaCalls.at(-1)?.audio))).toContain(first);
+    await expect(trigger).not.toContainText(tr.defaultDevice);
+    await expect(micCheck(page).getByText(tr.micActive)).toBeVisible();
+    expect(await liveTracks(page), "one microphone stream and one camera stream").toBe(2);
+    await trigger.press("Tab");
+
+    // Back to the default choice through the menu.
+    await trigger.click(); await page.locator('[role="option"][data-device-id=""]').click();
+    await expect(trigger).toContainText(tr.defaultDevice);
+    await expect.poll(() => gumCalls(page, "audio")).toBe(callsBefore + 2);
+
+    // Dark theme and the phone: same component, still inside the screen.
+    await page.evaluate(() => localStorage.setItem("theme", "dark")); await page.setViewportSize({ width: 320, height: 640 });
+    await page.reload();
+    await expect(page.locator("html")).toHaveClass(/dark/);
+    await micCheck(page).getByRole("button", { name: tr.testMicrophone, exact: true }).click();
+    await expect(micCheck(page).getByText(tr.micActive)).toBeVisible({ timeout: 15000 });
+    const phoneIds = await deviceOptions(page, micCheck(page), tr.audioinput);
+    expect(phoneIds.length).toBeGreaterThan(0);
+    const phoneBox = (await page.getByRole("listbox", { name: tr.audioinput }).boundingBox())!;
+    expect(phoneBox.x).toBeGreaterThanOrEqual(0); expect(phoneBox.x + phoneBox.width).toBeLessThanOrEqual(320.5); expect(phoneBox.y + phoneBox.height).toBeLessThanOrEqual(640.5);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.waitForTimeout(400); await screenshot(page, "device-dropdown-open-dark-320");
+    await page.keyboard.press("Escape");
+    await page.evaluate(() => localStorage.removeItem("theme"));
+  } finally {
+    await archive(page, [project]); await context.close();
   }
 });

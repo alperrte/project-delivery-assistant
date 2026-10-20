@@ -1,5 +1,5 @@
 "use client";
-import { useRef, type Dispatch, type SetStateAction } from "react";
+import { useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { useTranslations } from "next-intl";
 import type { Room } from "livekit-client";
 import { toast } from "sonner";
@@ -11,6 +11,7 @@ import { profilePhotoSrc } from "@/features/account/api";
 import { COMPOSER_CHOICES, insertEmoji } from "@/features/chat/emoji-catalog";
 import { EmojiPicker } from "@/features/chat/components/emoji-picker";
 import { meetingsApi } from "../api";
+import { DeviceSelect } from "./device-select";
 import type { MeetingParticipant } from "../types";
 import type { SessionLive } from "../session/meeting-session";
 
@@ -103,13 +104,11 @@ export function ChatPanel({ live, active, content, setContent, mentions, setMent
 
 export function DevicesPanel({ room, devices, onSwitch }: { room: Room | undefined; devices: MediaDeviceInfo[]; onSwitch: (kind: MediaDeviceKind, deviceId: string) => void }) {
   const t = useTranslations("meetings");
+  // The choice per kind, started from the device the room has open; the room confirms it by switching.
+  const [chosen, setChosen] = useState<Partial<Record<MediaDeviceKind, string>>>(() => ({ audioinput: room?.getActiveDevice("audioinput"), videoinput: room?.getActiveDevice("videoinput"), audiooutput: room?.getActiveDevice("audiooutput") }));
   return <div className="space-y-4 overflow-y-auto">
-    {(["audioinput", "videoinput", "audiooutput"] as const).map(kind => <label key={kind} className="block space-y-2 text-sm">{t(kind)}
-      <select className="min-h-11 w-full rounded-md border bg-background px-3 text-sm compact:text-base" defaultValue={room?.getActiveDevice(kind)} onChange={event => onSwitch(kind, event.target.value)}>
-        <option value="default">{t("defaultDevice")}</option>
-        {devices.filter(d => d.kind === kind && d.deviceId && d.deviceId !== "default").map((d, i) => <option key={d.deviceId} value={d.deviceId}>{d.label || `${t(kind)} ${i + 1}`}</option>)}
-      </select>
-    </label>)}
+    {(["audioinput", "videoinput", "audiooutput"] as const).map(kind => <DeviceSelect key={kind} kind={kind} devices={devices} value={chosen[kind] === "default" ? "" : chosen[kind] ?? ""}
+      onChange={deviceId => { setChosen(previous => ({ ...previous, [kind]: deviceId })); onSwitch(kind, deviceId || "default"); }} />)}
     <p className="text-xs leading-5 text-muted-foreground">{t("deviceHint")}</p>
   </div>;
 }
