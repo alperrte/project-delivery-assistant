@@ -17,7 +17,8 @@ export function useMeetingRoom(meetingId: string, projectId?: string) {
   const [error, setError] = useState<unknown>();
   const [participants, setParticipants] = useState<MeetingParticipant[]>([]);
   const [messages, setMessages] = useState<MeetingMessage[]>([]);
-  const [meeting, setMeeting] = useState<GuestMeeting>();
+  // A member's meeting carries its organizer (the creator recorded by the server); the guest view does not.
+  const [meeting, setMeeting] = useState<GuestMeeting & { organizerId?: string }>();
   const [selfId, setSelfId] = useState("");
   const [retained, setRetained] = useState(false);
   const [hasOlder, setHasOlder] = useState(false);

@@ -7,7 +7,7 @@ import { meetingAccount } from "./meeting-fixture";
 import { REJECTED_STATE } from "./consent-state";
 import { localizeHref } from "../src/i18n/routing";
 import type { Project } from "../src/features/projects/types";
-import type { Meeting } from "../src/features/meetings/types";
+import type { Meeting, MeetingInvite } from "../src/features/meetings/types";
 import tr from "../src/i18n/meetings/tr.json";
 import en from "../src/i18n/meetings/en.json";
 import messages from "../src/i18n/messages/tr.json";
@@ -661,5 +661,132 @@ test("mini bar respects the device safe areas (notch, home indicator) and stays 
   } finally {
     await archive(page, [project]);
     await context.close();
+  }
+});
+
+// ---------------------------------------------------------------------------------------------------------------------
+// "End for everyone" belongs to the meeting's creator only (not to project managers, members or guests).
+// ---------------------------------------------------------------------------------------------------------------------
+test("ending a meeting for everyone belongs only to its creator: UI, API, leave semantics, mobile, guests", async ({ browser }) => {
+  test.setTimeout(300000);
+  const managerContext = await browser.newContext({ storageState: REJECTED_STATE, permissions: ["camera", "microphone"], viewport: { width: 1440, height: 900 } });
+  const ownerContext = await browser.newContext({ storageState: REJECTED_STATE, permissions: ["camera", "microphone"], viewport: { width: 1280, height: 800 } });
+  const guestContext = await browser.newContext({ storageState: REJECTED_STATE, permissions: ["camera", "microphone"], viewport: { width: 1280, height: 800 } });
+  const a = await managerContext.newPage(), b = await ownerContext.newPage(), g = await guestContext.newPage();
+  const endLabel = { name: tr.endForAll, exact: true } as const;
+  let project: Project | undefined;
+  try {
+    await login(managerContext, managerFile); await login(ownerContext, memberFile);
+    project = await createProject(a); await b.goto("/dashboard");
+    const owner = (await api(b, "GET", "/auth/me")).json as { id: string; nickname: string };
+    addMember(project.id, owner.id);
+    // `a` is a PROJECT_MANAGER of the project; `b` is an ordinary member who creates the meeting.
+    const meeting = await createMeeting(b, project.id);
+    expect(meeting.organizerId, "the creator recorded by the server is the organizer").toBe(owner.id);
+    const status = async (page: Page) => ((await api(page, "GET", `/projects/${project!.id}/meetings/${meeting.id}`)).json as Meeting).status;
+
+    // Detail page: only the creator is offered "end for everyone".
+    await a.goto(detailHref(project.slug, meeting.id)); await b.goto(detailHref(project.slug, meeting.id));
+    await expect(a.getByRole("link", { name: tr.join, exact: true })).toBeVisible();
+    await expect(b.getByRole("button", endLabel)).toBeVisible();
+    await expect(a.getByRole("button", endLabel)).toHaveCount(0);
+
+    // Room: same rule; the manager keeps the moderation controls, the creator (not a manager) does not get them.
+    await a.goto(roomHref(project.slug, meeting.id)); await b.goto(roomHref(project.slug, meeting.id));
+    await join(a); await join(b);
+    await expect(room(b).getByRole("button", endLabel)).toBeVisible();
+    await expect(room(a).getByRole("button", endLabel)).toHaveCount(0);
+    await room(a).getByRole("button", { name: tr.participants, exact: true }).click();
+    await expect(room(a).locator("li").filter({ hasText: owner.nickname }).getByRole("button", { name: tr.muteParticipant, exact: true })).toBeVisible();
+    await room(b).getByRole("button", { name: tr.participants, exact: true }).click();
+    await expect(room(b).getByRole("button", { name: tr.muteParticipant, exact: true })).toHaveCount(0);
+
+    // Backend: a project manager who did not create it is refused, directly through the API, and nothing changes.
+    const refused = await api(a, "POST", `/projects/${project.id}/meetings/${meeting.id}/end`);
+    expect(refused.status).toBe(403);
+    expect(await status(a)).toBe("OPEN");
+
+    // Guests never see it and cannot reach the project endpoint.
+    const invite = (await api(b, "POST", `/projects/${project.id}/meetings/${meeting.id}/invites`, { expiresAt: new Date(Date.now() + 3600000).toISOString(), maxUses: 1 })).json as MeetingInvite;
+    await g.goto(`${localizeHref("/meeting-guest", "tr")}#${invite.token}`);
+    await g.getByLabel(tr.displayName, { exact: true }).fill("QA Guest"); await g.getByRole("button", { name: tr.continue, exact: true }).click(); await join(g);
+    await expect(g.getByRole("button", endLabel)).toHaveCount(0);
+    expect([401, 403]).toContain((await api(g, "POST", `/projects/${project.id}/meetings/${meeting.id}/end`)).status);
+    expect(await status(a)).toBe("OPEN");
+
+    // Phone layout: the same rule in the "More" menu.
+    await b.setViewportSize({ width: 390, height: 844 }); await a.setViewportSize({ width: 390, height: 844 });
+    await room(b).getByRole("button", { name: tr.more, exact: true }).click();
+    await expect(b.getByRole("menuitem", endLabel)).toBeVisible(); await b.keyboard.press("Escape");
+    await room(a).getByRole("button", { name: tr.more, exact: true }).click();
+    await expect(a.getByRole("menuitem", { name: tr.devices, exact: true })).toBeVisible();
+    await expect(a.getByRole("menuitem", endLabel)).toHaveCount(0); await a.keyboard.press("Escape");
+    await b.setViewportSize({ width: 1280, height: 800 }); await a.setViewportSize({ width: 1440, height: 900 });
+
+    // The creator's confirmation can be declined: the meeting goes on for everyone.
+    await room(b).getByRole("button", endLabel).click();
+    await expect(b.getByRole("dialog", { name: tr.endForAll })).toBeVisible();
+    await b.getByRole("dialog").getByRole("button", { name: tr.cancel, exact: true }).click();
+    await expect(b.getByRole("dialog")).toHaveCount(0);
+    expect(await status(a)).toBe("OPEN"); await expect(connected(a)).toBeVisible(); await expect(connected(b)).toBeVisible();
+
+    // Leaving is not ending: the creator leaves, the meeting continues for the others, and on return the option is back.
+    await room(b).getByRole("button", { name: tr.leave, exact: true }).click();
+    await b.getByRole("dialog").getByRole("button", { name: tr.leaveConfirm, exact: true }).click();
+    await expect(b.getByRole("heading", { name: tr.phase.left, exact: true })).toBeVisible();
+    await a.waitForTimeout(5000);
+    expect(await status(a)).toBe("OPEN"); await expect(connected(a)).toBeVisible();
+    await b.goto(roomHref(project.slug, meeting.id)); await join(b);
+    await expect(room(b).getByRole("button", endLabel)).toBeVisible();
+
+    // The creator ends it for everyone: all rooms close, the state is ENDED and nobody can join again.
+    await room(b).getByRole("button", endLabel).click();
+    await b.getByRole("dialog").getByRole("button", { name: tr.confirm, exact: true }).click();
+    await expect(a.getByRole("heading", { name: tr.phase.closed, exact: true })).toBeVisible({ timeout: 30000 });
+    // A guest's access is revoked together with the meeting, so the guest room reports either state.
+    await expect(g.getByRole("heading", { name: new RegExp(`^(${tr.phase.closed}|${tr.phase.removed})$`) })).toBeVisible({ timeout: 30000 });
+    expect(await status(a)).toBe("ENDED");
+    expect((await api(a, "POST", `/projects/${project.id}/meetings/${meeting.id}/join`)).status).toBe(409);
+    expect((await api(b, "POST", `/projects/${project.id}/meetings/${meeting.id}/join`)).status).toBe(409);
+    // A manager who did not create it is still refused afterwards (no way to probe or repeat the action).
+    expect((await api(a, "POST", `/projects/${project.id}/meetings/${meeting.id}/end`)).status).toBe(403);
+  } finally {
+    await archive(a, [project]);
+    await managerContext.close(); await ownerContext.close(); await guestContext.close();
+  }
+});
+
+test("a meeting created by a project manager is owned by that manager, not by other managers or by whoever joins first", async ({ browser }) => {
+  test.setTimeout(180000);
+  const managerContext = await browser.newContext({ storageState: REJECTED_STATE, permissions: ["camera", "microphone"], viewport: { width: 1440, height: 900 } });
+  const memberContext = await browser.newContext({ storageState: REJECTED_STATE, permissions: ["camera", "microphone"], viewport: { width: 1280, height: 800 } });
+  const a = await managerContext.newPage(), b = await memberContext.newPage();
+  let project: Project | undefined;
+  try {
+    await login(managerContext, managerFile); await login(memberContext, memberFile);
+    project = await createProject(a); await b.goto("/dashboard");
+    const member = (await api(b, "GET", "/auth/me")).json as { id: string };
+    addMember(project.id, member.id);
+    // Make the member a second PROJECT_MANAGER (TEST-ONLY fixture row in this QA project).
+    psql(`INSERT INTO project_membership_roles(membership_id,role) SELECT id,'PROJECT_MANAGER' FROM project_memberships WHERE project_id='${uuid(project.id)}' AND user_id='${uuid(member.id)}'`);
+    const meeting = await createMeeting(a, project.id);
+    // The second manager joins first, which changes nothing about who owns the meeting.
+    await b.goto(roomHref(project.slug, meeting.id)); await join(b);
+    await a.goto(roomHref(project.slug, meeting.id)); await join(a);
+    await expect(room(a).getByRole("button", { name: tr.endForAll, exact: true })).toBeVisible();
+    await expect(room(b).getByRole("button", { name: tr.endForAll, exact: true })).toHaveCount(0);
+    expect((await api(b, "POST", `/projects/${project.id}/meetings/${meeting.id}/end`)).status).toBe(403);
+    // Both managers keep the other moderation powers.
+    await room(b).getByRole("button", { name: tr.participants, exact: true }).click();
+    await expect(room(b).getByRole("button", { name: tr.muteParticipant, exact: true })).toBeVisible();
+    // The mini bar offers no end-for-everyone either: only Leave (with its confirmation).
+    await b.getByRole("link", { name: messages.app.nav.projects, exact: true }).first().click();
+    await expect(mini(b)).toBeVisible();
+    await expect(mini(b).getByRole("button", { name: tr.endForAll, exact: true })).toHaveCount(0);
+    expect((await api(a, "POST", `/projects/${project.id}/meetings/${meeting.id}/end`)).status).toBe(200);
+    await expect(mini(b)).toHaveCount(0, { timeout: 20000 });
+  } finally {
+    await archive(a, [project]);
+    await managerContext.close(); await memberContext.close();
   }
 });

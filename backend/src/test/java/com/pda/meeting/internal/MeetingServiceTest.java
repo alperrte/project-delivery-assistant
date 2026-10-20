@@ -79,8 +79,39 @@ class MeetingServiceTest {
     @Test void nonManagerOrganizerCannotMuteOrKick() {
         assertEquals("MEETING_MANAGER_REQUIRED",assertThrows(MeetingException.class,()->service.mute(project,meeting.id,actor,UUID.randomUUID())).code());
         assertEquals("MEETING_MANAGER_REQUIRED",assertThrows(MeetingException.class,()->service.stageKick(project,meeting.id,actor,UUID.randomUUID())).code());
-        assertEquals("MEETING_MANAGER_REQUIRED",assertThrows(MeetingException.class,()->service.end(project,meeting.id,actor)).code());
         verifyNoInteractions(media);
+    }
+    @Test void onlyTheCreatorEndsForEveryoneNoRoleAndNoOtherManager() {
+        UUID creator=UUID.randomUUID(); meeting.organizerId=creator;
+        when(projects.isMember(project,creator)).thenReturn(true); when(projects.rolesForUserInProject(project,creator)).thenReturn(Set.of());
+        // A project manager who is not the creator, and a plain member, are both refused with 403 and nothing happens.
+        when(projects.rolesForUserInProject(project,actor)).thenReturn(Set.of("PROJECT_MANAGER"));
+        var manager=assertThrows(MeetingException.class,()->service.end(project,meeting.id,actor));
+        assertEquals(403,manager.status()); assertEquals("MEETING_OWNER_REQUIRED",manager.code());
+        when(projects.rolesForUserInProject(project,actor)).thenReturn(Set.of("TESTER"));
+        assertEquals("MEETING_OWNER_REQUIRED",assertThrows(MeetingException.class,()->service.end(project,meeting.id,actor)).code());
+        assertEquals(Meeting.Status.OPEN,meeting.status); assertFalse(meeting.cleanupPending);
+        verify(chats,never()).deleteByMeetingId(any()); verifyNoInteractions(media);
+        // The creator ends it without any manager role.
+        service.end(project,meeting.id,creator);
+        assertEquals(Meeting.Status.ENDED,meeting.status); assertTrue(meeting.cleanupPending);
+        // Afterwards the answer for a non-owner is unchanged (the ended state is not a way to probe or to succeed).
+        assertEquals("MEETING_OWNER_REQUIRED",assertThrows(MeetingException.class,()->service.end(project,meeting.id,actor)).code());
+    }
+    @Test void creatorWhoLeftTheProjectOrLostAccessCannotEnd() {
+        when(projects.isMember(project,actor)).thenReturn(false);
+        assertEquals(403,assertThrows(MeetingException.class,()->service.end(project,meeting.id,actor)).status());
+        assertEquals(Meeting.Status.OPEN,meeting.status);
+    }
+    @Test void joiningFirstOrOtherModerationRolesNeverMakeAnOwner() {
+        UUID creator=UUID.randomUUID(); meeting.organizerId=creator;
+        MeetingParticipant first=new MeetingParticipant(); first.id=UUID.randomUUID(); first.meetingId=meeting.id; first.userId=actor; first.identity="user-"+actor;
+        when(participants.findByMeetingId(meeting.id)).thenReturn(List.of(first));
+        when(projects.rolesForUserInProject(project,actor)).thenReturn(Set.of("PROJECT_MANAGER"));
+        assertEquals("MEETING_OWNER_REQUIRED",assertThrows(MeetingException.class,()->service.end(project,meeting.id,actor)).code());
+        // Moderation stays with managers: muting by this manager is still accepted.
+        when(participants.findById(first.id)).thenReturn(Optional.of(first));
+        assertDoesNotThrow(()->service.mute(project,meeting.id,actor,first.id));
     }
     @Test void globalRoleNeverBypassesMembership() {
         when(projects.isMember(project,actor)).thenReturn(false);
@@ -111,8 +142,7 @@ class MeetingServiceTest {
         lifecycle.tick(meeting.id); assertEquals(Meeting.Status.OPEN,meeting.status);
     }
     @Test void endingMarksCleanupBeforeProviderAndDeletesTransientChat() {
-        when(projects.rolesForUserInProject(project,actor)).thenReturn(Set.of("PROJECT_MANAGER"));
-        service.end(project,meeting.id,actor);
+        service.end(project,meeting.id,actor); // the creator (organizerId == actor), not a manager
         assertEquals(Meeting.Status.ENDED,meeting.status); assertTrue(meeting.cleanupPending);
         verify(chats).deleteByMeetingId(meeting.id); verify(media,never()).deleteRoom(any());
         doThrow(new IllegalStateException()).when(media).deleteRoom(any()); lifecycle.tick(meeting.id);

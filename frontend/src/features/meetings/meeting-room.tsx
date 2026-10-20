@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Track, type Participant } from "livekit-client";
@@ -30,14 +30,14 @@ export function ProjectMeetingRoom({ slug, id }: { slug: string; id: string }) {
   const context = useMeetingProject(slug), t = useTranslations("meetings");
   if (context.isError) return <MeetingError error={context.error} />;
   if (!context.project || !context.user) return <p role="status">{t("loading")}</p>;
-  return <ProjectRoomGate key={`${context.user.id}:${context.project.id}:${id}`} slug={slug} id={id} projectId={context.project.id} isManager={context.isManager} />;
+  return <ProjectRoomGate key={`${context.user.id}:${context.project.id}:${id}`} slug={slug} id={id} projectId={context.project.id} userId={context.user.id} isManager={context.isManager} />;
 }
 
 /**
  * Shows this meeting's call from the workspace-level session, which keeps running when this page is left.
  * A different call that is still live blocks joining here (one call at a time) instead of being hung up.
  */
-function ProjectRoomGate({ slug, id, projectId, isManager }: { slug: string; id: string; projectId: string; isManager: boolean }) {
+function ProjectRoomGate({ slug, id, projectId, userId, isManager }: { slug: string; id: string; projectId: string; userId: string; isManager: boolean }) {
   const t = useTranslations("meetings"), session = useOptionalMeetingSession();
   const store = session?.store, active = session?.target, activeLive = session?.live;
   const blocked = !!active && active.id !== id && !!activeLive && isInCallPhase(activeLive.phase);
@@ -47,7 +47,7 @@ function ProjectRoomGate({ slug, id, projectId, isManager }: { slug: string; id:
     const result = store.attach({ id, projectId, slug, roomHref: `${returnHref}/room` });
     return () => { if (result === "ok") store.detach(); };
   }, [store, blocked, id, projectId, slug, returnHref]);
-  if (!session) return <MeetingRoom id={id} projectId={projectId} isManager={isManager} returnHref={returnHref} />;
+  if (!session) return <MeetingRoom id={id} projectId={projectId} userId={userId} isManager={isManager} returnHref={returnHref} />;
   if (blocked && active && activeLive) return <section role="status" className="workspace-panel max-w-2xl space-y-4 p-6">
     <h1 className="text-lg font-semibold">{t("otherMeetingTitle")}</h1>
     <p className="text-sm leading-6 text-muted-foreground">{t("otherMeetingBody", { title: activeLive.meeting?.title ?? t("group") })}</p>
@@ -58,7 +58,7 @@ function ProjectRoomGate({ slug, id, projectId, isManager }: { slug: string; id:
   </section>;
   const live = active?.id === id ? activeLive : null;
   if (!live) return <p role="status">{t("loading")}</p>;
-  return <MeetingRoomView live={live} id={id} projectId={projectId} isManager={isManager} returnHref={returnHref} />;
+  return <MeetingRoomView live={live} id={id} projectId={projectId} userId={userId} isManager={isManager} returnHref={returnHref} />;
 }
 
 /**
@@ -74,15 +74,26 @@ function compactGrid(count: number): string {
 }
 
 /** A call owned by this page alone: guest rooms (outside the workspace) and the fallback without a session provider. */
-export function MeetingRoom({ id, projectId, isManager = false, returnHref }: { id: string; projectId?: string; isManager?: boolean; returnHref?: string }) {
+export function MeetingRoom({ id, projectId, userId, isManager = false, returnHref }: { id: string; projectId?: string; userId?: string; isManager?: boolean; returnHref?: string }) {
   const { live, audio } = useMeetingSessionRuntime(id, projectId);
-  return <><MeetingRoomView live={live} id={id} projectId={projectId} isManager={isManager} returnHref={returnHref} />{audio}</>;
+  return <><MeetingRoomView live={live} id={id} projectId={projectId} userId={userId} isManager={isManager} returnHref={returnHref} />{audio}</>;
 }
 
-function MeetingRoomView({ live, id, projectId, isManager = false, returnHref }: { live: SessionLive; id: string; projectId?: string; isManager?: boolean; returnHref?: string }) {
+function MeetingRoomView({ live, id, projectId, userId, isManager = false, returnHref }: { live: SessionLive; id: string; projectId?: string; userId?: string; isManager?: boolean; returnHref?: string }) {
   const t = useTranslations("meetings");
   const [panel, setPanel] = useState<RoomPanel | null>(null);
-  const { content, mentions } = live.draft, setContent = live.setDraftContent, setMentions = live.setDraftMentions;
+  // The text box is driven by local state so typing never waits on the call session (a value that arrives a render late
+  // would overwrite keystrokes); every change is written through to the session, which keeps it while this page is away.
+  const [content, setLocalContent] = useState(live.draft.content), [mentions, setLocalMentions] = useState(live.draft.mentions);
+  const contentNow = useRef(content), mentionsNow = useRef(mentions);
+  const setContent: Dispatch<SetStateAction<string>> = value => {
+    const next = typeof value === "function" ? value(contentNow.current) : value;
+    contentNow.current = next; setLocalContent(next); live.setDraftContent(next);
+  };
+  const setMentions: Dispatch<SetStateAction<string[]>> = value => {
+    const next = typeof value === "function" ? value(mentionsNow.current) : value;
+    mentionsNow.current = next; setLocalMentions(next); live.setDraftMentions(next);
+  };
   const [sending, setSending] = useState(false), mediaBusy = live.mediaBusy;
   const [screenBusy, setScreenBusy] = useState(false), screenLock = useRef(false);
   const [endOpen, setEndOpen] = useState(false);
@@ -100,7 +111,9 @@ function MeetingRoomView({ live, id, projectId, isManager = false, returnHref }:
   const monitor = useSpeakerMonitor(room);
   const viewport = useVisualViewport(inCall);
   const lookup = new Map(live.participants.map(p => [p.identity, p]));
+  // Moderation (mute, remove) stays with project managers; ending the meeting for everyone is only for its creator, whatever their role.
   const managerProjectId = isManager ? projectId : undefined;
+  const endProjectId = userId && live.meeting?.organizerId === userId ? projectId : undefined;
   const nameOf = (p: Participant) => lookup.get(p.identity)?.displayName ?? p.name ?? p.identity;
 
   // Unread badge: whatever existed when the first chat load finished (and everything while the chat is open) counts as read.
@@ -203,11 +216,11 @@ function MeetingRoomView({ live, id, projectId, isManager = false, returnHref }:
       </div>
       <RoomControls active={active} mediaBusy={mediaBusy} mic={Boolean(room?.localParticipant.isMicrophoneEnabled)} camera={Boolean(room?.localParticipant.isCameraEnabled)}
         sharing={sharingSelf} screenBusy={screenBusy} screenSupported={canShareScreen()} panel={panel} unread={unread} keyboard={viewport.keyboard}
-        canEndForAll={Boolean(managerProjectId)}
+        canEndForAll={Boolean(endProjectId)}
         onMic={() => void media("mic")} onCamera={() => void media("camera")} onScreen={() => void toggleScreen()} onPanel={next => void togglePanel(next)}
         onEndForAll={() => setEndOpen(true)} onLeave={async () => { stopPreview(); live.leave(); }} />
-      {managerProjectId && <ConfirmDialog open={endOpen} onOpenChange={setEndOpen} title={t("endForAll")} description={t("endConfirm")} confirmLabel={t("confirm")} cancelLabel={t("cancel")} destructive
-        onConfirm={async () => { await meetingsApi.action(managerProjectId, id, "end"); live.leave(); }} />}
+      {endProjectId && <ConfirmDialog open={endOpen} onOpenChange={setEndOpen} title={t("endForAll")} description={t("endConfirm")} confirmLabel={t("confirm")} cancelLabel={t("cancel")} destructive
+        onConfirm={async () => { await meetingsApi.action(endProjectId, id, "end"); live.leave(); }} />}
     </>}
   </div>;
 }
