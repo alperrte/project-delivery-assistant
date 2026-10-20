@@ -216,6 +216,8 @@ test("leaving from the mini bar asks first; ending for all and signing out clean
     await room(page).getByRole("button", { name: tr.micOn, exact: true }).click();
     await expect(room(page).getByRole("button", { name: tr.micOff, exact: true })).toBeVisible();
     await goProjects(page); await expect(mini(page)).toBeVisible();
+    // The navbar auto-hides while idle; a real top-edge pointer move reveals it (joining the call takes longer than its 700 ms window).
+    await page.mouse.move(700, 8);
     await page.locator("header").getByRole("button", { name: /Hesap/ }).click();
     await page.getByRole("menuitem", { name: "Çıkış yap" }).click();
     await expect(page).toHaveURL(/\/tr\/giris/);
