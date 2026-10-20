@@ -38,6 +38,8 @@ public class MeetingService {
     }
     boolean manager(Meeting m,UUID actor) { return projects.rolesForUserInProject(m.projectId,actor).contains("PROJECT_MANAGER"); }
     void moderate(Meeting m,UUID actor) { member(m.projectId,actor); if(!manager(m,actor)) throw error(403,"MEETING_MANAGER_REQUIRED"); }
+    /** Ending a meeting for everyone belongs to the user recorded as its organizer at creation, never to a role: a project manager who did not create it is refused. Access (active membership) is still required, so an owner who left the project cannot end it either. */
+    void owner(Meeting m,UUID actor) { member(m.projectId,actor); if(!actor.equals(m.organizerId)) throw error(403,"MEETING_OWNER_REQUIRED"); }
     void edit(Meeting m,UUID actor) { if(!manager(m,actor)&&!m.organizerId.equals(actor)) throw error(403,"MEETING_FORBIDDEN"); }
     Meeting load(UUID project,UUID id,UUID actor) {
         member(project,actor); projects.lockMembershipContext(project); member(project,actor); Meeting m=locked(id); if(!m.projectId.equals(project)) throw error(404,"MEETING_NOT_FOUND"); return m;
@@ -74,7 +76,7 @@ public class MeetingService {
         Meeting m=load(project,id,actor); edit(m,actor); if(m.status==Meeting.Status.OPEN) return view(m); scheduled(m); open(m,actor); return view(m);
     }
     public View end(UUID project,UUID id,UUID actor) {
-        Meeting m=load(project,id,actor); moderate(m,actor); if(m.status==Meeting.Status.ENDED) return view(m);
+        Meeting m=load(project,id,actor); owner(m,actor); if(m.status==Meeting.Status.ENDED) return view(m);
         requireOpen(m); finish(m,actor); return view(m);
     }
     public void open(Meeting m,UUID actor) {

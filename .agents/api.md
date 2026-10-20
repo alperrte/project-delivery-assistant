@@ -6,7 +6,7 @@ Public fakat CSRF korumalı POST `/meetings/guest/preview`, scoped cookie isteye
 
 ## Toplantı backend — 2026-10-18
 
-Yeni proje kapsamlı kök `/api/v1/projects/{projectId}/meetings` CRUD, calendar, start/cancel/end, join/leave, participant mute/kick, invite ve chat uçlarını sağlar. Ayrı `/api/v1/meetings/guest/**` yolları yalnız meeting-scoped HttpOnly cookie ile çalışır; PDA principal'ı vermez. Public `POST /api/v1/meetings/media/webhook` raw-body imza/hash doğrular ve tek yeni CSRF istisnasıdır. Tam gerçek route/DTO/izin/hata/kota/reconnect sözleşmesi: `docs/meeting-backend-handoff.md`. Swagger yalnız mevcut geliştirme/test docs ayarı açıkken kullanılır. Frontend teslimi ayrıdır.
+Yeni proje kapsamlı kök `/api/v1/projects/{projectId}/meetings` CRUD, calendar, start/cancel/end, join/leave, participant mute/kick, invite ve chat uçlarını sağlar. Ayrı `/api/v1/meetings/guest/**` yolları yalnız meeting-scoped HttpOnly cookie ile çalışır; PDA principal'ı vermez. Public `POST /api/v1/meetings/media/webhook` raw-body imza/hash doğrular ve tek yeni CSRF istisnasıdır. Tam gerçek route/DTO/izin/hata/kota/reconnect sözleşmesi: `docs/meeting-backend-handoff.md`. Swagger yalnız mevcut geliştirme/test docs ayarı açıkken kullanılır. Frontend teslimi ayrıdır. `POST .../meetings/{meetingId}/end` (herkes için bitir) yalnız toplantıyı oluşturan kullanıcıya (`organizerId`, sunucuda kayıtlı) açıktır; Project Manager rolü tek başına yetki vermez, sahip olmayanlara ve misafirlere 403 `MEETING_OWNER_REQUIRED` döner, sahibin de aktif proje üyeliği gerekir. Katılımcı susturma/çıkarma Project Manager'da kalır; LiveKit token'ları `roomAdmin` içermez, oda yalnız bu backend akışıyla kapanır.
 
 ## Çoklu proje türü — 2026-10-12
 

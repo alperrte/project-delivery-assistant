@@ -220,6 +220,38 @@ class MeetingCoreIntegrationTest {
         assertEquals(0,db.queryForObject("SELECT count(*) FROM meeting_chat_messages WHERE meeting_id=?",Integer.class,id));
         assertEquals(0,db.queryForObject("SELECT count(*) FROM meeting_chat_mentions WHERE message_id=?",Integer.class,message.id()));
     }
+    @Test void endingForEveryoneBelongsToTheCreatorNotToAnyProjectManager() {
+        UUID creator=user("USER"), otherManager=user("USER"), plain=user("USER");
+        addMember(creator,"TESTER"); addMember(otherManager,"PROJECT_MANAGER"); addMember(plain,"TESTER");
+        // Created by an ordinary member; `actor` is a project manager of the same project.
+        UUID id=service.create(project,creator,new Command("Owned meeting","",Instant.now().plusSeconds(60),Instant.now().plusSeconds(3660),"Europe/Istanbul",List.of(),Set.of())).id();
+        service.start(project,id,creator);
+        UUID target=participant(id);
+        for(UUID refused:List.of(actor,otherManager,plain)) {
+            var failure=assertThrows(MeetingException.class,()->moderation.end(project,id,refused));
+            assertEquals(403,failure.status()); assertEquals("MEETING_OWNER_REQUIRED",failure.code());
+        }
+        assertEquals(Meeting.Status.OPEN,meetings.findById(id).orElseThrow().status);
+        verify(media,never()).deleteRoom(anyString());
+        // Other moderation is unchanged: a manager still mutes; a plain member still cannot.
+        service.mute(project,id,actor,target); verify(media).muteParticipant("pda-"+id,"user-"+actor);
+        assertEquals("MEETING_MANAGER_REQUIRED",assertThrows(MeetingException.class,()->service.mute(project,id,creator,target)).code());
+        // The creator's own membership is still required.
+        db.update("DELETE FROM project_membership_roles WHERE membership_id IN (SELECT id FROM project_memberships WHERE user_id=?)",creator);
+        db.update("DELETE FROM project_memberships WHERE user_id=?",creator);
+        assertEquals(403,assertThrows(MeetingException.class,()->moderation.end(project,id,creator)).status());
+        assertEquals(Meeting.Status.OPEN,meetings.findById(id).orElseThrow().status);
+        addMember(creator,"TESTER");
+        // The creator ends it, without a manager role; afterwards nobody can join again.
+        assertEquals(Meeting.Status.ENDED,moderation.end(project,id,creator).status());
+        assertEquals(Meeting.Status.ENDED,meetings.findById(id).orElseThrow().status);
+        assertEquals(409,assertThrows(MeetingException.class,()->service.join(project,id,actor)).status());
+        assertEquals(409,assertThrows(MeetingException.class,()->service.join(project,id,creator)).status());
+    }
+    private void addMember(UUID user,String role) {
+        UUID membership=UUID.randomUUID(); db.update("INSERT INTO project_memberships(id,project_id,user_id,joined_at) VALUES (?,?,?,now())",membership,project,user);
+        db.update("INSERT INTO project_membership_roles(membership_id,role) VALUES (?,?)",membership,role);
+    }
     private UUID scheduled() { return service.create(project,actor,new Command("Meeting test","",Instant.now().plusSeconds(60),Instant.now().plusSeconds(3660),"Europe/Istanbul",List.of("Agenda"),Set.of())).id(); }
     private UUID participant(UUID id) { UUID participant=UUID.randomUUID(); db.update("INSERT INTO meeting_participants(id,meeting_id,user_id,identity,display_name,revoked,connected) VALUES (?,?,?,?, 'Member',false,true)",participant,id,actor,"user-"+actor); return participant; }
     private UUID user(String role) { UUID id=UUID.randomUUID(); db.update("INSERT INTO users(id,email,nickname,account_status,email_verification_status,global_role,created_at,updated_at) VALUES (?,?,?,'ACTIVE','VERIFIED',?,now(),now())",id,id+"@example.test",id.toString().substring(0,20),role); return id; }
