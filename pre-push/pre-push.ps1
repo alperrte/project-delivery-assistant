@@ -151,6 +151,18 @@ Get-Content ".env" | ForEach-Object {
     }
 }
 
+# The meeting E2E specs (meetings, meeting-room-ux, meeting-session) start real meetings, which needs the LiveKit SFU.
+# Without it the backend cannot create a room and "start" fails (it surfaced as a bare 403). The SFU only runs from the
+# optional meeting overlay + profile, so the QA stack adds it whenever the media keys are configured in .env.
+$MeetingMediaActive = $false
+if ($env:LIVEKIT_API_KEY -and $env:LIVEKIT_API_SECRET -and (Test-Path (Join-Path $Root "docker-compose.meeting.yml"))) {
+    $QaComposeArgs = @("--profile", "meeting") + $QaComposeArgs + @("-f", (Join-Path $Root "docker-compose.meeting.yml"))
+    $MeetingMediaActive = $true
+}
+else {
+    Write-Warning "LIVEKIT_API_KEY/SECRET .env icinde yok: meeting E2E testleri LiveKit olmadan basarisiz olur."
+}
+
 # ------------------------------------------------------------
 # Git / secret safety
 # ------------------------------------------------------------
@@ -282,6 +294,10 @@ $BackendPort = if ($env:BACKEND_PORT) { $env:BACKEND_PORT } else { "8080" }
 Write-Host ""
 Write-Host "E2E backend health bekleniyor..." -ForegroundColor Cyan
 Wait-Http -Url "http://localhost:$BackendPort/actuator/health" -TimeoutSeconds 120
+if ($MeetingMediaActive) {
+    Write-Host "LiveKit bekleniyor..." -ForegroundColor Cyan
+    Wait-Http -Url "http://localhost:7880/" -TimeoutSeconds 60
+}
 
 # ------------------------------------------------------------
 # Frontend
