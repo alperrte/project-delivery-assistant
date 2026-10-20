@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { Camera, CameraOff, Check, Loader2, Mic, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { DeviceSelect, deviceChoices } from "./device-select";
 import { SpeechGate, rmsToDb } from "./speech-gate";
 
 /**
@@ -43,9 +44,20 @@ export function PreJoinCheck({ onJoin, onPrefer }: { onJoin: () => void; onPrefe
   const cameraRun = useRef(0), micRun = useRef(0);
   const meter = useRef<{ context: AudioContext; frame: number; hint: ReturnType<typeof setTimeout> } | undefined>(undefined);
   const alive = useRef(true);
+  // The latest choice and callback, readable from the device-change listener without re-subscribing.
+  const chosen = useRef({ camera: "", mic: "" }), onPreferRef = useRef(onPrefer);
+  useEffect(() => { onPreferRef.current = onPrefer; });
 
   const refreshDevices = useCallback(async () => {
-    try { const list = await navigator.mediaDevices.enumerateDevices(); if (alive.current) setDevices(list.filter(d => d.kind === "audioinput" || d.kind === "videoinput")); } catch { /* the lists stay as they were */ }
+    try {
+      const list = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === "audioinput" || d.kind === "videoinput");
+      if (!alive.current) return;
+      setDevices(list);
+      // A chosen device that was unplugged falls back to the default, on screen and for joining.
+      const gone = (kind: Kind, id: string) => id && !deviceChoices(list, kind).some(device => device.deviceId === id);
+      if (gone("videoinput", chosen.current.camera)) { chosen.current.camera = ""; setCameraId(""); onPreferRef.current("videoinput", undefined); }
+      if (gone("audioinput", chosen.current.mic)) { chosen.current.mic = ""; setMicId(""); onPreferRef.current("audioinput", undefined); }
+    } catch { /* the lists stay as they were */ }
   }, []);
 
   const endCamera = useCallback((next: CheckState) => {
@@ -74,7 +86,7 @@ export function PreJoinCheck({ onJoin, onPrefer }: { onJoin: () => void; onPrefe
       const track = stream.getVideoTracks()[0];
       track?.addEventListener("ended", () => { if (cameraStream.current === stream) endCamera({ status: "error", error: "testLost" }); });
       if (video.current) { video.current.srcObject = stream; void video.current.play().catch(() => {}); }
-      setCamera({ status: "live" }); setCameraId(track?.getSettings().deviceId ?? deviceId);
+      setCamera({ status: "live" });
       void refreshDevices();
     } catch (failure) {
       if (run === cameraRun.current && alive.current) setCamera({ status: "error", error: checkErrorKey(failure) });
@@ -112,7 +124,7 @@ export function PreJoinCheck({ onJoin, onPrefer }: { onJoin: () => void; onPrefe
       };
       const hint = setTimeout(() => { if (!voiced && micStream.current === stream) setQuiet(true); }, SILENCE_HINT_MS);
       meter.current = { context, frame: requestAnimationFrame(tick), hint };
-      setMic({ status: "live" }); setMicId(track?.getSettings().deviceId ?? deviceId);
+      setMic({ status: "live" });
       void refreshDevices();
     } catch (failure) {
       if (run === micRun.current && alive.current) setMic({ status: "error", error: checkErrorKey(failure) });
@@ -133,17 +145,12 @@ export function PreJoinCheck({ onJoin, onPrefer }: { onJoin: () => void; onPrefe
 
   function chooseDevice(kind: Kind, deviceId: string) {
     onPrefer(kind, deviceId || undefined);
-    if (kind === "videoinput") { setCameraId(deviceId); if (camera.status === "live") void startCamera(deviceId); }
-    else { setMicId(deviceId); if (mic.status === "live") void startMic(deviceId); }
+    if (kind === "videoinput") { chosen.current.camera = deviceId; setCameraId(deviceId); if (camera.status === "live") void startCamera(deviceId); }
+    else { chosen.current.mic = deviceId; setMicId(deviceId); if (mic.status === "live") void startMic(deviceId); }
   }
 
-  const cameras = devices.filter(d => d.kind === "videoinput" && d.deviceId), mics = devices.filter(d => d.kind === "audioinput" && d.deviceId);
   const message = (state: CheckState, kind: Kind) => state.error ? t(state.error, { device: t(kind) }) : undefined;
-  const select = (kind: Kind, list: MediaDeviceInfo[], value: string) => <label className="block space-y-1 text-xs text-muted-foreground">{t(kind)}
-    <select className="min-h-11 w-full rounded-md border bg-background px-3 text-sm text-foreground compact:text-base" value={value} onChange={event => chooseDevice(kind, event.target.value)}>
-      <option value="">{t("defaultDevice")}</option>
-      {list.map((d, index) => <option key={d.deviceId} value={d.deviceId}>{d.label || `${t(kind)} ${index + 1}`}</option>)}
-    </select></label>;
+  const select = (kind: Kind, value: string) => <DeviceSelect kind={kind} devices={devices} value={value} testId={`${kind}-select`} onChange={deviceId => chooseDevice(kind, deviceId)} />;
 
   return <div className="grid gap-6 md:grid-cols-2">
     <div className="space-y-4">
@@ -157,7 +164,7 @@ export function PreJoinCheck({ onJoin, onPrefer }: { onJoin: () => void; onPrefe
           </div>}
           {camera.status === "live" && <span role="status" className="absolute left-2 top-2 inline-flex items-center gap-1.5 rounded-full bg-card/90 px-2.5 py-1 text-xs"><span aria-hidden="true" className="size-2 rounded-full bg-live" />{t("camActive")}</span>}
         </div>
-        {select("videoinput", cameras, cameraId)}
+        {select("videoinput", cameraId)}
         <Button variant={camera.status === "live" ? "secondary" : "outline"} className="min-h-11 w-full sm:w-auto" aria-busy={camera.status === "starting" || undefined} disabled={camera.status === "starting"}
           onClick={() => camera.status === "live" ? endCamera(IDLE) : void startCamera()}>
           {camera.status === "starting" && <Loader2 size={16} className="animate-spin" aria-hidden="true" />}{t(camera.status === "live" ? "stopTest" : "previewCamera")}
@@ -181,7 +188,7 @@ export function PreJoinCheck({ onJoin, onPrefer }: { onJoin: () => void; onPrefe
               : <p className="mt-1 text-muted-foreground">{t(quiet ? "micSilent" : "micListening")}</p>}
           </>}
         </div>
-        {select("audioinput", mics, micId)}
+        {select("audioinput", micId)}
         <Button variant={mic.status === "live" ? "secondary" : "outline"} className="min-h-11 w-full sm:w-auto" aria-busy={mic.status === "starting" || undefined} disabled={mic.status === "starting"}
           onClick={() => mic.status === "live" ? endMic(IDLE) : void startMic()}>
           {mic.status === "starting" && <Loader2 size={16} className="animate-spin" aria-hidden="true" />}{t(mic.status === "live" ? "stopTest" : "testMicrophone")}
