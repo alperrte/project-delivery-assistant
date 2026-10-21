@@ -22,6 +22,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { TimePicker } from "@/components/ui/time-picker";
 import { useCurrentMember } from "@/features/projects/hooks/use-current-member";
 import { useSelectedProject } from "@/features/projects/hooks/use-selected-project";
+import { STILL_QUERY } from "@/lib/api/live-sync";
 import { errorKey } from "@/lib/api/error-message";
 import { cn } from "@/lib/utils";
 import { remindersApi } from "../api";
@@ -63,6 +64,7 @@ export function ReminderFormPage({ reminderId, initialDate }: { reminderId?: str
     queryFn: () => remindersApi.detail(projectId, reminderId!),
     enabled: editing && !!projectId && !!member.data,
     retry: false,
+    ...STILL_QUERY,
   });
   const original = existing.data;
 

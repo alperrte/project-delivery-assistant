@@ -29,6 +29,7 @@ import { errorKey } from "@/lib/api/error-message";
 import { tasksApi } from "../api";
 import { fromDeadlineIso, quickDeadline, splitMinutes, type QuickDeadline } from "../deadline";
 import { invalidateTaskViews, useTask } from "../hooks";
+import { hasBlockingError } from "@/lib/api/live-sync";
 import {
   CHECKLIST_MAX,
   CHECKLIST_TEXT_MAX,
@@ -647,8 +648,8 @@ function TaskFormView({ taskId, ...context }: ProjectGateContext & { taskId?: st
   const parentParam = editing ? "" : (searchParams.get("parent") ?? "");
   const sprintParam = editing ? "" : (searchParams.get("sprint") ?? "");
 
-  const task = useTask(context.projectId, taskId ?? "");
-  const preParent = useTask(context.projectId, parentParam);
+  const task = useTask(context.projectId, taskId ?? "", true);
+  const preParent = useTask(context.projectId, parentParam, true);
 
   if (!context.isManager) {
     return (
@@ -663,7 +664,7 @@ function TaskFormView({ taskId, ...context }: ProjectGateContext & { taskId?: st
   if ((editing && task.isPending) || (!!parentParam && preParent.isPending)) {
     return <p className="text-sm text-muted-foreground" aria-busy="true">{t("loading")}</p>;
   }
-  if (editing && (task.isError || !task.data)) {
+  if (editing && (hasBlockingError(task) || !task.data)) {
     return (
       <div className="space-y-4">
         <p role="alert" className="text-sm text-destructive">{te("notFound")}</p>

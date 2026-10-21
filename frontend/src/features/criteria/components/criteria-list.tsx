@@ -18,6 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { errorKey } from "@/lib/api/error-message";
 import { cn } from "@/lib/utils";
 import { criteriaApi } from "../api";
+import { hasBlockingError } from "@/lib/api/live-sync";
 
 const STATUS_STYLE = {
   completed: "border-success/25 bg-success/10 text-success",
@@ -105,7 +106,7 @@ export function CriteriaList({ slug, projectId, isManager }: { slug: string; pro
   }
 
   if (isLoading) return <Skeleton className="h-40 w-full" />;
-  if (isError) return (
+  if (hasBlockingError({ isError, data: criteria, error })) return (
     <div className="flex flex-wrap items-center gap-3">
       <p role="alert" className="text-sm text-destructive">{te(errorKey(error))}</p>
       <Button variant="outline" size="sm" onClick={() => void refetch()}>{tw("retry")}</Button>

@@ -28,6 +28,7 @@ import { TaskFilterBar } from "./task-filter-bar";
 import { TaskTable } from "./task-table";
 import { TaskViewToggle } from "./task-view-toggle";
 import { StatusBadge } from "./task-badges";
+import { hasBlockingError } from "@/lib/api/live-sync";
 
 export function TaskListSkeleton({ rows = 6 }: { rows?: number }) {
   return (
@@ -145,7 +146,7 @@ function TasksView({ slug, project, projectId, isManager, userId }: ProjectGateC
       <PageHeader title={t("title")} description={t("description")} action={createLink || undefined} />
       <TaskFilterBar advanced={allowsAdvanced(project.taskManagementMode)} projectId={projectId} filters={filters} onChange={update} onReset={reset} trailing={<TaskViewToggle view={view} onChange={setView} />} />
 
-      {query.isError && (
+      {hasBlockingError(query) && (
         <div role="alert" className="space-y-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4">
           <p className="text-sm text-destructive">{te(errorKey(query.error))}</p>
           <Button variant="outline" size="sm" onClick={() => void query.refetch()}>

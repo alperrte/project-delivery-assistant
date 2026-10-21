@@ -21,6 +21,7 @@ import { ReminderList } from "@/features/reminders/components/reminder-list";
 import { dateFromKey, dateKey, todayKey } from "@/features/reminders/dates";
 import { useMonthReminders } from "@/features/reminders/hooks/use-month-reminders";
 import { cn } from "@/lib/utils";
+import { hasBlockingError } from "@/lib/api/live-sync";
 
 function MiniCalendar() {
   const t = useTranslations("workspace");
@@ -69,7 +70,7 @@ export function Dashboard() {
   const [view, setView] = useState<"overview" | "updates">("overview");
   const query = useQuery({ queryKey: ["projects", "dashboard"], queryFn: () => projectsApi.list(0, 6) });
   const projects = query.data?.content ?? [];
-  const homes = useQueries({ queries: projects.map(project => ({ queryKey: ["project-home", project.id], queryFn: () => projectsApi.home(project.id) })) });
+  const homes = useQueries({ queries: projects.map(project => ({ queryKey: ["projects", project.id, "home"], queryFn: () => projectsApi.home(project.id) })) });
   const updates = [...projects].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   const create = <Link href="/projects/new" className={buttonVariants()}><Plus size={16} aria-hidden="true" />{t("create")}</Link>;
   const updateList = <section className="min-w-0"><h2 className="mb-4 text-[15px] font-semibold">{t("updates")}</h2><div className="space-y-0">{updates.map(project => <Link key={project.id} href={`/projects/${project.slug}`} className="flex items-start gap-3 border-b py-3 last:border-0 hover:bg-muted/50"><span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full border bg-surface-2"><Clock size={14} aria-hidden="true" /></span><span className="min-w-0 flex-1"><span className="block truncate text-xs font-medium">{project.name}</span><span className="text-[11px] text-muted-foreground">{t("projectUpdated")}</span></span><time dateTime={project.updatedAt} className="shrink-0 text-[10px] text-muted-foreground">{new Date(project.updatedAt).toLocaleDateString(locale, { day: "numeric", month: "short" })}</time></Link>)}{!query.isLoading && !query.isError && !updates.length && <p className="text-xs text-muted-foreground">{t("noUpdates")}</p>}</div></section>;
@@ -90,7 +91,7 @@ export function Dashboard() {
           <section>
             <div className="mb-3 flex items-center justify-between gap-2"><h2 className="text-[15px] font-semibold">{t("yourProjects")}</h2><Link href="/projects" className="inline-flex min-h-6 items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground">{t("allProjects")}<ArrowRight size={13} aria-hidden="true" /></Link></div>
             {query.isLoading && <div aria-label={t("loading")} className="space-y-2"><Skeleton className="h-12" /><Skeleton className="h-12" /><Skeleton className="h-12" /></div>}
-            {query.isError && <div role="alert" className="rounded-lg border p-5"><p className="mb-3 text-sm">{t("loadError")}</p><Button variant="outline" onClick={() => query.refetch()}>{t("retry")}</Button></div>}
+            {hasBlockingError(query) && <div role="alert" className="rounded-lg border p-5"><p className="mb-3 text-sm">{t("loadError")}</p><Button variant="outline" onClick={() => query.refetch()}>{t("retry")}</Button></div>}
             {query.data && !projects.length && <EmptyState title={t("emptyTitle")} description={t("emptyDescription")} />}
             {projects.length > 0 && <div className="overflow-x-auto rounded-lg border"><table className="w-full text-left text-xs"><caption className="sr-only">{t("yourProjects")}</caption><thead className="border-b bg-surface-2 text-[10px] text-muted-foreground"><tr>{["name", "status", "criteria", "updated", "team"].map(key => <th scope="col" key={key} className="px-3 py-2.5 font-medium whitespace-nowrap">{t(key)}</th>)}</tr></thead><tbody className="divide-y">{projects.map((project, i) => {
               const home = homes[i]?.data;
@@ -100,7 +101,7 @@ export function Dashboard() {
           </section>
           <div className="grid gap-6 md:grid-cols-2"><MyTasksCard />{updateList}</div>
         </>}
-        {view === "updates" && <>{query.isLoading ? <Skeleton className="h-32" /> : query.isError ? <Button variant="outline" onClick={() => query.refetch()}>{t("retry")}</Button> : updateList}<p className="text-xs text-muted-foreground">{t("updatesScope")}</p></>}
+        {view === "updates" && <>{query.isLoading ? <Skeleton className="h-32" /> : hasBlockingError(query) ? <Button variant="outline" onClick={() => query.refetch()}>{t("retry")}</Button> : updateList}<p className="text-xs text-muted-foreground">{t("updatesScope")}</p></>}
       </div>
     </div>
     <aside aria-label={t("insights")} className="min-w-0 space-y-6 border-t bg-surface-2 p-5 xl:border-t-0 xl:border-l">

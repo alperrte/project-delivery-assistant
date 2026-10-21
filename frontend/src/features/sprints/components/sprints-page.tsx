@@ -20,6 +20,7 @@ import { useSprints, useSprintSummary } from "../hooks";
 import type { Sprint, SprintStatus } from "../types";
 import { SprintActions } from "./sprint-actions";
 import { SprintStatusBadge } from "./sprint-status-badge";
+import { hasBlockingError } from "@/lib/api/live-sync";
 
 const SECTIONS: SprintStatus[] = ["ACTIVE", "PLANNED", "COMPLETED"];
 
@@ -118,7 +119,7 @@ function SprintsView({ slug, projectId, project, isManager: manager }: ProjectGa
       {!allowsAdvanced(project.taskManagementMode) && <AdvancedReadOnlyNotice />}
       <PageHeader title={t("title")} description={t("description")} action={createButton || undefined} />
 
-      {sprints.isError && (
+      {hasBlockingError(sprints) && (
         <div role="alert" className="space-y-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4">
           <p className="text-sm text-destructive">{te(errorKey(sprints.error))}</p>
           <Button variant="outline" size="sm" onClick={() => void sprints.refetch()}>

@@ -19,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { useSession } from "@/features/auth/hooks/use-session";
+import { STILL_QUERY } from "@/lib/api/live-sync";
 import { PageFailure } from "@/features/errors/page-failure";
 import type { UserRef } from "@/features/projects/types";
 import { errorKey } from "@/lib/api/error-message";
@@ -79,6 +80,7 @@ export function TeamFormPage({ slug, teamId }: { slug: string; teamId?: string }
     queryKey: [...teamsKey(projectId), "all"],
     queryFn: () => squadsApi.listAll(projectId),
     enabled: !!projectId,
+    ...STILL_QUERY,
   });
   const team = teams.data?.find((item) => item.id === teamId);
 

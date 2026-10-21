@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useMyTaskCounts } from "../hooks";
+import { hasBlockingError } from "@/lib/api/live-sync";
 
 function Figure({ label, value, danger }: { label: string; value: number; danger?: boolean }) {
   return (
@@ -34,7 +35,7 @@ export function MyTasksCard() {
             <Skeleton className="h-10" />
           </div>
         )}
-        {counts.isError && (
+        {hasBlockingError(counts) && (
           <div role="alert" className="space-y-3">
             <p className="text-xs text-muted-foreground">{t("card.error")}</p>
             <Button variant="outline" size="sm" onClick={() => void counts.refetch()}>

@@ -26,6 +26,7 @@ import { BoardCard } from "./board-card";
 import { ProjectGate, type ProjectGateContext } from "./project-gate";
 import { StatusDot } from "./task-badges";
 import { StatusConfirmation } from "./status-confirmation";
+import { hasBlockingError } from "@/lib/api/live-sync";
 
 const ALL = "all";
 const BACKLOG = "backlog";
@@ -183,7 +184,7 @@ function BoardView({ slug, project, projectId, userId, isManager }: ProjectGateC
         {announcement}
       </p>
 
-      {tasks.isError && (
+      {hasBlockingError(tasks) && (
         <div role="alert" className="space-y-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4">
           <p className="text-sm text-destructive">{te(errorKey(tasks.error))}</p>
           <Button variant="outline" size="sm" onClick={() => void tasks.refetch()}>

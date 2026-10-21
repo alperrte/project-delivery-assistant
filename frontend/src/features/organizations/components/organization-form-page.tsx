@@ -28,6 +28,7 @@ import { LOGO_MAX_BYTES, COVER_MAX_BYTES } from "@/lib/media/image-validation";
 import { usePickedImage } from "@/lib/media/use-picked-image";
 import { organizationsApi, organizationImageSource } from "../api";
 import { organizationKeys, invalidateOrganizationQueries } from "../queries";
+import { STILL_QUERY } from "@/lib/api/live-sync";
 import { organizationFormSchema, type OrganizationFormValues } from "../schemas";
 import type { Organization } from "../types";
 import { OrganizationCard, type OrganizationCardData } from "./organization-card";
@@ -50,7 +51,7 @@ function useMediaDraft(savedSrc: string | null) {
 /** Load once before mounting the editor; query refetches cannot reset a user's unsaved values. */
 export function OrganizationFormPage({ organizationId }: { organizationId?: string }) {
  const t = useTranslations("organizations.form"); const { data: user } = useSession();
- const existing = useQuery({ queryKey: organizationKeys.detail(organizationId ?? ""), queryFn: () => organizationsApi.detail(organizationId!), enabled: !!organizationId });
+ const existing = useQuery({ queryKey: organizationKeys.detail(organizationId ?? ""), queryFn: () => organizationsApi.detail(organizationId!), enabled: !!organizationId, ...STILL_QUERY });
  if (organizationId && existing.isError) return <PageFailure error={existing.error} onRetry={() => { void existing.refetch(); }} />;
  if (organizationId && (!existing.data || !user)) return <Skeleton className="h-64 w-full" />;
  if (existing.data && (existing.data.status === "ARCHIVED" || user?.id !== existing.data.ownerUserId)) return <p role="alert">{t("notEditable")}</p>;

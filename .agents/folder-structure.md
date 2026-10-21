@@ -300,6 +300,7 @@ Public routes now include `(public)/about` and `(public)/license` beside cookies
 
 - `frontend/bundle-budgets.json`, `frontend/scripts/check-bundle-size.mjs` (`npm run check:bundle`), `frontend/scripts/analyze.mjs` (`npm run analyze`): rota başına JS bütçesi ve analiz.
 - `frontend/src/lib/api/query-retry.ts`: GET sorguları için retry/gecikme; `client.ts` zaman aşımını içerir.
+- `frontend/src/lib/api/live-sync.ts` (2026-10-21): canlı veri ailesi (`projects`/`tasks`/`organizations`) için 15 sn `refetchInterval`/odak yenileme politikası, `STILL_QUERY` ve `hasBlockingError`; `providers.tsx` varsayılan sorgu seçeneklerine bağlanır. `features/projects/hooks/use-selected-project.ts` seçili projeyi `localStorage` `pda:last-project:<userId>` içinde slug olarak tutar.
 - `frontend/src/i18n/client-messages.ts`: istemci sağlayıcısına verilmeyen, yalnız sunucuda okunan namespace listesi.
 - `frontend/src/features/analytics/web-vitals-debug.tsx`: yalnız geliştirmede Web Vitals konsol çıktısı.
 - `frontend/src/features/landing/demo/delivery-statuses.ts`: demo çalışma alanından ayrı, hafif sabit.

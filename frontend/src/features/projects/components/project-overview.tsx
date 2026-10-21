@@ -22,6 +22,7 @@ import type { Project, RepositorySummary } from "../types";
 import { TechLogo, toTechLabels } from "./tech-logo";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ProjectCriteriaActivity, ProjectCriteriaTrend } from "./project-criteria-insights";
+import { hasBlockingError } from "@/lib/api/live-sync";
 
 type OverviewSection = "criteria" | "teams" | "invitations" | "repository" | "settings";
 
@@ -108,7 +109,7 @@ export function ProjectOverview({ project, isManager, onNavigate }: {
   });
 
   if (isLoading) return <Skeleton className="h-96 w-full rounded-xl" />;
-  if (isError) return <p className="text-sm text-destructive">{te(errorKey(error))}</p>;
+  if (hasBlockingError({ isError, data: home, error })) return <p className="text-sm text-destructive">{te(errorKey(error))}</p>;
   if (!home) return null;
 
   const total = home.criteriaProgress.total;

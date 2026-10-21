@@ -14,6 +14,7 @@ import { errorKey } from "@/lib/api/error-message";
 import { organizationKeys } from "../queries";
 import { organizationsApi } from "../api";
 import { OrganizationCard } from "./organization-card";
+import { hasBlockingError } from "@/lib/api/live-sync";
 
 export function OrganizationList() {
   const t = useTranslations("organizations");
@@ -44,7 +45,7 @@ export function OrganizationList() {
         </EntityGrid>
       )}
 
-      {isError && <p className="text-sm text-destructive">{te(errorKey(error))}</p>}
+      {hasBlockingError({ isError, data, error }) && <p className="text-sm text-destructive">{te(errorKey(error))}</p>}
 
       {data && data.content.length === 0 && (
         <EmptyState title={t("emptyTitle")} description={t("emptyDescription")} />

@@ -17,9 +17,9 @@ const notFound = (page: Page) => page.locator('[data-error-code="404"]');
 
 /** The remembered-selection keys hold the project slug; none may keep naming a deleted project. */
 async function rememberedSlugs(page: Page): Promise<string[]> {
-  return page.evaluate(() => Object.keys(sessionStorage)
+  return page.evaluate(() => Object.keys(localStorage)
     .filter((key) => key.startsWith("pda:last-project:"))
-    .map((key) => sessionStorage.getItem(key) ?? ""));
+    .map((key) => localStorage.getItem(key) ?? ""));
 }
 
 async function projectId(page: Page, slug: string) {
