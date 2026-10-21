@@ -27,6 +27,7 @@ import { BurndownChart, type BurndownUnit } from "./burndown-chart";
 import { SprintActions } from "./sprint-actions";
 import { SprintStatusBadge } from "./sprint-status-badge";
 import { BreadcrumbLabel } from "@/components/layout/breadcrumb-labels";
+import { hasBlockingError } from "@/lib/api/live-sync";
 
 function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
@@ -161,7 +162,7 @@ function SprintTasks({ projectId, slug, sprintId, userId, isManager }: { project
       </h2>
       {tasks.isPending ? (
         <Skeleton className="h-32 w-full rounded-xl" aria-hidden="true" />
-      ) : tasks.isError ? (
+      ) : hasBlockingError(tasks) || !tasks.data ? (
         <p role="alert" className="text-sm text-destructive">
           {t("error")}
         </p>
@@ -188,7 +189,7 @@ function SprintDetailBody({ slug, project, projectId, isManager, userId, sprintI
   const sprints = useSprints(projectId);
 
   if (sprint.isPending) return <PageSkeleton />;
-  if (sprint.isError || !sprint.data) {
+  if (hasBlockingError(sprint) || !sprint.data) {
     return <PageFailure error={sprint.error ?? new ApiError(404)} onRetry={() => { void sprint.refetch(); }} />;
   }
 

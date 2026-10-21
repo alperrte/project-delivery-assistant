@@ -59,7 +59,7 @@ async function choose(page: Page, next: Project) {
   await expect(page.getByTestId("project-switcher-popup")).toBeHidden();
 }
 async function remembered(page: Page, actor: string) {
-  return page.evaluate(id => sessionStorage.getItem(`pda:last-project:${id}`), actor);
+  return page.evaluate(id => localStorage.getItem(`pda:last-project:${id}`), actor);
 }
 
 test("real switching preserves global URL, persists selection, redirects project pages and leaves no old filters", async ({ page }) => {

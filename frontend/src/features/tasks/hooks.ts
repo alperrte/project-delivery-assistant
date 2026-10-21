@@ -7,6 +7,7 @@ import { membersApi } from "@/features/projects/members-api";
 import { squadsApi } from "@/features/squads/api";
 import { teamsKey } from "@/features/squads/hooks";
 import { ApiError } from "@/lib/api/client";
+import { STILL_QUERY } from "@/lib/api/live-sync";
 import { errorKey } from "@/lib/api/error-message";
 import { allTaskPages, myTasksApi, tasksApi } from "./api";
 import type { MyTasksParams, TaskListParams, TimelineFilter } from "./types";
@@ -49,11 +50,13 @@ export function useAllTasks(projectId: string, params: TaskListParams, enabled =
   });
 }
 
-export function useTask(projectId: string, taskId: string) {
+/** `editing` freezes the task in place for the edit form; the detail page keeps following the server. */
+export function useTask(projectId: string, taskId: string, editing = false) {
   return useQuery({
     queryKey: taskKey(projectId, taskId),
     queryFn: () => tasksApi.detail(projectId, taskId),
     enabled: !!projectId && !!taskId,
+    ...(editing ? STILL_QUERY : {}),
   });
 }
 

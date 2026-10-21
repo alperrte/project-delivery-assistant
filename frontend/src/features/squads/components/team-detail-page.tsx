@@ -29,6 +29,7 @@ import { DeleteTeamButton } from "./delete-team-button";
 import { TeamMembersTable } from "./team-members-table";
 import { PageTitle } from "@/components/common/page-title";
 import { BreadcrumbLabel } from "@/components/layout/breadcrumb-labels";
+import { LIVE_REFRESH_MS } from "@/lib/api/live-sync";
 
 const PAGE_SIZE = 20;
 const SORTS = ["joined_desc", "joined_asc", "name"] as const;
@@ -71,7 +72,7 @@ export function TeamDetailPage({ slug, teamId }: { slug: string; teamId: string 
   const team = useQuery({
     queryKey: [...teamsKey(projectId), teamId],
     queryFn: () => squadsApi.detail(projectId, teamId),
-    refetchInterval: 30_000, refetchIntervalInBackground: false, refetchOnWindowFocus: "always",
+    refetchInterval: LIVE_REFRESH_MS, refetchIntervalInBackground: false, refetchOnWindowFocus: "always",
     enabled: ready,
   });
   const roster = useQuery({

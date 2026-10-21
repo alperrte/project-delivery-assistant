@@ -13,6 +13,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { errorKey } from "@/lib/api/error-message";
 import { PROJECT_PAGE_SIZE, projectsApi } from "../api";
 import { ProjectCard } from "./project-card";
+import { hasBlockingError } from "@/lib/api/live-sync";
 
 /** `?page=` is one based in the URL and zero based in the API; anything unusable falls back to the first page. */
 function pageFromParam(value: string | null): number {
@@ -56,7 +57,7 @@ export function ProjectList() {
         </EntityGrid>
       )}
 
-      {isError && (
+      {hasBlockingError({ isError, data, error }) && (
         <div className="flex flex-wrap items-center gap-3">
           <p role="alert" className="text-sm text-destructive">{te(errorKey(error))}</p>
           <Button variant="outline" size="sm" onClick={() => void refetch()}>{tw("retry")}</Button>

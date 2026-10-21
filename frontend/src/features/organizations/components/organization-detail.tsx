@@ -20,6 +20,7 @@ import { ProjectRow } from "@/features/projects/components/project-card";
 import { cn } from "@/lib/utils";
 import { organizationKeys, invalidateOrganizationQueries } from "../queries";
 import { organizationsApi, organizationImageSource } from "../api";
+import { hasBlockingError } from "@/lib/api/live-sync";
 
 /** One label/value pair of the organization's facts; an empty value reads as a dash so the grid never shifts. */
 function Fact({ label, children }: { label: string; children?: React.ReactNode }) {
@@ -59,7 +60,7 @@ export function OrganizationDetail({ organizationId }: { organizationId: string 
   }
 
   if (isLoading) return <Skeleton className="h-32 w-full" />;
-  if (isError) return <PageFailure error={error} onRetry={() => { void refetch(); }} />;
+  if (hasBlockingError({ isError, data: org, error })) return <PageFailure error={error} onRetry={() => { void refetch(); }} />;
   if (!org) return null;
 
   const isOwner = user?.id === org.ownerUserId;

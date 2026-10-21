@@ -21,6 +21,7 @@ import { TaskHeader } from "./task-header";
 import { StatusBadge, PriorityBadge } from "../task-badges";
 import { TaskModeBadge } from "../task-mode-picker";
 import { TaskProgressAction } from "../my-task-card";
+import { hasBlockingError } from "@/lib/api/live-sync";
 
 /** An archived task is read only for everybody, including the manager. */
 function permissionsFor(task: Task, userId: string, isManager: boolean): TaskPermissions {
@@ -47,7 +48,7 @@ export function TaskDetailBody({ slug, project, projectId, isManager, userId, ta
   const task = useTask(projectId, taskId);
 
   if (task.isPending) return <PageSkeleton />;
-  if (task.isError || !task.data) {
+  if (hasBlockingError(task) || !task.data) {
     return <PageFailure error={task.error ?? new ApiError(404)} onRetry={() => { void task.refetch(); }} />;
   }
 

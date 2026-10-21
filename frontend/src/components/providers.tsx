@@ -9,6 +9,7 @@ import { ServiceWorkerRegistration } from "@/components/service-worker-registrat
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeTransitionOverlay } from "@/components/layout/theme-transition";
+import { liveRefetchInterval, liveRefetchOnFocus } from "@/lib/api/live-sync";
 import { queryRetryDelay, shouldRetryQuery } from "@/lib/api/query-retry";
 import { applyMotionPreference, useMotionPreference, useReducedMotionPreference } from "@/lib/preferences/motion";
 import { ConsentProvider } from "@/features/consent/consent-provider";
@@ -58,7 +59,12 @@ export function Providers({ children, nonce }: { children: ReactNode; nonce?: st
       new QueryClient({
         defaultOptions: {
           // Reads retry twice on network errors / 502 / 503 / 504 with back-off; 4xx never (src/lib/api/query-retry.ts).
-          queries: { retry: shouldRetryQuery, retryDelay: queryRetryDelay, refetchOnWindowFocus: false, staleTime: 30_000 },
+          // Workspace data families also re-read every ~15 s while visible and when the tab is shown again (live-sync.ts);
+          // everything else keeps `refetchOnWindowFocus: false` and its own timers.
+          queries: {
+            retry: shouldRetryQuery, retryDelay: queryRetryDelay, staleTime: 30_000,
+            refetchOnWindowFocus: liveRefetchOnFocus, refetchInterval: liveRefetchInterval,
+          },
           // Without this a save sent while the browser is offline is paused, not failed: the button stays disabled with no
           // message and the request fires by itself when the connection returns. Failing right away shows the network error.
           // Mutations are never retried: a repeated POST could run twice.

@@ -21,6 +21,7 @@ import { PageFailure } from "@/features/errors/page-failure";
 import { ProjectGate, type ProjectGateContext } from "@/features/tasks/components/project-gate";
 import { errorKey } from "@/lib/api/error-message";
 import { criteriaApi } from "../api";
+import { STILL_QUERY } from "@/lib/api/live-sync";
 import { CRITERION_DESCRIPTION_MAX, CRITERION_TITLE_MAX, criterionFormSchema, type CriterionFormValues } from "../schemas";
 import type { Criterion } from "../types";
 
@@ -166,6 +167,7 @@ function CriterionFormView({ slug, projectId, isManager, criterionId }: ProjectG
     queryKey: ["projects", projectId, "criteria"],
     queryFn: () => criteriaApi.list(projectId),
     enabled: editing && isManager,
+    ...STILL_QUERY,
   });
 
   // The server stays the authority (CRITERIA_MANAGE); this only avoids offering a form that would be refused.

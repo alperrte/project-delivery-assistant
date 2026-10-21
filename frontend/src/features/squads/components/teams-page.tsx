@@ -22,6 +22,7 @@ import { teamsKey } from "../hooks";
 import { TeamCard } from "./team-card";
 import { TeamChart } from "./team-chart";
 import { TeamTable } from "./team-table";
+import { LIVE_REFRESH_MS, hasBlockingError } from "@/lib/api/live-sync";
 
 type View = "grid" | "table" | "chart";
 /** Per-account choice. The pre-v1 global key is only read once, to migrate it to the first account that opens the page. */
@@ -126,7 +127,7 @@ export function TeamsPage({ project, isManager }: { project: Project; isManager:
   const teams = useQuery({
     queryKey: [...teamsKey(project.id), "all"],
     queryFn: () => squadsApi.listAll(project.id),
-    refetchInterval: 30_000, refetchIntervalInBackground: false, refetchOnWindowFocus: "always",
+    refetchInterval: LIVE_REFRESH_MS, refetchIntervalInBackground: false, refetchOnWindowFocus: "always",
   });
   const members = useQuery({
     queryKey: ["projects", project.id, "members", "count"],
@@ -207,7 +208,7 @@ export function TeamsPage({ project, isManager }: { project: Project; isManager:
           ))}
         </EntityGrid>
       )}
-      {teams.isError && <p role="alert" className="text-sm text-destructive">{te(errorKey(teams.error))}</p>}
+      {hasBlockingError(teams) && <p role="alert" className="text-sm text-destructive">{te(errorKey(teams.error))}</p>}
 
       {teams.data && all.length === 0 && (
         <EmptyState

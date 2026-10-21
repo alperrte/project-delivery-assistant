@@ -14,6 +14,7 @@ import { TASK_PAGE_SIZE } from "../api";
 import { useTaskList } from "../hooks";
 import { PoolCard } from "./pool-card";
 import { ProjectGate, type ProjectGateContext } from "./project-gate";
+import { hasBlockingError } from "@/lib/api/live-sync";
 
 function PoolGrid({ children }: { children: ReactNode }) {
   return <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{children}</ul>;
@@ -39,7 +40,7 @@ function PoolView({ slug, projectId, project }: ProjectGateContext) {
     <div>
       <PageHeader title={t("title")} description={t("description")} />
 
-      {pool.isError && (
+      {hasBlockingError(pool) && (
         <div role="alert" className="space-y-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4">
           <p className="text-sm text-destructive">{te(errorKey(pool.error))}</p>
           <Button variant="outline" size="sm" onClick={() => void pool.refetch()}>

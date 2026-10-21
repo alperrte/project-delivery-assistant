@@ -70,7 +70,7 @@ test.describe.serial("Project reminders", () => {
     // Navigation can finish before the selected-project query/effect commits.
     // Wait for the actual selection before leaving for the global calendar.
     await expect.poll(() => page.evaluate((selectedSlug) =>
-      Object.keys(sessionStorage).some((key) => key.startsWith("pda:last-project:") && sessionStorage.getItem(key) === selectedSlug),
+      Object.keys(localStorage).some((key) => key.startsWith("pda:last-project:") && localStorage.getItem(key) === selectedSlug),
     slug)).toBe(true);
   }
 
@@ -206,7 +206,7 @@ test.describe.serial("Project reminders", () => {
     const phone = await touch.newPage();
     await phone.goto(`/projects/${slug}`);
     await expect.poll(() => phone.evaluate((selectedSlug) =>
-      Object.keys(sessionStorage).some((key) => key.startsWith("pda:last-project:") && sessionStorage.getItem(key) === selectedSlug),
+      Object.keys(localStorage).some((key) => key.startsWith("pda:last-project:") && localStorage.getItem(key) === selectedSlug),
     slug)).toBe(true);
     await phone.goto("/calendar");
 

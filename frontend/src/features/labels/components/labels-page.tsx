@@ -20,6 +20,7 @@ import { labelsApi } from "../api";
 import { useLabels } from "../hooks";
 import type { Label } from "../types";
 import { LabelDialog } from "./label-dialog";
+import { hasBlockingError } from "@/lib/api/live-sync";
 
 function LabelRow({ projectId, label, isManager, onEdit }: { projectId: string; label: Label; isManager: boolean; onEdit: (label: Label) => void }) {
   const t = useTranslations("labels.row");
@@ -78,7 +79,7 @@ function LabelsView({ projectId, project, isManager: manager }: ProjectGateConte
       {!allowsAdvanced(project.taskManagementMode) && <AdvancedReadOnlyNotice />}
       <PageHeader title={t("title")} description={isManager ? t("description") : t("memberDescription")} action={createButton || undefined} />
 
-      {labels.isError && (
+      {hasBlockingError(labels) && (
         <div role="alert" className="space-y-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4">
           <p className="text-sm text-destructive">{te(errorKey(labels.error))}</p>
           <Button variant="outline" size="sm" onClick={() => void labels.refetch()}>

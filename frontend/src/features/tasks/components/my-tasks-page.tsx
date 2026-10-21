@@ -9,6 +9,8 @@ import { EntityGrid } from "@/components/common/entity-card";
 import { EmptyState } from "@/components/common/empty-state";
 import { PageHeader } from "@/components/common/page-header";
 import { PaginationBar } from "@/components/common/pagination-bar";
+import { hasBlockingError } from "@/lib/api/live-sync";
+import { ApiError } from "@/lib/api/client";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { DropdownMenuCheckboxItem, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -132,8 +134,8 @@ function TasksPanel({ tab, view, userId, onClear, filtered, onOpen }: { tab: MyT
     }
   }, [query.data, query.isPlaceholderData, filters.page, update]);
 
-  if (query.isError) return <ErrorPanel error={query.error} onRetry={() => void query.refetch()} />;
   if (query.isPending) return <ListSkeleton />;
+  if (hasBlockingError(query) || !query.data) return <ErrorPanel error={query.error ?? new ApiError(404)} onRetry={() => void query.refetch()} />;
 
   const { content, totalElements, totalPages } = query.data;
   const render = (items: Task[]) => view === "grid" ? (

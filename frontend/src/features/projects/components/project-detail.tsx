@@ -23,6 +23,7 @@ import { ProjectMark } from "./project-mark";
 import { ProjectOverview } from "./project-overview";
 import { ProjectSettingsForm } from "./project-settings-form";
 import { PageTitle } from "@/components/common/page-title";
+import { hasBlockingError } from "@/lib/api/live-sync";
 
 export function ProjectDetail({ slug }: { slug: string }) {
   const t = useTranslations("projects.detail");
@@ -50,7 +51,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
   }, [pathname, router]);
 
   if (isLoading || memberLoading) return <Skeleton className="h-64 w-full rounded-2xl" />;
-  if (isError) return <PageFailure error={error} onRetry={() => { void refetch(); }} />;
+  if (hasBlockingError({ isError, data: project, error })) return <PageFailure error={error} onRetry={() => { void refetch(); }} />;
   if (!project) return null;
 
   return (
