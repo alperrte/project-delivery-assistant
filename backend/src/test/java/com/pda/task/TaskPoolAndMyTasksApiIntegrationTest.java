@@ -101,9 +101,10 @@ class TaskPoolAndMyTasksApiIntegrationTest extends TaskTestBase {
         mvc.perform(get("/api/v1/tasks/pool")).andExpect(status().isUnauthorized());
 
         send(post(claim), inTeam, null).andExpect(status().isOk());
-        // Taking a task from the pool is self-assignment: nobody assigned it.
+        // A pool claim is persisted as an actual self-assignment.
         read(tasksUrl(project) + "/" + teamTask, pm).andExpect(jsonPath("$.assigneeIds.length()").value(1))
-                .andExpect(jsonPath("$.assigners.length()").value(0));
+                .andExpect(jsonPath("$.assigners[0].userId").value(inTeam.id().toString()))
+                .andExpect(jsonPath("$.assignmentDetails[0].assignedBy").value(inTeam.id().toString()));
         read("/api/v1/tasks/mine?projectId=" + project, inTeam).andExpect(jsonPath("$.counts.poolAvailable").value(1));
         send(post(claim), inTeam, null).andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("TASK_ALREADY_CLAIMED"));
@@ -171,7 +172,7 @@ class TaskPoolAndMyTasksApiIntegrationTest extends TaskTestBase {
         read("/api/v1/tasks/mine", a).andExpect(jsonPath("$.totalElements").value(1));
     }
 
-    @Test void assignersAreWhoAssignedSomeoneElseAndSelfAssignmentIsNotCounted() throws Exception {
+    @Test void assignersIncludeActualSelfAssignmentsAndNeverInventAnUnassignedActor() throws Exception {
         Account pm = account("assignerpm");
         UUID project = project(pm, "Assigner project");
         Account a = member(project, pm, "assignera");
@@ -182,13 +183,14 @@ class TaskPoolAndMyTasksApiIntegrationTest extends TaskTestBase {
         read(tasksUrl(project) + "/" + assigned, a).andExpect(jsonPath("$.assigners.length()").value(1))
                 .andExpect(jsonPath("$.assigners[0].userId").value(pm.id().toString()))
                 .andExpect(jsonPath("$.assigners[0].nickname").isNotEmpty());
-        read(tasksUrl(project) + "/" + selfTaken, pm).andExpect(jsonPath("$.assigners.length()").value(0));
+        read(tasksUrl(project) + "/" + selfTaken, pm).andExpect(jsonPath("$.assigners[0].userId").value(pm.id().toString()))
+                .andExpect(jsonPath("$.assignmentDetails[0].assignedBy").value(pm.id().toString()));
         read(tasksUrl(project) + "/" + unassigned, pm).andExpect(jsonPath("$.assigners.length()").value(0));
 
         String list = read(tasksUrl(project) + "?size=50", pm).andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         assertEquals(1, ((List<?>) JsonPath.read(list, "$.content[?(@.id=='" + assigned + "')].assigners[*]")).size());
-        assertEquals(0, ((List<?>) JsonPath.read(list, "$.content[?(@.id=='" + selfTaken + "')].assigners[*]")).size());
+        assertEquals(1, ((List<?>) JsonPath.read(list, "$.content[?(@.id=='" + selfTaken + "')].assigners[*]")).size());
         read("/api/v1/tasks/mine", a).andExpect(jsonPath("$.content[0].id").value(assigned.toString()))
                 .andExpect(jsonPath("$.content[0].assigners[0].userId").value(pm.id().toString()));
     }

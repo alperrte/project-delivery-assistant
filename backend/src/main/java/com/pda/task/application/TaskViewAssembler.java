@@ -56,11 +56,14 @@ public class TaskViewAssembler {
         Set<UUID> ids = list.stream().map(Task::getId).collect(Collectors.toSet());
 
         Map<UUID, List<UUID>> assigneesByTask = new HashMap<>();
-        // Assigner per task and when they last assigned; self-assignment (pool claim, manager taking it) is no assigner.
+        // Current rows preserve the actual actor/recipient pair, including self-assignment and pool claims.
+        Map<UUID, List<AssignmentRef>> detailsByTask = new HashMap<>();
         Map<UUID, Map<UUID, Instant>> assignersByTask = new HashMap<>();
         for (TaskAssignment a : assignments.findByTaskIds(ids)) {
             assigneesByTask.computeIfAbsent(a.getTaskId(), k -> new ArrayList<>()).add(a.getUserId());
-            if (a.getAssignedBy() == null || a.getAssignedBy().equals(a.getUserId())) continue;
+            detailsByTask.computeIfAbsent(a.getTaskId(), k -> new ArrayList<>())
+                    .add(new AssignmentRef(a.getUserId(), a.getAssignedBy(), a.getAssignedAt()));
+            if (a.getAssignedBy() == null) continue;
             assignersByTask.computeIfAbsent(a.getTaskId(), k -> new HashMap<>())
                     .merge(a.getAssignedBy(), a.getAssignedAt(), (x, y) -> x.isAfter(y) ? x : y);
         }
@@ -118,8 +121,7 @@ public class TaskViewAssembler {
                     .sorted(Comparator.comparing(p -> p.nickname() == null ? "" : p.nickname().toLowerCase()))
                     .toList();
             List<PersonRef> assigners = assignersByTask.getOrDefault(t.getId(), Map.of()).entrySet().stream()
-                    .filter(e -> nickname(names, e.getKey()) != null)
-                    .sorted(Map.Entry.<UUID, Instant>comparingByValue().reversed())
+                    .sorted(Map.Entry.<UUID, Instant>comparingByValue().reversed().thenComparing(Map.Entry.comparingByKey()))
                     .map(e -> new PersonRef(e.getKey(), nickname(names, e.getKey()), photoVersion(names, e.getKey())))
                     .toList();
             List<LabelRef> labelRefs = labelIdsByTask.getOrDefault(t.getId(), List.of()).stream()
@@ -149,7 +151,9 @@ public class TaskViewAssembler {
                     new PoolRef(t.isPoolOpen(), t.isClaimedFromPool(), t.getPoolTeamId(),
                             t.getPoolTeamId() == null ? null : teamNames.get(t.getPoolTeamId())),
                     watched.contains(t.getId()),
-                    info == null ? null : new ProjectRef(info.id(), info.slug(), info.name(), info.logoVersion()), t.getCreationMode()));
+                    info == null ? null : new ProjectRef(info.id(), info.slug(), info.name(), info.logoVersion()), t.getCreationMode(),
+                    detailsByTask.getOrDefault(t.getId(), List.of()).stream()
+                            .sorted(Comparator.comparing(AssignmentRef::userId)).toList()));
         }
         return views;
     }

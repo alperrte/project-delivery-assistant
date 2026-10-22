@@ -708,6 +708,8 @@ Client applies only newer versions, including empty arrays; late MESSAGE cannot 
 
 ### Task Service backend endpoints (F5)
 
+2026-10-22 TSF response/order extension: all existing TaskView routes include current `assignmentDetails[{userId,assignedBy,assignedAt}]`; existing unique `assigners` now includes actual self-assignment/pool-claim actors. Unavailable actors retain their stored ID with null nickname/photo; null legacy actors are never inferred from creator/editor. These are current rows, not assignment history. `GET /api/v1/tasks/mine?scope=ALL` orders non-DONE before DONE in SQL before pagination, with existing secondary order plus globally unique task ID. Existing principal identity, active project membership, permission/ownership boundaries, cookie/CSRF/CORS, private/no-store, input allowlists and page limits are unchanged; no new endpoint, migration or ENV. Swagger with docs already enabled: read a self-assigned task and `/tasks/mine?scope=ALL&size=20&page=0`, then successive pages. See `.agents/api.md` and `docs/compliation/2026-10-22-task-service-backend.md` for contract and test evidence.
+
 Swagger check path: `/swagger-ui/index.html` with `API_DOCS_ENABLED=true`. Call `GET /api/v1/auth/csrf`, log in, create/select an active project, then use the endpoints below. All mutations require the `X-XSRF-TOKEN` header and `PDA_ACCESS` HttpOnly cookie. `ADMIN` alone grants no project access. All routes are project scoped and return `ProblemDetail` on errors.
 
 | Endpoint | Auth / scope | Safe input | Success | Important errors |

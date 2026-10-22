@@ -23,10 +23,12 @@ public record TaskView(
         int commentCount, int attachmentCount,
         Integer estimatePoints, Integer timeEstimateMinutes, long loggedMinutes,
         SprintRef sprint, PoolRef pool, boolean watching, ProjectRef project,
-        com.pda.task.domain.TaskCreationMode creationMode) {
+        com.pda.task.domain.TaskCreationMode creationMode, List<AssignmentRef> assignmentDetails) {
 
     /** A person as shown in lists and threads; {@code profilePhotoVersion} is null when they have no photo. */
     public record PersonRef(UUID userId, String nickname, Long profilePhotoVersion) {}
+    /** Current assignment rows, not historical activity. A missing legacy actor stays null. */
+    public record AssignmentRef(UUID userId, UUID assignedBy, Instant assignedAt) {}
     public record LabelRef(UUID id, String name, String color) {}
     public record TaskRef(UUID id, String key, String title) {}
     public record SprintRef(UUID id, String name, SprintStatus status) {}

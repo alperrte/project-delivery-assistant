@@ -116,10 +116,16 @@ public final class TaskSpecifications {
 
     /** Orders the page query only (the count query must stay unordered); ties fall back to the newest task. */
     public static Specification<Task> orderBy(String field, boolean ascending) {
+        return orderBy(field, ascending, false);
+    }
+
+    /** The cross-project ALL view puts DONE last before LIMIT/OFFSET. Other views retain their ordering. */
+    public static Specification<Task> orderBy(String field, boolean ascending, boolean doneLast) {
         return (root, query, cb) -> {
             Class<?> type = query.getResultType();
             if (type == Long.class || type == long.class) return null;
             List<Order> orders = new ArrayList<>();
+            if (doneLast) orders.add(cb.asc(cb.selectCase().when(cb.equal(root.get("status"), TaskStatus.DONE), 1).otherwise(0)));
             Expression<?> expression;
             if ("priority".equals(field)) {
                 expression = cb.selectCase().when(cb.equal(root.get("priority"), TaskPriority.CRITICAL), 3)
@@ -133,6 +139,8 @@ public final class TaskSpecifications {
             }
             orders.add(ascending ? cb.asc(expression) : cb.desc(expression));
             if (!"taskNumber".equals(field)) orders.add(cb.desc(root.get("taskNumber")));
+            // taskNumber is only unique within one project; mine spans multiple projects.
+            if (doneLast) orders.add(cb.asc(root.get("id")));
             query.orderBy(orders);
             return null;
         };
