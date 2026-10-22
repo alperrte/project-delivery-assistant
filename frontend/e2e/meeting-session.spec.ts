@@ -3,7 +3,7 @@ import { readFileSync, mkdirSync } from "node:fs";
 import path from "node:path";
 import { api, chooseDate, chooseTime } from "./helpers";
 import { psql, uuid } from "./db";
-import { meetingAccount } from "./meeting-fixture";
+import { meetingAccount, showPanel } from "./meeting-fixture";
 import { REJECTED_STATE } from "./consent-state";
 import { localizeHref } from "../src/i18n/routing";
 import type { Project } from "../src/features/projects/types";
@@ -698,9 +698,9 @@ test("ending a meeting for everyone belongs only to its creator: UI, API, leave 
     await join(a); await join(b);
     await expect(room(b).getByRole("button", endLabel)).toBeVisible();
     await expect(room(a).getByRole("button", endLabel)).toHaveCount(0);
-    await room(a).getByRole("button", { name: tr.participants, exact: true }).click();
+    await showPanel(room(a).page(), tr.participants);
     await expect(room(a).locator("li").filter({ hasText: owner.nickname }).getByRole("button", { name: tr.muteParticipant, exact: true })).toBeVisible();
-    await room(b).getByRole("button", { name: tr.participants, exact: true }).click();
+    await showPanel(room(b).page(), tr.participants);
     await expect(room(b).getByRole("button", { name: tr.muteParticipant, exact: true })).toHaveCount(0);
 
     // Backend: a project manager who did not create it is refused, directly through the API, and nothing changes.
@@ -779,7 +779,7 @@ test("a meeting created by a project manager is owned by that manager, not by ot
     await expect(room(b).getByRole("button", { name: tr.endForAll, exact: true })).toHaveCount(0);
     expect((await api(b, "POST", `/projects/${project.id}/meetings/${meeting.id}/end`)).status).toBe(403);
     // Both managers keep the other moderation powers.
-    await room(b).getByRole("button", { name: tr.participants, exact: true }).click();
+    await showPanel(room(b).page(), tr.participants);
     await expect(room(b).getByRole("button", { name: tr.muteParticipant, exact: true })).toBeVisible();
     // The mini bar offers no end-for-everyone either: only Leave (with its confirmation).
     await b.getByRole("link", { name: messages.app.nav.projects, exact: true }).first().click();
@@ -924,7 +924,7 @@ test("meeting detail page has no breadcrumb and no back link, and keeps everythi
     // Content and actions of a planned meeting are all still there.
     await expect(page.getByText(tr.status.SCHEDULED, { exact: true }).first()).toBeVisible();
     await expect(page.getByText(`${tr.createdBy}:`, { exact: false })).toBeVisible();
-    await expect(page.getByText(`${tr.plannedAttendees}:`, { exact: false })).toBeVisible();
+    await expect(page.getByRole("heading", { name: new RegExp(`^${tr.plannedAttendees}`) })).toBeVisible();
     await expect(page.getByRole("heading", { name: tr.agenda, exact: true })).toBeVisible();
     await expect(page.getByText(tr.timezone.replace("{zone}", ""), { exact: false }).first()).toBeVisible();
     for (const name of [tr.startNow, tr.edit, tr.cancelMeeting]) await expect(page.getByRole("button", { name, exact: true }).or(page.getByRole("link", { name, exact: true })).first()).toBeVisible();

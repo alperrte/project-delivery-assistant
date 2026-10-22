@@ -1,36 +1,128 @@
 "use client";
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
-import Link from "@/i18n/navigation";
-import { CalendarDays, Plus, Video } from "lucide-react";
+import Link, { usePathname, useRouter, useSearchParams } from "@/i18n/navigation";
+import { CalendarDays, Plus, Search } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/common/page-header";
+import { PaginationBar } from "@/components/common/pagination-bar";
 import { EmptyState } from "@/components/common/empty-state";
+import { cn } from "@/lib/utils";
 import { meetingsApi } from "./api";
-import { MeetingError, MeetingStatus, useMeetingProject } from "./shared";
-import type { MeetingStatus as Status } from "./types";
+import { MeetingCard } from "./meeting-card";
+import { arrangeMeetings, matchesQuery, PAGE_SIZE, pageFromParam, SORTS, sliceGroups, sortFromParam, STATUS_FILTERS, statusFromParam } from "./meeting-list";
+import { MeetingError, useMeetingProject, useNow, useProjectMembers } from "./shared";
+import type { Meeting, MeetingStatus } from "./types";
+
+const ALL = "ALL";
 
 export function MeetingsPage({ slug }: { slug: string }) {
-  const t = useTranslations("meetings"), tw = useTranslations("workspace"), locale = useLocale();
-  const context = useMeetingProject(slug);
-  const [status, setStatus] = useState<Status | "">(""), [page, setPage] = useState(0);
-  const query = useQuery({ queryKey: [...context.keys, "list", status, page], enabled: !!context.project,
-    queryFn: ({ signal }) => meetingsApi.list(context.project!.id, page, status || undefined, signal), retry: false, refetchInterval: 15_000 });
-  return <div className="min-w-0 space-y-5"><PageHeader title={t("myMeetings")} description={context.project?.name} action={<Link href={`/projects/${slug}/meetings/new`} className={buttonVariants()}><Plus size={16} />{t("create")}</Link>} />
-    <nav className="flex flex-wrap gap-2" aria-label={t("filter")}>
-      {(["", "SCHEDULED", "OPEN", "ENDED", "CANCELLED"] as const).map(value => <Button key={value} variant={status === value ? "default" : "outline"} aria-pressed={status === value} onClick={() => { setStatus(value); setPage(0); }}>{t(value ? `status.${value}` : "all")}</Button>)}
-      <Link href={`/calendar?project=${encodeURIComponent(slug)}`} className={buttonVariants({ variant: "ghost", className: "ml-auto" })}><CalendarDays size={16} />{tw("calendar")}</Link>
-    </nav>
-    {context.isError ? <MeetingError error={context.error} /> : query.isError ? <MeetingError error={query.error} retry={() => void query.refetch()} /> : query.isPending ? <p role="status" className="workspace-panel p-8 text-muted-foreground">{t("loading")}</p> : !query.data.content.length ? <EmptyState title={t("empty")} description={t("emptyHint")} /> : <>
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{query.data.content.map(meeting => <Link key={meeting.id} href={`/projects/${slug}/meetings/${meeting.id}`} className="workspace-panel flex min-w-0 flex-col gap-4 p-5 transition-colors hover:border-primary focus-visible:outline-2 focus-visible:outline-ring">
-        <div className="flex items-center justify-between gap-2"><Video size={20} className="text-primary" /><MeetingStatus meeting={meeting} /></div>
-        <h2 className="break-words text-lg font-semibold">{meeting.title}</h2>
-        <p className="line-clamp-2 break-words text-sm leading-6 text-muted-foreground">{meeting.description}</p>
-        <time dateTime={meeting.startsAt} className="mt-auto border-t pt-4 text-sm tabular-nums">{new Date(meeting.startsAt).toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" })}</time>
-        {meeting.overtime && meeting.status === "OPEN" && <p className="text-xs text-warning">{t("overtime")}</p>}
-      </Link>)}</div>
-      <nav aria-label={t("pages")} className="flex items-center justify-center gap-4"><Button variant="outline" disabled={page === 0} onClick={() => setPage(p => p - 1)}>{t("previous")}</Button><span className="text-sm tabular-nums">{page + 1} / {query.data.totalPages}</span><Button variant="outline" disabled={page + 1 >= query.data.totalPages} onClick={() => setPage(p => p + 1)}>{t("next")}</Button></nav>
-    </>}
+  const t = useTranslations("meetings"), tw = useTranslations("workspace"), locale = useLocale(), client = useQueryClient();
+  const router = useRouter(), pathname = usePathname(), params = useSearchParams();
+  const context = useMeetingProject(slug), now = useNow(15_000);
+  const status = statusFromParam(params.get("status")), sort = sortFromParam(params.get("sort")), urlQuery = params.get("q") ?? "";
+  const [search, setSearch] = useState(urlQuery);
+  // The URL carries the filter, sort, search and page; Back/Forward restores them. Search typing replaces the entry instead of piling up history.
+  function navigate(changes: Record<string, string | null>, mode: "push" | "replace" = "push") {
+    const next = new URLSearchParams(params.toString());
+    for (const [key, value] of Object.entries(changes)) { if (value) next.set(key, value); else next.delete(key); }
+    const query = next.toString();
+    router[mode](query ? `${pathname}?${query}` : pathname, { scroll: false });
+  }
+  // Back/Forward (or a cleared filter) changes the URL query: the box follows it, adjusted while rendering rather than in an effect.
+  const [seenQuery, setSeenQuery] = useState(urlQuery);
+  if (seenQuery !== urlQuery) { setSeenQuery(urlQuery); setSearch(urlQuery); }
+  useEffect(() => {
+    if (search === urlQuery) return;
+    const timer = setTimeout(() => navigate({ q: search.trim() || null, page: null }, "replace"), 300);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- navigate only reads the current URL
+  }, [search, urlQuery]);
+
+  const query = useQuery({ queryKey: [...context.keys, "list", "all"], enabled: !!context.project,
+    queryFn: ({ signal }) => meetingsApi.listAll(context.project!.id, signal), retry: false, refetchInterval: 15_000 });
+  const members = useProjectMembers(context);
+  const memberMap = useMemo(() => new Map((members.data ?? []).map(member => [member.userId, member])), [members.data]);
+
+  const matching = useMemo(() => (query.data?.content ?? []).filter(meeting => matchesQuery(meeting, search, locale)), [query.data, search, locale]);
+  const counts = useMemo(() => {
+    const result: Record<string, number> = { [ALL]: matching.length };
+    STATUS_FILTERS.forEach(value => { result[value] = matching.filter(meeting => meeting.status === value).length; });
+    return result;
+  }, [matching]);
+  const arranged = useMemo(() => arrangeMeetings(status ? matching.filter(meeting => meeting.status === status) : matching, sort, now), [matching, status, sort, now]);
+  const totalPages = Math.max(1, Math.ceil(arranged.length / PAGE_SIZE));
+  const requestedPage = pageFromParam(params.get("page")), page = Math.min(requestedPage, totalPages - 1);
+  useEffect(() => { if (query.isSuccess && requestedPage !== page) navigate({ page: page > 0 ? String(page + 1) : null }, "replace"); // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query.isSuccess, requestedPage, page]);
+  const groups = useMemo(() => sliceGroups(arranged.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE), now), [arranged, page, now]);
+
+  const statusOptions = [{ value: ALL, label: t("all") }, ...STATUS_FILTERS.map(value => ({ value, label: t(`status.${value}`) }))];
+  const sortOptions = SORTS.map(value => ({ value, label: t(`sort.${value}`) }));
+  const choose = (value: MeetingStatus | typeof ALL) => navigate({ status: value === ALL ? null : value, page: null });
+  async function act(meeting: Meeting, action: "cancel" | "end") {
+    await meetingsApi.action(context.project!.id, meeting.id, action);
+    await client.invalidateQueries({ queryKey: context.keys });
+  }
+  const canEdit = (meeting: Meeting) => context.isManager || context.user?.id === meeting.organizerId;
+  const total = query.data?.content.length ?? 0, filtered = !!status || !!search.trim();
+
+  return <div className="min-w-0 space-y-5">
+    <PageHeader title={t("myMeetings")} description={t("listDescription")}
+      action={<Link href={`/projects/${slug}/meetings/new`} className={buttonVariants({ variant: "accent", className: "min-h-11 sm:min-h-10" })}><Plus size={16} aria-hidden="true" />{t("create")}</Link>} />
+    <div className="space-y-3">
+      <nav className="hidden flex-wrap gap-1.5 md:flex" aria-label={t("filter")}>
+        {statusOptions.map(option => {
+          const selected = (status || ALL) === option.value;
+          return <button key={option.value} type="button" aria-pressed={selected} onClick={() => choose(option.value as MeetingStatus | typeof ALL)}
+            className={cn("inline-flex h-9 cursor-pointer items-center gap-2 rounded-full px-3.5 text-sm outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50",
+              selected ? "bg-meeting-soft font-semibold text-meeting-ink" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
+            {option.label}<span className={cn("text-xs tabular-nums", selected ? "text-meeting-ink" : "text-muted-foreground")}>{counts[option.value]}</span>
+          </button>;
+        })}
+      </nav>
+      <div className="md:hidden">
+        <Select value={status || ALL} items={statusOptions} modal={false} onValueChange={next => { if (typeof next === "string") choose(next as MeetingStatus | typeof ALL); }}>
+          <SelectTrigger aria-label={t("filter")} className="h-11 w-full text-base"><SelectValue /></SelectTrigger>
+          <SelectContent alignItemWithTrigger={false} align="start">
+            {statusOptions.map(option => <SelectItem key={option.value} value={option.value} className="min-h-11">{option.label}<span className="ml-auto pr-1 text-xs tabular-nums text-muted-foreground">{counts[option.value]}</span></SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="flex flex-col gap-3 md:flex-row md:items-center">
+        <div className="relative min-w-0 flex-1">
+          <Search size={16} aria-hidden="true" className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground" />
+          <Input type="search" value={search} maxLength={100} onChange={event => setSearch(event.target.value)} aria-label={t("searchMeetings")} placeholder={t("searchMeetings")} className="h-11 pl-9 text-base md:h-10 md:text-sm" />
+        </div>
+        <div className="flex items-center gap-3">
+          <Link href={`/calendar?project=${encodeURIComponent(slug)}`} className={buttonVariants({ variant: "outline", className: "min-h-11 flex-1 border-border-strong md:min-h-10 md:flex-none" })}><CalendarDays size={16} aria-hidden="true" />{tw("calendar")}</Link>
+          <Select value={sort} items={sortOptions} modal={false} onValueChange={next => { if (typeof next === "string") navigate({ sort: next === "upcoming" ? null : next, page: null }); }}>
+            <SelectTrigger aria-label={t("sortBy")} className="h-11 w-44 flex-1 md:h-10 md:flex-none"><SelectValue /></SelectTrigger>
+            <SelectContent alignItemWithTrigger={false} align="end">
+              {sortOptions.map(option => <SelectItem key={option.value} value={option.value} className="min-h-11">{option.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+    </div>
+    {context.isError ? <MeetingError error={context.error} />
+      : query.isError ? <MeetingError error={query.error} retry={() => void query.refetch()} />
+      : query.isPending ? <div role="status" aria-label={t("loading")} className="space-y-3">{[0, 1, 2].map(index => <Skeleton key={index} className="h-22 rounded-xl" />)}</div>
+      : !total ? <EmptyState title={t("empty")} description={t("emptyHint")} action={<Link href={`/projects/${slug}/meetings/new`} className={buttonVariants({ variant: "accent" })}><Plus size={16} aria-hidden="true" />{t("create")}</Link>} />
+      : !arranged.length ? <div role="status" className="workspace-panel space-y-3 p-8 text-sm"><p className="font-medium">{t("noResults")}</p><p className="text-muted-foreground">{t("noResultsHint")}</p>
+          {filtered && <Button variant="outline" onClick={() => { setSearch(""); navigate({ status: null, q: null, page: null }); }}>{t("clearFilters")}</Button>}</div>
+      : <>
+        <div className="space-y-6">{groups.map(group => <section key={group.key} aria-labelledby={`meeting-group-${group.key}`} className="space-y-2.5">
+          <h2 id={`meeting-group-${group.key}`} className="px-1 text-sm font-semibold text-muted-foreground">{t(`group_${group.key}`)}</h2>
+          <div className="space-y-2.5">{group.meetings.map(meeting => <MeetingCard key={meeting.id} meeting={meeting} slug={slug} projectName={context.project?.name} members={memberMap} now={now}
+            canEdit={canEdit(meeting)} canEnd={context.user?.id === meeting.organizerId} onAction={act} />)}</div>
+        </section>)}</div>
+        {query.data && !query.data.complete && <p role="status" className="text-xs text-muted-foreground">{t("listTruncated")}</p>}
+        <PaginationBar page={page} totalPages={totalPages} totalElements={arranged.length} pageSize={PAGE_SIZE} onPageChange={next => navigate({ page: next > 0 ? String(next + 1) : null })} />
+      </>}
   </div>;
 }

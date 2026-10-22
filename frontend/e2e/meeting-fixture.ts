@@ -3,6 +3,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { expect, type Page } from "@playwright/test";
 import { psql, uuid } from "./db";
 
 /** TEST-ONLY local accounts: no registration request, outgoing email, or change to an existing user's credentials. */
@@ -23,4 +24,11 @@ export function meetingAccount(role: "manager" | "member") {
   if (!/^\$2[aby]\$10\$[A-Za-z0-9./]{53}$/.test(hash)) throw new Error("Invalid test-only password hash");
   psql(`INSERT INTO users(id,email,nickname,password_hash,account_status,email_verification_status,global_role,email_verified_at,created_at,updated_at) VALUES('${uuid(id)}','${email}','${nickname}','${hash}','ACTIVE','VERIFIED','USER',now(),now(),now())`);
   writeFileSync(file, JSON.stringify({ id, email, password })); return file;
+}
+
+/** The side panel is open from the start on wide screens, so tapping its bar button would close it again: show a tab only if it is not the open one. */
+export async function showPanel(page: Page, name: string) {
+  const tab = page.locator("[data-meeting-room] aside").getByRole("tab", { name: new RegExp(`^${name}`), selected: true });
+  if (!(await tab.isVisible())) await page.locator("[data-meeting-room]").getByRole("button", { name, exact: true }).click();
+  await expect(tab).toBeVisible();
 }

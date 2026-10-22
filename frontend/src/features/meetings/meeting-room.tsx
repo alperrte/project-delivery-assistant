@@ -1,19 +1,24 @@
 "use client";
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Track, type Participant } from "livekit-client";
-import { Users, X } from "lucide-react";
+import { ChevronLeft, Clock, Link2, PhoneOff, Users, X } from "lucide-react";
 import Link from "@/i18n/navigation";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { localizeHref } from "@/i18n/routing";
+import type { Locale } from "@/i18n/config";
 import { cn } from "@/lib/utils";
 import { meetingsApi } from "./api";
-import { MeetingError, useMeetingProject } from "./shared";
+import { clockText, MeetingError, useMeetingProject, useNow } from "./shared";
 import { deviceErrorKey, isInCallPhase, useOptionalMeetingSession, type SessionLive } from "./session/meeting-session";
 import { useMeetingSessionRuntime } from "./session/meeting-session-runtime";
 import { PreJoinCheck } from "./room/device-check";
 import { ParticipantTile } from "./room/participant-tile";
+import { RoomStage, type StageFocus, type StageMode } from "./room/room-stage";
+import { COMPACT_QUERY, WIDE_QUERY, useFitViewport, useMediaQuery } from "./room/use-media-query";
 import { RoomControls, type RoomPanel } from "./room/room-controls";
 import { ChatPanel, DevicesPanel, ParticipantsPanel, participantPhoto } from "./room/room-panels";
 import { canShareScreen, screenShareMessage } from "./room/screen-share";
@@ -21,12 +26,15 @@ import { useSpeakerMonitor } from "./room/speaker-monitor";
 import { useVisualViewport } from "./room/use-visual-viewport";
 
 function RoomClock({ openedAt, endsAt }: { openedAt: string | null; endsAt: string }) {
-  const t = useTranslations("meetings");
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => { const timer = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(timer); }, []);
+  const t = useTranslations("meetings"), locale = useLocale();
+  const now = useNow(1000);
   const elapsed = Math.max(0, Math.floor((now - Date.parse(openedAt ?? new Date(now).toISOString())) / 1000));
   const remaining = Math.ceil((Date.parse(endsAt) - now) / 60000);
-  return <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs tabular-nums text-muted-foreground"><span>{t("elapsed", { time: `${String(Math.floor(elapsed / 3600)).padStart(2,"0")}:${String(Math.floor(elapsed / 60) % 60).padStart(2,"0")}:${String(elapsed % 60).padStart(2,"0")}` })}</span>{remaining > 0 ? <span>{t("remaining", { minutes: remaining })}</span> : <span role="status" className="text-warning">{t("overtime")}</span>}</div>;
+  return <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs tabular-nums text-muted-foreground">
+    <span className="inline-flex items-center gap-1"><Clock size={13} aria-hidden="true" />{t("elapsed", { time: clockText(elapsed) })}</span>
+    <span>{t("plannedEnd", { time: new Intl.DateTimeFormat(locale, { timeStyle: "short" }).format(new Date(endsAt)) })}{remaining > 0 && ` · ${t("remainingShort", { minutes: remaining })}`}</span>
+    {remaining <= 0 && <span role="status" className="text-warning">{t("overtime")}</span>}
+  </div>;
 }
 export function ProjectMeetingRoom({ slug, id }: { slug: string; id: string }) {
   const context = useMeetingProject(slug), t = useTranslations("meetings");
@@ -82,8 +90,11 @@ export function MeetingRoom({ id, projectId, userId, isManager = false, returnHr
 }
 
 function MeetingRoomView({ live, id, projectId, userId, isManager = false, returnHref }: { live: SessionLive; id: string; projectId?: string; userId?: string; isManager?: boolean; returnHref?: string }) {
-  const t = useTranslations("meetings");
-  const [panel, setPanel] = useState<RoomPanel | null>(null);
+  const t = useTranslations("meetings"), locale = useLocale();
+  const compact = useMediaQuery(COMPACT_QUERY), root = useRef<HTMLDivElement>(null);
+  // The side panel is open from the start where there is room for it (a wide window), like the reference; phones start with the stage alone.
+  const [panel, setPanel] = useState<RoomPanel | null>(() => typeof window !== "undefined" && window.matchMedia(WIDE_QUERY).matches ? "participants" : null);
+  const [mode, setMode] = useState<StageMode>("focus"), [pick, setPick] = useState<StageFocus | null>(null);
   // The text box is driven by local state so typing never waits on the call session (a value that arrives a render late
   // would overwrite keystrokes); every change is written through to the session, which keeps it while this page is away.
   const [content, setLocalContent] = useState(live.draft.content), [mentions, setLocalMentions] = useState(live.draft.mentions);
@@ -110,11 +121,18 @@ function MeetingRoomView({ live, id, projectId, userId, isManager = false, retur
   const sharing = shares.length > 0, sharingSelf = Boolean(room?.localParticipant.isScreenShareEnabled);
   const monitor = useSpeakerMonitor(room);
   const viewport = useVisualViewport(inCall);
+  useFitViewport(root, inCall);
   const lookup = new Map(live.participants.map(p => [p.identity, p]));
   // Moderation (mute, remove) stays with project managers; ending the meeting for everyone is only for its creator, whatever their role.
   const managerProjectId = isManager ? projectId : undefined;
   const endProjectId = userId && live.meeting?.organizerId === userId ? projectId : undefined;
+  // Guest invites follow the detail page's rule: the organizer or a project manager.
+  const inviteProjectId = projectId && (isManager || endProjectId) ? projectId : undefined;
   const nameOf = (p: Participant) => lookup.get(p.identity)?.displayName ?? p.name ?? p.identity;
+  const describe = (p: Participant) => ({
+    name: nameOf(p), label: `${lookup.get(p.identity)?.displayName ?? p.name ?? t("member")}${p === room?.localParticipant ? ` (${t("you")})` : ""}`,
+    photoSrc: participantPhoto(lookup.get(p.identity)), guest: Boolean(lookup.get(p.identity)?.guest),
+  });
 
   // Unread badge: whatever existed when the first chat load finished (and everything while the chat is open) counts as read.
   const latestMessage = live.messages.at(-1)?.sentAt ?? "";
@@ -157,6 +175,11 @@ function MeetingRoomView({ live, id, projectId, userId, isManager = false, retur
       try { setDevices(await navigator.mediaDevices.enumerateDevices()); } catch (failure) { showDeviceError(failure); }
     }
   }
+  async function copyLink() {
+    if (!returnHref) return;
+    try { await navigator.clipboard.writeText(`${window.location.origin}${localizeHref(returnHref, locale as Locale)}`); toast.success(t("linkCopied")); }
+    catch { toast.error(t("linkCopyFailed")); }
+  }
   // The lock is a ref: two Enter presses in the same tick must not both pass a `sending` state that has not re-rendered yet.
   const sendLock = useRef(false);
   async function send() {
@@ -165,20 +188,34 @@ function MeetingRoomView({ live, id, projectId, userId, isManager = false, retur
     try { await live.send(content.trim(), mentions); setContent(""); setMentions([]); live.setError(undefined); }
     catch (failure) { live.setError(failure); } finally { sendLock.current = false; setSending(false); }
   }
+  // Phones keep the equal-share grid; every other size gets the stage with the strip (or the plain grid when chosen).
   const tiles = people.map((p, index) => <ParticipantTile key={p.identity} participant={p} monitor={monitor}
-    name={nameOf(p)} label={`${lookup.get(p.identity)?.displayName ?? p.name ?? t("member")}${p === room?.localParticipant ? ` (${t("you")})` : ""}`}
+    name={nameOf(p)} label={describe(p).label}
     photoSrc={participantPhoto(lookup.get(p.identity))} guest={lookup.get(p.identity)?.guest}
     className={cn("aspect-video compact:aspect-auto",
       sharing && "compact:aspect-video compact:h-full compact:shrink-0 compact:landscape:h-auto compact:landscape:w-full",
       !sharing && people.length > 1 && people.length <= 6 && people.length % 2 === 1 && index === people.length - 1 && "compact:portrait:col-span-2")} />);
+  const tabs = panel === "participants" || panel === "chat";
 
-  return <div data-meeting-room
+  return <div data-meeting-room ref={root}
     style={inCall ? { "--room-top": "calc(3.5rem + env(safe-area-inset-top))", "--room-bar": viewport.keyboard ? "0px" : "calc(3.75rem + env(safe-area-inset-bottom))", ...(viewport.height ? { "--vvh": `${viewport.height}px`, "--vvt": `${viewport.top}px` } : {}) } as React.CSSProperties : undefined}
-    className={inCall ? "flex min-w-0 flex-col gap-4 compact:fixed compact:inset-x-0 compact:top-[var(--vvt,0px)] compact:z-40 compact:h-[var(--vvh,100dvh)] compact:gap-0 compact:overflow-hidden compact:bg-background" : "min-w-0 space-y-4"}>
+    className={inCall ? "flex min-w-0 flex-col gap-3 compact:fixed compact:inset-x-0 compact:top-[var(--vvt,0px)] compact:z-40 compact:h-[var(--vvh,100dvh)] compact:gap-0 compact:overflow-hidden compact:bg-background" : "min-w-0 space-y-4"}>
     <header className={cn("flex flex-wrap items-center justify-between gap-3", inCall && "compact:h-[var(--room-top)] compact:shrink-0 compact:flex-nowrap compact:items-center compact:gap-2 compact:overflow-hidden compact:border-b compact:px-3 compact:pb-2 compact:pt-[max(0.5rem,env(safe-area-inset-top))]")}>
-      <div className="min-w-0"><h1 className="break-words text-xl font-semibold compact:truncate compact:text-base">{live.meeting?.title ?? t("group")}</h1>{live.meeting && <RoomClock openedAt={live.meeting.openedAt} endsAt={live.meeting.endsAt} />}</div>
+      <div className="flex min-w-0 items-center gap-3">
+        {inCall && returnHref && <Tooltip><TooltipTrigger render={<Link href={returnHref} aria-label={t("minimize")} className={buttonVariants({ variant: "outline", className: "size-10 shrink-0 compact:size-9" })} />}><ChevronLeft size={18} aria-hidden="true" /></TooltipTrigger><TooltipContent>{t("minimize")}</TooltipContent></Tooltip>}
+        <div className="min-w-0 space-y-0.5">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+            <h1 className="break-words text-xl font-semibold compact:truncate compact:text-base">{live.meeting?.title ?? t("group")}</h1>
+            <p role="status" className={cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium compact:hidden", active ? "bg-success/15 text-success" : "bg-muted text-muted-foreground")}><span aria-hidden="true" className={cn("size-1.5 rounded-full bg-current", live.phase === "reconnecting" && "animate-pulse")} />{t(`phase.${live.phase}`)}</p>
+            {inCall && <span className="inline-flex items-center gap-1 text-xs tabular-nums text-muted-foreground compact:hidden"><Users size={13} aria-hidden="true" />{t("participantCount", { count: people.length })}</span>}
+          </div>
+          {live.meeting && <RoomClock openedAt={live.meeting.openedAt} endsAt={live.meeting.endsAt} />}
+        </div>
+      </div>
       <div className="flex shrink-0 items-center gap-2">
-        <p role="status" className={`text-sm compact:text-xs ${active ? "text-success" : "text-muted-foreground"}`}>{t(`phase.${live.phase}`)}</p>
+        <p role="status" className={`hidden text-xs compact:block ${active ? "text-success" : "text-muted-foreground"}`}>{t(`phase.${live.phase}`)}</p>
+        {inCall && projectId && returnHref && <Button variant="outline" className="min-h-10 gap-2 compact:hidden" disabled={!active} onClick={() => void copyLink()}><Link2 size={16} aria-hidden="true" />{t("copyMeetingLink")}</Button>}
+        {inCall && endProjectId && <Button variant="destructive" className="min-h-10 gap-2 compact:hidden" disabled={!active} onClick={() => setEndOpen(true)}><PhoneOff size={16} aria-hidden="true" />{t("endForAll")}</Button>}
         {inCall && <Button variant={panel === "participants" ? "secondary" : "ghost"} className="hidden min-h-11 min-w-11 gap-1.5 compact:inline-flex" aria-label={t("participants")} aria-pressed={panel === "participants"} disabled={!active} onClick={() => void togglePanel("participants")}><Users size={18} aria-hidden="true" /><span className="tabular-nums">{people.length}</span></Button>}
       </div>
     </header>
@@ -190,29 +227,44 @@ function MeetingRoomView({ live, id, projectId, userId, isManager = false, retur
     {live.phase === "ready" ? <div className="workspace-panel mx-auto max-w-3xl p-4 sm:p-6"><PreJoinCheck onJoin={live.join} onPrefer={live.setPreferredDevice} /></div>
     : !inCall ? <section className="workspace-panel space-y-4 p-8"><h2 className="font-semibold">{t(`phase.${live.phase}`)}</h2>{live.phase === "failed" && <Button onClick={live.retry}>{t("retry")}</Button>}{returnHref && <Link href={returnHref} className="inline-flex min-h-11 items-center underline">{t("back")}</Link>}</section>
     : <>
-      <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row compact:flex-col compact:gap-0">
-        <section aria-label={t("videoGrid")} className="min-w-0 flex-1 space-y-4 compact:flex compact:min-h-0 compact:flex-col compact:space-y-0 compact:p-2">
-          <div className="min-w-0 space-y-4 compact:flex compact:min-h-0 compact:flex-1 compact:flex-col compact:gap-2 compact:space-y-0 compact:landscape:flex-row">
-            {sharing && <div className="space-y-4 compact:flex compact:min-h-0 compact:min-w-0 compact:flex-[3] compact:flex-col compact:gap-2 compact:space-y-0">
-              {shares.map(p => <ParticipantTile key={`${p.identity}:screen`} participant={p} monitor={monitor} source={Track.Source.ScreenShare} name={nameOf(p)} label={t("sharedScreenOf", { name: nameOf(p) })} className="aspect-video compact:aspect-auto compact:min-h-0 compact:flex-1" />)}
-            </div>}
-            {people.length > 0 && <div className={cn("grid min-w-0 gap-3 sm:grid-cols-2",
-              sharing ? "compact:flex compact:shrink-0 compact:gap-2 compact:overflow-x-auto compact:overscroll-contain compact:h-24 compact:landscape:h-auto compact:landscape:w-32 compact:landscape:flex-col compact:landscape:overflow-x-hidden compact:landscape:overflow-y-auto"
-                : cn("compact:min-h-0 compact:flex-1 compact:gap-2", compactGrid(people.length)))}>{tiles}</div>}
-          </div>
-          {!people.length && <div className="workspace-panel grid min-h-60 place-items-center p-6 text-sm text-muted-foreground">{t(`phase.${live.phase}`)}</div>}
+      <div className="flex min-h-0 flex-1 flex-col gap-3 lg:flex-row compact:flex-col compact:gap-0">
+        <section aria-label={t("videoGrid")} className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 compact:gap-0 compact:p-2">
+          {!people.length ? <div className="workspace-panel grid min-h-60 flex-1 place-items-center p-6 text-sm text-muted-foreground">{t(`phase.${live.phase}`)}</div>
+            : compact ? <div className="flex min-h-0 flex-1 flex-col gap-2 landscape:flex-row">
+              {sharing && <div className="flex min-h-0 min-w-0 flex-[3] flex-col gap-2">
+                {shares.map(p => <ParticipantTile key={`${p.identity}:screen`} participant={p} monitor={monitor} source={Track.Source.ScreenShare} name={nameOf(p)} label={t("sharedScreenOf", { name: nameOf(p) })} className="aspect-video min-h-0 flex-1 compact:aspect-auto" />)}
+              </div>}
+              <div className={cn("grid min-w-0 gap-3 sm:grid-cols-2",
+                sharing ? "flex h-24 shrink-0 gap-2 overflow-x-auto overscroll-contain landscape:h-auto landscape:w-32 landscape:flex-col landscape:overflow-x-hidden landscape:overflow-y-auto"
+                  : cn("min-h-0 flex-1 gap-2", compactGrid(people.length)))}>{tiles}</div>
+            </div>
+            : <RoomStage people={people} shares={shares} monitor={monitor} mode={mode} onMode={setMode} pick={pick} onPick={setPick} describe={describe} screenLabel={name => t("sharedScreenOf", { name })} />}
         </section>
         {panel && <aside aria-label={t(panel)} onKeyDown={event => { if (event.key === "Escape") setPanel(null); }}
-          className="workspace-panel flex max-h-[70dvh] min-w-0 flex-col overflow-hidden p-4 lg:sticky lg:top-24 lg:w-80 lg:shrink-0 compact:fixed compact:inset-x-0 compact:top-[calc(var(--vvt,0px)+var(--room-top))] compact:z-30 compact:h-[calc(var(--vvh,100dvh)-var(--room-top)-var(--room-bar))] compact:max-h-none compact:rounded-none compact:border-0 compact:px-3 compact:pb-3 compact:pt-3">
-          <div className="mb-4 flex items-center justify-between gap-2"><h2 className="font-semibold">{t(panel)}</h2><Button variant="ghost" className="min-h-11 min-w-11" aria-label={t("closePanel")} onClick={() => setPanel(null)}><X size={18} aria-hidden="true" /></Button></div>
-          {panel === "participants" && <ParticipantsPanel live={live} volumes={live.volumes} onVolume={live.setVolume} managerProjectId={managerProjectId} meetingId={id} onNotice={setNotice} />}
-          {panel === "chat" && <ChatPanel live={live} active={active} content={content} setContent={setContent} mentions={mentions} setMentions={setMentions} sending={sending} onSend={() => void send()} />}
-          {panel === "devices" && <DevicesPanel room={room} devices={devices} onSwitch={(kind, deviceId) => void live.switchDevice(kind, deviceId).catch(showDeviceError)} />}
+          className="workspace-panel flex max-h-[70dvh] min-w-0 flex-col overflow-hidden p-4 lg:max-h-none lg:w-80 lg:shrink-0 xl:w-96 compact:fixed compact:inset-x-0 compact:top-[calc(var(--vvt,0px)+var(--room-top))] compact:z-30 compact:h-[calc(var(--vvh,100dvh)-var(--room-top)-var(--room-bar))] compact:max-h-none compact:rounded-none compact:border-0 compact:px-3 compact:pb-3 compact:pt-3">
+          <div className="mb-3 flex items-center justify-between gap-2">
+            {tabs
+              ? <div role="tablist" aria-label={t("panelTabs")} className="flex min-w-0 flex-1 gap-5">
+                {(["participants", "chat"] as const).map(tab => <button key={tab} type="button" role="tab" id={`room-tab-${tab}`} aria-selected={panel === tab} aria-controls="room-tabpanel" onClick={() => setPanel(tab)}
+                  className={cn("-mb-px inline-flex min-h-10 cursor-pointer items-center gap-1.5 border-b-2 text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    panel === tab ? "border-meeting text-foreground" : "border-transparent text-muted-foreground hover:text-foreground")}>
+                  {t(tab)}{tab === "participants" && <span className="tabular-nums text-muted-foreground">({people.length})</span>}
+                  {tab === "chat" && unread > 0 && panel !== "chat" && <span aria-hidden="true" className="grid h-4 min-w-4 place-items-center rounded-full bg-meeting px-1 text-[10px] font-semibold leading-none text-meeting-foreground">{unread > 9 ? "9+" : unread}</span>}
+                </button>)}
+              </div>
+              : <h2 className="font-semibold">{t(panel)}</h2>}
+            <Button variant="ghost" className="min-h-11 min-w-11" aria-label={t("closePanel")} onClick={() => setPanel(null)}><X size={18} aria-hidden="true" /></Button>
+          </div>
+          <div role={tabs ? "tabpanel" : undefined} id={tabs ? "room-tabpanel" : undefined} aria-labelledby={tabs ? `room-tab-${panel}` : undefined} className="flex min-h-0 flex-1 flex-col border-t pt-3">
+            {panel === "participants" && <ParticipantsPanel live={live} room={room} volumes={live.volumes} onVolume={live.setVolume} managerProjectId={managerProjectId} inviteProjectId={inviteProjectId} onCopyLink={projectId && returnHref ? () => void copyLink() : undefined} organizerId={live.meeting?.organizerId} meetingId={id} onNotice={setNotice} />}
+            {panel === "chat" && <ChatPanel live={live} active={active} content={content} setContent={setContent} mentions={mentions} setMentions={setMentions} sending={sending} onSend={() => void send()} />}
+            {panel === "devices" && <DevicesPanel room={room} devices={devices} onSwitch={(kind, deviceId) => void live.switchDevice(kind, deviceId).catch(showDeviceError)} noise={live.noiseSuppressionSupported ? { enabled: live.noiseSuppression, onChange: enabled => void live.setNoiseSuppression(enabled).catch(showDeviceError) } : undefined} />}
+          </div>
         </aside>}
       </div>
       <RoomControls active={active} mediaBusy={mediaBusy} mic={Boolean(room?.localParticipant.isMicrophoneEnabled)} camera={Boolean(room?.localParticipant.isCameraEnabled)}
         sharing={sharingSelf} screenBusy={screenBusy} screenSupported={canShareScreen()} panel={panel} unread={unread} keyboard={viewport.keyboard}
-        canEndForAll={Boolean(endProjectId)}
+        canEndForAll={Boolean(endProjectId)} grid={mode === "grid"} onGrid={() => setMode(previous => previous === "grid" ? "focus" : "grid")}
         onMic={() => void media("mic")} onCamera={() => void media("camera")} onScreen={() => void toggleScreen()} onPanel={next => void togglePanel(next)}
         onEndForAll={() => setEndOpen(true)} onLeave={async () => { live.leave(); }} />
       {endProjectId && <ConfirmDialog open={endOpen} onOpenChange={setEndOpen} title={t("endTitle")} description={t("endConfirm")} confirmLabel={t("endConfirmLabel")} cancelLabel={t("endCancel")} destructive

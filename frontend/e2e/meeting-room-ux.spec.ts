@@ -121,11 +121,12 @@ test("profile photos and the speaking indicator for local and remote participant
     await join(a); await join(b);
 
     // Camera off: the member sees the manager's PDA photo, the manager sees their own; the member has none and keeps initials.
-    const photoOf = (page: Page, id: string) => page.locator(`[data-meeting-room] img[src*="/users/${id}/profile-photo?v="]`);
+    // The side panel lists the same people with the same avatars, so the video area is addressed on its own.
+    const photoOf = (page: Page, id: string) => page.locator(`[data-meeting-room] section[aria-label="${tr.videoGrid}"] img[src*="/users/${id}/profile-photo?v="]`);
     await expect(photoOf(a, manager.id)).toBeVisible({ timeout: 15000 });
     await expect(photoOf(b, manager.id)).toBeVisible({ timeout: 15000 });
     await expect(photoOf(a, member.id)).toHaveCount(0); await expect(photoOf(b, member.id)).toHaveCount(0);
-    await expect(a.locator("[data-meeting-room] [data-slot=avatar]").filter({ hasNot: a.locator("img") })).toHaveCount(1);
+    await expect(a.locator(`[data-meeting-room] section[aria-label="${tr.videoGrid}"] [data-slot=avatar]`).filter({ hasNot: a.locator("img") })).toHaveCount(1);
 
     // Live video wins over the photo; closing the camera brings the photo back.
     await a.getByRole("button", { name: tr.cameraOn, exact: true }).click();
@@ -205,7 +206,7 @@ test("room layout, call bar, chat and participant panels at phone and tablet siz
     expect(parseFloat(await input.evaluate(element => getComputedStyle(element).fontSize))).toBeGreaterThanOrEqual(16);
     await screenshot(page, "room-ux-chat-390");
     await room(page).getByRole("button", { name: tr.participants, exact: true }).click();
-    await expect(room(page).locator("aside").getByRole("heading", { name: tr.participants, exact: true })).toBeVisible();
+    await expect(room(page).locator("aside").getByRole("tab", { name: new RegExp(`^${tr.participants}`), selected: true })).toBeVisible();
     await screenshot(page, "room-ux-participants-390");
     await room(page).getByRole("button", { name: tr.closePanel, exact: true }).click();
     await expect(room(page).locator("aside")).toHaveCount(0);
