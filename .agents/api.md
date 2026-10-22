@@ -1,5 +1,9 @@
 # API rehberi
 
+## Organizasyon sayfalamasında kararlı sıra — 2026-10-22
+
+Mevcut GET `/projects/{p}/members` artık `joinedAt,id`; GET `/projects/{p}/teams` `createdAt,id`; GET `/projects/{p}/teams/{t}/members` `addedAt,id` artan sıralanır. Benzersiz entity ID'si tarih eşitliklerinde sayfalar arasında kayıt kaybını/tekrarını önler. Aynı endpoint/DTO, 1–100 sayfa boyutu, güncel proje üyeliği/PROJECT_VIEW, private/no-store ve hata kuralları korunur; yeni endpoint, migration veya yetki yoktur. 206 eşit tarihli kaydı üç sayfada gerçek PostgreSQL/HTTP ile doğrulayan regresyon SquadApiIntegrationTest içindedir. Ayrıntı: `docs/compliation/2026-10-22-squad-service-backend.md`.
+
 ## Toplantı misafir UI sözleşmesi — 2026-10-18
 
 Public fakat CSRF korumalı POST `/meetings/guest/preview`, scoped cookie isteyen GET `/meetings/guest/{id}/state` ve organizer/manager'a açık sayfalı GET `/projects/{p}/meetings/{m}/invites` eklendi. Metadata secret/hash içermez. Aynı frontend-origin CORS politikası guest yollarına uygulandı; `Retry-After` expose edildi. Yeni migration/ENV/CSRF istisnası yoktur. Tam alan/izin/hata/kota/Swagger: `docs/meeting-guest-contract.md`; sonuçlar: `docs/compliation/2026-10-18-meeting-guest-contract.md`.
