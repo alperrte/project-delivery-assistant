@@ -1,5 +1,9 @@
 ﻿# Klasör yapısı kısa rehberi
 
+## Toplantı mail hatırlatmaları — 2026-10-22
+
+`backend/src/main/java/com/pda/meeting/internal/MeetingReminder{Store,Dispatcher,Scheduler,Mail}` kalıcı kuyruk, kısa DB claim'leri ve ayrı mail worker'ını; `SmtpMeetingReminderMail` mevcut ortak SMTP ayarlarını kullanan multipart/yerelleştirilmiş adaptörü barındırır. V54 `db/migration` altında, entegrasyon/template/scheduler testleri `com.pda.meeting.internal`, upgrade testi `com.pda.migration` altındadır. Notification'ın uygulama içi bildirim paketi veya modül sınırları taşınmaz.
+
 ## Toplantı frontend — 2026-10-18
 
 Production hazırlığı: `docker-compose.meeting.prod.yml`, `ops/caddy/meeting.json`, salt okunur `ops/check-meeting-production.ps1`, Docker Desktop izole smoke `ops/verify-meeting-edge.py`. `ops/verify-meeting-backup.sh` onaylı restore tatbikatını canlı DB yerine ağa kapalı/geçici PostgreSQL konteynerinde yürütür; production üzerinde ayrıca açık onay gerekir. Uygulama/kapasite/rollback runbook'u `.agents/meeting-release-readiness.md`, kabul durumu `.agents/meeting-remaining-checklist.md`.

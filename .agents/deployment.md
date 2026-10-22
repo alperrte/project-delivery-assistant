@@ -1,5 +1,9 @@
 # Kurulum ve deployment
 
+## Toplantı e-posta hatırlatmaları — 2026-10-22
+
+Yeni ENV veya SMTP servisi yoktur. Mevcut meeting özelliği (`MEETING_MEDIA_ENABLED` / `pda.meeting.enabled`) ve `MAIL_ENABLED` açıkken V54 kuyruğu işlenir; mevcut `MAIL_PROVIDER`, `SMTP_*`, `SMTP_FROM_ADDRESS`/`MAIL_FROM` ve güvenilir origin olan `FRONTEND_URL` kullanılır. `FRONTEND_URL` mail bağlantıları için path/query/fragment/credentials içermeyen HTTP(S) origin olmalıdır; mevcut origin güvenlik politikası genişlemez. Tek başına SMTP erişilemezliği API/create transaction'ını etkilemez; retry ledger'ı PostgreSQL'dedir. Yayında normal backend imajı/Flyway V54 gerekir; bu görev production dağıtımı veya gerçek DNS/teslim garantisi içermez. Recovery sınırları `.agents/operations.md` içindedir.
+
 ## Toplantı SFU hazırlığı — 2026-10-18
 
 Üretim hazırlığı eki: `docker-compose.meeting.prod.yml` isteğe bağlı SFU overlay'idir; varsayılan dört servisli production bileşimi değişmedi. `ops/caddy/meeting.json` resmî digest-pinli Caddy Layer4 ile site/medya/TURN TLS'i tek TCP 443'te ayırır; PROXY v2 client-IP'yi korur. Frontend Docker public medya origin'ini build/runtime'a alır. `MEDIA_ADDRESS`, `TURN_ADDRESS`, `LIVEKIT_NODE_IP` örnek sözleşmeye eklendi. Hedef ölçüm 2 oda × 5 kişi; kapasite garantisi değil. Gerçek production profili/DNS/firewall/deployment değiştirilmedi. Salt okunur kontroller: `ops/check-meeting-production.ps1 -Template`, `ops/verify-meeting-edge.py`. Tam uygulama/rollback ve açık kabul: `.agents/meeting-release-readiness.md`.

@@ -1,5 +1,9 @@
 # Veritabanı ve kalıcılık
 
+## V54 toplantı e-posta teslim kuyruğu — 2026-10-22
+
+`meetings.reminder_revision BIGINT NOT NULL DEFAULT 0` eski kayıtları korur. `meeting_reminder_deliveries` meeting FK/cascade, alıcı UUID, planlama sürümü, reminder/next-attempt/last-attempt/sent tarihleri, sınırlı status/error kodu, 0–8 deneme ve claim UUID/lease içerir. `(meeting_id,recipient_user_id,reminder_revision)` UNIQUE, due/expired-lease partial index'leri ve scheduled-meeting index'i vardır. Adres/içerik/token saklanmaz; kullanıcı referansı scalar UUID'dir. Başlangıç veya attendee set değişimi sürümü ilerletir; eski bekleyen işler iptal edilir. Kısa atomik `FOR UPDATE SKIP LOCKED` claim ve token koşullu completion kullanılır. V53→V54 eski toplantı koruma/constraint/idempotent startup testi vardır. Uygulanmış migration değiştirilmez; recovery/geri dönüş `.agents/operations.md` kapsamındadır.
+
 ## V52–V53 toplantı backend — 2026-10-18
 
 V52 `meetings`, agenda/attendee, invite, participant/guest-session hash, chat/mention, audit, webhook dedup ve bağımsız `meeting_room_cleanup` tablolarını ekler. UTC TIMESTAMPTZ, meeting row write lock, unique oda/identity/secret hash ve FK/check/index sınırları kullanılır. Kalıcı proje silme meeting ilişkilerini cascade ile kaldırır; SFU odalarının doğrulanmış silinmesi için bağımsız cleanup tombstone'u kalır. Kick pending eski oda adı/epoch ve ban transaction'ı remote silmeden önce commit edilir. Davet redemption öncesi yalnız scalar ID sorgulanır, meeting kilidinden sonra güncel davet okunur; first-level cache ile eski kullanım/revoke snapshot'ı kullanılmaz.

@@ -8,6 +8,8 @@ import java.util.*;
 public class Meeting {
     @Id public UUID id;
     @Version public long version;
+    /** Changes only when the start time or invited recipient set changes, independently of lifecycle writes. */
+    @Column(nullable=false) public long reminderRevision;
     @Column(nullable=false) public UUID projectId;
     @Column(nullable=false) public UUID organizerId;
     @Column(nullable=false,length=160) public String title;
