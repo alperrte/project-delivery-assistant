@@ -67,7 +67,7 @@ export function SubtasksSection({ task, slug, projectId, perms, advancedWritable
                 <StatusDot status={subtask.status} />
                 <span className="w-16 shrink-0 text-xs tabular-nums text-muted-foreground">{subtask.taskKey}</span>
                 <span className={cn("min-w-0 flex-1 truncate", subtask.status === "DONE" && "text-muted-foreground line-through")}>{subtask.title}</span>
-                <AssigneeAvatars people={subtask.assignees} max={2} className="hidden sm:inline-flex" />
+                <AssigneeAvatars people={subtask.assignees} max={2} interactive={false} className="hidden sm:inline-flex" />
                 <StatusBadge status={subtask.status} className="hidden md:inline-flex" />
               </Link>
             </li>

@@ -15,6 +15,7 @@ export const LABEL_COLORS = ["slate", "red", "orange", "amber", "green", "teal",
 export type LabelColor = (typeof LABEL_COLORS)[number];
 
 export type PersonRef = { userId: string; nickname: string | null; profilePhotoVersion?: number | null };
+export type AssignmentRef = { userId: string; assignedBy: string | null; assignedAt: string };
 export type LabelRef = { id: string; name: string; color: LabelColor };
 export type TaskRef = { id: string; key: string; title: string };
 export type SprintRef = { id: string; name: string; status: SprintStatus };
@@ -53,8 +54,10 @@ export type Task = {
   version: number;
   assigneeIds: string[];
   assignees: PersonRef[];
-  /** Who assigned the task, latest first, self-assignment left out; older servers omit it. */
+  /** Actors of current assignments, latest first, including self-assignment. Older servers omit it. */
   assigners?: PersonRef[];
+  /** Actual current actor/recipient pairs; never reconstructed from createdBy/updatedBy or history. */
+  assignmentDetails?: AssignmentRef[];
   labels: LabelRef[];
   parent: TaskRef | null;
   subtaskCount: number;
