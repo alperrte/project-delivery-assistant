@@ -15,7 +15,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Project } from "@/features/projects/types";
 import { useSession } from "@/features/auth/hooks/use-session";
-import { membersApi } from "@/features/projects/members-api";
 import { errorKey } from "@/lib/api/error-message";
 import { squadsApi, TEAM_PAGE_SIZE } from "../api";
 import { teamsKey } from "../hooks";
@@ -129,11 +128,6 @@ export function TeamsPage({ project, isManager }: { project: Project; isManager:
     queryFn: () => squadsApi.listAll(project.id),
     refetchInterval: LIVE_REFRESH_MS, refetchIntervalInBackground: false, refetchOnWindowFocus: "always",
   });
-  const members = useQuery({
-    queryKey: ["projects", project.id, "members", "count"],
-    queryFn: () => membersApi.list(project.id, 0, 1),
-    enabled: view === "chart",
-  });
 
   function href(next: { view?: View; page?: number }) {
     const params = new URLSearchParams(searchParams.toString());
@@ -176,7 +170,7 @@ export function TeamsPage({ project, isManager }: { project: Project; isManager:
         description={t("description")}
         action={
           <div className="flex flex-wrap items-center gap-2">
-            {all.length > 0 && (
+            {teams.data && (
               <Tabs value={view} onValueChange={(next) => { const chosen = parseView(next as string); if (chosen) changeView(chosen); }}>
                 <TabsList aria-label={t("view.label")} className="group-data-horizontal/tabs:h-9">
                   <TabsTrigger value="grid" className="px-2.5">
@@ -210,7 +204,7 @@ export function TeamsPage({ project, isManager }: { project: Project; isManager:
       )}
       {hasBlockingError(teams) && <p role="alert" className="text-sm text-destructive">{te(errorKey(teams.error))}</p>}
 
-      {teams.data && all.length === 0 && (
+      {!hasBlockingError(teams) && teams.data && all.length === 0 && view !== "chart" && (
         <EmptyState
           title={t("emptyTitle")}
           description={isManager ? t("emptyDescription") : t("emptyViewerDescription")}
@@ -218,7 +212,7 @@ export function TeamsPage({ project, isManager }: { project: Project; isManager:
         />
       )}
 
-      {teams.data && all.length > 0 && view !== "chart" && (
+      {!hasBlockingError(teams) && teams.data && all.length > 0 && view !== "chart" && (
         <>
           {view === "table" ? (
             <TeamTable teams={visible} project={project} parentNames={parentNames} canManage={isManager} />
@@ -246,8 +240,8 @@ export function TeamsPage({ project, isManager }: { project: Project; isManager:
         </>
       )}
 
-      {teams.data && all.length > 0 && view === "chart" && (
-        <TeamChart project={project} teams={all} memberTotal={members.data?.totalElements ?? null} />
+      {!hasBlockingError(teams) && view === "chart" && (
+        <TeamChart key={project.id} project={project} teams={all} teamsReady={!!teams.data} />
       )}
     </div>
   );

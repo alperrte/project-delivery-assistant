@@ -1113,7 +1113,19 @@
     "chart": {
       "label": "Ekip organizasyon şeması",
       "openTeam": "{name} ekibini aç",
-      "members": "{count} üye"
+      "members": "{count} üye",
+      "description": "Proje rolleri ve gerçek ekip üyelikleri gösterilir; bu görünüm kişisel raporlama ilişkisi belirtmez.",
+      "totals": "{members} benzersiz proje üyesi · {teams} ekip",
+      "managers": "Proje yöneticileri",
+      "teams": "Ekipler",
+      "unassigned": "Ekibe atanmamış üyeler",
+      "people": "Üyeler",
+      "roles": "Proje rolleri",
+      "teamMemberships": "Bağlı ekipler",
+      "teamDetails": "Ekip ayrıntıları",
+      "subteams": "Alt ekipler",
+      "emptyMembers": "Bu grupta üye yok.",
+      "emptyTeams": "Henüz ekip yok. Proje üyeleri aşağıda gösterilir."
     },
     "form": {
       "title": "Yeni ekip",

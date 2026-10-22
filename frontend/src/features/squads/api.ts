@@ -30,9 +30,9 @@ export const squadsApi = {
     apiRequest<void>(`/projects/${projectId}/teams/${teamId}`, { method: "DELETE" }),
   members: (projectId: string, teamId: string, page: number, size = 20) =>
     apiRequest<Page<TeamMember>>(`/projects/${projectId}/teams/${teamId}/members?page=${page}&size=${size}`),
-  allMembers: (projectId: string, teamId: string) =>
+  allMembers: (projectId: string, teamId: string, signal?: AbortSignal) =>
     allPages((page) =>
-      apiRequest<Page<TeamMember>>(`/projects/${projectId}/teams/${teamId}/members?page=${page}&size=${MAX_PAGE_SIZE}`)),
+      apiRequest<Page<TeamMember>>(`/projects/${projectId}/teams/${teamId}/members?page=${page}&size=${MAX_PAGE_SIZE}`, { signal })),
   addMember: (projectId: string, teamId: string, userId: string) =>
     apiRequest<TeamMember>(`/projects/${projectId}/teams/${teamId}/members`, { method: "POST", body: { userId } }),
   removeMember: (projectId: string, teamId: string, userId: string) =>

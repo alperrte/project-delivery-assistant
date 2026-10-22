@@ -3,8 +3,8 @@ import { api } from "./helpers";
 import { MANAGER_STORAGE, MEMBER_STORAGE } from "./global-setup";
 
 /**
- * Teams page views: Grid (cards), Table and Chart are three presentations of the SAME query. The table shows the same
- * page slice as the grid, switching views never refetches, the choice is remembered per account, and phones get a
+ * Teams page views share the team-list query; the complete chart also reads project members and team rosters.
+ * The table shows the same page slice as the grid, switching views never refetches that list, the choice is remembered per account, and phones get a
  * stacked list instead of a horizontally scrolling table.
  */
 const TEAM_COUNT = 14; // 12 per page -> two pages
@@ -106,13 +106,14 @@ test.describe.serial("Teams view toggle (grid / table / chart)", () => {
     await expect(first.locator("[data-member-preview]").first()).toBeVisible();
   });
 
-  test("table and grid share the page: page 2 survives switching, chart works, no extra requests", async () => {
+  test("table and grid share the page: page 2 survives switching, chart works, no extra team-list requests", async () => {
     const teamRequests: string[] = [];
     await openTeams(manager, "&view=table");
     await expect(manager.getByTestId("teams-table").locator("tbody tr")).toHaveCount(PAGE_SIZE);
     manager.on("request", (request) => {
       const url = new URL(request.url());
-      if (request.method() === "GET" && url.pathname.includes(`/projects/${fixture.projectId}/teams`)) teamRequests.push(request.url());
+      // The complete organization chart separately reads rosters; view switches reuse the team list.
+      if (request.method() === "GET" && url.pathname === `/api/v1/projects/${fixture.projectId}/teams`) teamRequests.push(request.url());
     });
 
     await manager.getByRole("button", { name: "Sayfa 2", exact: true }).click();

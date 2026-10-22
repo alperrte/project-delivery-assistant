@@ -53,7 +53,7 @@ export default async function globalSetup() {
       });
       try {
         // API-only preparation must not mount notification/popup owners.
-        const base = "http://localhost:8080/api/v1";
+        const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/api/v1";
         const csrf = await context.request.get(`${base}/auth/csrf`);
         if (csrf.status() !== 200) throw new Error(`Shared fixture CSRF failed (${csrf.status()})`);
         const { headerName } = await csrf.json() as { headerName: string };
