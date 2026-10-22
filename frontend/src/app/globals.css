@@ -87,6 +87,11 @@ html::-webkit-scrollbar-thumb:hover,
   --color-ring: var(--ring);
   --color-surface-2: var(--surface-2);
   --color-live: var(--live);
+  --color-meeting: var(--meeting);
+  --color-meeting-hover: var(--meeting-hover);
+  --color-meeting-foreground: var(--meeting-foreground);
+  --color-meeting-soft: var(--meeting-soft);
+  --color-meeting-ink: var(--meeting-ink);
   --color-label-slate: var(--label-slate);
   --color-label-red: var(--label-red);
   --color-label-orange: var(--label-orange);
@@ -275,6 +280,12 @@ html::-webkit-scrollbar-thumb:hover,
   --warning: #a4660b;
   --destructive: #ba1a1a;
   --live: #10b981;
+  /* Meeting surfaces (list, form, room): the one blue accent of the meeting UI; white text on --meeting is >= 4.5:1. */
+  --meeting: #1d5fe0;
+  --meeting-hover: #164fbd;
+  --meeting-foreground: #ffffff;
+  --meeting-soft: #e8f0fd;
+  --meeting-ink: #1b55c9;
 }
 :is(html.dark:has(.app-shell), html.dark .workspace-preview, html.dark .theme-toggle) {
   --background: #090a0b;
@@ -301,6 +312,11 @@ html::-webkit-scrollbar-thumb:hover,
   --warning: #f59e0b;
   --destructive: #ff6b72;
   --live: #10b981;
+  --meeting: #2f6bed;
+  --meeting-hover: #4b80f2;
+  --meeting-foreground: #ffffff;
+  --meeting-soft: #16213a;
+  --meeting-ink: #8db2ff;
 }
 :is(.app-shell, .workspace-preview) h1, :is(.app-shell, .workspace-preview) .font-heading {
   font-family: var(--font-inter), sans-serif;

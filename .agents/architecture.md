@@ -1,5 +1,9 @@
 ﻿# Mimari kısa özet
 
+## Toplantı arayüzü yeniden tasarımı — 2026-10-23
+
+Yalnız frontend (`meeting-system-frontend`); backend, API sözleşmesi, Flyway ve V54 hatırlatma sistemi değişmedi (V54 yerel şemada uygulanmış, formdan oluşan toplantılar `meeting_reminder_deliveries` kuyruğuna girer). Liste backend'de arama/sayım olmadığından proje toplantılarının tamamını `meetingsApi.listAll` ile alır ve filtre/arama/sıralama/gruplama/sayfalamayı istemcide aynı kümeden yapar (15 sn polling, `["accounts", actor, "meetings", project, "list", "all"]` anahtarı). Toplantı yüzeyleri ortak `--meeting*` token'larını ve `Button variant="accent"` kullanır. Oda LiveKit yaşam döngüsü, `MeetingSessionProvider`/`MeetingMiniBar`/`SessionRunner` ve token'ların yalnız bellekte tutulması aynen korunur; yeni sahne/filmstrip/panel yalnız görünümdür. Ayrıntı: `docs/compliation/2026-10-22-meeting-system-frontend.md`.
+
 ## Toplantı e-posta hatırlatmaları — 2026-10-22
 
 Meeting modülü kendi `internal` paketinde kalıcı `meeting_reminder_deliveries` kuyruğunu yönetir; uygulama içi Notification event fanout'u değişmez. Başlangıç/attendee set değişiminde ayrı `reminderRevision` ilerler; lifecycle entity version'ı mail idempotency anahtarı değildir. 15 sn discovery ve kısa PostgreSQL claim/lease/fencing transaction'ları, ayrı tek mail worker'ı ve mevcut `SmtpMailSettings` kullanılır. SMTP sırasında DB kilidi/transaction tutulmaz ve ortak lifecycle scheduler'ı beklemez. Project ve User yalnız public contract üzerinden güncel erişim, ACTIVE+VERIFIED adres ve kayıtlı locale sağlar; kayıtlı dil yoksa TR kullanılır. SMTP at-least-once crash/retry sınırı ve V54 işletimi `.agents/operations.md` içindedir.

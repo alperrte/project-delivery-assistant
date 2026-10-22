@@ -1,12 +1,14 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { DisconnectReason, LogLevel, Room, RoomEvent, Track, setLogLevel } from "livekit-client";
+import { DisconnectReason, LogLevel, Room, RoomEvent, Track, setLogLevel, type LocalAudioTrack } from "livekit-client";
 import { ApiError } from "@/lib/api/client";
 import { guestMeetingState, meetingConnectionApi, meetingsApi } from "./api";
 import type { GuestMeeting, MeetingMessage, MeetingParticipant } from "./types";
 
 // The SDK must not log signaling URLs, tokens or user/media metadata.
 setLogLevel(LogLevel.silent);
+/** Microphone capture the browser can do for us (never a third-party service): echo cancellation, noise suppression and automatic gain. */
+const CAPTURE = { echoCancellation: true, noiseSuppression: true, autoGainControl: true } as const;
 export type RoomPhase = "ready" | "connecting" | "connected" | "reconnecting" | "left" | "closed" | "removed" | "failed";
 
 export function useMeetingRoom(meetingId: string, projectId?: string) {
@@ -23,9 +25,11 @@ export function useMeetingRoom(meetingId: string, projectId?: string) {
   const [retained, setRetained] = useState(false);
   const [hasOlder, setHasOlder] = useState(false);
   const [chatLoaded, setChatLoaded] = useState(false);
-  const controls = useRef<{ join: () => void; retry: () => void; leave: () => void; older: () => Promise<void>; refreshChat: () => Promise<void> } | null>(null);
+  const controls = useRef<{ join: () => void; retry: () => void; leave: () => void; older: () => Promise<void>; refreshChat: () => Promise<void>; applyNoise: (enabled: boolean) => Promise<void> } | null>(null);
   const intended = useRef({ mic: false, camera: false });
   const devices = useRef<Partial<Record<MediaDeviceKind, string>>>({});
+  const [noiseSuppression, setNoiseSuppressionState] = useState(true);
+  const noise = useRef(true);
 
   useEffect(() => {
     let alive = true, stopped = false, suspended = false, joining = false, joined = false, attempts = 0, epoch = -1, currentId = "", currentRoom: Room | undefined;
@@ -97,7 +101,7 @@ export function useMeetingRoom(meetingId: string, projectId?: string) {
         joined = true; currentId = admission.participantId; setSelfId(currentId); setRetained(admission.chatRetained); epoch = admission.roomEpoch;
         dispose();
         const next = new Room({ adaptiveStream: true, dynacast: true,
-          audioCaptureDefaults: { deviceId: devices.current.audioinput }, videoCaptureDefaults: { deviceId: devices.current.videoinput },
+          audioCaptureDefaults: { deviceId: devices.current.audioinput, ...CAPTURE, noiseSuppression: noise.current }, videoCaptureDefaults: { deviceId: devices.current.videoinput },
           audioOutput: { deviceId: devices.current.audiooutput }, reconnectPolicy: { nextRetryDelayInMs: () => null } });
         currentRoom = next;
         const refreshed = () => { void refreshChat().catch(() => {}); };
@@ -152,6 +156,12 @@ export function useMeetingRoom(meetingId: string, projectId?: string) {
       // A second call (double tap, or a confirmation that fires twice) must not send another leave request.
       leave: () => { if (stopped) return; const wasJoined = joined; stop("left"); if (wasJoined) void api.leave().catch(() => {}); },
       refreshChat,
+      applyNoise: async enabled => {
+        if (!currentRoom) return;
+        currentRoom.options.audioCaptureDefaults = { ...currentRoom.options.audioCaptureDefaults, noiseSuppression: enabled };
+        const track = currentRoom.localParticipant.getTrackPublication(Track.Source.Microphone)?.audioTrack as LocalAudioTrack | undefined;
+        if (track) await track.restartTrack({ ...CAPTURE, noiseSuppression: enabled, deviceId: devices.current.audioinput });
+      },
       older: async () => { const response = await api.chat(historyPage + 1, abort.signal); if (!alive || stopped) return; historyPage++; setHasOlder(historyPage + 1 < response.totalPages); setMessages(previous => [...new Map([...response.content, ...previous].map(m => [m.id, m])).values()].sort((a,b) => a.sentAt.localeCompare(b.sentAt) || a.id.localeCompare(b.id))); },
     };
     const timer = setInterval(() => void poll(), 4000);
@@ -169,6 +179,11 @@ export function useMeetingRoom(meetingId: string, projectId?: string) {
     setIntent: (kind: "mic" | "camera", enabled: boolean) => { intended.current[kind] = enabled; },
     /** The device chosen on the ready screen; the room opens it when the person turns the microphone/camera on. */
     setPreferredDevice: (kind: "audioinput" | "videoinput", deviceId: string | undefined) => { devices.current[kind] = deviceId; },
+    /** Whether this browser can switch noise suppression at all; where it cannot, the setting is not offered. */
+    noiseSuppressionSupported: typeof navigator !== "undefined" && Boolean(navigator.mediaDevices?.getSupportedConstraints?.().noiseSuppression),
+    noiseSuppression,
+    /** Applies to the open microphone (it is restarted with the new constraint) and to every microphone opened later in this call. */
+    setNoiseSuppression: async (enabled: boolean) => { noise.current = enabled; setNoiseSuppressionState(enabled); await controls.current?.applyNoise(enabled); },
     switchDevice: async (kind: MediaDeviceKind, deviceId: string) => { if (room && await room.switchActiveDevice(kind, deviceId)) devices.current[kind] = deviceId; },
     join: () => controls.current?.join(), leave: () => controls.current?.leave(),
     retry: () => controls.current?.retry(),

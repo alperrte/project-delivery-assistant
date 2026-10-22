@@ -110,7 +110,7 @@ export function MeetingMiniBar() {
     <Button variant={camera ? "secondary" : "outline"} className="size-11 shrink-0" aria-label={t(camera ? "cameraOff" : "cameraOn")} aria-pressed={camera} disabled={!connected || live.mediaBusy} onClick={() => void toggle("camera")}>
       {camera ? <Camera size={18} aria-hidden="true" /> : <CameraOff size={18} aria-hidden="true" />}
     </Button>
-    <Link href={target.roomHref} aria-label={t("returnToMeeting")} className={buttonVariants({ className: "h-11 shrink-0 gap-2 px-3 max-[27rem]:w-11 max-[27rem]:px-0" })}><Video size={18} aria-hidden="true" /><span className="max-[27rem]:sr-only">{t("returnToMeeting")}</span></Link>
+    <Link href={target.roomHref} aria-label={t("returnToMeeting")} className={buttonVariants({ variant: "accent", className: "h-11 shrink-0 gap-2 px-3 max-[27rem]:w-11 max-[27rem]:px-0" })}><Video size={18} aria-hidden="true" /><span className="max-[27rem]:sr-only">{t("returnToMeeting")}</span></Link>
     <ConfirmDialog
       trigger={<Button variant="destructive" className="size-11 shrink-0" aria-label={t("leave")}><PhoneOff size={18} aria-hidden="true" /></Button>}
       title={t("leaveTitle")} description={t("leaveDescription")} confirmLabel={t("leaveConfirm")} cancelLabel={t("leaveCancel")} destructive

@@ -2,10 +2,25 @@ import { apiRequest } from "@/lib/api/client";
 import type { Page } from "@/types/pagination";
 import type { GuestMeeting, Meeting, MeetingInput, MeetingInvite, MeetingInviteMetadata, MeetingJoin, MeetingMessage, MeetingParticipant, MeetingStatus } from "./types";
 
+/** Safety bound for the full list: 20 pages of 100 meetings. */
+const MAX_LIST_PAGES = 20;
 const root = (projectId: string) => `/projects/${encodeURIComponent(projectId)}/meetings`;
 export const meetingsApi = {
   list: (projectId: string, page = 0, status?: MeetingStatus, signal?: AbortSignal) =>
     apiRequest<Page<Meeting>>(`${root(projectId)}?page=${page}&size=12&sort=startsAt,desc${status ? `&status=${status}` : ""}`, { signal }),
+  /**
+   * Every meeting of the project (pages of 100, at most MAX_LIST_PAGES pages). The list screen filters, searches, sorts and groups
+   * this one set, so the tab counts, the search and the pagination always describe the same meetings.
+   */
+  listAll: async (projectId: string, signal?: AbortSignal) => {
+    const content: Meeting[] = [];
+    for (let page = 0; page < MAX_LIST_PAGES; page++) {
+      const result = await apiRequest<Page<Meeting>>(`${root(projectId)}?page=${page}&size=100&sort=startsAt,desc`, { signal });
+      content.push(...result.content);
+      if (page + 1 >= result.totalPages) return { content, complete: true };
+    }
+    return { content, complete: false };
+  },
   detail: (projectId: string, id: string, signal?: AbortSignal) => apiRequest<Meeting>(`${root(projectId)}/${id}`, { signal }),
   create: (projectId: string, body: MeetingInput, guard?: () => boolean) => apiRequest<Meeting>(root(projectId), { method: "POST", body, guard }),
   update: (projectId: string, id: string, body: MeetingInput, guard?: () => boolean) => apiRequest<Meeting>(`${root(projectId)}/${id}`, { method: "PUT", body, guard }),
