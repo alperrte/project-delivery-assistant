@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -18,6 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { errorKey } from "@/lib/api/error-message";
 import { cn } from "@/lib/utils";
 import { criteriaApi } from "../api";
+import { moveCriterionWithinStatus, sortCriteriaForDisplay } from "../ordering";
 import { hasBlockingError } from "@/lib/api/live-sync";
 
 const STATUS_STYLE = {
@@ -66,6 +67,7 @@ export function CriteriaList({ slug, projectId, isManager }: { slug: string; pro
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<"all" | "completed" | "remaining">("all");
   const [search, setSearch] = useState("");
+  const mutationLock = useRef(false);
 
   const { data: criteria, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["projects", projectId, "criteria"],
@@ -82,26 +84,30 @@ export function CriteriaList({ slug, projectId, isManager }: { slug: string; pro
       vars.completed ? criteriaApi.uncomplete(projectId, vars.id) : criteriaApi.complete(projectId, vars.id),
     onSuccess: invalidate,
     onError: (err) => toast.error(te(errorKey(err))),
+    onSettled: () => { mutationLock.current = false; },
   });
 
   const remove = useMutation({
     mutationFn: (id: string) => criteriaApi.remove(projectId, id),
     onSuccess: invalidate,
     onError: (err) => toast.error(te(errorKey(err))),
+    onSettled: () => { mutationLock.current = false; },
   });
 
   const reorder = useMutation({
     mutationFn: (orderedIds: string[]) => criteriaApi.reorder(projectId, orderedIds),
     onSuccess: invalidate,
     onError: (err) => toast.error(te(errorKey(err))),
+    onSettled: () => { mutationLock.current = false; },
   });
 
-  function move(index: number, direction: -1 | 1) {
-    if (!criteria) return;
-    const target = index + direction;
-    if (target < 0 || target >= criteria.length) return;
-    const ids = criteria.map((c) => c.id);
-    [ids[index], ids[target]] = [ids[target], ids[index]];
+  const mutationBusy = toggle.isPending || remove.isPending || reorder.isPending;
+
+  function move(criterionId: string, direction: -1 | 1) {
+    if (!criteria || mutationLock.current || mutationBusy || filter !== "all" || search) return;
+    const ids = moveCriterionWithinStatus(criteria, criterionId, direction);
+    if (!ids) return;
+    mutationLock.current = true;
     reorder.mutate(ids);
   }
 
@@ -117,7 +123,8 @@ export function CriteriaList({ slug, projectId, isManager }: { slug: string; pro
   const completed = criteria.filter((c) => c.completed).length;
   const total = criteria.length;
   const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
-  const visibleCriteria = criteria.filter((criterion) =>
+  const orderedCriteria = sortCriteriaForDisplay(criteria);
+  const visibleCriteria = orderedCriteria.filter((criterion) =>
     (filter === "all" || (filter === "completed" ? criterion.completed : !criterion.completed)) &&
     criterion.title.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()),
   );
@@ -172,9 +179,9 @@ export function CriteriaList({ slug, projectId, isManager }: { slug: string; pro
         </div>
         {visibleCriteria.length === 0 ? <EmptyState title={t("noResults")} /> : <ul className="divide-y overflow-hidden rounded-xl border bg-card shadow-sm">
           {visibleCriteria.map((criterion) => {
-            const index = criteria.findIndex((item) => item.id === criterion.id);
+            const index = orderedCriteria.findIndex((item) => item.id === criterion.id);
             return (
-            <li key={criterion.id} className="flex flex-wrap items-start gap-3 p-4 transition-colors hover:bg-muted/25 sm:p-5">
+            <li key={criterion.id} data-testid="criterion-row" data-criterion-id={criterion.id} className="flex flex-wrap items-start gap-3 p-4 transition-colors hover:bg-muted/25 sm:p-5">
               <div className="min-w-0 flex-1">
                 <p className={criterion.completed ? "text-sm text-muted-foreground line-through" : "text-sm font-medium text-foreground"}>
                   {criterion.title}
@@ -187,8 +194,12 @@ export function CriteriaList({ slug, projectId, isManager }: { slug: string; pro
                 title={criterion.title}
                 completed={criterion.completed}
                 editable={isManager}
-                busy={toggle.isPending}
-                onChange={() => toggle.mutate({ id: criterion.id, completed: criterion.completed })}
+                busy={mutationBusy}
+                onChange={() => {
+                  if (mutationLock.current || mutationBusy) return;
+                  mutationLock.current = true;
+                  toggle.mutate({ id: criterion.id, completed: criterion.completed });
+                }}
               />
               {isManager && (
                 <div className="flex shrink-0 items-center gap-1">
@@ -196,8 +207,8 @@ export function CriteriaList({ slug, projectId, isManager }: { slug: string; pro
                     variant="ghost"
                     size="icon-sm"
                     aria-label={t("moveUp")}
-                    disabled={filter !== "all" || !!search || index === 0 || reorder.isPending}
-                    onClick={() => move(index, -1)}
+                    disabled={filter !== "all" || !!search || mutationBusy || orderedCriteria[index - 1]?.completed !== criterion.completed}
+                    onClick={() => move(criterion.id, -1)}
                   >
                     <CaretUp size={14} />
                   </Button>
@@ -205,8 +216,8 @@ export function CriteriaList({ slug, projectId, isManager }: { slug: string; pro
                     variant="ghost"
                     size="icon-sm"
                     aria-label={t("moveDown")}
-                    disabled={filter !== "all" || !!search || index === criteria.length - 1 || reorder.isPending}
-                    onClick={() => move(index, 1)}
+                    disabled={filter !== "all" || !!search || mutationBusy || orderedCriteria[index + 1]?.completed !== criterion.completed}
+                    onClick={() => move(criterion.id, 1)}
                   >
                     <CaretDown size={14} />
                   </Button>
@@ -219,7 +230,7 @@ export function CriteriaList({ slug, projectId, isManager }: { slug: string; pro
                   </Link>
                   <ConfirmDialog
                     trigger={
-                      <Button variant="ghost" size="icon-sm" aria-label={t("delete")}>
+                      <Button variant="ghost" size="icon-sm" aria-label={t("delete")} disabled={mutationBusy}>
                         <Trash size={14} />
                       </Button>
                     }
@@ -227,7 +238,11 @@ export function CriteriaList({ slug, projectId, isManager }: { slug: string; pro
                     confirmLabel={t("delete")}
                     cancelLabel={t("cancel")}
                     destructive
-                    onConfirm={() => remove.mutateAsync(criterion.id)}
+                    onConfirm={async () => {
+                      if (mutationLock.current || mutationBusy) return;
+                      mutationLock.current = true;
+                      await remove.mutateAsync(criterion.id);
+                    }}
                   />
                 </div>
               )}

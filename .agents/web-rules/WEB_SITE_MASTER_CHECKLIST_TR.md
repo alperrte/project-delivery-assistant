@@ -1,5 +1,9 @@
 # Web Sitesi Kesinlikle Olması Gerekenler — Master Checklist
 
+## Proje kriter grafiği ve sıralama — 2026-10-22 (sınırlı kapsam)
+
+Yalnız Proje Genel Bakış / Kriterler yüzeylerinde Responsive, Dark Mode, Keyboard Navigation, Focus State, Empty/Error State ve Navigasyon doğrulandı. Grafik TR/EN/DE × light/dark × 320/375/768/1024/1440 px matrisinde taşmasız, orantılı, okunabilir eksenlerle; native ay düğmeleri Enter/Space, görünür odak ve en az 24 px hedeflerle çalışır. Ay paneli güncel kriter paydalı UTC hesaplamasını, aylık/kümülatif ayrımını ve tarihsel veri sınırını açıklar. Gerçek QA API/PostgreSQL üzerinde tamamlananlar önce, grup içi kalıcı manuel sıra, tam ID payload, hata, geri alma, proje izolasyonu ve iki kullanıcılı GF-02 yenilemesi (arama/filtre/scroll korunarak) doğrulandı. Geçersiz tarihler ve arka plan erişim kaybı ayrıca test edildi; console/hydration hatası yok, mobil/masaüstü görüntüleri incelendi. 27 farklı hedefli frontend testi son koşularında PASS. Global kutular bu sınırlı kanıtla değiştirilmedi; tam pre-push sonucu ve doğrulanmayan fiziksel cihaz/ekran okuyucu/diğer tarayıcı sınırları teslim kaydındadır: `docs/compliation/2026-10-22-project-service-frontend-fixes.md`.
+
 ## Tek takvim — 2026-10-18 (sınırlı kapsam)
 
 Toplantılarım liste sayfası için de breadcrumb kaldırıldı; hedefli ESLint/whitespace kontrolleri geçti. Bu takip değişikliğinde tarayıcı testi tekrarlanmadı; global kutular değişmedi.
