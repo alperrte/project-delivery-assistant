@@ -60,8 +60,7 @@ export async function api(
   body?: unknown,
 ): Promise<{ status: number; json: unknown }> {
   return page.evaluate(
-    async ({ method, path, body }) => {
-      const base = "http://localhost:8080/api/v1";
+    async ({ method, path, body, base }) => {
       const csrfRes = await fetch(`${base}/auth/csrf`, { credentials: "include" });
       const { headerName } = await csrfRes.json();
       const cookie = document.cookie.split("; ").find((row) => row.startsWith("XSRF-TOKEN="));
@@ -74,7 +73,7 @@ export async function api(
       });
       return { status: res.status, json: await res.json().catch(() => null) };
     },
-    { method, path, body },
+    { method, path, body, base: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/api/v1" },
   );
 }
 
