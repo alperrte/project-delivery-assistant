@@ -1,5 +1,9 @@
 # Frontend tasarım kuralları
 
+## Bildirim popup kaydırması — 2026-10-22
+
+Bildirim merkezinin mevcut popup'ı `data-workspace-scroll` ile ortak tema paletini kullanır. `overflow-y-auto` ve `overscroll-y-contain` kaydırmayı popup içinde tutar; yükseklik 70dvh, 32rem ve Base UI `--available-height` değerlerinin en küçüğüyle sınırlıdır. Yeni scrollbar CSS'i veya ayrı popup/odak mekanizması oluşturulmaz.
+
 ## Görev atama ve Kanban kaydırması — 2026-10-22
 
 Görev tablosu/mobil satırı, Görevlerim kartı, liste satırı ve detay aynı AssignmentFlow gösterimini kullanır: mevcut Avatar/fallback, görünür kişi adı, en fazla üç alıcı avatarı ve +N; tam isimler ve gerçek aktör–alıcı çiftleri mevcut Tooltip ile klavye, hover ve dokunmayla açılır. Kimliği bilinmeyen aktör yerine oluşturan/düzenleyen tahmin edilmez. Genişletilmiş kart linkinin üzerindeki etkileşimli kontrol relative z-10 alır; link içinde ikinci kontrol oluşturulmaz. Kanban sütun listesi mevcut data-workspace-scroll paletini kullanır, klavyeyle odaklanır ve overscroll-y-contain ile kaydırmayı sütunda tutar. Global scrollbar stili kopyalanmaz.

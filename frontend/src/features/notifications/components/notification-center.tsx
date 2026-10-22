@@ -200,7 +200,7 @@ ${c.headAuthor ? t("repositoryCommitsHeadBy", { message: c.headMessage, author: 
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Positioner align="end" sideOffset={8} className="z-50 outline-none">
-          <Popover.Popup ref={popupRef} className="w-[min(26rem,calc(100vw-2rem))] max-h-[min(70dvh,32rem)] overflow-y-auto rounded-xl border bg-popover p-4 text-popover-foreground shadow-lg outline-none"
+          <Popover.Popup ref={popupRef} data-workspace-scroll className="w-[min(26rem,calc(100vw-2rem))] max-h-[min(70dvh,32rem,var(--available-height))] overflow-y-auto overscroll-y-contain rounded-xl border bg-popover p-4 text-popover-foreground shadow-lg outline-none"
             finalFocus={() => !navigatingTask.current}
             aria-label={t("title")}
             onPointerDownCapture={() => { focusPlan.current = null; }} onKeyDownCapture={() => { focusPlan.current = null; }}
