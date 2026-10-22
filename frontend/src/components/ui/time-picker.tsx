@@ -77,7 +77,7 @@ export function TimePicker({ id, label, value, onChange, onBlur, ref, disabled, 
           <Popover.Popup
             aria-label={label}
             initialFocus={() => document.getElementById(`${id}-time`)?.querySelector<HTMLElement>('[role="option"][tabindex="0"]') ?? true}
-            className="max-h-(--available-height) w-[min(16rem,calc(100vw-1.5rem))] overflow-y-auto rounded-xl border border-border bg-popover p-3 text-popover-foreground shadow-xl outline-none"
+            className="max-h-(--available-height) w-[min(22rem,calc(100vw-1.5rem))] overflow-y-auto rounded-xl border border-border bg-popover p-3 text-popover-foreground shadow-xl outline-none"
           >
             <div className="mb-2 flex items-center justify-between gap-2 px-1">
               <Popover.Title className="text-sm font-medium">{label}</Popover.Title>
@@ -86,7 +86,7 @@ export function TimePicker({ id, label, value, onChange, onBlur, ref, disabled, 
               </Popover.Close>
             </div>
             {open && (
-              <div id={`${id}-time`} className="grid grid-cols-2 gap-2">
+              <div id={`${id}-time`} className="grid grid-cols-2 gap-3 px-1">
                 <TimeColumn label={t("hour")} dataKey="data-hour" options={hours} selected={parsed?.hour ?? null} onSelect={chooseHour} />
                 <TimeColumn label={t("minute")} dataKey="data-minute" options={minutes} selected={parsed?.minute ?? null} onSelect={chooseMinute} />
               </div>
@@ -137,8 +137,8 @@ function TimeColumn({ label, dataKey, options, selected, onSelect }: {
 
   return (
     <div className="min-w-0">
-      <p className="mb-1 px-1 text-center text-xs font-medium text-muted-foreground">{label}</p>
-      <div ref={listRef} role="listbox" aria-label={label} className="relative max-h-56 overflow-y-auto rounded-lg border border-border bg-muted/30 p-1">
+      <p className="pb-2 text-center text-xs font-medium text-muted-foreground">{label}</p>
+      <div ref={listRef} role="listbox" aria-label={label} data-workspace-scroll className="relative max-h-56 space-y-0.5 overflow-y-auto overscroll-contain pr-1">
         {options.map((option, index) => {
           const isSelected = option === selected;
           return (
