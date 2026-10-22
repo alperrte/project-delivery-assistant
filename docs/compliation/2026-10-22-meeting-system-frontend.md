@@ -70,4 +70,4 @@ Mevcut spec'lerde yapılan düzeltmeler (davranış kararı gereği): panel geni
 
 ## Commit
 
-Kod ve testler: `20a531bf` — `feat(meetings): redesign meeting interfaces from visual references` (`meeting-system-frontend`). Bu kayıt ayrı bir `docs` commit'idir. Push/merge yapılmadı.
+Kod ve testler: `da5a04a1` — `feat(meetings): redesign meeting interfaces from visual references` (`meeting-system-frontend`). Bu kayıt ayrı bir `docs` commit'idir. Push/merge yapılmadı.
