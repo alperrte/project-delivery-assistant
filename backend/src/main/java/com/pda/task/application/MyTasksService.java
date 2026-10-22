@@ -80,7 +80,7 @@ public class MyTasksService {
         }
 
         PageRequest pageable = PageRequest.of(page, size);
-        Page<Task> result = tasks.findAll(filtered.and(TaskSpecifications.orderBy(sortField, ascending)), pageable);
+        Page<Task> result = tasks.findAll(filtered.and(TaskSpecifications.orderBy(sortField, ascending, scope == Scope.ALL)), pageable);
         List<TaskView> content = assembler.assemble(result.getContent(), actor, projects);
         return new MyTasksPage(content, result.getNumber(), result.getSize(), result.getTotalElements(),
                 result.getTotalPages(), counts(mine, now, actor));
