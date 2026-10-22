@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { TaskModeBadge } from "./task-mode-picker";
 import type { Task } from "../types";
 import { StatusMenu } from "./status-menu";
-import { AssigneeAvatars, BlockedMark, DeadlineChip, LabelList, PointsBadge, PoolMark, PriorityIndicator, ProgressPill } from "./task-badges";
+import { AssignmentFlow, BlockedMark, DeadlineChip, LabelList, PointsBadge, PoolMark, PriorityIndicator, ProgressPill } from "./task-badges";
 
 export function PriorityDot({ priority, className }: { priority: Task["priority"]; className?: string }) {
   const t = useTranslations("tasks.common.priority");
@@ -103,7 +103,7 @@ export function TaskRow({ task, href, canChangeStatus, showProject }: TaskRowPro
         )}
         <PointsBadge points={task.estimatePoints} />
         <DeadlineChip task={task} className="md:min-w-24 md:justify-end" />
-        <AssigneeAvatars people={task.assignees} />
+        <AssignmentFlow assignees={task.assignees} assigners={task.assigners ?? []} assignmentDetails={task.assignmentDetails} />
       </div>
     </li>
   );

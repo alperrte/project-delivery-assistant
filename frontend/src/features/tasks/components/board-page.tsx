@@ -235,7 +235,7 @@ function BoardView({ slug, project, projectId, userId, isManager }: ProjectGateC
                   ) : status === "DONE" && hideDone ? (
                     <p className="rounded-lg border border-dashed px-3 py-6 text-center text-xs text-muted-foreground" data-testid="board-done-hidden">{accepts ? t("dropHere") : t("doneHidden", { count: column.length })}</p>
                   ) : (
-                    <ul className="max-h-[32rem] space-y-2 overflow-y-auto pr-0.5">
+                    <ul data-workspace-scroll tabIndex={0} aria-label={t("column", { status: tc(`status.${status}`), count: column.length })} className="max-h-[32rem] space-y-2 overflow-y-auto overscroll-y-contain rounded-md pr-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
                       {column.map((task) => (
                         <BoardCard
                           key={task.id}

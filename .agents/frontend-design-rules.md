@@ -1,5 +1,9 @@
 # Frontend tasarım kuralları
 
+## Görev atama ve Kanban kaydırması — 2026-10-22
+
+Görev tablosu/mobil satırı, Görevlerim kartı, liste satırı ve detay aynı AssignmentFlow gösterimini kullanır: mevcut Avatar/fallback, görünür kişi adı, en fazla üç alıcı avatarı ve +N; tam isimler ve gerçek aktör–alıcı çiftleri mevcut Tooltip ile klavye, hover ve dokunmayla açılır. Kimliği bilinmeyen aktör yerine oluşturan/düzenleyen tahmin edilmez. Genişletilmiş kart linkinin üzerindeki etkileşimli kontrol relative z-10 alır; link içinde ikinci kontrol oluşturulmaz. Kanban sütun listesi mevcut data-workspace-scroll paletini kullanır, klavyeyle odaklanır ve overscroll-y-contain ile kaydırmayı sütunda tutar. Global scrollbar stili kopyalanmaz.
+
 ## Bağlantılı proje organizasyon diyagramı — 2026-10-22
 
 Ekipler → Şema masaüstünde ortalı proje kökü, çizgilerle bağlı yönetici/ekip/ekipsiz düğümleri ve parent-child dallanması kullanır. `.org-tree` yalnız hiyerarşi listelerine uygulanır; kişi ve rol listeleri bağlantı çizgisi almaz. Eski kompakt 14rem ekip düğümü ölçeği korunur. Geniş ağaç yalnız kendi viewport'unda yatay kayar; ilk yüklemede kök ortalanır, GF-02 yenilemesinde kullanıcının pan/kapalı düğüm state'i sıfırlanmaz. Uzun üye listeleri bütün kayıtları içerir ve düğüm içinde klavyeyle kaydırılabilir. Mobilde bağlı dikey yapı ve sınırlı girinti korunur. Mevcut token/Avatar/rol bilgileri ve native disclosure davranışı kullanılır.

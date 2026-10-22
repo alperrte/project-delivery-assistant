@@ -1,14 +1,17 @@
 "use client";
 
+import { useId, useState } from "react";
 import { useTranslations } from "next-intl";
 import { CaretRight, CheckCircle, Clock, Lock, Prohibit, Tray } from "@phosphor-icons/react";
 import { CircleAlert } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { profilePhotoSrc } from "@/features/account/api";
 import { cn } from "@/lib/utils";
 import { deadlineState } from "../deadline";
 import { useTaskFormat } from "../format";
-import type { LabelRef, PersonRef, Task, TaskPriority, TaskStatus } from "../types";
+import type { AssignmentRef, LabelRef, PersonRef, Task, TaskPriority, TaskStatus } from "../types";
+import { assignmentGroups, uniquePeople } from "../assignment";
 import {
   deadlineToneClass,
   labelBadgeClass,
@@ -134,56 +137,62 @@ export function PoolMark({ task, className }: { task: Pick<Task, "pool">; classN
   );
 }
 
-/** Small avatars (decorative) followed by a screen reader list of the names. `silent` leaves the names to a parent that announces them. */
-export function AssigneeAvatars({ people, max = 3, className, silent }: { people: PersonRef[]; max?: number; className?: string; silent?: boolean }) {
+function PersonAvatars({ people, max }: { people: PersonRef[]; max: number }) {
   const t = useTranslations("tasks.common");
+  const shown = people.slice(0, max);
+  return <span className="flex -space-x-1.5" aria-hidden="true">
+    {shown.map(person => <Avatar key={person.userId} name={person.nickname ?? t("unknownUser")} src={profilePhotoSrc(person.userId, person.profilePhotoVersion)} className="size-6 bg-muted text-[10px] text-foreground" />)}
+    {people.length > shown.length && <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-secondary text-[10px] font-medium text-muted-foreground ring-2 ring-card">+{people.length - shown.length}</span>}
+  </span>;
+}
+
+/** One keyboard/touch/hover disclosure; names stay visible and the complete relationships are accessible. */
+function AssignmentSummary({ assignees, assigners = [], assignmentDetails, max = 3, className }: { assignees: PersonRef[]; assigners?: PersonRef[]; assignmentDetails?: AssignmentRef[]; max?: number; className?: string }) {
+  const t = useTranslations("tasks.common");
+  const [open, setOpen] = useState(false);
+  const tooltipId = useId();
+  const triggerId = `${tooltipId}-trigger`;
+  const people = uniquePeople(assignees);
+  const actors = uniquePeople(assigners);
   if (people.length === 0) {
     return <span className={cn("text-xs text-muted-foreground", className)}>{t("unassigned")}</span>;
   }
-  const shown = people.slice(0, max);
-  const extra = people.length - shown.length;
-  return (
-    <span className={cn("inline-flex items-center", className)}>
-      <span className="flex -space-x-1.5" aria-hidden="true">
-        {shown.map((person) => (
-          <Avatar key={person.userId} name={person.nickname ?? "?"} src={profilePhotoSrc(person.userId, person.profilePhotoVersion)} className="size-6 bg-muted text-[10px] text-foreground" />
-        ))}
-        {extra > 0 && (
-          <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-secondary text-[10px] font-medium text-muted-foreground ring-2 ring-card">
-            +{extra}
-          </span>
-        )}
+  const name = (person: PersonRef) => person.nickname ?? `${t("unknownUser")} (${person.userId})`;
+  const names = (list: PersonRef[]) => list.map(name).join(", ");
+  const groups = assignmentGroups(people, actors, assignmentDetails);
+  const text = groups
+    ? groups.map(group => group.actor ? t("assignedBy", { assigner: name(group.actor), assignees: names(group.people) }) : t("assignmentRecipients", { names: names(group.people) })).join("\n")
+    : actors.length ? `${t("assignmentActors", { names: names(actors) })}\n${t("assignmentRecipients", { names: names(people) })}` : t("assignmentRecipients", { names: names(people) });
+  return <Tooltip open={open} triggerId={triggerId} onOpenChange={setOpen}>
+    <TooltipTrigger id={triggerId} type="button" closeOnClick={false} onClick={() => setOpen(true)} aria-label={text} aria-describedby={open ? tooltipId : undefined} className={cn("relative z-10 inline-flex min-h-9 min-w-0 max-w-full items-center gap-1 rounded-md text-left text-xs outline-none focus-visible:ring-2 focus-visible:ring-ring", className)}>
+      <span data-assignment-summary title={text} className="inline-flex min-w-0 max-w-full flex-wrap items-center gap-1.5">
+        {actors.length > 0 && <span data-assigner className="inline-flex items-center gap-1" aria-hidden="true">
+          <PersonAvatars people={actors} max={1} />
+          <span className="assign-flow"><span className="assign-flow-track" /><CaretRight weight="bold" size={10} /></span>
+        </span>}
+        <PersonAvatars people={people} max={Math.max(1, max)} />
+        <span className="max-w-28 truncate text-muted-foreground" aria-hidden="true">{people[0].nickname ?? t("unknownUser")}{people.length > 1 ? ` +${people.length - 1}` : ""}</span>
+        <span className="sr-only">{text}</span>
       </span>
-      {!silent && <span className="sr-only">{people.map((person) => person.nickname ?? "?").join(", ")}</span>}
-    </span>
-  );
+    </TooltipTrigger>
+    <TooltipContent id={tooltipId} role="tooltip" className="block max-w-[min(24rem,calc(100vw-2rem))] whitespace-pre-line break-words">{text}</TooltipContent>
+  </Tooltip>;
 }
 
-/** Who assigned the task, an arrow, and who it was assigned to. Without an assigner or an assignee it is just the assignee avatars. */
-export function AssignmentFlow({ assigners, assignees, max = 3, className }: { assigners: PersonRef[]; assignees: PersonRef[]; max?: number; className?: string }) {
-  const tc = useTranslations("tasks.common");
-  if (assignees.length === 0 || assigners.length === 0) return <AssigneeAvatars people={assignees} max={max} className={className} />;
-  const [first] = assigners;
-  const extra = assigners.length - 1;
-  const names = (people: PersonRef[]) => people.map((person) => person.nickname ?? "?").join(", ");
-  const text = tc("assignedBy", { assigner: names(assigners), assignees: names(assignees) });
-  return (
-    <span className={cn("inline-flex items-center gap-1", className)} title={text}>
-      <span className="inline-flex items-center gap-1" aria-hidden="true">
-        <span data-assigner className="inline-flex">
-          <Avatar name={first.nickname ?? "?"} src={profilePhotoSrc(first.userId, first.profilePhotoVersion)} title={false} className="size-6 bg-muted text-[10px] text-foreground" />
-        </span>
-        {extra > 0 && (
-          <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-secondary text-[10px] font-medium text-muted-foreground ring-2 ring-card">
-            +{extra}
-          </span>
-        )}
-        <span className="assign-flow" aria-hidden="true"><span className="assign-flow-track" /><CaretRight weight="bold" size={10} /></span>
-        <AssigneeAvatars people={assignees} max={max} silent />
-      </span>
-      <span className="sr-only">{text}</span>
-    </span>
-  );
+export function AssigneeAvatars({ people, max = 3, className, interactive = true }: { people: PersonRef[]; max?: number; className?: string; interactive?: boolean }) {
+  const t = useTranslations("tasks.common");
+  if (!interactive) {
+    const recipients = uniquePeople(people);
+    const names = recipients.map(person => person.nickname ?? t("unknownUser")).join(", ");
+    return <span className={cn("inline-flex min-w-0 items-center gap-1 text-xs", className)} title={names || t("unassigned")}>
+      <PersonAvatars people={recipients} max={max} /><span className="sr-only">{names || t("unassigned")}</span>
+    </span>;
+  }
+  return <AssignmentSummary assignees={people} max={max} className={className} />;
+}
+
+export function AssignmentFlow(props: { assigners: PersonRef[]; assignees: PersonRef[]; assignmentDetails?: AssignmentRef[]; max?: number; className?: string }) {
+  return <AssignmentSummary {...props} />;
 }
 
 /** `2/5` with a thin bar; used for subtasks and checklists. */

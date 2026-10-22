@@ -20,7 +20,7 @@ import { ESTIMATE_POINTS, TASK_PRIORITIES, type TaskPriority } from "../../types
 import { deadlineToneClass } from "../../workflow";
 import { useClaimTask } from "../pool-card";
 import { StatusMenu } from "../status-menu";
-import { AssigneeAvatars, DeadlineChip, LabelList, PoolMark, PriorityIndicator } from "../task-badges";
+import { AssignmentFlow, DeadlineChip, LabelList, PoolMark, PriorityIndicator } from "../task-badges";
 import { LabelPicker } from "../task-form-fields";
 import { AssigneesDialog } from "./assignees-dialog";
 import { BlockDialog } from "./block-dialog";
@@ -101,18 +101,7 @@ export function PropertiesPanel(ctx: DetailContext) {
         <PropertyRow label={t("assignees")}>
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-              {task.assignees.length > 0 ? (
-                <ul className="flex min-w-0 max-w-full flex-wrap gap-x-3 gap-y-1">
-                  {task.assignees.map((person) => (
-                    <li key={person.userId} className="flex min-w-0 max-w-full items-center gap-1.5 text-sm">
-                      <Avatar name={person.nickname ?? "?"} src={profilePhotoSrc(person.userId, person.profilePhotoVersion)} className="size-5 text-[9px]" />
-                      <span className="truncate">{person.nickname ?? "?"}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <AssigneeAvatars people={[]} />
-              )}
+              <AssignmentFlow assignees={task.assignees} assigners={task.assigners ?? []} assignmentDetails={task.assignmentDetails} />
               <PoolMark task={task} />
             </div>
             <div className="flex flex-wrap gap-2">

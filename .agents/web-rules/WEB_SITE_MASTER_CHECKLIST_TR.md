@@ -1,5 +1,9 @@
 # Web Sitesi Kesinlikle Olması Gerekenler — Master Checklist
 
+## Task Service atama / Kanban / Görevlerim — 2026-10-22 (sınırlı kapsam)
+
+Yalnız atama gösterimi, pano kaydırması ve kişisel görev sıralamasının etkilediği Responsive/Dark Mode/Keyboard Navigation/Focus State/Görsel fallback/Pagination/Empty State maddeleri gözden geçirildi; global kutular değiştirilmedi. Mevcut Avatar/Tooltip ve scrollbar token'ları kullanılır; gerçek atayan/alıcı çiftleri, görünür adlar ve tüm +N isimlerine klavye/dokunma erişimi vardır. TR/EN/DE × light/dark × 320/375/768/1024/1440, 320 px scoped axe (0 ihlal), atama console/hydration (0 hata), gerçek iki hesaplı GF-02/form-dialog koruması, native drag/keyboard/wheel/CDP touch ve gerçek veri değişiminde Kanban scroll'u hedefli doğrulandı. ALL/DONE sırası yalnız frontend dizisinde değil, gerçek PostgreSQL'de bütün sayfalarda test edildi. Fiziksel cihaz/ekran okuyucu/diğer tarayıcılar ve global WCAG sonucu çıkarılmaz. Test sayıları, komutlar, ilk hatalar ve manuel adımlar: `docs/compliation/2026-10-22-task-service-frontend.md`; API/Swagger ve backend ayrımı backend completion kaydındadır. Tam pre-push final aşamaya ertelendi.
+
 ## Ekip diyagramının bağlantılı görünümü — 2026-10-22 (takip)
 
 Şema masaüstünde proje kökü ve gerçek parent-child düğümleri bağlayan çizgilerle geri getirildi. Genişlik taşması yalnız şema viewport'undadır; native disclosure, tüm üye/rol bilgileri, klavye odağı ve mobil bağlı dikey yapı korunur. Beş ekipli üç seviyeli TR/EN/DE × light/dark × beş viewport matrisine bağlantı çizgisi/flex yerleşim regresyonu, canlı yenilemeye yatay pan koruması eklendi. Global kutular yeniden audit edilmedi. İlk büyük üye koşusunda bulunan eşit tarihli sayfalama kaybı backend'de ID ikincil sırasıyla düzeltildi; testlerin son sonuçları `docs/compliation/2026-10-22-squad-service-chart-diagram.md` ve backend branch'indeki `docs/compliation/2026-10-22-squad-service-backend.md` kayıtlarındadır.
