@@ -8,6 +8,7 @@ import { localizeHref } from "../src/i18n/routing";
 import type { Project } from "../src/features/projects/types";
 import type { Meeting } from "../src/features/meetings/types";
 import tr from "../src/i18n/meetings/tr.json";
+import messages from "../src/i18n/messages/tr.json";
 import AxeBuilder from "@axe-core/playwright";
 
 // The redesigned meeting surfaces against the real API (and, for the room, the real LiveKit SFU): list filters/search/sort/groups/URL
@@ -173,6 +174,7 @@ test("create form: agenda with Enter, participants search/count/organizer, inlin
     project = await createProject(page); const member = await addMember(memberPage, project);
     await page.goto(localizeHref(`/projects/${project.slug}/meetings/new`, "tr"));
     await expect(page.locator("#meeting-title")).toBeVisible();
+    await expect(page.getByText(tr.online, { exact: true })).toHaveCount(0);
     // Required title: an inline message, no request.
     await page.locator('button[type="submit"][value="plan"]').click();
     await expect(page.getByText(tr.errTitleRequired, { exact: true })).toBeVisible();
@@ -225,6 +227,8 @@ test("room: stage, strip, focus, grid, tabs, invite, copy link with two real par
     const roomUrl = localizeHref(`/projects/${project.slug}/meetings/${meeting.id}/room`, "tr");
     await a.goto(roomUrl); await b.goto(roomUrl);
     for (const page of [a, b]) { await page.getByRole("button", { name: tr.join, exact: true }).click(); await expect(page.getByRole("status").filter({ hasText: new RegExp(`^${tr.phase.connected}$`) })).toBeVisible({ timeout: 30000 }); }
+    // The call screen carries no workspace breadcrumb, and the create form no "online meeting" note.
+    await expect(a.getByRole("navigation", { name: messages.common.breadcrumb, exact: true })).toHaveCount(0);
     // The side panel is open on wide screens with the participants tab, count and both people.
     const aside = a.locator("[data-meeting-room] aside");
     await expect(aside.getByRole("tab", { name: /^Katılımcılar/, selected: true })).toBeVisible();

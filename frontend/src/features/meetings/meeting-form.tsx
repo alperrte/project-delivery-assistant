@@ -117,11 +117,6 @@ export function MeetingForm({ slug, meeting }: { slug: string; meeting?: Meeting
             <div className="flex items-baseline justify-between gap-2"><Label htmlFor="meeting-description">{t("description")}</Label><span aria-hidden="true" className="text-xs tabular-nums text-muted-foreground">{description.length}/4000</span></div>
             <Textarea id="meeting-description" maxLength={4000} rows={4} value={description} disabled={locked} placeholder={t("descriptionPlaceholder")} onChange={e => setDescription(e.target.value)} className="max-h-72 min-h-28 field-sizing-content text-base md:text-sm" />
           </div>
-          {/* Every PDA meeting is an online LiveKit room; the row states that instead of offering a type that does not exist. */}
-          <div className="flex items-start gap-3 rounded-lg border bg-surface-2 p-3.5">
-            <span aria-hidden="true" className="mt-0.5 flex h-5 w-9 shrink-0 items-center justify-end rounded-full bg-meeting px-0.5"><span className="size-4 rounded-full bg-meeting-foreground" /></span>
-            <div className="min-w-0 space-y-0.5 text-sm"><p className="flex flex-wrap items-center gap-2 font-medium">{t("online")}<span className="rounded-full bg-meeting-soft px-2 py-0.5 text-xs font-medium text-meeting-ink">{t("on")}</span></p><p className="text-muted-foreground">{t("onlineHint")}</p></div>
-          </div>
         </Section>
         <Section icon={<CalendarDays size={18} />} title={t("schedule")} description={t("timezone", { zone: zoneId })}>
           <div className="grid gap-5 sm:grid-cols-2">

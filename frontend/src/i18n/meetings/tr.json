@@ -237,8 +237,6 @@
   "titlePlaceholder": "Örn. Sprint değerlendirme toplantısı",
   "descriptionPlaceholder": "Toplantının amacını ve konularını kısaca anlat",
   "errTitleRequired": "Toplantı başlığı zorunlu.",
-  "on": "Açık",
-  "onlineHint": "Katılımcılar PDA üzerinden görüntülü ve sesli katılır. Tüm PDA toplantıları çevrim içidir.",
   "startLabel": "Başlangıç",
   "endLabel": "Bitiş",
   "err_incomplete": "Başlangıç ve bitiş için tarih ve saat seç.",

@@ -237,8 +237,6 @@
   "titlePlaceholder": "e.g. Sprint review meeting",
   "descriptionPlaceholder": "Briefly describe the purpose and topics",
   "errTitleRequired": "A meeting title is required.",
-  "on": "On",
-  "onlineHint": "Participants join by video and audio in PDA. All PDA meetings are online.",
   "startLabel": "Start",
   "endLabel": "End",
   "err_incomplete": "Choose a date and time for the start and the end.",

@@ -237,8 +237,6 @@
   "titlePlaceholder": "z. B. Sprint-Review",
   "descriptionPlaceholder": "Beschreibe kurz Zweck und Themen",
   "errTitleRequired": "Ein Titel ist erforderlich.",
-  "on": "An",
-  "onlineHint": "Teilnehmende treten per Video und Audio in PDA bei. Alle PDA-Besprechungen finden online statt.",
   "startLabel": "Beginn",
   "endLabel": "Ende",
   "err_incomplete": "Wähle Datum und Uhrzeit für Beginn und Ende.",
