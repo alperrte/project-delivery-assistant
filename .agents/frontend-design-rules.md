@@ -1,5 +1,9 @@
 # Frontend tasarım kuralları
 
+## Bağlantılı proje organizasyon diyagramı — 2026-10-22
+
+Ekipler → Şema masaüstünde ortalı proje kökü, çizgilerle bağlı yönetici/ekip/ekipsiz düğümleri ve parent-child dallanması kullanır. `.org-tree` yalnız hiyerarşi listelerine uygulanır; kişi ve rol listeleri bağlantı çizgisi almaz. Eski kompakt 14rem ekip düğümü ölçeği korunur. Geniş ağaç yalnız kendi viewport'unda yatay kayar; ilk yüklemede kök ortalanır, GF-02 yenilemesinde kullanıcının pan/kapalı düğüm state'i sıfırlanmaz. Uzun üye listeleri bütün kayıtları içerir ve düğüm içinde klavyeyle kaydırılabilir. Mobilde bağlı dikey yapı ve sınırlı girinti korunur. Mevcut token/Avatar/rol bilgileri ve native disclosure davranışı kullanılır.
+
 ## Tam boy sohbet kaydırma sınırı — 2026-10-15
 
 Sohbet tam boy açıkken alttaki sayfanın viewport scrollbar'ı gizlenir ve kullanıcı document'ı kaydıramaz. Sohbet geçmişi, konuşma listesi ve arama kendi scroll alanlarında çalışır; sidebar/header kullanılabilir kalır. Kapatma/küçültme sonrası sayfanın önceki scroll konumu korunur; bar/compact modlarında sayfa kaydırması açıktır. Root kilidi semantik `data-chat-full` varlığına bağlı CSS'tir; ortak dialog/drawer inline stillerini değiştirmez.

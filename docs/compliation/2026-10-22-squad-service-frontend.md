@@ -1,5 +1,7 @@
 # SSF-01 + SSF-02 — Tam proje organizasyon görünümü
 
+Takip düzeltmesi: kullanıcı geri bildirimiyle masaüstündeki bağlantılı diyagram görünümü geri getirildi. Sonraki regresyonda somut olarak bulunan eşit tarihli pagination kaybı ayrıca backend branch'inde düzeltildi; aşağıdaki ilk teslimin “backend değişmedi” değerlendirmesi ilk koşunun tarihsel durumudur. Güncel takip: `2026-10-22-squad-service-chart-diagram.md`; backend kaydı ilgili branch'te `2026-10-22-squad-service-backend.md`.
+
 Tarih: 2026-10-22 (Europe/Istanbul). Branch: `squad-service-frontend`.
 
 ## 1. Tamamlanan kapsam

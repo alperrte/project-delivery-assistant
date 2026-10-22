@@ -106,12 +106,15 @@ test("SSF two-user GF-02 changes roles, team relations and removals while disclo
     expect(invite.status).toBe(201);
     expect((await api(viewer, "POST", `/project-invitations/${(invite.json as { invitationId: string }).invitationId}/accept`)).status).toBe(200);
     await expect(chart(page).getByTestId("organization-count")).toContainText("2 benzersiz", { timeout: 40_000 });
-    await viewer.setViewportSize({ width: 1280, height: 640 });
+    await viewer.setViewportSize({ width: 1024, height: 640 });
     await open(viewer, p);
     await section(viewer, "managers").getByRole("button").first().click();
     await viewer.evaluate(() => { document.body.dataset.ssfDocument = "original"; window.scrollTo(0, 100); });
     const before = await viewer.evaluate(() => scrollY);
     expect(before).toBeGreaterThan(0);
+    const diagram = viewer.getByTestId("organization-diagram");
+    const pan = await diagram.evaluate(node => { node.scrollLeft = 32; return node.scrollLeft; });
+    expect(pan).toBeGreaterThan(0);
     expect((await api(page, "POST", `/projects/${p.id}/members/${member.id}/roles`, { role: "BACKEND_DEVELOPER" })).status).toBe(200);
     expect((await api(page, "POST", `/projects/${p.id}/teams/${child.id}/members`, { userId: member.id })).status).toBe(201);
     expect((await api(page, "PUT", `/projects/${p.id}/teams/${child.id}`, { name: "Renamed child", description: null })).status).toBe(200);
@@ -121,6 +124,7 @@ test("SSF two-user GF-02 changes roles, team relations and removals while disclo
     await expect(section(viewer, "managers").getByRole("button").first()).toHaveAttribute("aria-expanded", "false");
     expect(await viewer.evaluate(() => document.body.dataset.ssfDocument)).toBe("original");
     expect(Math.abs((await viewer.evaluate(() => scrollY)) - before)).toBeLessThanOrEqual(2);
+    expect(await diagram.evaluate(node => node.scrollLeft)).toBe(pan);
     expect((await api(page, "PUT", `/projects/${p.id}/teams/${child.id}/parent`, { parentTeamId: null })).status).toBe(200);
     expect((await api(page, "DELETE", `/projects/${p.id}/teams/${root.id}/members/${member.id}`)).status).toBe(204);
     await expect(branch(viewer, root.id).locator(`[data-org-person="${member.id}"]`)).toHaveCount(0, { timeout: 40_000 });
@@ -146,6 +150,8 @@ for (const [locale, messages] of [["tr", tr], ["en", en], ["de", de]] as const) 
       const root = await team(page, p, "Platform engineering with a deliberately long team name");
       const child = await team(page, p, "Quality and infrastructure", root.id);
       await team(page, p, "Third level", child.id);
+      await team(page, p, "Frontend");
+      await team(page, p, "Quality assurance");
       for (const theme of ["light", "dark"]) for (const width of [320, 375, 768, 1024, 1440]) {
         await page.setViewportSize({ width, height: 1000 });
         await open(page, p, locale);
@@ -159,6 +165,14 @@ for (const [locale, messages] of [["tr", tr], ["en", en], ["de", de]] as const) 
         const geometry = await button.boundingBox(); expect(geometry!.height).toBeGreaterThanOrEqual(44);
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
         expect(await chart(page).evaluate(node => node.scrollWidth <= node.clientWidth)).toBe(true);
+        if (width >= 768) {
+          const connected = await chart(page).evaluate(node => {
+            const hierarchy = node.querySelector(".org-tree")!;
+            const branch = hierarchy.querySelector(".org-node")!;
+            return { layout: getComputedStyle(hierarchy).display, stem: getComputedStyle(hierarchy, "::before").borderLeftWidth, connector: getComputedStyle(branch, "::after").borderTopWidth, people: getComputedStyle(node.querySelector(".org-members")!).display };
+          });
+          expect(connected).toEqual({ layout: "flex", stem: "1px", connector: "1px", people: "grid" });
+        }
         if (locale === "tr" && width === 320) {
           const audit = await new AxeBuilder({ page }).include('[data-testid="organization-chart"]').withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"]).analyze();
           expect(audit.violations).toEqual([]);
