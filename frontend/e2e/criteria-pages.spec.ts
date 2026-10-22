@@ -88,7 +88,7 @@ test.describe.serial("Kriter oluşturma ve düzenleme sayfaları", () => {
 
     // Client-side navigation to the overview: the cached home was invalidated, so the progress is already correct.
     await page.getByRole("navigation", { name: "Gezinme menüsü" }).getByRole("link", { name: "Genel Bakış" }).click();
-    await expect(page.getByText("1 kriterin 0 tanesi tamamlandı")).toBeVisible();
+    await expect(page.locator('section[aria-labelledby="criteria-snapshot-heading"]').getByText("1 kriterin 0 tanesi tamamlandı")).toBeVisible();
   });
 
   test("düzenleme bağlantısı dolu formu açar ve değişiklik kaydedilir", async () => {

@@ -8,10 +8,12 @@ import {
   Code, EnvelopeSimple, GearSix, GithubLogo, Plus, UsersThree,
 } from "@phosphor-icons/react";
 import { Avatar } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { profilePhotoSrc } from "@/features/account/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { errorKey } from "@/lib/api/error-message";
 import { criteriaApi } from "@/features/criteria/api";
+import { sortCriteriaForDisplay } from "@/features/criteria/ordering";
 import { relativeTime, safeAvatarSrc, safeGitHubLink } from "@/features/repository/links";
 import { usePendingInvitationCount } from "@/features/invitations/hooks";
 import { squadsApi } from "@/features/squads/api";
@@ -89,12 +91,13 @@ export function ProjectOverview({ project, isManager, onNavigate }: {
 }) {
   const t = useTranslations("projects.overview");
   const te = useTranslations("errors");
+  const tw = useTranslations("workspace");
   const locale = useLocale();
   const { data: home, isLoading, isError, error } = useQuery({
     queryKey: ["projects", project.id, "home"],
     queryFn: () => projectsApi.home(project.id),
   });
-  const { data: criteria } = useQuery({
+  const { data: criteria, isError: criteriaIsError, error: criteriaError, refetch: refetchCriteria } = useQuery({
     queryKey: ["projects", project.id, "criteria"],
     queryFn: () => criteriaApi.list(project.id),
   });
@@ -112,14 +115,14 @@ export function ProjectOverview({ project, isManager, onNavigate }: {
   if (hasBlockingError({ isError, data: home, error })) return <p className="text-sm text-destructive">{te(errorKey(error))}</p>;
   if (!home) return null;
 
-  const total = home.criteriaProgress.total;
-  const completed = home.criteriaProgress.completed;
+  const total = criteria?.length ?? home.criteriaProgress.total;
+  const completed = criteria ? criteria.filter((criterion) => criterion.completed).length : home.criteriaProgress.completed;
   const progress = total === 0 ? 0 : Math.round((completed / total) * 100);
   const date = new Intl.DateTimeFormat(locale, { dateStyle: "medium" });
 
-  const open = criteria?.filter((c) => !c.completed) ?? [];
-  const done = criteria?.filter((c) => c.completed).sort((a, b) => Date.parse(b.completedAt ?? "0") - Date.parse(a.completedAt ?? "0")) ?? [];
-  const snapshot = [...open, ...done].slice(0, 5);
+  const snapshot = sortCriteriaForDisplay(criteria ?? []).slice(0, 5);
+  const criteriaFailure = hasBlockingError({ isError: criteriaIsError, data: criteria, error: criteriaError })
+    ? te(errorKey(criteriaError)) : undefined;
 
   const visibleMembers = members?.content.slice(0, 4) ?? [];
   const extraMembers = Math.max(0, home.teamMemberCount - visibleMembers.length);
@@ -131,14 +134,19 @@ export function ProjectOverview({ project, isManager, onNavigate }: {
         <section className="workspace-panel min-w-0 p-6" aria-labelledby="criteria-snapshot-heading">
           <div className="flex flex-wrap items-baseline justify-between gap-3">
             <h2 id="criteria-snapshot-heading" className="text-base font-semibold text-foreground">{t("criteriaSnapshot")}</h2>
-            {total > 0 && (
+            {!criteriaFailure && total > 0 && (
               <button type="button" onClick={() => onNavigate("criteria")} className="text-sm font-medium text-primary hover:underline">
                 {t("viewAll")}
               </button>
             )}
           </div>
 
-          {total === 0 ? (
+          {criteriaFailure ? (
+            <div className="mt-5 space-y-3 border-t pt-5">
+              <p role="alert" className="text-sm text-destructive">{criteriaFailure}</p>
+              <Button variant="outline" size="sm" onClick={() => void refetchCriteria()}>{tw("retry")}</Button>
+            </div>
+          ) : total === 0 ? (
             <div className="mt-5 flex flex-col items-start gap-3 border-t pt-5">
               <p className="text-sm leading-6 text-muted-foreground">{t("noCriteriaDescription")}</p>
               {isManager && (
@@ -263,8 +271,8 @@ export function ProjectOverview({ project, isManager, onNavigate }: {
       )}
 
       <div className="grid gap-5 lg:grid-cols-2">
-        <ProjectCriteriaActivity criteria={criteria} />
-        <ProjectCriteriaTrend criteria={criteria} />
+        <ProjectCriteriaActivity criteria={criteria} error={criteriaFailure} onRetry={() => void refetchCriteria()} />
+        <ProjectCriteriaTrend key={project.id} criteria={criteria} error={criteriaFailure} onRetry={() => void refetchCriteria()} onNavigate={() => onNavigate("criteria")} />
       </div>
 
       <section className="workspace-panel flex flex-col gap-x-8 gap-y-4 p-6 md:flex-row md:items-start" aria-label={t("projectProfile")}>
