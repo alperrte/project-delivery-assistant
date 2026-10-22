@@ -63,6 +63,50 @@ class SquadApiIntegrationTest {
     @Autowired org.springframework.jdbc.core.JdbcTemplate jdbc;
 
     @Test
+    void organizationPagesUseUniqueTieBreakersForEqualTimestamps() throws Exception {
+        Account manager = account("orgpages");
+        UUID project = createProject(manager, csrfCookie(), "Equal timestamp pagination");
+        UUID root = squadService.create(manager.id(), project, "Root", null, null, true).getId();
+        // TEST-ONLY bulk fixtures: all 205 members deliberately share the same timestamps.
+        jdbc.update("""
+                WITH fixture AS (SELECT gen_random_uuid() uid, gen_random_uuid() mid FROM generate_series(1,205)),
+                new_users AS (INSERT INTO users(id,email,nickname,password_hash,account_status,email_verification_status,global_role,email_verified_at,created_at,updated_at)
+                    SELECT f.uid, 'pages-'||f.uid||'@example.test', 'pages-'||left(f.uid::text,20), u.password_hash,
+                           'ACTIVE','VERIFIED','USER',now(),now(),now() FROM fixture f CROSS JOIN users u WHERE u.id=? RETURNING id),
+                new_members AS (INSERT INTO project_memberships(id,project_id,user_id,joined_at,status)
+                    SELECT f.mid,?,f.uid,'2001-01-01T00:00:00Z','ACTIVE' FROM fixture f JOIN new_users u ON u.id=f.uid RETURNING id),
+                new_roles AS (INSERT INTO project_membership_roles(membership_id,role) SELECT id,'TESTER' FROM new_members)
+                INSERT INTO squad_members(id,squad_id,project_membership_id,added_by,added_at)
+                    SELECT gen_random_uuid(),?,id,?,'2001-01-01T00:00:00Z' FROM new_members
+                """, manager.id(), project, root, manager.id());
+        jdbc.update("""
+                INSERT INTO squads(id,project_id,name,created_by,created_at,updated_at,updated_by)
+                    SELECT gen_random_uuid(),?,'Tie team '||n,?,'2001-01-01T00:00:00Z',now(),?
+                    FROM generate_series(1,205) n
+                """, project, manager.id(), manager.id());
+        String base = "/api/v1/projects/" + project;
+        assertOrderedPages(manager, base + "/members", "userId", jdbc.queryForList(
+                "SELECT user_id FROM project_memberships WHERE project_id=? ORDER BY joined_at,id", UUID.class, project));
+        assertOrderedPages(manager, base + "/teams", "id", jdbc.queryForList(
+                "SELECT id FROM squads WHERE project_id=? ORDER BY created_at,id", UUID.class, project));
+        assertOrderedPages(manager, base + "/teams/" + root + "/members", "userId", jdbc.queryForList(
+                "SELECT m.user_id FROM squad_members s JOIN project_memberships m ON m.id=s.project_membership_id WHERE s.squad_id=? ORDER BY s.added_at,s.id", UUID.class, root));
+    }
+
+    private void assertOrderedPages(Account actor, String path, String field, java.util.List<UUID> expected) throws Exception {
+        java.util.List<String> actual = new java.util.ArrayList<>();
+        for (int page = 0; page < 3; page++) {
+            String body = mvc.perform(get(path + "?page=" + page + "&size=100").cookie(actor.access()))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(expected.size()))
+                    .andReturn().getResponse().getContentAsString();
+            actual.addAll(JsonPath.<java.util.List<String>>read(body, "$.content[*]." + field));
+        }
+        org.junit.jupiter.api.Assertions.assertEquals(206, expected.size());
+        org.junit.jupiter.api.Assertions.assertEquals(expected.stream().map(UUID::toString).toList(), actual);
+        org.junit.jupiter.api.Assertions.assertEquals(expected.size(), new java.util.HashSet<>(actual).size());
+    }
+
+    @Test
     void deletionRejectsAdminNonmemberRemovedAndDisabledAccountsAndWrongProjectOrCsrf() throws Exception {
         Cookie csrf = csrfCookie();
         Account manager = account("deletescope"), viewer = account("deleteviewer"), admin = account("deleteadmin");

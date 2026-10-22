@@ -105,6 +105,6 @@ public class ProjectMembershipController {
         if (page < 0 || size < 1 || size > 100) {
             throw new IllegalArgumentException("Invalid pagination");
         }
-        return PageRequest.of(page, size, Sort.by("joinedAt").ascending());
+        return PageRequest.of(page, size, Sort.by("joinedAt", "id").ascending());
     }
 }

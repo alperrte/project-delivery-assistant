@@ -124,11 +124,11 @@ public class TeamController {
 
     private static PageRequest page(int page, int size) {
         if (page < 0 || size < 1 || size > 100) throw new IllegalArgumentException("Invalid pagination");
-        return PageRequest.of(page, size, Sort.by("createdAt").ascending());
+        return PageRequest.of(page, size, Sort.by("createdAt", "id").ascending());
     }
     private static PageRequest memberPage(int page, int size) {
         if (page < 0 || size < 1 || size > 100) throw new IllegalArgumentException("Invalid pagination");
-        return PageRequest.of(page, size, Sort.by("addedAt").ascending());
+        return PageRequest.of(page, size, Sort.by("addedAt", "id").ascending());
     }
     private static UUID actor(UserAccounts.AuthenticatedUser principal) {
         if (principal == null || principal.id() == null) throw new AccessDeniedException("Authentication required");
