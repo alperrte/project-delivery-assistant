@@ -1,5 +1,9 @@
 ﻿# Mimari kısa özet
 
+## Toplantı e-posta hatırlatmaları — 2026-10-22
+
+Meeting modülü kendi `internal` paketinde kalıcı `meeting_reminder_deliveries` kuyruğunu yönetir; uygulama içi Notification event fanout'u değişmez. Başlangıç/attendee set değişiminde ayrı `reminderRevision` ilerler; lifecycle entity version'ı mail idempotency anahtarı değildir. 15 sn discovery ve kısa PostgreSQL claim/lease/fencing transaction'ları, ayrı tek mail worker'ı ve mevcut `SmtpMailSettings` kullanılır. SMTP sırasında DB kilidi/transaction tutulmaz ve ortak lifecycle scheduler'ı beklemez. Project ve User yalnız public contract üzerinden güncel erişim, ACTIVE+VERIFIED adres ve kayıtlı locale sağlar; kayıtlı dil yoksa TR kullanılır. SMTP at-least-once crash/retry sınırı ve V54 işletimi `.agents/operations.md` içindedir.
+
 ## Tek takvim — 2026-10-18
 
 Üretim medya hazırlığı: tek VPS/tek SFU, opt-in `docker-compose.meeting.prod.yml`, TLS/SNI için aynı Caddy'de Layer4 ve dahili web listener'ı. İç web bağlantısında loopback-restricted PROXY v2; media query'leri için access log yok. Backend mevcut HTTPS RoomService kuralı korunur. Hedef 2×5 katılımcı; canlı/gerçek cihaz/kapasite onayı açık. Operasyon sözleşmesi: `.agents/meeting-release-readiness.md`.

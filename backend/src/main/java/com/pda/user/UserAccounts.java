@@ -24,6 +24,9 @@ public interface UserAccounts {
     boolean activateVerifiedEmail(UUID userId);
     Optional<AuthenticatedUser> authenticateLocal(String email, String password);
     Optional<AuthenticatedUser> findActiveById(UUID userId);
+    /** Internal transactional mail recipient; only ACTIVE accounts with a VERIFIED address. No API response. */
+    Optional<MailRecipient> findVerifiedMailRecipient(UUID userId);
+    record MailRecipient(String email, String nickname, String locale) {}
     /** Active, non-sensitive user summaries in one query for paginated team/member views. */
     Map<UUID, AuthenticatedUser> findActiveByIds(Set<UUID> userIds);
     /** Safe internal batch display profiles; callers derive IDs from their authorized membership scope. */

@@ -215,7 +215,10 @@ public class MeetingService {
         if(!projects.activeMemberIds(project,c.attendeeIds()).containsAll(c.attendeeIds())) throw error(400,"MEETING_INVALID_ATTENDEES");
     }
     private boolean invalidText(String value) { return value!=null&&value.chars().anyMatch(c->Character.isISOControl(c)&&c!='\n'&&c!='\r'&&c!='\t'); }
-    void apply(Meeting m,Command c) { m.title=c.title().strip(); m.description=c.description()==null?"":c.description(); m.startsAt=c.startsAt(); m.endsAt=c.endsAt(); m.zoneId=c.zoneId(); m.agenda.clear(); m.agenda.addAll(c.agenda()); m.attendeeIds.clear(); m.attendeeIds.addAll(c.attendeeIds()); m.updatedAt=clock.instant(); }
+    void apply(Meeting m,Command c) {
+        if(!Objects.equals(m.startsAt,c.startsAt())||!m.attendeeIds.equals(c.attendeeIds())) m.reminderRevision++;
+        m.title=c.title().strip(); m.description=c.description()==null?"":c.description(); m.startsAt=c.startsAt(); m.endsAt=c.endsAt(); m.zoneId=c.zoneId(); m.agenda.clear(); m.agenda.addAll(c.agenda()); m.attendeeIds.clear(); m.attendeeIds.addAll(c.attendeeIds()); m.updatedAt=clock.instant();
+    }
     void scheduled(Meeting m) { if(m.status!=Meeting.Status.SCHEDULED) throw error(409,"MEETING_NOT_SCHEDULED"); }
     void requireOpen(Meeting m) { if(m.rotationPending) throw error(503,"MEETING_RECONNECT_PENDING"); if(m.status!=Meeting.Status.OPEN) throw error(409,"MEETING_NOT_OPEN"); }
     MeetingParticipant target(Meeting m,UUID id) { var p=participants.findById(id).orElseThrow(()->error(404,"MEETING_PARTICIPANT_NOT_FOUND")); if(!p.meetingId.equals(m.id)) throw error(404,"MEETING_PARTICIPANT_NOT_FOUND"); return p; }

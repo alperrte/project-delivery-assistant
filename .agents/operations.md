@@ -1,5 +1,15 @@
 # İşletme ve süreklilik rehberi (runbook)
 
+## Toplantı mail kuyruğu — V54 / 2026-10-22
+
+- 15 sn tarama gelecekteki SCHEDULED toplantıları discovery batch'i başına en fazla 500 alıcı işiyle tamamlar; `reminder_at=starts_at-60dk`. Yakın toplantı ilk uygun turda gönderilebilir. Başlamış/OPEN/ENDED/CANCELLED kayıt ve eski planlama sürümü gönderilmez.
+- Posta worker'ı ortak scheduler'dan ayrıdır; bir instance'ta aynı anda tek mail turu ve turda en fazla 100 claim vardır. PostgreSQL `SKIP LOCKED`, 120 sn lease ve UUID fencing çok instance/restart kontrolünü sağlar. SMTP'de DB transaction/lock açık tutulmaz.
+- Geçici SMTP hatasında 30/60/120/240/480/900/900 saniye backoff, toplam en fazla 8 deneme vardır; başlangıçtan sonra retry iptal edilir. Auth/parse hatası doğrudan FAILED, tükenen deneme ATTEMPTS_EXHAUSTED olur. Loglar yalnız delivery UUID/deneme/outcome veya aggregate sayı içerir; adres, başlık, içerik, SMTP yanıtı/credential loglanmaz.
+- `MAIL_ENABLED=false` durumunda yeni claim/SMTP denemesi yapılmaz. Tekrar açılınca kuyruk güncel zaman, üyelik, ACTIVE+VERIFIED hesap ve meeting recipient/revision ile yeniden değerlendirilir. Kalıcı FAILED kayıtlar kör biçimde sıfırlanmaz; önce neden ve gerçek SMTP teslim durumu incelenir.
+- SMTP kabulünden sonra DB sent commit'i kaybolursa lease recovery tekrar SMTP gönderebilir: at-least-once, mutlak exactly-once değildir. SENDING kayıtlar elle silinmez; normal yeniden başlatma pending işleri ve süresi dolmuş lease'leri kurtarır. İptal/saat/üyelik değişimi gönderim öncesi yeniden doğrulanır; SMTP'ye teslim edilmiş veya o sırada işlenen mail geri çekilemez.
+- Migration kurtarma: V54 yalnız additive kolon/tablo/index ekler ve eski toplantıları revision=0 ile korur. Mevcut DB'yi yedekle; Flyway validation/repair/baseline ile eski migration geçmişini gizleme. Önceki uygulama sürümüne dönüldüğünde V54 verilerini koru; o sürüm hatırlatma kuyruğunu işlemez. Eski binary'nin Flyway doğrulaması daha yeni applied migration'ı reddederse validation bypass yerine V54'ü tanıyan uyumlu rollback build'i veya yedekten ayrı ortama restore kullan. SMTP öncesi kabul belirsizliği olan DB restore'ları mükerrer gönderime yol açabilir; mevcut at-least-once sınırını değerlendir.
+- Salt okunur izleme: `SELECT status,count(*) FROM meeting_reminder_deliveries GROUP BY status;` ve FAILED/error-code sayıları. İçerik/adres/token içeren ayrı telemetry veya yeni yönetim endpoint'i yoktur.
+
 Bu belge yayın ortamında ve yerel kurulumda uygulanacak işletme adımlarını toplar: yedekleme, olay müdahalesi, geri dönüş, migration, bakım, izleme, sertifika ve yayın sonrası kontrol. Production tek bir Hostinger KVM 2 VPS'tir (`deployment.md` "Production kararı"); sunucuda yapılacak adımlar §6b'dedir ve gerçek sunucuda uygulanana kadar uygulanmış sayılmaz. Güvenlik kuralları için `SECURITY.md` esastır.
 
 ## Toplantı medya işletimi — 2026-10-18

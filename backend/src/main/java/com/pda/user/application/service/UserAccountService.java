@@ -33,6 +33,16 @@ public class UserAccountService implements UserAccounts {
     private static final int MIN_SEARCH_QUERY_LENGTH = 2;
     private static final int MAX_SEARCH_RESULTS = 20;
 
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<MailRecipient> findVerifiedMailRecipient(UUID userId) {
+        return users.findById(userId)
+                .filter(user -> user.getAccountStatus() == AccountStatus.ACTIVE
+                        && user.getEmailVerificationStatus() == com.pda.user.domain.enums.EmailVerificationStatus.VERIFIED)
+                .map(user -> new MailRecipient(user.getEmail(), user.getNickname(), preferences.findById(userId)
+                        .map(p -> p.getLocale()).filter(locale -> Set.of("tr", "en", "de").contains(locale)).orElse("tr")));
+    }
+
     private final UserRepository users;
     private final UserOAuthIdentityRepository identities;
     private final BCryptPasswordEncoder passwordEncoder;
