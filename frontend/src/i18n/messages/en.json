@@ -1077,7 +1077,19 @@
     "chart": {
       "label": "Team organization chart",
       "openTeam": "Open team {name}",
-      "members": "{count, plural, one {# member} other {# members}}"
+      "members": "{count, plural, one {# member} other {# members}}",
+      "description": "Project roles and actual team memberships are shown; this view does not imply personal reporting relationships.",
+      "totals": "{members} unique project members · {teams} teams",
+      "managers": "Project managers",
+      "teams": "Teams",
+      "unassigned": "Members without a team",
+      "people": "Members",
+      "roles": "Project roles",
+      "teamMemberships": "Teams",
+      "teamDetails": "Team details",
+      "subteams": "Child teams",
+      "emptyMembers": "There are no members in this group.",
+      "emptyTeams": "There are no teams yet. Project members are shown below."
     },
     "noDescription": "No description has been added for this team.",
     "newPage": {
