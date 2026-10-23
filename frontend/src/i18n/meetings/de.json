@@ -332,5 +332,7 @@
   "autoGainControl": "Automatische Verstärkung",
   "autoGainControlHint": "Gleicht den Mikrofonpegel an; dämpft laute und hebt leise Sprache.",
   "captureUnsupported": "Dieser Browser unterstützt diese Einstellung nicht; der Ton wird unverändert gesendet.",
-  "captureNote": "Es werden nur die eingebauten Browserfunktionen genutzt: kein Zusatzdienst, keine Aufzeichnung, keine aufwendige Verarbeitung. Änderungen gelten sofort für das offene Mikrofon."
+  "captureNote": "Es werden nur die eingebauten Browserfunktionen genutzt: kein Zusatzdienst, keine Aufzeichnung, keine aufwendige Verarbeitung. Änderungen gelten sofort für das offene Mikrofon.",
+  "miniPopOut": "In separatem Fenster öffnen",
+  "miniPopOutFailed": "Das separate Fenster konnte nicht geöffnet werden. Dieser Browser oder diese Einstellung erlaubt es möglicherweise nicht; der Anruf läuft auf der Seite weiter."
 }

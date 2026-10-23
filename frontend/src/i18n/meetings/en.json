@@ -332,5 +332,7 @@
   "autoGainControl": "Automatic gain",
   "autoGainControlHint": "Evens out your microphone level; softens loud and lifts quiet speech.",
   "captureUnsupported": "This browser does not support this setting; sound is sent as it is.",
-  "captureNote": "Only the browser's built-in features are used: no extra service, recording or heavy processing. A change applies to the open microphone at once."
+  "captureNote": "Only the browser's built-in features are used: no extra service, recording or heavy processing. A change applies to the open microphone at once.",
+  "miniPopOut": "Open in a separate window",
+  "miniPopOutFailed": "The separate window could not be opened. This browser or setting may not allow it; the call keeps running in the page."
 }

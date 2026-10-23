@@ -349,3 +349,103 @@ test("mini window: shows the other person's real moving camera picture, and an a
     await expect(mini(a).locator("video")).toHaveCount(0, { timeout: 20000 });
   } finally { await archive(a, project); await managerContext.close(); await memberContext.close(); }
 });
+
+/** Opens the separate call window from the page mini window (a real tap, as the browser requires) and returns its page. */
+async function openSeparateWindow(page: Page, context: BrowserContext) {
+  const [pip] = await Promise.all([context.waitForEvent("page"), mini(page).getByRole("button", { name: tr.miniPopOut, exact: true }).click()]);
+  await pip.waitForSelector("[data-mini-pip]", { timeout: 15000 });
+  return pip;
+}
+
+test("separate call window (Document Picture-in-Picture): same call, styled, live picture, controls, theme, return, close and leave", async ({ browser }) => {
+  test.setTimeout(240000);
+  const managerContext = await browser.newContext({ storageState: REJECTED_STATE, permissions: ["camera", "microphone"], viewport: { width: 1280, height: 800 } });
+  const memberContext = await browser.newContext({ storageState: REJECTED_STATE, permissions: ["camera", "microphone"], viewport: { width: 1280, height: 800 } });
+  const a = await managerContext.newPage(), b = await memberContext.newPage(); let project: Project | undefined;
+  try {
+    await login(managerContext, managerFile); await login(memberContext, memberFile);
+    project = await createProject(a); await b.goto("/dashboard");
+    addMember(project.id, ((await api(b, "GET", "/auth/me")).json as { id: string }).id);
+    const meeting = await createMeeting(a, project.id);
+    let joins = 0; a.on("request", request => { if (request.method() === "POST" && request.url().endsWith(`/meetings/${meeting.id}/join`)) joins++; });
+    await a.goto(roomHref(project.slug, meeting.id)); await b.goto(roomHref(project.slug, meeting.id));
+    await join(a); await join(b);
+    await b.getByRole("button", { name: tr.cameraOn, exact: true }).click(); await expect(b.getByRole("button", { name: tr.cameraOff, exact: true })).toBeVisible();
+    await appPush(a, localizeHref("/projects", "tr")); await expect(mini(a)).toBeVisible();
+
+    // 1. Open: the call moves into its own window; the page window steps aside (no second picture running).
+    const pip = await openSeparateWindow(a, managerContext);
+    await expect(mini(a)).toHaveCount(0);
+    expect(managerContext.pages()).toContain(pip);
+    // Styled like the app (the real style rules arrived): a 44 px round-cornered control, not a bare default button.
+    const mic = pip.getByRole("button", { name: tr.micOn, exact: true });
+    await expect(mic).toBeVisible(); const micBox = (await mic.boundingBox())!; expect(Math.round(micBox.width)).toBe(44);
+    expect(await mic.evaluate(element => parseFloat(getComputedStyle(element).borderTopLeftRadius))).toBeGreaterThan(2);
+    // The workspace palette arrived too: the "return" button has the meeting blue (not transparent), also in dark mode.
+    const returnButton = pip.getByRole("button", { name: tr.returnToMeeting, exact: true });
+    const background = () => returnButton.evaluate(element => getComputedStyle(element).backgroundColor);
+    expect(await background()).toBe("rgb(29, 95, 224)");
+    await a.evaluate(() => document.documentElement.classList.add("dark"));
+    await expect.poll(background).toBe("rgb(47, 107, 237)");
+    await a.evaluate(() => document.documentElement.classList.remove("dark"));
+    await expect.poll(background).toBe("rgb(29, 95, 224)");
+    // 2. The real moving picture of the other person is in that window.
+    const video = pip.locator("[data-mini-pip] video"); await expect(video).toHaveCount(1, { timeout: 20000 });
+    const sample = () => video.evaluate(element => {
+      const v = element as HTMLVideoElement, canvas = document.createElement("canvas"); canvas.width = 32; canvas.height = 32;
+      const ctx = canvas.getContext("2d")!; ctx.drawImage(v, 0, 0, 32, 32); const data = ctx.getImageData(0, 0, 32, 32).data;
+      return { width: v.videoWidth, playing: !v.paused && v.readyState >= 2, signature: Array.from(data.slice(0, 256)).join(",") };
+    });
+    await expect.poll(async () => (await sample()).width, { timeout: 20000 }).toBeGreaterThan(0);
+    const first = await sample(); expect(first.playing).toBe(true);
+    await expect.poll(async () => (await sample()).signature !== first.signature, { timeout: 15000 }).toBe(true);
+    // 3. A control in that window drives the real call.
+    await mic.click(); await expect(pip.getByRole("button", { name: tr.micOff, exact: true })).toHaveAttribute("aria-pressed", "true");
+    // 4. The theme follows the page while the window is open.
+    await a.evaluate(() => document.documentElement.classList.add("dark"));
+    await expect.poll(() => pip.evaluate(() => document.documentElement.classList.contains("dark"))).toBe(true);
+    await a.evaluate(() => document.documentElement.classList.remove("dark"));
+    await expect.poll(() => pip.evaluate(() => document.documentElement.classList.contains("dark"))).toBe(false);
+    expect((await new AxeBuilder({ page: pip }).include("[data-mini-pip]").analyze()).violations, "the separate window has no accessibility violations").toEqual([]);
+    await screenshot(pip, "v291-separate-window");
+    // 5. "Return to the meeting" closes the window and goes back to the room, in the same call.
+    await pip.getByRole("button", { name: tr.returnToMeeting, exact: true }).click();
+    await expect.poll(() => pip.isClosed()).toBe(true); await expect(room(a)).toBeVisible(); await expect(mini(a)).toHaveCount(0);
+    await expect(room(a).getByRole("button", { name: tr.micOff, exact: true })).toBeVisible(); // the microphone switched on in the window is still on
+
+    // 6. Closing the window by hand brings the page window back; the call never stopped.
+    await appPush(a, localizeHref("/projects", "tr")); await expect(mini(a)).toBeVisible();
+    const second = await openSeparateWindow(a, managerContext); await expect(mini(a)).toHaveCount(0);
+    await second.close();
+    await expect(mini(a)).toBeVisible(); await expect(mini(a).getByRole("status").first()).toHaveText(tr.miniActive);
+    // 7. Leave from the window asks in the page first, as everywhere else; cancelling keeps the call.
+    const third = await openSeparateWindow(a, managerContext);
+    await third.getByRole("button", { name: tr.leave, exact: true }).click();
+    await expect.poll(() => third.isClosed()).toBe(true);
+    const dialog = a.getByRole("dialog", { name: tr.leaveTitle }); await expect(dialog).toBeVisible();
+    await dialog.getByRole("button", { name: tr.leaveCancel, exact: true }).click(); await expect(dialog).toBeHidden(); await expect(mini(a)).toBeVisible();
+    // Confirming ends the call and nothing stays open.
+    const fourth = await openSeparateWindow(a, managerContext);
+    await fourth.getByRole("button", { name: tr.leave, exact: true }).click();
+    await a.getByRole("dialog", { name: tr.leaveTitle }).getByRole("button", { name: tr.leaveConfirm, exact: true }).click();
+    await expect(mini(a)).toHaveCount(0); expect(managerContext.pages().filter(p => !p.isClosed())).toHaveLength(1);
+    expect(joins, "one admission for the whole story").toBe(1);
+  } finally { await archive(a, project); await managerContext.close(); await memberContext.close(); }
+});
+
+test("separate call window: where the browser has no Document Picture-in-Picture the button is not offered and the page window works as before", async ({ browser }) => {
+  test.setTimeout(150000);
+  const context = await browser.newContext({ storageState: REJECTED_STATE, permissions: ["camera", "microphone"], viewport: { width: 1280, height: 800 } });
+  await context.addInitScript(() => { Object.defineProperty(window, "documentPictureInPicture", { value: undefined, configurable: true }); });
+  const page = await context.newPage(); let project: Project | undefined;
+  try {
+    await login(context, managerFile); project = await createProject(page);
+    const meeting = await createMeeting(page, project.id);
+    await page.goto(roomHref(project.slug, meeting.id)); await join(page);
+    await appPush(page, localizeHref("/projects", "tr")); await expect(mini(page)).toBeVisible();
+    await expect(mini(page).getByRole("button", { name: tr.miniPopOut })).toHaveCount(0);
+    for (const name of [tr.micOn, tr.cameraOn, tr.leave]) await expect(mini(page).getByRole("button", { name, exact: true })).toBeVisible();
+    await expect(mini(page).getByRole("link", { name: tr.returnToMeeting, exact: true })).toBeVisible();
+    expect((await new AxeBuilder({ page }).include("[data-meeting-mini]").analyze()).violations).toEqual([]);
+  } finally { await archive(page, project); await context.close(); }
+});

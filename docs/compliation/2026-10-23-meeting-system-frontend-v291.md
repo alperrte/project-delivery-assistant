@@ -4,7 +4,7 @@ Dal: `meeting-system-frontend`. Backend tarafı ayrı dalda ve ayrı commit'tedi
 
 ## Durum
 
-Frontend kapsamı tamamlandı ve gerçek stack'te doğrulandı (üretim derlemesi + gerçek API/PostgreSQL/self-hosted LiveKit + Mailpit). **Kullanıcı kararları alındı:** MSF-10 e-posta tasarımı kullanıcı tarafından incelenip onaylandı (renk, logo, bilgi kartı ve buton yerleşimi korunur, ek görsel değişiklik istenmedi); MSF-18 için ücretsiz tarayıcı tabanlı çözüm seçildi ve tamamlandı. İsteğe bağlı Document Picture-in-Picture (MSF-17) uygulanmadı; sayfa içi sürüklenebilir pencere tek başına tam işlev verir, Chromium-only API'ye bağımlılık eklenmedi.
+Frontend kapsamı tamamlandı ve gerçek stack'te doğrulandı (üretim derlemesi + gerçek API/PostgreSQL/self-hosted LiveKit + Mailpit). **Kullanıcı kararları alındı:** MSF-10 e-posta tasarımı kullanıcı tarafından incelenip onaylandı (renk, logo, bilgi kartı ve buton yerleşimi korunur, ek görsel değişiklik istenmedi); MSF-18 için ücretsiz tarayıcı tabanlı çözüm seçildi ve tamamlandı. İsteğe bağlı Document Picture-in-Picture (MSF-17) sonradan eklendi: tarayıcıda API varsa (Chromium, güvenli sayfa) mini pencerede "Ayrı pencerede aç" düğmesi çıkar; yoksa düğme gösterilmez ve sayfa içi pencere aynen çalışır.
 
 ## Kök nedenler ve çözümler
 
@@ -57,7 +57,7 @@ Ses seviyesi/yerel sessize alma yalnız istemcide ve yalnız bu cihazı etkiler;
 
 - **MSF-10:** Kullanıcı onayladı; tasarım değiştirilmedi.
 - **MSF-18:** Tarayıcı desteğine bağlıdır: gürültü bastırma kalitesi tarayıcı/işletim sistemi/cihaza göre değişir; gerçek fiziksel mikrofon ve Firefox/Safari'de denenmedi (Chromium + sahte medya cihazı). Desteklenmeyen tarayıcı davranışı `getSupportedConstraints` taklit edilerek sınandı.
-- Document Picture-in-Picture eklenmedi (isteğe bağlıydı).
+- Document Picture-in-Picture yalnız Chromium tabanlı tarayıcılarda vardır (Firefox/Safari'de düğme çıkmaz). Ayrı pencereden "Ayrıl" önce sayfaya döner ve onayı orada sorar; ayrı pencerenin stilleri sayfanın stil kurallarından kopyalanır (CSP'ye takılmayan `adoptedStyleSheets`), çalışma alanı paleti için pencere köküne `workspace-preview` sınıfı verilir. Gerçek masaüstü always-on-top davranışı (pencerenin diğer uygulamaların üstünde kalması) Playwright'ta doğrulanamaz; test pencerenin ikinci bir sayfa olarak açıldığını, içeriğini ve kontrollerini doğrular.
 - Telefon tarayıcılarında ekran paylaşımı yoktur; açıklayıcı mesaj gösterilir.
 - Tarayıcılar arası (Safari/Firefox) gerçek cihaz denemesi yapılmadı; Chromium + sahte medya cihazı.
 
