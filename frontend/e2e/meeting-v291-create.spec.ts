@@ -1,5 +1,6 @@
 import { test, expect, type BrowserContext, type Page } from "@playwright/test";
-import { readFileSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
+import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { api } from "./helpers";
 import { psql, uuid } from "./db";
@@ -67,6 +68,27 @@ test("a link can never join a call by itself: only the one-time note of the meet
     expect(await joinsByItself(page, project, meeting, { meetingId: "someone-else", at: Date.now() }), "a note for another meeting does nothing").toBe(false);
     expect(await joinsByItself(page, project, meeting, { meetingId: meeting.id, at: Date.now() - 120_000 }), "an old note does nothing").toBe(false);
     expect(await joinsByItself(page, project, meeting, { meetingId: meeting.id, at: Date.now() }), "the fresh note of this meeting joins").toBe(true);
+  } finally { await api(page, "POST", `/projects/${project.id}/archive`).catch(() => {}); }
+});
+test("icon picker layout: one row or two even rows of six, never a lone icon, at every width and in both themes", async ({ page, context }) => {
+  test.setTimeout(150000); await login(context, managerFile); const project = await createProject(page);
+  try {
+    for (const dark of [false, true]) for (const width of [320, 375, 768, 1024, 1280, 1440, 1920]) {
+      await page.setViewportSize({ width, height: 1000 });
+      await page.goto(newHref(project.slug)); await page.evaluate(value => localStorage.setItem("theme", value), dark ? "dark" : "light"); await page.reload();
+      const options = page.locator("[data-icon-option]"); await expect(options).toHaveCount(12);
+      const boxes = await options.evaluateAll(items => items.map(item => { const r = item.getBoundingClientRect(); return { x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width), h: Math.round(r.height) }; }));
+      const rows = [...new Set(boxes.map(box => box.y))];
+      const perRow = rows.map(y => boxes.filter(box => box.y === y).length);
+      expect(perRow, `${width}px ${dark ? "dark" : "light"}: rows of icons`).toEqual(rows.length === 1 ? [12] : [6, 6]);
+      for (const box of boxes) { expect(box.w, "touch-sized").toBeGreaterThanOrEqual(34); expect(box.w).toBeLessThanOrEqual(44); expect(box.h).toBe(box.w); }
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `no sideways scroll at ${width}px`).toBe(true);
+      if (width === 1440 || width === 375) { mkdirSync(path.join(__dirname, "../test-results/meetings-visual"), { recursive: true }); await page.locator("[data-icon-option]").first().locator("xpath=ancestor::fieldset").screenshot({ path: path.join(__dirname, `../test-results/meetings-visual/v291-icon-picker-${width}-${dark ? "dark" : "light"}.png`) }); }
+    }
+    // Choosing still works the same way, by pointer and keyboard.
+    await page.setViewportSize({ width: 1440, height: 1000 }); await page.goto(newHref(project.slug));
+    await page.locator("[data-icon-option=target]").click(); await expect(page.locator("[data-icon-option=target] input")).toBeChecked();
+    await page.locator("[data-icon-option=target] input").press("ArrowRight"); await expect(page.locator("[data-icon-option=briefcase] input")).toBeChecked();
   } finally { await api(page, "POST", `/projects/${project.id}/archive`).catch(() => {}); }
 });
 const newHref = (slug: string) => localizeHref(`/projects/${slug}/meetings/new`, "tr");
