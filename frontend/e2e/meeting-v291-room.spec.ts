@@ -278,3 +278,74 @@ test("mini window on a touch phone: dragged with a finger, kept inside the scree
     await screenshot(page, "v291-mini-window-touch");
   } finally { await archive(page, project); await context.close(); }
 });
+
+test("mini window: the dragged place survives a reload (after joining again) and is pulled back inside a smaller screen", async ({ browser }) => {
+  test.setTimeout(180000);
+  const context = await browser.newContext({ storageState: REJECTED_STATE, permissions: ["camera", "microphone"], viewport: { width: 1440, height: 900 } });
+  const page = await context.newPage(); let project: Project | undefined;
+  try {
+    await login(context, managerFile); project = await createProject(page);
+    const meeting = await createMeeting(page, project.id);
+    await page.goto(roomHref(project.slug, meeting.id)); await join(page);
+    await appPush(page, localizeHref("/projects", "tr")); await expect(mini(page)).toBeVisible();
+    const box = async () => (await mini(page).boundingBox())!;
+    const grip = (await mini(page).locator("[data-mini-handle]").boundingBox())!;
+    const from = { x: grip.x + 12, y: grip.y + grip.height / 2 };
+    await page.mouse.move(from.x, from.y); await page.mouse.down(); await page.mouse.move(700, 300, { steps: 8 }); await page.mouse.up();
+    const placed = await box(); await expect(mini(page)).toHaveAttribute("data-dragged", "");
+    const stored = JSON.parse((await page.evaluate(() => localStorage.getItem("pda:meeting-mini-window:v1")))!) as { x: number; y: number };
+    expect(Math.abs(stored.x - placed.x)).toBeLessThan(2); expect(Math.abs(stored.y - placed.y)).toBeLessThan(2);
+
+    // A reload ends the call (as it always did): nothing is shown until the person joins again; then the place is the same.
+    await page.reload(); await expect(mini(page)).toHaveCount(0);
+    await page.goto(roomHref(project.slug, meeting.id)); await join(page);
+    await appPush(page, localizeHref("/projects", "tr")); await expect(mini(page)).toBeVisible();
+    await expect(mini(page)).toHaveAttribute("data-dragged", "");
+    const again = await box(); expect(Math.abs(again.x - placed.x)).toBeLessThan(2); expect(Math.abs(again.y - placed.y)).toBeLessThan(2);
+
+    // A smaller screen (a phone in landscape) pulls a place that no longer fits back inside the screen, and the stored place follows.
+    await page.setViewportSize({ width: 600, height: 420 });
+    await expect.poll(async () => { const b = await box(); return b.x >= 0 && b.y >= 0 && b.x + b.width <= 600.5 && b.y + b.height <= 420.5; }).toBe(true);
+    // And a corrupt remembered value never breaks the window: it simply opens in its default place.
+    await page.evaluate(() => localStorage.setItem("pda:meeting-mini-window:v1", "{not json"));
+    await page.goto(roomHref(project.slug, meeting.id)); await join(page);
+    await appPush(page, localizeHref("/projects", "tr")); await expect(mini(page)).toBeVisible();
+    await expect(mini(page)).not.toHaveAttribute("data-dragged", "");
+  } finally { await archive(page, project); await context.close(); }
+});
+
+test("mini window: shows the other person's real moving camera picture, and an avatar when nobody has a camera on", async ({ browser }) => {
+  test.setTimeout(240000);
+  const managerContext = await browser.newContext({ storageState: REJECTED_STATE, permissions: ["camera", "microphone"], viewport: { width: 1280, height: 800 } });
+  const memberContext = await browser.newContext({ storageState: REJECTED_STATE, permissions: ["camera", "microphone"], viewport: { width: 1280, height: 800 } });
+  const a = await managerContext.newPage(), b = await memberContext.newPage(); let project: Project | undefined;
+  try {
+    await login(managerContext, managerFile); await login(memberContext, memberFile);
+    project = await createProject(a); await b.goto("/dashboard");
+    addMember(project.id, ((await api(b, "GET", "/auth/me")).json as { id: string }).id);
+    const meeting = await createMeeting(a, project.id);
+    await a.goto(roomHref(project.slug, meeting.id)); await b.goto(roomHref(project.slug, meeting.id));
+    await join(a); await join(b);
+    await appPush(a, localizeHref("/projects", "tr")); await expect(mini(a)).toBeVisible();
+    // Nobody has a camera on: the window shows the avatar, no video element.
+    await expect(mini(a).locator("video")).toHaveCount(0);
+    await expect(mini(a).locator("[data-mini-feed]")).toBeVisible();
+    // The member turns the camera on: the window of the manager (who is on another page) now carries that real picture.
+    await b.getByRole("button", { name: tr.cameraOn, exact: true }).click(); await expect(b.getByRole("button", { name: tr.cameraOff, exact: true })).toBeVisible();
+    const video = mini(a).locator("video"); await expect(video).toHaveCount(1, { timeout: 20000 });
+    // Real frames: the picture has a size, is playing, is not one flat colour, and keeps changing (the fake camera moves).
+    const sample = () => video.evaluate(element => {
+      const v = element as HTMLVideoElement, canvas = document.createElement("canvas"); canvas.width = 32; canvas.height = 32;
+      const ctx = canvas.getContext("2d")!; ctx.drawImage(v, 0, 0, 32, 32); const data = ctx.getImageData(0, 0, 32, 32).data;
+      let sum = 0, sumSquares = 0; const n = data.length / 4; for (let i = 0; i < data.length; i += 4) { const g = (data[i] + data[i + 1] + data[i + 2]) / 3; sum += g; sumSquares += g * g; }
+      const mean = sum / n; return { width: v.videoWidth, height: v.videoHeight, playing: !v.paused && v.readyState >= 2, spread: Math.sqrt(Math.max(0, sumSquares / n - mean * mean)), signature: Array.from(data.slice(0, 256)).join(",") };
+    });
+    await expect.poll(async () => (await sample()).width, { timeout: 20000 }).toBeGreaterThan(0);
+    const first = await sample(); expect(first.playing).toBe(true); expect(first.height).toBeGreaterThan(0); expect(first.spread, "not a flat colour").toBeGreaterThan(3);
+    await expect.poll(async () => (await sample()).signature !== first.signature, { timeout: 15000 }).toBe(true);
+    await screenshot(a, "v291-mini-window-live-picture");
+    // The camera goes off again: back to the avatar, and the picture element is gone.
+    await b.getByRole("button", { name: tr.cameraOff, exact: true }).click();
+    await expect(mini(a).locator("video")).toHaveCount(0, { timeout: 20000 });
+  } finally { await archive(a, project); await managerContext.close(); await memberContext.close(); }
+});
