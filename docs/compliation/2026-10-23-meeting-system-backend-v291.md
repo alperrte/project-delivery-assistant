@@ -43,6 +43,7 @@ Swagger yalnız geliştirme/test ayarı açıkken kullanılabilir (`.agents/SECU
 | Komut | Sonuç |
 |---|---|
 | `mvnw test -Dtest=MeetingServiceTest,MeetingCoreIntegrationTest,MeetingReminderIntegrationTest,MeetingReminderMailTest,MeetingReminderMailPreviewTest` (Testcontainers PostgreSQL 18 + gerçek Mailpit) | **81 test, 0 hata** (21 + 17 + 32 + 10 + 1) |
+| `mvnw test -Dtest=com.pda.migration.*Test` (yeni `MeetingV55MigrationTest`: gerçek V54 veritabanında eski toplantı + V54 hatırlatma kuyruğu satırları, ardından V55) | **9 test, 0 hata**; eski toplantı korunur (`icon='video'`, `reminder_revision` aynı), V54 kuyruk satırları ve `NO_LONGER_ELIGIBLE` kodu değişmez, V54 kuralları (benzersizlik, deneme sınırı, adres reddi) sürer, yeni nedenler kabul edilir, geçersiz simge reddedilir, toplantı silinince gizleme/kuyruk kayıtları birlikte silinir, yeniden başlatma idempotent |
 | Frontend gerçek yığın e2e (Docker'da yeniden derlenmiş backend, V55 uygulanmış, self-hosted LiveKit, Mailpit) | geçmiş, 3 alıcılı e-posta, atlanan alıcı nedeni, `startNow` sapmaları geçti (frontend kaydına bakın) |
 | `git diff --check` | temiz |
 
