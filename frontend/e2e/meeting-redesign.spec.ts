@@ -198,7 +198,7 @@ test("create form: agenda with Enter, participants search/count/organizer, inlin
     const panel = page.locator("[data-meeting-form] aside").first();
     await expect(panel.getByText(tr.organizer, { exact: true })).toBeVisible();
     await expect(panel).toContainText("1 / 2");
-    await panel.getByRole("searchbox", { name: tr.searchMembers, exact: true }).fill(member.nickname.toUpperCase());
+    await panel.getByRole("searchbox", { name: tr.searchMembers, exact: true }).fill(member.nickname.slice(-8).toUpperCase()); // upper case on purpose, hex letters only: a Turkish browser lower-cases "I" to a dotless "ı"
     await expect(panel.getByRole("checkbox", { name: member.nickname, exact: true })).toBeVisible();
     await panel.getByRole("checkbox", { name: member.nickname, exact: true }).click(); await expect(panel).toContainText("2 / 2");
     // Real payload: what is stored is exactly what was chosen.
@@ -248,7 +248,7 @@ test("room: stage, strip, focus, grid, tabs, invite, copy link with two real par
     await expect(aside.getByRole("tab", { name: /^Katılımcılar/, selected: true })).toBeVisible();
     await expect(aside.getByRole("tab", { name: /Katılımcılar \(2\)/ })).toBeVisible();
     await expect(aside.getByRole("listitem")).toHaveCount(2);
-    await aside.getByRole("searchbox", { name: tr.searchParticipants, exact: true }).fill(member.nickname.toUpperCase());
+    await aside.getByRole("searchbox", { name: tr.searchParticipants, exact: true }).fill(member.nickname.slice(-8).toUpperCase()); // upper case on purpose, hex letters only: a Turkish browser lower-cases "I" to a dotless "ı"
     await expect(aside.getByRole("listitem")).toHaveCount(1);
     await aside.getByRole("searchbox", { name: tr.searchParticipants, exact: true }).fill("");
     await expect(aside.getByText(tr.organizer, { exact: true })).toBeVisible();
