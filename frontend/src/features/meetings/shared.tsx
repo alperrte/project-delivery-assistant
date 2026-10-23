@@ -42,9 +42,17 @@ export function useNow(intervalMs: number) {
   return now;
 }
 export function meetingErrorKey(error: unknown): string {
+  // A device or screen-share failure from the browser says what happened instead of the generic "could not complete".
+  if (error instanceof Error && !(error instanceof ApiError)) {
+    if (error.name === "NotAllowedError" || error.name === "SecurityError") return "permissionDenied";
+    if (error.name === "NotFoundError" || error.name === "OverconstrainedError") return "deviceMissing";
+    if (error.name === "NotReadableError" || error.name === "AbortError") return "deviceBusy";
+    return "error";
+  }
   if (!(error instanceof ApiError)) return "error";
   if (error.code === "MEETING_DUPLICATE_TAB") return "duplicateTab";
   if (error.code === "MEETING_INVITE_INVALID") return "invalidInvite";
+  if (error.code === "MEETING_INVALID_SCHEDULE") return "invalidSchedule";
   if (error.status === 403) return error.code === "MEETING_PARTICIPANT_REVOKED" ? "removed" : "forbidden";
   if (error.status === 401) return "sessionExpired";
   if (error.status === 404) return "notFound";

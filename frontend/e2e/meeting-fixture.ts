@@ -3,7 +3,8 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { expect, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
+import tr from "../src/i18n/meetings/tr.json";
 import { psql, uuid } from "./db";
 
 /** TEST-ONLY local accounts: no registration request, outgoing email, or change to an existing user's credentials. */
@@ -32,3 +33,24 @@ export async function showPanel(page: Page, name: string) {
   if (!(await tab.isVisible())) await page.locator("[data-meeting-room]").getByRole("button", { name, exact: true }).click();
   await expect(tab).toBeVisible();
 }
+
+/**
+ * Opens the menu of one person of the open participants panel (their "more" button, as a touch or keyboard user would) and returns
+ * the menu. Without a name it is the first person who is not yourself. The panel itself is opened first if it is not.
+ */
+export async function openParticipantMenu(page: Page, name?: string): Promise<Locator> {
+  await showPanel(page, tr.participants);
+  const rows = page.locator("[data-meeting-room] [data-participant]");
+  const row = name ? rows.filter({ hasText: name }).first() : rows.filter({ hasNotText: `(${tr.you})` }).first();
+  const label = row.getByRole("button", { name: /^.* için seçenekler$|^Options for |^Optionen für / });
+  await label.click();
+  const menu = page.locator("[data-participant-menu]"); await expect(menu).toBeVisible();
+  return menu;
+}
+/** The real gain (volume) values of the remote audio, read from the Web Audio nodes the page created (see `recordGains`). */
+export const recordGains = () => {
+  const gains: GainNode[] = []; Object.assign(window, { qaGains: gains });
+  const original = AudioContext.prototype.createGain;
+  AudioContext.prototype.createGain = function (this: AudioContext) { const node = original.call(this); gains.push(node); return node; };
+};
+export const readGains = (page: Page) => page.evaluate(() => (window as unknown as { qaGains: GainNode[] }).qaGains.map(node => Math.round(node.gain.value * 100) / 100));

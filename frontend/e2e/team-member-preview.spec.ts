@@ -247,7 +247,11 @@ test("grid card shows photo, name and primary project role (+N) side by side wit
     await expect(row.locator("[data-member-role]")).toHaveCount(0);
     await page.goto(`/tr/projeler/${project.slug}?section=teams&view=chart`);
     await expect(page.getByRole("link", { name: /Role card team/ }).first()).toBeVisible();
-    expect(memberRequests).toEqual([]);
+    // The organization chart (unlike the cards and the table) deliberately loads each team's roster: one bounded request per team,
+    // never one per person, and none repeated.
+    await expect.poll(() => memberRequests.length).toBeGreaterThan(0);
+    expect(new Set(memberRequests).size, "no roster is requested twice").toBe(memberRequests.length);
+    expect(memberRequests.every(url => new URL(url).searchParams.get("page") === "0")).toBe(true);
   } finally {
     await api(page, "POST", `/projects/${project.id}/archive`);
     for (const personContext of peopleContexts) await personContext.close();

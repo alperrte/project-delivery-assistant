@@ -2,8 +2,8 @@
 export const CONTACT_HREF = "/contact";
 export const CONTACT_EMAIL = "info@pd-assistant.com";
 export const REPOSITORY_URL = "https://github.com/alperrte/project-delivery-assistant";
-/** Release label shown in the footer ("v2"). Display text only: package and API versions are not derived from it. */
-export const APP_VERSION = "2";
+/** Release label shown in the footer ("v2.9.1"). Display text only: package and API versions are not derived from it. */
+export const APP_VERSION = "2.9.1";
 export const CONTRIBUTORS = [
   {
     name: "Alper Temiz",

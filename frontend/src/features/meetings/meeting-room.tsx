@@ -18,9 +18,12 @@ import { useMeetingSessionRuntime } from "./session/meeting-session-runtime";
 import { PreJoinCheck } from "./room/device-check";
 import { ParticipantTile } from "./room/participant-tile";
 import { RoomStage, type StageFocus, type StageMode } from "./room/room-stage";
+import { ParticipantMenu, ParticipantMenuProvider, type ParticipantMenuApi } from "./room/participant-menu";
 import { COMPACT_QUERY, WIDE_QUERY, useFitViewport, useMediaQuery } from "./room/use-media-query";
 import { RoomControls, type RoomPanel } from "./room/room-controls";
 import { ChatPanel, DevicesPanel, ParticipantsPanel, participantPhoto } from "./room/room-panels";
+import { consumeAutoJoin } from "./autojoin";
+import { captureSupport } from "./use-meeting-room";
 import { canShareScreen, screenShareMessage } from "./room/screen-share";
 import { useSpeakerMonitor } from "./room/speaker-monitor";
 import { useVisualViewport } from "./room/use-visual-viewport";
@@ -122,6 +125,14 @@ function MeetingRoomView({ live, id, projectId, userId, isManager = false, retur
   const monitor = useSpeakerMonitor(room);
   const viewport = useVisualViewport(inCall);
   useFitViewport(root, inCall);
+  // "Start now" leaves a one-time note for this meeting in this tab (see autojoin.ts): join once, with the microphone and camera still
+  // off (nothing is switched on without a tap). A link alone never joins anybody.
+  const autoJoined = useRef(false);
+  useEffect(() => {
+    if (autoJoined.current || live.phase !== "ready") return;
+    autoJoined.current = true;
+    if (consumeAutoJoin(id)) live.join();
+  }, [live, id]);
   const lookup = new Map(live.participants.map(p => [p.identity, p]));
   // Moderation (mute, remove) stays with project managers; ending the meeting for everyone is only for its creator, whatever their role.
   const managerProjectId = isManager ? projectId : undefined;
@@ -165,6 +176,10 @@ function MeetingRoomView({ live, id, projectId, userId, isManager = false, retur
     screenLock.current = true; setScreenBusy(true);
     try { await local.setScreenShareEnabled(enable, { audio: true }); }
     catch (failure) {
+      // The SDK also reports the failure as a room-level device error; it is explained right here, so the generic banner is cleared.
+      live.setError(undefined);
+      // Stopping is idempotent: a share that already ended (the browser's own "Stop sharing", a closed window) is not an error.
+      if (!enable) return;
       const message = screenShareMessage(failure);
       (message === "screenShareCancelled" || message === "screenShareUnsupported" ? toast.info : toast.error)(t(message), { duration: message === "screenShareUnsupported" ? 8000 : undefined });
     } finally { screenLock.current = false; setScreenBusy(false); }
@@ -189,15 +204,25 @@ function MeetingRoomView({ live, id, projectId, userId, isManager = false, retur
     catch (failure) { live.setError(failure); } finally { sendLock.current = false; setSending(false); }
   }
   // Phones keep the equal-share grid; every other size gets the stage with the strip (or the plain grid when chosen).
-  const tiles = people.map((p, index) => <ParticipantTile key={p.identity} participant={p} monitor={monitor}
-    name={nameOf(p)} label={describe(p).label}
-    photoSrc={participantPhoto(lookup.get(p.identity))} guest={lookup.get(p.identity)?.guest}
-    className={cn("aspect-video compact:aspect-auto",
-      sharing && "compact:aspect-video compact:h-full compact:shrink-0 compact:landscape:h-auto compact:landscape:w-full",
-      !sharing && people.length > 1 && people.length <= 6 && people.length % 2 === 1 && index === people.length - 1 && "compact:portrait:col-span-2")} />);
+  const tiles = people.map((p, index) => <ParticipantMenu key={p.identity} target={{ identity: p.identity, name: nameOf(p), self: p === room?.localParticipant, photoSrc: participantPhoto(lookup.get(p.identity)), guest: lookup.get(p.identity)?.guest }}
+    className="absolute top-1 right-1 z-10 size-9 rounded-lg bg-black/60 text-white hover:bg-black/80 hover:text-white">
+    {menu => <ParticipantTile participant={p} monitor={monitor}
+      name={nameOf(p)} label={describe(p).label}
+      photoSrc={participantPhoto(lookup.get(p.identity))} guest={lookup.get(p.identity)?.guest}
+      className={cn("aspect-video compact:aspect-auto",
+        sharing && "compact:aspect-video compact:h-full compact:shrink-0 compact:landscape:h-auto compact:landscape:w-full",
+        !sharing && people.length > 1 && people.length <= 6 && people.length % 2 === 1 && index === people.length - 1 && "compact:portrait:col-span-2")}>{menu}</ParticipantTile>}
+  </ParticipantMenu>);
+  // One menu source for every card and row of the room: local volume and mute, focus and (managers only) the two moderation actions.
+  const menuApi: ParticipantMenuApi = {
+    volumes: live.volumes, muted: live.muted, setVolume: live.setVolume, setLocalMute: live.setLocalMute,
+    managerProjectId, meetingId: id, participantId: identity => lookup.get(identity)?.id, onNotice: setNotice, onFailure: live.setError,
+    focusedIdentity: pick?.kind === "camera" ? pick.identity : null,
+    onFocus: compact ? undefined : identity => { if (identity) { setPick({ kind: "camera", identity }); setMode("focus"); } else setPick(null); },
+  };
   const tabs = panel === "participants" || panel === "chat";
 
-  return <div data-meeting-room ref={root}
+  return <ParticipantMenuProvider value={menuApi}><div data-meeting-room ref={root}
     style={inCall ? { "--room-top": "calc(3.5rem + env(safe-area-inset-top))", "--room-bar": viewport.keyboard ? "0px" : "calc(3.75rem + env(safe-area-inset-bottom))", ...(viewport.height ? { "--vvh": `${viewport.height}px`, "--vvt": `${viewport.top}px` } : {}) } as React.CSSProperties : undefined}
     className={inCall ? "flex min-w-0 flex-col gap-3 compact:fixed compact:inset-x-0 compact:top-[var(--vvt,0px)] compact:z-40 compact:h-[var(--vvh,100dvh)] compact:gap-0 compact:overflow-hidden compact:bg-background" : "min-w-0 space-y-4"}>
     <header className={cn("flex flex-wrap items-center justify-between gap-3", inCall && "compact:h-[var(--room-top)] compact:shrink-0 compact:flex-nowrap compact:items-center compact:gap-2 compact:overflow-hidden compact:border-b compact:px-3 compact:pb-2 compact:pt-[max(0.5rem,env(safe-area-inset-top))]")}>
@@ -256,9 +281,9 @@ function MeetingRoomView({ live, id, projectId, userId, isManager = false, retur
             <Button variant="ghost" className="min-h-11 min-w-11" aria-label={t("closePanel")} onClick={() => setPanel(null)}><X size={18} aria-hidden="true" /></Button>
           </div>
           <div role={tabs ? "tabpanel" : undefined} id={tabs ? "room-tabpanel" : undefined} aria-labelledby={tabs ? `room-tab-${panel}` : undefined} className="flex min-h-0 flex-1 flex-col border-t pt-3">
-            {panel === "participants" && <ParticipantsPanel live={live} room={room} volumes={live.volumes} onVolume={live.setVolume} managerProjectId={managerProjectId} inviteProjectId={inviteProjectId} onCopyLink={projectId && returnHref ? () => void copyLink() : undefined} organizerId={live.meeting?.organizerId} meetingId={id} onNotice={setNotice} />}
-            {panel === "chat" && <ChatPanel live={live} active={active} content={content} setContent={setContent} mentions={mentions} setMentions={setMentions} sending={sending} onSend={() => void send()} />}
-            {panel === "devices" && <DevicesPanel room={room} devices={devices} onSwitch={(kind, deviceId) => void live.switchDevice(kind, deviceId).catch(showDeviceError)} noise={live.noiseSuppressionSupported ? { enabled: live.noiseSuppression, onChange: enabled => void live.setNoiseSuppression(enabled).catch(showDeviceError) } : undefined} />}
+            {panel === "participants" && <ParticipantsPanel live={live} room={room} inviteProjectId={inviteProjectId} onCopyLink={projectId && returnHref ? () => void copyLink() : undefined} organizerId={live.meeting?.organizerId} meetingId={id} />}
+            {panel === "chat" && <ChatPanel live={live} active={active} content={content} setContent={setContent} mentions={mentions} setMentions={setMentions} sending={sending} onSend={send} />}
+            {panel === "devices" && <DevicesPanel room={room} devices={devices} onSwitch={(kind, deviceId) => void live.switchDevice(kind, deviceId).catch(showDeviceError)} capture={{ values: live.capture, support: captureSupport(), onChange: (key, enabled) => void live.setCapture(key, enabled).catch(showDeviceError) }} />}
           </div>
         </aside>}
       </div>
@@ -270,5 +295,5 @@ function MeetingRoomView({ live, id, projectId, userId, isManager = false, retur
       {endProjectId && <ConfirmDialog open={endOpen} onOpenChange={setEndOpen} title={t("endTitle")} description={t("endConfirm")} confirmLabel={t("endConfirmLabel")} cancelLabel={t("endCancel")} destructive
         onConfirm={async () => { await meetingsApi.action(endProjectId, id, "end"); live.leave(); }} />}
     </>}
-  </div>;
+  </div></ParticipantMenuProvider>;
 }

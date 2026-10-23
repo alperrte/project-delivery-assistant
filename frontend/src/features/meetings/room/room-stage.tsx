@@ -6,6 +6,7 @@ import { Expand, LayoutGrid, Minimize2, Presentation } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { ParticipantMenu } from "./participant-menu";
 import { ParticipantTile } from "./participant-tile";
 import type { SpeakerMonitor } from "./speaker-monitor";
 
@@ -39,9 +40,12 @@ function IconButton({ label, onClick, pressed, children }: { label: string; onCl
     className="size-10 rounded-lg bg-black/60 text-white hover:bg-black/80 hover:text-white aria-pressed:bg-meeting" />}>{children}</TooltipTrigger><TooltipContent>{label}</TooltipContent></Tooltip>;
 }
 
+const MENU_BUTTON = "z-10 rounded-lg bg-black/60 text-white hover:bg-black/80 hover:text-white";
+
 /**
  * The big media area, the horizontal strip of everyone else under it and the plain grid alternative. Every card is bound to a
- * real LiveKit track (a camera, or a screen share kept at its own aspect ratio, never cropped).
+ * real LiveKit track (a camera, or a screen share kept at its own aspect ratio, never cropped). Right click (or the "more" button)
+ * on any card opens that person's menu.
  */
 export function RoomStage({ people, shares, monitor, mode, onMode, pick, onPick, describe, screenLabel }: StageProps) {
   const t = useTranslations("meetings");
@@ -59,15 +63,21 @@ export function RoomStage({ people, shares, monitor, mode, onMode, pick, onPick,
     const info = describe(participant);
     return { participant, kind, info, label: kind === "screen" ? screenLabel(info.name) : info.label };
   };
+  type Feed = ReturnType<typeof feed>;
   const selectFeed = (participant: Participant, kind: StageFocus["kind"]) => { onPick({ kind, identity: participant.identity }); onMode("focus"); };
+  const source = (item: Feed) => item.kind === "screen" ? Track.Source.ScreenShare : Track.Source.Camera;
+  const target = (item: Feed) => ({ identity: item.participant.identity, name: item.info.name, self: item.participant.isLocal, photoSrc: item.info.photoSrc, guest: item.info.guest });
 
   if (mode === "grid") {
     const feeds = [...shares.map(p => feed(p, "screen")), ...people.map(p => feed(p, "camera"))];
     return <div className={cn("grid min-h-0 flex-1 auto-rows-fr gap-3 overflow-y-auto overscroll-contain", feeds.length > 1 && "sm:grid-cols-2", feeds.length > 4 && "xl:grid-cols-3")} data-room-grid>
-      {feeds.map(item => <ParticipantTile key={`${item.participant.identity}:${item.kind}`} participant={item.participant} monitor={monitor} source={item.kind === "screen" ? Track.Source.ScreenShare : Track.Source.Camera}
-        name={item.info.name} label={item.label} photoSrc={item.info.photoSrc} guest={item.info.guest} className="aspect-video lg:aspect-auto lg:min-h-40">
-        <button type="button" aria-label={t("focusOn", { name: item.label })} onClick={() => selectFeed(item.participant, item.kind)} className="absolute inset-0 cursor-pointer rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring" />
-      </ParticipantTile>)}
+      {feeds.map(item => <ParticipantMenu key={`${item.participant.identity}:${item.kind}`} target={target(item)} className={cn("absolute top-2 right-2", MENU_BUTTON)}>
+        {menu => <ParticipantTile participant={item.participant} monitor={monitor} source={source(item)}
+          name={item.info.name} label={item.label} photoSrc={item.info.photoSrc} guest={item.info.guest} className="aspect-video lg:aspect-auto lg:min-h-40">
+          <button type="button" aria-label={t("focusOn", { name: item.label })} onClick={() => selectFeed(item.participant, item.kind)} className="absolute inset-0 cursor-pointer rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring" />
+          {menu}
+        </ParticipantTile>}
+      </ParticipantMenu>)}
     </div>;
   }
 
@@ -77,20 +87,25 @@ export function RoomStage({ people, shares, monitor, mode, onMode, pick, onPick,
   const strip = [...shares.map(p => feed(p, "screen")), ...people.map(p => feed(p, "camera"))].filter(item => !(stage && item.participant.identity === stage.identity && item.kind === stage.kind));
   return <div className="flex min-h-0 flex-1 flex-col gap-3">
     <div ref={stageRef} data-room-stage data-stage-kind={stage?.kind} className={cn("relative aspect-video min-h-0 lg:aspect-auto lg:flex-1", fullscreen && "bg-black")}>
-      {mainFeed && <ParticipantTile key={`${mainFeed.participant.identity}:${mainFeed.kind}`} participant={mainFeed.participant} monitor={monitor} source={mainFeed.kind === "screen" ? Track.Source.ScreenShare : Track.Source.Camera}
-        name={mainFeed.info.name} label={mainFeed.label} photoSrc={mainFeed.info.photoSrc} guest={mainFeed.info.guest} className="h-full w-full" />}
+      {mainFeed && <ParticipantMenu key={`${mainFeed.participant.identity}:${mainFeed.kind}`} target={target(mainFeed)} className={cn("absolute top-3 left-3 size-10", MENU_BUTTON)}>
+        {menu => <ParticipantTile participant={mainFeed.participant} monitor={monitor} source={source(mainFeed)}
+          name={mainFeed.info.name} label={mainFeed.label} photoSrc={mainFeed.info.photoSrc} guest={mainFeed.info.guest} className="h-full w-full">{menu}</ParticipantTile>}
+      </ParticipantMenu>}
       <div className="absolute top-3 right-3 z-10 flex gap-2">
         {pick && <IconButton label={t("autoFocus")} onClick={() => onPick(null)}><Presentation size={18} aria-hidden="true" /></IconButton>}
         <IconButton label={t("gridView")} onClick={() => onMode("grid")}><LayoutGrid size={18} aria-hidden="true" /></IconButton>
         {canFullscreen && <IconButton label={t(fullscreen ? "exitFullscreen" : "fullscreen")} pressed={fullscreen} onClick={toggleFullscreen}>{fullscreen ? <Minimize2 size={18} aria-hidden="true" /> : <Expand size={18} aria-hidden="true" />}</IconButton>}
       </div>
     </div>
-    {strip.length > 0 && <div role="list" aria-label={t("participantStrip")} data-room-strip className="flex shrink-0 snap-x gap-3 overflow-x-auto overscroll-x-contain pb-1">
+    {strip.length > 0 && <div role="list" aria-label={t("participantStrip")} data-room-strip className="flex shrink-0 snap-x gap-3 overflow-x-auto overscroll-x-contain pb-1" data-workspace-scroll>
       {strip.map(item => <div key={`${item.participant.identity}:${item.kind}`} role="listitem" className="h-24 shrink-0 snap-start sm:h-28">
-        <ParticipantTile participant={item.participant} monitor={monitor} source={item.kind === "screen" ? Track.Source.ScreenShare : Track.Source.Camera} compact
-          name={item.info.name} label={item.label} photoSrc={item.info.photoSrc} guest={item.info.guest} className="aspect-video h-full">
-          <button type="button" aria-label={t("focusOn", { name: item.label })} onClick={() => selectFeed(item.participant, item.kind)} className="absolute inset-0 cursor-pointer rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring" />
-        </ParticipantTile>
+        <ParticipantMenu target={target(item)} className={cn("absolute top-1 right-1 size-7", MENU_BUTTON)}>
+          {menu => <ParticipantTile participant={item.participant} monitor={monitor} source={source(item)} compact
+            name={item.info.name} label={item.label} photoSrc={item.info.photoSrc} guest={item.info.guest} className="aspect-video h-full">
+            <button type="button" aria-label={t("focusOn", { name: item.label })} onClick={() => selectFeed(item.participant, item.kind)} className="absolute inset-0 cursor-pointer rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring" />
+            {menu}
+          </ParticipantTile>}
+        </ParticipantMenu>
       </div>)}
     </div>}
   </div>;

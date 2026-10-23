@@ -1,8 +1,9 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Camera, CameraOff, Check, Loader2, Mic, Video } from "lucide-react";
+import { Camera, CameraOff, Check, Headphones, Loader2, Mic, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { DeviceSelect, deviceChoices } from "./device-select";
 import { SpeechGate, rmsToDb } from "./speech-gate";
@@ -18,6 +19,8 @@ type CheckState = { status: "idle" | "starting" | "live" | "error"; error?: stri
 const IDLE: CheckState = { status: "idle" };
 const SEGMENTS = 12;
 const SILENCE_HINT_MS = 3500;
+/** Default level of the "hear myself" monitor: below full scale so a first switch-on is not a loud surprise. */
+const MONITOR_DEFAULT = 60;
 
 /** Maps a getUserMedia failure (or missing support) to one of the check's messages. */
 export function checkErrorKey(failure: unknown): "testDenied" | "testMissing" | "testBusy" | "testFailed" {
@@ -42,7 +45,10 @@ export function PreJoinCheck({ onJoin, onPrefer }: { onJoin: () => void; onPrefe
   const video = useRef<HTMLVideoElement>(null);
   const cameraStream = useRef<MediaStream | undefined>(undefined), micStream = useRef<MediaStream | undefined>(undefined);
   const cameraRun = useRef(0), micRun = useRef(0);
-  const meter = useRef<{ context: AudioContext; frame: number; hint: ReturnType<typeof setTimeout> } | undefined>(undefined);
+  const meter = useRef<{ context: AudioContext; frame: number; hint: ReturnType<typeof setTimeout>; input: MediaStreamAudioSourceNode; monitor: GainNode; monitoring: boolean } | undefined>(undefined);
+  // "Hear myself": the microphone is played back on this device only (Web Audio), off by default and never part of any call.
+  const [hearSelf, setHearSelf] = useState(false), [monitorVolume, setMonitorVolume] = useState(MONITOR_DEFAULT);
+  const hearRef = useRef(false), volumeRef = useRef(MONITOR_DEFAULT);
   const alive = useRef(true);
   // The latest choice and callback, readable from the device-change listener without re-subscribing.
   const chosen = useRef({ camera: "", mic: "" }), onPreferRef = useRef(onPrefer);
@@ -66,10 +72,11 @@ export function PreJoinCheck({ onJoin, onPrefer }: { onJoin: () => void; onPrefe
     if (video.current) video.current.srcObject = null;
     if (alive.current) setCamera(next);
   }, []);
-  const endMic = useCallback((next: CheckState) => {
+  const endMic = useCallback((next: CheckState, keepMonitor = false) => {
     micRun.current++;
     const active = meter.current; meter.current = undefined;
-    if (active) { cancelAnimationFrame(active.frame); clearTimeout(active.hint); void active.context.close().catch(() => {}); }
+    if (active) { cancelAnimationFrame(active.frame); clearTimeout(active.hint); if (active.monitoring) { active.monitor.disconnect(); active.input.disconnect(active.monitor); } void active.context.close().catch(() => {}); }
+    if (!keepMonitor) { hearRef.current = false; if (alive.current) setHearSelf(false); }
     stopStream(micStream.current); micStream.current = undefined;
     if (alive.current) { setMic(next); setSegments(0); setHeard(false); setQuiet(false); }
   }, []);
@@ -93,10 +100,23 @@ export function PreJoinCheck({ onJoin, onPrefer }: { onJoin: () => void; onPrefe
     }
   }
 
-  async function startMic(deviceId = micId) {
+  /** Connects or disconnects the playback of the microphone to this device's speakers; nothing else ever touches the destination. */
+  function applyMonitor(on: boolean) {
+    const active = meter.current; hearRef.current = on; setHearSelf(on);
+    if (!active || active.monitoring === on) return;
+    if (on) { active.monitor.gain.value = volumeRef.current / 100; active.input.connect(active.monitor); active.monitor.connect(active.context.destination); }
+    else { active.monitor.disconnect(); active.input.disconnect(active.monitor); }
+    active.monitoring = on;
+  }
+  function changeMonitorVolume(value: number) {
+    volumeRef.current = value; setMonitorVolume(value);
+    if (meter.current) meter.current.monitor.gain.value = value / 100;
+  }
+
+  async function startMic(deviceId = micId, restoreMonitor = false) {
     const unsupported = unsupportedKey();
     if (unsupported) { endMic({ status: "error", error: unsupported }); return; }
-    endMic({ status: "starting" });
+    endMic({ status: "starting" }, restoreMonitor);
     const run = micRun.current;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: deviceId ? { deviceId: { exact: deviceId } } : true });
@@ -123,8 +143,10 @@ export function PreJoinCheck({ onJoin, onPrefer }: { onJoin: () => void; onPrefe
         if (meter.current) meter.current.frame = requestAnimationFrame(tick);
       };
       const hint = setTimeout(() => { if (!voiced && micStream.current === stream) setQuiet(true); }, SILENCE_HINT_MS);
-      meter.current = { context, frame: requestAnimationFrame(tick), hint };
+      const monitor = context.createGain();
+      meter.current = { context, frame: requestAnimationFrame(tick), hint, input, monitor, monitoring: false };
       setMic({ status: "live" });
+      if (restoreMonitor) applyMonitor(true);
       void refreshDevices();
     } catch (failure) {
       if (run === micRun.current && alive.current) setMic({ status: "error", error: checkErrorKey(failure) });
@@ -146,7 +168,7 @@ export function PreJoinCheck({ onJoin, onPrefer }: { onJoin: () => void; onPrefe
   function chooseDevice(kind: Kind, deviceId: string) {
     onPrefer(kind, deviceId || undefined);
     if (kind === "videoinput") { chosen.current.camera = deviceId; setCameraId(deviceId); if (camera.status === "live") void startCamera(deviceId); }
-    else { chosen.current.mic = deviceId; setMicId(deviceId); if (mic.status === "live") void startMic(deviceId); }
+    else { chosen.current.mic = deviceId; setMicId(deviceId); if (mic.status === "live") void startMic(deviceId, hearRef.current); }
   }
 
   const message = (state: CheckState, kind: Kind) => state.error ? t(state.error, { device: t(kind) }) : undefined;
@@ -189,6 +211,18 @@ export function PreJoinCheck({ onJoin, onPrefer }: { onJoin: () => void; onPrefe
           </>}
         </div>
         {select("audioinput", micId)}
+        <div className="space-y-2 rounded-lg bg-surface-2 p-3">
+          <label className="flex min-h-11 cursor-pointer items-start gap-3 text-sm">
+            <Checkbox checked={hearSelf} disabled={mic.status !== "live"} onCheckedChange={on => applyMonitor(on)} className="mt-0.5" data-testid="hear-self" />
+            <span className="space-y-0.5"><span className="flex items-center gap-1.5 font-medium"><Headphones size={15} aria-hidden="true" />{t("hearSelf")}</span>
+              <span className="block text-xs leading-5 text-muted-foreground">{t("hearSelfHint")}</span></span>
+          </label>
+          {hearSelf && <label className="flex items-center gap-3 text-xs text-muted-foreground">
+            <span className="shrink-0">{t("hearSelfVolume")}</span>
+            <input type="range" min={0} max={100} value={monitorVolume} onChange={event => changeMonitorVolume(Number(event.target.value))} className="w-full accent-meeting" aria-label={t("hearSelfVolume")} />
+            <span aria-hidden="true" className="w-8 shrink-0 text-right tabular-nums">{monitorVolume}</span>
+          </label>}
+        </div>
         <Button variant={mic.status === "live" ? "secondary" : "outline"} className="min-h-11 w-full sm:w-auto" aria-busy={mic.status === "starting" || undefined} disabled={mic.status === "starting"}
           onClick={() => mic.status === "live" ? endMic(IDLE) : void startMic()}>
           {mic.status === "starting" && <Loader2 size={16} className="animate-spin" aria-hidden="true" />}{t(mic.status === "live" ? "stopTest" : "testMicrophone")}

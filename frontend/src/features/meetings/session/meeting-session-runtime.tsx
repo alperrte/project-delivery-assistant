@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, type Dispatch, type ReactNode, type SetSta
 import type { RemoteParticipant } from "livekit-client";
 import { useMeetingRoom, type RoomPhase } from "../use-meeting-room";
 import type { ChatDraft, SessionLive, SessionStore, SessionTarget } from "./meeting-session";
+import { DEFAULT_VOLUME, MAX_VOLUME } from "./volume";
 
 /**
  * The part of the call that needs the LiveKit SDK. `MeetingSessionProvider` sits in the workspace layout, so it loads
@@ -31,16 +32,28 @@ function RemoteAudio({ participant, volume }: { participant: RemoteParticipant; 
 export function useMeetingSessionRuntime(id: string, projectId?: string): { live: SessionLive; audio: ReactNode } {
   const runtime = useMeetingRoom(id, projectId);
   const [mediaBusy, setMediaBusy] = useState(false), lock = useRef(false);
+  // Per-person playback level in percent (0-200, 100 = as received, above 100 is a real boost through the Web Audio gain) and a separate
+  // "muted for me" flag, so muting and unmuting returns to exactly the level the person had chosen. Both are local: nothing is sent.
   const [volumes, setVolumes] = useState<Record<string, number>>({});
+  const [muted, setMuted] = useState<Record<string, boolean>>({});
   const [stored, setStored] = useState<ChatDraft>(NO_DRAFT);
   // Leaving, ending for all or removal discard the draft; a failed connection that can be retried keeps it.
   const draft = DRAFT_ENDING.includes(runtime.phase) ? NO_DRAFT : stored;
   const setDraftContent: Dispatch<SetStateAction<string>> = value => setStored(previous => ({ ...previous, content: typeof value === "function" ? value(previous.content) : value }));
   const setDraftMentions: Dispatch<SetStateAction<string[]>> = value => setStored(previous => ({ ...previous, mentions: typeof value === "function" ? value(previous.mentions) : value }));
   const room = runtime.room;
+  const clamp = (volume: number) => Math.max(0, Math.min(MAX_VOLUME, Math.round(volume)));
+  const effective = (identity: string, level = volumes[identity] ?? DEFAULT_VOLUME, silenced = muted[identity] ?? false) => silenced ? 0 : level / 100;
   const setVolume = (identity: string, volume: number) => {
-    room?.remoteParticipants.get(identity)?.setVolume(volume / 100);
-    setVolumes(previous => ({ ...previous, [identity]: volume }));
+    const level = clamp(volume);
+    // Moving the slider is an explicit choice to hear the person again.
+    room?.remoteParticipants.get(identity)?.setVolume(effective(identity, level, false));
+    setVolumes(previous => ({ ...previous, [identity]: level }));
+    setMuted(previous => previous[identity] ? { ...previous, [identity]: false } : previous);
+  };
+  const setLocalMute = (identity: string, on: boolean) => {
+    room?.remoteParticipants.get(identity)?.setVolume(effective(identity, undefined, on));
+    setMuted(previous => ({ ...previous, [identity]: on }));
   };
   async function toggleMedia(kind: "mic" | "camera") {
     if (!room || lock.current) return undefined;
@@ -53,8 +66,8 @@ export function useMeetingSessionRuntime(id: string, projectId?: string): { live
     } catch (failure) { return failure; }
     finally { lock.current = false; setMediaBusy(false); }
   }
-  const audio = room ? <div hidden>{[...room.remoteParticipants.values()].map(p => <RemoteAudio key={p.identity} participant={p} volume={(volumes[p.identity] ?? 100) / 100} />)}</div> : null;
-  return { live: { ...runtime, mediaBusy, volumes, setVolume, toggleMedia, draft, setDraftContent, setDraftMentions }, audio };
+  const audio = room ? <div hidden>{[...room.remoteParticipants.values()].map(p => <RemoteAudio key={p.identity} participant={p} volume={effective(p.identity)} />)}</div> : null;
+  return { live: { ...runtime, mediaBusy, volumes, setVolume, muted, setLocalMute, toggleMedia, draft, setDraftContent, setDraftMentions }, audio };
 }
 
 export function SessionRunner({ target, store }: { target: SessionTarget; store: SessionStore }) {
