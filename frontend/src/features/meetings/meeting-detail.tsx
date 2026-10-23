@@ -17,6 +17,7 @@ import { profilePhotoSrc } from "@/features/account/api";
 import { meetingsApi, meetingConnectionApi } from "./api";
 import { clockText, durationMinutes, localDateTime, meetingPeople, MeetingError, MeetingStatus, useMeeting, useNow, useProjectMembers } from "./shared";
 import { DurationText } from "./meeting-card";
+import { MeetingIcon } from "./meeting-icons";
 import { MeetingForm } from "./meeting-form";
 import { isInCallPhase, useOptionalMeetingSession } from "./session/meeting-session";
 import type { MeetingInvite } from "./types";
@@ -71,7 +72,7 @@ export function MeetingDetail({ slug, id, edit = false }: { slug: string; id: st
   const planned = meetingPeople(meeting), live = meeting.status === "OPEN";
   const left = Math.ceil((Date.parse(meeting.endsAt) - now) / 60_000);
   return <PageContainer width="form">
-    <PageHeader title={meeting.title} description={context.project?.name} action={<MeetingStatus meeting={meeting} className="px-3 py-1" />} />
+    <PageHeader title={meeting.title} description={context.project?.name} titleAdornment={<span data-meeting-icon={meeting.icon} className="grid size-9 place-items-center rounded-lg bg-meeting-soft text-meeting-ink"><MeetingIcon name={meeting.icon} size={20} /></span>} action={<MeetingStatus meeting={meeting} className="px-3 py-1" />} />
     {error != null && <MeetingError error={error} />}
     <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
       <section className="workspace-panel min-w-0 divide-y">

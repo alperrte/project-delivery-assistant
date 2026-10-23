@@ -15,12 +15,18 @@ export const meetingsApi = {
   listAll: async (projectId: string, signal?: AbortSignal) => {
     const content: Meeting[] = [];
     for (let page = 0; page < MAX_LIST_PAGES; page++) {
-      const result = await apiRequest<Page<Meeting>>(`${root(projectId)}?page=${page}&size=100&sort=startsAt,desc`, { signal });
+      // `hidden=EXCLUDE` (the default) leaves out what this member cleared from their own history; nobody else is affected.
+      const result = await apiRequest<Page<Meeting>>(`${root(projectId)}?page=${page}&size=100&sort=startsAt,desc&hidden=EXCLUDE`, { signal });
       content.push(...result.content);
       if (page + 1 >= result.totalPages) return { content, complete: true };
     }
     return { content, complete: false };
   },
+  /** How many meetings this member has cleared from their own history in the project. */
+  hiddenCount: (projectId: string, signal?: AbortSignal) => apiRequest<{ count: number }>(`${root(projectId)}/history`, { signal }),
+  /** Hides this member's finished and cancelled meetings from their own list; no meeting data changes and nobody else is affected. */
+  clearHistory: (projectId: string) => apiRequest<{ count: number }>(`${root(projectId)}/history/clear`, { method: "POST" }),
+  restoreHistory: (projectId: string) => apiRequest<{ count: number }>(`${root(projectId)}/history/restore`, { method: "POST" }),
   detail: (projectId: string, id: string, signal?: AbortSignal) => apiRequest<Meeting>(`${root(projectId)}/${id}`, { signal }),
   create: (projectId: string, body: MeetingInput, guard?: () => boolean) => apiRequest<Meeting>(root(projectId), { method: "POST", body, guard }),
   update: (projectId: string, id: string, body: MeetingInput, guard?: () => boolean) => apiRequest<Meeting>(`${root(projectId)}/${id}`, { method: "PUT", body, guard }),

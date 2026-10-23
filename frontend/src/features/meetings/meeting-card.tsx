@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { Ban, CalendarClock, Clock, Copy, Eye, MoreHorizontal, Pencil, PhoneOff, Video } from "lucide-react";
+import { Ban, CalendarClock, Clock, Copy, Eye, MoreHorizontal, Pencil, PhoneOff } from "lucide-react";
 import Link from "@/i18n/navigation";
 import { localizeHref } from "@/i18n/routing";
 import type { Locale } from "@/i18n/config";
@@ -14,6 +14,7 @@ import type { Member } from "@/features/projects/types";
 import { cn } from "@/lib/utils";
 import { clockText, durationMinutes, meetingPeople, MeetingStatus } from "./shared";
 import { isInCallPhase, useOptionalMeetingSession } from "./session/meeting-session";
+import { MeetingIcon } from "./meeting-icons";
 import type { Meeting } from "./types";
 
 /** "1 sa 30 dk" / "45 dk" from a number of minutes. */
@@ -65,7 +66,7 @@ export function MeetingCard({ meeting, slug, projectName, members, now, canEdit,
     className={cn("relative rounded-xl border bg-card transition-colors hover:bg-muted/40 focus-within:ring-2 focus-within:ring-ring", live && "border-meeting ring-1 ring-meeting")}>
     <div className="grid gap-4 p-4 md:grid-cols-[minmax(0,1.6fr)_auto_minmax(11rem,1fr)_auto] md:items-center md:gap-6">
       <div className="flex min-w-0 items-start gap-3">
-        <span aria-hidden="true" className={cn("grid size-11 shrink-0 place-items-center rounded-lg", live ? "bg-meeting text-meeting-foreground" : "bg-meeting-soft text-meeting-ink")}><Video size={20} /></span>
+        <span aria-hidden="true" data-meeting-icon={meeting.icon} className={cn("grid size-11 shrink-0 place-items-center rounded-lg", live ? "bg-meeting text-meeting-foreground" : "bg-meeting-soft text-meeting-ink")}><MeetingIcon name={meeting.icon} size={20} /></span>
         <div className="min-w-0 space-y-1.5">
           <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
             <h3 className="min-w-0 break-words text-base font-semibold leading-6">

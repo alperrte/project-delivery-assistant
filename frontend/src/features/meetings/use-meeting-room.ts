@@ -101,6 +101,8 @@ export function useMeetingRoom(meetingId: string, projectId?: string) {
         joined = true; currentId = admission.participantId; setSelfId(currentId); setRetained(admission.chatRetained); epoch = admission.roomEpoch;
         dispose();
         const next = new Room({ adaptiveStream: true, dynacast: true,
+          // Remote audio goes through a Web Audio gain node, which is what lets the per-person volume go above 100%.
+          webAudioMix: true,
           audioCaptureDefaults: { deviceId: devices.current.audioinput, ...CAPTURE, noiseSuppression: noise.current }, videoCaptureDefaults: { deviceId: devices.current.videoinput },
           audioOutput: { deviceId: devices.current.audiooutput }, reconnectPolicy: { nextRetryDelayInMs: () => null } });
         currentRoom = next;

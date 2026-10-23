@@ -43,7 +43,9 @@ async function make(page: Page, project: Project, title: string, startsIn: numbe
   expect(result.status).toBe(201); return result.json as Meeting;
 }
 const cards = (page: Page) => page.locator("[data-meeting-card]");
-const tab = (page: Page, name: string) => page.getByRole("navigation", { name: tr.filter, exact: true }).getByRole("button", { name: new RegExp(`^${name}`) });
+const statusSelect = (page: Page) => page.getByRole("combobox", { name: tr.filter, exact: true });
+async function chooseStatus(page: Page, label: string) { await statusSelect(page).click(); await page.getByRole("option", { name: new RegExp(`^${label}`) }).click(); }
+const history = (slug: string, extra = "") => listHref(slug, `?history=1${extra}`);
 
 test("list: counts, filters, URL state, Back/Forward, search, sort, groups, one card per meeting, actions per status and role", async ({ browser }) => {
   test.setTimeout(180000);
@@ -67,9 +69,15 @@ test("list: counts, filters, URL state, Back/Forward, search, sort, groups, one 
     expect((await api(page, "POST", `/projects/${project.id}/meetings/${ended.id}/end`)).status).toBe(200);
 
     await page.goto(listHref(project.slug));
-    await expect(cards(page)).toHaveCount(6);
-    // Real totals on the tabs; the same meeting never appears twice.
-    for (const [name, count] of [[tr.all, 6], [tr.status.SCHEDULED, 3], [tr.status.OPEN, 1], [tr.status.ENDED, 1], [tr.status.CANCELLED, 1]] as const) await expect(tab(page, name)).toContainText(String(count));
+    // The main view is what is planned or live (finished and cancelled ones are history); the dropdown carries the real totals.
+    await expect(cards(page)).toHaveCount(4);
+    await expect(statusSelect(page)).toContainText("(4)");
+    await statusSelect(page).click();
+    for (const [name, count] of [[tr.all, 4], [tr.status.SCHEDULED, 3], [tr.status.OPEN, 1], [tr.status.ENDED, 1], [tr.status.CANCELLED, 1]] as const) await expect(page.getByRole("option", { name: `${name} (${count})`, exact: true })).toBeVisible();
+    await page.keyboard.press("Escape");
+    await page.getByRole("checkbox", { name: tr.showHistory }).click(); await expect(cards(page)).toHaveCount(6); expect(new URL(page.url()).searchParams.get("history")).toBe("1");
+    await page.getByRole("checkbox", { name: tr.showHistory }).click(); await expect(cards(page)).toHaveCount(4);
+    await page.goto(history(project.slug)); await expect(cards(page)).toHaveCount(6);
     const titles = await cards(page).locator("h3").allTextContents(); expect(new Set(titles).size).toBe(titles.length);
     // Groups follow the viewer's calendar: live and today first, then tomorrow, later days; every card sits under one heading.
     await expect(page.getByRole("heading", { name: tr.group_today, exact: true })).toBeVisible();
@@ -87,20 +95,20 @@ test("list: counts, filters, URL state, Back/Forward, search, sort, groups, one 
     }
 
     // Filter → URL; Back restores; reload keeps; an invalid value falls back to "all".
-    await tab(page, tr.status.SCHEDULED).click();
+    await chooseStatus(page, tr.status.SCHEDULED);
     await expect.poll(() => new URL(page.url()).searchParams.get("status")).toBe("SCHEDULED");
     await expect(cards(page)).toHaveCount(3);
     await page.goBack(); await expect(cards(page)).toHaveCount(6); expect(new URL(page.url()).searchParams.get("status")).toBeNull();
     await page.goForward(); await expect(cards(page)).toHaveCount(3);
-    await page.reload(); await expect(cards(page)).toHaveCount(3); await expect(tab(page, tr.status.SCHEDULED)).toHaveAttribute("aria-pressed", "true");
-    await page.goto(listHref(project.slug, "?status=BOGUS&page=99&sort=nope")); await expect(cards(page)).toHaveCount(6);
+    await page.reload(); await expect(cards(page)).toHaveCount(3); await expect(statusSelect(page)).toContainText(tr.status.SCHEDULED);
+    await page.goto(listHref(project.slug, "?status=BOGUS&page=99&sort=nope")); await expect(cards(page)).toHaveCount(4);
     for (const status of ["OPEN", "ENDED", "CANCELLED"] as const) { await page.goto(listHref(project.slug, `?status=${status}`)); await expect(cards(page)).toHaveCount(1); await expect(cards(page).first()).toHaveAttribute("data-status", status); }
 
     // Search covers title, description and agenda items of every meeting, ignoring case; counts follow.
-    await page.goto(listHref(project.slug));
+    await page.goto(history(project.slug));
     const search = page.getByRole("searchbox", { name: tr.searchMeetings, exact: true });
     await search.fill("RETRO"); await expect(cards(page)).toHaveCount(1); await expect(cards(page).first()).toContainText("Beta retrospective");
-    await expect(tab(page, tr.all)).toContainText("1"); await expect.poll(() => new URL(page.url()).searchParams.get("q")).toBe("RETRO");
+    await expect(statusSelect(page)).toContainText("(1)"); await expect.poll(() => new URL(page.url()).searchParams.get("q")).toBe("RETRO");
     await search.fill("budget"); await expect(cards(page)).toHaveCount(1); await expect(cards(page).first()).toContainText("Gamma planning");
     await search.fill("zzz-no-match"); await expect(page.getByText(tr.noResults, { exact: true })).toBeVisible();
     await page.getByRole("button", { name: tr.clearFilters, exact: true }).click(); await expect(cards(page)).toHaveCount(6); await expect(search).toHaveValue("");
@@ -113,7 +121,7 @@ test("list: counts, filters, URL state, Back/Forward, search, sort, groups, one 
     await expect(cards(page).first().locator("h3")).toHaveText("Zeta live review"); // oldest first: the group of today (with the live meeting) comes before the later days
 
     // Menu: managers see edit/cancel only where the status allows; cancelling asks first and updates the card in place.
-    await page.goto(listHref(project.slug));
+    await page.goto(history(project.slug));
     await card("Alpha roadmap").getByRole("button", { name: tr.cardActions.replace("{title}", "Alpha roadmap") }).click();
     await expect(page.getByRole("menuitem", { name: tr.edit, exact: true })).toBeVisible();
     await expect(page.getByRole("menuitem", { name: tr.copyMeetingLink, exact: true })).toBeVisible();
@@ -126,7 +134,7 @@ test("list: counts, filters, URL state, Back/Forward, search, sort, groups, one 
     await page.keyboard.press("Escape");
 
     // A plain member sees the same meetings but no edit/cancel/end actions (the backend stays the authority).
-    await memberPage.goto(listHref(project.slug)); await expect(cards(memberPage)).toHaveCount(6);
+    await memberPage.goto(history(project.slug)); await expect(cards(memberPage)).toHaveCount(6);
     await cards(memberPage).filter({ hasText: "Gamma planning" }).getByRole("button", { name: tr.cardActions.replace("{title}", "Gamma planning") }).click();
     await expect(memberPage.getByRole("menuitem", { name: tr.viewDetails, exact: true })).toBeVisible();
     for (const name of [tr.edit, tr.cancelMeeting, tr.endForAll]) await expect(memberPage.getByRole("menuitem", { name, exact: true })).toHaveCount(0);
@@ -135,12 +143,11 @@ test("list: counts, filters, URL state, Back/Forward, search, sort, groups, one 
 
     // Phone: the tabs become the shared Select with the same filter state.
     await page.setViewportSize({ width: 375, height: 800 }); await page.goto(listHref(project.slug));
-    await expect(page.getByRole("navigation", { name: tr.filter, exact: true })).toBeHidden();
-    await page.getByRole("combobox", { name: tr.filter, exact: true }).click(); await page.getByRole("option", { name: new RegExp(`^${tr.status.OPEN}`) }).click();
+    await chooseStatus(page, tr.status.OPEN);
     await expect.poll(() => new URL(page.url()).searchParams.get("status")).toBe("OPEN"); await expect(cards(page)).toHaveCount(1);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     // Accessibility of the list in both themes.
-    await page.setViewportSize({ width: 1440, height: 1000 }); await page.goto(listHref(project.slug));
+    await page.setViewportSize({ width: 1440, height: 1000 }); await page.goto(history(project.slug));
     await expect(cards(page)).toHaveCount(6);
     expect((await new AxeBuilder({ page }).include("#main-content").analyze()).violations).toEqual([]);
     await page.emulateMedia({ colorScheme: "dark" }); await page.evaluate(() => localStorage.setItem("theme", "dark")); await page.reload(); await expect(cards(page)).toHaveCount(6);
@@ -159,7 +166,7 @@ test("list: pagination keeps groups honest and the page in the URL", async ({ pa
     await page.goBack(); await expect(cards(page)).toHaveCount(10);
     await page.goto(listHref(project.slug, "?page=2")); await expect(cards(page)).toHaveCount(2);
     // A filter resets to the first page.
-    await tab(page, tr.status.SCHEDULED).click(); await expect(cards(page)).toHaveCount(10); expect(new URL(page.url()).searchParams.get("page")).toBeNull();
+    await chooseStatus(page, tr.status.SCHEDULED); await expect(cards(page)).toHaveCount(10); expect(new URL(page.url()).searchParams.get("page")).toBeNull();
   } finally { await api(page, "POST", `/projects/${project.id}/archive`).catch(() => {}); }
 });
 
@@ -201,7 +208,11 @@ test("create form: agenda with Enter, participants search/count/organizer, inlin
     await page.goto(localizeHref(`/projects/${project.slug}/meetings/new`, "tr"));
     await page.locator("#meeting-title").fill("Started from the form");
     await page.getByRole("button", { name: tr.startNow, exact: true }).click();
-    await expect(page.getByRole("heading", { name: "Started from the form", exact: true })).toBeVisible();
+    // A started meeting opens its call and joins it, microphone and camera still off.
+    await expect(page.locator("[data-meeting-room]")).toBeVisible({ timeout: 20000 });
+    await expect(page.getByRole("status").filter({ hasText: new RegExp(`^${tr.phase.connected}$`) })).toBeVisible({ timeout: 30000 });
+    expect(new URL(page.url()).searchParams.get("autojoin")).toBeNull();
+    await expect(page.getByRole("button", { name: tr.micOn, exact: true })).toBeVisible(); await expect(page.getByRole("button", { name: tr.cameraOn, exact: true })).toBeVisible();
     const list = (await api(page, "GET", `/projects/${project.id}/meetings?size=20&sort=startsAt,asc`)).json as { content: Meeting[] };
     const started = list.content.filter(m => m.title === "Started from the form"); expect(started).toHaveLength(1); expect(started[0].status).toBe("OPEN");
     // Responsive + accessibility (both themes).

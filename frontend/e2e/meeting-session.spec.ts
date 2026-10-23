@@ -3,7 +3,7 @@ import { readFileSync, mkdirSync } from "node:fs";
 import path from "node:path";
 import { api, chooseDate, chooseTime } from "./helpers";
 import { psql, uuid } from "./db";
-import { meetingAccount, showPanel } from "./meeting-fixture";
+import { meetingAccount, openParticipantMenu, showPanel } from "./meeting-fixture";
 import { REJECTED_STATE } from "./consent-state";
 import { localizeHref } from "../src/i18n/routing";
 import type { Project } from "../src/features/projects/types";
@@ -699,9 +699,9 @@ test("ending a meeting for everyone belongs only to its creator: UI, API, leave 
     await expect(room(b).getByRole("button", endLabel)).toBeVisible();
     await expect(room(a).getByRole("button", endLabel)).toHaveCount(0);
     await showPanel(room(a).page(), tr.participants);
-    await expect(room(a).locator("li").filter({ hasText: owner.nickname }).getByRole("button", { name: tr.muteParticipant, exact: true })).toBeVisible();
+    await expect((await openParticipantMenu(a, owner.nickname)).getByRole("button", { name: tr.muteParticipant, exact: true })).toBeVisible(); await a.keyboard.press("Escape");
     await showPanel(room(b).page(), tr.participants);
-    await expect(room(b).getByRole("button", { name: tr.muteParticipant, exact: true })).toHaveCount(0);
+    await openParticipantMenu(b); await expect(b.getByRole("button", { name: tr.muteParticipant, exact: true })).toHaveCount(0); await b.keyboard.press("Escape");
 
     // Backend: a project manager who did not create it is refused, directly through the API, and nothing changes.
     const refused = await api(a, "POST", `/projects/${project.id}/meetings/${meeting.id}/end`);
@@ -780,7 +780,7 @@ test("a meeting created by a project manager is owned by that manager, not by ot
     expect((await api(b, "POST", `/projects/${project.id}/meetings/${meeting.id}/end`)).status).toBe(403);
     // Both managers keep the other moderation powers.
     await showPanel(room(b).page(), tr.participants);
-    await expect(room(b).getByRole("button", { name: tr.muteParticipant, exact: true })).toBeVisible();
+    await expect((await openParticipantMenu(b)).getByRole("button", { name: tr.muteParticipant, exact: true })).toBeVisible(); await b.keyboard.press("Escape");
     // The mini bar offers no end-for-everyone either: only Leave (with its confirmation).
     await b.getByRole("link", { name: messages.app.nav.projects, exact: true }).first().click();
     await expect(mini(b)).toBeVisible();

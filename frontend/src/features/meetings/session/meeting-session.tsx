@@ -19,8 +19,12 @@ export type SessionTarget = { id: string; projectId: string; slug: string; roomH
 type Runtime = ReturnType<typeof useMeetingRoom>;
 export type SessionLive = Runtime & {
   mediaBusy: boolean;
+  /** Local playback level per remote identity, percent 0-200 (default 100). Never sent to anyone. */
   volumes: Record<string, number>;
   setVolume: (identity: string, volume: number) => void;
+  /** "Muted for me" per identity: silences them on this device only; the level above is kept for unmuting. */
+  muted: Record<string, boolean>;
+  setLocalMute: (identity: string, on: boolean) => void;
   /** Resolves with the failure (for the caller to present), or undefined on success. */
   toggleMedia: (kind: "mic" | "camera") => Promise<unknown>;
   /** The unsent chat message. It lives with the call, so it survives leaving the room page and is gone once the call has ended. */

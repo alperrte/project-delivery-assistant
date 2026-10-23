@@ -3,7 +3,7 @@ import { readFileSync, mkdirSync } from "node:fs";
 import path from "node:path";
 import { api } from "./helpers";
 import { psql, uuid } from "./db";
-import { meetingAccount, showPanel } from "./meeting-fixture";
+import { meetingAccount, openParticipantMenu, readGains, recordGains, showPanel } from "./meeting-fixture";
 import { REJECTED_STATE } from "./consent-state";
 import { localizeHref, matchPath } from "../src/i18n/routing";
 import type { Project } from "../src/features/projects/types";
@@ -128,6 +128,7 @@ test("two real participants: media, mention/chat, guest revoke semantics, modera
       constructor(...args: ConstructorParameters<typeof RTCPeerConnection>) { super(...args); peers.push(this); }
     };
   });
+  await memberContext.addInitScript(recordGains);
   await managerContext.addInitScript(() => {
     const tracks: MediaStreamTrack[] = [];
     Object.assign(window, { meetingQaTracks: tracks });
@@ -163,7 +164,7 @@ test("two real participants: media, mention/chat, guest revoke semantics, modera
     }), { timeout: 15000 }).toBe(true);
     await b.getByRole("button", { name: tr.micOn, exact: true }).click();
     await showPanel(a, tr.participants);
-    await a.locator("[data-meeting-room] li").filter({ hasText: member.nickname }).getByRole("button", { name: tr.muteParticipant, exact: true }).click();
+    await (await openParticipantMenu(a, member.nickname)).getByRole("button", { name: tr.muteParticipant, exact: true }).click();
     await expect(b.getByRole("button", { name: tr.micOn, exact: true })).toBeVisible();
     await a.getByRole("button", { name: tr.screen, exact: true }).click(); await expect(b.locator("video")).toHaveCount(2, { timeout: 15000 });
     await a.getByRole("button", { name: tr.screenShareStop, exact: true }).click(); await expect(b.locator("video")).toHaveCount(1, { timeout: 15000 });
@@ -174,8 +175,13 @@ test("two real participants: media, mention/chat, guest revoke semantics, modera
     const messageText = `${mentionText}Real SFU chat`;
     await a.getByRole("textbox", { name: tr.message, exact: true }).fill(messageText); await a.getByRole("button", { name: tr.send, exact: true }).click(); await expect(b.getByText(messageText, { exact: true })).toBeVisible({ timeout: 15000 });
     await showPanel(b, tr.participants);
-    await b.getByRole("slider", { name: tr.volume, exact: true }).first().press("Home");
-    await expect.poll(() => b.locator("audio").first().evaluate(element => (element as HTMLAudioElement).volume)).toBe(0);
+    // Per-person volume is local and goes 0-200 %: the remote audio runs through a real Web Audio gain, read back from the page itself.
+    const volumeMenu = await openParticipantMenu(b), slider = volumeMenu.locator("[data-volume-slider]");
+    await expect.poll(() => readGains(b)).toContain(1);
+    await slider.press("Home"); await expect.poll(() => readGains(b)).toContain(0);
+    await slider.press("End"); await expect.poll(() => readGains(b)).toContain(2); // a real boost: twice the received level
+    await volumeMenu.getByRole("button", { name: tr.volumeReset, exact: true }).click(); await expect.poll(async () => (await readGains(b)).filter(value => value === 0 || value === 2)).toEqual([]);
+    await b.keyboard.press("Escape");
     await showPanel(b, tr.chat);
     const inviteResponse = await api(a, "POST", `/projects/${project.id}/meetings/${meeting.id}/invites`, { expiresAt: new Date(Date.now() + 3600000).toISOString(), maxUses: 2 }); expect(inviteResponse.status).toBe(201); const invite = inviteResponse.json as MeetingInvite;
     const guestStatuses: string[] = [];
@@ -198,8 +204,7 @@ test("two real participants: media, mention/chat, guest revoke semantics, modera
     const oldEpoch = ((await api(a, "GET", `/projects/${project.id}/meetings/${meeting.id}`)).json as Meeting).roomEpoch;
     expect((await api(b, "POST", `/projects/${project.id}/meetings/${meeting.id}/participants/${guest.id}/mute`)).status).toBe(403);
     await showPanel(a, tr.participants);
-    const guestRow = a.locator("[data-meeting-room] li").filter({ hasText: "QA Guest" });
-    await guestRow.getByRole("button", { name: tr.kick, exact: true }).click();
+    await (await openParticipantMenu(a, "QA Guest")).getByRole("button", { name: tr.kick, exact: true }).click();
     await a.getByRole("dialog").getByRole("button", { name: tr.confirm, exact: true }).click();
     await expect(g.getByRole("heading", { name: tr.phase.removed, exact: true })).toBeVisible({ timeout: 30000 });
     await expect.poll(async () => ((await api(a, "GET", `/projects/${project!.id}/meetings/${meeting.id}`)).json as Meeting).roomEpoch).toBeGreaterThan(oldEpoch);
