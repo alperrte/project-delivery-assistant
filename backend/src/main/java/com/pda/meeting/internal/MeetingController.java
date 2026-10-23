@@ -19,7 +19,13 @@ public class MeetingController {
     public View create(@PathVariable UUID projectId,@AuthenticationPrincipal UserAccounts.AuthenticatedUser actor,@Valid @RequestBody Command command) { return service.create(projectId,actor(actor),command); }
     @GetMapping public PageView<View> list(@PathVariable UUID projectId,@AuthenticationPrincipal UserAccounts.AuthenticatedUser actor,
         @RequestParam(required=false) Meeting.Status status,@RequestParam(required=false) Instant from,@RequestParam(required=false) Instant to,
-        @RequestParam(defaultValue="0") int page,@RequestParam(defaultValue="20") int size,@RequestParam(defaultValue="startsAt,asc") String sort) { return service.list(projectId,actor(actor),status,from,to,page,size,sort); }
+        @RequestParam(defaultValue="0") int page,@RequestParam(defaultValue="20") int size,@RequestParam(defaultValue="startsAt,asc") String sort,
+        @RequestParam(defaultValue="EXCLUDE") MeetingService.HiddenMode hidden) { return service.list(projectId,actor(actor),status,from,to,page,size,sort,hidden); }
+    /** How many meetings the caller has cleared from their own history in this project (for the restore control). */
+    @GetMapping("/history") public HistoryResult historyCount(@PathVariable UUID projectId,@AuthenticationPrincipal UserAccounts.AuthenticatedUser actor) { return service.hiddenCount(projectId,actor(actor)); }
+    /** Clears the caller finished and cancelled meetings from their own list; nobody else list and no meeting data change. */
+    @PostMapping("/history/clear") public HistoryResult clearHistory(@PathVariable UUID projectId,@AuthenticationPrincipal UserAccounts.AuthenticatedUser actor) { return service.clearHistory(projectId,actor(actor)); }
+    @PostMapping("/history/restore") public HistoryResult restoreHistory(@PathVariable UUID projectId,@AuthenticationPrincipal UserAccounts.AuthenticatedUser actor) { return service.restoreHistory(projectId,actor(actor)); }
     @GetMapping("/{meetingId}") public View detail(@PathVariable UUID projectId,@PathVariable UUID meetingId,@AuthenticationPrincipal UserAccounts.AuthenticatedUser actor) { return service.detail(projectId,meetingId,actor(actor)); }
     @GetMapping("/calendar") public PageView<View> calendar(@PathVariable UUID projectId,
         @AuthenticationPrincipal UserAccounts.AuthenticatedUser actor,@RequestParam Instant from,@RequestParam Instant to,

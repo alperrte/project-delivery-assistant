@@ -20,17 +20,22 @@ public class MeetingService {
     final MeetingInviteRepository invites;
     final MeetingChatRepository chats;
     final MeetingAuditRepository audits;
+    final MeetingHiddenRepository hidden;
     final ProjectAccess projects;
     final MeetingMediaPort media;
     final MeetingPolicy policy;
     final ApplicationEventPublisher events;
     final Clock clock;
     private static final SecureRandom RANDOM=new SecureRandom();
+    /** The only icon names a meeting may carry (mirrors the V55 CHECK constraint and the frontend picker). */
+    public static final Set<String> ICONS=Set.of("video","users","calendar","presentation","code","laptop","lightbulb","target","briefcase","graduation-cap","clipboard-list","message-square");
+    /** Which of the caller's cleared (hidden) meetings a listing returns. */
+    public enum HiddenMode { EXCLUDE, INCLUDE, ONLY }
     public MeetingService(MeetingRepository meetings,MeetingParticipantRepository participants,MeetingInviteRepository invites,
-        MeetingChatRepository chats,MeetingAuditRepository audits,ProjectAccess projects,MeetingMediaPort media,
+        MeetingChatRepository chats,MeetingAuditRepository audits,MeetingHiddenRepository hidden,ProjectAccess projects,MeetingMediaPort media,
         MeetingPolicy policy,ApplicationEventPublisher events,Clock clock) {
         this.meetings=meetings; this.participants=participants; this.invites=invites; this.chats=chats;
-        this.audits=audits; this.projects=projects; this.media=media; this.policy=policy; this.events=events; this.clock=clock;
+        this.audits=audits; this.hidden=hidden; this.projects=projects; this.media=media; this.policy=policy; this.events=events; this.clock=clock;
     }
     void enabled() { if(!policy.isEnabled()) throw error(503,"MEETING_DISABLED"); }
     void member(UUID project,UUID actor) {
@@ -45,8 +50,10 @@ public class MeetingService {
         member(project,actor); projects.lockMembershipContext(project); member(project,actor); Meeting m=locked(id); if(!m.projectId.equals(project)) throw error(404,"MEETING_NOT_FOUND"); return m;
     }
     public Meeting locked(UUID id) { return meetings.lock(id).orElseThrow(()->error(404,"MEETING_NOT_FOUND")); }
-    public View create(UUID project,UUID actor,Command c) {
-        member(project,actor); projects.lockMembershipContext(project); member(project,actor); validate(project,c); Meeting m=new Meeting(); m.id=UUID.randomUUID(); m.projectId=project;
+    public View create(UUID project,UUID actor,Command requested) {
+        member(project,actor); projects.lockMembershipContext(project); member(project,actor);
+        // "Start now" takes its start from this server clock; the client clock is only a hint, and one that runs slow used to be refused as "in the past".
+        Command c=requested!=null&&Boolean.TRUE.equals(requested.startNow())?requested.withStartsAt(clock.instant()):requested; validate(project,c); Meeting m=new Meeting(); m.id=UUID.randomUUID(); m.projectId=project;
         m.organizerId=actor; m.roomName="pda-"+m.id; m.status=Meeting.Status.SCHEDULED;
         m.createdAt=clock.instant(); apply(m,c); meetings.save(m); audit(m,actor,null,"CREATED"); changed(m,actor,MeetingEvents.Type.CREATED); return view(m);
     }
@@ -56,6 +63,9 @@ public class MeetingService {
     }
     public View detail(UUID project,UUID id,UUID actor) { return view(load(project,id,actor)); }
     public PageView<View> list(UUID project,UUID actor,Meeting.Status status,Instant from,Instant to,int page,int size,String sort) {
+        return list(project,actor,status,from,to,page,size,sort,HiddenMode.INCLUDE);
+    }
+    public PageView<View> list(UUID project,UUID actor,Meeting.Status status,Instant from,Instant to,int page,int size,String sort,HiddenMode mode) {
         member(project,actor); if(page<0||page>10000||size<1||size>100) throw error(400,"MEETING_INVALID_PAGE");
         if(from!=null&&to!=null&&(!from.isBefore(to)||Duration.between(from,to).compareTo(Duration.ofDays(366))>0)) throw error(400,"MEETING_INVALID_RANGE");
         String[] bits=sort.split(",",-1); if(bits.length!=2||!Set.of("startsAt","createdAt","title","status").contains(bits[0])||!Set.of("asc","desc").contains(bits[1])) throw error(400,"MEETING_INVALID_SORT");
@@ -63,10 +73,23 @@ public class MeetingService {
             var predicates=new ArrayList<jakarta.persistence.criteria.Predicate>(); predicates.add(b.equal(r.get("projectId"),project));
             if(status!=null) predicates.add(b.equal(r.get("status"),status));
             if(from!=null) predicates.add(b.greaterThan(r.get("endsAt"),from));
-            if(to!=null) predicates.add(b.lessThan(r.get("startsAt"),to)); return b.and(predicates.toArray(jakarta.persistence.criteria.Predicate[]::new));
+            if(to!=null) predicates.add(b.lessThan(r.get("startsAt"),to));
+            if(mode!=HiddenMode.INCLUDE) {
+                // Only the caller own choices count: someone else clearing their history never changes this list.
+                var mine=q.subquery(UUID.class); var h=mine.from(MeetingHidden.class); mine.select(h.get("meetingId")).where(b.equal(h.get("userId"),actor));
+                predicates.add(mode==HiddenMode.ONLY?r.get("id").in(mine):b.not(r.get("id").in(mine)));
+            }
+            return b.and(predicates.toArray(jakarta.persistence.criteria.Predicate[]::new));
         };
-        return PageView.of(meetings.findAll(filter,PageRequest.of(page,size,Sort.by(Sort.Direction.fromString(bits[1]),bits[0]).and(Sort.by("id")))).map(this::view));
+        var result=meetings.findAll(filter,PageRequest.of(page,size,Sort.by(Sort.Direction.fromString(bits[1]),bits[0]).and(Sort.by("id"))));
+        Set<UUID> mineHidden=result.isEmpty()||mode==HiddenMode.EXCLUDE?Set.of():hidden.hiddenAmong(actor,result.getContent().stream().map(m->m.id).toList());
+        return PageView.of(result.map(m->view(m,mode==HiddenMode.ONLY||mineHidden.contains(m.id))));
     }
+    /** Clears the finished and cancelled meetings from THIS user list. The meetings themselves, their chat, audit, notifications and reminders are untouched. */
+    public HistoryResult clearHistory(UUID project,UUID actor) { member(project,actor); return new HistoryResult(hidden.hideHistory(project,actor,clock.instant())); }
+    public HistoryResult restoreHistory(UUID project,UUID actor) { member(project,actor); return new HistoryResult(hidden.restoreHistory(project,actor)); }
+    @Transactional(readOnly=true)
+    public HistoryResult hiddenCount(UUID project,UUID actor) { member(project,actor); return new HistoryResult(hidden.countInProject(actor,project)); }
     public View cancel(UUID project,UUID id,UUID actor) {
         Meeting m=load(project,id,actor); edit(m,actor); if(m.status==Meeting.Status.CANCELLED) return view(m); scheduled(m);
         m.status=Meeting.Status.CANCELLED; m.endedAt=clock.instant(); m.updatedAt=clock.instant();
@@ -210,6 +233,7 @@ public class MeetingService {
     void validate(UUID project,Command c) {
         if(c==null||c.title()==null||c.title().isBlank()||c.title().length()>160||c.description()!=null&&c.description().length()>4000||c.startsAt()==null||c.endsAt()==null||!c.startsAt().isBefore(c.endsAt())||c.startsAt().isBefore(clock.instant().minusSeconds(5))||Duration.between(c.startsAt(),c.endsAt()).compareTo(Duration.ofHours(24))>0) throw error(400,"MEETING_INVALID_SCHEDULE");
         if(invalidText(c.title())||invalidText(c.description())) throw error(400,"MEETING_INVALID_REQUEST");
+        if(c.icon()!=null&&!ICONS.contains(c.icon())) throw error(400,"MEETING_INVALID_ICON");
         try { ZoneId.of(c.zoneId()); } catch(Exception e) { throw error(400,"MEETING_INVALID_TIMEZONE"); }
         if(c.agenda()==null||c.agenda().size()>30||c.agenda().stream().anyMatch(x->x==null||x.isBlank()||x.length()>1000||invalidText(x))||c.attendeeIds()==null||c.attendeeIds().size()>100||c.attendeeIds().stream().anyMatch(Objects::isNull)) throw error(400,"MEETING_INVALID_REQUEST");
         if(!projects.activeMemberIds(project,c.attendeeIds()).containsAll(c.attendeeIds())) throw error(400,"MEETING_INVALID_ATTENDEES");
@@ -217,7 +241,7 @@ public class MeetingService {
     private boolean invalidText(String value) { return value!=null&&value.chars().anyMatch(c->Character.isISOControl(c)&&c!='\n'&&c!='\r'&&c!='\t'); }
     void apply(Meeting m,Command c) {
         if(!Objects.equals(m.startsAt,c.startsAt())||!m.attendeeIds.equals(c.attendeeIds())) m.reminderRevision++;
-        m.title=c.title().strip(); m.description=c.description()==null?"":c.description(); m.startsAt=c.startsAt(); m.endsAt=c.endsAt(); m.zoneId=c.zoneId(); m.agenda.clear(); m.agenda.addAll(c.agenda()); m.attendeeIds.clear(); m.attendeeIds.addAll(c.attendeeIds()); m.updatedAt=clock.instant();
+        m.title=c.title().strip(); m.description=c.description()==null?"":c.description(); m.startsAt=c.startsAt(); m.endsAt=c.endsAt(); m.zoneId=c.zoneId(); m.agenda.clear(); m.agenda.addAll(c.agenda()); if(c.icon()!=null) m.icon=c.icon(); m.attendeeIds.clear(); m.attendeeIds.addAll(c.attendeeIds()); m.updatedAt=clock.instant();
     }
     void scheduled(Meeting m) { if(m.status!=Meeting.Status.SCHEDULED) throw error(409,"MEETING_NOT_SCHEDULED"); }
     void requireOpen(Meeting m) { if(m.rotationPending) throw error(503,"MEETING_RECONNECT_PENDING"); if(m.status!=Meeting.Status.OPEN) throw error(409,"MEETING_NOT_OPEN"); }
@@ -228,7 +252,8 @@ public class MeetingService {
         do { batch=projects.members(m.projectId,PageRequest.of(page++,100)); batch.forEach(x->recipients.add(x.userId())); } while(batch.hasNext());
         events.publishEvent(new MeetingEvents.Changed(UUID.randomUUID(),m.id,m.projectId,actor,type,m.title,recipients,clock.instant()));
     }
-    View view(Meeting m) { return new View(m.id,m.projectId,m.organizerId,m.title,m.description,m.startsAt,m.endsAt,m.zoneId,m.status,m.openedAt,m.endedAt,m.overtimeAt!=null,policy.isRetainChat(),m.version,List.copyOf(m.agenda),Set.copyOf(m.attendeeIds),m.roomEpoch,m.rotationPending,m.cleanupPending); }
+    View view(Meeting m) { return view(m,false); }
+    View view(Meeting m,boolean hiddenForCaller) { return new View(m.id,m.projectId,m.organizerId,m.title,m.description,m.startsAt,m.endsAt,m.zoneId,m.status,m.openedAt,m.endedAt,m.overtimeAt!=null,policy.isRetainChat(),m.version,List.copyOf(m.agenda),Set.copyOf(m.attendeeIds),m.roomEpoch,m.rotationPending,m.cleanupPending,m.icon,hiddenForCaller); }
     /** {@code member} is the participant's active project membership; null (guests, guest callers, ex-members) exposes no user id or photo. */
     ParticipantView participantView(MeetingParticipant p,ProjectMemberView member) {
         return new ParticipantView(p.id,p.identity,p.displayName,p.userId==null,p.connected,p.revoked,p.joinedAt,p.leftAt,

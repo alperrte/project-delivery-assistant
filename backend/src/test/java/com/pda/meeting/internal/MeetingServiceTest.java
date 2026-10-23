@@ -18,6 +18,7 @@ class MeetingServiceTest {
     MeetingInviteRepository invites=mock(MeetingInviteRepository.class);
     MeetingChatRepository chats=mock(MeetingChatRepository.class);
     MeetingAuditRepository audits=mock(MeetingAuditRepository.class);
+    MeetingHiddenRepository hidden=mock(MeetingHiddenRepository.class);
     ProjectAccess projects=mock(ProjectAccess.class);
     MeetingMediaPort media=mock(MeetingMediaPort.class);
     ApplicationEventPublisher events=mock(ApplicationEventPublisher.class);
@@ -30,7 +31,7 @@ class MeetingServiceTest {
     Meeting meeting;
     @BeforeEach void setup() {
         policy.setEnabled(true);
-        service=new MeetingService(meetings,participants,invites,chats,audits,projects,media,policy,events,Clock.fixed(now,ZoneOffset.UTC));
+        service=new MeetingService(meetings,participants,invites,chats,audits,hidden,projects,media,policy,events,Clock.fixed(now,ZoneOffset.UTC));
         lifecycle=new MeetingLifecycle(service,webhooks,mock(com.pda.user.UserAccounts.class),policy,media,meetings,participants,projects,Clock.fixed(now,ZoneOffset.UTC));
         meeting=new Meeting(); meeting.id=UUID.randomUUID(); meeting.projectId=project; meeting.organizerId=actor;
         meeting.status=Meeting.Status.OPEN; meeting.roomName="pda-"+meeting.id; meeting.title="Meeting"; meeting.description="";
@@ -130,6 +131,33 @@ class MeetingServiceTest {
         var controlText=new Command("Title\u0000","",now.plusSeconds(10),now.plusSeconds(60),"UTC",List.of(),Set.of());
         assertEquals(400,assertThrows(MeetingException.class,()->service.create(project,actor,controlText)).status());
         verify(meetings,never()).save(any());
+    }
+    @Test void startNowTakesTheServerClockSoASlowClientIsNotRefusedAsThePast() {
+        // The browser sent its own "now", 40 seconds behind this server: without the flag that is a past start and is refused.
+        var slow=new Command("Now","",now.minusSeconds(40),now.plusSeconds(3600),"UTC",List.of(),Set.of());
+        assertEquals("MEETING_INVALID_SCHEDULE",assertThrows(MeetingException.class,()->service.create(project,actor,slow)).code());
+        var withFlag=new Command("Now","",now.minusSeconds(40),now.plusSeconds(3600),"UTC",List.of(),Set.of(),null,true);
+        assertEquals(now,service.create(project,actor,withFlag).startsAt());
+        // The server clock cannot hide a bad end: an end that is already over is still refused, and so is more than 24 hours.
+        var endedAlready=new Command("Now","",now,now.minusSeconds(5),"UTC",List.of(),Set.of(),null,true);
+        assertEquals("MEETING_INVALID_SCHEDULE",assertThrows(MeetingException.class,()->service.create(project,actor,endedAlready)).code());
+        var tooLong=new Command("Now","",now,now.plus(Duration.ofHours(25)),"UTC",List.of(),Set.of(),null,true);
+        assertEquals("MEETING_INVALID_SCHEDULE",assertThrows(MeetingException.class,()->service.create(project,actor,tooLong)).code());
+    }
+    @Test void iconIsAnAllowlistedNameThatDefaultsToVideoAndSurvivesAnUpdateWithoutIcon() {
+        var plain=new Command("Icon","",now.plusSeconds(60),now.plusSeconds(3600),"UTC",List.of(),Set.of());
+        assertEquals("video",service.create(project,actor,plain).icon());
+        var chosen=new Command("Icon","",now.plusSeconds(60),now.plusSeconds(3600),"UTC",List.of(),Set.of(),"presentation",null);
+        assertEquals("presentation",service.create(project,actor,chosen).icon());
+        for(String bad:new String[]{"<script>","Video","rocket",""}) {
+            var invalid=new Command("Icon","",now.plusSeconds(60),now.plusSeconds(3600),"UTC",List.of(),Set.of(),bad,null);
+            assertEquals("MEETING_INVALID_ICON",assertThrows(MeetingException.class,()->service.create(project,actor,invalid)).code());
+        }
+        for(String name:MeetingService.ICONS) assertEquals(name,service.create(project,actor,new Command("Icon","",now.plusSeconds(60),now.plusSeconds(3600),"UTC",List.of(),Set.of(),name,null)).icon());
+        // An update that does not mention the icon keeps the stored one.
+        meeting.status=Meeting.Status.SCHEDULED; meeting.icon="code"; meeting.startsAt=now.plusSeconds(60); meeting.endsAt=now.plusSeconds(3600);
+        service.update(project,meeting.id,actor,new Command("Renamed","",now.plusSeconds(60),now.plusSeconds(3600),"UTC",List.of(),Set.of()));
+        assertEquals("code",meeting.icon);
     }
     @Test void dueSchedulerOpensOnceAndOvertimeDoesNotClose() {
         meeting.status=Meeting.Status.SCHEDULED; meeting.endsAt=now.minusSeconds(1);

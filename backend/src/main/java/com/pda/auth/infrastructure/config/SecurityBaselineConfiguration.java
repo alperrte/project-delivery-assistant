@@ -171,7 +171,8 @@ public class SecurityBaselineConfiguration {
                             .requestMatchers(HttpMethod.POST, "/api/v1/projects/*/meetings", "/api/v1/projects/*/meetings/*/cancel",
                                     "/api/v1/projects/*/meetings/*/start", "/api/v1/projects/*/meetings/*/end", "/api/v1/projects/*/meetings/*/join",
                                     "/api/v1/projects/*/meetings/*/leave", "/api/v1/projects/*/meetings/*/invites", "/api/v1/projects/*/meetings/*/chat",
-                                    "/api/v1/projects/*/meetings/*/participants/*/mute", "/api/v1/projects/*/meetings/*/participants/*/kick").authenticated()
+                                    "/api/v1/projects/*/meetings/*/participants/*/mute", "/api/v1/projects/*/meetings/*/participants/*/kick",
+                                    "/api/v1/projects/*/meetings/history/clear", "/api/v1/projects/*/meetings/history/restore").authenticated()
                             .requestMatchers(HttpMethod.PUT, "/api/v1/projects/*/meetings/*").authenticated()
                             .requestMatchers(HttpMethod.DELETE, "/api/v1/projects/*/meetings/*/invites/*").authenticated()
                             .requestMatchers(HttpMethod.GET, "/api/v1/project-invitations/me",

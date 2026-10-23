@@ -22,3 +22,7 @@ Forward feature migrations after the consolidated baseline: V41 chat deletion, V
 ## V51 — message search (2026-10-14)
 
 V51 adds trusted `pg_trgm`, immutable NFC/mixed Turkish-English case folding and a partial expression GIN on non-deleted chat content. It leaves the V50 schema's existing records, history cursor btree, read/delivery evidence and permissions intact. Both fresh PostgreSQL 17 Testcontainers startup and the existing local PostgreSQL 18 V50→V51 startup were verified. The next feature version is V52.
+
+## V55 — meeting icon, per-user history and reminder skip reasons (2026-10-23)
+
+V55 adds `meetings.icon` (NOT NULL, default `video`, allowlist CHECK), the `meeting_user_hidden` table (per-user hidden finished/cancelled meetings, PK(meeting_id,user_id), FK cascade) with a user index, and widens the `meeting_reminder_deliveries.error_code` CHECK with the four skip reasons. Existing rows keep valid defaults; no data backfill. The next migration is V56.

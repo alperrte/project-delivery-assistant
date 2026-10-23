@@ -27,6 +27,18 @@ class MeetingReminderMailTest {
         assertFalse(mail.html().contains("<script>")); assertTrue(mail.html().contains("&lt;script&gt;"));
         assertTrue(mail.text().contains("<script>"));
     }
+    @Test void brandedLayoutCarriesLogoGreetingNameButtonDarkModeAndPlainTextFallback() {
+        var recipient=new UserAccounts.MailRecipient("qa@example.test","Ayşe <b>Yılmaz</b>","tr");
+        var mail=SmtpMeetingReminderMail.render("https://pd-assistant.com",new MeetingReminderStore.Envelope(UUID.randomUUID(),"demo","Sprint planlama",Instant.parse("2026-10-25T12:00:00Z"),"Europe/Istanbul","Hamza",recipient));
+        String html=mail.html();
+        assertTrue(html.contains("src=\"cid:pda-logo\"")); assertTrue(html.contains("alt=\"PDA")); // the real logo travels as an inline image, with alt text as the fallback
+        assertTrue(html.contains("Toplantınız 1 saat sonra başlıyor")); assertTrue(html.contains("Merhaba Ayşe &lt;b&gt;Yılmaz&lt;/b&gt;,")); assertFalse(html.contains("<b>Yılmaz"));
+        assertTrue(html.contains("prefers-color-scheme: dark")); assertTrue(html.contains("max-width:620px")); assertTrue(html.contains(org.springframework.web.util.HtmlUtils.htmlEscape("Toplantıyı görüntüle")));
+        assertTrue(html.contains("bgcolor=\"#2563eb\"")); // filled button even where link styles are dropped
+        assertTrue(mail.text().contains("Merhaba Ayşe <b>Yılmaz</b>,")); assertTrue(mail.text().contains("Toplantıyı görüntüle: "+mail.link()));
+        assertTrue(mail.text().contains("PDA Ekibi")); assertFalse(html.contains("<script")); assertFalse(html.contains("javascript:"));
+        for(String forbidden:new String[]{"token","secret","password"}) assertFalse(html.toLowerCase().contains(forbidden)); // nothing sensitive is ever in the body
+    }
     @Test void disabledMailDoesNotNeedCredentialsAndUntrustedOriginIsRejected() {
         var mail=new SmtpMeetingReminderMail(new MockEnvironment().withProperty("FRONTEND_URL","https://pd-assistant.com"));
         assertFalse(mail.available());

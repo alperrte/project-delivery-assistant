@@ -78,25 +78,39 @@ public class MeetingReminderStore {
     }
 
     @Transactional(readOnly=true)
-    public Optional<Envelope> prepare(Claim claim) {
+    public Optional<Envelope> prepare(Claim claim) { return Optional.ofNullable(inspect(claim).envelope()); }
+
+    /**
+     * Why a recipient is (not) eligible, evaluated once for both sending and recording a skip. Checks run in a fixed order and the
+     * first failing one names the reason, so a skipped teammate is visible in the delivery row instead of silently disappearing.
+     */
+    private Inspection inspect(Claim claim) {
         Instant now=clock.instant();
         if(!Boolean.TRUE.equals(db.queryForObject("""
             SELECT EXISTS(SELECT 1 FROM meeting_reminder_deliveries WHERE id=? AND status='SENDING'
                 AND claim_token=? AND lease_until>?)
-            """,Boolean.class,claim.id(),claim.token(),Timestamp.from(now)))) return Optional.empty();
+            """,Boolean.class,claim.id(),claim.token(),Timestamp.from(now)))) return Inspection.skip("NO_LONGER_ELIGIBLE");
         var m=meetings.findById(claim.meetingId()).orElse(null);
         if(m==null||m.status!=Meeting.Status.SCHEDULED||m.reminderRevision!=claim.revision()
-                ||!m.startsAt.isAfter(now)||m.startsAt.minusSeconds(3600).isAfter(now)
-                ||(!m.organizerId.equals(claim.recipientId())&&!m.attendeeIds.contains(claim.recipientId()))) return Optional.empty();
+                ||!m.startsAt.isAfter(now)||m.startsAt.minusSeconds(3600).isAfter(now)) return Inspection.skip("NO_LONGER_ELIGIBLE");
+        if(!m.organizerId.equals(claim.recipientId())&&!m.attendeeIds.contains(claim.recipientId())) return Inspection.skip("REMOVED_FROM_MEETING");
         var project=projects.taskContext(m.projectId);
-        if(project==null||project.archived()||!projects.isMember(m.projectId,claim.recipientId())) return Optional.empty();
-        if(participants.findByMeetingIdAndIdentity(m.id,"user-"+claim.recipientId()).map(p->p.revoked).orElse(false)) return Optional.empty();
-        return users.findVerifiedMailRecipient(claim.recipientId()).map(recipient->new Envelope(m.id,project.slug(),
-                m.title,m.startsAt,m.zoneId,users.findActiveById(m.organizerId).map(UserAccounts.AuthenticatedUser::nickname).orElse("PDA"),recipient));
+        if(project==null||project.archived()) return Inspection.skip("PROJECT_UNAVAILABLE");
+        if(!projects.isMember(m.projectId,claim.recipientId())) return Inspection.skip("NOT_A_PROJECT_MEMBER");
+        if(participants.findByMeetingIdAndIdentity(m.id,"user-"+claim.recipientId()).map(p->p.revoked).orElse(false)) return Inspection.skip("REMOVED_FROM_MEETING");
+        return users.findVerifiedMailRecipient(claim.recipientId()).map(recipient->new Inspection(new Envelope(m.id,project.slug(),
+                m.title,m.startsAt,m.zoneId,users.findActiveById(m.organizerId).map(UserAccounts.AuthenticatedUser::nickname).orElse("PDA"),recipient),null))
+            .orElseGet(()->Inspection.skip("RECIPIENT_UNAVAILABLE"));
     }
+    private record Inspection(Envelope envelope,String reason) { static Inspection skip(String reason) { return new Inspection(null,reason); } }
 
+    /** Records a skipped recipient together with the reason (no address, no names: only the delivery id and a code are logged). */
     @Transactional
-    public void cancel(Claim claim) { finish(claim,"CANCELLED",null,"NO_LONGER_ELIGIBLE",clock.instant()); }
+    public void cancel(Claim claim) {
+        String reason=inspect(claim).reason(); if(reason==null) reason="NO_LONGER_ELIGIBLE";
+        org.slf4j.LoggerFactory.getLogger(getClass()).info("Meeting reminder delivery={} skipped reason={}",claim.id(),reason);
+        finish(claim,"CANCELLED",null,reason,clock.instant());
+    }
     @Transactional
     public void sent(Claim claim) { finish(claim,"SENT",clock.instant(),null,clock.instant()); }
     @Transactional
