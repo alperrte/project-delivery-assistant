@@ -11,10 +11,19 @@ public final class MeetingDtos {
     @Schema(name="MeetingCommand") public record Command(@NotBlank @Size(max=160) String title,@Size(max=4000) String description,
         @NotNull Instant startsAt,@NotNull Instant endsAt,@NotBlank @Size(max=80) String zoneId,
         @NotNull @Size(max=30) List<@NotBlank @Size(max=1000) String> agenda,
-        @NotNull @Size(max=100) Set<@NotNull UUID> attendeeIds) {}
+        @NotNull @Size(max=100) Set<@NotNull UUID> attendeeIds,
+        /** Optional: null keeps the current icon (video for a new meeting). Must be one of the allowlisted icon names. */
+        @Size(max=24) String icon,
+        /** Optional: true makes the SERVER clock the start time of a new meeting, so a slow client clock cannot be refused as "in the past". */
+        Boolean startNow) {
+        public Command(String title,String description,Instant startsAt,Instant endsAt,String zoneId,List<String> agenda,Set<UUID> attendeeIds) { this(title,description,startsAt,endsAt,zoneId,agenda,attendeeIds,null,null); }
+        Command withStartsAt(Instant start) { return new Command(title,description,start,endsAt,zoneId,agenda,attendeeIds,icon,null); }
+    }
     @Schema(name="MeetingView") public record View(UUID id,UUID projectId,UUID organizerId,String title,String description,
         Instant startsAt,Instant endsAt,String zoneId,Meeting.Status status,Instant openedAt,Instant endedAt,
-        boolean overtime,boolean chatRetained,long version,List<String> agenda,Set<UUID> attendeeIds,int roomEpoch,boolean reconnectRequired,boolean cleanupPending) {}
+        boolean overtime,boolean chatRetained,long version,List<String> agenda,Set<UUID> attendeeIds,int roomEpoch,boolean reconnectRequired,boolean cleanupPending,
+        String icon,boolean hidden) {}
+    @Schema(name="MeetingHistoryResult") public record HistoryResult(long count) {}
     @Schema(name="MeetingParticipantView") public record ParticipantView(UUID id,String identity,String displayName,boolean guest,boolean connected,boolean revoked,
         Instant joinedAt,Instant leftAt,UUID userId,Long profilePhotoVersion) {}
     @Schema(name="MeetingJoin") public record Join(UUID participantId,String identity,MeetingMediaPort.MediaJoin media,boolean chatRetained,int roomEpoch,String status) {}

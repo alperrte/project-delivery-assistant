@@ -18,6 +18,8 @@ public class Meeting {
     @Column(nullable=false) public Instant endsAt;
     @Column(nullable=false,length=80) public String zoneId;
     @Enumerated(EnumType.STRING) @Column(nullable=false,length=16) public Status status;
+    /** One of {@link MeetingService#ICONS}; existing meetings keep the video icon. */
+    @Column(nullable=false,length=24) public String icon="video";
     @Column(nullable=false,unique=true,length=100) public String roomName;
     @Column(nullable=false) public int roomEpoch;
     @Column(nullable=false) public boolean rotationPending;

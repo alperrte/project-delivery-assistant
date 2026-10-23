@@ -136,6 +136,26 @@ class MeetingReminderIntegrationTest {
         UUID id=meeting(1800); doThrow(new org.springframework.mail.MailSendException("TEST-ONLY outage")).when(mail).send(any());
         dispatcher.dispatch(); service.cancel(project,id,owner); now=now.plusSeconds(60); dispatcher.dispatch(); sends(2); assertEquals(2,count("CANCELLED"));
     }
+    String reason(String code) { return db.queryForObject("SELECT count(*)||'' FROM meeting_reminder_deliveries WHERE error_code=?",String.class,code); }
+    @Test void organizerAndEveryInvitedMemberEachGetOneMailEvenWhenTheOrganizerIsAlsoListed() {
+        // Three real recipients: the organizer (also present in the attendee list), attendee A and attendee B.
+        service.create(project,owner,command(now.plusSeconds(1800),Set.of(owner,attendee,other))); dispatcher.dispatch(); dispatcher.dispatch();
+        sends(3); assertEquals(3,count("SENT"));
+        for(UUID user:List.of(owner,attendee,other)) verify(mail,times(1)).send(argThat(e->e.recipient().email().equals(user+"@example.test")));
+    }
+    @Test void aSkippedRecipientIsRecordedWithTheReasonInsteadOfVanishing() {
+        UUID unverified=user(), removed=user(), revoked=user(), gone=user();
+        db.update("UPDATE users SET email_verification_status='PENDING' WHERE id=?",unverified);
+        for(UUID user:List.of(unverified,revoked,gone)) { UUID member=UUID.randomUUID(); db.update("INSERT INTO project_memberships(id,project_id,user_id,joined_at) VALUES (?,?,?,now())",member,project,user); }
+        // `removed` is invited but not a project member; `gone` is a member that is later removed from the project.
+        UUID id=service.create(project,owner,command(now.plusSeconds(1800),Set.of(attendee,unverified,revoked,gone))).id();
+        db.update("INSERT INTO meeting_participants(id,meeting_id,user_id,identity,display_name,revoked) VALUES (?,?,?,?,?,true)",UUID.randomUUID(),id,revoked,"user-"+revoked,"QA participant");
+        db.update("DELETE FROM project_memberships WHERE project_id=? AND user_id=?",project,gone);
+        db.update("INSERT INTO meeting_attendees(meeting_id,user_id) VALUES (?,?)",id,removed); store.reconcile();
+        dispatcher.dispatch();
+        assertEquals("1",reason("RECIPIENT_UNAVAILABLE")); assertEquals("2",reason("NOT_A_PROJECT_MEMBER")); assertEquals("1",reason("REMOVED_FROM_MEETING"));
+        sends(2); // the organizer and the one healthy attendee
+    }
     @Test void disabledAccountIsExcludedByUserPublicContract() {
         meeting(1800); db.update("UPDATE users SET account_status='DISABLED' WHERE id=?",attendee); dispatcher.dispatch(); sends(1); assertEquals(1,count("CANCELLED"));
     }

@@ -248,6 +248,52 @@ class MeetingCoreIntegrationTest {
         assertEquals(409,assertThrows(MeetingException.class,()->service.join(project,id,actor)).status());
         assertEquals(409,assertThrows(MeetingException.class,()->service.join(project,id,creator)).status());
     }
+    @Test void iconPersistsThroughCreateUpdateAndReadAndOnlyAllowlistedNamesAreStored() {
+        Instant start=Instant.now().plusSeconds(3600);
+        UUID id=service.create(project,actor,new Command("Icon","",start,start.plusSeconds(3600),"Europe/Istanbul",List.of(),Set.of(),"presentation",null)).id();
+        assertEquals("presentation",service.detail(project,id,actor).icon());
+        assertEquals("presentation",db.queryForObject("SELECT icon FROM meetings WHERE id=?",String.class,id));
+        service.update(project,id,actor,new Command("Icon","",start,start.plusSeconds(3600),"Europe/Istanbul",List.of(),Set.of(),"code",null));
+        assertEquals("code",service.detail(project,id,actor).icon());
+        service.update(project,id,actor,new Command("Renamed","",start,start.plusSeconds(3600),"Europe/Istanbul",List.of(),Set.of()));
+        assertEquals("code",service.detail(project,id,actor).icon()); // omitting the icon keeps it
+        assertEquals("video",service.detail(project,scheduled(),actor).icon()); // the default of a meeting created without one
+        assertEquals("MEETING_INVALID_ICON",assertThrows(MeetingException.class,()->service.update(project,id,actor,new Command("Icon","",start,start.plusSeconds(3600),"Europe/Istanbul",List.of(),Set.of(),"rocket",null))).code());
+        // The database refuses a name outside the allowlist even if the service were bypassed.
+        assertThrows(org.springframework.dao.DataIntegrityViolationException.class,()->db.update("UPDATE meetings SET icon='rocket' WHERE id=?",id));
+    }
+    private Set<UUID> ids(UUID viewer,MeetingService.HiddenMode mode) {
+        var result=new HashSet<UUID>(); service.list(project,viewer,null,null,null,0,100,"startsAt,asc",mode).content().forEach(v->result.add(v.id())); return result;
+    }
+    @Test void clearingHistoryHidesOnlyMyFinishedAndCancelledMeetingsAndNobodyElses() {
+        UUID colleague=user("USER"); addMember(colleague,"TESTER"); UUID outsider=user("USER");
+        UUID ended=scheduled(); service.start(project,ended,actor); service.end(project,ended,actor);
+        UUID cancelled=scheduled(); service.cancel(project,cancelled,actor);
+        UUID upcoming=scheduled(); UUID live=scheduled(); service.start(project,live,actor);
+        assertEquals(Set.of(ended,cancelled,upcoming,live),ids(actor,MeetingService.HiddenMode.EXCLUDE));
+        long audits=db.queryForObject("SELECT count(*) FROM meeting_audit",Long.class);
+        assertEquals(2,service.clearHistory(project,actor).count());
+        // Only finished and cancelled meetings went; the planned and the live one stay.
+        assertEquals(Set.of(upcoming,live),ids(actor,MeetingService.HiddenMode.EXCLUDE));
+        assertEquals(Set.of(ended,cancelled),ids(actor,MeetingService.HiddenMode.ONLY));
+        assertEquals(4,ids(actor,MeetingService.HiddenMode.INCLUDE).size());
+        assertTrue(service.list(project,actor,null,null,null,0,100,"startsAt,asc",MeetingService.HiddenMode.ONLY).content().stream().allMatch(MeetingDtos.View::hidden));
+        // A colleague sees everything and has nothing hidden; the meetings, their audit trail and their reminders were not touched.
+        assertEquals(4,ids(colleague,MeetingService.HiddenMode.EXCLUDE).size()); assertEquals(0,service.hiddenCount(project,colleague).count());
+        assertEquals(Meeting.Status.ENDED,meetings.findById(ended).orElseThrow().status); assertEquals(Meeting.Status.CANCELLED,meetings.findById(cancelled).orElseThrow().status);
+        assertEquals(audits,db.queryForObject("SELECT count(*) FROM meeting_audit",Long.class));
+        assertEquals(2,service.hiddenCount(project,actor).count());
+        assertEquals(0,service.clearHistory(project,actor).count()); // clearing again changes nothing
+        assertEquals(403,assertThrows(MeetingException.class,()->service.clearHistory(project,outsider)).status());
+        assertEquals(403,assertThrows(MeetingException.class,()->service.hiddenCount(project,outsider)).status());
+        // A meeting that finishes later is not hidden until the next clear; restoring brings the cleared ones back for this user only.
+        service.end(project,live,actor); assertTrue(ids(actor,MeetingService.HiddenMode.EXCLUDE).contains(live));
+        assertEquals(2,service.restoreHistory(project,actor).count());
+        assertEquals(Set.of(ended,cancelled,upcoming,live),ids(actor,MeetingService.HiddenMode.EXCLUDE)); assertEquals(0,service.hiddenCount(project,actor).count());
+        // The calendar (no hidden filter) always sees everything.
+        service.clearHistory(project,actor);
+        assertEquals(4,service.list(project,actor,null,null,null,0,100,"startsAt,asc").content().size());
+    }
     private void addMember(UUID user,String role) {
         UUID membership=UUID.randomUUID(); db.update("INSERT INTO project_memberships(id,project_id,user_id,joined_at) VALUES (?,?,?,now())",membership,project,user);
         db.update("INSERT INTO project_membership_roles(membership_id,role) VALUES (?,?)",membership,role);

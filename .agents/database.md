@@ -1,5 +1,9 @@
 # Veritabanı ve kalıcılık
 
+## V55 toplantı simgesi, kişisel geçmiş gizleme ve hatırlatma nedenleri — 2026-10-23
+
+`V55__meeting_icon_history_reminder_reasons.sql`: `meetings.icon VARCHAR(24) NOT NULL DEFAULT 'video'` ve `meetings_icon_allowlist` CHECK (video, users, calendar, presentation, code, laptop, lightbulb, target, briefcase, graduation-cap, clipboard-list, message-square); mevcut toplantılar `video` kalır, sunucu `MEETING_INVALID_ICON` ile allowlist dışını reddeder. `meeting_user_hidden(meeting_id, user_id, hidden_at)` kullanıcıya özel "geçmişi temizle" kaydıdır: PK(meeting_id,user_id), meeting FK ON DELETE CASCADE, kullanıcı referansı scalar UUID; toplantıyı kimse için silmez/değiştirmez, yalnız ENDED/CANCELLED toplantılar gizlenebilir, geri alma satırı siler. `meeting_reminder_deliveries_error_code_check` hatırlatma atlama nedenleri `RECIPIENT_UNAVAILABLE`, `NOT_A_PROJECT_MEMBER`, `PROJECT_UNAVAILABLE`, `REMOVED_FROM_MEETING` ile genişler (adres/içerik saklanmaz). Uygulanmış migration değiştirilmedi.
+
 ## V54 toplantı e-posta teslim kuyruğu — 2026-10-22
 
 `meetings.reminder_revision BIGINT NOT NULL DEFAULT 0` eski kayıtları korur. `meeting_reminder_deliveries` meeting FK/cascade, alıcı UUID, planlama sürümü, reminder/next-attempt/last-attempt/sent tarihleri, sınırlı status/error kodu, 0–8 deneme ve claim UUID/lease içerir. `(meeting_id,recipient_user_id,reminder_revision)` UNIQUE, due/expired-lease partial index'leri ve scheduled-meeting index'i vardır. Adres/içerik/token saklanmaz; kullanıcı referansı scalar UUID'dir. Başlangıç veya attendee set değişimi sürümü ilerletir; eski bekleyen işler iptal edilir. Kısa atomik `FOR UPDATE SKIP LOCKED` claim ve token koşullu completion kullanılır. V53→V54 eski toplantı koruma/constraint/idempotent startup testi vardır. Uygulanmış migration değiştirilmez; recovery/geri dönüş `.agents/operations.md` kapsamındadır.
