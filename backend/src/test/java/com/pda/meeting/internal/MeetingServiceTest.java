@@ -17,6 +17,7 @@ class MeetingServiceTest {
     MeetingParticipantRepository participants=mock(MeetingParticipantRepository.class);
     MeetingInviteRepository invites=mock(MeetingInviteRepository.class);
     MeetingChatRepository chats=mock(MeetingChatRepository.class);
+    MeetingChatReactionRepository reactions=mock(MeetingChatReactionRepository.class);
     MeetingAuditRepository audits=mock(MeetingAuditRepository.class);
     MeetingHiddenRepository hidden=mock(MeetingHiddenRepository.class);
     ProjectAccess projects=mock(ProjectAccess.class);
@@ -31,7 +32,7 @@ class MeetingServiceTest {
     Meeting meeting;
     @BeforeEach void setup() {
         policy.setEnabled(true);
-        service=new MeetingService(meetings,participants,invites,chats,audits,hidden,projects,media,policy,events,Clock.fixed(now,ZoneOffset.UTC));
+        service=new MeetingService(meetings,participants,invites,chats,reactions,audits,hidden,projects,media,policy,events,Clock.fixed(now,ZoneOffset.UTC));
         lifecycle=new MeetingLifecycle(service,webhooks,mock(com.pda.user.UserAccounts.class),policy,media,meetings,participants,projects,Clock.fixed(now,ZoneOffset.UTC));
         meeting=new Meeting(); meeting.id=UUID.randomUUID(); meeting.projectId=project; meeting.organizerId=actor;
         meeting.status=Meeting.Status.OPEN; meeting.roomName="pda-"+meeting.id; meeting.title="Meeting"; meeting.description="";

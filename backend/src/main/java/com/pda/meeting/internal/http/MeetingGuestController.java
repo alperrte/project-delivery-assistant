@@ -53,6 +53,22 @@ public class MeetingGuestController {
     public ChatView chat(@PathVariable UUID meetingId,@Valid @RequestBody ChatRequest body,HttpServletRequest request,HttpServletResponse response) {
         noStore(response);return service.guestChat(meetingId,secret(request),body);
     }
+    @GetMapping("/{meetingId}/chat/{messageId}")
+    public ChatView message(@PathVariable UUID meetingId,@PathVariable UUID messageId,HttpServletRequest request,HttpServletResponse response) {
+        noStore(response);return service.guestMessage(meetingId,secret(request),messageId);
+    }
+    @GetMapping("/{meetingId}/chat/{messageId}/page")
+    public ChatLocation locate(@PathVariable UUID meetingId,@PathVariable UUID messageId,@RequestParam(defaultValue="50") int size,HttpServletRequest request,HttpServletResponse response) {
+        noStore(response);return service.guestLocate(meetingId,secret(request),messageId,size);
+    }
+    @PutMapping("/{meetingId}/chat/{messageId}/reactions")
+    public ChatView react(@PathVariable UUID meetingId,@PathVariable UUID messageId,@Valid @RequestBody ReactionRequest body,HttpServletRequest request,HttpServletResponse response) {
+        noStore(response);return service.guestReact(meetingId,secret(request),messageId,body.emoji());
+    }
+    @DeleteMapping("/{meetingId}/chat/{messageId}/reactions")
+    public ChatView unreact(@PathVariable UUID meetingId,@PathVariable UUID messageId,@RequestParam String emoji,HttpServletRequest request,HttpServletResponse response) {
+        noStore(response);return service.guestUnreact(meetingId,secret(request),messageId,emoji);
+    }
     @PostMapping("/{meetingId}/leave") @ResponseStatus(HttpStatus.NO_CONTENT)
     public void leave(@PathVariable UUID meetingId,HttpServletRequest request,HttpServletResponse response) {
         service.guestLeave(meetingId,secret(request));writeCookie(meetingId,"",Duration.ZERO,request,response);

@@ -10,6 +10,8 @@ public class MeetingChatMessage {
     @Column(nullable=false,length=80) public String displayName;
     @Column(nullable=false,length=2000) public String content;
     @Column(nullable=false) public Instant sentAt;
+    /** The message of the SAME meeting this one answers (V56 composite FK); cleared, never dangling, when that message is deleted. */
+    @Column(name="reply_to_message_id") public UUID replyToMessageId;
     @ElementCollection @CollectionTable(name="meeting_chat_mentions",joinColumns=@JoinColumn(name="message_id"))
     @Column(name="participant_id") public Set<UUID> mentionIds=new HashSet<>();
 }

@@ -19,6 +19,7 @@ public class MeetingService {
     final MeetingParticipantRepository participants;
     final MeetingInviteRepository invites;
     final MeetingChatRepository chats;
+    final MeetingChatReactionRepository reactions;
     final MeetingAuditRepository audits;
     final MeetingHiddenRepository hidden;
     final ProjectAccess projects;
@@ -32,9 +33,9 @@ public class MeetingService {
     /** Which of the caller's cleared (hidden) meetings a listing returns. */
     public enum HiddenMode { EXCLUDE, INCLUDE, ONLY }
     public MeetingService(MeetingRepository meetings,MeetingParticipantRepository participants,MeetingInviteRepository invites,
-        MeetingChatRepository chats,MeetingAuditRepository audits,MeetingHiddenRepository hidden,ProjectAccess projects,MeetingMediaPort media,
+        MeetingChatRepository chats,MeetingChatReactionRepository reactions,MeetingAuditRepository audits,MeetingHiddenRepository hidden,ProjectAccess projects,MeetingMediaPort media,
         MeetingPolicy policy,ApplicationEventPublisher events,Clock clock) {
-        this.meetings=meetings; this.participants=participants; this.invites=invites; this.chats=chats;
+        this.meetings=meetings; this.participants=participants; this.invites=invites; this.chats=chats; this.reactions=reactions;
         this.audits=audits; this.hidden=hidden; this.projects=projects; this.media=media; this.policy=policy; this.events=events; this.clock=clock;
     }
     void enabled() { if(!policy.isEnabled()) throw error(503,"MEETING_DISABLED"); }
@@ -201,17 +202,56 @@ public class MeetingService {
     }
     public ChatView guestChat(UUID id,String secret,ChatRequest request) { Meeting m=locked(id); return sendChat(m,guest(m,secret),request); }
     public PageView<ChatView> guestHistory(UUID id,String secret,int page,int size) {
-        Meeting m=locked(id); requireOpen(m); active(m,guest(m,secret)); if(page<0||page>1000||size<1||size>100) throw error(400,"MEETING_INVALID_PAGE");
-        return PageView.of(chats.findByMeetingId(id,PageRequest.of(page,size,Sort.by(Sort.Direction.DESC,"sentAt","id"))).map(this::chatView));
+        Meeting m=locked(id); requireOpen(m); var p=guest(m,secret); active(m,p); if(page<0||page>1000||size<1||size>100) throw error(400,"MEETING_INVALID_PAGE");
+        return historyPage(m,p,page,size);
     }
+    public ChatView guestMessage(UUID id,String secret,UUID messageId) { Meeting m=locked(id); requireOpen(m); var p=guest(m,secret); active(m,p); return singleView(m,p,messageId); }
+    public ChatLocation guestLocate(UUID id,String secret,UUID messageId,int size) { Meeting m=locked(id); requireOpen(m); var p=guest(m,secret); active(m,p); return locate(m,messageId,size); }
+    public ChatView guestReact(UUID id,String secret,UUID messageId,String emoji) { Meeting m=locked(id); return react(m,guest(m,secret),messageId,emoji,true); }
+    public ChatView guestUnreact(UUID id,String secret,UUID messageId,String emoji) { Meeting m=locked(id); return react(m,guest(m,secret),messageId,emoji,false); }
     public List<ParticipantView> guestParticipants(UUID id,String secret) { Meeting m=locked(id); requireOpen(m); guest(m,secret); return participants.findByMeetingId(id).stream().map(p->participantView(p,null)).toList(); }
     public void guestLeave(UUID id,String secret) { Meeting m=locked(id); var p=guest(m,secret); media.removeParticipant(m.roomName,p.identity); p.connected=false; p.leftAt=clock.instant(); p.revoked=true; }
     public ChatView chat(UUID project,UUID id,UUID actor,ChatRequest request) {
         Meeting m=load(project,id,actor); return sendChat(m,activeUser(m,actor),request);
     }
     public PageView<ChatView> history(UUID project,UUID id,UUID actor,int page,int size) {
-        Meeting m=load(project,id,actor); activeUser(m,actor); if(page<0||page>1000||size<1||size>100) throw error(400,"MEETING_INVALID_PAGE");
-        return PageView.of(chats.findByMeetingId(id,PageRequest.of(page,size,Sort.by(Sort.Direction.DESC,"sentAt","id"))).map(this::chatView));
+        Meeting m=load(project,id,actor); var p=activeUser(m,actor); if(page<0||page>1000||size<1||size>100) throw error(400,"MEETING_INVALID_PAGE");
+        return historyPage(m,p,page,size);
+    }
+    public ChatView message(UUID project,UUID id,UUID actor,UUID messageId) { Meeting m=load(project,id,actor); return singleView(m,activeUser(m,actor),messageId); }
+    public ChatLocation locate(UUID project,UUID id,UUID actor,UUID messageId,int size) { Meeting m=load(project,id,actor); activeUser(m,actor); return locate(m,messageId,size); }
+    public ChatView react(UUID project,UUID id,UUID actor,UUID messageId,String emoji) { Meeting m=load(project,id,actor); return react(m,activeUser(m,actor),messageId,emoji,true); }
+    public ChatView unreact(UUID project,UUID id,UUID actor,UUID messageId,String emoji) { Meeting m=load(project,id,actor); return react(m,activeUser(m,actor),messageId,emoji,false); }
+    /** Reactions are per verified participant and message. Adding is idempotent (the key decides); removing only ever touches the caller's own row. */
+    ChatView react(Meeting m,MeetingParticipant p,UUID messageId,String emoji,boolean add) {
+        requireOpen(m); active(m,p);
+        if(!ChatEmoji.valid(emoji)) throw error(400,"MEETING_INVALID_REACTION");
+        MeetingChatMessage message=chats.findByIdAndMeetingId(messageId,m.id).orElseThrow(()->error(404,"MEETING_MESSAGE_NOT_FOUND"));
+        if(add) {
+            // Bounded growth: a message carries at most 20 different emoji and one person at most 12 of them.
+            if(reactions.exists(message.id,p.id,emoji)==0) {
+                if(reactions.distinctEmojis(message.id)>=20&&reactions.withEmoji(message.id,emoji)==0) throw error(409,"MEETING_REACTION_LIMIT");
+                if(reactions.byParticipant(message.id,p.id)>=12) throw error(409,"MEETING_REACTION_LIMIT");
+                reactions.add(message.id,p.id,emoji,clock.instant());
+            }
+        } else reactions.remove(message.id,p.id,emoji);
+        // Everyone in the room refreshes this one message from the REST source of truth; the envelope carries ids only.
+        String envelope="{\"type\":\"meeting.chat.reaction\",\"meetingId\":\""+m.id+"\",\"messageId\":\""+message.id+"\"}";
+        media.sendData(m.roomName,envelope.getBytes(StandardCharsets.UTF_8));
+        return chatViews(m,p.id,List.of(message)).get(0);
+    }
+    ChatView singleView(Meeting m,MeetingParticipant viewer,UUID messageId) {
+        return chatViews(m,viewer.id,List.of(chats.findByIdAndMeetingId(messageId,m.id).orElseThrow(()->error(404,"MEETING_MESSAGE_NOT_FOUND")))).get(0);
+    }
+    ChatLocation locate(Meeting m,UUID messageId,int size) {
+        if(size<1||size>100) throw error(400,"MEETING_INVALID_PAGE");
+        MeetingChatMessage message=chats.findByIdAndMeetingId(messageId,m.id).orElseThrow(()->error(404,"MEETING_MESSAGE_NOT_FOUND"));
+        return new ChatLocation(message.id,(int)(chats.newerThan(m.id,message.sentAt,message.id)/size),size);
+    }
+    PageView<ChatView> historyPage(Meeting m,MeetingParticipant viewer,int page,int size) {
+        Page<MeetingChatMessage> found=chats.findByMeetingId(m.id,PageRequest.of(page,size,Sort.by(Sort.Direction.DESC,"sentAt","id")));
+        List<ChatView> views=chatViews(m,viewer.id,found.getContent());
+        return new PageView<>(views,found.getNumber(),found.getSize(),found.getTotalElements(),found.getTotalPages());
     }
     MeetingParticipant activeUser(Meeting m,UUID actor) {
         requireOpen(m); var p=participants.findByMeetingIdAndIdentity(m.id,"user-"+actor).orElseThrow(()->error(403,"MEETING_PARTICIPANT_REQUIRED")); active(m,p); return p;
@@ -224,11 +264,14 @@ public class MeetingService {
         Set<String> current=new HashSet<>(); media.listParticipants(m.roomName).forEach(x->current.add(x.identity()));
         Set<UUID> valid=new HashSet<>(); for(var participant:participants.findByMeetingId(m.id)) if(participant.connected&&!participant.revoked&&current.contains(participant.identity)) valid.add(participant.id);
         if(!valid.containsAll(mentions)) throw error(400,"MEETING_INVALID_MENTIONS");
-        MeetingChatMessage msg=new MeetingChatMessage(); msg.id=UUID.randomUUID(); msg.meetingId=m.id; msg.participantId=p.id; msg.displayName=p.displayName; msg.content=text.strip(); msg.sentAt=now; msg.mentionIds.addAll(mentions);
+        // A reply must answer a message of THIS meeting; another meeting's id is reported like an unknown one (no hint that it exists).
+        UUID replyTo=request.replyToMessageId();
+        if(replyTo!=null&&chats.findByIdAndMeetingId(replyTo,m.id).isEmpty()) throw error(404,"MEETING_REPLY_TARGET_NOT_FOUND");
+        MeetingChatMessage msg=new MeetingChatMessage(); msg.id=UUID.randomUUID(); msg.meetingId=m.id; msg.participantId=p.id; msg.displayName=p.displayName; msg.content=text.strip(); msg.sentAt=now; msg.mentionIds.addAll(mentions); msg.replyToMessageId=replyTo;
         chats.save(msg); p.lastMessageAt=now;
         // Data envelope is server generated; the REST source of truth provides bounded history after delivery loss.
         String envelope="{\"type\":\"meeting.chat\",\"meetingId\":\""+m.id+"\",\"messageId\":\""+msg.id+"\"}";
-        media.sendData(m.roomName,envelope.getBytes(StandardCharsets.UTF_8)); return chatView(msg);
+        media.sendData(m.roomName,envelope.getBytes(StandardCharsets.UTF_8)); return chatViews(m,p.id,List.of(msg)).get(0);
     }
     void validate(UUID project,Command c) {
         if(c==null||c.title()==null||c.title().isBlank()||c.title().length()>160||c.description()!=null&&c.description().length()>4000||c.startsAt()==null||c.endsAt()==null||!c.startsAt().isBefore(c.endsAt())||c.startsAt().isBefore(clock.instant().minusSeconds(5))||Duration.between(c.startsAt(),c.endsAt()).compareTo(Duration.ofHours(24))>0) throw error(400,"MEETING_INVALID_SCHEDULE");
@@ -259,7 +302,37 @@ public class MeetingService {
         return new ParticipantView(p.id,p.identity,p.displayName,p.userId==null,p.connected,p.revoked,p.joinedAt,p.leftAt,
             member==null?null:member.userId(),member==null?null:member.profilePhotoVersion());
     }
-    ChatView chatView(MeetingChatMessage m) { return new ChatView(m.id,m.participantId,m.displayName,m.content,m.sentAt,Set.copyOf(m.mentionIds)); }
+    static final int REPLY_PREVIEW=160, REACTORS_SHOWN=20;
+    /** The views of a batch of messages with their reply quotes and reactions loaded in ONE query each (never one per message). */
+    List<ChatView> chatViews(Meeting meeting,UUID viewer,List<MeetingChatMessage> messages) {
+        if(messages.isEmpty()) return List.of();
+        Map<UUID,MeetingChatMessage> quoted=new HashMap<>();
+        Set<UUID> quoteIds=new HashSet<>(); for(var m:messages) if(m.replyToMessageId!=null) quoteIds.add(m.replyToMessageId);
+        if(!quoteIds.isEmpty()) for(var q:chats.findAllById(quoteIds)) if(q.meetingId.equals(meeting.id)) quoted.put(q.id,q);
+        Map<UUID,List<MeetingChatReaction>> byMessage=new HashMap<>();
+        for(var r:reactions.findByMessageIdInOrderByCreatedAtAscEmojiAsc(messages.stream().map(x->x.id).toList())) byMessage.computeIfAbsent(r.messageId,k->new ArrayList<>()).add(r);
+        Map<UUID,String> names=new HashMap<>(); if(!byMessage.isEmpty()) for(var p:participants.findByMeetingId(meeting.id)) names.put(p.id,p.displayName);
+        List<ChatView> views=new ArrayList<>(messages.size());
+        for(var m:messages) {
+            var q=m.replyToMessageId==null?null:quoted.get(m.replyToMessageId);
+            ReplyView reply=q==null?null:new ReplyView(q.id,q.participantId,q.displayName,preview(q.content));
+            views.add(new ChatView(m.id,m.participantId,m.displayName,m.content,m.sentAt,Set.copyOf(m.mentionIds),m.replyToMessageId,reply,reactionViews(byMessage.getOrDefault(m.id,List.of()),viewer,names)));
+        }
+        return views;
+    }
+    private static List<ReactionView> reactionViews(List<MeetingChatReaction> rows,UUID viewer,Map<UUID,String> names) {
+        Map<String,List<MeetingChatReaction>> grouped=new LinkedHashMap<>(); for(var r:rows) grouped.computeIfAbsent(r.emoji,k->new ArrayList<>()).add(r);
+        List<ReactionView> out=new ArrayList<>(grouped.size());
+        grouped.forEach((emoji,list)->out.add(new ReactionView(emoji,list.size(),list.stream().anyMatch(r->r.participantId.equals(viewer)),
+            list.stream().limit(REACTORS_SHOWN).map(r->new ReactorView(r.participantId,names.getOrDefault(r.participantId,""))).toList())));
+        return out;
+    }
+    private static String preview(String content) {
+        String flat=content.replaceAll("\\s+"," ").strip();
+        if(flat.length()<=REPLY_PREVIEW) return flat;
+        int end=REPLY_PREVIEW; if(Character.isHighSurrogate(flat.charAt(end-1))) end--;
+        return flat.substring(0,end)+"…";
+    }
     static String randomSecret() { byte[] bytes=new byte[32]; RANDOM.nextBytes(bytes); return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes); }
     static String hash(String secret) { try { return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(secret.getBytes(StandardCharsets.UTF_8))); } catch(NoSuchAlgorithmException e) { throw new IllegalStateException(e); } }
     static MeetingException error(int status,String code) { return new MeetingException(status,code); }

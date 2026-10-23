@@ -165,16 +165,20 @@ public class SecurityBaselineConfiguration {
                     authorize.requestMatchers(HttpMethod.GET, "/actuator/health", "/api/v1/auth/csrf").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/meetings/media/webhook", "/api/v1/meetings/guest/session", "/api/v1/meetings/guest/preview",
                                     "/api/v1/meetings/guest/*/join", "/api/v1/meetings/guest/*/leave", "/api/v1/meetings/guest/*/chat").permitAll()
-                            .requestMatchers(HttpMethod.GET, "/api/v1/meetings/guest/*/chat", "/api/v1/meetings/guest/*/participants", "/api/v1/meetings/guest/*/state").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/v1/meetings/guest/*/chat", "/api/v1/meetings/guest/*/chat/*", "/api/v1/meetings/guest/*/chat/*/page",
+                                    "/api/v1/meetings/guest/*/participants", "/api/v1/meetings/guest/*/state").permitAll()
+                            .requestMatchers(HttpMethod.PUT, "/api/v1/meetings/guest/*/chat/*/reactions").permitAll()
+                            .requestMatchers(HttpMethod.DELETE, "/api/v1/meetings/guest/*/chat/*/reactions").permitAll()
                             .requestMatchers(HttpMethod.GET, "/api/v1/projects/*/meetings", "/api/v1/projects/*/meetings/*",
-                                    "/api/v1/projects/*/meetings/*/participants", "/api/v1/projects/*/meetings/*/chat", "/api/v1/projects/*/meetings/*/invites").authenticated()
+                                    "/api/v1/projects/*/meetings/*/participants", "/api/v1/projects/*/meetings/*/chat", "/api/v1/projects/*/meetings/*/chat/*",
+                                    "/api/v1/projects/*/meetings/*/chat/*/page", "/api/v1/projects/*/meetings/*/invites").authenticated()
                             .requestMatchers(HttpMethod.POST, "/api/v1/projects/*/meetings", "/api/v1/projects/*/meetings/*/cancel",
                                     "/api/v1/projects/*/meetings/*/start", "/api/v1/projects/*/meetings/*/end", "/api/v1/projects/*/meetings/*/join",
                                     "/api/v1/projects/*/meetings/*/leave", "/api/v1/projects/*/meetings/*/invites", "/api/v1/projects/*/meetings/*/chat",
                                     "/api/v1/projects/*/meetings/*/participants/*/mute", "/api/v1/projects/*/meetings/*/participants/*/kick",
                                     "/api/v1/projects/*/meetings/history/clear", "/api/v1/projects/*/meetings/history/restore").authenticated()
-                            .requestMatchers(HttpMethod.PUT, "/api/v1/projects/*/meetings/*").authenticated()
-                            .requestMatchers(HttpMethod.DELETE, "/api/v1/projects/*/meetings/*/invites/*").authenticated()
+                            .requestMatchers(HttpMethod.PUT, "/api/v1/projects/*/meetings/*", "/api/v1/projects/*/meetings/*/chat/*/reactions").authenticated()
+                            .requestMatchers(HttpMethod.DELETE, "/api/v1/projects/*/meetings/*/invites/*", "/api/v1/projects/*/meetings/*/chat/*/reactions").authenticated()
                             .requestMatchers(HttpMethod.GET, "/api/v1/project-invitations/me",
                                     "/api/v1/project-invitations/*/preview",
                                     "/api/v1/project-invitations/*/logo",
