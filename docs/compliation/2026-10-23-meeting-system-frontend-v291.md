@@ -12,7 +12,7 @@ Frontend kapsamı tamamlandı ve gerçek stack'te doğrulandı (üretim derlemes
 |---|---|---|
 | MSF-05 | Katılımcı onay kutusunun `after:` hedef alanı satırın dışına taşıyordu; liste `overflow-y:auto` olduğu için yatay kaydırma çubuğu çıkıyordu. | Hedef alanı `after:inset-x-0` ile satıra bağlandı, liste `min-w-0`; bilgi metni TR/EN/DE tek satıra kısaltıldı. |
 | MSF-06 | Simge kavramı yoktu. | 12 simgelik allowlist, radyo grubu (klavye/ekran okuyucu adlı) seçici, kart/detayda gösterim; varsayılan `video`. |
-| MSF-07 | "Hemen başlat" cihaz saatiyle `startsAt` gönderiyordu; saat sapması (geride/ileride) backend'in zaman doğrulamasında 400 `MEETING_INVALID_SCHEDULE` veriyordu. | Backend `startNow` ile başlangıcı sunucu saatinden alır; form oluşturup `?autojoin=1` ile doğrudan odaya girer (mikrofon/kamera kapalı); yeniden denemede aynı toplantı kullanılır, çift oluşturma yok. |
+| MSF-07 | "Hemen başlat" cihaz saatiyle `startsAt` gönderiyordu; saat sapması (geride/ileride) backend'in zaman doğrulamasında 400 `MEETING_INVALID_SCHEDULE` veriyordu. | Backend `startNow` ile başlangıcı sunucu saatinden alır; form oluşturup oturum belleğinde (sessionStorage) bu toplantıya ait, 60 sn geçerli, tek kullanımlık bir not bırakarak doğrudan odaya girer (mikrofon/kamera kapalı); bağlantıdaki parametre artık hiçbir şekilde katılım başlatmaz (güvenlik incelemesi bulgusu: başkasının gönderdiği bağlantı kişiyi aramaya katamaz); yeniden denemede aynı toplantı kullanılır, çift oluşturma yok. |
 | MSF-08 | Sekme + ayrı filtreler. | Tek durum açılır listesi (Tümü/Planlandı/Canlı/Bitti/İptal, gerçek sayılarla), `status` ve `history` URL'de; "Geçmişi göster"; kullanıcıya özel "Geçmişi temizle/Geri getir" backend'e bağlı. 100+ toplantıda sayfalama doğrulandı. |
 | MSF-11 | — | Ön test ekranında "Kendimi duy": varsayılan kapalı, yalnız yerel hoparlöre bağlanır, durdurma/katılma/sekme kapanışında bağlantı kesilir ve AudioContext kapanır. |
 | MSF-12–14 | Ses yalnız ses elemanı `volume` (0–1) idi, yükseltme yoktu. | Katılımcı menüsü (sağ tık, `⋯` düğmesi, menü tuşu; dokunmatik/klavye erişilebilir); Room `webAudioMix: true` ile gerçek GainNode, kişi başı 0–200 %; "Benim için sessize al" önceki seviyeyi geri getirir; moderatör sessize alma/çıkarma aynı menüde. |
@@ -36,7 +36,7 @@ Yeni: `meeting-icons.tsx`, `room/participant-menu.tsx`, `session/volume.ts`, `e2
 | `npm run lint` (tüm frontend) | 0 hata |
 | `npx tsc --noEmit` | 0 hata |
 | `npm run build` / `npm run check:bundle` | başarılı / tüm rotalar bütçe içinde |
-| `playwright test --config=playwright.meetings.config.ts` (üretim derlemesi, gerçek API/PostgreSQL/LiveKit/Mailpit, sahte medya cihazı) | **48/48** (önceki 37 + 11 yeni: 6 oluşturma/liste/posta, 5 oda) |
+| `playwright test --config=playwright.meetings.config.ts` (üretim derlemesi, gerçek API/PostgreSQL/LiveKit/Mailpit, sahte medya cihazı) | **49/49** (önceki 37 + 12 yeni: 7 oluşturma/liste/posta/katılım koruması, 5 oda) |
 | `playwright test e2e/footer-public-pages.spec.ts` | 17/17 (sürüm etiketi 2.9.1) |
 | `git diff --check` | temiz |
 

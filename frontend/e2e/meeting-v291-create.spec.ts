@@ -48,6 +48,27 @@ async function make(page: Page, project: Project, title: string, startsIn: numbe
   const result = await api(page, "POST", `/projects/${project.id}/meetings`, { title, description: "V2.9.1 QA", startsAt: new Date(Date.now() + startsIn).toISOString(), endsAt: new Date(Date.now() + startsIn + lengthMs).toISOString(), zoneId: "Europe/Istanbul", agenda: ["Review"], attendeeIds, ...extra });
   expect(result.status, JSON.stringify(result.json)).toBe(201); return result.json as Meeting;
 }
+/** Opens the ready screen of a meeting after leaving an optional note, and reports whether the page joined by itself. */
+async function joinsByItself(page: Page, project: Project, meeting: Meeting, note: unknown, query = "") {
+  await page.goto(localizeHref(`/projects/${project.slug}/meetings`, "tr"));
+  await page.evaluate(value => { if (value) sessionStorage.setItem("pda:meeting-autojoin:v1", JSON.stringify(value)); else sessionStorage.removeItem("pda:meeting-autojoin:v1"); }, note);
+  await page.goto(`${localizeHref(`/projects/${project.slug}/meetings/${meeting.id}/room`, "tr")}${query}`);
+  const joined = await page.getByRole("status").filter({ hasText: new RegExp(`^${tr.phase.connected}$`) }).waitFor({ timeout: 8000 }).then(() => true, () => false);
+  if (!joined) await expect(page.getByRole("heading", { name: tr.readyTitle, exact: true })).toBeVisible();
+  expect(await page.evaluate(() => sessionStorage.getItem("pda:meeting-autojoin:v1")), "the note is always used up").toBeNull();
+  return joined;
+}
+test("a link can never join a call by itself: only the one-time note of the meeting just started does", async ({ page, context }) => {
+  test.setTimeout(150000); await login(context, managerFile); const project = await createProject(page);
+  try {
+    const meeting = await make(page, project, "Auto-join guard", 1000);
+    expect((await api(page, "POST", `/projects/${project.id}/meetings/${meeting.id}/start`)).status).toBe(200);
+    expect(await joinsByItself(page, project, meeting, null, "?autojoin=1"), "the old link parameter does nothing").toBe(false);
+    expect(await joinsByItself(page, project, meeting, { meetingId: "someone-else", at: Date.now() }), "a note for another meeting does nothing").toBe(false);
+    expect(await joinsByItself(page, project, meeting, { meetingId: meeting.id, at: Date.now() - 120_000 }), "an old note does nothing").toBe(false);
+    expect(await joinsByItself(page, project, meeting, { meetingId: meeting.id, at: Date.now() }), "the fresh note of this meeting joins").toBe(true);
+  } finally { await api(page, "POST", `/projects/${project.id}/archive`).catch(() => {}); }
+});
 const newHref = (slug: string) => localizeHref(`/projects/${slug}/meetings/new`, "tr");
 const listHref = (slug: string, query = "") => localizeHref(`/projects/${slug}/meetings`, "tr") + query;
 const cards = (page: Page) => page.locator("[data-meeting-card]");

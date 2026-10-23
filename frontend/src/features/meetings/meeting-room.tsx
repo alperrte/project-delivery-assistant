@@ -22,6 +22,7 @@ import { ParticipantMenu, ParticipantMenuProvider, type ParticipantMenuApi } fro
 import { COMPACT_QUERY, WIDE_QUERY, useFitViewport, useMediaQuery } from "./room/use-media-query";
 import { RoomControls, type RoomPanel } from "./room/room-controls";
 import { ChatPanel, DevicesPanel, ParticipantsPanel, participantPhoto } from "./room/room-panels";
+import { consumeAutoJoin } from "./autojoin";
 import { canShareScreen, screenShareMessage } from "./room/screen-share";
 import { useSpeakerMonitor } from "./room/speaker-monitor";
 import { useVisualViewport } from "./room/use-visual-viewport";
@@ -123,16 +124,14 @@ function MeetingRoomView({ live, id, projectId, userId, isManager = false, retur
   const monitor = useSpeakerMonitor(room);
   const viewport = useVisualViewport(inCall);
   useFitViewport(root, inCall);
-  // "Start now" lands here with ?autojoin=1: join once, with the microphone and camera still off (nothing is switched on without a tap).
+  // "Start now" leaves a one-time note for this meeting in this tab (see autojoin.ts): join once, with the microphone and camera still
+  // off (nothing is switched on without a tap). A link alone never joins anybody.
   const autoJoined = useRef(false);
   useEffect(() => {
     if (autoJoined.current || live.phase !== "ready") return;
-    const url = new URL(window.location.href);
-    if (url.searchParams.get("autojoin") !== "1") return;
-    autoJoined.current = true; url.searchParams.delete("autojoin");
-    window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}`);
-    live.join();
-  }, [live]);
+    autoJoined.current = true;
+    if (consumeAutoJoin(id)) live.join();
+  }, [live, id]);
   const lookup = new Map(live.participants.map(p => [p.identity, p]));
   // Moderation (mute, remove) stays with project managers; ending the meeting for everyone is only for its creator, whatever their role.
   const managerProjectId = isManager ? projectId : undefined;

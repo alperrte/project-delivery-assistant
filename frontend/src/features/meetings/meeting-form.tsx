@@ -22,6 +22,7 @@ import type { Locale } from "@/i18n/config";
 import { MeetingIconPicker } from "./meeting-icons";
 import type { Meeting, MeetingIconName, MeetingInput } from "./types";
 import { meetingsApi } from "./api";
+import { markAutoJoin } from "./autojoin";
 import { DurationText } from "./meeting-card";
 import { joinLocal, localDateTime, scheduleProblem, splitLocal } from "./meeting-schedule";
 import { MeetingError, useMeetingProject, useProjectMembers } from "./shared";
@@ -90,8 +91,8 @@ export function MeetingForm({ slug, meeting }: { slug: string; meeting?: Meeting
       if (!currentActor()) return;
       await client.invalidateQueries({ queryKey: context.keys });
       // A started meeting goes straight to its call: entering a room needs a full document load (media CSP / permissions are per document),
-      // and `autojoin` joins with the microphone and camera still off, so nothing is switched on without the person asking for it.
-      if (immediate) { window.location.assign(new URL(`${localizeHref(`/projects/${slug}/meetings/${saved.id}/room`, locale)}?autojoin=1`, window.location.origin).href); return; }
+      // and the one-time auto-join note joins with the microphone and camera still off, so nothing is switched on without the person asking for it.
+      if (immediate) { markAutoJoin(saved.id); window.location.assign(new URL(localizeHref(`/projects/${slug}/meetings/${saved.id}/room`, locale), window.location.origin).href); return; }
       router.push(`/projects/${slug}/meetings/${saved.id}`);
     } catch (failure) { setError(failure); } finally { inFlight.current = false; setBusy(false); }
   }
