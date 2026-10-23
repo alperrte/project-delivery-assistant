@@ -4,7 +4,7 @@ Dal: `meeting-system-backend`. Frontend ayrı dalda: bkz. `2026-10-23-meeting-sy
 
 ## Durum
 
-Backend kapsamı tamamlandı; hedefli testler geçti. E-posta tasarımı (MSF-10) **kullanıcı onayı bekliyor**, onaylanmış sayılmaz. Tam `pre-push` çalıştırılmadı (kullanıcı talimatı); push, merge ve dağıtım yapılmadı.
+Backend kapsamı tamamlandı; hedefli testler geçti. E-posta tasarımı (MSF-10) kullanıcı tarafından 3 dilde, masaüstü/mobil/koyu görünümleriyle incelenip **onaylandı**; renkler, logo, bilgi kartı ve buton yerleşimi korunur, ek görsel değişiklik yoktur. Tam `pre-push` çalıştırılmadı (kullanıcı talimatı); push, merge ve dağıtım yapılmadı.
 
 ## Kapsam ve kök nedenler
 
@@ -56,7 +56,8 @@ Geçmiş gizleme yalnız çağıranın kaydını yazar ve okur; başka kullanıc
 ## Sınırlar
 
 - Tam `pre-push` ve tüm backend test paketi çalıştırılmadı (yalnız hedefli testler).
-- E-posta istemcileri (Gmail/Outlook/Apple Mail) gerçek cihazlarda denenmedi; yalnız yerel önizleme ve Mailpit.
+- E-posta istemcileri (Gmail/Outlook/Apple Mail) gerçek cihazlarda denenmedi; yalnız yerel önizleme ve Mailpit. Gömülü logo dosyası 312 KB'tır (küçültmek istenirse ayrı bir iş); örnek e-postada saat satırı `14:00 +03:00` biçimindedir ve saat dilimi ayrı satırda da gösterilir.
+- Şablon kalıcı kaynaktadır: `SmtpMeetingReminderMail.java`, logo `src/main/resources/branding/pda-logo.png`, önizleme üreticisi `MeetingReminderMailPreviewTest.java` (hepsi git'te); `backend/target/` yalnız test çıktısıdır ve git dışıdır.
 - Hatırlatma SMTP'si at-least-once sınırı değişmedi (`.agents/operations.md`).
 - `/history` uçları için ayrı bir birim güvenlik testi yok; gerçek yığın e2e testi kapsıyor.
 
