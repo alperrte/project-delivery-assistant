@@ -106,6 +106,30 @@ class MeetingReminderIntegrationTest {
     @Test void movingEarlierMakesNewRevisionImmediatelyEligible() {
         UUID id=meeting(86400); store.reconcile(); move(id,1800,Set.of(owner,attendee)); dispatcher.dispatch(); sends(2); assertEquals(2,count("CANCELLED"));
     }
+    /** The reminder moment is an absolute instant exactly 60 minutes before the start, whatever the meeting's zone or a daylight-saving change in between. */
+    @ParameterizedTest @CsvSource({
+            "Europe/Istanbul,2026-10-23T14:30,2026-10-23T11:30:00Z,14:30 +03:00",
+            "Europe/Berlin,2026-10-23T14:30,2026-10-23T12:30:00Z,14:30 +02:00",
+            "Europe/London,2026-10-23T14:30,2026-10-23T13:30:00Z,14:30 +01:00",
+            "America/New_York,2026-10-23T14:30,2026-10-23T18:30:00Z,14:30 -04:00",
+            "UTC,2026-10-23T14:30,2026-10-23T14:30:00Z,14:30 Z",
+            "Europe/Berlin,2026-10-25T04:00,2026-10-25T03:00:00Z,04:00 +01:00",
+            "Europe/London,2026-03-29T02:30,2026-03-29T01:30:00Z,02:30 +01:00",
+            "America/New_York,2026-11-01T08:00,2026-11-01T13:00:00Z,08:00 -05:00",
+            "America/New_York,2026-03-08T03:30,2026-03-08T07:30:00Z,03:30 -04:00"})
+    void reminderIsExactlySixtyMinutesBeforeTheRealStartInEveryZone(String zone,String local,String utc,String displayed) {
+        Instant start=ZonedDateTime.of(LocalDateTime.parse(local),ZoneId.of(zone)).toInstant();
+        assertEquals(Instant.parse(utc),start,"the local start is the expected UTC instant");
+        now=start.minusSeconds(7200);
+        UUID id=service.create(project,owner,new Command("Zone meeting","",start,start.plusSeconds(3600),zone,List.of(),Set.of(attendee))).id();
+        store.reconcile();
+        assertEquals(start.minusSeconds(3600),db.queryForObject("SELECT reminder_at FROM meeting_reminder_deliveries WHERE meeting_id=? LIMIT 1",Timestamp.class,id).toInstant(),"stored reminder instant");
+        assertEquals(start,db.queryForObject("SELECT starts_at FROM meetings WHERE id=?",Timestamp.class,id).toInstant(),"stored start instant");
+        now=start.minusSeconds(3601); dispatcher.dispatch(); sends(0);               // one second early: nothing is sent
+        now=start.minusSeconds(3600); dispatcher.dispatch(); sends(2);               // on the minute: the organizer and the attendee, once each
+        dispatcher.dispatch(); sends(2);
+        verify(mail,times(2)).send(argThat(e->e.startsAt().equals(start) && SmtpMeetingReminderMail.render("https://pd-assistant.com",e).text().contains(displayed)));
+    }
     @Test void newlyAddedAttendeeUsesNewPlanningRevision() {
         UUID id=meeting(86400); store.reconcile(); move(id,1800,Set.of(owner,attendee,other)); dispatcher.dispatch(); sends(3);
         assertEquals(2,count("CANCELLED")); assertEquals(3,count("SENT"));
