@@ -1,10 +1,11 @@
 "use client";
 import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type RefObject } from "react";
+import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import type { Participant, Track } from "livekit-client";
-import { Camera, CameraOff, GripHorizontal, Loader2, Mic, MicOff, MonitorUp, PhoneOff, Video } from "lucide-react";
-import Link, { usePathname } from "@/i18n/navigation";
+import { Camera, CameraOff, GripHorizontal, Loader2, Mic, MicOff, MonitorUp, PhoneOff, PictureInPicture2, Video } from "lucide-react";
+import Link, { usePathname, useRouter } from "@/i18n/navigation";
 import { Avatar } from "@/components/ui/avatar";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
@@ -12,6 +13,7 @@ import { profilePhotoSrc } from "@/features/account/api";
 import { cn } from "@/lib/utils";
 import { useVisualViewport } from "../room/use-visual-viewport";
 import { deviceErrorKey, isInCallPhase, useOptionalMeetingSession, type SessionLive } from "./meeting-session";
+import { useDocumentPip, useDocumentPipSupported } from "./mini-pip";
 
 const GAP = 8;
 const POSITION_KEY = "pda:meeting-mini-window:v1";
@@ -184,9 +186,17 @@ export function MeetingMiniBar() {
   // The keyboard covers the bottom of the page without resizing it: its height is what the visual viewport lost.
   const keyboardLift = viewport.keyboard && viewport.height ? Math.max(0, window.innerHeight - viewport.top - viewport.height) : 0;
   const drag = useDraggable(bar, visible);
-  useBottomClearance(bar, keyboardLift, visible && !drag.position);
+  // The call can also live in its own small always-on-top window (Document Picture-in-Picture), where the browser has it.
+  const pip = useDocumentPip(), pipSupported = useDocumentPipSupported(), closePip = pip.close;
+  const router = useRouter();
+  const [leaveOpen, setLeaveOpen] = useState(false);
+  const leaveButton = useRef<HTMLButtonElement>(null);
+  useBottomClearance(bar, keyboardLift, visible && !drag.position && !pip.window);
+  // The separate window belongs to the running call: it closes with it (and when the person is back in the room).
+  useEffect(() => { if (!visible) closePip(); }, [visible, closePip]);
   const compact = viewport.keyboard;
   if (!visible || !live || !target) return null;
+  const roomHref = target.roomHref;
   const room = live.room, local = room?.localParticipant;
   const connected = live.phase === "connected";
   const mic = Boolean(local?.isMicrophoneEnabled), camera = Boolean(local?.isCameraEnabled), sharing = Boolean(local?.isScreenShareEnabled);
@@ -195,7 +205,13 @@ export function MeetingMiniBar() {
     const failure = await live!.toggleMedia(kind);
     if (failure) toast.error(t(deviceErrorKey(failure)));
   }
-  return <section ref={bar} aria-label={t("miniLabel")} data-meeting-mini data-dragged={drag.position ? "" : undefined}
+  async function popOut() {
+    try { await pip.open(live!.meeting?.title ?? t("group")); }
+    catch { toast.info(t("miniPopOutFailed")); }
+  }
+  function returnFromPip() { closePip(); window.focus(); router.push(roomHref); }
+  function leaveFromPip() { closePip(); window.focus(); setLeaveOpen(true); }
+  const section = <section ref={bar} aria-label={t("miniLabel")} data-meeting-mini data-dragged={drag.position ? "" : undefined}
     style={drag.position ? { left: drag.position.x, top: drag.position.y, right: "auto", bottom: "auto", width: "min(21rem, calc(100vw - 1rem))" } : undefined}
     className={cn("fixed z-30 overflow-hidden rounded-xl border bg-card shadow-lg",
       !drag.position && "left-[max(0.75rem,env(safe-area-inset-left))] right-[max(0.75rem,env(safe-area-inset-right))] bottom-[max(0.75rem,env(safe-area-inset-bottom))] sm:right-auto sm:w-[26rem] sm:max-w-[calc(100vw-1.5rem)] sm:left-[max(1rem,env(safe-area-inset-left))] lg:left-[calc(var(--workspace-sidebar-width)+1rem)] [body:has([data-sticky-actions])_&]:bottom-[4.75rem]")}>
@@ -221,11 +237,36 @@ export function MeetingMiniBar() {
       <Button variant={camera ? "secondary" : "outline"} className="size-11 shrink-0" aria-label={t(camera ? "cameraOff" : "cameraOn")} aria-pressed={camera} disabled={!connected || live.mediaBusy} onClick={() => void toggle("camera")}>
         {camera ? <Camera size={18} aria-hidden="true" /> : <CameraOff size={18} aria-hidden="true" />}
       </Button>
+      {pipSupported && <Button variant="outline" className="size-11 shrink-0" aria-label={t("miniPopOut")} title={t("miniPopOut")} onClick={() => void popOut()}><PictureInPicture2 size={18} aria-hidden="true" /></Button>}
       <Link href={target.roomHref} aria-label={t("returnToMeeting")} className={buttonVariants({ variant: "accent", className: "h-11 min-w-0 flex-1 shrink gap-2 px-3 max-[27rem]:flex-none max-[27rem]:w-11 max-[27rem]:px-0" })}><Video size={18} aria-hidden="true" /><span className="truncate max-[27rem]:sr-only">{t("returnToMeeting")}</span></Link>
-      <ConfirmDialog
-        trigger={<Button variant="destructive" className="size-11 shrink-0" aria-label={t("leave")}><PhoneOff size={18} aria-hidden="true" /></Button>}
-        title={t("leaveTitle")} description={t("leaveDescription")} confirmLabel={t("leaveConfirm")} cancelLabel={t("leaveCancel")} destructive
-        onConfirm={async () => { live.leave(); }} />
+      <Button ref={leaveButton} variant="destructive" className="size-11 shrink-0" aria-label={t("leave")} onClick={() => setLeaveOpen(true)}><PhoneOff size={18} aria-hidden="true" /></Button>
     </div>
   </section>;
+  // The same call in its own window: the picture, what is running and the everyday controls; Leave asks in the page, as always.
+  // `workspace-preview` carries the workspace palette, which is otherwise only defined under the app shell (this window has none).
+  const pipView = pip.window && createPortal(
+    <div data-mini-pip role="group" aria-label={live.meeting?.title ?? t("group")} className="workspace-preview flex h-dvh min-h-0 flex-col overflow-hidden bg-card text-foreground">
+      <div className="relative min-h-0 flex-1"><MiniFeed live={live} /></div>
+      <div className="flex items-center gap-2 px-3 py-1.5">
+        <span aria-hidden="true" className={cn("size-2 shrink-0 rounded-full", connected ? "bg-live" : "animate-pulse bg-warning")} />
+        <p className="min-w-0 flex-1 truncate text-sm font-medium">{live.meeting?.title ?? t("group")}</p>
+        <span role="status" className="shrink-0 text-xs text-muted-foreground">{connected ? t("miniActive") : t(`phase.${live.phase}`)}{people > 0 && ` · ${t("miniParticipants", { count: people })}`}</span>
+      </div>
+      <div className="flex items-center gap-1.5 border-t p-2">
+        <Button variant={mic ? "secondary" : "outline"} className="size-11 shrink-0" aria-label={t(mic ? "micOff" : "micOn")} aria-pressed={mic} disabled={!connected || live.mediaBusy} onClick={() => void toggle("mic")}>
+          {live.mediaBusy ? <Loader2 size={18} className="animate-spin" aria-hidden="true" /> : mic ? <Mic size={18} aria-hidden="true" /> : <MicOff size={18} aria-hidden="true" />}
+        </Button>
+        <Button variant={camera ? "secondary" : "outline"} className="size-11 shrink-0" aria-label={t(camera ? "cameraOff" : "cameraOn")} aria-pressed={camera} disabled={!connected || live.mediaBusy} onClick={() => void toggle("camera")}>
+          {camera ? <Camera size={18} aria-hidden="true" /> : <CameraOff size={18} aria-hidden="true" />}
+        </Button>
+        <Button variant="accent" className="h-11 min-w-0 flex-1 gap-2 px-3" aria-label={t("returnToMeeting")} onClick={returnFromPip}><Video size={18} aria-hidden="true" /><span className="truncate">{t("returnToMeeting")}</span></Button>
+        <Button variant="destructive" className="size-11 shrink-0" aria-label={t("leave")} onClick={leaveFromPip}><PhoneOff size={18} aria-hidden="true" /></Button>
+      </div>
+    </div>, pip.window.document.body);
+  return <>
+    {pipView ?? section}
+    <ConfirmDialog open={leaveOpen} onOpenChange={setLeaveOpen} finalFocus={leaveButton}
+      title={t("leaveTitle")} description={t("leaveDescription")} confirmLabel={t("leaveConfirm")} cancelLabel={t("leaveCancel")} destructive
+      onConfirm={async () => { live.leave(); }} />
+  </>;
 }

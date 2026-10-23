@@ -332,5 +332,7 @@
   "autoGainControl": "Otomatik ses seviyesi",
   "autoGainControlHint": "Mikrofon seviyeni konuşmana göre dengeler; çok kısık veya çok yüksek sesi düzeltir.",
   "captureUnsupported": "Bu tarayıcı bu ayarı desteklemiyor; ses olduğu gibi gönderilir.",
-  "captureNote": "Yalnız tarayıcının yerleşik özellikleri kullanılır: ek servis, kayıt veya ağır işlem yoktur. Değişiklik açık mikrofona hemen uygulanır."
+  "captureNote": "Yalnız tarayıcının yerleşik özellikleri kullanılır: ek servis, kayıt veya ağır işlem yoktur. Değişiklik açık mikrofona hemen uygulanır.",
+  "miniPopOut": "Ayrı pencerede aç",
+  "miniPopOutFailed": "Ayrı pencere açılamadı. Bu tarayıcı ya da ayar buna izin vermiyor olabilir; görüşme açık pencerede sürüyor."
 }
