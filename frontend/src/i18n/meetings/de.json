@@ -283,7 +283,7 @@
   "newMessages": "Neue Nachrichten",
   "remainingShort": "noch {minutes} Min.",
   "noiseSuppression": "Rauschunterdrückung",
-  "noiseSuppressionHint": "Nutzt Rauschunterdrückung, Echounterdrückung und automatische Verstärkung des Browsers. Unabhängig von der Sprechanzeige.",
+  "noiseSuppressionHint": "Verringert gleichmäßige Hintergrundgeräusche (Tastatur, Lüfter, Brummen) mit der Browserfunktion.",
   "done": "Fertig",
   "invalidSchedule": "Beginn oder Ende wurde nicht akzeptiert. Die Uhr deines Geräts weicht evtl. vom Server ab; prüfe sie und versuche es erneut.",
   "iconLabel": "Besprechungssymbol",
@@ -325,5 +325,12 @@
   "focusParticipant": "Auf diese Person fokussieren",
   "moderation": "Moderationsaktionen",
   "miniDraggable": "verschiebbares Fenster",
-  "miniMoveHint": "Mit Maus oder Touch ziehen; mit den Pfeiltasten verschieben, Pos1 setzt zurück."
+  "miniMoveHint": "Mit Maus oder Touch ziehen; mit den Pfeiltasten verschieben, Pos1 setzt zurück.",
+  "captureTitle": "Audioverarbeitung (Browser)",
+  "echoCancellation": "Echounterdrückung",
+  "echoCancellationHint": "Verhindert, dass Ton aus den Lautsprechern wieder ins Mikrofon gelangt. Bei Lautsprechern eingeschaltet lassen.",
+  "autoGainControl": "Automatische Verstärkung",
+  "autoGainControlHint": "Gleicht den Mikrofonpegel an; dämpft laute und hebt leise Sprache.",
+  "captureUnsupported": "Dieser Browser unterstützt diese Einstellung nicht; der Ton wird unverändert gesendet.",
+  "captureNote": "Es werden nur die eingebauten Browserfunktionen genutzt: kein Zusatzdienst, keine Aufzeichnung, keine aufwendige Verarbeitung. Änderungen gelten sofort für das offene Mikrofon."
 }

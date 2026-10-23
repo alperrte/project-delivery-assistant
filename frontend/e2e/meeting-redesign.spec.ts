@@ -1,5 +1,6 @@
 import { test, expect, type BrowserContext, type Page } from "@playwright/test";
-import { readFileSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
+import path from "node:path";
 import { api } from "./helpers";
 import { psql, uuid } from "./db";
 import { meetingAccount, showPanel } from "./meeting-fixture";
@@ -8,6 +9,8 @@ import { localizeHref } from "../src/i18n/routing";
 import type { Project } from "../src/features/projects/types";
 import type { Meeting } from "../src/features/meetings/types";
 import tr from "../src/i18n/meetings/tr.json";
+import en from "../src/i18n/meetings/en.json";
+import de from "../src/i18n/meetings/de.json";
 import messages from "../src/i18n/messages/tr.json";
 import AxeBuilder from "@axe-core/playwright";
 
@@ -313,9 +316,76 @@ test("microphone capture: echo cancellation, noise suppression and gain are requ
     const settings = () => page.evaluate(() => (window as unknown as { qaTracks: MediaStreamTrack[] }).qaTracks.filter(track => track.readyState === "live").map(track => { const s = track.getSettings(); return [s.noiseSuppression, s.echoCancellation, s.autoGainControl]; }));
     await expect.poll(settings).toEqual([[true, true, true]]);
     await page.getByRole("button", { name: tr.devices, exact: true }).click();
-    const box = page.getByRole("checkbox", { name: new RegExp(tr.noiseSuppression) }); await expect(box).toBeChecked();
-    await box.click(); await expect.poll(settings).toEqual([[false, true, true]]);
-    await box.click(); await expect.poll(settings).toEqual([[true, true, true]]);
+    const option = (label: string) => page.getByRole("checkbox", { name: new RegExp(label) });
+    for (const label of [tr.noiseSuppression, tr.echoCancellation, tr.autoGainControl]) { await expect(option(label)).toBeEnabled(); await expect(option(label)).toBeChecked(); }
+    // Each one switches the open microphone on its own (settings order: noise, echo, gain), and the choice is remembered for the next call.
+    await option(tr.noiseSuppression).click(); await expect.poll(settings).toEqual([[false, true, true]]);
+    await option(tr.echoCancellation).click(); await expect.poll(settings).toEqual([[false, false, true]]);
+    await option(tr.autoGainControl).click(); await expect.poll(settings).toEqual([[false, false, false]]);
+    expect(await page.evaluate(() => localStorage.getItem("pda:meeting-capture:v1"))).toBe(JSON.stringify({ noiseSuppression: false, echoCancellation: false, autoGainControl: false }));
+    for (const label of [tr.noiseSuppression, tr.echoCancellation, tr.autoGainControl]) await option(label).click();
+    await expect.poll(settings).toEqual([[true, true, true]]);
+    expect(await page.evaluate(() => localStorage.getItem("pda:meeting-capture:v1"))).toBe(JSON.stringify({ noiseSuppression: true, echoCancellation: true, autoGainControl: true }));
     expect((await api(page, "POST", `/projects/${project.id}/meetings/${meeting.id}/end`)).status).toBe(200);
   } finally { if (project) await api(page, "POST", `/projects/${project.id}/archive`).catch(() => {}); await context.close(); }
+});
+
+test("microphone processing settings: a browser without support says so honestly; a saved choice is used at the next call", async ({ browser }) => {
+  test.setTimeout(150000);
+  const context = await browser.newContext({ storageState: REJECTED_STATE, permissions: ["camera", "microphone"], viewport: { width: 1280, height: 900 } });
+  await context.addInitScript(() => {
+    const requested: MediaTrackConstraints[] = []; Object.assign(window, { qaAudioRequests: requested });
+    const original = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+    navigator.mediaDevices.getUserMedia = async constraints => { if (typeof constraints?.audio === "object") requested.push(constraints.audio); return original(constraints); };
+    // Pretend to be a browser that can switch only the echo cancellation (the page is told so through the standard API).
+    if (sessionStorage.getItem("qaLimited")) navigator.mediaDevices.getSupportedConstraints = () => ({ echoCancellation: true });
+  });
+  const page = await context.newPage(); let project: Project | undefined;
+  try {
+    await login(context, managerFile); project = await createProject(page);
+    const meeting = await make(page, project, "Capture support", 1000, 2 * H);
+    expect((await api(page, "POST", `/projects/${project.id}/meetings/${meeting.id}/start`)).status).toBe(200);
+    const room = localizeHref(`/projects/${project.slug}/meetings/${meeting.id}/room`, "tr");
+    const option = (label: string) => page.getByRole("checkbox", { name: new RegExp(label) });
+    const join = async () => { await page.getByRole("button", { name: tr.join, exact: true }).click(); await expect(page.getByRole("status").filter({ hasText: new RegExp(`^${tr.phase.connected}$`) })).toBeVisible({ timeout: 30000 }); };
+    // A limited browser: only echo cancellation is offered; the other two are disabled with the honest explanation.
+    await page.goto(room); await page.evaluate(() => sessionStorage.setItem("qaLimited", "1")); await page.reload(); await join();
+    await page.getByRole("button", { name: tr.devices, exact: true }).click();
+    await expect(option(tr.echoCancellation)).toBeEnabled();
+    for (const label of [tr.noiseSuppression, tr.autoGainControl]) { await expect(option(label)).toBeDisabled(); await expect(option(label)).not.toBeChecked(); }
+    await expect(page.locator("[data-capture-settings]").getByText(tr.captureUnsupported)).toHaveCount(2);
+    expect((await new AxeBuilder({ page }).include("[data-capture-settings]").analyze()).violations).toEqual([]);
+    mkdirSync(path.join(__dirname, "../test-results/meetings-visual"), { recursive: true });
+    await page.screenshot({ path: path.join(__dirname, "../test-results/meetings-visual/v291-capture-unsupported.png") });
+    // A saved choice is applied to the microphone the next call opens.
+    await page.evaluate(() => { sessionStorage.removeItem("qaLimited"); localStorage.setItem("pda:meeting-capture:v1", JSON.stringify({ noiseSuppression: false, echoCancellation: true, autoGainControl: false })); });
+    await page.goto(room); await join(); await page.getByRole("button", { name: tr.micOn, exact: true }).click();
+    await expect.poll(() => page.evaluate(() => (window as unknown as { qaAudioRequests: MediaTrackConstraints[] }).qaAudioRequests.at(-1))).toMatchObject({ noiseSuppression: false, echoCancellation: true, autoGainControl: false });
+    await page.getByRole("button", { name: tr.devices, exact: true }).click();
+    await expect(option(tr.noiseSuppression)).not.toBeChecked(); await expect(option(tr.echoCancellation)).toBeChecked(); await expect(option(tr.autoGainControl)).not.toBeChecked();
+    await page.screenshot({ path: path.join(__dirname, "../test-results/meetings-visual/v291-capture-settings.png") });
+    expect((await api(page, "POST", `/projects/${project.id}/meetings/${meeting.id}/end`)).status).toBe(200);
+  } finally { if (project) await api(page, "POST", `/projects/${project.id}/archive`).catch(() => {}); await context.close(); }
+});
+
+test("microphone processing panel reads right and passes axe in TR/EN/DE, light and dark", async ({ page, context }) => {
+  test.setTimeout(240000);
+  await login(context, managerFile); const project = await createProject(page);
+  try {
+    const meeting = await make(page, project, "Capture themes", 1000, 2 * H);
+    expect((await api(page, "POST", `/projects/${project.id}/meetings/${meeting.id}/start`)).status).toBe(200);
+    for (const locale of ["tr", "en", "de"] as const) for (const dark of [false, true]) {
+      await page.goto(localizeHref(`/projects/${project.slug}/meetings/${meeting.id}/room`, locale));
+      await page.evaluate(value => { localStorage.setItem("theme", value); }, dark ? "dark" : "light"); await page.reload();
+      const catalog = { tr, en, de }[locale];
+      await page.getByRole("button", { name: catalog.join, exact: true }).click();
+      await expect(page.getByRole("status").filter({ hasText: new RegExp(`^${catalog.phase.connected}$`) })).toBeVisible({ timeout: 30000 });
+      await page.locator("[data-meeting-room]").getByRole("button", { name: catalog.devices, exact: true }).click();
+      const panel = page.locator("[data-capture-settings]"); await expect(panel).toBeVisible();
+      const text = await panel.innerText();
+      expect(text, `${locale} ${dark ? "dark" : "light"}: no raw translation keys`).not.toMatch(/captureTitle|noiseSuppressionHint|captureNote|meetings\./);
+      expect(text).toContain(catalog.noiseSuppression); expect(text).toContain(catalog.echoCancellation); expect(text).toContain(catalog.autoGainControl); expect(text).toContain(catalog.captureNote);
+      expect((await new AxeBuilder({ page }).include("[data-capture-settings]").analyze()).violations, `${locale} ${dark ? "dark" : "light"} axe`).toEqual([]);
+    }
+  } finally { await api(page, "POST", `/projects/${project.id}/archive`).catch(() => {}); }
 });

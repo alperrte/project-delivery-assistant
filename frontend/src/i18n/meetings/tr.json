@@ -283,7 +283,7 @@
   "newMessages": "Yeni mesajlar",
   "remainingShort": "{minutes} dk kaldı",
   "noiseSuppression": "Gürültü azaltma",
-  "noiseSuppressionHint": "Tarayıcının yerleşik gürültü bastırmasını, yankı önlemeyi ve otomatik ses seviyesini kullanır. Konuşma göstergesinden bağımsızdır.",
+  "noiseSuppressionHint": "Arka plandaki sürekli sesleri (klavye, fan, uğultu) tarayıcının yerleşik özelliğiyle azaltır.",
   "done": "Tamam",
   "invalidSchedule": "Başlangıç veya bitiş saati kabul edilmedi. Cihazının saati sunucudan farklı olabilir; saati kontrol edip yeniden dene.",
   "iconLabel": "Toplantı ikonu",
@@ -325,5 +325,12 @@
   "focusParticipant": "Bu katılımcıya odaklan",
   "moderation": "Moderatör işlemleri",
   "miniDraggable": "taşınabilir pencere",
-  "miniMoveHint": "Fareyle veya dokunarak sürükle; ok tuşlarıyla taşı, Home ile eski yerine döndür."
+  "miniMoveHint": "Fareyle veya dokunarak sürükle; ok tuşlarıyla taşı, Home ile eski yerine döndür.",
+  "captureTitle": "Ses işleme (tarayıcı)",
+  "echoCancellation": "Yankı önleme",
+  "echoCancellationHint": "Hoparlörden gelen sesin mikrofonuna geri karışmasını engeller. Hoparlör kullanıyorsan açık bırak.",
+  "autoGainControl": "Otomatik ses seviyesi",
+  "autoGainControlHint": "Mikrofon seviyeni konuşmana göre dengeler; çok kısık veya çok yüksek sesi düzeltir.",
+  "captureUnsupported": "Bu tarayıcı bu ayarı desteklemiyor; ses olduğu gibi gönderilir.",
+  "captureNote": "Yalnız tarayıcının yerleşik özellikleri kullanılır: ek servis, kayıt veya ağır işlem yoktur. Değişiklik açık mikrofona hemen uygulanır."
 }

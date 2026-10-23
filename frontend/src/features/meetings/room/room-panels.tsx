@@ -17,6 +17,7 @@ import { DeviceSelect } from "./device-select";
 import { InviteDialog } from "./invite-dialog";
 import { ParticipantMenu } from "./participant-menu";
 import { DEFAULT_VOLUME } from "../session/volume";
+import { CAPTURE_KEYS, type CaptureKey, type CaptureSettings } from "../use-meeting-room";
 import type { MeetingMessage, MeetingParticipant } from "../types";
 import type { SessionLive } from "../session/meeting-session";
 
@@ -185,10 +186,10 @@ export function ChatPanel({ live, active, content, setContent, mentions, setMent
   </>;
 }
 
-export function DevicesPanel({ room, devices, onSwitch, noise }: {
+export function DevicesPanel({ room, devices, onSwitch, capture }: {
   room: Room | undefined; devices: MediaDeviceInfo[]; onSwitch: (kind: MediaDeviceKind, deviceId: string) => void;
-  /** Only given where the browser can really switch noise suppression. */
-  noise?: { enabled: boolean; onChange: (enabled: boolean) => void };
+  /** The browser's own microphone processing: what is on, and which of it this browser can really switch. */
+  capture: { values: CaptureSettings; support: Record<CaptureKey, boolean>; onChange: (key: CaptureKey, enabled: boolean) => void };
 }) {
   const t = useTranslations("meetings");
   // The choice per kind, started from the device the room has open; the room confirms it by switching.
@@ -196,10 +197,18 @@ export function DevicesPanel({ room, devices, onSwitch, noise }: {
   return <div className="space-y-4 overflow-y-auto" data-workspace-scroll>
     {(["audioinput", "videoinput", "audiooutput"] as const).map(kind => <DeviceSelect key={kind} kind={kind} devices={devices} value={chosen[kind] === "default" ? "" : chosen[kind] ?? ""}
       onChange={deviceId => { setChosen(previous => ({ ...previous, [kind]: deviceId })); onSwitch(kind, deviceId || "default"); }} />)}
-    {noise && <label className="flex min-h-11 cursor-pointer items-start gap-3 rounded-lg border p-3 text-sm">
-      <Checkbox checked={noise.enabled} onCheckedChange={noise.onChange} className="mt-0.5" />
-      <span className="space-y-0.5"><span className="block font-medium">{t("noiseSuppression")}</span><span className="block text-xs leading-5 text-muted-foreground">{t("noiseSuppressionHint")}</span></span>
-    </label>}
+    <fieldset className="space-y-2" data-capture-settings>
+      <legend className="mb-1 text-sm font-medium">{t("captureTitle")}</legend>
+      {CAPTURE_KEYS.map(key => {
+        const supported = capture.support[key];
+        return <label key={key} className={cn("flex min-h-11 items-start gap-3 rounded-lg border p-3 text-sm", supported ? "cursor-pointer" : "cursor-not-allowed opacity-70")}>
+          <Checkbox checked={supported && capture.values[key]} disabled={!supported} onCheckedChange={enabled => capture.onChange(key, enabled)} className="mt-0.5" data-capture={key} />
+          <span className="space-y-0.5"><span className="block font-medium">{t(key)}</span>
+            <span className="block text-xs leading-5 text-muted-foreground">{t(supported ? `${key}Hint` : "captureUnsupported")}</span></span>
+        </label>;
+      })}
+      <p className="text-xs leading-5 text-muted-foreground">{t("captureNote")}</p>
+    </fieldset>
     <p className="text-xs leading-5 text-muted-foreground">{t("deviceHint")}</p>
   </div>;
 }

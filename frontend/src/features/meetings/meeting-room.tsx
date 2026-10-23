@@ -23,6 +23,7 @@ import { COMPACT_QUERY, WIDE_QUERY, useFitViewport, useMediaQuery } from "./room
 import { RoomControls, type RoomPanel } from "./room/room-controls";
 import { ChatPanel, DevicesPanel, ParticipantsPanel, participantPhoto } from "./room/room-panels";
 import { consumeAutoJoin } from "./autojoin";
+import { captureSupport } from "./use-meeting-room";
 import { canShareScreen, screenShareMessage } from "./room/screen-share";
 import { useSpeakerMonitor } from "./room/speaker-monitor";
 import { useVisualViewport } from "./room/use-visual-viewport";
@@ -282,7 +283,7 @@ function MeetingRoomView({ live, id, projectId, userId, isManager = false, retur
           <div role={tabs ? "tabpanel" : undefined} id={tabs ? "room-tabpanel" : undefined} aria-labelledby={tabs ? `room-tab-${panel}` : undefined} className="flex min-h-0 flex-1 flex-col border-t pt-3">
             {panel === "participants" && <ParticipantsPanel live={live} room={room} inviteProjectId={inviteProjectId} onCopyLink={projectId && returnHref ? () => void copyLink() : undefined} organizerId={live.meeting?.organizerId} meetingId={id} />}
             {panel === "chat" && <ChatPanel live={live} active={active} content={content} setContent={setContent} mentions={mentions} setMentions={setMentions} sending={sending} onSend={send} />}
-            {panel === "devices" && <DevicesPanel room={room} devices={devices} onSwitch={(kind, deviceId) => void live.switchDevice(kind, deviceId).catch(showDeviceError)} noise={live.noiseSuppressionSupported ? { enabled: live.noiseSuppression, onChange: enabled => void live.setNoiseSuppression(enabled).catch(showDeviceError) } : undefined} />}
+            {panel === "devices" && <DevicesPanel room={room} devices={devices} onSwitch={(kind, deviceId) => void live.switchDevice(kind, deviceId).catch(showDeviceError)} capture={{ values: live.capture, support: captureSupport(), onChange: (key, enabled) => void live.setCapture(key, enabled).catch(showDeviceError) }} />}
           </div>
         </aside>}
       </div>

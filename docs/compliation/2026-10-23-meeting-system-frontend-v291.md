@@ -4,7 +4,7 @@ Dal: `meeting-system-frontend`. Backend tarafı ayrı dalda ve ayrı commit'tedi
 
 ## Durum
 
-Frontend kapsamı tamamlandı ve gerçek stack'te doğrulandı (üretim derlemesi + gerçek API/PostgreSQL/self-hosted LiveKit + Mailpit). **İki madde kullanıcı onayı bekliyor ve onaysız kapatılmış sayılmaz:** (1) hatırlatma e-postası tasarımı (MSF-10), (2) gürültü engelleme teknolojisi (MSF-18, yalnız tarayıcı tabanlı seçenek mevcut). İsteğe bağlı Document Picture-in-Picture (MSF-17) uygulanmadı; sayfa içi sürüklenebilir pencere tek başına tam işlev verir, Chromium-only API'ye bağımlılık eklenmedi.
+Frontend kapsamı tamamlandı ve gerçek stack'te doğrulandı (üretim derlemesi + gerçek API/PostgreSQL/self-hosted LiveKit + Mailpit). **Kullanıcı kararları alındı:** MSF-10 e-posta tasarımı kullanıcı tarafından incelenip onaylandı (renk, logo, bilgi kartı ve buton yerleşimi korunur, ek görsel değişiklik istenmedi); MSF-18 için ücretsiz tarayıcı tabanlı çözüm seçildi ve tamamlandı. İsteğe bağlı Document Picture-in-Picture (MSF-17) uygulanmadı; sayfa içi sürüklenebilir pencere tek başına tam işlev verir, Chromium-only API'ye bağımlılık eklenmedi.
 
 ## Kök nedenler ve çözümler
 
@@ -19,11 +19,12 @@ Frontend kapsamı tamamlandı ve gerçek stack'te doğrulandı (üretim derlemes
 | MSF-15 | Gönderirken metin kutusu `disabled` olup odağı kaybediyordu; odak çağrısı sayfayı kaydırıyordu. | Kutu `readOnly`, gönderimden sonra `focus({ preventScroll: true })`; ardışık mesajlar `participantId` ile gruplanır, gün ayırıcıları eklenir. |
 | MSF-16 | Zaten bitmiş paylaşımı durdurma `setScreenShareEnabled(false)` ile hata atıp genel "İşlem tamamlanamadı…" bandını gösteriyordu. | Durdurma idempotent; SDK'nın oda düzeyi hatası temizlenir; iptal/reddetme kendi mesajını gösterir. |
 | MSF-17 | Mini çubuk sabitti. | Gerçek video akışlı, serbest sürüklenebilir pencere (fare, dokunma, ok tuşları/Shift/Home), ekrana kenetli, konum `localStorage`'da; tek LiveKit oturumu; mikrofon/kamera/dön/ayrıl. |
+| MSF-18 | Önceki sürümde yalnız gürültü azaltma anahtarı vardı; yankı önleme ve otomatik ses seviyesi açılıp kapatılamıyor, desteklenmeyen tarayıcıda ayar sessizce gizleniyordu. | Cihazlar panelinde üç bağımsız anahtar (gürültü azaltma, yankı önleme, otomatik ses seviyesi) yalnız tarayıcının yerleşik `noiseSuppression`/`echoCancellation`/`autoGainControl` kısıtlarını kullanır; açık mikrofona anında uygulanır (parça yeniden başlatılır), sonraki mikrofonlara ve sonraki görüşmelere (`localStorage`) taşınır. Tarayıcı bir kısıtı desteklemiyorsa o anahtar devre dışı ve "Bu tarayıcı bu ayarı desteklemiyor; ses olduğu gibi gönderilir." açıklamasıyla gösterilir. Ücretli/üçüncü taraf servis, ağır ses işleme, ek WebAudio/WASM yoktur; LiveKit bağlantısı ve mikrofon yönetimi değişmedi. |
 | MSF-19 | — | Sürüm etiketi `2.9.1` (yalnız gösterim). |
 
 ## Değişen önemli dosyalar
 
-Yeni: `meeting-icons.tsx`, `room/participant-menu.tsx`, `session/volume.ts`, `e2e/meeting-v291-create.spec.ts`, `e2e/meeting-v291-room.spec.ts`. Değişen: `meetings-page.tsx` (yeniden yazıldı), `meeting-form.tsx`, `meeting-card.tsx`, `meeting-detail.tsx`, `meeting-room.tsx`, `use-meeting-room.ts`, `api.ts`, `types.ts`, `shared.tsx`, `room/room-stage.tsx`, `room/room-panels.tsx`, `room/device-check.tsx`, `session/meeting-mini-bar.tsx`, `session/meeting-session-runtime.tsx`, `session/meeting-session.tsx`, `public-info/site-info.ts`, `i18n/meetings/{tr,en,de}.json`, mevcut meeting e2e dosyaları ve `playwright.meetings.config.ts`.
+Yeni: `meeting-icons.tsx`, `room/participant-menu.tsx`, `session/volume.ts`, `e2e/meeting-v291-create.spec.ts`, `e2e/meeting-v291-room.spec.ts`. Değişen: `meetings-page.tsx` (yeniden yazıldı), `meeting-form.tsx`, `meeting-card.tsx`, `meeting-detail.tsx`, `meeting-room.tsx`, `use-meeting-room.ts`, `api.ts`, `types.ts`, `shared.tsx`, `room/room-stage.tsx`, `room/room-panels.tsx` (Cihazlar paneli: üç ses işleme anahtarı), `room/device-check.tsx`, `session/meeting-mini-bar.tsx`, `session/meeting-session-runtime.tsx`, `session/meeting-session.tsx`, `public-info/site-info.ts`, `i18n/meetings/{tr,en,de}.json`, mevcut meeting e2e dosyaları ve `playwright.meetings.config.ts`.
 
 ## API sözleşmesi (frontend'in kullandığı yeni parçalar)
 
@@ -36,7 +37,7 @@ Yeni: `meeting-icons.tsx`, `room/participant-menu.tsx`, `session/volume.ts`, `e2
 | `npm run lint` (tüm frontend) | 0 hata |
 | `npx tsc --noEmit` | 0 hata |
 | `npm run build` / `npm run check:bundle` | başarılı / tüm rotalar bütçe içinde |
-| `playwright test --config=playwright.meetings.config.ts` (üretim derlemesi, gerçek API/PostgreSQL/LiveKit/Mailpit, sahte medya cihazı) | **49/49** (önceki 37 + 12 yeni: 7 oluşturma/liste/posta/katılım koruması, 5 oda) |
+| `playwright test --config=playwright.meetings.config.ts` (üretim derlemesi, gerçek API/PostgreSQL/LiveKit/Mailpit, sahte medya cihazı) | **51/51** (önceki 37 + 14 yeni: 7 oluşturma/liste/posta/katılım koruması, 5 oda, 2 mikrofon işleme; ayrıca TR/EN/DE × açık/koyu panel testi) |
 | `playwright test e2e/footer-public-pages.spec.ts` | 17/17 (sürüm etiketi 2.9.1) |
 | `git diff --check` | temiz |
 
@@ -54,8 +55,8 @@ Ses seviyesi/yerel sessize alma yalnız istemcide ve yalnız bu cihazı etkiler;
 
 ## Sınırlar ve bekleyen onaylar
 
-- **MSF-10:** E-posta tasarımı kullanıcı onayı bekliyor; onaylanmış sayılmaz.
-- **MSF-18:** Yalnız tarayıcı tabanlı (`noiseSuppression`/`echoCancellation`/`autoGainControl`, Cihazlar panelinde anahtar) var; daha güçlü yerel işleme veya Krisp benzeri üçüncü taraf kararı kullanıcıdan bekleniyor, ücretli/üçüncü taraf hizmet eklenmedi.
+- **MSF-10:** Kullanıcı onayladı; tasarım değiştirilmedi.
+- **MSF-18:** Tarayıcı desteğine bağlıdır: gürültü bastırma kalitesi tarayıcı/işletim sistemi/cihaza göre değişir; gerçek fiziksel mikrofon ve Firefox/Safari'de denenmedi (Chromium + sahte medya cihazı). Desteklenmeyen tarayıcı davranışı `getSupportedConstraints` taklit edilerek sınandı.
 - Document Picture-in-Picture eklenmedi (isteğe bağlıydı).
 - Telefon tarayıcılarında ekran paylaşımı yoktur; açıklayıcı mesaj gösterilir.
 - Tarayıcılar arası (Safari/Firefox) gerçek cihaz denemesi yapılmadı; Chromium + sahte medya cihazı.

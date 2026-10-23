@@ -283,7 +283,7 @@
   "newMessages": "New messages",
   "remainingShort": "{minutes} min left",
   "noiseSuppression": "Noise suppression",
-  "noiseSuppressionHint": "Uses the browser's built-in noise suppression, echo cancellation and automatic gain. It is separate from the speaking indicator.",
+  "noiseSuppressionHint": "Reduces steady background sound (keyboard, fan, hum) with the browser's built-in feature.",
   "done": "Done",
   "invalidSchedule": "The start or end time was not accepted. Your device clock may differ from the server; check it and try again.",
   "iconLabel": "Meeting icon",
@@ -325,5 +325,12 @@
   "focusParticipant": "Focus on this participant",
   "moderation": "Moderator actions",
   "miniDraggable": "movable window",
-  "miniMoveHint": "Drag with the mouse or touch; move with the arrow keys, Home puts it back."
+  "miniMoveHint": "Drag with the mouse or touch; move with the arrow keys, Home puts it back.",
+  "captureTitle": "Audio processing (browser)",
+  "echoCancellation": "Echo cancellation",
+  "echoCancellationHint": "Stops sound from your speakers feeding back into your microphone. Keep it on when you use speakers.",
+  "autoGainControl": "Automatic gain",
+  "autoGainControlHint": "Evens out your microphone level; softens loud and lifts quiet speech.",
+  "captureUnsupported": "This browser does not support this setting; sound is sent as it is.",
+  "captureNote": "Only the browser's built-in features are used: no extra service, recording or heavy processing. A change applies to the open microphone at once."
 }
