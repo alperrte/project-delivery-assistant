@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils"
 const TINTS = [
   "bg-primary/15 text-primary",
   "bg-live/15 text-live",
-  "bg-[#7a6ff0]/15 text-[#7a6ff0]",
+  "bg-[#7a6ff0]/15 text-[#5b4fd9] dark:text-[#a79fff]", // darker text than the tint itself: 3.3:1 failed the 4.5:1 AA minimum
 ] as const
 
 /**

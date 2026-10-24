@@ -406,6 +406,8 @@ test("separate call window (Document Picture-in-Picture): same call, styled, liv
     await expect.poll(() => pip.evaluate(() => document.documentElement.classList.contains("dark"))).toBe(true);
     await a.evaluate(() => document.documentElement.classList.remove("dark"));
     await expect.poll(() => pip.evaluate(() => document.documentElement.classList.contains("dark"))).toBe(false);
+    // 4b. A full screen button is there (what it does is covered by the next test).
+    await expect(pip.locator("[data-pip-expand]")).toHaveAttribute("aria-label", tr.pipFullscreenWindow); await expect(pip.locator("[data-pip-expand]")).toHaveAttribute("aria-pressed", "false");
     expect((await new AxeBuilder({ page: pip }).include("[data-mini-pip]").analyze()).violations, "the separate window has no accessibility violations").toEqual([]);
     await screenshot(pip, "v291-separate-window");
     // 5. "Return to the meeting" closes the window and goes back to the room, in the same call.
@@ -448,4 +450,58 @@ test("separate call window: where the browser has no Document Picture-in-Picture
     await expect(mini(page).getByRole("link", { name: tr.returnToMeeting, exact: true })).toBeVisible();
     expect((await new AxeBuilder({ page }).include("[data-meeting-mini]").analyze()).violations).toEqual([]);
   } finally { await archive(page, project); await context.close(); }
+});
+
+test("separate call window, full screen: the small window hands the call to a screen-sized window that goes really full screen, in the same call", async ({ browser }) => {
+  test.setTimeout(240000);
+  const managerContext = await browser.newContext({ storageState: REJECTED_STATE, permissions: ["camera", "microphone"], viewport: { width: 1280, height: 800 } });
+  const memberContext = await browser.newContext({ storageState: REJECTED_STATE, permissions: ["camera", "microphone"], viewport: { width: 1280, height: 800 } });
+  const a = await managerContext.newPage(), b = await memberContext.newPage(); let project: Project | undefined;
+  try {
+    await login(managerContext, managerFile); await login(memberContext, memberFile);
+    project = await createProject(a); await b.goto("/dashboard");
+    addMember(project.id, ((await api(b, "GET", "/auth/me")).json as { id: string }).id);
+    const meeting = await createMeeting(a, project.id);
+    let joins = 0; a.on("request", request => { if (request.method() === "POST" && request.url().endsWith(`/meetings/${meeting.id}/join`)) joins++; });
+    await a.goto(roomHref(project.slug, meeting.id)); await b.goto(roomHref(project.slug, meeting.id));
+    await join(a); await join(b);
+    await b.getByRole("button", { name: tr.cameraOn, exact: true }).click(); await expect(b.getByRole("button", { name: tr.cameraOff, exact: true })).toBeVisible();
+    await appPush(a, localizeHref("/projects", "tr")); await expect(mini(a)).toBeVisible();
+
+    // 1. In the small window the button promises a screen-sized window; the tap opens it from that window (the pop-up is allowed) and the small one is gone.
+    const pip = await openSeparateWindow(a, managerContext);
+    const expand = pip.locator("[data-pip-expand]");
+    await expect(expand).toHaveAttribute("aria-label", tr.pipFullscreenWindow);
+    const area = await pip.evaluate(() => { const s = window.screen as Screen & { availLeft?: number; availTop?: number }; return { w: s.availWidth, h: s.availHeight, x: s.availLeft ?? 0, y: s.availTop ?? 0 }; });
+    await pip.evaluate(() => { const open = window.open.bind(window); window.open = (...args: Parameters<typeof window.open>) => { (window.opener as unknown as { qaOpen: unknown[] }).qaOpen = args; return open(...args); }; });
+    const [popup] = await Promise.all([managerContext.waitForEvent("page"), expand.click()]);
+    await popup.waitForSelector("[data-mini-pip]", { timeout: 15000 });
+    await expect.poll(() => pip.isClosed()).toBe(true); await expect(mini(a)).toHaveCount(0);
+    expect(await a.evaluate(() => (window as unknown as { qaOpen: unknown[] }).qaOpen)).toEqual(["", "pda-call-window", `popup=yes,width=${area.w},height=${area.h},left=${area.x},top=${area.y}`]);
+    // 2. It is the same call, picture and controls included; the page did not join again.
+    await expect(popup.locator("[data-mini-pip] video")).toHaveCount(1, { timeout: 20000 });
+    await popup.getByRole("button", { name: tr.micOn, exact: true }).click(); await expect(popup.getByRole("button", { name: tr.micOff, exact: true })).toHaveAttribute("aria-pressed", "true");
+    expect(joins).toBe(1);
+    // 3. In this ordinary window the browser's real full screen works: the button goes in and out, and follows the browser (Escape too).
+    const big = popup.locator("[data-pip-expand]");
+    await expect(big).toHaveAttribute("aria-label", tr.pipFullscreen); await expect(big).toHaveAttribute("aria-pressed", "false");
+    await popup.evaluate(() => { const state = { on: false }; Object.assign(window, { qaFullscreen: state });
+      // A headless browser has no screen to take over: the browser's own full screen is stood in for here, the page code under test is the real one.
+      Object.defineProperty(document, "fullscreenElement", { configurable: true, get: () => (state.on ? document.documentElement : null) });
+      document.documentElement.requestFullscreen = async () => { state.on = true; document.dispatchEvent(new Event("fullscreenchange")); };
+      document.exitFullscreen = async () => { state.on = false; document.dispatchEvent(new Event("fullscreenchange")); }; });
+    await big.click(); await expect(big).toHaveAttribute("aria-pressed", "true"); await expect(big).toHaveAttribute("aria-label", tr.pipExitFullscreen);
+    await popup.evaluate(() => { (window as unknown as { qaFullscreen: { on: boolean } }).qaFullscreen.on = false; document.dispatchEvent(new Event("fullscreenchange")); });
+    await expect(big).toHaveAttribute("aria-pressed", "false");
+    await big.click(); await expect(big).toHaveAttribute("aria-pressed", "true"); await big.click(); await expect(big).toHaveAttribute("aria-pressed", "false");
+    expect((await new AxeBuilder({ page: popup }).include("[data-mini-pip]").analyze()).violations).toEqual([]);
+    await screenshot(popup, "v291-call-fullscreen-window");
+    // 4. Closing that window by hand brings the page window back, the call never stopped; "return" goes to the room.
+    await popup.close(); await expect(mini(a)).toBeVisible(); await expect(mini(a).getByRole("status").first()).toHaveText(tr.miniActive);
+    const again = await openSeparateWindow(a, managerContext);
+    const [second] = await Promise.all([managerContext.waitForEvent("page"), again.locator("[data-pip-expand]").click()]);
+    await second.waitForSelector("[data-mini-pip]"); await second.getByRole("button", { name: tr.returnToMeeting, exact: true }).click();
+    await expect.poll(() => second.isClosed()).toBe(true); await expect(room(a)).toBeVisible(); await expect(mini(a)).toHaveCount(0);
+    expect(joins, "one admission for the whole story").toBe(1);
+  } finally { await archive(a, project); await managerContext.close(); await memberContext.close(); }
 });

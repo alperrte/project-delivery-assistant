@@ -170,7 +170,7 @@ test("two real participants: media, mention/chat, guest revoke semantics, modera
     await a.getByRole("button", { name: tr.screenShareStop, exact: true }).click(); await expect(b.locator("video")).toHaveCount(1, { timeout: 15000 });
     await showPanel(a, tr.chat); await showPanel(b, tr.chat);
     await a.getByRole("textbox", { name: tr.message, exact: true }).fill("@");
-    await a.getByRole("group", { name: tr.mentions, exact: true }).getByRole("button", { name: member.nickname, exact: true }).click();
+    await a.getByRole("listbox", { name: tr.mentions, exact: true }).getByRole("option", { name: member.nickname, exact: true }).click();
     const mentionText = await a.getByRole("textbox", { name: tr.message, exact: true }).inputValue();
     const messageText = `${mentionText}Real SFU chat`;
     await a.getByRole("textbox", { name: tr.message, exact: true }).fill(messageText); await a.getByRole("button", { name: tr.send, exact: true }).click(); await expect(b.getByText(messageText, { exact: true })).toBeVisible({ timeout: 15000 });

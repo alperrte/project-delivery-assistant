@@ -30,9 +30,14 @@ export type MeetingJoin = {
   participantId: string; identity: string; roomEpoch: number; status: MeetingStatus;
   chatRetained: boolean; media: { url: string; token: string; expiresAt: string };
 };
+/** One emoji on a message: how many people, whether you are one of them, and the first names (the server bounds the list). */
+export type MeetingReaction = { emoji: string; count: number; reactedByMe: boolean; reactors: { participantId: string; displayName: string }[] };
+/** The answered message as a short quote from the server (never the whole history). */
+export type MeetingReply = { id: string; participantId: string; displayName: string; preview: string };
 export type MeetingMessage = {
   id: string; participantId: string; displayName: string; content: string;
   sentAt: string; mentionIds: string[];
+  replyToMessageId?: string | null; replyTo?: MeetingReply | null; reactions?: MeetingReaction[];
 };
 export type MeetingInvite = { id: string; token: string; expiresAt: string; maxUses: number };
 export type MeetingInviteMetadata = { id: string; expiresAt: string; maxUses: number; uses: number; revoked: boolean };

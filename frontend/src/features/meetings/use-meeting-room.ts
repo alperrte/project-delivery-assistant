@@ -25,6 +25,24 @@ export function captureSupport(): Record<CaptureKey, boolean> {
   const supported = typeof navigator === "undefined" ? undefined : navigator.mediaDevices?.getSupportedConstraints?.();
   return Object.fromEntries(CAPTURE_KEYS.map(key => [key, Boolean(supported?.[key])])) as Record<CaptureKey, boolean>;
 }
+const byTime = (a: MeetingMessage, b: MeetingMessage) => a.sentAt.localeCompare(b.sentAt) || a.id.localeCompare(b.id);
+/** Newer data about a message replaces the old (its reactions and quote included); the list stays oldest first. */
+const merge = (previous: MeetingMessage[], incoming: MeetingMessage[]) => [...new Map([...previous, ...incoming].map(m => [m.id, m])).values()].sort(byTime);
+/** What a reaction tap shows at once, before the server answers; the answer (or a reload) then replaces it. */
+function withReaction(message: MeetingMessage, emoji: string, add: boolean, self: { id: string; name: string }): MeetingMessage {
+  const reactions = [...(message.reactions ?? [])], index = reactions.findIndex(r => r.emoji === emoji), current = reactions[index];
+  if (add) {
+    if (current?.reactedByMe) return message;
+    const reactor = { participantId: self.id, displayName: self.name };
+    if (current) reactions[index] = { ...current, count: current.count + 1, reactedByMe: true, reactors: [...current.reactors, reactor] };
+    else reactions.push({ emoji, count: 1, reactedByMe: true, reactors: [reactor] });
+  } else {
+    if (!current?.reactedByMe) return message;
+    if (current.count <= 1) reactions.splice(index, 1);
+    else reactions[index] = { ...current, count: current.count - 1, reactedByMe: false, reactors: current.reactors.filter(r => r.participantId !== self.id) };
+  }
+  return { ...message, reactions };
+}
 export type RoomPhase = "ready" | "connecting" | "connected" | "reconnecting" | "left" | "closed" | "removed" | "failed";
 
 export function useMeetingRoom(meetingId: string, projectId?: string) {
@@ -35,13 +53,15 @@ export function useMeetingRoom(meetingId: string, projectId?: string) {
   const [error, setError] = useState<unknown>();
   const [participants, setParticipants] = useState<MeetingParticipant[]>([]);
   const [messages, setMessages] = useState<MeetingMessage[]>([]);
+  const messagesRef = useRef<MeetingMessage[]>([]);
+  useEffect(() => { messagesRef.current = messages; }, [messages]);
   // A member's meeting carries its organizer (the creator recorded by the server); the guest view does not.
   const [meeting, setMeeting] = useState<GuestMeeting & { organizerId?: string }>();
   const [selfId, setSelfId] = useState("");
   const [retained, setRetained] = useState(false);
   const [hasOlder, setHasOlder] = useState(false);
   const [chatLoaded, setChatLoaded] = useState(false);
-  const controls = useRef<{ join: () => void; retry: () => void; leave: () => void; older: () => Promise<void>; refreshChat: () => Promise<void>; applyCapture: (next: CaptureSettings) => Promise<void> } | null>(null);
+  const controls = useRef<{ join: () => void; retry: () => void; leave: () => void; older: () => Promise<void>; refreshChat: () => Promise<void>; applyCapture: (next: CaptureSettings) => Promise<void>; reloadMessage: (id: string) => Promise<void>; ensureLoaded: (id: string) => Promise<boolean> } | null>(null);
   const intended = useRef({ mic: false, camera: false });
   const devices = useRef<Partial<Record<MediaDeviceKind, string>>>({});
   // The remembered choice; it only shows once the devices panel is opened, so it never takes part in the server-rendered markup.
@@ -69,13 +89,29 @@ export function useMeetingRoom(meetingId: string, projectId?: string) {
     async function refreshChat() {
       const response = await api.chat(0, abort.signal);
       if (!alive || stopped) return;
-      setMessages(previous => {
-        const merged = new Map(previous.map(m => [m.id, m]));
-        response.content.forEach(m => merged.set(m.id, m));
-        return [...merged.values()].sort((a, b) => a.sentAt.localeCompare(b.sentAt) || a.id.localeCompare(b.id));
-      });
+      setMessages(previous => merge(previous, response.content));
       if (!historyPage) setHasOlder(response.totalPages > 1);
       setChatLoaded(true);
+    }
+    /** One message again from the server (a reaction on it changed), only when it is part of the list already. */
+    async function reloadMessage(messageId: string) {
+      if (!messagesRef.current.some(m => m.id === messageId)) return;
+      const message = await api.message(messageId, abort.signal);
+      if (alive && !stopped) setMessages(previous => merge(previous, [message]));
+    }
+    async function olderPage() {
+      const response = await api.chat(historyPage + 1, abort.signal);
+      if (!alive || stopped) return;
+      historyPage++; setHasOlder(historyPage + 1 < response.totalPages); setMessages(previous => merge(previous, response.content));
+    }
+    /** Makes sure a message is in the list, loading older pages up to the one the server names for it; false when it is gone. */
+    async function ensureLoaded(messageId: string) {
+      if (messagesRef.current.some(m => m.id === messageId)) return true;
+      let target: number;
+      try { target = (await api.locate(messageId, abort.signal)).page; } catch { return false; }
+      if (target > 40) return false; // the history reaches 1001 pages at most; further back than this is not worth loading for a quote
+      while (historyPage < target && alive && !stopped) await olderPage();
+      return messagesRef.current.some(m => m.id === messageId) || (await api.message(messageId, abort.signal).then(found => { setMessages(previous => merge(previous, [found])); return true; }, () => false));
     }
     async function loadState() {
       const state = projectId ? await meetingsApi.detail(projectId, meetingId, abort.signal) : await guestMeetingState(meetingId, abort.signal);
@@ -129,8 +165,14 @@ export function useMeetingRoom(meetingId: string, projectId?: string) {
           if (participant === next.localParticipant && publication.source === Track.Source.Microphone) intended.current.mic = false;
         });
         next.on(RoomEvent.MediaDevicesError, failure => { if (alive) setError(failure); });
-        next.on(RoomEvent.DataReceived, (_payload, sender, _kind, topic) => {
-          if (!sender && topic === "pda.meeting") refreshed();
+        next.on(RoomEvent.DataReceived, (payload, sender, _kind, topic) => {
+          if (sender || topic !== "pda.meeting") return;
+          // The server's envelope carries ids only: a reaction refreshes that one message, anything else refreshes the newest page.
+          try {
+            const envelope = JSON.parse(new TextDecoder().decode(payload)) as { type?: string; messageId?: string };
+            if (envelope.type === "meeting.chat.reaction" && envelope.messageId) { void reloadMessage(envelope.messageId).catch(() => {}); return; }
+          } catch { /* not JSON: fall through to the plain refresh */ }
+          refreshed();
         });
         next.on(RoomEvent.Disconnected, reason => {
           // Room deletion during moderation also disconnects innocent participants. Re-authorize via REST.
@@ -181,7 +223,7 @@ export function useMeetingRoom(meetingId: string, projectId?: string) {
         const track = currentRoom.localParticipant.getTrackPublication(Track.Source.Microphone)?.audioTrack as LocalAudioTrack | undefined;
         if (track) await track.restartTrack({ ...next, deviceId: devices.current.audioinput });
       },
-      older: async () => { const response = await api.chat(historyPage + 1, abort.signal); if (!alive || stopped) return; historyPage++; setHasOlder(historyPage + 1 < response.totalPages); setMessages(previous => [...new Map([...response.content, ...previous].map(m => [m.id, m])).values()].sort((a,b) => a.sentAt.localeCompare(b.sentAt) || a.id.localeCompare(b.id))); },
+      older: olderPage, reloadMessage, ensureLoaded,
     };
     const timer = setInterval(() => void poll(), 4000);
     void loadState().catch(failure => { if (alive) setError(failure); });
@@ -208,6 +250,23 @@ export function useMeetingRoom(meetingId: string, projectId?: string) {
     join: () => controls.current?.join(), leave: () => controls.current?.leave(),
     retry: () => controls.current?.retry(),
     older: () => controls.current?.older(),
-    send: async (content: string, mentionIds: string[]) => { await api.send(content, mentionIds); await controls.current?.refreshChat(); },
+    send: async (content: string, mentionIds: string[], replyToMessageId?: string) => { await api.send(content, mentionIds, replyToMessageId); await controls.current?.refreshChat(); },
+    /** Brings an answered message into the list (older pages if needed); false when it can no longer be reached. */
+    ensureMessage: (messageId: string) => controls.current?.ensureLoaded(messageId) ?? Promise.resolve(false),
+    /**
+     * Adds or removes the caller's own emoji on a message. The list changes at once; the server's answer replaces it, and a failure
+     * puts the real state back (then the error is passed on).
+     */
+    react: async (messageId: string, emoji: string, add: boolean) => {
+      const me = participants.find(p => p.id === selfId);
+      setMessages(previous => previous.map(m => m.id === messageId ? withReaction(m, emoji, add, { id: selfId, name: me?.displayName ?? "" }) : m));
+      try {
+        const updated = await (add ? api.react(messageId, emoji) : api.unreact(messageId, emoji));
+        setMessages(previous => merge(previous, [updated]));
+      } catch (failure) {
+        await controls.current?.reloadMessage(messageId).catch(() => {});
+        throw failure;
+      }
+    },
   };
 }

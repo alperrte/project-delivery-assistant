@@ -197,11 +197,11 @@ function MeetingRoomView({ live, id, projectId, userId, isManager = false, retur
   }
   // The lock is a ref: two Enter presses in the same tick must not both pass a `sending` state that has not re-rendered yet.
   const sendLock = useRef(false);
-  async function send() {
-    if (!content.trim() || sendLock.current) return;
+  async function send(replyToMessageId?: string) {
+    if (!content.trim() || sendLock.current) return false;
     sendLock.current = true; setSending(true);
-    try { await live.send(content.trim(), mentions); setContent(""); setMentions([]); live.setError(undefined); }
-    catch (failure) { live.setError(failure); } finally { sendLock.current = false; setSending(false); }
+    try { await live.send(content.trim(), mentions, replyToMessageId); setContent(""); setMentions([]); live.setError(undefined); return true; }
+    catch (failure) { live.setError(failure); return false; } finally { sendLock.current = false; setSending(false); }
   }
   // Phones keep the equal-share grid; every other size gets the stage with the strip (or the plain grid when chosen).
   const tiles = people.map((p, index) => <ParticipantMenu key={p.identity} target={{ identity: p.identity, name: nameOf(p), self: p === room?.localParticipant, photoSrc: participantPhoto(lookup.get(p.identity)), guest: lookup.get(p.identity)?.guest }}
