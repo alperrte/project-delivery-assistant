@@ -36,8 +36,21 @@ public final class MeetingDtos {
         String zoneId,Meeting.Status status,Instant openedAt,boolean overtime,boolean chatRetained,
         List<String> agenda,int roomEpoch,boolean reconnectRequired) {}
     public record GuestSession(UUID meetingId,UUID participantId,String secret,Instant expiresAt) {}
-    public record ChatRequest(@NotBlank @Size(max=2000) String content,@NotNull @Size(max=20) Set<@NotNull UUID> mentionIds) {}
-    @Schema(name="MeetingChatView") public record ChatView(UUID id,UUID participantId,String displayName,String content,Instant sentAt,Set<UUID> mentionIds) {}
+    public record ChatRequest(@NotBlank @Size(max=2000) String content,@NotNull @Size(max=20) Set<@NotNull UUID> mentionIds,UUID replyToMessageId) {
+        public ChatRequest(String content,Set<UUID> mentionIds) { this(content,mentionIds,null); }
+    }
+    public record ReactionRequest(@NotBlank @Size(max=32) String emoji) {}
+    /** The answered message as a short, authorised quote: enough to show who and what, never the whole history. */
+    @Schema(name="MeetingChatReply") public record ReplyView(UUID id,UUID participantId,String displayName,String preview) {}
+    /** One emoji on a message: how many people, whether the caller is one of them, and the first names (bounded) for the tooltip. */
+    @Schema(name="MeetingChatReaction") public record ReactionView(String emoji,long count,boolean reactedByMe,List<ReactorView> reactors) {}
+    public record ReactorView(UUID participantId,String displayName) {}
+    @Schema(name="MeetingChatView") public record ChatView(UUID id,UUID participantId,String displayName,String content,Instant sentAt,Set<UUID> mentionIds,
+                                                           UUID replyToMessageId,ReplyView replyTo,List<ReactionView> reactions) {
+        public ChatView(UUID id,UUID participantId,String displayName,String content,Instant sentAt,Set<UUID> mentionIds) { this(id,participantId,displayName,content,sentAt,mentionIds,null,null,List.of()); }
+    }
+    /** Where a message sits in the newest-first history: the page (of the asked size) that holds it. */
+    public record ChatLocation(UUID messageId,int page,int size) {}
     public record PageView<T>(List<T> content,int page,int size,long totalElements,int totalPages) {
         public static <T> PageView<T> of(org.springframework.data.domain.Page<T> p) { return new PageView<>(p.getContent(),p.getNumber(),p.getSize(),p.getTotalElements(),p.getTotalPages()); }
     }

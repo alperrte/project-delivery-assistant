@@ -26,3 +26,7 @@ V51 adds trusted `pg_trgm`, immutable NFC/mixed Turkish-English case folding and
 ## V55 — meeting icon, per-user history and reminder skip reasons (2026-10-23)
 
 V55 adds `meetings.icon` (NOT NULL, default `video`, allowlist CHECK), the `meeting_user_hidden` table (per-user hidden finished/cancelled meetings, PK(meeting_id,user_id), FK cascade) with a user index, and widens the `meeting_reminder_deliveries.error_code` CHECK with the four skip reasons. Existing rows keep valid defaults; no data backfill. The next migration is V56.
+
+## V56 — meeting chat replies and reactions (2026-10-24)
+
+V56 adds `meeting_chat_messages.reply_to_message_id` with a composite foreign key `(reply_to_message_id, meeting_id) → (id, meeting_id)` (a reply can only point into its own meeting; deleting the answered message clears just the link), a self-reply CHECK, and the `meeting_chat_reactions` table (PK message+participant+emoji, CASCADE with the message and the participant). Existing messages keep working without a reply or reactions; no backfill. The next migration is V57.

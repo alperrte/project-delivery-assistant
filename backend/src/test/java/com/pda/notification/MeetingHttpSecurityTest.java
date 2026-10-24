@@ -111,6 +111,37 @@ class MeetingHttpSecurityTest {
         for(int i=0;i<10;i++) mvc.perform(post("/api/v1/meetings/guest/session").with(r->{r.setRemoteAddr("limit-rate");return r;})).andExpect(status().isForbidden());
         mvc.perform(post("/api/v1/meetings/guest/session").with(r->{r.setRemoteAddr("limit-rate");return r;})).andExpect(status().isTooManyRequests());
     }
+    @Test void guestRepliesAndReactionsKeepCsrfCookieScopeAndNoStore() throws Exception {
+        UUID meeting=UUID.randomUUID(),message=UUID.randomUUID();String base="/api/v1/meetings/guest/"+meeting+"/chat";
+        Cookie guest=new Cookie(MeetingGuestController.COOKIE,"test-only");Cookie csrf=csrf();
+        var view=new MeetingDtos.ChatView(message,UUID.randomUUID(),"Guest","Hello",Instant.now(),Set.of());
+        when(service.guestReact(eq(meeting),eq("test-only"),eq(message),eq("👍"))).thenReturn(view);
+        when(service.guestUnreact(eq(meeting),eq("test-only"),eq(message),eq("👍"))).thenReturn(view);
+        when(service.guestMessage(eq(meeting),eq("test-only"),eq(message))).thenReturn(view);
+        when(service.guestLocate(eq(meeting),eq("test-only"),eq(message),eq(50))).thenReturn(new MeetingDtos.ChatLocation(message,2,50));
+        when(service.guestChat(eq(meeting),eq("test-only"),argThat(r->r!=null&&message.equals(r.replyToMessageId())))).thenReturn(view);
+        String reaction="{\"emoji\":\"👍\"}";
+        // CSRF protects the new state changes as it does every other guest write.
+        mvc.perform(put(base+"/"+message+"/reactions").cookie(guest).contentType("application/json").content(reaction)).andExpect(status().isForbidden());
+        mvc.perform(delete(base+"/"+message+"/reactions").param("emoji","👍").cookie(guest)).andExpect(status().isForbidden());
+        // Without the guest session cookie nothing is served, and reading is also private.
+        mvc.perform(put(base+"/"+message+"/reactions").cookie(csrf).header("X-XSRF-TOKEN",csrf.getValue()).contentType("application/json").content(reaction)).andExpect(status().isUnauthorized());
+        mvc.perform(get(base+"/"+message)).andExpect(status().isUnauthorized());
+        mvc.perform(put(base+"/"+message+"/reactions").cookie(guest,csrf).header("X-XSRF-TOKEN",csrf.getValue()).contentType("application/json").content(reaction))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.id").value(message.toString())).andExpect(header().string("Cache-Control","private, no-store"));
+        mvc.perform(delete(base+"/"+message+"/reactions").param("emoji","👍").cookie(guest,csrf).header("X-XSRF-TOKEN",csrf.getValue()))
+            .andExpect(status().isOk()).andExpect(header().string("Cache-Control","private, no-store"));
+        mvc.perform(get(base+"/"+message).cookie(guest)).andExpect(status().isOk()).andExpect(header().string("Cache-Control","private, no-store"));
+        mvc.perform(get(base+"/"+message+"/page").cookie(guest)).andExpect(status().isOk()).andExpect(jsonPath("$.page").value(2));
+        // A reply travels as a reply id in the normal chat request and reaches the service with it.
+        mvc.perform(post(base).cookie(guest,csrf).header("X-XSRF-TOKEN",csrf.getValue()).contentType("application/json")
+            .content("{\"content\":\"Answer\",\"mentionIds\":[],\"replyToMessageId\":\""+message+"\"}")).andExpect(status().isCreated());
+        // An empty or over-long emoji never reaches the service; the project route stays closed to a guest cookie.
+        mvc.perform(put(base+"/"+message+"/reactions").cookie(guest,csrf).header("X-XSRF-TOKEN",csrf.getValue()).contentType("application/json").content("{\"emoji\":\"\"}")).andExpect(status().isBadRequest());
+        mvc.perform(put(base+"/"+message+"/reactions").cookie(guest,csrf).header("X-XSRF-TOKEN",csrf.getValue()).contentType("application/json").content("{\"emoji\":\""+"a".repeat(33)+"\"}")).andExpect(status().isBadRequest());
+        mvc.perform(put("/api/v1/projects/"+UUID.randomUUID()+"/meetings/"+meeting+"/chat/"+message+"/reactions").cookie(guest,csrf).header("X-XSRF-TOKEN",csrf.getValue()).contentType("application/json").content(reaction)).andExpect(status().isUnauthorized());
+        verify(service,times(1)).guestReact(any(),any(),any(),any());
+    }
     private Cookie csrf() throws Exception {return mvc.perform(get("/api/v1/auth/csrf")).andReturn().getResponse().getCookie("XSRF-TOKEN");}
     private String signature(String body) throws Exception {
         String hash=Base64.getEncoder().encodeToString(MessageDigest.getInstance("SHA-256").digest(body.getBytes(StandardCharsets.UTF_8)));

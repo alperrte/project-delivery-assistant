@@ -294,6 +294,151 @@ class MeetingCoreIntegrationTest {
         service.clearHistory(project,actor);
         assertEquals(4,service.list(project,actor,null,null,null,0,100,"startsAt,asc").content().size());
     }
+    // ---- V2.9.2: chat replies and reactions --------------------------------------------------------------------------------------
+    /** A started meeting with the manager and one more member in the room (both known to the media server), returned as ids. */
+    private record Room(UUID id,UUID first,UUID second,UUID secondUser) {}
+    private Room roomOfTwo() {
+        UUID id=scheduled(); service.start(project,id,actor); UUID first=participant(id);
+        UUID other=user("USER"); addMember(other,"TESTER");
+        UUID second=UUID.randomUUID(); db.update("INSERT INTO meeting_participants(id,meeting_id,user_id,identity,display_name,revoked,connected) VALUES (?,?,?,?, 'Other',false,true)",second,id,other,"user-"+other);
+        when(media.listParticipants("pda-"+id)).thenReturn(List.of(new MeetingMediaPort.MediaParticipant("user-"+actor,"Member"),new MeetingMediaPort.MediaParticipant("user-"+other,"Other")));
+        return new Room(id,first,second,other);
+    }
+    private void noRateLimit(UUID meeting) { db.update("UPDATE meeting_participants SET last_message_at=NULL WHERE meeting_id=?",meeting); }
+
+    @Test void aReplyIsARealStoredRelationInTheSameMeetingAndSurvivesReload() {
+        Room room=roomOfTwo();
+        var original=service.chat(project,room.id(),actor,new ChatRequest("Is the backend finished?\nPlease answer",Set.of()));
+        assertNull(original.replyToMessageId()); assertNull(original.replyTo());
+        var reply=service.chat(project,room.id(),room.secondUser(),new ChatRequest("Yes, tests pass",Set.of(),original.id()));
+        assertEquals(original.id(),reply.replyToMessageId());
+        assertEquals("Member",reply.replyTo().displayName()); assertEquals("Is the backend finished? Please answer",reply.replyTo().preview());
+        assertEquals(original.id(),db.queryForObject("SELECT reply_to_message_id FROM meeting_chat_messages WHERE id=?",UUID.class,reply.id()));
+        // Reload: the relation and the quote come back from the stored data, newest first.
+        var history=service.history(project,room.id(),actor,0,50).content();
+        assertEquals(reply.id(),history.get(0).id()); assertEquals(original.id(),history.get(0).replyToMessageId()); assertEquals("Member",history.get(0).replyTo().displayName());
+        assertNull(history.get(1).replyTo());
+        // You may answer your own message.
+        noRateLimit(room.id());
+        assertEquals(original.id(),service.chat(project,room.id(),actor,new ChatRequest("Adding to that",Set.of(),original.id())).replyToMessageId());
+        // A long original is quoted shortly (and never splits an emoji).
+        noRateLimit(room.id());
+        var longOne=service.chat(project,room.id(),actor,new ChatRequest("x".repeat(159)+"😀 more text",Set.of()));
+        noRateLimit(room.id());
+        var quote=service.chat(project,room.id(),room.secondUser(),new ChatRequest("re",Set.of(),longOne.id())).replyTo().preview();
+        assertTrue(quote.length()<=161&&quote.endsWith("…")&&!Character.isHighSurrogate(quote.charAt(quote.length()-2)));
+    }
+    @Test void aReplyToAnotherMeetingsMessageOrAnUnknownOneIsRefusedByTheServiceAndByTheDatabase() {
+        Room one=roomOfTwo(); Room other=roomOfTwo();
+        var foreign=service.chat(project,other.id(),actor,new ChatRequest("In the other meeting",Set.of()));
+        for(UUID target:List.of(foreign.id(),UUID.randomUUID())) {
+            var failure=assertThrows(MeetingException.class,()->service.chat(project,one.id(),actor,new ChatRequest("Cross reply",Set.of(),target)));
+            assertEquals(404,failure.status()); assertEquals("MEETING_REPLY_TARGET_NOT_FOUND",failure.code());
+        }
+        assertEquals(0,db.queryForObject("SELECT count(*) FROM meeting_chat_messages WHERE meeting_id=?",Integer.class,one.id()));
+        // Even a bypass of the service cannot link messages of two meetings (composite foreign key), nor a message to itself.
+        assertThrows(org.springframework.dao.DataIntegrityViolationException.class,()->db.update(
+            "INSERT INTO meeting_chat_messages(id,meeting_id,participant_id,display_name,content,sent_at,reply_to_message_id) VALUES (?,?,?,'Member','x',now(),?)",UUID.randomUUID(),one.id(),one.first(),foreign.id()));
+        UUID self=UUID.randomUUID();
+        assertThrows(org.springframework.dao.DataIntegrityViolationException.class,()->db.update(
+            "INSERT INTO meeting_chat_messages(id,meeting_id,participant_id,display_name,content,sent_at,reply_to_message_id) VALUES (?,?,?,'Member','x',now(),?)",self,one.id(),one.first(),self));
+    }
+    @Test void chatRetentionDeletesRepliesAndReactionsWithoutForeignKeyErrors() {
+        Room room=roomOfTwo();
+        var original=service.chat(project,room.id(),actor,new ChatRequest("Original",Set.of()));
+        service.react(project,room.id(),room.secondUser(),original.id(),"👍");
+        var reply=service.chat(project,room.id(),room.secondUser(),new ChatRequest("Answer",Set.of(),original.id()));
+        service.react(project,room.id(),actor,reply.id(),"❤️");
+        service.end(project,room.id(),actor);   // default retention: the chat is deleted with the meeting
+        assertEquals(0,db.queryForObject("SELECT count(*) FROM meeting_chat_messages WHERE meeting_id=?",Integer.class,room.id()));
+        assertEquals(0,db.queryForObject("SELECT count(*) FROM meeting_chat_reactions WHERE message_id IN (?,?)",Integer.class,original.id(),reply.id()));
+        // Deleting only the answered message clears the link, it does not delete the reply or leave a dangling id.
+        Room second=roomOfTwo(); noRateLimit(second.id());
+        var a=service.chat(project,second.id(),actor,new ChatRequest("A",Set.of())); var b=service.chat(project,second.id(),second.secondUser(),new ChatRequest("B",Set.of(),a.id()));
+        db.update("DELETE FROM meeting_chat_messages WHERE id=?",a.id());
+        assertNull(db.queryForObject("SELECT reply_to_message_id FROM meeting_chat_messages WHERE id=?",UUID.class,b.id()));
+        assertNull(service.history(project,second.id(),actor,0,50).content().getFirst().replyTo());
+    }
+    @Test void reactionsCountOncePerPersonAndEmojiAreIdempotentAndOnlyTheOwnerRemovesTheirs() {
+        Room room=roomOfTwo();
+        var message=service.chat(project,room.id(),actor,new ChatRequest("Starting the meeting",Set.of()));
+        service.react(project,room.id(),actor,message.id(),"👍"); var again=service.react(project,room.id(),actor,message.id(),"👍");
+        assertEquals(1,again.reactions().size()); assertEquals(1,again.reactions().getFirst().count()); assertTrue(again.reactions().getFirst().reactedByMe());
+        // A second person on the same emoji: two; each sees their own reaction as theirs.
+        var both=service.react(project,room.id(),room.secondUser(),message.id(),"👍");
+        assertEquals(2,both.reactions().getFirst().count()); assertTrue(both.reactions().getFirst().reactedByMe());
+        assertEquals(List.of("Member","Other"),both.reactions().getFirst().reactors().stream().map(ReactorView::displayName).toList());
+        assertFalse(service.message(project,room.id(),actor,message.id()).reactions().isEmpty());
+        // Another emoji stays separate.
+        var heart=service.react(project,room.id(),room.secondUser(),message.id(),"❤️");
+        assertEquals(List.of("👍","❤️"),heart.reactions().stream().map(ReactionView::emoji).toList());
+        // Removing is idempotent and only touches the caller's own row.
+        var removed=service.unreact(project,room.id(),room.secondUser(),message.id(),"👍");
+        assertEquals(1,removed.reactions().stream().filter(r->r.emoji().equals("👍")).findFirst().orElseThrow().count());
+        service.unreact(project,room.id(),room.secondUser(),message.id(),"👍");
+        var viewerIsFirst=service.message(project,room.id(),actor,message.id());
+        assertTrue(viewerIsFirst.reactions().stream().filter(r->r.emoji().equals("👍")).findFirst().orElseThrow().reactedByMe());
+        assertFalse(viewerIsFirst.reactions().stream().filter(r->r.emoji().equals("❤️")).findFirst().orElseThrow().reactedByMe());
+        assertEquals(2,db.queryForObject("SELECT count(*) FROM meeting_chat_reactions WHERE message_id=?",Integer.class,message.id()));
+        // Persisted, and the page the history returns carries them (one query for the whole page).
+        assertEquals(2,service.history(project,room.id(),actor,0,50).content().getFirst().reactions().size());
+        verify(media,atLeastOnce()).sendData(eq("pda-"+room.id()),argThat(bytes->new String(bytes,java.nio.charset.StandardCharsets.UTF_8).contains("meeting.chat.reaction")));
+    }
+    @Test void reactionsRefuseBadEmojiForeignMessagesStrangersAndRunawayGrowth() {
+        Room room=roomOfTwo(); Room other=roomOfTwo();
+        var message=service.chat(project,room.id(),actor,new ChatRequest("Hello",Set.of()));
+        var foreign=service.chat(project,other.id(),actor,new ChatRequest("Elsewhere",Set.of()));
+        for(String bad:new String[]{"","a","1","👍👍","<b>","👍a","\n👍","  "})
+            assertEquals("MEETING_INVALID_REACTION",assertThrows(MeetingException.class,()->service.react(project,room.id(),actor,message.id(),bad)).code(),"'"+bad+"'");
+        assertEquals("MEETING_MESSAGE_NOT_FOUND",assertThrows(MeetingException.class,()->service.react(project,room.id(),actor,foreign.id(),"👍")).code());
+        assertEquals("MEETING_MESSAGE_NOT_FOUND",assertThrows(MeetingException.class,()->service.react(project,room.id(),actor,UUID.randomUUID(),"👍")).code());
+        // Somebody who is not in the room (or not even a member) can neither react nor read the message.
+        UUID outsider=user("USER");
+        assertEquals("MEETING_FORBIDDEN",assertThrows(MeetingException.class,()->service.react(project,room.id(),outsider,message.id(),"👍")).code());
+        UUID memberNotInRoom=user("USER"); addMember(memberNotInRoom,"TESTER");
+        assertEquals("MEETING_PARTICIPANT_REQUIRED",assertThrows(MeetingException.class,()->service.react(project,room.id(),memberNotInRoom,message.id(),"👍")).code());
+        assertEquals("MEETING_PARTICIPANT_REQUIRED",assertThrows(MeetingException.class,()->service.message(project,room.id(),memberNotInRoom,message.id())).code());
+        // A person keeps to 12 emoji on one message.
+        String[] emojis={"😀","😄","😂","🤣","😊","😍","🥳","😎","🤔","😮","😢","😭","😅"};
+        for(int i=0;i<12;i++) service.react(project,room.id(),actor,message.id(),emojis[i]);
+        assertEquals("MEETING_REACTION_LIMIT",assertThrows(MeetingException.class,()->service.react(project,room.id(),actor,message.id(),emojis[12])).code());
+        // Nothing was written for the refused ones.
+        assertEquals(12,db.queryForObject("SELECT count(*) FROM meeting_chat_reactions WHERE message_id=?",Integer.class,message.id()));
+        assertEquals(0,db.queryForObject("SELECT count(*) FROM meeting_chat_reactions WHERE message_id=?",Integer.class,foreign.id()));
+    }
+    @Test void guestsReplyAndReactWithTheirOwnSessionIdentity() {
+        UUID id=scheduled(); service.start(project,id,actor); UUID member=participant(id);
+        var invitation=service.invite(project,id,actor,new InviteRequest(Instant.now().plusSeconds(3600),2));
+        var guest=service.guestSession(new GuestRequest(invitation.token(),"Guest"));
+        db.update("UPDATE meeting_participants SET connected=true WHERE id=?",guest.participantId());
+        when(media.listParticipants("pda-"+id)).thenReturn(List.of(new MeetingMediaPort.MediaParticipant("user-"+actor,"Member"),new MeetingMediaPort.MediaParticipant("guest-"+guest.participantId(),"Guest")));
+        var original=service.chat(project,id,actor,new ChatRequest("Hello guest",Set.of()));
+        var reply=service.guestChat(id,guest.secret(),new ChatRequest("Hello member",Set.of(),original.id()));
+        assertEquals(original.id(),reply.replyToMessageId());
+        assertEquals(original.id(),service.guestHistory(id,guest.secret(),0,50).content().getLast().id());
+        var reacted=service.guestReact(id,guest.secret(),original.id(),"👍");
+        assertTrue(reacted.reactions().getFirst().reactedByMe());
+        assertFalse(service.message(project,id,actor,original.id()).reactions().getFirst().reactedByMe(),"the member did not react: the guest did");
+        assertEquals(guest.participantId(),db.queryForObject("SELECT participant_id FROM meeting_chat_reactions WHERE message_id=?",UUID.class,original.id()));
+        assertEquals(0,service.guestUnreact(id,guest.secret(),original.id(),"👍").reactions().size());
+        // A guest secret of another meeting gets nothing.
+        UUID otherMeeting=scheduled(); service.start(project,otherMeeting,actor);
+        assertThrows(MeetingException.class,()->service.guestReact(otherMeeting,guest.secret(),original.id(),"👍"));
+    }
+    @Test void aMessageCanBeLocatedInTheNewestFirstHistoryPageAcrossPages() {
+        Room room=roomOfTwo(); Instant base=Instant.now().minusSeconds(600); List<UUID> ids=new ArrayList<>();
+        for(int i=0;i<120;i++) { UUID id=UUID.randomUUID(); ids.add(id);
+            db.update("INSERT INTO meeting_chat_messages(id,meeting_id,participant_id,display_name,content,sent_at) VALUES (?,?,?,'Member',?,?)",id,room.id(),room.first(),"m"+i,java.sql.Timestamp.from(base.plusSeconds(i))); }
+        // Oldest = last page; newest = first page; and the page it names really contains it, at every size.
+        for(int size:new int[]{50,20,100}) for(UUID id:List.of(ids.getFirst(),ids.get(60),ids.getLast())) {
+            var where=service.locate(project,room.id(),actor,id,size);
+            assertEquals(id,where.messageId()); assertTrue(service.history(project,room.id(),actor,where.page(),size).content().stream().anyMatch(m->m.id().equals(id)),"size "+size);
+        }
+        assertEquals(2,service.locate(project,room.id(),actor,ids.getFirst(),50).page()); assertEquals(0,service.locate(project,room.id(),actor,ids.getLast(),50).page());
+        Room other=roomOfTwo(); var foreign=service.chat(project,other.id(),actor,new ChatRequest("Elsewhere",Set.of()));
+        assertEquals("MEETING_MESSAGE_NOT_FOUND",assertThrows(MeetingException.class,()->service.locate(project,room.id(),actor,foreign.id(),50)).code());
+        assertEquals("MEETING_INVALID_PAGE",assertThrows(MeetingException.class,()->service.locate(project,room.id(),actor,ids.getLast(),0)).code());
+    }
     private void addMember(UUID user,String role) {
         UUID membership=UUID.randomUUID(); db.update("INSERT INTO project_memberships(id,project_id,user_id,joined_at) VALUES (?,?,?,now())",membership,project,user);
         db.update("INSERT INTO project_membership_roles(membership_id,role) VALUES (?,?)",membership,role);
