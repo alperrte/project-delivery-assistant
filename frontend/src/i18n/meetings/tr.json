@@ -351,7 +351,6 @@
   "guestTag": "misafir",
   "pipFullscreen": "Tam ekran",
   "pipExitFullscreen": "Tam ekrandan çık",
-  "pipEnlarge": "Pencereyi büyüt (ekranı kapla)",
-  "pipShrink": "Pencereyi eski boyutuna getir",
-  "pipExpandFailed": "Tarayıcı bu pencerenin boyutunu değiştirmeye izin vermedi."
+  "pipExpandFailed": "Büyük pencere açılamadı. Bu site için açılır pencerelere izin verip yeniden dene.",
+  "pipFullscreenWindow": "Tam ekran: görüşme ekran boyutunda ayrı bir pencerede açılır"
 }

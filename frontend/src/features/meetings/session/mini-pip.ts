@@ -40,42 +40,63 @@ function dressWindow(target: Window): () => void {
 
 /**
  * Whether this window can really go full screen. Chromium does not offer the Fullscreen API inside a Picture-in-Picture window
- * (`fullscreenEnabled` is false there); where a browser does, it is used. Otherwise the window is made as large as the screen allows.
+ * (`fullscreenEnabled` is false there, and its size is capped by the browser); an ordinary window does.
  */
 export const canFullscreen = (target: Window) => Boolean(target.document.fullscreenEnabled && target.document.documentElement.requestFullscreen);
 
-/** The one separate call window of this page: open it from a tap, close it, and know whether it is open (also when the person closes it). */
+const POPUP_NAME = "pda-call-window";
+export type CallWindowKind = "pip" | "popup";
+
+/**
+ * The one separate call window of this page. It starts as a small always-on-top Picture-in-Picture window; for full screen the call moves
+ * into an ordinary window the size of the screen (a Picture-in-Picture window cannot be made that large nor go full screen), which can then
+ * use the browser's real full screen. Both show the same call from this page, which keeps the one LiveKit session.
+ */
 export function useDocumentPip() {
   const [window_, setWindow] = useState<Window | null>(null);
-  // "Expanded": full screen (when the browser has it) or enlarged to the screen; `restore` remembers where and how big the window was.
-  const [expanded, setExpanded] = useState(false);
-  const restore = useRef<{ width: number; height: number; x: number; y: number } | null>(null);
-  const current = useRef<{ window: Window; stop: () => void } | null>(null);
+  const [kind, setKind] = useState<CallWindowKind>("pip");
+  const [fullscreen, setFullscreen] = useState(false);
+  const current = useRef<{ window: Window; stop: () => void; kind: CallWindowKind } | null>(null);
   const close = useCallback(() => {
-    const open = current.current; current.current = null; setWindow(null); setExpanded(false); restore.current = null;
+    const open = current.current; current.current = null; setWindow(null); setFullscreen(false); setKind("pip");
     if (!open) return;
     open.stop();
     try { open.window.close(); } catch { /* already closed */ }
   }, []);
-  /** Full screen / back, or enlarge to the screen / back. Must run straight from a tap (the browser requires it). False when the browser refused. */
-  const toggleExpanded = useCallback(async () => {
-    const target = current.current?.window; if (!target) return false;
+  /** Makes `target` the call window: styled like the page, following its theme, and forgotten again when the person closes it. */
+  const adopt = useCallback((target: Window, windowKind: CallWindowKind, title: string) => {
+    target.document.title = title;
+    const stop = dressWindow(target);
+    current.current = { window: target, stop, kind: windowKind };
+    target.document.addEventListener("fullscreenchange", () => { if (current.current?.window === target) setFullscreen(Boolean(target.document.fullscreenElement)); });
+    target.addEventListener("pagehide", () => { if (current.current?.window === target) { current.current.stop(); current.current = null; setWindow(null); setFullscreen(false); setKind("pip"); } });
+    setWindow(target); setKind(windowKind); setFullscreen(false);
+  }, []);
+  /**
+   * Full screen. Where the window can do it (an ordinary window), the browser's real full screen is toggled and the state follows its own
+   * `fullscreenchange` (Escape included). From the Picture-in-Picture window the call moves into a screen-sized window instead. Must run
+   * straight from a tap (the browser requires it); false when the browser refused (for example a pop-up blocker).
+   */
+  const toggleFullscreen = useCallback(async (title: string) => {
+    const open = current.current; if (!open) return false;
+    const target = open.window;
     try {
       if (canFullscreen(target)) {
         if (target.document.fullscreenElement) await target.document.exitFullscreen(); else await target.document.documentElement.requestFullscreen();
-        return true;   // the state follows the browser's own fullscreenchange (it also covers leaving with Escape)
+        return true;
       }
-      if (restore.current) {
-        const before = restore.current; restore.current = null;
-        target.resizeTo(before.width, before.height); target.moveTo(before.x, before.y); setExpanded(false);
-      } else {
-        restore.current = { width: target.outerWidth, height: target.outerHeight, x: target.screenX, y: target.screenY };
-        const screen = target.screen as Screen & { availLeft?: number; availTop?: number };
-        target.resizeTo(screen.availWidth, screen.availHeight); target.moveTo(screen.availLeft ?? 0, screen.availTop ?? 0); setExpanded(true);
-      }
+      if (open.kind !== "pip") return false;
+      const area = target.screen as Screen & { availLeft?: number; availTop?: number };
+      // Opened from the Picture-in-Picture window itself: that is the window the tap happened in, so the browser lets the pop-up open.
+      const popup = target.open("", POPUP_NAME, `popup=yes,width=${area.availWidth},height=${area.availHeight},left=${area.availLeft ?? 0},top=${area.availTop ?? 0}`);
+      if (!popup) return false;
+      adopt(popup, "popup", title);
+      open.stop(); try { open.window.close(); } catch { /* already closed */ }
+      // Best effort: where the browser lets the new window use the tap too, it goes full screen at once; otherwise its own button does it.
+      void popup.document.documentElement.requestFullscreen?.().catch(() => {});
       return true;
-    } catch { restore.current = null; return false; }
-  }, []);
+    } catch { return false; }
+  }, [adopt]);
   /** Must run straight from a tap or key press (the browser requires it); rejects when the browser refuses. */
   const open = useCallback(async (title: string, size = { width: 360, height: 280 }) => {
     const existing = () => current.current?.window ?? null;
@@ -83,14 +104,10 @@ export function useDocumentPip() {
     const pip = api(); if (!pip) throw new Error("Document Picture-in-Picture is not available");
     const target = await pip.requestWindow(size);
     if (existing()) { target.close(); return existing()!; }
-    target.document.title = title;
-    const stop = dressWindow(target);
-    current.current = { window: target, stop };
-    target.document.addEventListener("fullscreenchange", () => { if (current.current?.window === target) setExpanded(Boolean(target.document.fullscreenElement)); });
-    target.addEventListener("pagehide", () => { if (current.current?.window === target) { current.current.stop(); current.current = null; setWindow(null); } });
-    setWindow(target);
+    adopt(target, "pip", title);
     return target;
-  }, []);
-  useEffect(() => close, [close]);
-  return { window: window_, open, close, expanded, toggleExpanded };
+  }, [adopt]);
+  // The window belongs to this page: it goes with it (a Picture-in-Picture window does so by itself, an ordinary one does not).
+  useEffect(() => { window.addEventListener("pagehide", close); return () => { window.removeEventListener("pagehide", close); close(); }; }, [close]);
+  return { window: window_, kind, open, close, fullscreen, toggleFullscreen };
 }

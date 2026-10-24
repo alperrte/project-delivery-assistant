@@ -351,7 +351,6 @@
   "guestTag": "guest",
   "pipFullscreen": "Full screen",
   "pipExitFullscreen": "Exit full screen",
-  "pipEnlarge": "Enlarge the window to fill the screen",
-  "pipShrink": "Restore the window size",
-  "pipExpandFailed": "The browser did not allow changing the size of this window."
+  "pipExpandFailed": "The large window could not be opened. Allow pop-ups for this site and try again.",
+  "pipFullscreenWindow": "Full screen: the call opens in a screen-sized window"
 }

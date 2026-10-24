@@ -351,7 +351,6 @@
   "guestTag": "Gast",
   "pipFullscreen": "Vollbild",
   "pipExitFullscreen": "Vollbild beenden",
-  "pipEnlarge": "Fenster auf Bildschirmgröße vergrößern",
-  "pipShrink": "Fenstergröße wiederherstellen",
-  "pipExpandFailed": "Der Browser erlaubt keine Größenänderung dieses Fensters."
+  "pipExpandFailed": "Das große Fenster konnte nicht geöffnet werden. Pop-ups für diese Seite erlauben und erneut versuchen.",
+  "pipFullscreenWindow": "Vollbild: Der Anruf öffnet sich in einem bildschirmgroßen Fenster"
 }
