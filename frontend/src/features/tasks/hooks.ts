@@ -32,11 +32,11 @@ export function invalidateTaskViews(queryClient: QueryClient, projectId: string)
   ]);
 }
 
-export function useTaskList(projectId: string, params: TaskListParams) {
+export function useTaskList(projectId: string, params: TaskListParams, enabled = true) {
   return useQuery({
     queryKey: [...tasksKey(projectId), "list", params],
     queryFn: () => tasksApi.list(projectId, params),
-    enabled: !!projectId,
+    enabled: !!projectId && enabled,
     placeholderData: keepPreviousData,
   });
 }
