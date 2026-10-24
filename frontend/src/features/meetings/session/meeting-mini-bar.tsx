@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import type { Participant, Track } from "livekit-client";
-import { Camera, CameraOff, GripHorizontal, Loader2, Mic, MicOff, MonitorUp, PhoneOff, PictureInPicture2, Video } from "lucide-react";
+import { Camera, CameraOff, GripHorizontal, Loader2, Mic, MicOff, Maximize2, Minimize2, MonitorUp, PhoneOff, PictureInPicture2, Video } from "lucide-react";
 import Link, { usePathname, useRouter } from "@/i18n/navigation";
 import { Avatar } from "@/components/ui/avatar";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import { profilePhotoSrc } from "@/features/account/api";
 import { cn } from "@/lib/utils";
 import { useVisualViewport } from "../room/use-visual-viewport";
 import { deviceErrorKey, isInCallPhase, useOptionalMeetingSession, type SessionLive } from "./meeting-session";
-import { useDocumentPip, useDocumentPipSupported } from "./mini-pip";
+import { canFullscreen, useDocumentPip, useDocumentPipSupported } from "./mini-pip";
 
 const GAP = 8;
 const POSITION_KEY = "pda:meeting-mini-window:v1";
@@ -209,6 +209,7 @@ export function MeetingMiniBar() {
     try { await pip.open(live!.meeting?.title ?? t("group")); }
     catch { toast.info(t("miniPopOutFailed")); }
   }
+  async function expandPip() { if (!(await pip.toggleExpanded())) toast.info(t("pipExpandFailed")); }
   function returnFromPip() { closePip(); window.focus(); router.push(roomHref); }
   function leaveFromPip() { closePip(); window.focus(); setLeaveOpen(true); }
   const section = <section ref={bar} aria-label={t("miniLabel")} data-meeting-mini data-dragged={drag.position ? "" : undefined}
@@ -258,6 +259,11 @@ export function MeetingMiniBar() {
         </Button>
         <Button variant={camera ? "secondary" : "outline"} className="size-11 shrink-0" aria-label={t(camera ? "cameraOff" : "cameraOn")} aria-pressed={camera} disabled={!connected || live.mediaBusy} onClick={() => void toggle("camera")}>
           {camera ? <Camera size={18} aria-hidden="true" /> : <CameraOff size={18} aria-hidden="true" />}
+        </Button>
+        <Button variant={pip.expanded ? "secondary" : "outline"} className="size-11 shrink-0" data-pip-expand aria-pressed={pip.expanded} onClick={() => void expandPip()}
+          aria-label={t(canFullscreen(pip.window) ? (pip.expanded ? "pipExitFullscreen" : "pipFullscreen") : (pip.expanded ? "pipShrink" : "pipEnlarge"))}
+          title={t(canFullscreen(pip.window) ? (pip.expanded ? "pipExitFullscreen" : "pipFullscreen") : (pip.expanded ? "pipShrink" : "pipEnlarge"))}>
+          {pip.expanded ? <Minimize2 size={18} aria-hidden="true" /> : <Maximize2 size={18} aria-hidden="true" />}
         </Button>
         <Button variant="accent" className="h-11 min-w-0 flex-1 gap-2 px-3" aria-label={t("returnToMeeting")} onClick={returnFromPip}><Video size={18} aria-hidden="true" /><span className="truncate">{t("returnToMeeting")}</span></Button>
         <Button variant="destructive" className="size-11 shrink-0" aria-label={t("leave")} onClick={leaveFromPip}><PhoneOff size={18} aria-hidden="true" /></Button>

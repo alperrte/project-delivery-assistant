@@ -348,5 +348,10 @@
   "reactionFailed": "Tepki kaydedilemedi. Bağlantını kontrol edip yeniden dene.",
   "messageActions": "Mesaj işlemleri",
   "mentionResults": "{count} kişi önerildi. Seçmek için yukarı ve aşağı ok, onaylamak için Enter.",
-  "guestTag": "misafir"
+  "guestTag": "misafir",
+  "pipFullscreen": "Tam ekran",
+  "pipExitFullscreen": "Tam ekrandan çık",
+  "pipEnlarge": "Pencereyi büyüt (ekranı kapla)",
+  "pipShrink": "Pencereyi eski boyutuna getir",
+  "pipExpandFailed": "Tarayıcı bu pencerenin boyutunu değiştirmeye izin vermedi."
 }

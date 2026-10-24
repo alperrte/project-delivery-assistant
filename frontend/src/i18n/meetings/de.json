@@ -348,5 +348,10 @@
   "reactionFailed": "Die Reaktion konnte nicht gespeichert werden. Verbindung prüfen und erneut versuchen.",
   "messageActions": "Nachrichtenaktionen",
   "mentionResults": "{count} Vorschläge. Mit Pfeil nach oben und unten wählen, mit Enter bestätigen.",
-  "guestTag": "Gast"
+  "guestTag": "Gast",
+  "pipFullscreen": "Vollbild",
+  "pipExitFullscreen": "Vollbild beenden",
+  "pipEnlarge": "Fenster auf Bildschirmgröße vergrößern",
+  "pipShrink": "Fenstergröße wiederherstellen",
+  "pipExpandFailed": "Der Browser erlaubt keine Größenänderung dieses Fensters."
 }

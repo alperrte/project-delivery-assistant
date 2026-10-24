@@ -348,5 +348,10 @@
   "reactionFailed": "The reaction could not be saved. Check your connection and try again.",
   "messageActions": "Message actions",
   "mentionResults": "{count} suggestions. Use the up and down arrows to move and Enter to choose.",
-  "guestTag": "guest"
+  "guestTag": "guest",
+  "pipFullscreen": "Full screen",
+  "pipExitFullscreen": "Exit full screen",
+  "pipEnlarge": "Enlarge the window to fill the screen",
+  "pipShrink": "Restore the window size",
+  "pipExpandFailed": "The browser did not allow changing the size of this window."
 }

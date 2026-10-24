@@ -406,6 +406,42 @@ test("separate call window (Document Picture-in-Picture): same call, styled, liv
     await expect.poll(() => pip.evaluate(() => document.documentElement.classList.contains("dark"))).toBe(true);
     await a.evaluate(() => document.documentElement.classList.remove("dark"));
     await expect.poll(() => pip.evaluate(() => document.documentElement.classList.contains("dark"))).toBe(false);
+    // 4b. Making the window big: Chromium has no Fullscreen API inside a Picture-in-Picture window, so the button enlarges it to the screen and
+    // back (remembering its place); where a browser does offer full screen, that is used instead and follows the browser (also Escape).
+    const expand = pip.locator("[data-pip-expand]");
+    await expect(expand).toHaveAttribute("aria-label", tr.pipEnlarge); await expect(expand).toHaveAttribute("aria-pressed", "false");
+    await pip.evaluate(() => {
+      const calls: unknown[][] = []; Object.assign(window, { qaCalls: calls, qaOuter: [window.outerWidth, window.outerHeight, window.screenX, window.screenY] });
+      const resize = window.resizeTo.bind(window), move = window.moveTo.bind(window);
+      window.resizeTo = (w, h) => { calls.push(["resizeTo", w, h]); resize(w, h); }; window.moveTo = (x, y) => { calls.push(["moveTo", x, y]); move(x, y); };
+    });
+    const calls = () => pip.evaluate(() => (window as unknown as { qaCalls: unknown[][] }).qaCalls);
+    const area = await pip.evaluate(() => { const s = window.screen as Screen & { availLeft?: number; availTop?: number }; return { w: s.availWidth, h: s.availHeight, x: s.availLeft ?? 0, y: s.availTop ?? 0 }; });
+    const outer = await pip.evaluate(() => (window as unknown as { qaOuter: number[] }).qaOuter);
+    await expand.click();
+    await expect(expand).toHaveAttribute("aria-label", tr.pipShrink); await expect(expand).toHaveAttribute("aria-pressed", "true");
+    expect(await calls()).toEqual([["resizeTo", area.w, area.h], ["moveTo", area.x, area.y]]);
+    await expand.click();
+    await expect(expand).toHaveAttribute("aria-label", tr.pipEnlarge); await expect(expand).toHaveAttribute("aria-pressed", "false");
+    expect((await calls()).slice(2)).toEqual([["resizeTo", outer[0], outer[1]], ["moveTo", outer[2], outer[3]]]);
+    // A browser that refuses to resize is told so, and nothing is left half done.
+    await pip.evaluate(() => { window.resizeTo = () => { throw new Error("blocked"); }; });
+    await expand.click(); await expect(a.getByText(tr.pipExpandFailed)).toBeVisible({ timeout: 10000 });
+    await expect(expand).toHaveAttribute("aria-label", tr.pipEnlarge); await expect(expand).toHaveAttribute("aria-pressed", "false");
+    // Real full screen where the browser offers it.
+    await pip.evaluate(() => {
+      const state = { on: false }; Object.assign(window, { qaFullscreen: state });
+      Object.defineProperty(document, "fullscreenEnabled", { configurable: true, get: () => true });
+      Object.defineProperty(document, "fullscreenElement", { configurable: true, get: () => (state.on ? document.documentElement : null) });
+      document.documentElement.requestFullscreen = async () => { state.on = true; document.dispatchEvent(new Event("fullscreenchange")); };
+      document.exitFullscreen = async () => { state.on = false; document.dispatchEvent(new Event("fullscreenchange")); };
+    });
+    await expand.click(); await expect(expand).toHaveAttribute("aria-label", tr.pipExitFullscreen); await expect(expand).toHaveAttribute("aria-pressed", "true");
+    expect(await pip.evaluate(() => (window as unknown as { qaFullscreen: { on: boolean } }).qaFullscreen.on)).toBe(true);
+    // Leaving full screen from outside our button (Escape) brings the button back to its first state.
+    await pip.evaluate(() => { (window as unknown as { qaFullscreen: { on: boolean } }).qaFullscreen.on = false; document.dispatchEvent(new Event("fullscreenchange")); });
+    await expect(expand).toHaveAttribute("aria-pressed", "false"); await expect(expand).toHaveAttribute("aria-label", tr.pipFullscreen);
+    await expand.click(); await expect(expand).toHaveAttribute("aria-pressed", "true"); await expand.click(); await expect(expand).toHaveAttribute("aria-pressed", "false");
     expect((await new AxeBuilder({ page: pip }).include("[data-mini-pip]").analyze()).violations, "the separate window has no accessibility violations").toEqual([]);
     await screenshot(pip, "v291-separate-window");
     // 5. "Return to the meeting" closes the window and goes back to the room, in the same call.
