@@ -233,7 +233,7 @@ export function ChatPanel({ live, active, content, setContent, mentions, setMent
     <EmojiPicker choices={COMPOSER_CHOICES} label={t("reactAction")} testId="meeting-reaction-picker" showTrigger={false} anchorRef={picker} open={!!reacting}
       onOpenChange={open => { if (!open) setReacting(null); }} onChoose={choiceMade => { if (reacting) toggle(reacting, choiceMade.emoji); }} />
     <form onSubmit={event => { event.preventDefault(); void submit(); }} className="mt-3 space-y-2 border-t pt-3">
-      {reply && <div data-reply-draft className="flex items-start gap-2 rounded-lg border-l-4 border-meeting bg-muted/50 py-1.5 pr-1 pl-3 text-xs">
+      {reply && <div data-reply-draft className="flex items-start gap-2 rounded-lg border-l-2 border-meeting bg-muted/50 py-1.5 pr-1 pl-3 text-xs">
         <CornerUpLeft size={14} aria-hidden="true" className="mt-0.5 shrink-0 text-muted-foreground" />
         <div className="min-w-0 flex-1"><p className="truncate font-medium">{t("replyingTo", { name: reply.participantId === live.selfId ? t("you") : reply.displayName })}</p><p className="line-clamp-2 break-words text-muted-foreground">{flat(reply.content, 140)}</p></div>
         <Button type="button" variant="ghost" size="icon-sm" aria-label={t("replyCancel")} title={t("replyCancel")} className="shrink-0 [@media(pointer:coarse)]:size-11" onClick={() => { setReply(null); input.current?.focus({ preventScroll: true }); }}><X size={14} aria-hidden="true" /></Button>
