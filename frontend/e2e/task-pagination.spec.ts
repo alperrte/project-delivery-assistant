@@ -20,13 +20,15 @@ test("Tasks and My tasks paginate cards and tables by nine, including grouped pa
     }
     for (const route of [`/projects/${project.slug}/tasks`, `/tasks?project=${project.id}&tab=all`]) {
       await page.goto(route);
+      // The project list opens on last update ascending (oldest first, V2.9.2); My tasks "all" keeps newest first.
+      const first = route.startsWith("/projects") ? "Nine task 00" : "Nine task 18";
       for (const view of ["Tablo", "Kart"]) {
         await page.getByRole("tab", { name: view, exact: true }).click();
         const rows = view === "Kart" ? page.locator("[data-task-card]") : page.locator("table tbody tr");
         const nav = page.getByRole("navigation", { name: tr.common.pagination.navLabel, exact: true });
         await expect(rows).toHaveCount(9);
         await expect(nav.getByRole("button", { name: tr.common.pagination.previous, exact: true })).toBeDisabled();
-        await expect(rows.first()).toContainText("Nine task 18");
+        await expect(rows.first()).toContainText(first);
         const firstPage = await rows.allTextContents();
         await nav.getByRole("button", { name: tr.common.pagination.next, exact: true }).click();
         await expect(page).toHaveURL(/page=2/);
@@ -45,7 +47,7 @@ test("Tasks and My tasks paginate cards and tables by nine, including grouped pa
         await expect(rows).toHaveCount(9);
         await nav.getByRole("button", { name: "Sayfa 1", exact: true }).click();
         await expect(rows).toHaveCount(9);
-        await expect(rows.first()).toContainText("Nine task 18");
+        await expect(rows.first()).toContainText(first);
       }
       const nav = page.getByRole("navigation", { name: tr.common.pagination.navLabel, exact: true });
       await nav.getByRole("button", { name: "Sayfa 3", exact: true }).click();

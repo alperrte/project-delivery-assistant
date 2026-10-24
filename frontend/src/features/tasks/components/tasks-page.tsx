@@ -107,13 +107,14 @@ function GroupedList({ groups, body }: { groups: TaskGroup[]; body: (tasks: Task
 function TasksView({ slug, project, projectId, isManager, userId }: ProjectGateContext) {
   const t = useTranslations("tasks.list");
   const te = useTranslations("errors");
-  const { filters, update, reset } = useTaskFilters();
+  const { filters, update, reset, ready } = useTaskFilters(userId);
   const grouped = filters.group !== "none";
   const { view, setView } = useTaskView("tasks", "table");
   const params = toListParams(filters);
   const filtered = activeFilterCount(filters) > 0;
 
-  const query = useTaskList(projectId, { ...params, page: filters.page, size: TASK_LIST_PAGE_SIZE });
+  // The remembered sort is read before the first request, so the list is never fetched in an order that is about to change.
+  const query = useTaskList(projectId, { ...params, page: filters.page, size: TASK_LIST_PAGE_SIZE }, ready);
   const tasks = query.data?.content ?? [];
   const total = query.data?.totalElements ?? 0;
   const totalPages = query.data?.totalPages ?? 1;
