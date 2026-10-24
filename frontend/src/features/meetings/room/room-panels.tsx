@@ -3,7 +3,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type Dispatch, t
 import { useLocale, useTranslations } from "next-intl";
 import type { Room } from "livekit-client";
 import { toast } from "sonner";
-import { ArrowDown, Copy, Mic, MicOff, Search, UserPlus, VolumeX } from "lucide-react";
+import { ArrowDown, Copy, CornerUpLeft, Mic, MicOff, Search, UserPlus, VolumeX, X } from "lucide-react";
 import { useTouchPrimaryInput } from "@/hooks/use-touch-primary-input";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { profilePhotoSrc } from "@/features/account/api";
 import { COMPOSER_CHOICES, insertEmoji } from "@/features/chat/emoji-catalog";
 import { EmojiPicker } from "@/features/chat/components/emoji-picker";
 import { cn } from "@/lib/utils";
+import { ChatMessage } from "./chat-message";
 import { DeviceSelect } from "./device-select";
 import { InviteDialog } from "./invite-dialog";
 import { ParticipantMenu } from "./participant-menu";
@@ -96,13 +97,27 @@ export function groupMessages(messages: MeetingMessage[]) {
   return groups;
 }
 
+/** The mention being typed at the caret: where its "@" is and what follows it (spaces allowed, so "@Alper Te" keeps narrowing). */
+export function mentionToken(text: string, caret: number) {
+  const found = /(?:^|\s)@([^@\n]*)$/.exec(text.slice(0, caret));
+  return found ? { start: found.index + found[0].length - found[1].length - 1, query: found[1] } : null;
+}
+const flat = (text: string, max: number) => { const value = text.replace(/\s+/g, " ").trim(); return value.length > max ? `${value.slice(0, max)}…` : value; };
+
 export function ChatPanel({ live, active, content, setContent, mentions, setMentions, sending, onSend }: {
   live: Live; active: boolean; content: string; setContent: Dispatch<SetStateAction<string>>;
-  mentions: string[]; setMentions: Dispatch<SetStateAction<string[]>>; sending: boolean; onSend: () => Promise<void> | void;
+  mentions: string[]; setMentions: Dispatch<SetStateAction<string[]>>; sending: boolean;
+  /** Sends the message (answering `replyToMessageId` when given); true when it was sent, so the reply draft can be dropped. */
+  onSend: (replyToMessageId?: string) => Promise<boolean | void> | boolean | void;
 }) {
   const t = useTranslations("meetings"), tc = useTranslations("chat"), locale = useLocale();
-  const input = useRef<HTMLTextAreaElement>(null), log = useRef<HTMLDivElement>(null), stick = useRef(true);
+  const input = useRef<HTMLTextAreaElement>(null), log = useRef<HTMLDivElement>(null), list = useRef<HTMLDivElement>(null), stick = useRef(true);
+  const picker = useRef<HTMLElement | null>(null);
   const [behind, setBehind] = useState(false);
+  const [reply, setReply] = useState<MeetingMessage | null>(null);
+  const [reacting, setReacting] = useState<MeetingMessage | null>(null);
+  const [highlighted, setHighlighted] = useState<string | null>(null), [jumpTo, setJumpTo] = useState<string | null>(null);
+  const [caret, setCaret] = useState(0), [dismissed, setDismissed] = useState<string | null>(null), [choice, setChoice] = useState({ key: "", index: 0 });
   const touch = useTouchPrimaryInput();
   const last = live.messages.at(-1);
   const groups = useMemo(() => groupMessages(live.messages), [live.messages]);
@@ -115,27 +130,84 @@ export function ChatPanel({ live, active, content, setContent, mentions, setMent
     else setBehind(true);
   }, [last?.id, live.selfId]); // eslint-disable-line react-hooks/exhaustive-deps -- reacts to a new last message only
   useEffect(() => { if (!behind && log.current && stick.current) log.current.scrollTop = log.current.scrollHeight; }, [behind]);
+
+  // Mentions: the token at the caret decides the list; ArrowUp/Down move in it, Enter chooses (it never sends), Escape closes it.
+  const token = mentionToken(content, caret), tokenKey = token ? `${token.start}:${token.query}` : "";
+  const suggestions = token && dismissed !== tokenKey
+    ? live.participants.filter(p => p.connected && !p.revoked && p.id !== live.selfId && p.displayName.toLocaleLowerCase().includes(token.query.toLocaleLowerCase())).slice(0, 8)
+    : [];
+  const activeIndex = suggestions.length ? Math.min(choice.key === tokenKey ? choice.index : 0, suggestions.length - 1) : -1;
+  const optionId = (id: string) => `meeting-mention-${id}`;
+  useEffect(() => {
+    if (activeIndex < 0 || !list.current) return;
+    const item = list.current.querySelector<HTMLElement>(`#${CSS.escape(optionId(suggestions[activeIndex].id))}`), box = list.current;
+    if (!item) return;
+    if (item.offsetTop < box.scrollTop) box.scrollTop = item.offsetTop;
+    else if (item.offsetTop + item.offsetHeight > box.scrollTop + box.clientHeight) box.scrollTop = item.offsetTop + item.offsetHeight - box.clientHeight;
+  }, [activeIndex]); // eslint-disable-line react-hooks/exhaustive-deps -- the list itself changes with the query, which resets the index
+  function chooseMention(participant: MeetingParticipant | undefined) {
+    if (!token || !participant || (mentions.length >= 20 && !mentions.includes(participant.id))) return;
+    const insert = `@${participant.displayName} `, position = token.start + insert.length;
+    setContent(content.slice(0, token.start) + insert + content.slice(caret));
+    setMentions(previous => [...new Set([...previous, participant.id])]);
+    setCaret(position);
+    requestAnimationFrame(() => { input.current?.focus({ preventScroll: true }); input.current?.setSelectionRange(position, position); });
+  }
+
   /** Sends, then puts the cursor back in the box (without scrolling the page) so the next message can follow at once. */
   async function submit() {
-    await onSend();
+    const sent = await onSend(reply?.id);
+    if (sent === true) setReply(null);
     input.current?.focus({ preventScroll: true });
   }
   // Enter sends, Shift+Enter starts a new line. Not while an IME candidate is being confirmed, and not on touch devices,
   // where Enter on the soft keyboard stays a new line and sending goes through the button (as in task comments).
   function keyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if (touch || event.key !== "Enter" || event.shiftKey || event.ctrlKey || event.altKey || event.metaKey) return;
     if (event.nativeEvent.isComposing || event.keyCode === 229) return;
+    if (suggestions.length) {
+      const move = (step: number) => { event.preventDefault(); setChoice({ key: tokenKey, index: (activeIndex + step + suggestions.length) % suggestions.length }); };
+      if (event.key === "ArrowDown") { move(1); return; }
+      if (event.key === "ArrowUp") { move(-1); return; }
+      if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); setDismissed(tokenKey); return; } // the panel itself must stay open
+      if (event.key === "Enter" && !event.shiftKey && !event.ctrlKey && !event.altKey && !event.metaKey) { event.preventDefault(); chooseMention(suggestions[activeIndex]); return; }
+    } else if (event.key === "Escape" && reply) { event.preventDefault(); event.stopPropagation(); setReply(null); return; }
+    if (touch || event.key !== "Enter" || event.shiftKey || event.ctrlKey || event.altKey || event.metaKey) return;
     event.preventDefault();
     if (content.trim() && !sending) void submit();
   }
-  const mentionQuery = /(?:^|\s)@([^@\n]*)$/.exec(content)?.[1];
-  const suggestions = mentionQuery === undefined ? [] : live.participants.filter(p => p.connected && !p.revoked && p.id !== live.selfId && p.displayName.toLocaleLowerCase().includes(mentionQuery.toLocaleLowerCase())).slice(0, 8);
+
+  const startReply = (message: MeetingMessage) => { setReply(message); requestAnimationFrame(() => input.current?.focus({ preventScroll: true })); };
+  const toggle = (message: MeetingMessage, emoji: string) => {
+    const mine = message.reactions?.find(r => r.emoji === emoji)?.reactedByMe ?? false;
+    live.react(message.id, emoji, !mine).catch(() => toast.error(t("reactionFailed")));
+  };
+  /** Brings an answered message into the list if it is older than what is loaded, then scrolls the CHAT (never the page) to it. */
+  async function goTo(messageId: string) {
+    if (!(await live.ensureMessage(messageId))) { toast.info(t("replyNotReachable")); return; }
+    setJumpTo(messageId);
+  }
+  useEffect(() => {
+    if (!jumpTo) return;
+    const box = log.current, target = box?.querySelector<HTMLElement>(`[data-message-id="${jumpTo}"]`);
+    if (!box || !target) return;
+    setJumpTo(null); stick.current = false;
+    const top = target.getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop - (box.clientHeight - target.clientHeight) / 2;
+    box.scrollTo({ top: Math.max(0, top), behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    target.focus({ preventScroll: true }); setHighlighted(jumpTo);
+  }, [jumpTo, live.messages]);
+  // The highlight is brief and has no animation: it just goes after a moment.
+  useEffect(() => {
+    if (!highlighted) return;
+    const timer = setTimeout(() => setHighlighted(null), 1800);
+    return () => clearTimeout(timer);
+  }, [highlighted]);
+
   const time = (iso: string) => new Date(iso).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
   return <>
     <p className="mb-3 text-xs leading-5 text-muted-foreground">{t(live.retained ? "chatRetained" : "chatTemporary")}</p>
     <div className="relative min-h-0 flex-1">
       <div ref={log} role="log" aria-label={t("chat")} aria-live="polite" onScroll={event => { stick.current = nearBottom(event.currentTarget); if (stick.current) setBehind(false); }}
-        className="h-full space-y-3 overflow-y-auto overscroll-contain pr-1" data-workspace-scroll>
+        className="relative h-full space-y-3 overflow-y-auto overscroll-contain pr-1" data-workspace-scroll>
         {live.hasOlder && <Button variant="ghost" className="compact:min-h-11" onClick={() => void live.older()?.catch(live.setError)}>{t("olderMessages")}</Button>}
         {!live.messages.length && <p className="rounded-lg bg-muted/50 p-4 text-sm text-muted-foreground">{t("emptyChat")}</p>}
         {groups.map((group, index) => {
@@ -147,10 +219,9 @@ export function ChatPanel({ live, active, content, setContent, mentions, setMent
               <Avatar name={group.name} src={participantPhoto(sender)} tint={sender?.guest ? 2 : 0} title={false} className="mt-0.5 size-8 text-xs ring-0" />
               <div className="min-w-0 flex-1 space-y-1">
                 <div className="flex flex-wrap items-baseline gap-x-2 text-xs text-muted-foreground"><span data-message-author className="break-words text-sm font-medium text-foreground">{group.name}{own ? ` (${t("you")})` : ""}</span><time dateTime={first.sentAt}>{time(first.sentAt)}</time></div>
-                {group.messages.map(message => <div key={message.id} data-message-id={message.id}>
-                  <p title={time(message.sentAt)} className={cn("w-fit max-w-full whitespace-pre-wrap break-words rounded-xl px-3 py-2 text-sm leading-6", own ? "bg-meeting-soft" : "bg-muted/60", message.mentionIds.includes(live.selfId) && "ring-1 ring-meeting")}>{message.content}</p>
-                  {message !== first && <time dateTime={message.sentAt} className="sr-only">{time(message.sentAt)}</time>}
-                </div>)}
+                {group.messages.map(message => <ChatMessage key={message.id} message={message} selfId={live.selfId} own={own} continued={message !== first} highlighted={highlighted === message.id} time={time(message.sentAt)}
+                  onReply={startReply} onToggle={toggle} onJump={id => void goTo(id)}
+                  onOpenPicker={(target, anchor) => { picker.current = anchor; setReacting(target); }} />)}
               </div>
             </article>
           </div>;
@@ -158,12 +229,23 @@ export function ChatPanel({ live, active, content, setContent, mentions, setMent
       </div>
       {behind && <Button type="button" size="sm" variant="accent" className="absolute bottom-2 left-1/2 -translate-x-1/2 shadow-md compact:min-h-11" onClick={() => { const element = log.current; if (element) element.scrollTop = element.scrollHeight; stick.current = true; setBehind(false); }}><ArrowDown size={14} aria-hidden="true" />{t("newMessages")}</Button>}
     </div>
+    {/* One picker for every message: it opens next to the button of the message that asked, and a choice adds (or takes back) that emoji. */}
+    <EmojiPicker choices={COMPOSER_CHOICES} label={t("reactAction")} testId="meeting-reaction-picker" showTrigger={false} anchorRef={picker} open={!!reacting}
+      onOpenChange={open => { if (!open) setReacting(null); }} onChoose={choiceMade => { if (reacting) toggle(reacting, choiceMade.emoji); }} />
     <form onSubmit={event => { event.preventDefault(); void submit(); }} className="mt-3 space-y-2 border-t pt-3">
+      {reply && <div data-reply-draft className="flex items-start gap-2 rounded-lg border-l-4 border-meeting bg-muted/50 py-1.5 pr-1 pl-3 text-xs">
+        <CornerUpLeft size={14} aria-hidden="true" className="mt-0.5 shrink-0 text-muted-foreground" />
+        <div className="min-w-0 flex-1"><p className="truncate font-medium">{t("replyingTo", { name: reply.participantId === live.selfId ? t("you") : reply.displayName })}</p><p className="line-clamp-2 break-words text-muted-foreground">{flat(reply.content, 140)}</p></div>
+        <Button type="button" variant="ghost" size="icon-sm" aria-label={t("replyCancel")} title={t("replyCancel")} className="shrink-0 [@media(pointer:coarse)]:size-11" onClick={() => { setReply(null); input.current?.focus({ preventScroll: true }); }}><X size={14} aria-hidden="true" /></Button>
+      </div>}
       <label htmlFor="meeting-message" className="sr-only">{t("message")}</label>
       {/* 16px on phones: smaller text makes iOS Safari zoom the page when the field gets focus. */}
       <div className="relative">
         {/* While a message is on its way the box is read-only, not disabled: a disabled field drops focus and the next message could not be typed at once. */}
-        <textarea ref={input} id="meeting-message" className="min-h-20 w-full resize-none rounded-lg border bg-background p-3 pr-12 text-sm focus-visible:outline-2 focus-visible:outline-ring compact:min-h-12 compact:text-base" maxLength={2000} value={content} onChange={event => setContent(event.target.value)} onKeyDown={keyDown} enterKeyHint={touch ? "enter" : "send"} placeholder={t("message")} disabled={!active} readOnly={sending} aria-busy={sending || undefined} />
+        <textarea ref={input} id="meeting-message" className="min-h-20 w-full resize-none rounded-lg border bg-background p-3 pr-12 text-sm focus-visible:outline-2 focus-visible:outline-ring compact:min-h-12 compact:text-base" maxLength={2000} value={content}
+          onChange={event => { setContent(event.target.value); setCaret(event.target.selectionStart); }} onSelect={event => setCaret(event.currentTarget.selectionStart)} onKeyDown={keyDown}
+          aria-autocomplete="list" aria-controls={suggestions.length ? "meeting-mention-list" : undefined} aria-activedescendant={activeIndex >= 0 ? optionId(suggestions[activeIndex].id) : undefined}
+          enterKeyHint={touch ? "enter" : "send"} placeholder={t("message")} disabled={!active} readOnly={sending} aria-busy={sending || undefined} />
         <div className="absolute right-1 bottom-1">
           {/* The chat's own emoji picker; the caret position and surrogate pairs are handled by `insertEmoji`. */}
           <EmojiPicker choices={COMPOSER_CHOICES} label={tc("emoji.action")} testId="meeting-chat-emoji" disabled={!active || sending} finalFocus={input}
@@ -176,9 +258,18 @@ export function ChatPanel({ live, active, content, setContent, mentions, setMent
             }} />
         </div>
       </div>
-      {suggestions.length > 0 && <div role="group" aria-label={t("mentions")} className="max-h-32 overflow-auto rounded-md border" data-workspace-scroll>
-        {suggestions.map(p => <Button key={p.id} type="button" variant="ghost" className="min-h-11 w-full justify-start whitespace-normal" disabled={mentions.length >= 20 && !mentions.includes(p.id)}
-          onClick={() => { setContent(previous => previous.replace(/@[^@\n]*$/, `@${p.displayName} `)); setMentions(previous => [...new Set([...previous, p.id])]); }}>{p.displayName}</Button>)}
+      {/* The field stays a plain text box (a textarea cannot carry the combobox role); the list is announced through the active option and this status. */}
+      <div role="status" className="sr-only">{suggestions.length ? t("mentionResults", { count: suggestions.length }) : ""}</div>
+      {suggestions.length > 0 && <div ref={list} id="meeting-mention-list" role="listbox" aria-label={t("mentions")} className="relative max-h-40 overflow-auto rounded-md border" data-workspace-scroll>
+        {suggestions.map((p, index) => {
+          const full = mentions.length >= 20 && !mentions.includes(p.id), duplicate = suggestions.some(other => other.id !== p.id && other.displayName === p.displayName);
+          return <div key={p.id} id={optionId(p.id)} role="option" aria-selected={index === activeIndex} aria-disabled={full || undefined} data-mention-option={p.id}
+            onMouseDown={event => event.preventDefault()} onClick={() => chooseMention(p)} onMouseMove={() => { if (index !== activeIndex) setChoice({ key: tokenKey, index }); }}
+            className={cn("flex min-h-11 cursor-pointer items-center gap-2 px-3 py-2 text-sm", index === activeIndex && "bg-muted", full && "cursor-not-allowed opacity-50")}>
+            <span className="min-w-0 flex-1 break-words">{p.displayName}</span>
+            {(p.guest || duplicate) && <span className="shrink-0 text-xs text-muted-foreground">{p.guest ? t("guestTag") : ""}{duplicate ? ` #${index + 1}` : ""}</span>}
+          </div>;
+        })}
       </div>}
       {mentions.length > 0 && <div className="flex flex-wrap gap-1">{mentions.map(mention => <Button key={mention} type="button" size="sm" variant="secondary" onClick={() => setMentions(previous => previous.filter(m => m !== mention))}>{live.participants.find(p => p.id === mention)?.displayName ?? t("mention")} ×</Button>)}</div>}
       <div className="flex items-center justify-between gap-2"><span className="text-xs tabular-nums text-muted-foreground">{content.length}/2000</span><Button type="submit" variant="accent" className="min-h-11" disabled={!active || sending || !content.trim()}>{t("send")}</Button></div>

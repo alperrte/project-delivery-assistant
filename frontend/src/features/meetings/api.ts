@@ -53,7 +53,12 @@ export function meetingConnectionApi(projectId: string | undefined, meetingId: s
     leave: () => apiRequest(`${path}/leave`, { method: "POST", keepalive: true }),
     participants: (signal?: AbortSignal) => apiRequest<MeetingParticipant[]>(`${path}/participants`, { signal }),
     chat: (page = 0, signal?: AbortSignal) => apiRequest<Page<MeetingMessage>>(`${path}/chat?page=${page}&size=50`, { signal }),
-    send: (content: string, mentionIds: string[]) => apiRequest<MeetingMessage>(`${path}/chat`, { method: "POST", body: { content, mentionIds } }),
+    send: (content: string, mentionIds: string[], replyToMessageId?: string) => apiRequest<MeetingMessage>(`${path}/chat`, { method: "POST", body: { content, mentionIds, replyToMessageId } }),
+    message: (messageId: string, signal?: AbortSignal) => apiRequest<MeetingMessage>(`${path}/chat/${messageId}`, { signal }),
+    /** The page of the newest-first history that holds this message (to reach an answered message that is not loaded yet). */
+    locate: (messageId: string, signal?: AbortSignal) => apiRequest<{ messageId: string; page: number; size: number }>(`${path}/chat/${messageId}/page?size=50`, { signal }),
+    react: (messageId: string, emoji: string) => apiRequest<MeetingMessage>(`${path}/chat/${messageId}/reactions`, { method: "PUT", body: { emoji } }),
+    unreact: (messageId: string, emoji: string) => apiRequest<MeetingMessage>(`${path}/chat/${messageId}/reactions?emoji=${encodeURIComponent(emoji)}`, { method: "DELETE" }),
   };
 }
 export const createGuestSession = (inviteToken: string, displayName: string) => apiRequest<{ meetingId: string; participantId: string; expiresAt: string }>("/meetings/guest/session", { method: "POST", body: { inviteToken, displayName } });

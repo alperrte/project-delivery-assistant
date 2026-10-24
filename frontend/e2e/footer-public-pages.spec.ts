@@ -109,13 +109,13 @@ test("footer links open the correct information and contributor targets", async 
   }
 });
 
-for (const [locale, label] of [["tr", "Sürüm 2.9.1"], ["en", "Version 2.9.1"], ["de", "Version 2.9.1"]] as const) {
+for (const [locale, label] of [["tr", "Sürüm 2.9.2"], ["en", "Version 2.9.2"], ["de", "Version 2.9.2"]] as const) {
   test(`footer shows the release version on every page type: ${locale}`, async ({ page, context }) => {
     await context.addCookies([{ name: "NEXT_LOCALE", value: locale, url: "http://localhost:3000" }]);
     for (const path of ["/login", "/register", "/about", "/"]) {
       await page.goto(path);
       const copyright = page.locator("footer p").first();
-      await expect(copyright).toContainText("v2.9.1");
+      await expect(copyright).toContainText("v2.9.2");
       await expect(copyright).not.toContainText("1.1.0");
       await expect(copyright.locator(".sr-only")).toHaveText(", " + label);
     }

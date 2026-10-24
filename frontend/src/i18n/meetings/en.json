@@ -334,5 +334,19 @@
   "captureUnsupported": "This browser does not support this setting; sound is sent as it is.",
   "captureNote": "Only the browser's built-in features are used: no extra service, recording or heavy processing. A change applies to the open microphone at once.",
   "miniPopOut": "Open in a separate window",
-  "miniPopOutFailed": "The separate window could not be opened. This browser or setting may not allow it; the call keeps running in the page."
+  "miniPopOutFailed": "The separate window could not be opened. This browser or setting may not allow it; the call keeps running in the page.",
+  "replyAction": "Reply",
+  "replyingTo": "Replying to {name}",
+  "replyCancel": "Cancel reply",
+  "replyGoTo": "Go to the replied message",
+  "replyQuoteLabel": "Reply to {name}: {preview}. Go to the message.",
+  "replyUnavailable": "The replied message is no longer available",
+  "replyNotReachable": "The replied message could not be reached.",
+  "reactAction": "Add an emoji reaction",
+  "reactionChip": "{emoji} {count}: {names}. Press to add the same reaction.",
+  "reactionChipOwn": "{emoji} {count}: {names}. Your reaction; press to remove it.",
+  "reactionFailed": "The reaction could not be saved. Check your connection and try again.",
+  "messageActions": "Message actions",
+  "mentionResults": "{count} suggestions. Use the up and down arrows to move and Enter to choose.",
+  "guestTag": "guest"
 }
