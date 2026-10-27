@@ -214,4 +214,6 @@ NVDA'nın doğru yaptıkları: alan adı + "edit" + "required", `aria-invalid` +
 
 ## API ve Swagger kontrolü (SECURITY.md §11)
 
+2026-10-27 legacy kolon temizliği ek kaydı: V59 yalnız `legacy_project_id` arşivini kaldırır; yukarıdaki bu kolona ilişkin açık teknik borç notları bu teslimle kapanır. Aktif nullable `project_id`, hibrit tür, proje silmede `ON DELETE SET NULL`, toplantı sahipliği/katılımcıları ve API yetkileri korunur. Önceki test sayıları kendi koşularının tarihsel sonuçlarıdır. Güncel testler, yerel yedek/izole restore kanıtı, geri dönüş stratejisi ve **production V58/V59 öncesi ayrıca alınması zorunlu yedek/restore kapısı**: [Legacy kolon temizliği](2026-10-27-meeting-legacy-project-cleanup.md). Mevcut yerel DB V58'de bırakıldı; production'a erişilmedi.
+
 Tüm uçlar `/api/v1/meetings` altındadır; yol/yetki/hata tablosu `.agents/SECURITY.md` → "Global meetings: user-owned, not project-owned". Swagger yalnız zaten açıksa: `/swagger-ui/index.html` veya `/v3/api-docs` (ENV değiştirmeyin); normal cookie login, `GET /api/v1/auth/csrf`, mutasyonlarda `X-XSRF-TOKEN`. Güvenli denemeler: `GET /api/v1/meetings?size=20`, `GET /api/v1/meetings/attendees/search?q=abc`, `POST /api/v1/meetings` ve gövdede `{title,startsAt,endsAt,zoneId,agenda:[],attendeeIds:[]}` (projectId yok); davetli olmayan hesapla `GET /api/v1/meetings/{id}` → 404.

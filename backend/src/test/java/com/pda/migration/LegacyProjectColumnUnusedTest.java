@@ -9,10 +9,8 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * meetings.legacy_project_id is the archive V58 made of the project a meeting belonged to before V57. It is deliberately kept (dropping it would
- * be irreversible and V58 has not run in production yet), but only on the condition that nothing ever reads it: a meeting's project is
- * meetings.project_id, and an old value there must never turn into a live project link. This guard keeps "archive only" true until a later
- * migration drops the column.
+ * V59 drops the archive V58 made of the pre-V57 project link. Application code must
+ * remain independent of that removed column; a meeting's live link is project_id.
  */
 class LegacyProjectColumnUnusedTest {
     private static final List<String> NAMES=List.of("legacy_project_id","legacyProjectId","legacyProject");

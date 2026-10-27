@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * The real upgrade path end to end: a PostgreSQL database that is at V56 with a project-owned, scheduled meeting is started by the
- * application (Flyway applies V57 at start-up), and the real reminder worker then sends real SMTP mail to a real Mailpit. Former active
+ * application (Flyway applies V57 through V59 at start-up), and the real reminder worker then sends real SMTP mail to a real Mailpit. Former active
  * project members now attend and are reminded once; a member removed earlier and a stranger of the same project are not.
  */
 @SpringBootTest(classes = BackendApplication.class, properties = {"pda.meeting.enabled=true"})
@@ -82,12 +82,12 @@ class MeetingV57ReminderUpgradeIntegrationTest {
         assertTrue(body.contains("/tr/toplantilar/" + MEETING), "the link is the global meeting address"); assertFalse(body.contains("projeler"));
         assertEquals(3, db.queryForObject("SELECT count(*) FROM meeting_reminder_deliveries WHERE meeting_id=? AND status='SENT'", Integer.class, MEETING));
         assertEquals(0, db.queryForObject("SELECT count(*) FROM meeting_reminder_deliveries WHERE meeting_id=? AND status<>'SENT'", Integer.class, MEETING));
-        // The meeting itself survived with its owner and its (now unused) project link.
+        // The meeting itself survived with its owner, independently of the retired project archive.
         assertEquals(OWNER, db.queryForObject("SELECT organizer_id FROM meetings WHERE id=?", UUID.class, MEETING));
-        // The application also applied V58: this old meeting stays INDEPENDENT (no live project link, so no project name in any mail), its old project is archived.
-        assertEquals(58, db.queryForObject("SELECT max(version::int) FROM flyway_schema_history WHERE success", Integer.class));
+        // V58 keeps the old meeting independent; V59 removes only the obsolete archive.
+        assertEquals(59, db.queryForObject("SELECT max(version::int) FROM flyway_schema_history WHERE success", Integer.class));
         assertNull(db.queryForObject("SELECT project_id FROM meetings WHERE id=?", UUID.class, MEETING));
-        assertEquals(PROJECT, db.queryForObject("SELECT legacy_project_id FROM meetings WHERE id=?", UUID.class, MEETING));
+        assertEquals(0, db.queryForObject("SELECT count(*) FROM information_schema.columns WHERE table_schema=current_schema() AND table_name='meetings' AND column_name='legacy_project_id'", Integer.class));
         assertFalse(body.contains("Legacy upgrade"), "the old project's name is not in the mail");
     }
 }
