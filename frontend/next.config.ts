@@ -25,6 +25,10 @@ const securityHeaders = [
 const publicAssetCache = [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }];
 
 const nextConfig: NextConfig = {
+  // Our i18n proxy owns path canonicalization. Keep the original transport URL:
+  // NextURL normalizes loopback IPs to localhost, which makes a local rewrite
+  // look external when the server is bound to 127.0.0.1 and re-enters the proxy.
+  skipProxyUrlNormalize: true,
   // Production source maps are never shipped to browsers: they would expose the original source and comments to anyone.
   // (This is also Next's default; it is spelled out so a later change is a visible decision.)
   // No `X-Powered-By: Next.js` header: it tells a scanner which framework to attack and serves no purpose.

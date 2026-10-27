@@ -196,7 +196,7 @@ export function MeetingForm({ meeting, project: chosen }: { meeting?: Meeting; p
           <h2 className="flex items-center gap-2 text-base font-semibold">{t("attendees")}<span className="ml-auto rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium tabular-nums text-muted-foreground" aria-label={t("participantCount", { count: selected })}>{selected}</span></h2>
           <div className="relative">
             <Search size={16} aria-hidden="true" className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground" />
-            <Input id="meeting-attendee-search" type="search" aria-label={t("searchPeople")} placeholder={t("searchPeople")} value={search} maxLength={64} disabled={locked} onChange={e => setSearch(e.target.value)} className="h-11 pl-9 text-base md:h-10 md:text-sm" />
+            <Input id="meeting-attendee-search" type="search" aria-label={t("searchPeople")} placeholder={t("searchPeopleHint", { min: MIN_SEARCH })} value={search} maxLength={64} disabled={locked} onChange={e => setSearch(e.target.value)} className="h-11 pl-9 text-base md:h-10 md:text-sm" />
           </div>
           <div aria-live="polite" className="space-y-1">
             {!searching && <p className="text-xs leading-5 text-muted-foreground">{t("searchPeopleHint", { min: MIN_SEARCH })}</p>}

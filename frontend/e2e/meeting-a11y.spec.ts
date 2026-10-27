@@ -9,6 +9,10 @@ import { localizeHref } from "../src/i18n/routing";
 import type { Project } from "../src/features/projects/types";
 import type { Meeting } from "../src/features/meetings/types";
 import tr from "../src/i18n/meetings/tr.json";
+import en from "../src/i18n/meetings/en.json";
+import de from "../src/i18n/meetings/de.json";
+import { demoData, demoPage } from "../src/features/landing/demo/demo-data";
+import landing from "../src/i18n/landing/tr.json";
 
 // Accessibility of the hybrid meeting screens, against the real stack: the kind chooser, the project picker, both forms with the attendee search,
 // Meetings (list, filters, card menu, confirmation dialog) and the sidebar. Automated only (axe WCAG A/AA in both themes, keyboard, focus, names,
@@ -255,4 +259,123 @@ test("what a screen reader needs: separated names, spoken confirmations, kept fo
     expect((await api(other, "POST", `/meetings/${meeting.id}/chat`, { content: "Hello there", mentionIds: [] })).status).toBe(201);
     await expect(page.getByRole("status").filter({ hasText: `${guest.me.nickname}: Hello there` })).toHaveCount(1, { timeout: 15000 });
   } finally { await owner.context.close(); await guest.context.close(); }
+});
+
+// TEST-ONLY browser fixture: every API request and socket is intercepted. No account,
+// database preparation/cleanup or real backend request is needed for this regression.
+test.describe("isolated attendee search", () => {
+  test.use({ serviceWorkers: "block", storageState: REJECTED_STATE });
+  for (const locale of ["tr", "en", "de"] as const) {
+    for (const kind of ["independent", "project"] as const) {
+      test(`${locale}: ${kind} form keeps a distinct name and hint, keyboard selection and announcements`, async ({ page, context, baseURL }) => {
+        const t = { tr, en, de }[locale], origin = new URL(baseURL!).origin;
+        const seed = demoData(landing);
+        const people = [
+          { userId: "00000000-0000-0000-0000-000000000002", nickname: "Search Alpha", profilePhotoVersion: null },
+          { userId: "00000000-0000-0000-0000-000000000003", nickname: "Search Beta", profilePhotoVersion: null },
+        ];
+        const unexpected: string[] = [];
+        const failures: string[] = [];
+        page.on("pageerror", error => failures.push(error.message));
+        await context.addCookies([{ name: "PDA_SESSION", value: "1", url: origin }, { name: "NEXT_LOCALE", value: locale, url: origin }]);
+        await page.routeWebSocket(/\/api\/v1\/ws$/, socket => socket.onMessage(message => {
+          if (String(message).startsWith("CONNECT")) socket.send("CONNECTED\nversion:1.2\nheart-beat:0,0\n\n\0");
+        }));
+        await page.route("**/api/v1/**", async route => {
+          const request = route.request(), url = new URL(request.url());
+          const headers = { "access-control-allow-origin": origin, "access-control-allow-credentials": "true" };
+          if (request.method() === "OPTIONS" || url.pathname.endsWith("/team-deletions/claim")) return route.fulfill({ status: 204, headers });
+          if (request.method() !== "GET") unexpected.push(`${request.method()} ${url.pathname}`);
+          const body = url.pathname.endsWith("/auth/me") ? { id: "00000000-0000-0000-0000-000000000001", nickname: "Search organizer", email: "search@example.test", globalRole: "USER", mustChangePassword: false }
+            : url.pathname.endsWith("/users/me/preferences") ? { locale, theme: "system", motion: "off", themeTransition: false }
+            : url.pathname.endsWith("/attendees/search") ? people.filter(person => person.nickname.toLowerCase().includes((url.searchParams.get("q") ?? "").toLowerCase()))
+            : url.pathname.endsWith("/auth/csrf") ? { headerName: "X-XSRF-TOKEN" }
+            : url.pathname.endsWith("/chat/conversations") ? { group: null, groups: [], directs: [], totalUnread: 0 }
+            : url.pathname.endsWith("/members") ? demoPage([])
+            : url.pathname === "/api/v1/projects" ? demoPage([seed.project])
+            : /count$/.test(url.pathname) ? { count: 0 }
+            : { content: [], totalElements: 0, totalPages: 0, counts: {} };
+          await route.fulfill({ status: 200, headers, contentType: "application/json", body: JSON.stringify(body) });
+        });
+        const href = `/meetings/new?type=${kind}${kind === "project" ? `&project=${seed.project.id}` : ""}`;
+        await page.goto(localizeHref(href, locale));
+        const box = page.getByRole("searchbox", { name: t.searchPeople, exact: true });
+        await expect(box).toBeVisible();
+        const hint = t.searchPeopleHint.replace("{min}", "3");
+        await expect(box).toHaveAccessibleName(t.searchPeople);
+        await expect(box).toHaveAttribute("placeholder", hint);
+        // Exercise client navigation/RSC as well as the direct URL above. The
+        // proxy must retain locale, type and project through its internal rewrite.
+        await page.getByRole("link", { name: kind === "project" ? t.changeProject : t.changeKind, exact: true }).click();
+        if (kind === "project") await page.getByRole("link", { name: t.changeKind, exact: true }).click();
+        await expect(page.locator(`[data-meeting-kind-choice="${kind}"]`)).toBeVisible();
+        await page.locator(`[data-meeting-kind-choice="${kind}"]`).click();
+        if (kind === "project") {
+          await page.locator(`[data-meeting-project-choice="${seed.project.id}"]`).click();
+        }
+        await expect(box).toBeVisible();
+        await expect(page).toHaveURL(new URL(localizeHref(href, locale), origin).href);
+        // The old project URL is a real compatibility page, not an API fixture.
+        await page.goto(localizeHref("/projects/old/meetings/new", locale));
+        await expect(page).toHaveURL(new URL(localizeHref("/meetings/new", locale), origin).href);
+        await page.locator(`[data-meeting-kind-choice="${kind}"]`).click();
+        if (kind === "project") await page.locator(`[data-meeting-project-choice="${seed.project.id}"]`).click();
+        await expect(box).toBeVisible();
+        await expect(page).toHaveURL(new URL(localizeHref(href, locale), origin).href);
+        expect(hint).not.toBe(t.searchPeople);
+        await expect(box).toHaveAttribute("type", "search");
+        await page.locator("#meeting-title").focus();
+        for (let i = 0; i < 70 && !(await box.evaluate(node => node === document.activeElement)); i++) await page.keyboard.press("Tab");
+        await expect(box).toBeFocused();
+        expect(await focusRing(page)).toBe(true);
+        await page.keyboard.type("Search");
+        const results = page.getByRole("list", { name: t.searchResults });
+        const add = (name: string) => results.getByRole("button", { name: t.addAttendee.replace("{name}", name), exact: true });
+        await expect(results.getByRole("button")).toHaveCount(2);
+        const countText = t.peopleFound.match(/other \{([^}]+)\}/)![1].replace("#", "2");
+        await expect(page.locator('[data-meeting-form] [aria-live="polite"]').filter({ hasText: countText })).toHaveCount(1);
+        for (const theme of ["light", "dark"] as const) {
+          await page.emulateMedia({ colorScheme: theme });
+          await expect.poll(() => page.locator("html").evaluate(node => node.classList.contains("dark"))).toBe(theme === "dark");
+          expect(await axe(page, "[data-meeting-form]")).toEqual([]);
+        }
+        await page.emulateMedia({ colorScheme: "light" });
+        await page.keyboard.press("Tab"); await expect(add(people[0].nickname)).toBeFocused();
+        await page.keyboard.press("Enter");
+        const picked = page.getByRole("list", { name: t.selectedAttendees });
+        await expect(picked.getByText(people[0].nickname, { exact: true })).toBeVisible();
+        await expect(add(people[1].nickname)).toBeFocused();
+        await expect(page.getByRole("status").filter({ hasText: t.attendeeAdded.replace("{name}", people[0].nickname) })).toHaveCount(1);
+        await page.keyboard.press("Space");
+        await expect(box).toBeFocused();
+        await expect(page.getByText(t.allMatchesAdded, { exact: true })).toBeVisible();
+        await expect(page.getByText(t.noPeopleFound, { exact: true })).toHaveCount(0);
+        for (const person of people) {
+          const remove = picked.getByRole("button", { name: t.removeAttendee.replace("{name}", person.nickname), exact: true });
+          await remove.focus(); await page.keyboard.press("Enter");
+          await expect(picked.getByText(person.nickname, { exact: true })).toHaveCount(0);
+          await expect(page.getByRole("status").filter({ hasText: t.attendeeRemoved.replace("{name}", person.nickname) })).toHaveCount(1);
+          if (person === people[0]) await expect(picked.getByRole("button").first()).toBeFocused();
+        }
+        await expect(box).toBeFocused();
+        await box.fill("NoSuchPerson");
+        await expect(page.getByText(t.noPeopleFound, { exact: true })).toBeVisible();
+        await expect(results).toHaveCount(0);
+        await expect(box).toBeFocused();
+        await box.fill("");
+        await expect(page.getByText(hint, { exact: true })).toBeVisible();
+        await expect(box).toHaveAccessibleName(t.searchPeople);
+        await expect(box).toHaveAttribute("placeholder", hint);
+        if (locale === "tr" && kind === "independent") {
+          await page.screenshot({ path: test.info().outputPath("search-desktop.png"), fullPage: true });
+          await page.setViewportSize({ width: 320, height: 844 });
+          await expect(box).toBeVisible();
+          expect(await noSideways(page)).toBe(true);
+          await page.screenshot({ path: test.info().outputPath("search-mobile.png"), fullPage: true });
+        }
+        expect(unexpected, "selection must not send mutation requests").toEqual([]);
+        expect(failures).toEqual([]);
+      });
+    }
+  }
 });
