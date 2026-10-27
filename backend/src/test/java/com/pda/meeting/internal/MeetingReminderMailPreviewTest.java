@@ -19,7 +19,7 @@ class MeetingReminderMailPreviewTest {
         try(var logo=getClass().getResourceAsStream("/branding/pda-logo.png")) { assertNotNull(logo,"the real PDA logo must be packaged"); Files.copy(logo,out.resolve("pda-logo.png"),StandardCopyOption.REPLACE_EXISTING); }
         for(String language:new String[]{"tr","en","de"}) {
             var recipient=new UserAccounts.MailRecipient("preview@example.test",switch(language){case "en"->"Sample User";case "de"->"Beispielperson";default->"Örnek Kullanıcı";},language);
-            var envelope=new MeetingReminderStore.Envelope(UUID.fromString("00000000-0000-0000-0000-000000000001"),"ornek-proje",
+            var envelope=new MeetingReminderStore.Envelope(UUID.fromString("00000000-0000-0000-0000-000000000001"),
                 switch(language){case "en"->"Sprint planning";case "de"->"Sprint-Planung";default->"Sprint planlama toplantısı";},
                 Instant.parse("2026-11-12T11:00:00Z"),"Europe/Istanbul",switch(language){case "en"->"Sample Organizer";case "de"->"Beispiel-Organisation";default->"Örnek Düzenleyen";},recipient);
             var mail=SmtpMeetingReminderMail.render("https://pda.example.test",envelope);

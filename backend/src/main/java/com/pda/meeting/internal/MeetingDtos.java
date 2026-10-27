@@ -15,14 +15,22 @@ public final class MeetingDtos {
         /** Optional: null keeps the current icon (video for a new meeting). Must be one of the allowlisted icon names. */
         @Size(max=24) String icon,
         /** Optional: true makes the SERVER clock the start time of a new meeting, so a slow client clock cannot be refused as "in the past". */
-        Boolean startNow) {
-        public Command(String title,String description,Instant startsAt,Instant endsAt,String zoneId,List<String> agenda,Set<UUID> attendeeIds) { this(title,description,startsAt,endsAt,zoneId,agenda,attendeeIds,null,null); }
-        Command withStartsAt(Instant start) { return new Command(title,description,start,endsAt,zoneId,agenda,attendeeIds,icon,null); }
+        Boolean startNow,
+        /** Chosen when a meeting is created: PROJECT needs a projectId, INDEPENDENT forbids one; absent means INDEPENDENT. It cannot be changed later (an update that names another type or project is refused). */
+        Meeting.Kind meetingType,UUID projectId) {
+        public Command(String title,String description,Instant startsAt,Instant endsAt,String zoneId,List<String> agenda,Set<UUID> attendeeIds) { this(title,description,startsAt,endsAt,zoneId,agenda,attendeeIds,null,null,null,null); }
+        public Command(String title,String description,Instant startsAt,Instant endsAt,String zoneId,List<String> agenda,Set<UUID> attendeeIds,String icon,Boolean startNow) { this(title,description,startsAt,endsAt,zoneId,agenda,attendeeIds,icon,startNow,null,null); }
+        Command withStartsAt(Instant start) { return new Command(title,description,start,endsAt,zoneId,agenda,attendeeIds,icon,null,meetingType,projectId); }
     }
-    @Schema(name="MeetingView") public record View(UUID id,UUID projectId,UUID organizerId,String title,String description,
+    /** {@code organizerId} is the owner. {@code attendees} carries the display profile of every attendee (nickname and photo version, never an email). */
+    /** The project of a project meeting as the VIEWER may see it: present only for someone who is an active member of that project, otherwise null (a guest of the meeting learns the type, never the project). */
+    @Schema(name="MeetingProject") public record ProjectRef(UUID id,String slug,String name,Long logoVersion,String logoShape) {}
+    @Schema(name="MeetingView") public record View(UUID id,Meeting.Kind meetingType,ProjectRef project,UUID organizerId,PersonView organizer,String title,String description,
         Instant startsAt,Instant endsAt,String zoneId,Meeting.Status status,Instant openedAt,Instant endedAt,
-        boolean overtime,boolean chatRetained,long version,List<String> agenda,Set<UUID> attendeeIds,int roomEpoch,boolean reconnectRequired,boolean cleanupPending,
+        boolean overtime,boolean chatRetained,long version,List<String> agenda,Set<UUID> attendeeIds,List<PersonView> attendees,int roomEpoch,boolean reconnectRequired,boolean cleanupPending,
         String icon,boolean hidden) {}
+    /** A person in a meeting (organizer lookups and attendee pickers): only what the UI needs to show them. */
+    @Schema(name="MeetingPerson") public record PersonView(UUID userId,String nickname,Long profilePhotoVersion) {}
     @Schema(name="MeetingHistoryResult") public record HistoryResult(long count) {}
     @Schema(name="MeetingParticipantView") public record ParticipantView(UUID id,String identity,String displayName,boolean guest,boolean connected,boolean revoked,
         Instant joinedAt,Instant leftAt,UUID userId,Long profilePhotoVersion) {}

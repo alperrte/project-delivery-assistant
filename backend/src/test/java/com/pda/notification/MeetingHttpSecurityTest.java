@@ -53,6 +53,18 @@ class MeetingHttpSecurityTest {
         mvc.perform(options("/api/v1/meetings/guest/preview").header("Origin","https://untrusted.invalid")
             .header("Access-Control-Request-Method","POST")).andExpect(status().isForbidden());
     }
+    @Test void signedInMeetingApiAllowsOnlyTheFrontendOriginAndKeepsTheWebhookOutOfThePolicy() throws Exception {
+        UUID meeting=UUID.randomUUID();
+        for(String path:new String[]{"/api/v1/meetings","/api/v1/meetings/"+meeting,"/api/v1/meetings/attendees/search","/api/v1/meetings/history/clear",
+                "/api/v1/meetings/"+meeting+"/join","/api/v1/meetings/"+meeting+"/participants/"+UUID.randomUUID()+"/kick","/api/v1/meetings/"+meeting+"/chat"}) {
+            mvc.perform(options(path).header("Origin","http://localhost:3000").header("Access-Control-Request-Method","POST").header("Access-Control-Request-Headers","content-type,x-xsrf-token"))
+                .andExpect(status().isOk()).andExpect(header().string("Access-Control-Allow-Origin","http://localhost:3000")).andExpect(header().string("Access-Control-Allow-Credentials","true"));
+            mvc.perform(options(path).header("Origin","https://untrusted.invalid").header("Access-Control-Request-Method","POST")).andExpect(status().isForbidden());
+        }
+        // The signed webhook is a server-to-server call: no browser origin is ever approved for it.
+        mvc.perform(options("/api/v1/meetings/media/webhook").header("Origin","http://localhost:3000").header("Access-Control-Request-Method","POST"))
+            .andExpect(header().doesNotExist("Access-Control-Allow-Origin")).andExpect(header().doesNotExist("Access-Control-Allow-Credentials"));
+    }
     @Test void guestPreviewIsBoundedCsrfProtectedAndDoesNotCreateCookieOrPrincipal() throws Exception {
         String body="{\"inviteToken\":\"test-only\"}";
         mvc.perform(post("/api/v1/meetings/guest/preview").contentType("application/json").content(body)).andExpect(status().isForbidden());
@@ -89,6 +101,11 @@ class MeetingHttpSecurityTest {
         mvc.perform(get(base+"/participants")).andExpect(status().isUnauthorized());
         when(service.guestParticipants(eq(meeting),eq("test-only"))).thenThrow(new MeetingException(403,"MEETING_GUEST_FORBIDDEN"));
         mvc.perform(get(base+"/participants").cookie(new Cookie(MeetingGuestController.COOKIE,"test-only"))).andExpect(status().isForbidden());
+        // A guest cookie is not a PDA session: the signed-in meeting API (list, detail, search) stays closed to it,
+        // and the earlier project-scoped route no longer exists at all.
+        mvc.perform(get("/api/v1/meetings").cookie(new Cookie(MeetingGuestController.COOKIE,"test-only"))).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/v1/meetings/"+meeting).cookie(new Cookie(MeetingGuestController.COOKIE,"test-only"))).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/v1/meetings/attendees/search?q=abc").cookie(new Cookie(MeetingGuestController.COOKIE,"test-only"))).andExpect(status().isUnauthorized());
         mvc.perform(get("/api/v1/projects/"+UUID.randomUUID()+"/meetings").cookie(new Cookie(MeetingGuestController.COOKIE,"test-only"))).andExpect(status().isUnauthorized());
         mvc.perform(post(base+"/join").cookie(new Cookie(MeetingGuestController.COOKIE,"test-only"))).andExpect(status().isForbidden());
         mvc.perform(post(base+"/kick")).andExpect(status().isForbidden());
@@ -106,7 +123,7 @@ class MeetingHttpSecurityTest {
     @Test void admissionBoundsActualBodyAndInitializationAttemptsAcrossIds() throws Exception {
         mvc.perform(post("/api/v1/meetings/guest/session").content("x".repeat(2049)).with(r->{r.setRemoteAddr("limit-body");return r;})).andExpect(status().isPayloadTooLarge());
         mvc.perform(post("/api/v1/meetings/media/webhook").content(new byte[65537])).andExpect(status().isPayloadTooLarge());
-        mvc.perform(post("/api/v1/projects/"+UUID.randomUUID()+"/meetings").content(new byte[196609]))
+        mvc.perform(post("/api/v1/meetings").content(new byte[196609]))
                 .andExpect(status().isPayloadTooLarge());
         for(int i=0;i<10;i++) mvc.perform(post("/api/v1/meetings/guest/session").with(r->{r.setRemoteAddr("limit-rate");return r;})).andExpect(status().isForbidden());
         mvc.perform(post("/api/v1/meetings/guest/session").with(r->{r.setRemoteAddr("limit-rate");return r;})).andExpect(status().isTooManyRequests());
@@ -139,7 +156,7 @@ class MeetingHttpSecurityTest {
         // An empty or over-long emoji never reaches the service; the project route stays closed to a guest cookie.
         mvc.perform(put(base+"/"+message+"/reactions").cookie(guest,csrf).header("X-XSRF-TOKEN",csrf.getValue()).contentType("application/json").content("{\"emoji\":\"\"}")).andExpect(status().isBadRequest());
         mvc.perform(put(base+"/"+message+"/reactions").cookie(guest,csrf).header("X-XSRF-TOKEN",csrf.getValue()).contentType("application/json").content("{\"emoji\":\""+"a".repeat(33)+"\"}")).andExpect(status().isBadRequest());
-        mvc.perform(put("/api/v1/projects/"+UUID.randomUUID()+"/meetings/"+meeting+"/chat/"+message+"/reactions").cookie(guest,csrf).header("X-XSRF-TOKEN",csrf.getValue()).contentType("application/json").content(reaction)).andExpect(status().isUnauthorized());
+        mvc.perform(put("/api/v1/meetings/"+meeting+"/chat/"+message+"/reactions").cookie(guest,csrf).header("X-XSRF-TOKEN",csrf.getValue()).contentType("application/json").content(reaction)).andExpect(status().isUnauthorized());
         verify(service,times(1)).guestReact(any(),any(),any(),any());
     }
     private Cookie csrf() throws Exception {return mvc.perform(get("/api/v1/auth/csrf")).andReturn().getResponse().getCookie("XSRF-TOKEN");}

@@ -1,10 +1,7 @@
 package com.pda.meeting.internal;
 
 import com.pda.meeting.*;
-import com.pda.project.ProjectMemberRemovedEvent;
-import com.pda.project.ProjectAccess;
 import com.pda.user.UserAccounts;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.*;
@@ -19,13 +16,12 @@ public class MeetingLifecycle implements MeetingMediaEvents {
     private final MeetingMediaPort media;
     private final MeetingRepository meetings;
     private final MeetingParticipantRepository participants;
-    private final ProjectAccess projects;
     private final Clock clock;
     public MeetingLifecycle(MeetingService service,MeetingWebhookRepository webhooks,UserAccounts users,
         MeetingPolicy policy,MeetingMediaPort media,MeetingRepository meetings,MeetingParticipantRepository participants,
-        ProjectAccess projects,Clock clock) {
+        Clock clock) {
         this.service=service; this.webhooks=webhooks; this.users=users; this.policy=policy; this.media=media;
-        this.meetings=meetings; this.participants=participants; this.projects=projects; this.clock=clock;
+        this.meetings=meetings; this.participants=participants; this.clock=clock;
     }
     @Transactional
     public void tick(UUID id) {
@@ -37,14 +33,10 @@ public class MeetingLifecycle implements MeetingMediaEvents {
             catch(RuntimeException failure) { m.cleanupAttempts++; m.cleanupRetryAt=now.plusSeconds(Math.min(300,5L*(1L<<Math.min(m.cleanupAttempts,6)))); }
             return;
         }
-        var project=projects.taskContext(m.projectId);
-        if(project!=null&&project.archived()) {
-            if(m.status==Meeting.Status.OPEN||m.status==Meeting.Status.SCHEDULED) service.finish(m,null);
-            return;
-        }
         if(m.status==Meeting.Status.OPEN) {
             for(var p:participants.findByMeetingId(id)) {
-                if(!p.revoked&&p.userId!=null&&(!projects.isMember(m.projectId,p.userId)||users.findActiveById(p.userId).isEmpty())) revokeMembership(m,p);
+                // Access follows the meeting (organizer or attendee) and a usable account, never a project: archiving, deleting or leaving a project changes nothing here.
+                if(!p.revoked&&p.userId!=null&&(!MeetingService.participantOf(m,p.userId)||users.findActiveById(p.userId).isEmpty())) revokeMembership(m,p);
                 else if(!p.revoked&&p.userId==null&&p.sessionExpiresAt!=null&&!p.sessionExpiresAt.isAfter(now)) {
                     p.revoked=true; p.connected=false; p.leftAt=now;
                     if(p.lastTokenAt!=null&&!m.rotationPending) { m.rotationPending=true; m.pendingRoomName=m.roomName; }
@@ -69,14 +61,6 @@ public class MeetingLifecycle implements MeetingMediaEvents {
             Instant base=m.everJoined?m.emptySince:(m.endsAt.isAfter(m.emptySince)?m.endsAt:m.emptySince);
             if(!base.plus(policy.getEmptyGrace()).isAfter(now)) service.finish(m,null);
         } else m.emptySince=null;
-    }
-    @EventListener @Transactional
-    public void memberRemoved(ProjectMemberRemovedEvent event) {
-        for(var id:meetings.idsByProject(event.projectId())) {
-            Meeting m=service.locked(id);
-            if(m.status!=Meeting.Status.OPEN) continue;
-            for(var p:participants.findByMeetingId(m.id)) if(event.userId().equals(p.userId)&&!p.revoked) revokeMembership(m,p);
-        }
     }
     private void revokeMembership(Meeting m,MeetingParticipant p) {
         p.revoked=true; p.connected=false; p.leftAt=clock.instant();

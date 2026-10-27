@@ -60,6 +60,8 @@ class LocalAuthIntegrationTest {
         registry.add("FRONTEND_URL", () -> "http://localhost:3000");
         registry.add("JWT_SECRET", () -> Base64.getEncoder().encodeToString(JWT_KEY));
         registry.add("MAIL_ENABLED", () -> "true");
+        // Mail ports are replaced by the capturing test configuration; the meeting reminder SMTP adapter is built eagerly and needs a syntactically valid transport (never contacted here).
+        registry.add("SMTP_HOST", () -> "localhost"); registry.add("SMTP_AUTH", () -> "false"); registry.add("SMTP_STARTTLS", () -> "false");
         registry.add("EMAIL_VERIFICATION_HMAC_KEY", () -> Base64.getEncoder().encodeToString(HMAC_KEY));
         registry.add("API_DOCS_ENABLED", () -> "true");
     }

@@ -11,7 +11,7 @@ class MeetingNotificationFactoryTest {
     @Test void lifecycleDisplayIsBoundedAndSnapshotsStayIndependent() {
         for (var type : MeetingEvents.Type.values()) {
             UUID user = UUID.randomUUID();
-            var event = new MeetingEvents.Changed(UUID.randomUUID(),UUID.randomUUID(),UUID.randomUUID(),null,
+            var event = new MeetingEvents.Changed(UUID.randomUUID(),UUID.randomUUID(),null,
                     type,"Meeting ".repeat(100),Set.of(user),Instant.now());
             var factory = new NotificationFactory(); var n = factory.meeting(user,event);
             assertEquals("MEETING_"+type.name(),n.getType().name());
@@ -21,7 +21,8 @@ class MeetingNotificationFactoryTest {
             assertFalse(n.isRead()); assertNull(n.getReadAt()); assertNull(n.getPopupPresentedAt());
             assertNull(n.getStatusChange()); assertNull(n.getTeamDeletion()); assertNull(n.getRepositoryCommits());
             assertNull(n.getInvitationContext());
-            assertThrows(IllegalArgumentException.class,()->factory.create(user,null,event.projectId(),ResourceType.MEETING,event.meetingId(),n.getType()));
+            assertNull(n.getProjectId(),"a meeting belongs to its people, so its notification carries no project");
+            assertThrows(IllegalArgumentException.class,()->factory.create(user,null,null,ResourceType.MEETING,event.meetingId(),n.getType()));
         }
     }
 }

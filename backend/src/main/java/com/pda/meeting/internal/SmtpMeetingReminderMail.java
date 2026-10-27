@@ -65,11 +65,10 @@ public class SmtpMeetingReminderMail implements MeetingReminderMail {
     static Rendered render(String origin,MeetingReminderStore.Envelope r) {
         String language=java.util.Set.of("tr","en","de").contains(r.recipient().locale())?r.recipient().locale():"tr";
         Copy c=copy(language);
-        String project=org.springframework.web.util.UriUtils.encodePathSegment(r.projectSlug(),java.nio.charset.StandardCharsets.UTF_8);
         String link=origin+switch(language) {
-            case "en" -> "/en/projects/"+project+"/meetings/";
-            case "de" -> "/de/projekte/"+project+"/besprechungen/";
-            default -> "/tr/projeler/"+project+"/toplantilar/";
+            case "en" -> "/en/meetings/";
+            case "de" -> "/de/besprechungen/";
+            default -> "/tr/toplantilar/";
         }+r.meetingId();
         var local=r.startsAt().atZone(ZoneId.of(r.zoneId()));
         String date=DateTimeFormatter.ofPattern("d MMMM uuuu",Locale.forLanguageTag(language)).format(local);
@@ -77,8 +76,10 @@ public class SmtpMeetingReminderMail implements MeetingReminderMail {
         String name=line(r.recipient().nickname()==null?"":r.recipient().nickname()).strip();
         String greeting=name.isEmpty()?c.greeting():c.greeting()+" "+name+",";
         String title=line(r.title());
-        String[] labels={c.date(),c.time(),c.zone(),c.organizer()};
-        String[] values={date,time,line(r.zoneId()),line(r.organizer())};
+        // A project meeting names its project, but only to a recipient who is a member of that project (the store decides); everyone else gets the usual mail.
+        boolean project=r.projectName()!=null&&!r.projectName().isBlank();
+        String[] labels=project?new String[]{projectLabel(language),c.date(),c.time(),c.zone(),c.organizer()}:new String[]{c.date(),c.time(),c.zone(),c.organizer()};
+        String[] values=project?new String[]{line(r.projectName()),date,time,line(r.zoneId()),line(r.organizer())}:new String[]{date,time,line(r.zoneId()),line(r.organizer())};
 
         StringBuilder text=new StringBuilder(greeting+"\n\n"+c.heading()+"\n"+c.intro()+"\n\n"+c.meeting()+": "+title+"\n");
         StringBuilder rows=new StringBuilder();
@@ -132,6 +133,7 @@ public class SmtpMeetingReminderMail implements MeetingReminderMail {
                 "Toplantı","Tarih","Saat","Saat dilimi","Düzenleyen","Toplantıyı görüntüle","Düğme çalışmazsa bu bağlantıyı kopyalayın:","Verimli bir toplantı dileriz.","PDA Ekibi");
         };
     }
+    private static String projectLabel(String language) { return switch(language) { case "en" -> "Project"; case "de" -> "Projekt"; default -> "Proje"; }; }
     private static String html(String value) { return HtmlUtils.htmlEscape(value); }
     private static String line(String value) {
         return value.codePoints().collect(StringBuilder::new,(b,cp)->b.appendCodePoint(Character.isISOControl(cp)||cp==0x2028||cp==0x2029?' ':cp),StringBuilder::append).toString();
