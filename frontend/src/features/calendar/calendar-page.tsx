@@ -37,7 +37,8 @@ export function CalendarPage() {
   const [selected, setSelected] = useState(today);
   const reminders = useMonthReminders(project?.id, month);
   const tasks = useCalendarTasks(project?.id, user?.id);
-  const meetings = useMonthMeetings(project?.id, month);
+  // Meetings belong to the user, not to the selected project: the same meetings show whichever project is chosen.
+  const meetings = useMonthMeetings(month);
 
   function moveMonth(delta: number) {
     const next = new Date(month.getFullYear(), month.getMonth() + delta, 1);
@@ -61,19 +62,19 @@ export function CalendarPage() {
         title={tw("calendar")}
         description={t("description")}
         action={
-          hasProject && (
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" onClick={goToday}>{t("today")}</Button>
-              <Link href={`/projects/${slug}/meetings/new`} className={buttonVariants({ variant: "outline" })}>
-                <Plus data-icon="inline-start" size={16} aria-hidden="true" />
-                {tm("create")}
-              </Link>
+          <div className="flex flex-wrap gap-2">
+            {hasProject && <Button variant="outline" onClick={goToday}>{t("today")}</Button>}
+            <Link href="/meetings/new" className={buttonVariants({ variant: "outline" })}>
+              <Plus data-icon="inline-start" size={16} aria-hidden="true" />
+              {tm("create")}
+            </Link>
+            {hasProject && (
               <Link href={`/calendar/new?date=${selected}`} className={buttonVariants()}>
                 <Plus data-icon="inline-start" size={16} aria-hidden="true" />
                 {t("create")}
               </Link>
-            </div>
-          )
+            )}
+          </div>
         }
       />
 
@@ -133,7 +134,7 @@ export function CalendarPage() {
                   <p className="mt-3 text-xs leading-5 text-muted-foreground">{tw("calendarScope")}</p>
                 </section>
 
-                <div className="min-w-0 space-y-5"><MeetingDayList meetings={meetingsOnDate(meetings.data ?? [], selected)} slug={slug} /><DayAgenda
+                <div className="min-w-0 space-y-5"><MeetingDayList meetings={meetingsOnDate(meetings.data ?? [], selected)} /><DayAgenda
                   selected={selected}
                   reminders={reminders.byDate.get(selected) ?? []}
                   tasks={tasks.byDate.get(selected) ?? []}

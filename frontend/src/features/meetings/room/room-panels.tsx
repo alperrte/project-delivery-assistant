@@ -28,10 +28,10 @@ export function participantPhoto(view: MeetingParticipant | undefined): string |
   return view?.userId ? profilePhotoSrc(view.userId, view.profilePhotoVersion) : null;
 }
 
-export function ParticipantsPanel({ live, room, inviteProjectId, onCopyLink, organizerId, meetingId }: {
+export function ParticipantsPanel({ live, room, canInvite, onCopyLink, organizerId, meetingId }: {
   live: Live; room: Room | undefined;
   /** Present only for the organizer or a Project Manager: they may create guest invites. */
-  inviteProjectId: string | undefined;
+  canInvite: boolean;
   /** Present only inside a project (guests have no meeting page to link to). */
   onCopyLink: (() => void) | undefined;
   organizerId: string | undefined; meetingId: string;
@@ -73,8 +73,8 @@ export function ParticipantsPanel({ live, room, inviteProjectId, onCopyLink, org
       })}
       {!shown.length && <li className="px-2 py-3 text-sm text-muted-foreground">{t("noParticipantsFound")}</li>}
     </ul>
-    {(inviteProjectId || onCopyLink) && <div className="flex shrink-0 flex-wrap gap-2 border-t pt-3">
-      {inviteProjectId && <InviteDialog projectId={inviteProjectId} meetingId={meetingId} trigger={<Button variant="accent" className="min-h-11 flex-1 basis-32"><UserPlus size={16} aria-hidden="true" />{t("invitePeople")}</Button>} />}
+    {(canInvite || onCopyLink) && <div className="flex shrink-0 flex-wrap gap-2 border-t pt-3">
+      {canInvite && <InviteDialog meetingId={meetingId} trigger={<Button variant="accent" className="min-h-11 flex-1 basis-32"><UserPlus size={16} aria-hidden="true" />{t("invitePeople")}</Button>} />}
       {onCopyLink && <Button variant="outline" className="min-h-11 flex-1 basis-32" onClick={onCopyLink}><Copy size={16} aria-hidden="true" />{t("copy")}</Button>}
     </div>}
   </div>;
@@ -121,6 +121,11 @@ export function ChatPanel({ live, active, content, setContent, mentions, setMent
   const touch = useTouchPrimaryInput();
   const last = live.messages.at(-1);
   const groups = useMemo(() => groupMessages(live.messages), [live.messages]);
+  // A new message is said once, as "name: text" (or "message sent" for your own), through its own polite status. The log itself is not live: when it was, the
+  // reader read every new bubble out with its Reply and Emoji buttons, and the avatar's initials, which only cluttered what had been said.
+  const [said, setSaid] = useState<{ ready: boolean; id?: string; text: string }>({ ready: false, text: "" });
+  if (live.chatLoaded && !said.ready) setSaid({ ready: true, id: last?.id, text: "" });
+  else if (said.ready && last && last.id !== said.id) setSaid({ ready: true, id: last.id, text: last.participantId === live.selfId ? t("messageSent") : t("messageFrom", { name: last.displayName, text: flat(last.content, 300) }) });
   // New messages keep the log at the bottom while the reader is there (or wrote the message); a reader further up is not yanked
   // away, and gets a "new messages" jump instead. Only the log scrolls: the page never does.
   useLayoutEffect(() => {
@@ -205,8 +210,9 @@ export function ChatPanel({ live, active, content, setContent, mentions, setMent
   const time = (iso: string) => new Date(iso).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
   return <>
     <p className="mb-3 text-xs leading-5 text-muted-foreground">{t(live.retained ? "chatRetained" : "chatTemporary")}</p>
+    <p role="status" className="sr-only">{said.text}</p>
     <div className="relative min-h-0 flex-1">
-      <div ref={log} role="log" aria-label={t("chat")} aria-live="polite" onScroll={event => { stick.current = nearBottom(event.currentTarget); if (stick.current) setBehind(false); }}
+      <div ref={log} role="log" aria-label={t("chat")} aria-live="off" onScroll={event => { stick.current = nearBottom(event.currentTarget); if (stick.current) setBehind(false); }}
         className="relative h-full space-y-3 overflow-y-auto overscroll-contain pr-1" data-workspace-scroll>
         {live.hasOlder && <Button variant="ghost" className="compact:min-h-11" onClick={() => void live.older()?.catch(live.setError)}>{t("olderMessages")}</Button>}
         {!live.messages.length && <p className="rounded-lg bg-muted/50 p-4 text-sm text-muted-foreground">{t("emptyChat")}</p>}
@@ -216,9 +222,9 @@ export function ChatPanel({ live, active, content, setContent, mentions, setMent
           return <div key={group.key} className="space-y-3">
             {index > 0 && groups[index - 1].day !== group.day && <div role="separator" className="flex items-center gap-3 text-xs text-muted-foreground"><span className="h-px flex-1 bg-border" /><time dateTime={first.sentAt}>{new Date(first.sentAt).toLocaleDateString(locale, { weekday: "long", day: "numeric", month: "long" })}</time><span className="h-px flex-1 bg-border" /></div>}
             <article data-message-group={group.participantId} className="flex gap-2.5">
-              <Avatar name={group.name} src={participantPhoto(sender)} tint={sender?.guest ? 2 : 0} title={false} className="mt-0.5 size-8 text-xs ring-0" />
+              <span aria-hidden="true" className="contents"><Avatar name={group.name} src={participantPhoto(sender)} tint={sender?.guest ? 2 : 0} title={false} className="mt-0.5 size-8 text-xs ring-0" /></span>
               <div className="min-w-0 flex-1 space-y-1">
-                <div className="flex flex-wrap items-baseline gap-x-2 text-xs text-muted-foreground"><span data-message-author className="break-words text-sm font-medium text-foreground">{group.name}{own ? ` (${t("you")})` : ""}</span><time dateTime={first.sentAt}>{time(first.sentAt)}</time></div>
+                <div className="flex flex-wrap items-baseline gap-x-2 text-xs text-muted-foreground"><span data-message-author className="break-words text-sm font-medium text-foreground">{group.name}{own ? ` (${t("you")})` : ""}</span><span className="sr-only">, </span><time dateTime={first.sentAt}>{time(first.sentAt)}</time><span className="sr-only">. </span></div>
                 {group.messages.map(message => <ChatMessage key={message.id} message={message} selfId={live.selfId} own={own} continued={message !== first} highlighted={highlighted === message.id} time={time(message.sentAt)}
                   onReply={startReply} onToggle={toggle} onJump={id => void goTo(id)}
                   onOpenPicker={(target, anchor) => { picker.current = anchor; setReacting(target); }} />)}

@@ -23,7 +23,7 @@ import { buildCsp, createNonce } from "./lib/security/csp";
  * session still has `mustChangePassword` pending (only the real `/auth/me`
  * response can) — that redirect stays owned by `AppShell`/the login form.
  */
-const PROTECTED_PATHS = ["/dashboard", "/projects", "/organizations", "/settings", "/account", "/calendar", "/invitations", "/change-password", "/tasks", "/admin"];
+const PROTECTED_PATHS = ["/dashboard", "/projects", "/meetings", "/organizations", "/settings", "/account", "/calendar", "/invitations", "/change-password", "/tasks", "/admin"];
 
 /**
  * Passes a page request on (optionally rewritten) with a fresh Content-Security-Policy. Next.js finds the nonce in the
@@ -33,7 +33,7 @@ const PROTECTED_PATHS = ["/dashboard", "/projects", "/organizations", "/settings
 function withCsp(request: NextRequest, options: { rewriteTo?: URL; headers?: Headers } = {}) {
   const nonce = createNonce();
   const internal = matchPath(request.nextUrl.pathname)?.internalPath ?? "";
-  const meeting = /^\/projects\/[^/]+\/meetings\/[^/]+\/room$/.test(internal) || /^\/meeting-guest(?:\/[^/]+)?$/.test(internal);
+  const meeting = /^\/meetings\/[^/]+\/room$/.test(internal) || /^\/meeting-guest(?:\/[^/]+)?$/.test(internal);
   const policy = buildCsp(nonce, { meeting });
   const requestHeaders = new Headers(options.headers ?? request.headers);
   requestHeaders.set("x-nonce", nonce);

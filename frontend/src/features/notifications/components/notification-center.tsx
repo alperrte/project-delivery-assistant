@@ -30,11 +30,10 @@ function RepositoryLink({ projectId, label, onOpen }: { projectId: string; label
     className="mt-2 inline-flex min-h-11 items-center text-sm font-medium underline underline-offset-4" onClick={event => { if (!onOpen()) event.preventDefault(); }}>{label}</Link>;
 }
 
-function MeetingLink({ projectId, id, actorId, onOpen }: { projectId: string; id: string; actorId: string; onOpen: () => boolean }) {
+/** A meeting belongs to its people, so its notification links straight to the global meeting page: no project lookup, and older notifications that still carry a project work the same. */
+function MeetingLink({ id, onOpen }: { id: string; onOpen: () => boolean }) {
   const t = useTranslations("meetings");
-  const project = useQuery({ queryKey: ["accounts", actorId, "meeting-project", projectId], queryFn: () => projectsApi.detail(projectId), retry: false });
-  if (!project.data?.slug) return null;
-  return <Link href={`/projects/${project.data.slug}/meetings/${id}`} className="mt-2 inline-flex min-h-11 items-center text-sm font-medium underline underline-offset-4" onClick={event => { if (!onOpen()) event.preventDefault(); }}>{t("openMeeting")}</Link>;
+  return <Link href={`/meetings/${id}`} className="mt-2 inline-flex min-h-11 items-center text-sm font-medium underline underline-offset-4" onClick={event => { if (!onOpen()) event.preventDefault(); }}>{t("openMeeting")}</Link>;
 }
 
 export function NotificationCenter({ expectedUserId, disabled = false }: { expectedUserId?: string; disabled?: boolean } = {}) {
@@ -247,7 +246,7 @@ ${c.headAuthor ? t("repositoryCommitsHeadBy", { message: c.headMessage, author: 
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0"><h3 id={`notification-title-${n.id}`} className="break-words text-sm font-medium">{title(n)}</h3><p className="mt-1 whitespace-pre-wrap break-words text-sm text-muted-foreground">{body(n)}</p>
                     <p className="mt-2 text-xs text-muted-foreground"><time dateTime={n.createdAt} title={Number.isFinite(Date.parse(n.createdAt)) ? date.format(new Date(n.createdAt)) : undefined}>{Number.isFinite(Date.parse(n.createdAt)) ? format.relative(n.createdAt) : ""}</time> · {n.read ? t("read") : t("unread")}</p>
-                    {n.resourceType === "MEETING" && n.projectId && !!userId && <MeetingLink projectId={n.projectId} id={n.resourceId} actorId={userId} onOpen={() => {
+                    {n.resourceType === "MEETING" && !!userId && <MeetingLink id={n.resourceId} onOpen={() => {
                       if (!owner?.current()) return false;
                       if (!n.read && !read.execute({ kind: "read", id: n.id })) return false;
                       navigatingTask.current = true; setOpen(false); return true;

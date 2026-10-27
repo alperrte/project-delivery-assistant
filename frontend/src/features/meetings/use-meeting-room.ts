@@ -45,8 +45,8 @@ function withReaction(message: MeetingMessage, emoji: string, add: boolean, self
 }
 export type RoomPhase = "ready" | "connecting" | "connected" | "reconnecting" | "left" | "closed" | "removed" | "failed";
 
-export function useMeetingRoom(meetingId: string, projectId?: string) {
-  const api = useMemo(() => meetingConnectionApi(projectId, meetingId), [projectId, meetingId]);
+export function useMeetingRoom(meetingId: string, guest = false) {
+  const api = useMemo(() => meetingConnectionApi(meetingId, guest), [guest, meetingId]);
   const [phase, setPhase] = useState<RoomPhase>("ready");
   const [room, setRoom] = useState<Room>();
   const [revision, setRevision] = useState(0);
@@ -114,7 +114,7 @@ export function useMeetingRoom(meetingId: string, projectId?: string) {
       return messagesRef.current.some(m => m.id === messageId) || (await api.message(messageId, abort.signal).then(found => { setMessages(previous => merge(previous, [found])); return true; }, () => false));
     }
     async function loadState() {
-      const state = projectId ? await meetingsApi.detail(projectId, meetingId, abort.signal) : await guestMeetingState(meetingId, abort.signal);
+      const state = guest ? await guestMeetingState(meetingId, abort.signal) : await meetingsApi.detail(meetingId, abort.signal);
       if (!alive || stopped) return undefined;
       setMeeting(state);
       if (state.status !== "OPEN") { stop("closed"); return undefined; }
@@ -234,7 +234,7 @@ export function useMeetingRoom(meetingId: string, projectId?: string) {
     window.addEventListener("pagehide", unload);
     window.addEventListener("pageshow", resume);
     return () => { alive = false; stopped = true; abort.abort(); clearInterval(timer); clearTimeout(retryTimer); window.removeEventListener("pagehide", unload); window.removeEventListener("pageshow", resume); dispose(); controls.current = null; };
-  }, [api, meetingId, projectId]);
+  }, [api, meetingId, guest]);
 
   return { phase, room, revision, participants, messages, meeting, selfId, retained, error, setError, hasOlder, chatLoaded,
     setIntent: (kind: "mic" | "camera", enabled: boolean) => { intended.current[kind] = enabled; },

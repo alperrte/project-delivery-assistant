@@ -4,7 +4,7 @@ import path from "node:path";
 import AxeBuilder from "@axe-core/playwright";
 import { api } from "./helpers";
 import { psql, uuid } from "./db";
-import { meetingAccount, openParticipantMenu, readGains, recordGains } from "./meeting-fixture";
+import { meetingAccount, openParticipantMenu, projectMateIds, readGains, recordGains, showPanel } from "./meeting-fixture";
 import { REJECTED_STATE } from "./consent-state";
 import { localizeHref } from "../src/i18n/routing";
 import type { Project } from "../src/features/projects/types";
@@ -34,16 +34,16 @@ async function createProject(page: Page) {
 }
 async function createMeeting(page: Page, projectId: string) {
   const now = Date.now();
-  const result = await api(page, "POST", `/projects/${projectId}/meetings`, { title: `V291 room ${now}`, description: "Room acceptance", startsAt: new Date(now + 1000).toISOString(), endsAt: new Date(now + 7200_000).toISOString(), zoneId: "Europe/Istanbul", agenda: [], attendeeIds: [] });
+  const result = await api(page, "POST", `/meetings`, { title: `V291 room ${now}`, description: "Room acceptance", startsAt: new Date(now + 1000).toISOString(), endsAt: new Date(now + 7200_000).toISOString(), zoneId: "Europe/Istanbul", agenda: [], attendeeIds: projectMateIds(projectId) });
   expect(result.status).toBe(201); const meeting = result.json as Meeting;
-  expect((await api(page, "POST", `/projects/${projectId}/meetings/${meeting.id}/start`)).status).toBe(200);
+  expect((await api(page, "POST", `/meetings/${meeting.id}/start`)).status).toBe(200);
   return meeting;
 }
 function addMember(projectId: string, userId: string) {
   // TEST-ONLY fixture membership, restricted to this newly created QA project/account.
   psql(`WITH membership AS (INSERT INTO project_memberships(id,project_id,user_id,joined_at) VALUES(gen_random_uuid(),'${uuid(projectId)}','${uuid(userId)}',now()) RETURNING id) INSERT INTO project_membership_roles(membership_id,role) SELECT id,'TESTER' FROM membership`);
 }
-const roomHref = (slug: string, id: string) => localizeHref(`/projects/${slug}/meetings/${id}/room`, "tr");
+const roomHref = (slug: string, id: string) => localizeHref(`/meetings/${id}/room`, "tr");
 const connected = (page: Page) => page.getByRole("status").filter({ hasText: new RegExp(`^${tr.phase.connected}$`) });
 async function join(page: Page) { await page.getByRole("button", { name: tr.join, exact: true }).click(); await expect(connected(page)).toBeVisible({ timeout: 30000 }); }
 async function screenshot(page: Page, name: string) { mkdirSync(path.join(__dirname, "../test-results/meetings-visual"), { recursive: true }); await page.screenshot({ path: path.join(__dirname, `../test-results/meetings-visual/${name}.png`) }); }
@@ -62,14 +62,14 @@ test("attendee list of the form has no sideways scrollbar at any width and its i
     addMember(project.id, ((await api(other, "GET", "/auth/me")).json as { id: string }).id); await memberContext.close();
     for (const [width, height] of [[320, 700], [375, 800], [768, 1000], [1024, 800], [1440, 900]] as const) {
       await page.setViewportSize({ width, height });
-      await page.goto(localizeHref(`/projects/${project.slug}/meetings/new`, "tr"));
-      const list = page.getByRole("list", { name: tr.attendees, exact: true });
+      await page.goto(localizeHref(`/meetings/new?type=independent`, "tr"));
+      const list = page.getByRole("list", { name: tr.selectedAttendees, exact: true });
       await expect(list).toBeVisible();
       const sizes = await list.evaluate(element => ({ scroll: element.scrollWidth, client: element.clientWidth }));
       expect(sizes.scroll, `no sideways scrollbar at ${width}px`).toBeLessThanOrEqual(sizes.client);
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `page does not scroll sideways at ${width}px`).toBe(true);
       if (width >= 1024) {
-        const info = page.getByText(tr.memberAccess, { exact: true });
+        const info = page.getByText(tr.attendeeAccess, { exact: true });
         const lines = await info.evaluate(element => Math.round(element.getBoundingClientRect().height / parseFloat(getComputedStyle(element).lineHeight)));
         expect(lines, `info text is one line at ${width}px`).toBe(1);
       }
@@ -150,6 +150,7 @@ test("participant menu, local volume and mute for me; chat grouping and focus; s
     await expect.poll(() => readGains(b).then(values => values.length), { timeout: 20000 }).toBeGreaterThan(0);
     const menu = await openParticipantMenu(b);
     await b.keyboard.press("Escape"); await expect(menu).toBeHidden();
+    await showPanel(room(b).page(), tr.participants); // Escape may have closed the panel on a narrow layout; the rows are only there while it is open
     const row = b.locator("[data-meeting-room] [data-participant]").filter({ hasNotText: `(${tr.you})` }).first();
     await row.click({ button: "right" }); await expect(b.locator("[data-participant-menu]")).toBeVisible();
     await room(b).getByRole("heading", { name: meeting.title, exact: true }).click(); await expect(b.locator("[data-participant-menu]")).toBeHidden();

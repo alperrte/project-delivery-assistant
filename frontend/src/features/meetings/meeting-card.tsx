@@ -10,11 +10,11 @@ import { AvatarStack } from "@/components/common/avatar-stack";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { buttonVariants, Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import type { Member } from "@/features/projects/types";
 import { cn } from "@/lib/utils";
-import { clockText, durationMinutes, meetingPeople, MeetingStatus } from "./shared";
+import { clockText, durationMinutes, meetingProfiles, MeetingStatus } from "./shared";
 import { isInCallPhase, useOptionalMeetingSession } from "./session/meeting-session";
 import { MeetingIcon } from "./meeting-icons";
+import { MeetingKindBadge, ProjectChip } from "./meeting-kind";
 import type { Meeting } from "./types";
 
 /** "1 sa 30 dk" / "45 dk" from a number of minutes. */
@@ -35,25 +35,25 @@ function LiveTiming({ meeting, now }: { meeting: Meeting; now: number }) {
 }
 
 export type MeetingCardProps = {
-  meeting: Meeting; slug: string; projectName?: string; members: Map<string, Member>; now: number;
+  meeting: Meeting; now: number;
   canEdit: boolean; canEnd: boolean;
   onAction: (meeting: Meeting, action: "cancel" | "end") => Promise<void>;
 };
 
 /**
- * One meeting as a compact horizontal row: icon, title/status/project on the left, the people in the middle, the time and the
+ * One meeting as a compact horizontal row: icon, title/status/people count on the left, the people in the middle, the time and the
  * state-dependent action on the right. The title link is stretched over the card (like the project cards); the action button
  * and the menu sit above it. On phones the four parts stack.
  */
-export function MeetingCard({ meeting, slug, projectName, members, now, canEdit, canEnd, onAction }: MeetingCardProps) {
+export function MeetingCard({ meeting, now, canEdit, canEnd, onAction }: MeetingCardProps) {
   const t = useTranslations("meetings"), locale = useLocale() as Locale;
   const [confirm, setConfirm] = useState<"cancel" | "end" | null>(null);
   const session = useOptionalMeetingSession();
   const callLive = !!session?.live && isInCallPhase(session.live.phase);
   const inThisCall = callLive && session?.target?.id === meeting.id, inOtherCall = callLive && !inThisCall;
   const live = meeting.status === "OPEN", scheduled = meeting.status === "SCHEDULED";
-  const detailHref = `/projects/${slug}/meetings/${meeting.id}`, roomHref = `${detailHref}/room`;
-  const people = meetingPeople(meeting), shown = people.map(id => members.get(id)).filter((member): member is Member => !!member);
+  const detailHref = `/meetings/${meeting.id}`, roomHref = `${detailHref}/room`;
+  const shown = meetingProfiles(meeting), peopleCount = new Set([meeting.organizerId, ...meeting.attendeeIds]).size;
   const starts = new Date(meeting.startsAt), ends = new Date(meeting.endsAt);
   const dateText = new Intl.DateTimeFormat(locale, { weekday: "short", day: "numeric", month: "short", year: "numeric" }).format(starts);
   const timeFormat = new Intl.DateTimeFormat(locale, { timeStyle: "short" });
@@ -72,13 +72,17 @@ export function MeetingCard({ meeting, slug, projectName, members, now, canEdit,
             <h3 className="min-w-0 break-words text-base font-semibold leading-6">
               <Link href={detailHref} className="outline-none after:absolute after:inset-0 after:rounded-xl focus-visible:after:ring-2 focus-visible:after:ring-ring">{meeting.title}</Link>
             </h3>
-            <MeetingStatus meeting={meeting} />
+            <MeetingStatus meeting={meeting} /><span className="sr-only">. </span>
           </div>
-          <p className="break-words text-sm text-muted-foreground">{projectName && <>{projectName} · </>}{t("participantCount", { count: people.length })}</p>
+          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+            <MeetingKindBadge meeting={meeting} />
+            {meeting.project && <><ProjectChip project={meeting.project} className="text-muted-foreground" /><span className="sr-only">. </span></>}
+            <span className="break-words text-sm text-muted-foreground">{t("participantCount", { count: peopleCount })}</span>
+          </div>
         </div>
       </div>
       <div className="md:justify-self-center" title={shown.map(member => member.nickname).filter(Boolean).join(", ")}>
-        {shown.length > 0 && <AvatarStack people={shown} total={people.length} />}
+        {shown.length > 0 && <AvatarStack people={shown} total={peopleCount} />}
       </div>
       <div className="min-w-0 space-y-1 text-sm">
         <p className="flex items-center gap-2 font-medium tabular-nums"><CalendarClock size={15} aria-hidden="true" className="shrink-0 text-muted-foreground" /><time dateTime={meeting.startsAt}>{dateText}</time></p>
@@ -90,9 +94,9 @@ export function MeetingCard({ meeting, slug, projectName, members, now, canEdit,
         {live && !inOtherCall
           // Entering a room needs a full document load (media CSP / Permissions-Policy are per document); a call already running in this tab is resumed in place.
           ? inThisCall
-            ? <Link href={roomHref} className={buttonVariants({ variant: "accent", className: "min-h-11 md:min-h-9" })}>{t("returnToMeeting")}</Link>
-            : <a href={localizeHref(roomHref, locale)} className={buttonVariants({ variant: "accent", className: "min-h-11 md:min-h-9" })}>{t("joinShort")}</a>
-          : <Link href={detailHref} className={buttonVariants({ variant: "outline", className: "min-h-11 border-border-strong md:min-h-9" })}>{t("details")}</Link>}
+            ? <Link href={roomHref} className={buttonVariants({ variant: "accent", className: "min-h-11 md:min-h-9" })}>{t("returnToMeeting")}<span className="sr-only"> — {meeting.title}</span></Link>
+            : <a href={localizeHref(roomHref, locale)} className={buttonVariants({ variant: "accent", className: "min-h-11 md:min-h-9" })}>{t("joinShort")}<span className="sr-only"> — {meeting.title}</span></a>
+          : <Link href={detailHref} className={buttonVariants({ variant: "outline", className: "min-h-11 border-border-strong md:min-h-9" })}>{t("details")}<span className="sr-only"> — {meeting.title}</span></Link>}
         <DropdownMenu>
           <DropdownMenuTrigger render={<Button variant="ghost" className="size-11 md:size-9" aria-label={t("cardActions", { title: meeting.title })} />}><MoreHorizontal size={18} aria-hidden="true" /></DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="min-w-56">

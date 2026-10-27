@@ -33,14 +33,14 @@ async function createProject(page: Page) {
   const result = await api(page, "POST", "/projects", { name: `Room UX ${Date.now()}`, projectTypes: ["WEB"] });
   expect(result.status).toBe(201); return result.json as Project;
 }
-async function createMeeting(page: Page, projectId: string) {
+async function createMeeting(page: Page, projectId: string, attendeeIds: string[] = []) {
   const now = Date.now();
-  const result = await api(page, "POST", `/projects/${projectId}/meetings`, { title: `Room UX ${now}`, description: "Room experience", startsAt: new Date(now + 1000).toISOString(), endsAt: new Date(now + 7200_000).toISOString(), zoneId: "Europe/Istanbul", agenda: [], attendeeIds: [] });
+  const result = await api(page, "POST", `/meetings`, { title: `Room UX ${now}`, description: "Room experience", startsAt: new Date(now + 1000).toISOString(), endsAt: new Date(now + 7200_000).toISOString(), zoneId: "Europe/Istanbul", agenda: [], attendeeIds });
   expect(result.status).toBe(201); const meeting = result.json as Meeting;
-  expect((await api(page, "POST", `/projects/${projectId}/meetings/${meeting.id}/start`)).status).toBe(200);
+  expect((await api(page, "POST", `/meetings/${meeting.id}/start`)).status).toBe(200);
   return meeting;
 }
-const roomHref = (slug: string, id: string) => localizeHref(`/projects/${slug}/meetings/${id}/room`, "tr");
+const roomHref = (slug: string, id: string) => localizeHref(`/meetings/${id}/room`, "tr");
 const connected = (page: Page) => page.getByRole("status").filter({ hasText: new RegExp(`^${tr.phase.connected}$`) });
 async function join(page: Page) { await page.getByRole("button", { name: tr.join, exact: true }).click(); await expect(connected(page)).toBeVisible({ timeout: 30000 }); }
 async function uploadPhoto(page: Page) {
@@ -116,7 +116,7 @@ test("profile photos and the speaking indicator for local and remote participant
     const member = (await api(b, "GET", "/auth/me")).json as { id: string };
     psql(`WITH membership AS (INSERT INTO project_memberships(id,project_id,user_id,joined_at) VALUES(gen_random_uuid(),'${uuid(project.id)}','${uuid(member.id)}',now()) RETURNING id) INSERT INTO project_membership_roles(membership_id,role) SELECT id,'TESTER' FROM membership`);
     expect(await uploadPhoto(a)).toBe(200);
-    const meeting = await createMeeting(a, project.id);
+    const meeting = await createMeeting(a, project.id, [member.id]);
     await a.goto(roomHref(project.slug, meeting.id)); await b.goto(roomHref(project.slug, meeting.id));
     await join(a); await join(b);
 
@@ -272,7 +272,7 @@ test("a shared screen takes priority on a phone and returns to the normal grid a
     project = await createProject(a); await b.goto("/dashboard");
     const member = (await api(b, "GET", "/auth/me")).json as { id: string };
     psql(`WITH membership AS (INSERT INTO project_memberships(id,project_id,user_id,joined_at) VALUES(gen_random_uuid(),'${uuid(project.id)}','${uuid(member.id)}',now()) RETURNING id) INSERT INTO project_membership_roles(membership_id,role) SELECT id,'TESTER' FROM membership`);
-    const meeting = await createMeeting(a, project.id);
+    const meeting = await createMeeting(a, project.id, [member.id]);
     await a.goto(roomHref(project.slug, meeting.id)); await b.goto(roomHref(project.slug, meeting.id));
     await join(a); await join(b);
     await a.getByRole("button", { name: tr.screen, exact: true }).click();
@@ -284,8 +284,8 @@ test("a shared screen takes priority on a phone and returns to the normal grid a
     expect(await b.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await screenshot(b, "room-ux-watching-share-portrait");
     await b.setViewportSize({ width: 844, height: 390 });
-    const landscapeBox = (await shared.first().boundingBox())!;
-    expect(landscapeBox.width).toBeGreaterThan(landscapeBox.height);
+    // The layout follows the new size a moment after the resize, so the shape is awaited, not sampled once.
+    await expect.poll(async () => { const box = (await shared.first().boundingBox())!; return box.width > box.height; }).toBe(true);
     expect(await b.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await screenshot(b, "room-ux-watching-share-landscape");
     await a.getByRole("button", { name: tr.screenShareStop, exact: true }).click();

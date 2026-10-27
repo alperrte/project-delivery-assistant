@@ -14,7 +14,8 @@ export function switchProjectHref(pathname: string, section: string | null, targ
     if (section === "repository" && options.repository) return `${root}?section=repository`;
     return root;
   }
-  if (["/teams", "/criteria", "/tasks", "/tasks/board", "/meetings", "/meetings/calendar"].includes(suffix)) return `${root}${suffix}`;
+  // Meetings are not a project surface: they live at /meetings, which is not under /projects and so is never rewritten by a project switch.
+  if (["/teams", "/criteria", "/tasks", "/tasks/board"].includes(suffix)) return `${root}${suffix}`;
   if (suffix === "/tasks/pool" && allowsPool(target.taskManagementMode)) return `${root}${suffix}`;
   if (suffix === "/sprints" && allowsAdvanced(target.taskManagementMode)) return `${root}${suffix}`;
   if (suffix === "/labels" && options.manager && allowsAdvanced(target.taskManagementMode)) return `${root}${suffix}`;

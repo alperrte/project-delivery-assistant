@@ -50,13 +50,13 @@ async function room(browser: import("@playwright/test").Browser, { guestNames = 
   const me = (await api(b, "GET", "/auth/me")).json as { id: string; nickname: string }; addMember(project.id, me.id);
   const own = (await api(a, "GET", "/auth/me")).json as { nickname: string };
   const now = Date.now();
-  const created = await api(a, "POST", `/projects/${project.id}/meetings`, { title: `V292 chat ${now}`, description: "Chat QA", startsAt: new Date(now + 1000).toISOString(), endsAt: new Date(now + 7200_000).toISOString(), zoneId: "Europe/Istanbul", agenda: [], attendeeIds: [] });
+  const created = await api(a, "POST", `/meetings`, { title: `V292 chat ${now}`, description: "Chat QA", startsAt: new Date(now + 1000).toISOString(), endsAt: new Date(now + 7200_000).toISOString(), zoneId: "Europe/Istanbul", agenda: [], attendeeIds: [me.id] });
   expect(created.status).toBe(201); const meeting = created.json as Meeting;
-  expect((await api(a, "POST", `/projects/${project.id}/meetings/${meeting.id}/start`)).status).toBe(200);
-  const href = localizeHref(`/projects/${project.slug}/meetings/${meeting.id}/room`, "tr");
+  expect((await api(a, "POST", `/meetings/${meeting.id}/start`)).status).toBe(200);
+  const href = localizeHref(`/meetings/${meeting.id}/room`, "tr");
   await a.goto(href); await b.goto(href); await join(a); await join(b);
   for (const [index, page] of guests.entries()) {
-    const invite = (await api(a, "POST", `/projects/${project.id}/meetings/${meeting.id}/invites`, { expiresAt: new Date(Date.now() + 3600000).toISOString(), maxUses: 5 })).json as MeetingInvite;
+    const invite = (await api(a, "POST", `/meetings/${meeting.id}/invites`, { expiresAt: new Date(Date.now() + 3600000).toISOString(), maxUses: 5 })).json as MeetingInvite;
     // The server lets one address start at most 10 guest admissions a minute (preview + session), and the three tests here run close together:
     // when the preview is refused, wait out the window and ask again.
     for (let attempt = 0; attempt < 3; attempt++) {
@@ -78,7 +78,7 @@ async function say(page: Page, text: string) {
   await expect(messageRow(page, text).first()).toBeVisible({ timeout: 15000 });
   await page.waitForTimeout(900); // the server allows one chat message per 750 ms and person
 }
-const history = async (page: Page, setup: Setup) => ((await api(page, "GET", `/projects/${setup.project.id}/meetings/${setup.meeting.id}/chat?page=0&size=100`)).json as { content: MeetingMessage[] }).content;
+const history = async (page: Page, setup: Setup) => ((await api(page, "GET", `/meetings/${setup.meeting.id}/chat?page=0&size=100`)).json as { content: MeetingMessage[] }).content;
 
 test("replies: a real stored relation, quote in every view, cancel, reload, guest reply, reaching an old message and the unavailable fallback", async ({ browser }) => {
   test.setTimeout(300000);
@@ -112,11 +112,11 @@ test("replies: a real stored relation, quote in every view, cancel, reload, gues
     await box(g).fill("Teşekkürler"); await box(g).press("Enter");
     await expect(a.locator(`[data-reply-quote="${stored.id}"]`)).toContainText("Evet, testler de başarılı", { timeout: 15000 });
     // 5. An answer to a message that is far back: the quote goes to it, loading older pages, and only the chat scrolls.
-    const participants = (await api(a, "GET", `/projects/${s.project.id}/meetings/${s.meeting.id}/participants`)).json as MeetingParticipant[];
+    const participants = (await api(a, "GET", `/meetings/${s.meeting.id}/participants`)).json as MeetingParticipant[];
     const author = participants.find(p => !p.guest)!;
     psql(`INSERT INTO meeting_chat_messages(id,meeting_id,participant_id,display_name,content,sent_at) SELECT gen_random_uuid(),'${uuid(s.meeting.id)}','${uuid(author.id)}','Seed','seed message '||g, now() - interval '3 days' + g * interval '1 minute' FROM generate_series(1,70) g`);
     const oldest = psql(`SELECT id FROM meeting_chat_messages WHERE meeting_id='${uuid(s.meeting.id)}' ORDER BY sent_at ASC, id ASC LIMIT 1`);
-    const reply = await api(b, "POST", `/projects/${s.project.id}/meetings/${s.meeting.id}/chat`, { content: "Answering a very old message", mentionIds: [], replyToMessageId: oldest });
+    const reply = await api(b, "POST", `/meetings/${s.meeting.id}/chat`, { content: "Answering a very old message", mentionIds: [], replyToMessageId: oldest });
     expect(reply.status).toBe(201);
     await expect(a.locator(`[data-reply-quote="${oldest}"]`)).toBeVisible({ timeout: 15000 });
     await expect(a.locator(`[data-message-id="${oldest}"]`)).toHaveCount(0); // not loaded yet: it is on an older page
@@ -128,13 +128,20 @@ test("replies: a real stored relation, quote in every view, cancel, reload, gues
     await expect(a.locator(`[data-message-id="${oldest}"]`)).toBeFocused();
     await expect(a.locator(`[data-message-id="${oldest}"]`)).not.toHaveAttribute("data-highlighted", "", { timeout: 6000 }); // a short highlight only
     // 6. An answer to a message that cannot be quoted any more says so instead of failing.
-    await b.route(/\/chat\?page=0/, async route => {
-      const response = await route.fetch(); const json = await response.json() as { content: MeetingMessage[] };
+    // Only this meeting's own first chat page is rewritten: the pattern used to be any URL ending in /chat?page=0, which other requests can match too.
+    // What the app asks for around the reload is recorded, so a refused page (the server answers 403 until the person has joined) is explained by its timeline.
+    const trail: string[] = [];
+    b.on("response", response => { const at = response.url().split("/meetings/")[1]; if (at && /(join|leave|chat|participants)/.test(at)) trail.push(`${Date.now() % 100000} ${response.request().method()} ${at.replace(s.meeting.id, "<id>")} ${response.status()}`); });
+    await b.route(url => url.pathname.endsWith(`/meetings/${s.meeting.id}/chat`) && url.searchParams.get("page") === "0", async route => {
+      const response = await route.fetch();
+      // Only a real page is rewritten; any other answer (the app's own handling of it is not what this test is about) goes through untouched.
+      if (!response.ok()) { trail.push(`stub: passed a ${response.status()} through`); await route.fulfill({ response }); return; }
+      const json = await response.json() as { content: MeetingMessage[] };
       for (const message of json.content) if (message.replyToMessageId) message.replyTo = null;
       await route.fulfill({ response, json });
     });
     await b.reload(); await join(b); await showPanel(b, tr.chat);
-    await expect(b.locator("[data-reply-missing]").first()).toContainText(tr.replyUnavailable, { timeout: 15000 });
+    await expect(b.locator("[data-reply-missing]").first(), trail.join(" | ")).toContainText(tr.replyUnavailable, { timeout: 15000 });
     expect((await new AxeBuilder({ page: b }).include("[data-meeting-room] aside").analyze()).violations, "chat with replies has no accessibility violations").toEqual([]);
   } finally { await s.close(); }
 });
@@ -203,7 +210,7 @@ test("mentions: ArrowUp/Down/Enter/Escape choose a person without sending, caret
     const posts: { content: string; mentionIds: string[] }[] = [];
     a.on("request", request => { if (request.method() === "POST" && request.url().endsWith(`/meetings/${s.meeting.id}/chat`)) posts.push(request.postDataJSON()); });
     const field = box(a), options = a.locator("[data-mention-option]");
-    const participants = (await api(a, "GET", `/projects/${s.project.id}/meetings/${s.meeting.id}/participants`)).json as MeetingParticipant[];
+    const participants = (await api(a, "GET", `/meetings/${s.meeting.id}/participants`)).json as MeetingParticipant[];
     // 1. "@" opens the list: three people (the member and two guests who share a name); the first is active.
     await field.click(); await field.pressSequentially("Hello @");
     await expect(options).toHaveCount(3); await expect(a.getByRole("listbox", { name: tr.mentions })).toBeVisible();

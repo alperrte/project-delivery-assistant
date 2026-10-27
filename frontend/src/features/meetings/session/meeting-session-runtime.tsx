@@ -29,8 +29,8 @@ function RemoteAudio({ participant, volume }: { participant: RemoteParticipant; 
 }
 
 /** The call itself: the LiveKit room (via `useMeetingRoom`), the remote audio elements and the shared media controls. */
-export function useMeetingSessionRuntime(id: string, projectId?: string): { live: SessionLive; audio: ReactNode } {
-  const runtime = useMeetingRoom(id, projectId);
+export function useMeetingSessionRuntime(id: string, guest = false): { live: SessionLive; audio: ReactNode } {
+  const runtime = useMeetingRoom(id, guest);
   const [mediaBusy, setMediaBusy] = useState(false), lock = useRef(false);
   // Per-person playback level in percent (0-200, 100 = as received, above 100 is a real boost through the Web Audio gain) and a separate
   // "muted for me" flag, so muting and unmuting returns to exactly the level the person had chosen. Both are local: nothing is sent.
@@ -71,7 +71,7 @@ export function useMeetingSessionRuntime(id: string, projectId?: string): { live
 }
 
 export function SessionRunner({ target, store }: { target: SessionTarget; store: SessionStore }) {
-  const { live, audio } = useMeetingSessionRuntime(target.id, target.projectId);
+  const { live, audio } = useMeetingSessionRuntime(target.id);
   useEffect(() => { store.publish(target.key, live); });
   useEffect(() => () => store.publish(target.key, null), [store, target.key]);
   return audio;

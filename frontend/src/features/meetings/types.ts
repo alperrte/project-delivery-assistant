@@ -2,7 +2,13 @@ export type MeetingStatus = "SCHEDULED" | "OPEN" | "ENDED" | "CANCELLED";
 /** The icons a meeting may carry: the backend allowlist (V55), in picker order. */
 export const MEETING_ICONS = ["video", "users", "calendar", "presentation", "code", "laptop", "lightbulb", "target", "briefcase", "graduation-cap", "clipboard-list", "message-square"] as const;
 export type MeetingIconName = (typeof MEETING_ICONS)[number];
+/** PROJECT: linked to one project when it was created. INDEPENDENT: no project. Either way access is only the organizer and the attendees. */
+export type MeetingKind = "PROJECT" | "INDEPENDENT";
+/** The project of a project meeting as the viewer may see it: null unless the viewer is a member of that project right now. */
+export type MeetingProject = { id: string; slug: string; name: string; logoVersion: number | null; logoShape: "SQUARE" | "CIRCLE" | null };
 export type MeetingInput = {
+  /** Create only: the type is fixed when the meeting is created. PROJECT needs `projectId`; INDEPENDENT must not send one. */
+  meetingType?: MeetingKind; projectId?: string | null;
   title: string; description: string; startsAt: string; endsAt: string;
   zoneId: string; agenda: string[]; attendeeIds: string[];
   /** Omitted on update keeps the stored icon; a new meeting without one gets the video icon. */
@@ -10,8 +16,11 @@ export type MeetingInput = {
   /** Create only: the server clock becomes the start, so a slow device clock cannot be refused as "in the past". */
   startNow?: boolean;
 };
+/** Someone in a meeting: only what is needed to show them (never an e-mail address). */
+export type MeetingPerson = { userId: string; nickname: string; profilePhotoVersion: number | null };
 export type Meeting = MeetingInput & {
-  id: string; projectId: string; organizerId: string; status: MeetingStatus;
+  /** Access is the organizer and the attendees only (a project meeting's project grants nothing). `attendees` are the display profiles of `attendeeIds`. */
+  id: string; meetingType: MeetingKind; project: MeetingProject | null; organizerId: string; organizer: MeetingPerson | null; attendees: MeetingPerson[]; status: MeetingStatus;
   openedAt: string | null; endedAt: string | null; overtime: boolean;
   chatRetained: boolean; version: number; roomEpoch: number;
   reconnectRequired: boolean; cleanupPending: boolean;
@@ -23,7 +32,7 @@ export type Meeting = MeetingInput & {
 export type MeetingParticipant = {
   id: string; identity: string; displayName: string; guest: boolean;
   connected: boolean; revoked: boolean; joinedAt: string | null; leftAt: string | null;
-  /** Set for signed-in members only; with the photo version it builds the PDA avatar URL. Guests and guest callers get null. */
+  /** Set for signed-in users only; with the photo version it builds the PDA avatar URL. Guests and guest callers get null. */
   userId: string | null; profilePhotoVersion: number | null;
 };
 export type MeetingJoin = {

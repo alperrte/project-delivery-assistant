@@ -3,38 +3,30 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "@/features/auth/hooks/use-session";
-import { useSelectedProject } from "@/features/projects/hooks/use-selected-project";
-import { useCurrentMember } from "@/features/projects/hooks/use-current-member";
-import { membersApi } from "@/features/projects/members-api";
 import { ApiError } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { meetingsApi } from "./api";
-import type { Meeting } from "./types";
+import type { Meeting, MeetingPerson } from "./types";
 
-export const meetingKeys = (actor: string | undefined, project: string | undefined) => ["accounts", actor, "meetings", project] as const;
-export function useMeetingProject(slug: string) {
-  const selected = useSelectedProject(slug);
+/** Meetings are scoped to the signed-in account only. The selected project, the route and a project change never enter a meeting query key. */
+export const meetingKeys = (actor: string | undefined) => ["accounts", actor, "meetings"] as const;
+/** The signed-in account that owns every meeting query. */
+export function useMeetingAccount() {
   const { data: user } = useSession();
-  const member = useCurrentMember(selected.project?.id ?? "");
-  return { ...selected, user, isManager: member.isManager, keys: meetingKeys(user?.id, selected.project?.id) };
+  return { user, keys: meetingKeys(user?.id) };
 }
-export function useMeeting(slug: string, id: string) {
-  const context = useMeetingProject(slug);
+export function useMeeting(id: string) {
+  const context = useMeetingAccount();
   const query = useQuery({
-    queryKey: [...context.keys, id], enabled: !!context.project,
-    queryFn: ({ signal }) => meetingsApi.detail(context.project!.id, id, signal),
+    queryKey: [...context.keys, id], enabled: !!context.user,
+    queryFn: ({ signal }) => meetingsApi.detail(id, signal),
     refetchInterval: 10_000, retry: false,
   });
   return { ...context, query };
 }
-/** Every active member of the project. Shared by the form's participant panel and the avatars of the list/detail. */
-export function useProjectMembers(context: { project?: { id: string }; keys: readonly unknown[] }) {
-  return useQuery({
-    queryKey: [...context.keys, "members"], enabled: !!context.project, staleTime: 60_000, retry: false,
-    queryFn: ({ signal }) => membersApi.listAll(context.project!.id, signal),
-  });
-}
+/** The organizer and every attendee as display profiles (the organizer first), each once. */
+export const meetingProfiles = (meeting: Pick<Meeting, "organizer" | "attendees">): MeetingPerson[] => [...(meeting.organizer ? [meeting.organizer] : []), ...meeting.attendees];
 /** The current time, refreshed on an interval, for countdowns that must not each own a timer. */
 export function useNow(intervalMs: number) {
   const [now, setNow] = useState(() => Date.now());

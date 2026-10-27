@@ -1,5 +1,9 @@
 # Web Sitesi Kesinlikle Olması Gerekenler — Master Checklist
 
+## Global toplantılar — 2026-10-27 (sınırlı kapsam)
+
+Etkilenen Navigasyon / Form Validation / Loading-Empty-Error / Pagination maddeleri yalnız sidebar "Toplantılar" grubu, `/meetings/**` rotaları ve katılımcı arama paneli için gözden geçirildi; global kutular değiştirilmedi. Kod düzeyinde doğrulananlar: TypeScript, ESLint, `next build` (global rotalar üretiliyor), 7 servis gerektirmeyen mantık testi (`meeting-global-logic.spec.ts`: sidebar vurgusu, TR/EN/DE rota çözümü, eski proje rotaları, proje değişiminin toplantı sayfasına dokunmaması, kaynakta `projectId` yokluğu) ve 24 mevcut yönlendirme/rota-politikası testi. **Doğrulanmadı:** masaüstü/mobil sidebar ve katılımcı arama panelinin görsel/klavye/ekran okuyucu denetimi, 320–1440 px matrisi, axe taraması ve canlı LiveKit/PostgreSQL ile çalışan Playwright toplantı paketi (spec'ler yeni rotalara uyarlandı ama bu teslimde çalıştırılmadı). Kayıt: `docs/compliation/2026-10-27-global-meetings.md`.
+
 ## NS-01 bildirim popup scrollbar — 2026-10-22 (sınırlı kapsam)
 
 Yalnız bildirim merkezinin Responsive/Dark Mode/Keyboard Navigation/Focus State/Overflow/Empty State/Pagination yüzeyleri değerlendirildi; global kutular değiştirilmedi. Ortak `data-workspace-scroll` paleti, auto overflow, overscroll containment ve kullanılabilir popup yüksekliği kullanılır; global CSS değişmedi. Gerçek API/PostgreSQL üzerinde 16 mevcut regresyon ve 2 yeni Chromium testi geçti (18 benzersiz test, bölünmüş koşular). TR/EN/DE × light/dark × 320/375/768/1024/1440 ve 375×400, wheel/CDP touch, uzun içerik, sekmeler, sayfalama, okuma/silme, polling ve Escape/odak dönüşü doğrulandı; scoped axe 12 durumda 0 ihlal verdi. Fiziksel telefon/ekran okuyucu/diğer tarayıcı veya global WCAG onayı değildir. Kayıt: `docs/compliation/2026-10-22-notification-scrollbar.md`. Tam pre-push final aşamaya ertelendi.
