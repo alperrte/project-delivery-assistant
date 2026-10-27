@@ -10,7 +10,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
 class MeetingReminderMailTest {
-    @ParameterizedTest @CsvSource({"tr,/tr/projeler/demo/toplantilar/","en,/en/projects/demo/meetings/","de,/de/projekte/demo/besprechungen/"})
+    @ParameterizedTest @CsvSource({"tr,/tr/toplantilar/","en,/en/meetings/","de,/de/besprechungen/"})
     void rendersSavedLanguageAndLocalizedCanonicalDetailLink(String language,String path) {
         var mail=SmtpMeetingReminderMail.render("https://pd-assistant.com",envelope(language,"Europe/Istanbul","2026-10-25T12:00:00Z","Planning"));
         assertTrue(mail.link().startsWith("https://pd-assistant.com"+path)); assertTrue(mail.text().contains("15:00 +03:00"));
@@ -29,7 +29,7 @@ class MeetingReminderMailTest {
     }
     @Test void brandedLayoutCarriesLogoGreetingNameButtonDarkModeAndPlainTextFallback() {
         var recipient=new UserAccounts.MailRecipient("qa@example.test","Ayşe <b>Yılmaz</b>","tr");
-        var mail=SmtpMeetingReminderMail.render("https://pd-assistant.com",new MeetingReminderStore.Envelope(UUID.randomUUID(),"demo","Sprint planlama",Instant.parse("2026-10-25T12:00:00Z"),"Europe/Istanbul","Hamza",recipient));
+        var mail=SmtpMeetingReminderMail.render("https://pd-assistant.com",new MeetingReminderStore.Envelope(UUID.randomUUID(),"Sprint planlama",Instant.parse("2026-10-25T12:00:00Z"),"Europe/Istanbul","Hamza",recipient));
         String html=mail.html();
         assertTrue(html.contains("src=\"cid:pda-logo\"")); assertTrue(html.contains("alt=\"PDA")); // the real logo travels as an inline image, with alt text as the fallback
         assertTrue(html.contains("Toplantınız 1 saat sonra başlıyor")); assertTrue(html.contains("Merhaba Ayşe &lt;b&gt;Yılmaz&lt;/b&gt;,")); assertFalse(html.contains("<b>Yılmaz"));
@@ -46,6 +46,6 @@ class MeetingReminderMailTest {
             assertThrows(IllegalStateException.class,()->new SmtpMeetingReminderMail(new MockEnvironment().withProperty("FRONTEND_URL",origin)));
     }
     private MeetingReminderStore.Envelope envelope(String language,String zone,String instant,String title) {
-        return new MeetingReminderStore.Envelope(UUID.randomUUID(),"demo",title,Instant.parse(instant),zone,"QA Organizer",new UserAccounts.MailRecipient("qa@example.test","QA",language));
+        return new MeetingReminderStore.Envelope(UUID.randomUUID(),title,Instant.parse(instant),zone,"QA Organizer",new UserAccounts.MailRecipient("qa@example.test","QA",language));
     }
 }

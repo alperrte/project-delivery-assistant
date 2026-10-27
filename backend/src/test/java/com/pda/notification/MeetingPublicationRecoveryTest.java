@@ -18,7 +18,7 @@ import static org.mockito.Mockito.*;
 class MeetingPublicationRecoveryTest {
     @Test void recoveryIsBoundedAndNeverResubmitsAnotherFamilyOrAnInFlightPublication() {
         IncompleteEventPublications registry = mock(IncompleteEventPublications.class);
-        MeetingEvents.Changed event = new MeetingEvents.Changed(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
+        MeetingEvents.Changed event = new MeetingEvents.Changed(UUID.randomUUID(), UUID.randomUUID(),
                 null, MeetingEvents.Type.CREATED, "Meeting", Set.of(), Instant.now());
         doAnswer(call -> {
             Predicate<EventPublication> selector = call.getArgument(0);

@@ -10,8 +10,13 @@ public class Meeting {
     @Version public long version;
     /** Changes only when the start time or invited recipient set changes, independently of lifecycle writes. */
     @Column(nullable=false) public long reminderRevision;
-    @Column(nullable=false) public UUID projectId;
+    /** The owner. Meetings belong to users (organizer + {@link #attendeeIds}), never to a project. */
     @Column(nullable=false) public UUID organizerId;
+    /**
+     * The project of a PROJECT meeting; null for an INDEPENDENT one. The type is this column's nullness, so type and link can never disagree, and deleting
+     * the project (ON DELETE SET NULL) leaves an independent meeting. It never grants access: that is the organizer and {@link #attendeeIds} only.
+     */
+    @Column public UUID projectId;
     @Column(nullable=false,length=160) public String title;
     @Column(nullable=false,length=4000) public String description;
     @Column(nullable=false) public Instant startsAt;
@@ -39,5 +44,7 @@ public class Meeting {
     public List<String> agenda=new ArrayList<>();
     @ElementCollection @CollectionTable(name="meeting_attendees",joinColumns=@JoinColumn(name="meeting_id"))
     @Column(name="user_id",nullable=false) public Set<UUID> attendeeIds=new HashSet<>();
+    public enum Kind { PROJECT, INDEPENDENT }
+    public Kind kind() { return projectId==null?Kind.INDEPENDENT:Kind.PROJECT; }
     public enum Status { SCHEDULED, OPEN, ENDED, CANCELLED }
 }

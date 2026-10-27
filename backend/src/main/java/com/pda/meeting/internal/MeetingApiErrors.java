@@ -18,7 +18,7 @@ public class MeetingApiErrors {
         var body=ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(status),"Meeting request could not be completed");
         body.setProperty("code",code);
         var response=ResponseEntity.status(status).header("Cache-Control","no-store");
-        if(status==429) response.header("Retry-After","MEETING_TOKEN_RATE_LIMITED".equals(code)?"2":"1");
+        if(status==429) response.header("Retry-After","MEETING_TOKEN_RATE_LIMITED".equals(code)?"2":"MEETING_SEARCH_RATE_LIMITED".equals(code)?"60":"1");
         if("MEETING_RECONNECT_PENDING".equals(code)) response.header("Retry-After","10");
         return response.body(body);
     }

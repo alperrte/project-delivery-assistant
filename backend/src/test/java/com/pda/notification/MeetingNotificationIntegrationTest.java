@@ -37,13 +37,15 @@ class MeetingNotificationIntegrationTest {
     @Autowired TransactionTemplate transaction;
     @Autowired IncompleteEventPublications publications;
     @Test void lifecycleFanoutReplayAndOwnReadFiltersPersist(){
-        UUID a=account(),b=account(),outsider=account(),project=UUID.randomUUID(),meeting=UUID.randomUUID();
+        UUID a=account(),b=account(),outsider=account(),meeting=UUID.randomUUID();
         for(var type:MeetingEvents.Type.values()){
-            var e=event(meeting,project,type,Set.of(a,b));
+            var e=event(meeting,type,Set.of(a,b));
             transaction.executeWithoutResult(s->publisher.publishEvent(e));store.save(e);store.save(e);
         }
         assertEquals(6,notifications.unreadCount(a));assertEquals(6,notifications.unreadCount(b));assertEquals(0,notifications.unreadCount(outsider));
-        var page=notifications.list(a,true,null,project,List.of(NotificationType.MEETING_CREATED),0,20);
+        // Meetings are user-owned: their notifications are stored without a project.
+        assertEquals(12,db.queryForObject("SELECT count(*) FROM notifications WHERE resource_type='MEETING' AND resource_id=? AND project_id IS NULL",Long.class,meeting));
+        var page=notifications.list(a,true,null,null,List.of(NotificationType.MEETING_CREATED),0,20);
         assertEquals(1,page.getTotalElements());var n=page.getContent().getFirst();
         assertThrows(NoSuchElementException.class,()->notifications.markRead(outsider,n.getId()));
         var readAt=notifications.markRead(a,n.getId()).getReadAt();
@@ -52,12 +54,12 @@ class MeetingNotificationIntegrationTest {
         assertEquals(6,notifications.list(a,false,null,0,20).getTotalElements());assertTrue(notifications.claimTeamDeletion(a).isEmpty());
     }
     @Test void rollbackPublishesNothing(){
-        var e=event(UUID.randomUUID(),UUID.randomUUID(),MeetingEvents.Type.CREATED,Set.of(account()));
+        var e=event(UUID.randomUUID(),MeetingEvents.Type.CREATED,Set.of(account()));
         assertThrows(IllegalStateException.class,()->transaction.executeWithoutResult(s->{publisher.publishEvent(e);throw new IllegalStateException("TEST-ONLY rollback");}));
         assertEquals(0,count(e.eventId()));
     }
     @Test void failedFanoutIsAtomicAndDurableReplayRecovers(){
-        UUID a=account(),missing=UUID.randomUUID();var e=event(UUID.randomUUID(),UUID.randomUUID(),MeetingEvents.Type.OPENED,Set.of(a,missing));
+        UUID a=account(),missing=UUID.randomUUID();var e=event(UUID.randomUUID(),MeetingEvents.Type.OPENED,Set.of(a,missing));
         try{transaction.executeWithoutResult(s->publisher.publishEvent(e));}catch(RuntimeException expected){ }
         assertEquals(0,count(e.eventId()));account(missing);
         publications.resubmitIncompletePublications(p->p.getEvent() instanceof MeetingEvents.Changed x && x.eventId().equals(e.eventId()));
@@ -67,7 +69,7 @@ class MeetingNotificationIntegrationTest {
         Set<UUID> recipients=new HashSet<>();List<Object[]> accounts=new ArrayList<>();
         for(int i=0;i<501;i++){UUID id=UUID.randomUUID();recipients.add(id);accounts.add(new Object[]{id,id+"@example.test",id.toString().substring(0,20)});}
         db.batchUpdate("INSERT INTO users(id,email,nickname,account_status,email_verification_status,global_role,created_at,updated_at) VALUES (?,?,?,'ACTIVE','VERIFIED','USER',now(),now())",accounts);
-        var e=event(UUID.randomUUID(),UUID.randomUUID(),MeetingEvents.Type.OVERTIME,recipients);store.save(e);store.save(e);assertEquals(501,count(e.eventId()));
+        var e=event(UUID.randomUUID(),MeetingEvents.Type.OVERTIME,recipients);store.save(e);store.save(e);assertEquals(501,count(e.eventId()));
     }
     @Test void constraintsPreserveOtherFamiliesAndRequireMeetingEvent(){
         UUID user=account();
@@ -78,7 +80,7 @@ class MeetingNotificationIntegrationTest {
         }
     }
     private long count(UUID e){return db.queryForObject("SELECT count(*) FROM notifications WHERE source_event_id=?",Long.class,e);}
-    private MeetingEvents.Changed event(UUID meeting,UUID project,MeetingEvents.Type type,Set<UUID> users){return new MeetingEvents.Changed(UUID.randomUUID(),meeting,project,null,type,"Meeting",users,Instant.now());}
+    private MeetingEvents.Changed event(UUID meeting,MeetingEvents.Type type,Set<UUID> users){return new MeetingEvents.Changed(UUID.randomUUID(),meeting,null,type,"Meeting",users,Instant.now());}
     private UUID account(){UUID id=UUID.randomUUID();account(id);return id;}
     private void account(UUID id){db.update("INSERT INTO users(id,email,nickname,account_status,email_verification_status,global_role,created_at,updated_at) VALUES (?,?,?,'ACTIVE','VERIFIED','USER',now(),now())",id,id+"@example.test",id.toString().substring(0,20));}
 }
