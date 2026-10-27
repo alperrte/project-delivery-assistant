@@ -248,6 +248,8 @@ Eski project-scoped `/api/v1/projects/*/meetings/**` yolları kaldırıldı (den
 
 ### Hybrid meetings: project or independent — 2026-10-27 (V58)
 
+V59 cleanup (2026-10-27): aşağıdaki V58 arşiv kolonuna ilişkin ifade tarihsel geçişi anlatır; `legacy_project_id` V59'da `RESTRICT` ile kaldırılır. Aktif `project_id`, nullable/FK `ON DELETE SET NULL`, API ve yetki kuralları değişmez. Production'da V58/V59 öncesi eski bağları içeren tam yedek + izole restore doğrulaması zorunludur; yerel yedek yeterli değildir. İşletim ve geri dönüş: migration `README.md` V59 bölümü.
+
 Yukarıdaki "kullanılmayan `project_id`" ve "body hiçbir zaman proje adlandırmaz" ifadelerinin yerini alır; erişim modeli **değişmedi**: toplantıya erişim yalnız organizatör veya açık katılımcı olmakla verilir, proje üyeliği/rolü hiçbir toplantı yetkisi vermez.
 
 - Tür saklanmaz, `project_id` doluluğundan türetilir: dolu = `PROJECT`, boş = `INDEPENDENT`. V58 eski `project_id` kolonunu `legacy_project_id` (arşiv, hiçbir yerde okunmaz) yapar ve yeni, boş `project_id` kolonunu `meetings_project_id_fkey ... ON DELETE SET NULL` ile ekler; mevcut tüm toplantılar bağımsız kalır (eski bayat değerlerden dönüştürme yok). Proje silinince toplantı, odası, sohbeti ve katılımcıları silinmez, toplantı bağımsıza döner.

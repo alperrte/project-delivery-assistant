@@ -1,5 +1,9 @@
 # Veritabanı ve kalıcılık
 
+## V59 eski toplantı proje arşivi temizliği — 2026-10-27
+
+V59 yalnız V58'in bıraktığı `meetings.legacy_project_id` kolonunu `RESTRICT` ile kaldırır; aktif nullable `project_id`, `ON DELETE SET NULL` FK ve indeks korunur. Eski proje değerleri uygulama davranışına katılmaz fakat arşiv kurtarması için gerekli olabilir: production'da V58/V59 başlamadan önce tam yedek ve izole restore doğrulaması zorunludur (V58 öncesinde arşiv değeri `project_id` adındadır). Yerel yedek production güvencesi değildir. Önceki SQL dosyaları değişmez; geri dönüş yedekten ayrı ortama restore ve gerekirse ileri düzeltmeyle yapılır, eski değerler aktif proje bağlantısına yazılmaz. Ayrıntı: migration `README.md` V59 bölümü ve `docs/compliation/2026-10-27-meeting-legacy-project-cleanup.md`.
+
 ## V56 toplantı sohbetinde yanıt ve emoji tepkisi — 2026-10-24
 
 `V56__meeting_chat_replies_reactions.sql`: `meeting_chat_messages.reply_to_message_id UUID` (boş olabilir), `UNIQUE(id, meeting_id)` ve `(reply_to_message_id, meeting_id) → (id, meeting_id)` bileşik FK'si: başka toplantının mesajına yanıt veritabanında da imkânsızdır; yanıtlanan mesaj silinince yalnız bağ temizlenir (`ON DELETE SET NULL (reply_to_message_id)`), `meeting_id` ve yanıt satırı kalır. Kendine yanıt CHECK ile reddedilir. `meeting_chat_reactions(message_id, participant_id, emoji VARCHAR(32), created_at)` PK `(message_id, participant_id, emoji)`: aynı kişi aynı emojiyi iki kez sayamaz; kimlik görünen ad değil doğrulanmış toplantı katılımcısıdır (üye veya misafir oturumu). Mesaj veya katılımcı silinince tepkiler CASCADE ile gider; sohbet saklama temizliği (`deleteByMeetingId`, toplantı bitişi) FK hatası vermez. Mevcut V52–V55 değişmedi; eski mesajlar yanıtsız ve tepkisiz kalır.
