@@ -40,7 +40,7 @@ export class Nvda {
       "[mouse]", "  enableMouseTracking = False", "  reportMouseShapeChanges = False",
     ].join("\n"));
     writeFileSync(this.logFile, "");
-    this.process = spawn(path.join(this.dir, "nvda.exe"), ["--minimal", "--disable-addons", `--config-path=${config}`, `--log-file=${this.logFile}`, "--log-level=12"], { detached: false, stdio: "ignore", windowsHide: true });
+    this.process = spawn(path.join(this.dir, "nvda.exe"), ["--minimal", "--disable-addons", "--no-sr-flag", `--config-path=${config}`, `--log-file=${this.logFile}`, "--log-level=12"], { detached: false, stdio: "ignore", windowsHide: true });
     for (let waited = 0; waited < 30000; waited += 250) {
       if (/NVDA initialized/.test(this.log())) return;
       await new Promise(resolve => setTimeout(resolve, 250));
@@ -49,9 +49,8 @@ export class Nvda {
   }
 
   async stop() {
-    try { this.process?.kill(); } catch { /* already gone */ }
-    // The portable copy's own process may have detached from the one started here.
-    try { execFileSync("taskkill", ["/IM", "nvda.exe", "/F"], { stdio: "ignore" }); } catch { /* none running */ }
+    // Stop only this test's process tree; never terminate somebody else's reader.
+    try { if (this.process?.pid && this.process.exitCode === null) execFileSync("taskkill", ["/PID", String(this.process.pid), "/T", "/F"], { stdio: "ignore" }); } catch { /* already stopped */ }
     this.process = undefined;
   }
 

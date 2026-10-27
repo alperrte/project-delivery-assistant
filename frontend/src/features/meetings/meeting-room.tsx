@@ -33,7 +33,7 @@ function RoomClock({ openedAt, endsAt }: { openedAt: string | null; endsAt: stri
   const now = useNow(1000);
   const elapsed = Math.max(0, Math.floor((now - Date.parse(openedAt ?? new Date(now).toISOString())) / 1000));
   const remaining = Math.ceil((Date.parse(endsAt) - now) / 60000);
-  return <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs tabular-nums text-muted-foreground">
+  return <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs tabular-nums text-muted-foreground compact:flex-nowrap compact:overflow-hidden compact:whitespace-nowrap">
     <span className="inline-flex items-center gap-1"><Clock size={13} aria-hidden="true" />{t("elapsed", { time: clockText(elapsed) })}</span>
     <span>{t("plannedEnd", { time: new Intl.DateTimeFormat(locale, { timeStyle: "short" }).format(new Date(endsAt)) })}{remaining > 0 && ` · ${t("remainingShort", { minutes: remaining })}`}</span>
     {remaining <= 0 && <span role="status" className="text-warning">{t("overtime")}</span>}
@@ -188,6 +188,17 @@ function MeetingRoomView({ live, id, userId, returnHref }: { live: SessionLive; 
       try { setDevices(await navigator.mediaDevices.enumerateDevices()); } catch (failure) { showDeviceError(failure); }
     }
   }
+  function closePanel() {
+    const label = panel ? t(panel) : t("more");
+    setPanel(null);
+    // Closing removes the focused field/button. Return to the visible opener;
+    // compact device controls live under More rather than a separate toolbar button.
+    requestAnimationFrame(() => {
+      const buttons = Array.from(root.current?.querySelectorAll<HTMLButtonElement>("button[aria-label]") ?? []);
+      const visible = (name: string) => buttons.find(button => button.getAttribute("aria-label") === name && !button.disabled && button.getClientRects().length > 0);
+      (visible(label) ?? visible(t("more")))?.focus({ preventScroll: true });
+    });
+  }
   async function copyLink() {
     if (!returnHref) return;
     try { await navigator.clipboard.writeText(`${window.location.origin}${localizeHref(returnHref, locale as Locale)}`); toast.success(t("linkCopied")); }
@@ -226,7 +237,7 @@ function MeetingRoomView({ live, id, userId, returnHref }: { live: SessionLive; 
     <header className={cn("flex flex-wrap items-center justify-between gap-3", inCall && "compact:h-[var(--room-top)] compact:shrink-0 compact:flex-nowrap compact:items-center compact:gap-2 compact:overflow-hidden compact:border-b compact:px-3 compact:pb-2 compact:pt-[max(0.5rem,env(safe-area-inset-top))]")}>
       <div className="flex min-w-0 items-center gap-3">
         {inCall && returnHref && <Tooltip><TooltipTrigger render={<Link href={returnHref} aria-label={t("minimize")} className={buttonVariants({ variant: "outline", className: "size-10 shrink-0 compact:size-9" })} />}><ChevronLeft size={18} aria-hidden="true" /></TooltipTrigger><TooltipContent>{t("minimize")}</TooltipContent></Tooltip>}
-        <div className="min-w-0 space-y-0.5">
+        <div className="min-w-0 space-y-0.5 compact:space-y-0">
           <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
             <h1 className="break-words text-xl font-semibold compact:truncate compact:text-base">{live.meeting?.title ?? t("group")}</h1>
             <p role="status" className={cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium compact:hidden", active ? "bg-success/15 text-success" : "bg-muted text-muted-foreground")}><span aria-hidden="true" className={cn("size-1.5 rounded-full bg-current", live.phase === "reconnecting" && "animate-pulse")} />{t(`phase.${live.phase}`)}</p>
@@ -263,7 +274,7 @@ function MeetingRoomView({ live, id, userId, returnHref }: { live: SessionLive; 
             </div>
             : <RoomStage people={people} shares={shares} monitor={monitor} mode={mode} onMode={setMode} pick={pick} onPick={setPick} describe={describe} screenLabel={name => t("sharedScreenOf", { name })} />}
         </section>
-        {panel && <aside aria-label={t(panel)} onKeyDown={event => { if (event.key === "Escape") setPanel(null); }}
+        {panel && <aside aria-label={t(panel)} onKeyDown={event => { if (event.key === "Escape") closePanel(); }}
           className="workspace-panel flex max-h-[70dvh] min-w-0 flex-col overflow-hidden p-4 lg:max-h-none lg:w-80 lg:shrink-0 xl:w-96 compact:fixed compact:inset-x-0 compact:top-[calc(var(--vvt,0px)+var(--room-top))] compact:z-30 compact:h-[calc(var(--vvh,100dvh)-var(--room-top)-var(--room-bar))] compact:max-h-none compact:rounded-none compact:border-0 compact:px-3 compact:pb-3 compact:pt-3">
           <div className="mb-3 flex items-center justify-between gap-2">
             {tabs
@@ -276,7 +287,7 @@ function MeetingRoomView({ live, id, userId, returnHref }: { live: SessionLive; 
                 </button>)}
               </div>
               : <h2 className="font-semibold">{t(panel)}</h2>}
-            <Button variant="ghost" className="min-h-11 min-w-11" aria-label={t("closePanel")} onClick={() => setPanel(null)}><X size={18} aria-hidden="true" /></Button>
+            <Button variant="ghost" className="min-h-11 min-w-11" aria-label={t("closePanel")} onClick={closePanel}><X size={18} aria-hidden="true" /></Button>
           </div>
           <div role={tabs ? "tabpanel" : undefined} id={tabs ? "room-tabpanel" : undefined} aria-labelledby={tabs ? `room-tab-${panel}` : undefined} className="flex min-h-0 flex-1 flex-col border-t pt-3">
             {panel === "participants" && <ParticipantsPanel live={live} room={room} canInvite={organizer} onCopyLink={userId && returnHref ? () => void copyLink() : undefined} organizerId={live.meeting?.organizerId} meetingId={id} />}

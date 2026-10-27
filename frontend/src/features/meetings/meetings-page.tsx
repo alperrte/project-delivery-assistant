@@ -162,7 +162,9 @@ export function MeetingsPage() {
             canEdit={canEdit(meeting)} canEnd={context.user?.id === meeting.organizerId} onAction={act} />)}</div>
         </section>)}</div>
         {query.data && !query.data.complete && <p role="status" className="text-xs text-muted-foreground">{t("listTruncated")}</p>}
-        <PaginationBar page={page} totalPages={totalPages} totalElements={arranged.length} pageSize={PAGE_SIZE} onPageChange={next => navigate({ page: next > 0 ? String(next + 1) : null })} />
+        <div data-meeting-pagination className="[&_button]:min-h-11 [&_button]:min-w-11">
+          <PaginationBar page={page} totalPages={totalPages} totalElements={arranged.length} pageSize={PAGE_SIZE} onPageChange={next => navigate({ page: next > 0 ? String(next + 1) : null })} />
+        </div>
       </>}
   </div>;
 }
