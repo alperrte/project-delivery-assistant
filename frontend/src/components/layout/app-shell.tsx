@@ -21,6 +21,7 @@ import { COLLAPSE_KEY, collapseEvent, useSidebarCollapsed } from "./sidebar-coll
 import { useSidebarWidth } from "./sidebar-width";
 import { ChatProvider } from "@/features/chat/chat-provider";
 import { ChatRoot } from "@/features/chat/components/chat-root";
+import { MeetingSidebar } from "@/features/meetings/meeting-sidebar";
 import { MeetingSessionProvider } from "@/features/meetings/session/meeting-session";
 import { MeetingMiniBar } from "@/features/meetings/session/meeting-mini-bar";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -227,6 +228,8 @@ export function AppShellView({ children, pathname, user, collapsed = false, onLo
             );
           })}
           <ProjectSidebarNav pathnameOverride={pathname} onNavigate={() => setMenuOpen(false)} collapsed={narrow} contained={contained} />
+          {/* Meetings are global: their group sits between the project groups and the personal links and never depends on a selected project. */}
+          {!contained && <MeetingSidebar pathname={pathname} collapsed={narrow} onNavigate={() => setMenuOpen(false)} />}
           <div className="mt-3 border-t border-border pt-4">
             {!narrow && (
               <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">{tw("personal")}</p>

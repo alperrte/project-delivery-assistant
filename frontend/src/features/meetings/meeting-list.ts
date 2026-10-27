@@ -8,6 +8,23 @@ export const PAGE_SIZE = 10;
 
 export const statusFromParam = (value: string | null): MeetingStatus | "" => (STATUS_FILTERS as readonly string[]).includes(value ?? "") ? value as MeetingStatus : "";
 export const sortFromParam = (value: string | null): MeetingSort => (SORTS as readonly string[]).includes(value ?? "") ? value as MeetingSort : "upcoming";
+/** Which kind of meeting the list shows. Filtering only narrows what the viewer already may see; it never widens access. */
+export const KIND_FILTERS = ["project", "independent"] as const;
+export type MeetingKindFilter = (typeof KIND_FILTERS)[number] | "";
+export const kindFromParam = (value: string | null): MeetingKindFilter => (KIND_FILTERS as readonly string[]).includes(value ?? "") ? value as MeetingKindFilter : "";
+/** The kind filter, and for project meetings optionally one project (a meeting whose project the viewer cannot see never matches a project). */
+export function matchesKind(meeting: Pick<Meeting, "meetingType" | "project">, kind: MeetingKindFilter, projectId: string): boolean {
+  if (kind === "independent") return meeting.meetingType === "INDEPENDENT";
+  if (kind === "project") return meeting.meetingType === "PROJECT" && (!projectId || meeting.project?.id === projectId);
+  return true;
+}
+/** The distinct projects of the meetings the viewer can see (the project filter offers nothing else), by name. */
+export function projectsOf(meetings: readonly Pick<Meeting, "project">[]): NonNullable<Meeting["project"]>[] {
+  const found = new Map<string, NonNullable<Meeting["project"]>>();
+  for (const meeting of meetings) if (meeting.project) found.set(meeting.project.id, meeting.project);
+  return [...found.values()].sort((a, b) => a.name.localeCompare(b.name));
+}
+
 /** `?page=` is one based in the URL, zero based here. */
 export function pageFromParam(value: string | null): number {
   const parsed = Number.parseInt(value ?? "", 10);
@@ -34,11 +51,11 @@ export function groupKey(meeting: Pick<Meeting, "startsAt" | "status">, now: num
   return days === 0 ? "today" : days === 1 ? "tomorrow" : days > 1 ? "later" : days >= -7 ? "pastWeek" : "earlier";
 }
 
-/** Case-insensitive match on title, description and agenda items. */
+/** Case-insensitive match on title, description, agenda items and the name of the (visible) project. */
 export function matchesQuery(meeting: Meeting, query: string, locale?: string): boolean {
   const needle = query.trim().toLocaleLowerCase(locale);
   if (!needle) return true;
-  return [meeting.title, meeting.description, ...meeting.agenda].some(text => (text ?? "").toLocaleLowerCase(locale).includes(needle));
+  return [meeting.title, meeting.description, meeting.project?.name, ...meeting.agenda].some(text => (text ?? "").toLocaleLowerCase(locale).includes(needle));
 }
 
 /**

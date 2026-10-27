@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
-  testDir: "./e2e", testMatch: ["meetings.spec.ts", "meeting-room-ux.spec.ts", "meeting-session.spec.ts", "meeting-redesign.spec.ts", "meeting-v291-create.spec.ts", "meeting-v291-room.spec.ts", "meeting-v292-chat.spec.ts"], workers: 1, retries: 0,
+  testDir: "./e2e", testMatch: ["meetings.spec.ts", "meeting-global.spec.ts", "meeting-room-ux.spec.ts", "meeting-session.spec.ts", "meeting-redesign.spec.ts", "meeting-v291-create.spec.ts", "meeting-v291-room.spec.ts", "meeting-v292-chat.spec.ts", "meeting-a11y.spec.ts", "meeting-chat-start.spec.ts"], workers: 1, retries: 0,
+  globalSetup: "./e2e/qa-global-setup.ts", globalTeardown: "./e2e/qa-global-teardown.ts",
   outputDir: "./test-results/meeting-system",
   reporter: [["list"]], use: { baseURL: "http://localhost:3000", trace: "off", screenshot: "only-on-failure" },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"], launchOptions: { args: ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream", "--auto-select-desktop-capture-source=Entire screen", "--enable-usermedia-screen-capturing"] } } }],

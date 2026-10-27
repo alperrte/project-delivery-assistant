@@ -32,14 +32,14 @@ async function createProject(page: Page) {
   const result = await api(page, "POST", "/projects", { name: `Meeting QA ${Date.now()}`, projectTypes: ["WEB"] });
   expect(result.status).toBe(201); return result.json as Project;
 }
-async function createMeeting(page: Page, projectId: string, open = true) {
+async function createMeeting(page: Page, projectId: string, open = true, attendeeIds: string[] = []) {
   const now = Date.now();
-  const result = await api(page, "POST", `/projects/${projectId}/meetings`, { title: `Meeting QA ${now}`, description: "Real API and LiveKit acceptance", startsAt: new Date(now + (open ? 1000 : 3600_000)).toISOString(), endsAt: new Date(now + 7200_000).toISOString(), zoneId: "Europe/Istanbul", agenda: ["Review", "Decisions"], attendeeIds: [] });
+  const result = await api(page, "POST", `/meetings`, { title: `Meeting QA ${now}`, description: "Real API and LiveKit acceptance", startsAt: new Date(now + (open ? 1000 : 3600_000)).toISOString(), endsAt: new Date(now + 7200_000).toISOString(), zoneId: "Europe/Istanbul", agenda: ["Review", "Decisions"], attendeeIds });
   expect(result.status).toBe(201); const meeting = result.json as Meeting;
-  if (open) expect((await api(page, "POST", `/projects/${projectId}/meetings/${meeting.id}/start`)).status).toBe(200);
+  if (open) expect((await api(page, "POST", `/meetings/${meeting.id}/start`)).status).toBe(200);
   return meeting;
 }
-const href = (slug: string, suffix = "") => localizeHref(`/projects/${slug}/meetings${suffix}`, "tr");
+const href = (slug: string, suffix = "") => localizeHref(`/meetings${suffix}`, "tr");
 async function join(page: Page) { await page.getByRole("button", { name: tr.join, exact: true }).click(); await expect(page.getByRole("status").filter({ hasText: new RegExp(`^${tr.phase.connected}$`) })).toBeVisible({ timeout: 30000 }); }
 async function screenshot(page: Page, name: string) { mkdirSync(path.join(__dirname, "../test-results/meetings-visual"), { recursive: true }); await page.screenshot({ path: path.join(__dirname, `../test-results/meetings-visual/${name}.png`), fullPage: true }); }
 
@@ -70,7 +70,7 @@ test("room entry reloads the document to apply route-scoped media permissions", 
 test("real create/edit/cancel, sidebar, calendars, localized responsive form and security headers", async ({ page, context }) => {
   test.setTimeout(180000); await login(context, managerFile); const project = await createProject(page);
   try {
-    await page.goto(href(project.slug, "/new"));
+    await page.goto(href(project.slug, "/new?type=independent"));
     await expect(page.locator("#meeting-title")).toBeVisible();
     await expect(page.getByRole("link", { name: tr.back, exact: true })).toHaveCount(0);
     await expect(page.getByRole("navigation", { name: messages.common.breadcrumb, exact: true })).toHaveCount(0);
@@ -81,9 +81,9 @@ test("real create/edit/cancel, sidebar, calendars, localized responsive form and
     await expect(page.getByRole("heading", { name: "Frontend scheduled meeting", exact: true })).toBeVisible();
     const id = matchPath(new URL(page.url()).pathname)!.params.meetingId;
     expect(id).toMatch(/^[a-f0-9-]{36}$/);
-    const persisted = await api(page, "GET", `/projects/${project.id}/meetings/${id}`);
+    const persisted = await api(page, "GET", `/meetings/${id}`);
     expect(persisted.status).toBe(200); expect((persisted.json as Meeting).agenda).toEqual(["Delivery review"]);
-    await page.goto(href(project.slug, "/calendar")); await expect(page.locator("[data-calendar-meetings]").first()).toBeVisible();
+    await page.goto(localizeHref(`/projects/${project.slug}/meetings/calendar`, "tr")); await expect(page.locator("[data-calendar-meetings]").first()).toBeVisible();
     await page.goto("/calendar"); await expect(page.locator("[data-calendar-meetings]").first()).toBeVisible();
     await page.goto(href(project.slug, `/${id}/edit`)); await page.getByLabel(tr.title, { exact: true }).fill("Updated meeting"); await page.getByRole("button", { name: tr.save, exact: true }).click();
     await expect(page.getByRole("heading", { name: "Updated meeting", exact: true })).toBeVisible();
@@ -96,13 +96,13 @@ test("real create/edit/cancel, sidebar, calendars, localized responsive form and
     await expect.poll(() => matchPath(new URL(page.url()).pathname)?.params.meetingId).toBe(id);
     for (const locale of ["tr", "en", "de"] as const) {
       await page.setViewportSize({ width: 320, height: 844 });
-      await page.goto(localizeHref(`/projects/${project.slug}/meetings/new`, locale));
+      await page.goto(localizeHref(`/meetings/new?type=independent`, locale));
       await expect(page.locator("#meeting-title")).toBeVisible();
       await expect(page.locator('button[type="submit"][value="plan"]')).toBeEnabled();
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
       await screenshot(page, `form-${locale}-320`);
     }
-    await page.setViewportSize({ width: 1440, height: 1000 }); await page.goto(href(project.slug, "/new")); await expect(page.getByRole("button", { name: tr.plan, exact: true })).toBeEnabled(); await screenshot(page, "form-tr-1440");
+    await page.setViewportSize({ width: 1440, height: 1000 }); await page.goto(href(project.slug, "/new?type=independent")); await expect(page.getByRole("button", { name: tr.plan, exact: true })).toBeEnabled(); await screenshot(page, "form-tr-1440");
     expect((await new AxeBuilder({ page }).include("[data-meeting-form]").analyze()).violations).toEqual([]);
     await page.emulateMedia({ reducedMotion: "reduce" }); await page.mouse.move(700, 20);
     await page.locator(".theme-toggle").getByRole("button", { name: "Koyu", exact: true }).click();
@@ -143,7 +143,7 @@ test("two real participants: media, mention/chat, guest revoke semantics, modera
     const member = (await api(b, "GET", "/auth/me")).json as { id: string; nickname: string };
     // TEST-ONLY fixture membership, restricted to this newly created QA project/account.
     psql(`WITH membership AS (INSERT INTO project_memberships(id,project_id,user_id,joined_at) VALUES(gen_random_uuid(),'${uuid(project.id)}','${uuid(member.id)}',now()) RETURNING id) INSERT INTO project_membership_roles(membership_id,role) SELECT id,'TESTER' FROM membership`);
-    const meeting = await createMeeting(a, project.id);
+    const meeting = await createMeeting(a, project.id, true, [member.id]);
     await a.goto(href(project.slug, `/${meeting.id}/room`));
     await b.goto(href(project.slug, `/${meeting.id}`));
     await b.getByRole("link", { name: tr.join, exact: true }).click();
@@ -183,7 +183,7 @@ test("two real participants: media, mention/chat, guest revoke semantics, modera
     await volumeMenu.getByRole("button", { name: tr.volumeReset, exact: true }).click(); await expect.poll(async () => (await readGains(b)).filter(value => value === 0 || value === 2)).toEqual([]);
     await b.keyboard.press("Escape");
     await showPanel(b, tr.chat);
-    const inviteResponse = await api(a, "POST", `/projects/${project.id}/meetings/${meeting.id}/invites`, { expiresAt: new Date(Date.now() + 3600000).toISOString(), maxUses: 2 }); expect(inviteResponse.status).toBe(201); const invite = inviteResponse.json as MeetingInvite;
+    const inviteResponse = await api(a, "POST", `/meetings/${meeting.id}/invites`, { expiresAt: new Date(Date.now() + 3600000).toISOString(), maxUses: 2 }); expect(inviteResponse.status).toBe(201); const invite = inviteResponse.json as MeetingInvite;
     const guestStatuses: string[] = [];
     g.on("response", response => { const url = new URL(response.url()); if (url.origin === "http://localhost:8080") guestStatuses.push(`${response.request().method()} ${url.pathname} ${response.status()}`); });
     g.on("requestfailed", request => { const url = new URL(request.url()); if (url.origin === "http://localhost:8080") guestStatuses.push(`${request.method()} ${url.pathname} ${request.failure()?.errorText}`); });
@@ -194,20 +194,20 @@ test("two real participants: media, mention/chat, guest revoke semantics, modera
     await expect(g.getByRole("heading", { name: meeting.title, exact: true })).toBeVisible(); expect(new URL(g.url()).hash).toBe("");
     await g.getByLabel(tr.displayName, { exact: true }).fill("QA Guest"); await g.getByRole("button", { name: tr.continue, exact: true }).click(); await join(g);
     await g.reload(); await join(g);
-    expect((await api(a, "DELETE", `/projects/${project.id}/meetings/${meeting.id}/invites/${invite.id}`)).status).toBe(204);
+    expect((await api(a, "DELETE", `/meetings/${meeting.id}/invites/${invite.id}`)).status).toBe(204);
     await expect(g.getByRole("status").filter({ hasText: new RegExp(`^${tr.phase.connected}$`) })).toBeVisible();
-    expect((await api(b, "POST", `/projects/${project.id}/meetings/${meeting.id}/end`)).status).toBe(403);
-    expect((await api(b, "GET", `/projects/${project.id}/meetings/${meeting.id}/invites`)).status).toBe(403);
+    expect((await api(b, "POST", `/meetings/${meeting.id}/end`)).status).toBe(403);
+    expect((await api(b, "GET", `/meetings/${meeting.id}/invites`)).status).toBe(403);
     await expect(b.getByRole("button", { name: tr.endForAll, exact: true })).toHaveCount(0);
-    const participantResponse = await api(a, "GET", `/projects/${project.id}/meetings/${meeting.id}/participants`);
+    const participantResponse = await api(a, "GET", `/meetings/${meeting.id}/participants`);
     const guest = (participantResponse.json as { id: string; guest: boolean }[]).find(p => p.guest)!;
-    const oldEpoch = ((await api(a, "GET", `/projects/${project.id}/meetings/${meeting.id}`)).json as Meeting).roomEpoch;
-    expect((await api(b, "POST", `/projects/${project.id}/meetings/${meeting.id}/participants/${guest.id}/mute`)).status).toBe(403);
+    const oldEpoch = ((await api(a, "GET", `/meetings/${meeting.id}`)).json as Meeting).roomEpoch;
+    expect((await api(b, "POST", `/meetings/${meeting.id}/participants/${guest.id}/mute`)).status).toBe(403);
     await showPanel(a, tr.participants);
     await (await openParticipantMenu(a, "QA Guest")).getByRole("button", { name: tr.kick, exact: true }).click();
     await a.getByRole("dialog").getByRole("button", { name: tr.confirm, exact: true }).click();
     await expect(g.getByRole("heading", { name: tr.phase.removed, exact: true })).toBeVisible({ timeout: 30000 });
-    await expect.poll(async () => ((await api(a, "GET", `/projects/${project!.id}/meetings/${meeting.id}`)).json as Meeting).roomEpoch).toBeGreaterThan(oldEpoch);
+    await expect.poll(async () => ((await api(a, "GET", `/meetings/${meeting.id}`)).json as Meeting).roomEpoch).toBeGreaterThan(oldEpoch);
     await expect(a.getByRole("status").filter({ hasText: new RegExp(`^${tr.phase.connected}$`) })).toBeVisible({ timeout: 45000 });
     await expect(b.getByRole("status").filter({ hasText: new RegExp(`^${tr.phase.connected}$`) })).toBeVisible({ timeout: 45000 });
     await expect(b.getByText(messageText, { exact: true })).toBeVisible();
@@ -216,7 +216,7 @@ test("two real participants: media, mention/chat, guest revoke semantics, modera
     await expect(b.getByRole("status").filter({ hasText: new RegExp(`^${tr.phase.connected}$`) })).toBeVisible();
     await a.setViewportSize({ width: 390, height: 844 }); expect(await a.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); await screenshot(a, "room-390"); await a.setViewportSize({ width: 1440, height: 1000 });
     await screenshot(a, "room-1440");
-    expect((await api(a, "POST", `/projects/${project.id}/meetings/${meeting.id}/end`)).status).toBe(200);
+    expect((await api(a, "POST", `/meetings/${meeting.id}/end`)).status).toBe(200);
     await expect(b.getByRole("heading", { name: tr.phase.closed, exact: true })).toBeVisible({ timeout: 15000 });
     await expect(a.getByRole("heading", { name: tr.phase.closed, exact: true })).toBeVisible({ timeout: 15000 });
     expect(await a.evaluate(() => (window as unknown as { meetingQaTracks: MediaStreamTrack[] }).meetingQaTracks.every(track => track.readyState === "ended"))).toBe(true);
@@ -241,9 +241,9 @@ test("saved invite metadata survives reload without secrets; invalid guest link 
     await revoke.click(); await page.getByRole("dialog").press("Escape"); await expect(revoke).toBeFocused();
     await revoke.press("Enter"); await page.getByRole("dialog").getByRole("button", { name: tr.confirm, exact: true }).focus(); await page.keyboard.press("Enter");
     await expect(page.getByText(tr.inviteRevoked, { exact: true })).toBeVisible();
-    const metadata = (await api(page, "GET", `/projects/${project.id}/meetings/${meeting.id}/invites`)).json as { content: Record<string, unknown>[] };
+    const metadata = (await api(page, "GET", `/meetings/${meeting.id}/invites`)).json as { content: Record<string, unknown>[] };
     expect(metadata.content[0].revoked).toBe(true); expect(metadata.content[0]).not.toHaveProperty("token"); expect(metadata.content[0]).not.toHaveProperty("tokenHash");
-    expect((await api(page, "POST", `/projects/${project.id}/meetings/${meeting.id}/end`)).status).toBe(200);
+    expect((await api(page, "POST", `/meetings/${meeting.id}/end`)).status).toBe(200);
   } finally { await api(page, "POST", `/projects/${project.id}/archive`); }
   await context.clearCookies(); await page.goto(localizeHref("/meeting-guest", "tr")); await expect(page.getByText(tr.invalidInvite, { exact: true })).toBeVisible(); expect(matchPath(new URL(page.url()).pathname)?.route).toBe("/meeting-guest");
   const response = page.waitForResponse(result => result.url().endsWith("/meetings/guest/preview") && result.request().method() === "POST");
@@ -256,9 +256,9 @@ test("saved invite metadata survives reload without secrets; invalid guest link 
 });
 
 
-test("unified calendar preserves legacy project links and project switching", async ({ page, context }) => {
+test("unified calendar keeps legacy project links working and shows the same meetings whichever project is selected", async ({ page, context }) => {
   test.setTimeout(120000);
-  await login(context, managerFile);
+  await login(context, meetingAccount("manager", { fresh: true })); // the calendar lists everything the user has: an account of its own holds only this meeting
   const first = await createProject(page);
   const second = await createProject(page);
   try {
@@ -269,7 +269,7 @@ test("unified calendar preserves legacy project links and project switching", as
       expect(new URL(page.url()).searchParams.get("project")).toBe(first.slug);
       await expect(page.locator("#calendar-project")).toContainText(first.name);
       await page.locator('button:has([data-calendar-meetings])').first().click();
-      const detail = page.locator(`a[href="${localizeHref(`/projects/${first.slug}/meetings/${meeting.id}`, locale)}"]`);
+      const detail = page.locator(`a[href="${localizeHref(`/meetings/${meeting.id}`, locale)}"]`);
       await expect(detail).toBeVisible();
       await expect(page.locator(`a[href="${localizeHref(`/projects/${first.slug}/meetings/calendar`, locale)}"]`)).toHaveCount(0);
       await page.setViewportSize({ width: locale === "tr" ? 1440 : locale === "en" ? 320 : 390, height: 900 });
@@ -282,12 +282,16 @@ test("unified calendar preserves legacy project links and project switching", as
     await page.getByRole("option", { name: second.name, exact: true }).click();
     await expect.poll(() => new URL(page.url()).searchParams.get("project")).toBe(second.slug);
     await expect(page.locator("#calendar-project")).toContainText(second.name);
-    await expect(page.locator("[data-calendar-meetings]")).toHaveCount(0);
+    // Meetings belong to the user: switching the project changes nothing about them.
+    await expect(page.locator("[data-calendar-meetings]").first()).toBeVisible();
     await page.reload();
     await expect(page.locator("#calendar-project")).toContainText(second.name);
     await page.goto(href(first.slug));
-    await page.locator(`a[href="${localizeHref(`/calendar?project=${encodeURIComponent(first.slug)}`, "tr")}"]`).click();
-    await expect(page.locator("#calendar-project")).toContainText(first.name);
+    // Two links lead to the calendar (the menu and the list's own button); at the phone width left by the loop above only the button is shown.
+    await page.locator(`a[href="${localizeHref("/calendar", "tr")}"]:visible`).first().click();
+    await expect.poll(() => matchPath(new URL(page.url()).pathname)?.route).toBe("/calendar");
+    // The project the user chose last is remembered; the meetings list never carried it.
+    await expect(page.locator("#calendar-project")).toContainText(second.name);
   } finally {
     await api(page, "POST", `/projects/${first.id}/archive`);
     await api(page, "POST", `/projects/${second.id}/archive`);

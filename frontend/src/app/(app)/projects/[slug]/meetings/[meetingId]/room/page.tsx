@@ -1,10 +1,10 @@
-import { ProjectMeetingRoom } from "@/features/meetings/meeting-room";
-import type { Viewport } from "next";
-import { pageTitle } from "@/lib/seo/page-title";
-/** Phones: let the layout use the notch area (the call bar pads for it) and shrink with the keyboard so the chat input stays visible. */
-export const viewport: Viewport = { viewportFit: "cover", interactiveWidget: "resizes-content" };
-export const generateMetadata = () => pageTitle("meetingRoom");
-export default async function Page({ params }: { params: Promise<{ slug: string; meetingId: string }> }) {
-  const { slug, meetingId } = await params;
-  return <ProjectMeetingRoom slug={slug} id={meetingId} />;
+import { redirect } from "next/navigation";
+import { getLocale } from "next-intl/server";
+import { localizeHref } from "@/i18n/routing";
+import type { Locale } from "@/i18n/config";
+
+/** Compatibility route: an old project room link opens the same room at its global address (a full navigation, so the media policy applies to the new document). */
+export default async function Page({ params }: { params: Promise<{ meetingId: string }> }) {
+  const { meetingId } = await params;
+  redirect(localizeHref(`/meetings/${encodeURIComponent(meetingId)}/room`, await getLocale() as Locale));
 }

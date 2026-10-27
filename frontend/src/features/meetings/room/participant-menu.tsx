@@ -14,8 +14,8 @@ import { DEFAULT_VOLUME, MAX_VOLUME } from "../session/volume";
 export type ParticipantMenuApi = {
   volumes: Record<string, number>; muted: Record<string, boolean>;
   setVolume: (identity: string, volume: number) => void; setLocalMute: (identity: string, on: boolean) => void;
-  /** Present only for a Project Manager: guests and ordinary members never get the moderation actions. */
-  managerProjectId: string | undefined; meetingId: string;
+  /** True only for the meeting organizer: guests, attendees and project roles never get the moderation actions. */
+  canModerate: boolean; meetingId: string;
   /** The room's participant record (id for the moderation endpoints), by LiveKit identity. */
   participantId: (identity: string) => string | undefined;
   onNotice: (message: string) => void; onFailure: (failure: unknown) => void;
@@ -45,7 +45,7 @@ export function ParticipantMenu({ target, children, className }: { target: MenuT
     setOpen(true);
   }
   const level = api.volumes[target.identity] ?? DEFAULT_VOLUME, silenced = api.muted[target.identity] ?? false;
-  const participantId = api.participantId(target.identity), canModerate = !!api.managerProjectId && !target.self && !!participantId;
+  const participantId = api.participantId(target.identity), canModerate = api.canModerate && !target.self && !!participantId;
   const trigger = <Button ref={button} type="button" variant="ghost" aria-label={t("participantActions", { name: target.name })} aria-haspopup="dialog" aria-expanded={open}
     onClick={() => { setAnchor(button.current); setOpen(true); }}
     className={cn("size-9 shrink-0 text-muted-foreground hover:text-foreground", className)}><MoreHorizontal size={18} aria-hidden="true" /></Button>;
@@ -83,7 +83,7 @@ export function ParticipantMenu({ target, children, className }: { target: MenuT
               <p className="text-xs font-medium text-muted-foreground">{t("moderation")}</p>
               <Button type="button" variant="outline" className="min-h-10 w-full justify-start" onClick={async () => {
                 setOpen(false);
-                try { await meetingsApi.moderate(api.managerProjectId!, api.meetingId, participantId!, "mute"); api.onNotice(t("muted")); } catch (failure) { api.onFailure(failure); }
+                try { await meetingsApi.moderate(api.meetingId, participantId!, "mute"); api.onNotice(t("muted")); } catch (failure) { api.onFailure(failure); }
               }}><MicOff size={16} aria-hidden="true" />{t("muteParticipant")}</Button>
               <Button type="button" variant="ghost" className="min-h-10 w-full justify-start text-destructive" onClick={() => { setOpen(false); setKick(true); }}><UserX size={16} aria-hidden="true" />{t("kick")}</Button>
             </section>}
@@ -92,6 +92,6 @@ export function ParticipantMenu({ target, children, className }: { target: MenuT
       </Popover.Portal>
     </Popover.Root>
     {canModerate && <ConfirmDialog open={kick} onOpenChange={setKick} title={t("kick")} description={t("kickConfirm")} confirmLabel={t("confirm")} cancelLabel={t("cancel")} destructive
-      onConfirm={async () => { await meetingsApi.moderate(api.managerProjectId!, api.meetingId, participantId!, "kick"); api.onNotice(t("rotationNotice")); }} />}
+      onConfirm={async () => { await meetingsApi.moderate(api.meetingId, participantId!, "kick"); api.onNotice(t("rotationNotice")); }} />}
   </div>;
 }

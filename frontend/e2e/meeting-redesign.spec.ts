@@ -3,7 +3,7 @@ import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { api } from "./helpers";
 import { psql, uuid } from "./db";
-import { meetingAccount, showPanel } from "./meeting-fixture";
+import { meetingAccount, projectMateIds, showPanel } from "./meeting-fixture";
 import { REJECTED_STATE } from "./consent-state";
 import { localizeHref } from "../src/i18n/routing";
 import type { Project } from "../src/features/projects/types";
@@ -21,7 +21,7 @@ test.use({ storageState: REJECTED_STATE, trace: "off", video: "off", launchOptio
 test.describe.configure({ mode: "serial" });
 const base = "http://localhost:8080/api/v1", H = 3600_000, D = 24 * H;
 let managerFile: string, memberFile: string;
-test.beforeAll(() => { managerFile = meetingAccount("manager"); memberFile = meetingAccount("member"); });
+test.beforeAll(() => { managerFile = meetingAccount("manager", { fresh: true }); memberFile = meetingAccount("member", { fresh: true }); });
 async function login(context: BrowserContext, file: string) {
   const account = JSON.parse(readFileSync(file, "utf8")) as { email: string; password: string };
   await context.request.get(`${base}/auth/csrf`);
@@ -29,7 +29,7 @@ async function login(context: BrowserContext, file: string) {
   const result = await context.request.post(`${base}/auth/login`, { headers: { "X-XSRF-TOKEN": decodeURIComponent(csrf.value), Origin: "http://localhost:3000" }, data: { email: account.email, password: account.password } });
   expect(result.status()).toBe(200);
 }
-const listHref = (slug: string, query = "") => localizeHref(`/projects/${slug}/meetings`, "tr") + query;
+const listHref = (slug: string, query = "") => localizeHref(`/meetings`, "tr") + query;
 async function createProject(page: Page) {
   await page.goto("/projects");
   const result = await api(page, "POST", "/projects", { name: `Redesign QA ${Date.now()}`, projectTypes: ["WEB"] });
@@ -41,8 +41,8 @@ async function addMember(page: Page, project: Project) {
   psql(`WITH membership AS (INSERT INTO project_memberships(id,project_id,user_id,joined_at) VALUES(gen_random_uuid(),'${uuid(project.id)}','${uuid(me.id)}',now()) RETURNING id) INSERT INTO project_membership_roles(membership_id,role) SELECT id,'TESTER' FROM membership`);
   return me;
 }
-async function make(page: Page, project: Project, title: string, startsIn: number, lengthMs = H, attendeeIds: string[] = [], description = "Real API data") {
-  const result = await api(page, "POST", `/projects/${project.id}/meetings`, { title, description, startsAt: new Date(Date.now() + startsIn).toISOString(), endsAt: new Date(Date.now() + startsIn + lengthMs).toISOString(), zoneId: "Europe/Istanbul", agenda: ["Review"], attendeeIds });
+async function make(page: Page, project: Project, title: string, startsIn: number, lengthMs = H, attendeeIds: string[] = projectMateIds(project.id), description = "Real API data") {
+  const result = await api(page, "POST", `/meetings`, { title, description, startsAt: new Date(Date.now() + startsIn).toISOString(), endsAt: new Date(Date.now() + startsIn + lengthMs).toISOString(), zoneId: "Europe/Istanbul", agenda: ["Review"], attendeeIds });
   expect(result.status).toBe(201); return result.json as Meeting;
 }
 const cards = (page: Page) => page.locator("[data-meeting-card]");
@@ -66,10 +66,10 @@ test("list: counts, filters, URL state, Back/Forward, search, sort, groups, one 
     const cancelled = await make(page, project, "Delta vendor call", 2 * D);
     const ended = await make(page, project, "Epsilon kickoff", 3 * D);
     const live = await make(page, project, "Zeta live review", 1500);
-    expect((await api(page, "POST", `/projects/${project.id}/meetings/${cancelled.id}/cancel`)).status).toBe(200);
-    expect((await api(page, "POST", `/projects/${project.id}/meetings/${live.id}/start`)).status).toBe(200);
-    expect((await api(page, "POST", `/projects/${project.id}/meetings/${ended.id}/start`)).status).toBe(200);
-    expect((await api(page, "POST", `/projects/${project.id}/meetings/${ended.id}/end`)).status).toBe(200);
+    expect((await api(page, "POST", `/meetings/${cancelled.id}/cancel`)).status).toBe(200);
+    expect((await api(page, "POST", `/meetings/${live.id}/start`)).status).toBe(200);
+    expect((await api(page, "POST", `/meetings/${ended.id}/start`)).status).toBe(200);
+    expect((await api(page, "POST", `/meetings/${ended.id}/end`)).status).toBe(200);
 
     await page.goto(listHref(project.slug));
     // The main view is what is planned or live (finished and cancelled ones are history); the dropdown carries the real totals.
@@ -90,11 +90,11 @@ test("list: counts, filters, URL state, Back/Forward, search, sort, groups, one 
 
     // Per-status actions: live → Join (a document link to the room), everything else → Details.
     const card = (title: string) => cards(page).filter({ hasText: title });
-    await expect(card("Zeta live review").getByRole("link", { name: tr.joinShort, exact: true })).toHaveAttribute("href", localizeHref(`/projects/${project.slug}/meetings/${live.id}/room`, "tr"));
+    await expect(card("Zeta live review").getByRole("link", { name: new RegExp(`^${tr.joinShort}`) })).toHaveAttribute("href", localizeHref(`/meetings/${live.id}/room`, "tr"));
     await expect(card("Zeta live review")).toHaveAttribute("data-status", "OPEN");
     for (const title of ["Alpha roadmap", "Delta vendor call", "Epsilon kickoff"]) {
-      await expect(card(title).getByRole("link", { name: tr.details, exact: true })).toBeVisible();
-      await expect(card(title).getByRole("link", { name: tr.joinShort, exact: true })).toHaveCount(0);
+      await expect(card(title).getByRole("link", { name: new RegExp(`^${tr.details}`) })).toBeVisible();
+      await expect(card(title).getByRole("link", { name: new RegExp(`^${tr.joinShort}`) })).toHaveCount(0);
     }
 
     // Filter → URL; Back restores; reload keeps; an invalid value falls back to "all".
@@ -160,7 +160,7 @@ test("list: counts, filters, URL state, Back/Forward, search, sort, groups, one 
 
 test("list: pagination keeps groups honest and the page in the URL", async ({ page, context }) => {
   test.setTimeout(120000);
-  await login(context, managerFile); const project = await createProject(page);
+  await login(context, meetingAccount("manager", { fresh: true })); const project = await createProject(page);
   try {
     for (let index = 0; index < 12; index++) await make(page, project, `Bulk ${String(index).padStart(2, "0")}`, (index + 1) * 3 * H);
     await page.goto(listHref(project.slug)); await expect(cards(page)).toHaveCount(10);
@@ -182,7 +182,7 @@ test("create form: agenda with Enter, participants search/count/organizer, inlin
   try {
     await login(managerContext, managerFile); await login(memberContext, memberFile);
     project = await createProject(page); const member = await addMember(memberPage, project);
-    await page.goto(localizeHref(`/projects/${project.slug}/meetings/new`, "tr"));
+    await page.goto(localizeHref(`/meetings/new?type=independent`, "tr"));
     await expect(page.locator("#meeting-title")).toBeVisible();
     await expect(page.getByText(tr.online, { exact: true })).toHaveCount(0);
     // Required title: an inline message, no request.
@@ -197,18 +197,20 @@ test("create form: agenda with Enter, participants search/count/organizer, inlin
     // Participants: organizer fixed and counted, case-insensitive search, selection count follows.
     const panel = page.locator("[data-meeting-form] aside").first();
     await expect(panel.getByText(tr.organizer, { exact: true })).toBeVisible();
-    await expect(panel).toContainText("1 / 2");
-    await panel.getByRole("searchbox", { name: tr.searchMembers, exact: true }).fill(member.nickname.slice(-8).toUpperCase()); // upper case on purpose, hex letters only: a Turkish browser lower-cases "I" to a dotless "ı"
-    await expect(panel.getByRole("checkbox", { name: member.nickname, exact: true })).toBeVisible();
-    await panel.getByRole("checkbox", { name: member.nickname, exact: true }).click(); await expect(panel).toContainText("2 / 2");
+    const count = (value: number) => panel.getByLabel(tr.participantCount.replace("{count}", String(value)), { exact: true });
+    await expect(count(1)).toBeVisible();
+    await panel.getByRole("searchbox", { name: tr.searchPeople, exact: true }).fill(member.nickname.slice(-8).toUpperCase()); // upper case on purpose, hex letters only: a Turkish browser lower-cases "I" to a dotless "ı"
+    const add = panel.getByRole("button", { name: tr.addAttendee.replace("{name}", member.nickname), exact: true });
+    await expect(add).toBeVisible();
+    await add.click(); await expect(count(2)).toBeVisible();
     // Real payload: what is stored is exactly what was chosen.
     await page.locator('button[type="submit"][value="plan"]').click();
     await expect(page.getByRole("heading", { name: "Form redesign check", exact: true })).toBeVisible();
     const id = new URL(page.url()).pathname.split("/").filter(Boolean).at(-1)!;
-    const stored = (await api(page, "GET", `/projects/${project.id}/meetings/${id}`)).json as Meeting;
+    const stored = (await api(page, "GET", `/meetings/${id}`)).json as Meeting;
     expect(stored.agenda).toEqual(["First point", "Second point"]); expect(stored.attendeeIds).toEqual([member.id]); expect(stored.status).toBe("SCHEDULED");
     // Start now: a real meeting that is really open (one create, then the start action).
-    await page.goto(localizeHref(`/projects/${project.slug}/meetings/new`, "tr"));
+    await page.goto(localizeHref(`/meetings/new?type=independent`, "tr"));
     await page.locator("#meeting-title").fill("Started from the form");
     await page.getByRole("button", { name: tr.startNow, exact: true }).click();
     // A started meeting opens its call and joins it, microphone and camera still off.
@@ -216,10 +218,10 @@ test("create form: agenda with Enter, participants search/count/organizer, inlin
     await expect(page.getByRole("status").filter({ hasText: new RegExp(`^${tr.phase.connected}$`) })).toBeVisible({ timeout: 30000 });
     expect(new URL(page.url()).searchParams.get("autojoin")).toBeNull();
     await expect(page.getByRole("button", { name: tr.micOn, exact: true })).toBeVisible(); await expect(page.getByRole("button", { name: tr.cameraOn, exact: true })).toBeVisible();
-    const list = (await api(page, "GET", `/projects/${project.id}/meetings?size=20&sort=startsAt,asc`)).json as { content: Meeting[] };
+    const list = (await api(page, "GET", `/meetings?size=20&sort=startsAt,asc`)).json as { content: Meeting[] };
     const started = list.content.filter(m => m.title === "Started from the form"); expect(started).toHaveLength(1); expect(started[0].status).toBe("OPEN");
     // Responsive + accessibility (both themes).
-    await page.goto(localizeHref(`/projects/${project.slug}/meetings/new`, "tr"));
+    await page.goto(localizeHref(`/meetings/new?type=independent`, "tr"));
     await expect(page.locator('button[type="submit"][value="plan"]')).toBeEnabled();
     expect((await new AxeBuilder({ page }).include("[data-meeting-form]").analyze()).violations).toEqual([]);
     await page.setViewportSize({ width: 320, height: 800 }); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -237,8 +239,8 @@ test("room: stage, strip, focus, grid, tabs, invite, copy link with two real par
     await login(managerContext, managerFile); await login(memberContext, memberFile);
     project = await createProject(a); const member = await addMember(b, project);
     const meeting = await make(a, project, "Room redesign", 1000, 2 * H);
-    expect((await api(a, "POST", `/projects/${project.id}/meetings/${meeting.id}/start`)).status).toBe(200);
-    const roomUrl = localizeHref(`/projects/${project.slug}/meetings/${meeting.id}/room`, "tr");
+    expect((await api(a, "POST", `/meetings/${meeting.id}/start`)).status).toBe(200);
+    const roomUrl = localizeHref(`/meetings/${meeting.id}/room`, "tr");
     await a.goto(roomUrl); await b.goto(roomUrl);
     for (const page of [a, b]) { await page.getByRole("button", { name: tr.join, exact: true }).click(); await expect(page.getByRole("status").filter({ hasText: new RegExp(`^${tr.phase.connected}$`) })).toBeVisible({ timeout: 30000 }); }
     // The call screen carries no workspace breadcrumb, and the create form no "online meeting" note.
@@ -275,13 +277,13 @@ test("room: stage, strip, focus, grid, tabs, invite, copy link with two real par
     await showPanel(a, tr.participants);
     // Copy link: the meeting page of the project, from the header and from the panel.
     await a.getByRole("button", { name: tr.copyMeetingLink, exact: true }).first().click();
-    expect(new URL(await a.evaluate(() => navigator.clipboard.readText())).pathname).toBe(localizeHref(`/projects/${project.slug}/meetings/${meeting.id}`, "tr"));
+    expect(new URL(await a.evaluate(() => navigator.clipboard.readText())).pathname).toBe(localizeHref(`/meetings/${meeting.id}`, "tr"));
     // Invite: a real guest invite, the link is on the clipboard, only metadata is listed afterwards.
     await a.locator("[data-meeting-room] aside").getByRole("button", { name: tr.invitePeople, exact: true }).click();
     await a.getByRole("dialog").getByRole("button", { name: tr.createInvite, exact: true }).click();
     await expect(a.getByRole("dialog").getByRole("status")).toContainText(tr.inviteCopied);
     expect(new URL(await a.evaluate(() => navigator.clipboard.readText())).pathname).toBe(localizeHref("/meeting-guest", "tr"));
-    const invites = (await api(a, "GET", `/projects/${project.id}/meetings/${meeting.id}/invites`)).json as { content: Record<string, unknown>[] };
+    const invites = (await api(a, "GET", `/meetings/${meeting.id}/invites`)).json as { content: Record<string, unknown>[] };
     expect(invites.content).toHaveLength(1); expect(invites.content[0]).not.toHaveProperty("token");
     await a.getByRole("dialog").getByRole("button", { name: tr.done, exact: true }).click();
     // A plain member neither gets the invite button nor the end button, but keeps copy link and leave.
@@ -292,7 +294,7 @@ test("room: stage, strip, focus, grid, tabs, invite, copy link with two real par
     await b.getByRole("link", { name: tr.minimize, exact: true }).click(); await expect(b.locator("[data-meeting-mini]")).toBeVisible();
     // Accessibility of the call screen.
     expect((await new AxeBuilder({ page: a }).include("[data-meeting-room]").analyze()).violations).toEqual([]);
-    expect((await api(a, "POST", `/projects/${project.id}/meetings/${meeting.id}/end`)).status).toBe(200);
+    expect((await api(a, "POST", `/meetings/${meeting.id}/end`)).status).toBe(200);
   } finally { if (project) await api(a, "POST", `/projects/${project.id}/archive`).catch(() => {}); await managerContext.close(); await memberContext.close(); }
 });
 
@@ -308,8 +310,8 @@ test("microphone capture: echo cancellation, noise suppression and gain are requ
   try {
     await login(context, managerFile); project = await createProject(page);
     const meeting = await make(page, project, "Noise check", 1000, 2 * H);
-    expect((await api(page, "POST", `/projects/${project.id}/meetings/${meeting.id}/start`)).status).toBe(200);
-    await page.goto(localizeHref(`/projects/${project.slug}/meetings/${meeting.id}/room`, "tr"));
+    expect((await api(page, "POST", `/meetings/${meeting.id}/start`)).status).toBe(200);
+    await page.goto(localizeHref(`/meetings/${meeting.id}/room`, "tr"));
     await page.getByRole("button", { name: tr.join, exact: true }).click();
     await expect(page.getByRole("status").filter({ hasText: new RegExp(`^${tr.phase.connected}$`) })).toBeVisible({ timeout: 30000 });
     await page.getByRole("button", { name: tr.micOn, exact: true }).click();
@@ -326,7 +328,7 @@ test("microphone capture: echo cancellation, noise suppression and gain are requ
     for (const label of [tr.noiseSuppression, tr.echoCancellation, tr.autoGainControl]) await option(label).click();
     await expect.poll(settings).toEqual([[true, true, true]]);
     expect(await page.evaluate(() => localStorage.getItem("pda:meeting-capture:v1"))).toBe(JSON.stringify({ noiseSuppression: true, echoCancellation: true, autoGainControl: true }));
-    expect((await api(page, "POST", `/projects/${project.id}/meetings/${meeting.id}/end`)).status).toBe(200);
+    expect((await api(page, "POST", `/meetings/${meeting.id}/end`)).status).toBe(200);
   } finally { if (project) await api(page, "POST", `/projects/${project.id}/archive`).catch(() => {}); await context.close(); }
 });
 
@@ -344,8 +346,8 @@ test("microphone processing settings: a browser without support says so honestly
   try {
     await login(context, managerFile); project = await createProject(page);
     const meeting = await make(page, project, "Capture support", 1000, 2 * H);
-    expect((await api(page, "POST", `/projects/${project.id}/meetings/${meeting.id}/start`)).status).toBe(200);
-    const room = localizeHref(`/projects/${project.slug}/meetings/${meeting.id}/room`, "tr");
+    expect((await api(page, "POST", `/meetings/${meeting.id}/start`)).status).toBe(200);
+    const room = localizeHref(`/meetings/${meeting.id}/room`, "tr");
     const option = (label: string) => page.getByRole("checkbox", { name: new RegExp(label) });
     const join = async () => { await page.getByRole("button", { name: tr.join, exact: true }).click(); await expect(page.getByRole("status").filter({ hasText: new RegExp(`^${tr.phase.connected}$`) })).toBeVisible({ timeout: 30000 }); };
     // A limited browser: only echo cancellation is offered; the other two are disabled with the honest explanation.
@@ -364,7 +366,7 @@ test("microphone processing settings: a browser without support says so honestly
     await page.getByRole("button", { name: tr.devices, exact: true }).click();
     await expect(option(tr.noiseSuppression)).not.toBeChecked(); await expect(option(tr.echoCancellation)).toBeChecked(); await expect(option(tr.autoGainControl)).not.toBeChecked();
     await page.screenshot({ path: path.join(__dirname, "../test-results/meetings-visual/v291-capture-settings.png") });
-    expect((await api(page, "POST", `/projects/${project.id}/meetings/${meeting.id}/end`)).status).toBe(200);
+    expect((await api(page, "POST", `/meetings/${meeting.id}/end`)).status).toBe(200);
   } finally { if (project) await api(page, "POST", `/projects/${project.id}/archive`).catch(() => {}); await context.close(); }
 });
 
@@ -373,9 +375,9 @@ test("microphone processing panel reads right and passes axe in TR/EN/DE, light 
   await login(context, managerFile); const project = await createProject(page);
   try {
     const meeting = await make(page, project, "Capture themes", 1000, 2 * H);
-    expect((await api(page, "POST", `/projects/${project.id}/meetings/${meeting.id}/start`)).status).toBe(200);
+    expect((await api(page, "POST", `/meetings/${meeting.id}/start`)).status).toBe(200);
     for (const locale of ["tr", "en", "de"] as const) for (const dark of [false, true]) {
-      await page.goto(localizeHref(`/projects/${project.slug}/meetings/${meeting.id}/room`, locale));
+      await page.goto(localizeHref(`/meetings/${meeting.id}/room`, locale));
       await page.evaluate(value => { localStorage.setItem("theme", value); }, dark ? "dark" : "light"); await page.reload();
       const catalog = { tr, en, de }[locale];
       await page.getByRole("button", { name: catalog.join, exact: true }).click();

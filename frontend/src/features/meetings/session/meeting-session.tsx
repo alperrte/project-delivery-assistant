@@ -15,7 +15,7 @@ import type { useMeetingRoom, RoomPhase } from "../use-meeting-room";
  * per join attempt and torn down only by an explicit end (leave, end for all, removal, failure), by sign-out (the
  * whole workspace unmounts) or when the room page is left before anything was joined.
  */
-export type SessionTarget = { id: string; projectId: string; slug: string; roomHref: string; key: number };
+export type SessionTarget = { id: string; roomHref: string; key: number };
 type Runtime = ReturnType<typeof useMeetingRoom>;
 export type SessionLive = Runtime & {
   mediaBusy: boolean;

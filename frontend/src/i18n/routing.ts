@@ -31,6 +31,12 @@ export const PAGE_ROUTES = [
   "/projects/[slug]/sprints/[sprintId]",
   "/projects/[slug]/sprints/[sprintId]/edit",
   "/projects/[slug]/labels",
+  // Meetings belong to the user, not to a project: the global routes are the real ones. The project-scoped paths below only redirect old links.
+  "/meetings",
+  "/meetings/new",
+  "/meetings/[meetingId]",
+  "/meetings/[meetingId]/edit",
+  "/meetings/[meetingId]/room",
   "/projects/[slug]/meetings",
   "/projects/[slug]/meetings/new",
   "/projects/[slug]/meetings/calendar",
