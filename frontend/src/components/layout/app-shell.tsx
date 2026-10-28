@@ -26,6 +26,7 @@ import { MeetingSessionProvider } from "@/features/meetings/session/meeting-sess
 import { MeetingMiniBar } from "@/features/meetings/session/meeting-mini-bar";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Logo } from "@/components/common/logo";
+import { APP_VERSION } from "@/features/public-info/site-info";
 import { Skeleton } from "@/components/ui/skeleton";
 import { navItemClass } from "./nav-item";
 import { cn } from "@/lib/utils";
@@ -275,6 +276,7 @@ export function AppShellView({ children, pathname, user, collapsed = false, onLo
             <GearSix size={19} aria-hidden="true" />
             {!narrow && tw("settings")}
           </Link>
+          <p data-app-version title={`PDA Version : v${APP_VERSION}`} className={cn("px-3 py-1 text-xs tabular-nums text-muted-foreground", narrow && "px-0 text-center text-[10px]")}>{!narrow && "PDA Version : "}v{APP_VERSION}</p>
         </div>
       </>
     );
