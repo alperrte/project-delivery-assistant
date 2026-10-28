@@ -51,8 +51,8 @@ export function InviteDialog({ meetingId, trigger }: { meetingId: string; trigge
       </div>
       <DialogFooter>
         <Button variant="outline" onClick={() => change(false)}>{t(link ? "done" : "cancel")}</Button>
-        {link ? <Button variant="accent" onClick={() => void copy()}><Copy size={16} aria-hidden="true" />{t("copy")}</Button>
-          : <Button variant="accent" disabled={busy || maxUses < 1 || maxUses > 100} onClick={() => void create()}>{t("createInvite")}</Button>}
+        {link ? <Button variant="default" onClick={() => void copy()}><Copy size={16} aria-hidden="true" />{t("copy")}</Button>
+          : <Button variant="default" disabled={busy || maxUses < 1 || maxUses > 100} onClick={() => void create()}>{t("createInvite")}</Button>}
       </DialogFooter>
     </DialogContent>
   </Dialog>;

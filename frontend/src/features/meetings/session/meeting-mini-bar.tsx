@@ -213,7 +213,7 @@ export function MeetingMiniBar() {
   function returnFromPip() { closePip(); window.focus(); router.push(roomHref); }
   function leaveFromPip() { closePip(); window.focus(); setLeaveOpen(true); }
   const section = <section ref={bar} aria-label={t("miniLabel")} data-meeting-mini data-dragged={drag.position ? "" : undefined}
-    style={drag.position ? { left: drag.position.x, top: drag.position.y, right: "auto", bottom: "auto", width: "min(21rem, calc(100vw - 1rem))" } : undefined}
+    style={drag.position ? { left: drag.position.x, top: drag.position.y, right: "auto", bottom: "auto", width: "min(26rem, calc(100vw - 1rem))" } : undefined}
     className={cn("fixed z-30 overflow-hidden rounded-xl border bg-card shadow-lg",
       !drag.position && "left-[max(0.75rem,env(safe-area-inset-left))] right-[max(0.75rem,env(safe-area-inset-right))] bottom-[max(0.75rem,env(safe-area-inset-bottom))] sm:right-auto sm:w-[26rem] sm:max-w-[calc(100vw-1.5rem)] sm:left-[max(1rem,env(safe-area-inset-left))] lg:left-[calc(var(--workspace-sidebar-width)+1rem)] [body:has([data-sticky-actions])_&]:bottom-[4.75rem]")}>
     {/* The handle: picture + title. Pointer and touch drag from here; focus it for arrow-key moves (Shift: bigger steps, Home: back to the default place). */}
@@ -231,7 +231,7 @@ export function MeetingMiniBar() {
         <GripHorizontal size={16} aria-hidden="true" className="shrink-0 text-muted-foreground" />
       </div>
     </div>
-    <div className="flex items-center gap-1.5 border-t p-2">
+    <div className="grid grid-cols-[repeat(3,2.75rem)_1fr] items-center gap-1.5 border-t p-2">
       <Button variant={mic ? "secondary" : "outline"} className="size-11 shrink-0" aria-label={t(mic ? "micOff" : "micOn")} aria-pressed={mic} disabled={!connected || live.mediaBusy} onClick={() => void toggle("mic")}>
         {live.mediaBusy ? <Loader2 size={18} className="animate-spin" aria-hidden="true" /> : mic ? <Mic size={18} aria-hidden="true" /> : <MicOff size={18} aria-hidden="true" />}
       </Button>
@@ -239,8 +239,8 @@ export function MeetingMiniBar() {
         {camera ? <Camera size={18} aria-hidden="true" /> : <CameraOff size={18} aria-hidden="true" />}
       </Button>
       {pipSupported && <Button variant="outline" className="size-11 shrink-0" aria-label={t("miniPopOut")} title={t("miniPopOut")} onClick={() => void popOut()}><PictureInPicture2 size={18} aria-hidden="true" /></Button>}
-      <Link href={target.roomHref} aria-label={t("returnToMeeting")} className={buttonVariants({ variant: "accent", className: "h-11 min-w-0 flex-1 shrink gap-2 px-3 max-[27rem]:flex-none max-[27rem]:w-11 max-[27rem]:px-0" })}><Video size={18} aria-hidden="true" /><span className="truncate max-[27rem]:sr-only">{t("returnToMeeting")}</span></Link>
-      <Button ref={leaveButton} variant="destructive" className="size-11 shrink-0" aria-label={t("leave")} onClick={() => setLeaveOpen(true)}><PhoneOff size={18} aria-hidden="true" /></Button>
+      <Button ref={leaveButton} variant="destructive" className="col-start-4 row-start-1 ml-auto size-11 shrink-0" aria-label={t("leave")} onClick={() => setLeaveOpen(true)}><PhoneOff size={18} aria-hidden="true" /></Button>
+      <Link href={target.roomHref} aria-label={t("returnToMeeting")} className={buttonVariants({ variant: "default", className: "col-span-full min-h-11 w-full gap-2 whitespace-normal px-3 text-center" })}><Video size={18} className="shrink-0" aria-hidden="true" /><span>{t("returnToMeeting")}</span></Link>
     </div>
   </section>;
   // The same call in its own window: the picture, what is running and the everyday controls; Leave asks in the page, as always.
@@ -253,7 +253,7 @@ export function MeetingMiniBar() {
         <p className="min-w-0 flex-1 truncate text-sm font-medium">{live.meeting?.title ?? t("group")}</p>
         <span role="status" className="shrink-0 text-xs text-muted-foreground">{connected ? t("miniActive") : t(`phase.${live.phase}`)}{people > 0 && ` · ${t("miniParticipants", { count: people })}`}</span>
       </div>
-      <div className="flex items-center gap-1.5 border-t p-2">
+      <div className="grid grid-cols-[repeat(3,2.75rem)_1fr] items-center gap-1.5 border-t p-2">
         <Button variant={mic ? "secondary" : "outline"} className="size-11 shrink-0" aria-label={t(mic ? "micOff" : "micOn")} aria-pressed={mic} disabled={!connected || live.mediaBusy} onClick={() => void toggle("mic")}>
           {live.mediaBusy ? <Loader2 size={18} className="animate-spin" aria-hidden="true" /> : mic ? <Mic size={18} aria-hidden="true" /> : <MicOff size={18} aria-hidden="true" />}
         </Button>
@@ -265,8 +265,8 @@ export function MeetingMiniBar() {
           title={t(pip.fullscreen ? "pipExitFullscreen" : canFullscreen(pip.window) ? "pipFullscreen" : "pipFullscreenWindow")}>
           {pip.fullscreen ? <Minimize2 size={18} aria-hidden="true" /> : <Maximize2 size={18} aria-hidden="true" />}
         </Button>
-        <Button variant="accent" className="h-11 min-w-0 flex-1 gap-2 px-3" aria-label={t("returnToMeeting")} onClick={returnFromPip}><Video size={18} aria-hidden="true" /><span className="truncate">{t("returnToMeeting")}</span></Button>
-        <Button variant="destructive" className="size-11 shrink-0" aria-label={t("leave")} onClick={leaveFromPip}><PhoneOff size={18} aria-hidden="true" /></Button>
+        <Button variant="destructive" className="col-start-4 row-start-1 ml-auto size-11 shrink-0" aria-label={t("leave")} onClick={leaveFromPip}><PhoneOff size={18} aria-hidden="true" /></Button>
+        <Button variant="default" className="col-span-full min-h-11 w-full gap-2 whitespace-normal px-3 text-center" aria-label={t("returnToMeeting")} onClick={returnFromPip}><Video size={18} className="shrink-0" aria-hidden="true" /><span>{t("returnToMeeting")}</span></Button>
       </div>
     </div>, pip.window.document.body);
   return <>

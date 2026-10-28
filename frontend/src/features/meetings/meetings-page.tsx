@@ -99,7 +99,7 @@ export function MeetingsPage() {
 
   return <div className="min-w-0 space-y-5 [&>div:first-child_p]:max-w-none">
     <PageHeader title={t("myMeetings")} description={t("listDescription")}
-      action={<Link href="/meetings/new" className={buttonVariants({ variant: "accent", className: "min-h-11 sm:min-h-10" })}><Plus size={16} aria-hidden="true" />{t("create")}</Link>} />
+      action={<Link href="/meetings/new" className={buttonVariants({ variant: "default", className: "min-h-11 sm:min-h-10" })}><Plus size={16} aria-hidden="true" />{t("create")}</Link>} />
     <div className="space-y-3">
       <div data-meeting-toolbar className="grid grid-cols-1 items-center gap-2 min-[480px]:grid-cols-2 md:flex md:flex-wrap">
         <div className="relative min-w-0 min-[480px]:col-span-2 md:w-[300px] md:shrink-0">
@@ -146,7 +146,7 @@ export function MeetingsPage() {
     </div>
     {query.isError ? <MeetingError error={query.error} retry={() => void query.refetch()} />
       : query.isPending ? <div role="status" aria-label={t("loading")} className="space-y-3">{[0, 1, 2].map(index => <Skeleton key={index} className="h-22 rounded-xl" />)}</div>
-      : !total && !restorable ? <EmptyState title={t("empty")} description={t("emptyHint")} action={<Link href="/meetings/new" className={buttonVariants({ variant: "accent" })}><Plus size={16} aria-hidden="true" />{t("create")}</Link>} />
+      : !total && !restorable ? <EmptyState title={t("empty")} description={t("emptyHint")} action={<Link href="/meetings/new" className={buttonVariants({ variant: "default" })}><Plus size={16} aria-hidden="true" />{t("create")}</Link>} />
       : !arranged.length ? <div role="status" className="workspace-panel space-y-3 p-8 text-sm">
           {!showPast && !filtered && pastLoaded > 0
             ? <><p className="font-medium">{t("noUpcoming")}</p><p className="text-muted-foreground">{t("noUpcomingHint")}</p><Button variant="outline" onClick={() => navigate({ history: "1", page: null })}>{t("showHistory")}</Button></>
