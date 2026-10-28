@@ -504,3 +504,13 @@ Yalnız meeting kapsamındaki Keyboard Navigation/Focus State/Screen Reader sema
 ## Meeting gerçek entegrasyon kabulü — 2026-10-28 (sınırlı kapsam)
 
 Önceki frontend kabulüne ek olarak gerçek yerel frontend/REST/PostgreSQL/LiveKit üzerinde TR/EN/DE, iki tür, planlama/Hemen Başlat, katılımcı/listeler/yetki reddi, iki kişilik medya/sohbet, kalıcılık/reload, ayrılma ve uzaktaki katılımcıyla sonlandırma 3/3 gerçek testte geçti. Origin uyumlu yeniden build sonrası gerçek TR tekrarı 1/1; mevcut regresyonlar ayrıca 79/79 PASS. Lint/type/build/diff PASS. Ürün kodu, tasarım ve mimari değişmedi; yerel eski Next süreci/build origin uyumsuzluğu giderildi. Gerçek testte API/socket mock yok; medya kaynakları Chromium test cihazlarıdır. Yalnız bu koşunun yeni QA kayıtları kullanılıp temizlendi. Kullanıcının son kararıyla NVDA ve fiziksel mobil bu teslimin kabul kapsamından çıkarıldı; önceki koşullu not bu açıdan güncellendi. Yerel gerçek entegrasyon durumu TAMAMLANDI; global checklist kutuları değiştirilmedi. Ayrıntı ve sınırlar: `docs/compliation/2026-10-28-meeting-real-final.md`.
+
+## Toplantılarım kompakt araç çubuğu — 2026-10-28 (sınırlı kapsam)
+
+Yalnız liste araç çubuğunda Responsive/Keyboard Navigation/Focus State/Dark Mode/Navigasyon yerleşimi etkilendi. Sıra arama → durum → tür → takvim → sıralama; masaüstü arama 300 px, kontroller içerik genişliğinde/eşit yükseklikte. Geçmiş ve koşullu proje filtresi alt bölümde korunur. TR/EN/DE, light/dark, 320–1920 px; 1280+ tek satır, taşmama/kırpılmama, Tab sırası ve mevcut filtre/arama/sıralama/takvim/geçmiş UI davranışları doğrulandı, görüntüler incelendi. Dev 73/73, yerel production toolbar 3/3; lint/type/build/diff PASS. API fixture'lı frontend kontrolüdür, yeni backend/DB/LiveKit doğrulaması değildir. Global kutular değişmedi. Kayıt: `docs/compliation/2026-10-28-meeting-list-toolbar.md`.
+
+Takip düzeltmesi: yalnız Toplantılarım başlık açıklamasının genişlik sınırı kaldırıldı; TR 1280/1440/1920 px tek satır, mobil doğal kırılma doğrulandı. Toolbar TR/EN/DE 3/3 ve production TR 1/1, lint/build PASS; ortak PageHeader değişmedi. Aynı completion kaydı güncellendi.
+
+## Meeting tür değiştirme bağlantısı — 2026-10-28 (sınırlı kapsam)
+
+Yalnız oluşturma/proje seçiminin Navigasyon/Keyboard Navigation/Focus State yerleşimi etkilendi. Tür değiştirme bağlantısı ve sol ok kaldırıldı; proje değiştirme, tür kartları ve mevcut sidebar oluşturma yolu korundu. TR/EN/DE iki türde bağlantının yokluğu, RSC/legacy rotalar ve arama/odak regresyonları dev 73/73, yerel production 6/6 PASS; lint/type/build/diff PASS. API fixture'lı frontend doğrulamasıdır; gerçek DB entegrasyonu yeniden çalıştırılmadı. Global kutular değiştirilmedi. Kayıt: `docs/compliation/2026-10-28-meeting-kind-link-removal.md`.

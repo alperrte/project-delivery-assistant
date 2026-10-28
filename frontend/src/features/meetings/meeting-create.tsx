@@ -1,7 +1,7 @@
 "use client";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { ArrowLeft, ArrowRight, FolderKanban, Video } from "lucide-react";
+import { ArrowRight, FolderKanban, Video } from "lucide-react";
 import Link, { useSearchParams } from "@/i18n/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { MeetingForm } from "./meeting-form";
 import { MeetingError, useMeetingAccount } from "./shared";
 
-const CHOOSER = "/meetings/new", INDEPENDENT = "/meetings/new?type=independent", PROJECT = "/meetings/new?type=project";
+const INDEPENDENT = "/meetings/new?type=independent", PROJECT = "/meetings/new?type=project";
 const card = "group workspace-panel flex flex-col gap-4 p-6 text-left outline-none transition-colors hover:border-primary/50 hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring active:bg-muted/60";
 
 /** The card is ONE link whose name is its title and the sentence under it. The two sit in separate blocks, so a reader would join them into one word ("OluşturProjelerinizden"): a spoken full stop between them keeps them apart. */
@@ -45,13 +45,10 @@ function useMyProjects() {
   return useQuery({ queryKey: [...context.keys, "my-projects"], enabled: !!context.user, staleTime: 30_000, retry: false, queryFn: ({ signal }) => projectsApi.allVisible(signal) });
 }
 
-const BackToKinds = ({ label }: { label: string }) => <Link href={CHOOSER} className="mb-4 inline-flex min-h-11 items-center gap-1.5 text-sm text-muted-foreground underline underline-offset-4"><ArrowLeft size={14} aria-hidden="true" />{label}</Link>;
-
 function ProjectPicker() {
   const t = useTranslations("meetings"), projects = useMyProjects();
   const list = (projects.data ?? []).filter(project => project.status !== "ARCHIVED");
   return <PageContainer width="form">
-    <BackToKinds label={t("changeKind")} />
     <PageHeader title={t("chooseProject")} description={t("chooseProjectDescription")} />
     {projects.isError ? <MeetingError error={projects.error} retry={() => void projects.refetch()} />
       : projects.isPending ? <div role="status" aria-label={t("loading")} className="grid gap-3 sm:grid-cols-2">{[0, 1, 2, 3].map(index => <Skeleton key={index} className="h-24 rounded-xl" />)}</div>

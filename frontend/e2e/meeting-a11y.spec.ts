@@ -306,8 +306,13 @@ test.describe("isolated attendee search", () => {
         await expect(box).toHaveAttribute("placeholder", hint);
         // Exercise client navigation/RSC as well as the direct URL above. The
         // proxy must retain locale, type and project through its internal rewrite.
-        await page.getByRole("link", { name: kind === "project" ? t.changeProject : t.changeKind, exact: true }).click();
-        if (kind === "project") await page.getByRole("link", { name: t.changeKind, exact: true }).click();
+        await expect(page.getByRole("link", { name: t.changeKind, exact: true })).toHaveCount(0);
+        if (kind === "project") {
+          await page.getByRole("link", { name: t.changeProject, exact: true }).click();
+          await expect(page.getByRole("heading", { name: t.chooseProject, exact: true })).toBeVisible();
+          await expect(page.getByRole("link", { name: t.changeKind, exact: true })).toHaveCount(0);
+        }
+        await page.getByRole("group", { name: t.group, exact: true }).getByRole("link", { name: t.create, exact: true }).click();
         await expect(page.locator(`[data-meeting-kind-choice="${kind}"]`)).toBeVisible();
         await page.locator(`[data-meeting-kind-choice="${kind}"]`).click();
         if (kind === "project") {
