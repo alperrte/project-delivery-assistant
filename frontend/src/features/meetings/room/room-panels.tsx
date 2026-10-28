@@ -74,7 +74,7 @@ export function ParticipantsPanel({ live, room, canInvite, onCopyLink, organizer
       {!shown.length && <li className="px-2 py-3 text-sm text-muted-foreground">{t("noParticipantsFound")}</li>}
     </ul>
     {(canInvite || onCopyLink) && <div className="flex shrink-0 flex-wrap gap-2 border-t pt-3">
-      {canInvite && <InviteDialog meetingId={meetingId} trigger={<Button variant="accent" className="min-h-11 flex-1 basis-32"><UserPlus size={16} aria-hidden="true" />{t("invitePeople")}</Button>} />}
+      {canInvite && <InviteDialog meetingId={meetingId} trigger={<Button variant="default" className="min-h-11 flex-1 basis-32"><UserPlus size={16} aria-hidden="true" />{t("invitePeople")}</Button>} />}
       {onCopyLink && <Button variant="outline" className="min-h-11 flex-1 basis-32" onClick={onCopyLink}><Copy size={16} aria-hidden="true" />{t("copy")}</Button>}
     </div>}
   </div>;
@@ -233,7 +233,7 @@ export function ChatPanel({ live, active, content, setContent, mentions, setMent
           </div>;
         })}
       </div>
-      {behind && <Button type="button" size="sm" variant="accent" className="absolute bottom-2 left-1/2 -translate-x-1/2 shadow-md compact:min-h-11" onClick={() => { const element = log.current; if (element) element.scrollTop = element.scrollHeight; stick.current = true; setBehind(false); }}><ArrowDown size={14} aria-hidden="true" />{t("newMessages")}</Button>}
+      {behind && <Button type="button" size="sm" variant="default" className="absolute bottom-2 left-1/2 -translate-x-1/2 shadow-md compact:min-h-11" onClick={() => { const element = log.current; if (element) element.scrollTop = element.scrollHeight; stick.current = true; setBehind(false); }}><ArrowDown size={14} aria-hidden="true" />{t("newMessages")}</Button>}
     </div>
     {/* One picker for every message: it opens next to the button of the message that asked, and a choice adds (or takes back) that emoji. */}
     <EmojiPicker choices={COMPOSER_CHOICES} label={t("reactAction")} testId="meeting-reaction-picker" showTrigger={false} anchorRef={picker} open={!!reacting}
@@ -279,7 +279,7 @@ export function ChatPanel({ live, active, content, setContent, mentions, setMent
         })}
       </div>}
       {mentions.length > 0 && <div className="flex flex-wrap gap-1">{mentions.map(mention => <Button key={mention} type="button" size="sm" variant="secondary" onClick={() => setMentions(previous => previous.filter(m => m !== mention))}>{live.participants.find(p => p.id === mention)?.displayName ?? t("mention")} ×</Button>)}</div>}
-      <div className="flex items-center justify-between gap-2"><span className="text-xs tabular-nums text-muted-foreground">{content.length}/2000</span><Button type="submit" variant="accent" className="min-h-11" disabled={!active || sending || !content.trim()}>{t("send")}</Button></div>
+      <div className="flex items-center justify-between gap-2"><span className="text-xs tabular-nums text-muted-foreground">{content.length}/2000</span><Button type="submit" variant="default" className="min-h-11" disabled={!active || sending || !content.trim()}>{t("send")}</Button></div>
     </form>
   </>;
 }

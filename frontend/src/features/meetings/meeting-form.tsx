@@ -141,7 +141,7 @@ export function MeetingForm({ meeting, project: chosen }: { meeting?: Meeting; p
   const remove = (userId: string, index: number) => { const gone = picked.find(person => person.userId === userId); setPicked(previous => previous.filter(person => person.userId !== userId)); setDirty(true); focusAfter.current = { list: "picked", index }; if (gone) setAnnouncement(t("attendeeRemoved", { name: gone.nickname })); };
   const durationMinutes = !problem || problem === "past" ? Math.round((Date.parse(endsAt) - Date.parse(startsAt)) / 60_000) : 0;
 
-  return <PageContainer width="form">
+  return <PageContainer width="wide">
     {meeting && <Link href="/meetings" className="mb-4 inline-flex min-h-11 items-center text-sm text-muted-foreground underline underline-offset-4">{t("back")}</Link>}
     <PageHeader title={t(meeting ? "edit" : kind === "PROJECT" ? "createProjectMeeting" : "createIndependentMeeting")} />
     <div data-meeting-kind-bar className="mb-5 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border bg-card px-4 py-2 text-sm">
@@ -244,7 +244,7 @@ export function MeetingForm({ meeting, project: chosen }: { meeting?: Meeting; p
           <p className="text-xs leading-5 text-muted-foreground">{t(project ? "projectAttendeeAccess" : "attendeeAccess")}</p>
         </section>
         <section className="workspace-panel space-y-3 p-5">
-          <Button type="submit" value="plan" variant="accent" disabled={busy || !context.user} className="min-h-11 w-full">{busy ? t("saving") : t(meeting ? "save" : "plan")}</Button>
+          <Button type="submit" value="plan" variant="default" disabled={busy || !context.user} className="min-h-11 w-full">{busy ? t("saving") : t(meeting ? "save" : "plan")}</Button>
           {!meeting && <Button type="submit" value="now" variant="outline" disabled={busy || !context.user} className="min-h-11 w-full border-border-strong">{t("startNow")}</Button>}
           <Link href="/meetings" className={buttonVariants({ variant: "ghost", className: "min-h-11 w-full" })}>{t("cancel")}</Link>
         </section>

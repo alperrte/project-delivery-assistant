@@ -30,7 +30,7 @@ export function MeetingIconPicker({ value, onChange, disabled }: { value: string
     <div className="@container">
       <div role="radiogroup" aria-label={t("iconLabel")} className="grid grid-cols-[repeat(6,minmax(0,2.75rem))] justify-between gap-x-1.5 gap-y-2 @min-[34rem]:grid-cols-[repeat(12,minmax(0,2.75rem))]">
       {MEETING_ICONS.map(name => <label key={name} data-icon-option={name} className={cn("relative grid aspect-square w-full cursor-pointer place-items-center rounded-lg border transition-colors has-[:focus-visible]:ring-3 has-[:focus-visible]:ring-ring/50",
-        current === name ? "border-meeting bg-meeting text-meeting-foreground" : "bg-surface-2 text-muted-foreground hover:bg-muted hover:text-foreground", disabled && "cursor-not-allowed opacity-50")}>
+        current === name ? "border-primary bg-primary text-primary-foreground" : "bg-surface-2 text-muted-foreground hover:bg-muted hover:text-foreground", disabled && "cursor-not-allowed opacity-50")}>
         <input type="radio" name={group} value={name} checked={current === name} onChange={() => onChange(name)} className="peer absolute inset-0 size-full cursor-pointer opacity-0 disabled:cursor-not-allowed" />
         <MeetingIcon name={name} size={20} /><span className="sr-only">{t(`icon.${name}`)}</span>
       </label>)}

@@ -94,8 +94,8 @@ export function MeetingCard({ meeting, now, canEdit, canEnd, onAction }: Meeting
         {live && !inOtherCall
           // Entering a room needs a full document load (media CSP / Permissions-Policy are per document); a call already running in this tab is resumed in place.
           ? inThisCall
-            ? <Link href={roomHref} className={buttonVariants({ variant: "accent", className: "min-h-11 md:min-h-9" })}>{t("returnToMeeting")}<span className="sr-only"> — {meeting.title}</span></Link>
-            : <a href={localizeHref(roomHref, locale)} className={buttonVariants({ variant: "accent", className: "min-h-11 md:min-h-9" })}>{t("joinShort")}<span className="sr-only"> — {meeting.title}</span></a>
+            ? <Link href={roomHref} className={buttonVariants({ variant: "default", className: "min-h-11 md:min-h-9" })}>{t("returnToMeeting")}<span className="sr-only"> — {meeting.title}</span></Link>
+            : <a href={localizeHref(roomHref, locale)} className={buttonVariants({ variant: "default", className: "min-h-11 md:min-h-9" })}>{t("joinShort")}<span className="sr-only"> — {meeting.title}</span></a>
           : <Link href={detailHref} className={buttonVariants({ variant: "outline", className: "min-h-11 border-border-strong md:min-h-9" })}>{t("details")}<span className="sr-only"> — {meeting.title}</span></Link>}
         <DropdownMenu>
           <DropdownMenuTrigger render={<Button variant="ghost" className="size-11 md:size-9" aria-label={t("cardActions", { title: meeting.title })} />}><MoreHorizontal size={18} aria-hidden="true" /></DropdownMenuTrigger>

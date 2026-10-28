@@ -68,7 +68,7 @@ export function ParticipantMenu({ target, children, className }: { target: MenuT
               <div aria-hidden="true" className="flex justify-between text-[10px] tabular-nums text-muted-foreground"><span>0%</span><span>100%</span><span>200%</span></div>
               <p className="text-xs leading-5 text-muted-foreground">{t("volumeLocalNote")}</p>
               <div className="flex flex-wrap gap-2">
-                <Button type="button" variant={silenced ? "accent" : "outline"} aria-pressed={silenced} className="min-h-10 flex-1" onClick={() => api.setLocalMute(target.identity, !silenced)}>
+                <Button type="button" variant={silenced ? "default" : "outline"} aria-pressed={silenced} className="min-h-10 flex-1" onClick={() => api.setLocalMute(target.identity, !silenced)}>
                   {silenced ? <Volume2 size={16} aria-hidden="true" /> : <VolumeX size={16} aria-hidden="true" />}{t(silenced ? "unmuteForMe" : "muteForMe")}</Button>
                 <Button type="button" variant="ghost" className="min-h-10" disabled={level === DEFAULT_VOLUME && !silenced} onClick={() => { api.setLocalMute(target.identity, false); api.setVolume(target.identity, DEFAULT_VOLUME); }}>
                   <RotateCcw size={15} aria-hidden="true" />{t("volumeReset")}</Button>
