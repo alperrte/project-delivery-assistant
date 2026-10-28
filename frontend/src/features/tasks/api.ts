@@ -142,10 +142,11 @@ export function isPreviewableImage(contentType: string): boolean {
 }
 
 export const myTasksApi = {
-  mine: (params: MyTasksParams = {}) => {
+  mine: (params: MyTasksParams = {}, signal?: AbortSignal) => {
     const { scope = "OPEN", activeSprint, sort = "deadlineAt", direction = "asc", page = 0, size = TASK_PAGE_SIZE, ...rest } = params;
     return apiRequest<MyTasksPage>(
       `/tasks/mine${buildQuery({ ...rest, scope, sprint: activeSprint ? "active" : undefined, sort, direction, page, size })}`,
+      { signal },
     );
   },
   counts: () => apiRequest<MyTaskCounts>("/tasks/counts"),
