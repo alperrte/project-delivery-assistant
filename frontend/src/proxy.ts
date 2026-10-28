@@ -23,7 +23,7 @@ import { buildCsp, createNonce } from "./lib/security/csp";
  * session still has `mustChangePassword` pending (only the real `/auth/me`
  * response can) — that redirect stays owned by `AppShell`/the login form.
  */
-const PROTECTED_PATHS = ["/dashboard", "/projects", "/organizations", "/settings", "/account", "/calendar", "/invitations", "/change-password", "/tasks", "/admin"];
+const PROTECTED_PATHS = ["/dashboard", "/projects", "/meetings", "/organizations", "/settings", "/account", "/calendar", "/invitations", "/change-password", "/tasks", "/admin"];
 
 /**
  * Passes a page request on (optionally rewritten) with a fresh Content-Security-Policy. Next.js finds the nonce in the
@@ -33,7 +33,7 @@ const PROTECTED_PATHS = ["/dashboard", "/projects", "/organizations", "/settings
 function withCsp(request: NextRequest, options: { rewriteTo?: URL; headers?: Headers } = {}) {
   const nonce = createNonce();
   const internal = matchPath(request.nextUrl.pathname)?.internalPath ?? "";
-  const meeting = /^\/projects\/[^/]+\/meetings\/[^/]+\/room$/.test(internal) || /^\/meeting-guest(?:\/[^/]+)?$/.test(internal);
+  const meeting = /^\/meetings\/[^/]+\/room$/.test(internal) || /^\/meeting-guest(?:\/[^/]+)?$/.test(internal);
   const policy = buildCsp(nonce, { meeting });
   const requestHeaders = new Headers(options.headers ?? request.headers);
   requestHeaders.set("x-nonce", nonce);
@@ -51,7 +51,10 @@ function withCsp(request: NextRequest, options: { rewriteTo?: URL; headers?: Hea
 }
 
 export function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  // Paired with skipProxyUrlNormalize: preserve the transport origin for local
+  // rewrites. Cloning nextUrl would normalize 127.0.0.1 to localhost again.
+  const url = new URL(request.url);
+  const { pathname } = url;
   // The administrator sign-in is one unprefixed address with no locale rewrite and no session hint check: it must be
   // reachable while signed out, and an admin with an unverified session still has to see it. Passing it through is
   // deliberate (not just "no route matched"); the page sets noindex itself and the header repeats it.
@@ -65,10 +68,10 @@ export function proxy(request: NextRequest) {
   const page = matchPath(pathname, preferred);
   if (!page) return withCsp(request);
   // Old forms (unprefixed, other language, `?section=`) all have one canonical destination.
-  const normalized = normalizeProjectSection(page.route, request.nextUrl.search);
+  const normalized = normalizeProjectSection(page.route, url.search);
   const canonicalPath = normalized.route === page.route ? page.canonicalPath : buildPath(normalized.route, page.params, page.locale);
-  if (pathname !== canonicalPath || normalized.search !== request.nextUrl.search) {
-    const target = request.nextUrl.clone();
+  if (pathname !== canonicalPath || normalized.search !== url.search) {
+    const target = new URL(url);
     target.pathname = canonicalPath;
     target.search = normalized.search;
     const redirect = NextResponse.redirect(target, 308);
@@ -83,7 +86,7 @@ export function proxy(request: NextRequest) {
   // Old/bookmarked/footer help links must also keep a signed-in visitor in the workspace.
   // This chooses a layout only: AppShell and the API still validate the session.
   if (authenticated && (page.internalPath === "/faq" || page.internalPath === "/contact")) {
-    const target = request.nextUrl.clone();
+    const target = new URL(url);
     target.pathname = buildPath(page.internalPath === "/faq" ? "/account/faq" : "/account/contact", {}, page.locale);
     const response = NextResponse.redirect(target, 307);
     response.headers.set("Cache-Control", "no-store");
@@ -92,11 +95,11 @@ export function proxy(request: NextRequest) {
 
   if (!authenticated && PROTECTED_PATHS.some(path => page.internalPath === path || page.internalPath.startsWith(`${path}/`))) {
     const loginUrl = new URL(buildPath("/login", {}, page.locale), request.url);
-    loginUrl.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
+    loginUrl.searchParams.set("next", `${pathname}${url.search}`);
     return NextResponse.redirect(loginUrl);
   }
 
-  const destination = request.nextUrl.clone();
+  const destination = new URL(url);
   destination.pathname = page.internalPath;
   if (page.section) destination.searchParams.set("section", page.section);
   const requestHeaders = new Headers(request.headers);

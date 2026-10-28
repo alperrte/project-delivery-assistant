@@ -63,7 +63,8 @@ class MeetingReminderIntegrationTest {
     @BeforeEach void fixture() {
         reset(mail); clock.source=()->now;
         when(mail.available()).thenReturn(true);
-        db.update("DELETE FROM projects"); owner=user(); attendee=user(); other=user(); project=UUID.randomUUID();
+        // Meetings no longer belong to projects, so deleting the projects does not clean them up: remove the meetings (and, by cascade, their reminders) explicitly.
+        db.update("DELETE FROM meetings"); db.update("DELETE FROM projects"); owner=user(); attendee=user(); other=user(); project=UUID.randomUUID();
         db.update("INSERT INTO projects(id,name,slug,status,priority,visibility,created_by,created_at,updated_at) VALUES (?,'Reminder QA',?,'ACTIVE','MEDIUM','PRIVATE',?,now(),now())",project,project.toString(),owner);
         for(UUID user:List.of(owner,attendee,other)) {
             UUID member=UUID.randomUUID(); db.update("INSERT INTO project_memberships(id,project_id,user_id,joined_at) VALUES (?,?,?,now())",member,project,user);
@@ -75,9 +76,9 @@ class MeetingReminderIntegrationTest {
         db.update("INSERT INTO users(id,email,nickname,account_status,email_verification_status,global_role,created_at,updated_at) VALUES (?,?,?,'ACTIVE','VERIFIED','USER',now(),now())",id,id+"@example.test","QA"+id.toString().substring(0,8));
         return id;
     }
-    UUID meeting(long seconds) { return service.create(project,owner,command(now.plusSeconds(seconds),Set.of(owner,attendee))).id(); }
+    UUID meeting(long seconds) { return service.create(owner,command(now.plusSeconds(seconds),Set.of(owner,attendee))).id(); }
     Command command(Instant start,Set<UUID> recipients) { return new Command("Reminder QA", "",start,start.plusSeconds(3600),"Europe/Istanbul",List.of(),recipients); }
-    void move(UUID id,long seconds,Set<UUID> recipients) { service.update(project,id,owner,command(now.plusSeconds(seconds),recipients)); }
+    void move(UUID id,long seconds,Set<UUID> recipients) { service.update(id,owner,command(now.plusSeconds(seconds),recipients)); }
     int count(String status) { return db.queryForObject("SELECT count(*) FROM meeting_reminder_deliveries WHERE status=?",Integer.class,status); }
     void sends(int n) { verify(mail,times(n)).send(any()); }
 
@@ -97,7 +98,7 @@ class MeetingReminderIntegrationTest {
         meeting(1800); store.reconcile(); now=now.plusSeconds(1801); dispatcher.dispatch(); sends(0); assertEquals(2,count("CANCELLED"));
     }
     @Test void cancelledMeetingInvalidatesWaitingJobs() {
-        UUID id=meeting(1800); store.reconcile(); service.cancel(project,id,owner); dispatcher.dispatch(); sends(0); assertEquals(2,count("CANCELLED"));
+        UUID id=meeting(1800); store.reconcile(); service.cancel(id,owner); dispatcher.dispatch(); sends(0); assertEquals(2,count("CANCELLED"));
     }
     @Test void postponingRecalculatesDueTimeAndCancelsOldRevision() {
         UUID id=meeting(3600); store.reconcile(); move(id,18000,Set.of(owner,attendee)); dispatcher.dispatch(); sends(0);
@@ -121,7 +122,7 @@ class MeetingReminderIntegrationTest {
         Instant start=ZonedDateTime.of(LocalDateTime.parse(local),ZoneId.of(zone)).toInstant();
         assertEquals(Instant.parse(utc),start,"the local start is the expected UTC instant");
         now=start.minusSeconds(7200);
-        UUID id=service.create(project,owner,new Command("Zone meeting","",start,start.plusSeconds(3600),zone,List.of(),Set.of(attendee))).id();
+        UUID id=service.create(owner,new Command("Zone meeting","",start,start.plusSeconds(3600),zone,List.of(),Set.of(attendee))).id();
         store.reconcile();
         assertEquals(start.minusSeconds(3600),db.queryForObject("SELECT reminder_at FROM meeting_reminder_deliveries WHERE meeting_id=? LIMIT 1",Timestamp.class,id).toInstant(),"stored reminder instant");
         assertEquals(start,db.queryForObject("SELECT starts_at FROM meetings WHERE id=?",Timestamp.class,id).toInstant(),"stored start instant");
@@ -158,27 +159,26 @@ class MeetingReminderIntegrationTest {
     }
     @Test void cancellationWhileWaitingForRetryStopsDelivery() {
         UUID id=meeting(1800); doThrow(new org.springframework.mail.MailSendException("TEST-ONLY outage")).when(mail).send(any());
-        dispatcher.dispatch(); service.cancel(project,id,owner); now=now.plusSeconds(60); dispatcher.dispatch(); sends(2); assertEquals(2,count("CANCELLED"));
+        dispatcher.dispatch(); service.cancel(id,owner); now=now.plusSeconds(60); dispatcher.dispatch(); sends(2); assertEquals(2,count("CANCELLED"));
     }
     String reason(String code) { return db.queryForObject("SELECT count(*)||'' FROM meeting_reminder_deliveries WHERE error_code=?",String.class,code); }
     @Test void organizerAndEveryInvitedMemberEachGetOneMailEvenWhenTheOrganizerIsAlsoListed() {
         // Three real recipients: the organizer (also present in the attendee list), attendee A and attendee B.
-        service.create(project,owner,command(now.plusSeconds(1800),Set.of(owner,attendee,other))); dispatcher.dispatch(); dispatcher.dispatch();
+        service.create(owner,command(now.plusSeconds(1800),Set.of(owner,attendee,other))); dispatcher.dispatch(); dispatcher.dispatch();
         sends(3); assertEquals(3,count("SENT"));
         for(UUID user:List.of(owner,attendee,other)) verify(mail,times(1)).send(argThat(e->e.recipient().email().equals(user+"@example.test")));
     }
     @Test void aSkippedRecipientIsRecordedWithTheReasonInsteadOfVanishing() {
-        UUID unverified=user(), removed=user(), revoked=user(), gone=user();
+        UUID unverified=user(), revoked=user(), gone=user();
         db.update("UPDATE users SET email_verification_status='PENDING' WHERE id=?",unverified);
-        for(UUID user:List.of(unverified,revoked,gone)) { UUID member=UUID.randomUUID(); db.update("INSERT INTO project_memberships(id,project_id,user_id,joined_at) VALUES (?,?,?,now())",member,project,user); }
-        // `removed` is invited but not a project member; `gone` is a member that is later removed from the project.
-        UUID id=service.create(project,owner,command(now.plusSeconds(1800),Set.of(attendee,unverified,revoked,gone))).id();
+        // `gone` is a project member who is removed from the project afterwards: the project no longer matters to a meeting reminder.
+        UUID member=UUID.randomUUID(); db.update("INSERT INTO project_memberships(id,project_id,user_id,joined_at) VALUES (?,?,?,now())",member,project,gone);
+        UUID id=service.create(owner,command(now.plusSeconds(1800),Set.of(attendee,unverified,revoked,gone))).id();
         db.update("INSERT INTO meeting_participants(id,meeting_id,user_id,identity,display_name,revoked) VALUES (?,?,?,?,?,true)",UUID.randomUUID(),id,revoked,"user-"+revoked,"QA participant");
-        db.update("DELETE FROM project_memberships WHERE project_id=? AND user_id=?",project,gone);
-        db.update("INSERT INTO meeting_attendees(meeting_id,user_id) VALUES (?,?)",id,removed); store.reconcile();
+        db.update("DELETE FROM project_memberships WHERE project_id=? AND user_id=?",project,gone); store.reconcile();
         dispatcher.dispatch();
-        assertEquals("1",reason("RECIPIENT_UNAVAILABLE")); assertEquals("2",reason("NOT_A_PROJECT_MEMBER")); assertEquals("1",reason("REMOVED_FROM_MEETING"));
-        sends(2); // the organizer and the one healthy attendee
+        assertEquals("1",reason("RECIPIENT_UNAVAILABLE")); assertEquals("0",reason("NOT_A_PROJECT_MEMBER")); assertEquals("1",reason("REMOVED_FROM_MEETING"));
+        sends(3); // the organizer, the healthy attendee and the one who left the project
     }
     @Test void disabledAccountIsExcludedByUserPublicContract() {
         meeting(1800); db.update("UPDATE users SET account_status='DISABLED' WHERE id=?",attendee); dispatcher.dispatch(); sends(1); assertEquals(1,count("CANCELLED"));
@@ -189,13 +189,31 @@ class MeetingReminderIntegrationTest {
         assertTrue(accounts.findVerifiedMailRecipient(attendee).isEmpty()); dispatcher.dispatch(); sends(1);
         verify(mail).send(argThat(e->e.recipient().locale().equals("de"))); assertEquals(1,count("CANCELLED"));
     }
-    @Test void removedProjectAccessPreventsSending() {
+    @Test void leavingAProjectDoesNotStopAGlobalMeetingReminder() {
         meeting(1800); db.update("DELETE FROM project_memberships WHERE project_id=? AND user_id=?",project,attendee);
-        dispatcher.dispatch(); sends(1); assertEquals(1,count("CANCELLED"));
+        dispatcher.dispatch(); sends(2); assertEquals(2,count("SENT"));
     }
-    @Test void archivedProjectCannotLeakMeetingDetailsByMail() {
+    @Test void archivingAProjectDoesNotCancelGlobalMeetingReminders() {
         meeting(1800); db.update("UPDATE projects SET status='ARCHIVED',archived_at=now() WHERE id=?",project);
-        dispatcher.dispatch(); sends(0); assertEquals(2,count("CANCELLED"));
+        dispatcher.dispatch(); sends(2); assertEquals(2,count("SENT"));
+    }
+    @Test void aProjectMeetingNamesItsProjectOnlyToRecipientsWhoAreMembersOfIt() {
+        UUID outsider=user(); // invited to the project meeting but not a member of the project
+        service.create(owner,new Command("Project talk","",now.plusSeconds(1800),now.plusSeconds(5400),"Europe/Istanbul",List.of(),Set.of(attendee,outsider),null,null,Meeting.Kind.PROJECT,project));
+        dispatcher.dispatch(); dispatcher.dispatch();
+        sends(3);
+        verify(mail,times(2)).send(argThat(e->"Reminder QA".equals(e.projectName())&&(e.recipient().email().equals(owner+"@example.test")||e.recipient().email().equals(attendee+"@example.test"))));
+        verify(mail,times(1)).send(argThat(e->e.projectName()==null&&e.recipient().email().equals(outsider+"@example.test")));
+        // Project members who were not invited get nothing, and the independent meeting of the other tests never names a project.
+        verify(mail,never()).send(argThat(e->e.recipient().email().equals(other+"@example.test")));
+        assertEquals(3,count("SENT"));
+    }
+    @Test void anIndependentMeetingNeverNamesAProject() {
+        meeting(1800); dispatcher.dispatch(); verify(mail,times(2)).send(argThat(e->e.projectName()==null));
+    }
+    @Test void aProjectMateWhoIsNotInvitedNeverGetsTheMail() {
+        meeting(1800); dispatcher.dispatch(); // `other` shares the project with the organizer but is not an attendee
+        verify(mail,never()).send(argThat(e->e.recipient().email().equals(other+"@example.test")));
     }
     @Test void revokedMeetingParticipantIsExcludedEvenWithProjectMembership() {
         UUID id=meeting(1800);
@@ -205,7 +223,7 @@ class MeetingReminderIntegrationTest {
     @ParameterizedTest @CsvSource({"2026-03-29T00:30:00Z,01:30 +01:00","2026-03-29T01:30:00Z,03:30 +02:00","2026-10-25T00:30:00Z,02:30 +02:00","2026-10-25T01:30:00Z,02:30 +01:00"})
     void absoluteDueTimeSurvivesBothDaylightSavingTransitions(String instant,String displayed) {
         Instant start=Instant.parse(instant); now=start.minusSeconds(3600);
-        service.create(project,owner,new Command("DST meeting","",start,start.plusSeconds(3600),"Europe/Berlin",List.of(),Set.of(attendee)));
+        service.create(owner,new Command("DST meeting","",start,start.plusSeconds(3600),"Europe/Berlin",List.of(),Set.of(attendee)));
         dispatcher.dispatch(); sends(2);
         verify(mail,times(2)).send(argThat(e->e.startsAt().equals(start)
                 && SmtpMeetingReminderMail.render("https://pd-assistant.com",e).text().contains(displayed)));
@@ -241,8 +259,8 @@ class MeetingReminderIntegrationTest {
     @Test void titleEditsDoNotResendAndDisabledMailDoesNotConsumeAttempts() {
         UUID id=meeting(1800); when(mail.available()).thenReturn(false); dispatcher.dispatch(); sends(0); assertEquals(0,count("PENDING"));
         when(mail.available()).thenReturn(true); dispatcher.dispatch(); sends(2);
-        var old=service.detail(project,id,owner);
-        service.update(project,id,owner,new Command("Edited title","",old.startsAt(),old.endsAt(),old.zoneId(),List.of(),old.attendeeIds()));
+        var old=service.detail(id,owner);
+        service.update(id,owner,new Command("Edited title","",old.startsAt(),old.endsAt(),old.zoneId(),List.of(),old.attendeeIds()));
         dispatcher.dispatch(); sends(2);
     }
     @Test void changedScheduleDuringSmtpDoesNotBlockUpdateAndRemainingOldJobsAreRejected() {
@@ -267,7 +285,7 @@ class MeetingReminderIntegrationTest {
         var ids=com.jayway.jsonpath.JsonPath.<List<String>>read(messages,"$.messages[*].ID"); assertEquals(2,ids.size());
         String message=http.send(HttpRequest.newBuilder(URI.create(base+"/api/v1/message/"+ids.getFirst())).GET().build(),HttpResponse.BodyHandlers.ofString()).body();
         assertTrue(message.contains("Reminder QA")); assertTrue(message.contains("Europe/Istanbul")); assertTrue(message.contains("Text")); assertTrue(message.contains("HTML"));
-        assertTrue(message.contains("/tr/projeler/"+project+"/toplantilar/"+id)); assertEquals(2,count("SENT"));
+        assertTrue(message.contains("/tr/toplantilar/"+id)); assertFalse(message.contains("projeler")); assertEquals(2,count("SENT"));
     }
     private static void await(CountDownLatch latch) { try { latch.await(); } catch(InterruptedException e) { Thread.currentThread().interrupt(); throw new RuntimeException(e); } }
     @TestConfiguration static class TestTime {

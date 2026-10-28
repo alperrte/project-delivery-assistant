@@ -18,7 +18,7 @@ public class NotificationFactory {
         };
         String message = title + ": " + java.util.Objects.requireNonNull(event.title());
         if (message.length() > 500) message = message.substring(0, 500);
-        return Notification.meeting(recipient, event.actorId(), event.projectId(), event.meetingId(),
+        return Notification.meeting(recipient, event.actorId(), event.meetingId(),
                 event.eventId(), type, title, message, event.occurredAt());
     }
 

@@ -1,6 +1,7 @@
 package com.pda.meeting.internal;
 
 import com.pda.project.ProjectAccess;
+import com.pda.project.ProjectSummaryView;
 import com.pda.user.UserAccounts;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -94,12 +95,11 @@ public class MeetingReminderStore {
         if(m==null||m.status!=Meeting.Status.SCHEDULED||m.reminderRevision!=claim.revision()
                 ||!m.startsAt.isAfter(now)||m.startsAt.minusSeconds(3600).isAfter(now)) return Inspection.skip("NO_LONGER_ELIGIBLE");
         if(!m.organizerId.equals(claim.recipientId())&&!m.attendeeIds.contains(claim.recipientId())) return Inspection.skip("REMOVED_FROM_MEETING");
-        var project=projects.taskContext(m.projectId);
-        if(project==null||project.archived()) return Inspection.skip("PROJECT_UNAVAILABLE");
-        if(!projects.isMember(m.projectId,claim.recipientId())) return Inspection.skip("NOT_A_PROJECT_MEMBER");
         if(participants.findByMeetingIdAndIdentity(m.id,"user-"+claim.recipientId()).map(p->p.revoked).orElse(false)) return Inspection.skip("REMOVED_FROM_MEETING");
-        return users.findVerifiedMailRecipient(claim.recipientId()).map(recipient->new Inspection(new Envelope(m.id,project.slug(),
-                m.title,m.startsAt,m.zoneId,users.findActiveById(m.organizerId).map(UserAccounts.AuthenticatedUser::nickname).orElse("PDA"),recipient),null))
+        // The project of a project meeting is named only to a recipient who is an active member of it now: being invited never reveals a project the person is not in.
+        String projectName=m.projectId==null?null:projects.activeProjectsForUser(claim.recipientId()).stream().filter(project->project.id().equals(m.projectId)).map(ProjectSummaryView::name).findFirst().orElse(null);
+        return users.findVerifiedMailRecipient(claim.recipientId()).map(recipient->new Inspection(new Envelope(m.id,
+                m.title,m.startsAt,m.zoneId,users.findActiveById(m.organizerId).map(UserAccounts.AuthenticatedUser::nickname).orElse("PDA"),recipient,projectName),null))
             .orElseGet(()->Inspection.skip("RECIPIENT_UNAVAILABLE"));
     }
     private record Inspection(Envelope envelope,String reason) { static Inspection skip(String reason) { return new Inspection(null,reason); } }
@@ -126,6 +126,9 @@ public class MeetingReminderStore {
             """,status,sentAt==null?null:Timestamp.from(sentAt),error,Timestamp.from(next),claim.id(),claim.token());
     }
     public record Claim(UUID id,UUID meetingId,UUID recipientId,long revision,int attempts,UUID token) {}
-    public record Envelope(UUID meetingId,String projectSlug,String title,Instant startsAt,String zoneId,
-                           String organizer,UserAccounts.MailRecipient recipient) {}
+    /** {@code projectName} is set only for a project meeting AND a recipient who is currently an active member of that project; otherwise null. */
+    public record Envelope(UUID meetingId,String title,Instant startsAt,String zoneId,
+                           String organizer,UserAccounts.MailRecipient recipient,String projectName) {
+        public Envelope(UUID meetingId,String title,Instant startsAt,String zoneId,String organizer,UserAccounts.MailRecipient recipient) { this(meetingId,title,startsAt,zoneId,organizer,recipient,null); }
+    }
 }

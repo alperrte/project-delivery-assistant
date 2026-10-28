@@ -46,8 +46,10 @@ final class MeetingHttpLimitFilter extends OncePerRequestFilter {
             @Override public long getContentLengthLong() {return body.length;}
         },response);
     }
+    /** The signed-in meeting API: everything under /api/v1/meetings except the guest and media-webhook surfaces handled above. */
     private boolean projectMeeting(String path) {
-        return path.matches("/api/v1/projects/[^/]+/meetings(?:/.*)?");
+        return path.equals("/api/v1/meetings")
+                || path.startsWith("/api/v1/meetings/") && !path.startsWith("/api/v1/meetings/guest/") && !path.equals("/api/v1/meetings/media/webhook");
     }
     private synchronized boolean allow(String address,boolean session) {
         long now=System.currentTimeMillis();

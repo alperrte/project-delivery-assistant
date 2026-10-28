@@ -133,6 +133,9 @@ public class SecurityBaselineConfiguration {
                                     || path.startsWith("/api/v1/auth/oauth/")
                                     || path.equals("/api/v1/projects") || path.startsWith("/api/v1/projects/")
                                     || path.equals("/api/v1/organizations") || path.startsWith("/api/v1/organizations/")
+                                    // The global meeting API (it used to sit under /projects/): an expired session must be renewable, not a 403.
+                                    || path.equals("/api/v1/meetings")
+                                    || path.startsWith("/api/v1/meetings/") && !path.startsWith("/api/v1/meetings/guest/") && !path.startsWith("/api/v1/meetings/media/")
                                     || path.startsWith("/api/v1/tasks/")
                                     || path.startsWith("/api/v1/users/")
                                     || path.startsWith("/api/v1/chat/")
@@ -169,16 +172,18 @@ public class SecurityBaselineConfiguration {
                                     "/api/v1/meetings/guest/*/participants", "/api/v1/meetings/guest/*/state").permitAll()
                             .requestMatchers(HttpMethod.PUT, "/api/v1/meetings/guest/*/chat/*/reactions").permitAll()
                             .requestMatchers(HttpMethod.DELETE, "/api/v1/meetings/guest/*/chat/*/reactions").permitAll()
-                            .requestMatchers(HttpMethod.GET, "/api/v1/projects/*/meetings", "/api/v1/projects/*/meetings/*",
-                                    "/api/v1/projects/*/meetings/*/participants", "/api/v1/projects/*/meetings/*/chat", "/api/v1/projects/*/meetings/*/chat/*",
-                                    "/api/v1/projects/*/meetings/*/chat/*/page", "/api/v1/projects/*/meetings/*/invites").authenticated()
-                            .requestMatchers(HttpMethod.POST, "/api/v1/projects/*/meetings", "/api/v1/projects/*/meetings/*/cancel",
-                                    "/api/v1/projects/*/meetings/*/start", "/api/v1/projects/*/meetings/*/end", "/api/v1/projects/*/meetings/*/join",
-                                    "/api/v1/projects/*/meetings/*/leave", "/api/v1/projects/*/meetings/*/invites", "/api/v1/projects/*/meetings/*/chat",
-                                    "/api/v1/projects/*/meetings/*/participants/*/mute", "/api/v1/projects/*/meetings/*/participants/*/kick",
-                                    "/api/v1/projects/*/meetings/history/clear", "/api/v1/projects/*/meetings/history/restore").authenticated()
-                            .requestMatchers(HttpMethod.PUT, "/api/v1/projects/*/meetings/*", "/api/v1/projects/*/meetings/*/chat/*/reactions").authenticated()
-                            .requestMatchers(HttpMethod.DELETE, "/api/v1/projects/*/meetings/*/invites/*", "/api/v1/projects/*/meetings/*/chat/*/reactions").authenticated()
+                            // Meetings are global and user-owned: authentication is required here, ownership/attendance is enforced by MeetingService.
+                            // The earlier project-scoped /api/v1/projects/*/meetings routes no longer exist and fall to deny-by-default.
+                            .requestMatchers(HttpMethod.GET, "/api/v1/meetings", "/api/v1/meetings/attendees/search", "/api/v1/meetings/*",
+                                    "/api/v1/meetings/*/participants", "/api/v1/meetings/*/chat", "/api/v1/meetings/*/chat/*",
+                                    "/api/v1/meetings/*/chat/*/page", "/api/v1/meetings/*/invites").authenticated()
+                            .requestMatchers(HttpMethod.POST, "/api/v1/meetings", "/api/v1/meetings/*/cancel",
+                                    "/api/v1/meetings/*/start", "/api/v1/meetings/*/end", "/api/v1/meetings/*/join",
+                                    "/api/v1/meetings/*/leave", "/api/v1/meetings/*/invites", "/api/v1/meetings/*/chat",
+                                    "/api/v1/meetings/*/participants/*/mute", "/api/v1/meetings/*/participants/*/kick",
+                                    "/api/v1/meetings/history/clear", "/api/v1/meetings/history/restore").authenticated()
+                            .requestMatchers(HttpMethod.PUT, "/api/v1/meetings/*", "/api/v1/meetings/*/chat/*/reactions").authenticated()
+                            .requestMatchers(HttpMethod.DELETE, "/api/v1/meetings/*/invites/*", "/api/v1/meetings/*/chat/*/reactions").authenticated()
                             .requestMatchers(HttpMethod.GET, "/api/v1/project-invitations/me",
                                     "/api/v1/project-invitations/*/preview",
                                     "/api/v1/project-invitations/*/logo",
@@ -371,6 +376,13 @@ public class SecurityBaselineConfiguration {
         source.registerCorsConfiguration("/api/v1/project-invitations/**", configuration);
         // Same approved frontend origin and CSRF headers; signed webhooks are not browser endpoints.
         source.registerCorsConfiguration("/api/v1/meetings/guest/**", configuration);
+        // The signed-in, user-owned meeting API (it used to be covered by /api/v1/projects/**). Listed route by route so that the
+        // signed media webhook (/api/v1/meetings/media/webhook), which a browser never calls, stays outside the browser policy.
+        for (String path : List.of("/api/v1/meetings", "/api/v1/meetings/*", "/api/v1/meetings/history/**", "/api/v1/meetings/attendees/**",
+                "/api/v1/meetings/*/participants/**", "/api/v1/meetings/*/chat/**", "/api/v1/meetings/*/invites/**",
+                "/api/v1/meetings/*/join", "/api/v1/meetings/*/leave", "/api/v1/meetings/*/start", "/api/v1/meetings/*/end", "/api/v1/meetings/*/cancel")) {
+            source.registerCorsConfiguration(path, configuration);
+        }
         return source;
     }
 

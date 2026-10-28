@@ -3,7 +3,7 @@ import { readFileSync, mkdirSync } from "node:fs";
 import path from "node:path";
 import { api, chooseDate, chooseTime } from "./helpers";
 import { psql, uuid } from "./db";
-import { meetingAccount, openParticipantMenu, showPanel } from "./meeting-fixture";
+import { meetingAccount, openParticipantMenu, projectMateIds, showPanel, hideDevOverlay } from "./meeting-fixture";
 import { REJECTED_STATE } from "./consent-state";
 import { localizeHref } from "../src/i18n/routing";
 import type { Project } from "../src/features/projects/types";
@@ -35,16 +35,16 @@ async function createProject(page: Page, label = "Session") {
 }
 async function createMeeting(page: Page, projectId: string, open = true) {
   const now = Date.now();
-  const result = await api(page, "POST", `/projects/${projectId}/meetings`, { title: `Session ${now}`, description: "Call survives navigation", startsAt: new Date(now + (open ? 1000 : 3600_000)).toISOString(), endsAt: new Date(now + 7200_000).toISOString(), zoneId: "Europe/Istanbul", agenda: [], attendeeIds: [] });
+  const result = await api(page, "POST", `/meetings`, { title: `Session ${now}`, description: "Call survives navigation", startsAt: new Date(now + (open ? 1000 : 3600_000)).toISOString(), endsAt: new Date(now + 7200_000).toISOString(), zoneId: "Europe/Istanbul", agenda: [], attendeeIds: projectMateIds(projectId) });
   expect(result.status).toBe(201); const meeting = result.json as Meeting;
-  if (open) expect((await api(page, "POST", `/projects/${projectId}/meetings/${meeting.id}/start`)).status).toBe(200);
+  if (open) expect((await api(page, "POST", `/meetings/${meeting.id}/start`)).status).toBe(200);
   return meeting;
 }
 function addMember(projectId: string, userId: string) {
   // TEST-ONLY fixture membership, restricted to this newly created QA project/account.
   psql(`WITH membership AS (INSERT INTO project_memberships(id,project_id,user_id,joined_at) VALUES(gen_random_uuid(),'${uuid(projectId)}','${uuid(userId)}',now()) RETURNING id) INSERT INTO project_membership_roles(membership_id,role) SELECT id,'TESTER' FROM membership`);
 }
-const roomHref = (slug: string, id: string) => localizeHref(`/projects/${slug}/meetings/${id}/room`, "tr");
+const roomHref = (slug: string, id: string) => localizeHref(`/meetings/${id}/room`, "tr");
 const connected = (page: Page) => page.getByRole("status").filter({ hasText: new RegExp(`^${tr.phase.connected}$`) });
 async function join(page: Page) { await page.getByRole("button", { name: tr.join, exact: true }).click(); await expect(connected(page)).toBeVisible({ timeout: 30000 }); }
 async function screenshot(page: Page, name: string) { mkdirSync(path.join(__dirname, "../test-results/meetings-visual"), { recursive: true }); await page.screenshot({ path: path.join(__dirname, `../test-results/meetings-visual/${name}.png`) }); }
@@ -169,7 +169,7 @@ const tracksEnded = (page: Page) => page.evaluate(() => { const tracks = (window
 const goProjects = (page: Page) => page.getByRole("link", { name: messages.app.nav.projects, exact: true }).first().click();
 /** In-app navigation (Next's client router): a `page.goto` would be a page load, which really does hang the call up. */
 const appPush = (page: Page, href: string) => page.evaluate(url => (window as unknown as { next: { router: { push: (href: string) => void } } }).next.router.push(url), href);
-const detailHref = (slug: string, id: string, suffix = "") => localizeHref(`/projects/${slug}/meetings/${id}${suffix}`, "tr");
+const detailHref = (slug: string, id: string, suffix = "") => localizeHref(`/meetings/${id}${suffix}`, "tr");
 
 test("leaving from the mini bar asks first; ending for all and signing out clean the background call up", async ({ browser }) => {
   test.setTimeout(240000);
@@ -206,7 +206,7 @@ test("leaving from the mini bar asks first; ending for all and signing out clean
     await room(page).getByRole("button", { name: tr.micOn, exact: true }).click();
     await expect(room(page).getByRole("button", { name: tr.micOff, exact: true })).toBeVisible();
     await goProjects(page); await expect(mini(page)).toBeVisible();
-    expect((await api(page, "POST", `/projects/${project.id}/meetings/${second.id}/end`)).status).toBe(200);
+    expect((await api(page, "POST", `/meetings/${second.id}/end`)).status).toBe(200);
     await expect(mini(page)).toHaveCount(0, { timeout: 20000 });
     await expect(page.getByText(tr.phase.closed, { exact: true })).toBeVisible();
     expect(await tracksEnded(page)).toBe(true);
@@ -248,7 +248,7 @@ test("only one call at a time: other meetings explain instead of hanging the run
 
     // The running meeting's detail page: the join link becomes an in-app return (a page load would hang up).
     await appPush(page, detailHref(project.slug, first.id));
-    await expect(page.locator("main").getByRole("link", { name: tr.returnToMeeting, exact: true })).toBeVisible();
+    await expect(page.locator("main").getByRole("link", { name: new RegExp(`^${tr.returnToMeeting}`) })).toBeVisible();
     await expect(page.getByRole("link", { name: tr.join, exact: true })).toHaveCount(0);
 
     // Another meeting's detail page: no join link, a way back to the running call instead.
@@ -311,7 +311,7 @@ test("emoji picker in the meeting chat: caret insertion, emoji-only messages, mu
     const family = "👨‍👩‍👧‍👦🇹🇷 ok";
     await a.waitForTimeout(900); await box.fill(family); await a.getByRole("button", { name: tr.send, exact: true }).click();
     await expect(b.getByText(family, { exact: true })).toBeVisible({ timeout: 15000 });
-    const stored = ((await api(a, "GET", `/projects/${project.id}/meetings/${meeting.id}/chat?page=0&size=50`)).json as { content: { content: string }[] }).content.map(m => m.content);
+    const stored = ((await api(a, "GET", `/meetings/${meeting.id}/chat?page=0&size=50`)).json as { content: { content: string }[] }).content.map(m => m.content);
     expect(stored).toEqual(expect.arrayContaining(["hello🚀🔥❤️ world", "🥳", family]));
 
     // A draft survives opening and closing the picker, and the picker fits a phone screen.
@@ -339,7 +339,7 @@ test("meeting form uses the shared date and time pickers and keeps its validatio
   await login(context, managerFile);
   const project = await createProject(page);
   try {
-    await page.goto(localizeHref(`/projects/${project.slug}/meetings/new`, "tr"));
+    await page.goto(localizeHref(`/meetings/new?type=independent`, "tr"));
     await expect(page.locator("#meeting-title")).toBeVisible();
     await expect(page.locator('input[type="datetime-local"]')).toHaveCount(0);
     // Same triggers as the reminder/task forms: an outline button with the calendar/clock icon, h-10, one border radius.
@@ -366,14 +366,14 @@ test("meeting form uses the shared date and time pickers and keeps its validatio
     // End before start is refused with the form's own message and nothing is sent.
     await page.locator("#meeting-title").fill("Shared pickers meeting");
     await chooseTime(page, "meeting-end-time", "13:00");
-    const requests: string[] = []; page.on("request", request => { if (request.method() === "POST" && request.url().endsWith(`/projects/${project.id}/meetings`)) requests.push(request.url()); });
+    const requests: string[] = []; page.on("request", request => { if (request.method() === "POST" && request.url().endsWith(`/meetings`)) requests.push(request.url()); });
     await page.getByRole("button", { name: tr.plan, exact: true }).click();
     await expect(page.getByRole("alert").filter({ hasText: tr.formInvalid })).toBeVisible();
     expect(requests).toHaveLength(0);
 
     // Valid dates are sent as the same ISO instants the native control produced.
     await chooseTime(page, "meeting-end-time", "15:45");
-    const created = page.waitForResponse(response => response.request().method() === "POST" && response.url().endsWith(`/projects/${project.id}/meetings`));
+    const created = page.waitForResponse(response => response.request().method() === "POST" && response.url().endsWith(`/meetings`));
     await page.getByRole("button", { name: tr.plan, exact: true }).click();
     const meeting = (await (await created).json()) as Meeting;
     const expectedStart = new Date(target.getFullYear(), target.getMonth(), target.getDate(), 14, 30).toISOString();
@@ -383,11 +383,11 @@ test("meeting form uses the shared date and time pickers and keeps its validatio
     await expect(page).toHaveURL(new RegExp(`${meeting.id}$`));
 
     // Edit shows the saved values in the same pickers.
-    await page.goto(localizeHref(`/projects/${project.slug}/meetings/${meeting.id}/edit`, "tr"));
+    await page.goto(localizeHref(`/meetings/${meeting.id}/edit`, "tr"));
     await expect(page.locator("#meeting-start-time")).toContainText("14:30"); await expect(page.locator("#meeting-end-time")).toContainText("15:45");
 
     // English labels and the dark theme.
-    await page.goto(localizeHref(`/projects/${project.slug}/meetings/new`, "en"));
+    await page.goto(localizeHref(`/meetings/new?type=independent`, "en"));
     await expect(page.getByText(en.startDate, { exact: true })).toBeVisible(); await expect(page.getByText(en.endTime, { exact: true })).toBeVisible();
     await page.evaluate(() => localStorage.setItem("theme", "dark")); await page.reload();
     await expect(page.locator("html")).toHaveClass(/dark/);
@@ -408,7 +408,7 @@ test("meeting form uses the shared date and time pickers and keeps its validatio
 test("mini bar on phones and tablets: inside the screen, thumb-sized, never blocks the page", async ({ browser }) => {
   test.setTimeout(150000);
   const context = await browser.newContext({ storageState: REJECTED_STATE, permissions: ["camera", "microphone"], viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
-  await context.addInitScript(trackScript);
+  await context.addInitScript(trackScript); await hideDevOverlay(context);
   const page = await context.newPage();
   let project: Project | undefined;
   try {
@@ -685,7 +685,7 @@ test("ending a meeting for everyone belongs only to its creator: UI, API, leave 
     // `a` is a PROJECT_MANAGER of the project; `b` is an ordinary member who creates the meeting.
     const meeting = await createMeeting(b, project.id);
     expect(meeting.organizerId, "the creator recorded by the server is the organizer").toBe(owner.id);
-    const status = async (page: Page) => ((await api(page, "GET", `/projects/${project!.id}/meetings/${meeting.id}`)).json as Meeting).status;
+    const status = async (page: Page) => ((await api(page, "GET", `/meetings/${meeting.id}`)).json as Meeting).status;
 
     // Detail page: only the creator is offered "end for everyone".
     await a.goto(detailHref(project.slug, meeting.id)); await b.goto(detailHref(project.slug, meeting.id));
@@ -693,27 +693,27 @@ test("ending a meeting for everyone belongs only to its creator: UI, API, leave 
     await expect(b.getByRole("button", endLabel)).toBeVisible();
     await expect(a.getByRole("button", endLabel)).toHaveCount(0);
 
-    // Room: same rule; the manager keeps the moderation controls, the creator (not a manager) does not get them.
+    // Room: same rule. Meetings belong to their organizer: the creator holds every moderation control, a project manager who was only invited holds none.
     await a.goto(roomHref(project.slug, meeting.id)); await b.goto(roomHref(project.slug, meeting.id));
     await join(a); await join(b);
     await expect(room(b).getByRole("button", endLabel)).toBeVisible();
     await expect(room(a).getByRole("button", endLabel)).toHaveCount(0);
     await showPanel(room(a).page(), tr.participants);
-    await expect((await openParticipantMenu(a, owner.nickname)).getByRole("button", { name: tr.muteParticipant, exact: true })).toBeVisible(); await a.keyboard.press("Escape");
+    await openParticipantMenu(a, owner.nickname); await expect(a.getByRole("button", { name: tr.muteParticipant, exact: true })).toHaveCount(0); await a.keyboard.press("Escape");
     await showPanel(room(b).page(), tr.participants);
-    await openParticipantMenu(b); await expect(b.getByRole("button", { name: tr.muteParticipant, exact: true })).toHaveCount(0); await b.keyboard.press("Escape");
+    await expect((await openParticipantMenu(b)).getByRole("button", { name: tr.muteParticipant, exact: true })).toBeVisible(); await b.keyboard.press("Escape");
 
     // Backend: a project manager who did not create it is refused, directly through the API, and nothing changes.
-    const refused = await api(a, "POST", `/projects/${project.id}/meetings/${meeting.id}/end`);
+    const refused = await api(a, "POST", `/meetings/${meeting.id}/end`);
     expect(refused.status).toBe(403);
     expect(await status(a)).toBe("OPEN");
 
     // Guests never see it and cannot reach the project endpoint.
-    const invite = (await api(b, "POST", `/projects/${project.id}/meetings/${meeting.id}/invites`, { expiresAt: new Date(Date.now() + 3600000).toISOString(), maxUses: 1 })).json as MeetingInvite;
+    const invite = (await api(b, "POST", `/meetings/${meeting.id}/invites`, { expiresAt: new Date(Date.now() + 3600000).toISOString(), maxUses: 1 })).json as MeetingInvite;
     await g.goto(`${localizeHref("/meeting-guest", "tr")}#${invite.token}`);
     await g.getByLabel(tr.displayName, { exact: true }).fill("QA Guest"); await g.getByRole("button", { name: tr.continue, exact: true }).click(); await join(g);
     await expect(g.getByRole("button", endLabel)).toHaveCount(0);
-    expect([401, 403]).toContain((await api(g, "POST", `/projects/${project.id}/meetings/${meeting.id}/end`)).status);
+    expect([401, 403]).toContain((await api(g, "POST", `/meetings/${meeting.id}/end`)).status);
     expect(await status(a)).toBe("OPEN");
 
     // Phone layout: the same rule in the "More" menu.
@@ -748,10 +748,10 @@ test("ending a meeting for everyone belongs only to its creator: UI, API, leave 
     // A guest's access is revoked together with the meeting, so the guest room reports either state.
     await expect(g.getByRole("heading", { name: new RegExp(`^(${tr.phase.closed}|${tr.phase.removed})$`) })).toBeVisible({ timeout: 30000 });
     expect(await status(a)).toBe("ENDED");
-    expect((await api(a, "POST", `/projects/${project.id}/meetings/${meeting.id}/join`)).status).toBe(409);
-    expect((await api(b, "POST", `/projects/${project.id}/meetings/${meeting.id}/join`)).status).toBe(409);
+    expect((await api(a, "POST", `/meetings/${meeting.id}/join`)).status).toBe(409);
+    expect((await api(b, "POST", `/meetings/${meeting.id}/join`)).status).toBe(409);
     // A manager who did not create it is still refused afterwards (no way to probe or repeat the action).
-    expect((await api(a, "POST", `/projects/${project.id}/meetings/${meeting.id}/end`)).status).toBe(403);
+    expect((await api(a, "POST", `/meetings/${meeting.id}/end`)).status).toBe(403);
   } finally {
     await archive(a, [project]);
     await managerContext.close(); await ownerContext.close(); await guestContext.close();
@@ -777,15 +777,17 @@ test("a meeting created by a project manager is owned by that manager, not by ot
     await a.goto(roomHref(project.slug, meeting.id)); await join(a);
     await expect(room(a).getByRole("button", { name: tr.endForAll, exact: true })).toBeVisible();
     await expect(room(b).getByRole("button", { name: tr.endForAll, exact: true })).toHaveCount(0);
-    expect((await api(b, "POST", `/projects/${project.id}/meetings/${meeting.id}/end`)).status).toBe(403);
-    // Both managers keep the other moderation powers.
+    expect((await api(b, "POST", `/meetings/${meeting.id}/end`)).status).toBe(403);
+    // Meetings belong to their organizer: the other project manager holds no moderation power either, the organizer holds all of them.
     await showPanel(room(b).page(), tr.participants);
-    await expect((await openParticipantMenu(b)).getByRole("button", { name: tr.muteParticipant, exact: true })).toBeVisible(); await b.keyboard.press("Escape");
+    await openParticipantMenu(b); await expect(b.getByRole("button", { name: tr.muteParticipant, exact: true })).toHaveCount(0); await b.keyboard.press("Escape");
+    await showPanel(room(a).page(), tr.participants);
+    await expect((await openParticipantMenu(a)).getByRole("button", { name: tr.muteParticipant, exact: true })).toBeVisible(); await a.keyboard.press("Escape");
     // The mini bar offers no end-for-everyone either: only Leave (with its confirmation).
     await b.getByRole("link", { name: messages.app.nav.projects, exact: true }).first().click();
     await expect(mini(b)).toBeVisible();
     await expect(mini(b).getByRole("button", { name: tr.endForAll, exact: true })).toHaveCount(0);
-    expect((await api(a, "POST", `/projects/${project.id}/meetings/${meeting.id}/end`)).status).toBe(200);
+    expect((await api(a, "POST", `/meetings/${meeting.id}/end`)).status).toBe(200);
     await expect(mini(b)).toHaveCount(0, { timeout: 20000 });
   } finally {
     await archive(a, [project]);
@@ -915,8 +917,8 @@ test("meeting detail page has no breadcrumb and no back link, and keeps everythi
     const scheduled = await createMeeting(page, project.id, false), open = await createMeeting(page, project.id);
     const breadcrumb = page.getByRole("navigation", { name: messages.common.breadcrumb, exact: true });
     // Reach the page the way a person does: through the project's meeting list.
-    await page.goto(localizeHref(`/projects/${project.slug}/meetings`, "tr"));
-    await page.getByRole("link", { name: new RegExp(scheduled.title) }).first().click().catch(() => {});
+    await page.goto(`${localizeHref("/meetings", "tr")}?q=${encodeURIComponent(scheduled.title)}`); // the list holds everything the user has: narrowed to this meeting
+    await page.getByRole("link", { name: new RegExp(scheduled.title) }).first().click();
     if (!page.url().includes(scheduled.id)) await appPush(page, detailHref(project.slug, scheduled.id));
     await expect(page.getByRole("heading", { name: scheduled.title, exact: true })).toBeVisible();
     await expect(breadcrumb).toHaveCount(0);
@@ -932,8 +934,8 @@ test("meeting detail page has no breadcrumb and no back link, and keeps everythi
     await expect(page.locator("#invite-expiry-date")).toBeVisible();
     // No empty band where the breadcrumb and back link were: the title sits where it does on the (trail-less) create page.
     const detailTop = (await page.getByRole("heading", { name: scheduled.title, exact: true }).boundingBox())!.y;
-    await page.goto(localizeHref(`/projects/${project.slug}/meetings/new`, "tr"));
-    const createTop = (await page.getByRole("heading", { name: tr.create, exact: true }).first().boundingBox())!.y;
+    await page.goto(localizeHref(`/meetings/new?type=independent`, "tr"));
+    const createTop = (await page.getByRole("heading", { name: tr.createIndependentMeeting, exact: true, level: 1 }).boundingBox())!.y;
     await page.goto(detailHref(project.slug, scheduled.id));
     const settled = (await page.getByRole("heading", { name: scheduled.title, exact: true }).boundingBox())!.y;
     expect(Math.abs(settled - createTop), `title offset ${settled} vs ${createTop} (client nav ${detailTop})`).toBeLessThanOrEqual(6);
@@ -955,7 +957,7 @@ test("meeting detail page has no breadcrumb and no back link, and keeps everythi
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto(localizeHref(`/projects/${project.slug}/criteria/new`, "tr"));
     await expect(breadcrumb).toBeVisible();
-    await page.goto(localizeHref(`/projects/${project.slug}/meetings/${scheduled.id}/edit`, "tr"));
+    await page.goto(localizeHref(`/meetings/${scheduled.id}/edit`, "tr"));
     await expect(page.locator("#meeting-title")).toBeVisible();
   } finally { await api(page, "POST", `/projects/${project.id}/archive`).catch(() => {}); }
 });
@@ -972,7 +974,7 @@ test("ending for everyone always asks first: dialog, cancel, Escape, failure, do
     project = await createProject(a); await b.goto("/dashboard");
     addMember(project.id, ((await api(b, "GET", "/auth/me")).json as { id: string }).id);
     const meeting = await createMeeting(b, project.id), detailMeeting = await createMeeting(b, project.id);
-    const status = async (id: string) => ((await api(b, "GET", `/projects/${project!.id}/meetings/${id}`)).json as Meeting).status;
+    const status = async (id: string) => ((await api(b, "GET", `/meetings/${id}`)).json as Meeting).status;
     const endRequests: string[] = [];
     b.on("request", request => { if (request.method() === "POST" && request.url().endsWith("/end")) endRequests.push(request.url()); });
     await a.goto(roomHref(project.slug, meeting.id)); await b.goto(roomHref(project.slug, meeting.id));
@@ -1027,7 +1029,7 @@ test("ending for everyone always asks first: dialog, cancel, Escape, failure, do
     await dialog.getByRole("button", { name: tr.endConfirmLabel, exact: true }).dblclick();
     await expect(a.getByRole("heading", { name: tr.phase.closed, exact: true })).toBeVisible({ timeout: 30000 });
     expect(endRequests).toHaveLength(1); expect(await status(meeting.id)).toBe("ENDED");
-    expect((await api(a, "POST", `/projects/${project.id}/meetings/${meeting.id}/join`)).status).toBe(409);
+    expect((await api(a, "POST", `/meetings/${meeting.id}/join`)).status).toBe(409);
 
     // The detail page's button asks too, with the same texts, and is the same single-request action.
     endRequests.length = 0;

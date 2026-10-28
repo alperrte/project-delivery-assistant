@@ -1,8 +1,9 @@
-import { Suspense } from "react";
-import { MeetingsPage } from "@/features/meetings/meetings-page";
-import { pageTitle } from "@/lib/seo/page-title";
-export const generateMetadata = () => pageTitle("meetings");
-export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-  return <Suspense><MeetingsPage slug={slug} /></Suspense>;
+import { redirect } from "next/navigation";
+import { getLocale } from "next-intl/server";
+import { localizeHref } from "@/i18n/routing";
+import type { Locale } from "@/i18n/config";
+
+/** Compatibility route: meetings are global, so an old project meetings link opens the user's meetings. */
+export default async function Page() {
+  redirect(localizeHref("/meetings", await getLocale() as Locale));
 }

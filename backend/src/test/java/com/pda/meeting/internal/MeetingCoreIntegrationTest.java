@@ -2,7 +2,6 @@ package com.pda.meeting.internal;
 
 import com.pda.BackendApplication;
 import com.pda.meeting.*;
-import com.pda.project.ProjectDeletedEvent;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -46,26 +45,24 @@ class MeetingCoreIntegrationTest {
     @Autowired TransactionTemplate tx;
     @Autowired ApplicationEventPublisher publisher;
     @Autowired MockMvc mvc;
-    UUID actor,project;
+    /** The organizer of every meeting these tests create. Deliberately a member of no project at all: meetings do not need one. */
+    UUID actor;
     @BeforeEach void fixture() {
         reset(media); when(media.roomExists(anyString())).thenReturn(true); when(media.listParticipants(anyString())).thenReturn(List.of());
-        actor=user("USER"); project=UUID.randomUUID();
-        db.update("INSERT INTO projects(id,name,slug,status,priority,visibility,created_by,created_at,updated_at) VALUES (?,'Meeting test',?,'ACTIVE','MEDIUM','PRIVATE',?,now(),now())",project,project.toString(),actor);
-        UUID member=UUID.randomUUID(); db.update("INSERT INTO project_memberships(id,project_id,user_id,joined_at) VALUES (?,?,?,now())",member,project,actor);
-        db.update("INSERT INTO project_membership_roles(membership_id,role) VALUES (?,'PROJECT_MANAGER')",member);
+        actor=user("USER");
     }
     @Test void guestPreviewAndInviteMetadataUseRealPersistenceWithoutExposingSecrets() throws Exception {
         UUID id=scheduled();
-        InviteView invite=service.invite(project,id,actor,new InviteRequest(Instant.now().plusSeconds(3600),2));
+        InviteView invite=service.invite(id,actor,new InviteRequest(Instant.now().plusSeconds(3600),2));
         GuestView preview=service.guestPreview(new PreviewRequest(invite.token()));
         assertEquals(id,preview.id()); assertEquals(Meeting.Status.SCHEDULED,preview.status());
         assertEquals(0,db.queryForObject("SELECT uses FROM meeting_invites WHERE id=?",Integer.class,invite.id()));
-        var metadata=service.listInvites(project,id,actor,0,10);
+        var metadata=service.listInvites(id,actor,0,10);
         assertEquals(1,metadata.totalElements()); assertEquals(invite.id(),metadata.content().getFirst().id());
         assertEquals(0,metadata.content().getFirst().uses());
         assertFalse(Arrays.stream(InviteMetadata.class.getRecordComponents()).anyMatch(c->c.getName().toLowerCase().contains("token")||c.getName().toLowerCase().contains("hash")));
-        service.revokeInvite(project,id,actor,invite.id());
-        assertTrue(service.listInvites(project,id,actor,0,10).content().getFirst().revoked());
+        service.revokeInvite(id,actor,invite.id());
+        assertTrue(service.listInvites(id,actor,0,10).content().getFirst().revoked());
         assertEquals(403,assertThrows(MeetingException.class,()->service.guestPreview(new PreviewRequest(invite.token()))).status());
     }
     @Test void replicasSerializeDueOpeningAndOvertimeWarning() throws Exception {
@@ -90,55 +87,75 @@ class MeetingCoreIntegrationTest {
         assertEquals("OPEN",db.queryForObject("SELECT status FROM meetings WHERE id=?",String.class,id));
     }
     @Test void failedKickDurablyBlocksMintAndWorkerRecoversWithoutLosingHistory() {
-        UUID id=scheduled(); service.start(project,id,actor);
+        UUID id=scheduled(); service.start(id,actor);
         UUID target=participant(id); String old="pda-"+id;
         doThrow(new IllegalStateException("TEST-ONLY delete outage")).when(media).deleteRoom(old);
-        assertThrows(MeetingException.class,()->moderation.kick(project,id,actor,target));
+        assertThrows(MeetingException.class,()->moderation.kick(id,actor,target));
         assertTrue(db.queryForObject("SELECT revoked FROM meeting_participants WHERE id=?",Boolean.class,target));
         assertTrue(db.queryForObject("SELECT rotation_pending FROM meetings WHERE id=?",Boolean.class,id));
-        assertEquals(503,assertThrows(MeetingException.class,()->service.join(project,id,actor)).status());
+        assertEquals(503,assertThrows(MeetingException.class,()->service.join(id,actor)).status());
         doNothing().when(media).deleteRoom(old); when(media.roomExists(old)).thenReturn(false); lifecycle.tick(id);
         assertEquals(1,db.queryForObject("SELECT room_epoch FROM meetings WHERE id=?",Integer.class,id));
-        assertEquals("Meeting test",service.detail(project,id,actor).title());
+        assertEquals("Meeting test",service.detail(id,actor).title());
         assertEquals(1,db.queryForObject("SELECT count(*) FROM meeting_agenda WHERE meeting_id=?",Integer.class,id));
         lifecycle.accept("stale-"+UUID.randomUUID(),"participant_joined",old,"user-"+actor,Instant.now());
         assertFalse(db.queryForObject("SELECT connected FROM meeting_participants WHERE id=?",Boolean.class,target));
     }
     @Test void inviteRevocationPreservesExistingGuestScopeAndUseCount() {
-        UUID id=scheduled(); service.start(project,id,actor);
-        var invitation=service.invite(project,id,actor,new InviteRequest(Instant.now().plusSeconds(3600),1));
+        UUID id=scheduled(); service.start(id,actor);
+        var invitation=service.invite(id,actor,new InviteRequest(Instant.now().plusSeconds(3600),1));
         var session=service.guestSession(new GuestRequest(invitation.token(),"Guest"));
-        service.revokeInvite(project,id,actor,invitation.id());
+        service.revokeInvite(id,actor,invitation.id());
         assertThrows(MeetingException.class,()->service.guestSession(new GuestRequest(invitation.token(),"Other")));
         when(media.issueToken(anyString(),anyString(),anyString(),any())).thenReturn(new MeetingMediaPort.MediaJoin("wss://example.test","TEST-ONLY",Instant.now().plusSeconds(60)));
         assertEquals(session.participantId(),service.guestJoin(id,session.secret()).participantId());
         assertEquals(1,db.queryForObject("SELECT uses FROM meeting_invites WHERE id=?",Integer.class,invitation.id()));
         assertThrows(MeetingException.class,()->service.guestJoin(UUID.randomUUID(),session.secret()));
     }
-    @Test void globalAdminOutsideProjectCannotJoinOrModerate() {
+    @Test void aGlobalAdminWhoIsNeitherOrganizerNorAttendeeCannotSeeJoinOrModerateAndLearnsNothingAboutTheId() {
         UUID id=scheduled(),outsider=user("ADMIN");
-        assertEquals(403,assertThrows(MeetingException.class,()->service.join(project,id,outsider)).status());
-        assertEquals(403,assertThrows(MeetingException.class,()->service.mute(project,id,outsider,UUID.randomUUID())).status());
+        // Knowing the id is not enough: a stranger gets the same 404 as for an id that does not exist.
+        for(Runnable attempt:List.<Runnable>of(()->service.detail(id,outsider),()->service.join(id,outsider),()->service.participants(id,outsider),
+                ()->service.mute(id,outsider,UUID.randomUUID()),()->service.history(id,outsider,0,50),()->service.leave(id,outsider))) {
+            var denied=assertThrows(MeetingException.class,attempt::run); assertEquals(404,denied.status()); assertEquals("MEETING_NOT_FOUND",denied.code());
+        }
+        assertEquals("MEETING_NOT_FOUND",assertThrows(MeetingException.class,()->service.detail(UUID.randomUUID(),outsider)).code());
     }
-    @Test void projectDeleteCascadesHistoryButLeavesIndependentCleanupTombstone() {
-        UUID id=scheduled(); service.start(project,id,actor); String room="pda-"+id;
-        tx.executeWithoutResult(s->{ publisher.publishEvent(new ProjectDeletedEvent(project,actor)); db.update("DELETE FROM projects WHERE id=?",project); });
-        assertFalse(meetings.existsById(id)); assertTrue(cleanup.existsById(room));
+    @Test void deletingAProjectNeverDeletesAGlobalMeetingOrItsRoomAndLeavesNoTombstone() {
+        UUID id=scheduled(); service.start(id,actor);
+        // A project meeting loses only the link when its project is deleted: it becomes an independent meeting.
+        UUID project=UUID.randomUUID();
+        db.update("INSERT INTO projects(id,name,slug,status,priority,visibility,created_by,created_at,updated_at) VALUES (?,'Legacy',?,'ACTIVE','MEDIUM','PRIVATE',?,now(),now())",project,project.toString(),actor);
+        db.update("UPDATE meetings SET project_id=? WHERE id=?",project,id);
+        tx.executeWithoutResult(s->{ publisher.publishEvent(new com.pda.project.ProjectDeletedEvent(project,actor)); db.update("DELETE FROM projects WHERE id=?",project); });
+        assertTrue(meetings.existsById(id)); assertFalse(cleanup.existsById("pda-"+id));
+        assertNull(db.queryForObject("SELECT project_id FROM meetings WHERE id=?",UUID.class,id));
+        assertEquals(Meeting.Kind.INDEPENDENT,service.detail(id,actor).meetingType());
+        assertEquals(Meeting.Status.OPEN,meetings.findById(id).orElseThrow().status);
+        verify(media,never()).deleteRoom(anyString());
+        assertEquals("Meeting test",service.detail(id,actor).title());
     }
-    @Test void membershipRemovalQueuesOneDurableRotationAndNoParticipantNeedsNone() {
-        UUID id=scheduled(); service.start(project,id,actor); UUID p=participant(id);
-        tx.executeWithoutResult(s->publisher.publishEvent(new com.pda.project.ProjectMemberRemovedEvent(project,actor,actor,Instant.now())));
-        assertTrue(db.queryForObject("SELECT revoked FROM meeting_participants WHERE id=?",Boolean.class,p));
+    @Test void projectMembershipChangesNeverRevokeAParticipantOfAGlobalMeeting() {
+        UUID id=scheduled(); service.start(id,actor); UUID p=participant(id);
+        tx.executeWithoutResult(s->publisher.publishEvent(new com.pda.project.ProjectMemberRemovedEvent(UUID.randomUUID(),actor,actor,Instant.now())));
+        lifecycle.tick(id);
+        assertFalse(db.queryForObject("SELECT revoked FROM meeting_participants WHERE id=?",Boolean.class,p));
+        assertFalse(db.queryForObject("SELECT rotation_pending FROM meetings WHERE id=?",Boolean.class,id));
+        assertEquals(0,db.queryForObject("SELECT room_epoch FROM meetings WHERE id=?",Integer.class,id));
+    }
+    @Test void aDeactivatedAccountIsStillRevokedFromALiveMeetingWithOneDurableRotation() {
+        UUID attendee=user("USER"); UUID id=scheduled(Set.of(attendee)); service.start(id,actor);
+        UUID row=UUID.randomUUID(); db.update("INSERT INTO meeting_participants(id,meeting_id,user_id,identity,display_name,revoked,connected) VALUES (?,?,?,?, 'Other',false,true)",row,id,attendee,"user-"+attendee);
+        db.update("UPDATE users SET account_status='DISABLED' WHERE id=?",attendee);
+        lifecycle.tick(id);
+        assertTrue(db.queryForObject("SELECT revoked FROM meeting_participants WHERE id=?",Boolean.class,row));
         assertTrue(db.queryForObject("SELECT rotation_pending FROM meetings WHERE id=?",Boolean.class,id));
         String old="pda-"+id; when(media.roomExists(old)).thenReturn(false); lifecycle.tick(id);
         assertEquals(1,db.queryForObject("SELECT room_epoch FROM meetings WHERE id=?",Integer.class,id));
-        UUID noParticipant=scheduled(); service.start(project,noParticipant,actor);
-        tx.executeWithoutResult(s->publisher.publishEvent(new com.pda.project.ProjectMemberRemovedEvent(project,UUID.randomUUID(),actor,Instant.now())));
-        assertFalse(db.queryForObject("SELECT rotation_pending FROM meetings WHERE id=?",Boolean.class,noParticipant));
     }
     @Test void concurrentSingleUseInviteHasExactlyOneRedemption() throws Exception {
-        UUID id=scheduled(); service.start(project,id,actor);
-        var invitation=service.invite(project,id,actor,new InviteRequest(Instant.now().plusSeconds(3600),1));
+        UUID id=scheduled(); service.start(id,actor);
+        var invitation=service.invite(id,actor,new InviteRequest(Instant.now().plusSeconds(3600),1));
         var successes=new java.util.concurrent.atomic.AtomicInteger();
         try(var executor=Executors.newFixedThreadPool(2)) {
             var start=new CountDownLatch(1); Runnable redeem=()->{await(start); try { service.guestSession(new GuestRequest(invitation.token(),"Guest")); successes.incrementAndGet(); } catch(MeetingException expected) { assertEquals("MEETING_INVITE_INVALID",expected.code()); }};
@@ -148,8 +165,8 @@ class MeetingCoreIntegrationTest {
         assertEquals(1,db.queryForObject("SELECT count(*) FROM meeting_participants WHERE invite_id=?",Integer.class,invitation.id()));
     }
     @Test void expiredGuestWithMintedMediaRotatesButUnusedSessionDoesNot() {
-        UUID id=scheduled(); service.start(project,id,actor);
-        var invitation=service.invite(project,id,actor,new InviteRequest(Instant.now().plusSeconds(3600),2));
+        UUID id=scheduled(); service.start(id,actor);
+        var invitation=service.invite(id,actor,new InviteRequest(Instant.now().plusSeconds(3600),2));
         var unused=service.guestSession(new GuestRequest(invitation.token(),"Unused"));
         db.update("UPDATE meeting_participants SET session_expires_at=now()-interval '1 second' WHERE id=?",unused.participantId());
         lifecycle.tick(id); assertEquals(0,db.queryForObject("SELECT room_epoch FROM meetings WHERE id=?",Integer.class,id));
@@ -160,11 +177,11 @@ class MeetingCoreIntegrationTest {
         assertTrue(db.queryForObject("SELECT revoked FROM meeting_participants WHERE id=?",Boolean.class,live.participantId()));
     }
     @Test void redemptionWaitingForRevocationLockReadsCommittedInviteState() throws Exception {
-        UUID id=scheduled(); service.start(project,id,actor);
-        var invitation=service.invite(project,id,actor,new InviteRequest(Instant.now().plusSeconds(3600),5));
+        UUID id=scheduled(); service.start(id,actor);
+        var invitation=service.invite(id,actor,new InviteRequest(Instant.now().plusSeconds(3600),5));
         var revokedInsideTransaction=new CountDownLatch(1); var releaseCommit=new CountDownLatch(1);
         try(var executor=Executors.newFixedThreadPool(2)) {
-            var revocation=executor.submit(()->tx.executeWithoutResult(s->{service.revokeInvite(project,id,actor,invitation.id()); revokedInsideTransaction.countDown(); await(releaseCommit);}));
+            var revocation=executor.submit(()->tx.executeWithoutResult(s->{service.revokeInvite(id,actor,invitation.id()); revokedInsideTransaction.countDown(); await(releaseCommit);}));
             assertTrue(revokedInsideTransaction.await(10,TimeUnit.SECONDS));
             var redemption=executor.submit(()->assertThrows(MeetingException.class,()->service.guestSession(new GuestRequest(invitation.token(),"Guest"))));
             releaseCommit.countDown(); revocation.get(20,TimeUnit.SECONDS); assertEquals("MEETING_INVITE_INVALID",redemption.get(20,TimeUnit.SECONDS).code());
@@ -176,14 +193,17 @@ class MeetingCoreIntegrationTest {
             .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk()).andReturn();
         String body=result.getResponse().getContentAsString();
         Map<String,Object> paths=com.jayway.jsonpath.JsonPath.read(body,"$.paths");
-        assertTrue(paths.containsKey("/api/v1/projects/{projectId}/meetings"));
-        assertTrue(paths.containsKey("/api/v1/projects/{projectId}/meetings/calendar"));
-        assertTrue(paths.containsKey("/api/v1/projects/{projectId}/meetings/{meetingId}/participants/{participantId}/kick"));
+        assertTrue(paths.containsKey("/api/v1/meetings"));
+        assertTrue(paths.containsKey("/api/v1/meetings/calendar"));
+        assertTrue(paths.containsKey("/api/v1/meetings/attendees/search"));
+        assertTrue(paths.containsKey("/api/v1/meetings/{meetingId}/participants/{participantId}/kick"));
+        assertTrue(paths.keySet().stream().noneMatch(p->p.contains("/projects/")&&p.contains("/meetings")),"no meeting route may carry a project");
         assertTrue(paths.containsKey("/api/v1/meetings/guest/session"));
         assertTrue(paths.containsKey("/api/v1/meetings/guest/{meetingId}/join"));
         assertTrue(paths.containsKey("/api/v1/meetings/media/webhook"));
         Map<String,Object> view=com.jayway.jsonpath.JsonPath.read(body,"$.components.schemas.MeetingView.properties");
         assertTrue(view.containsKey("roomEpoch")); assertTrue(view.containsKey("reconnectRequired")); assertTrue(view.containsKey("cleanupPending"));
+        assertFalse(view.containsKey("projectId")); assertTrue(view.containsKey("organizer")); assertTrue(view.containsKey("attendees"));
         Map<String,Object> participant=com.jayway.jsonpath.JsonPath.read(body,"$.components.schemas.MeetingParticipantView.properties");
         assertTrue(participant.containsKey("identity")); assertTrue(participant.containsKey("profilePhotoVersion")); assertTrue(participant.containsKey("userId"));
         String responseRef=com.jayway.jsonpath.JsonPath.read(body,"$.paths['/api/v1/meetings/guest/session'].post.responses['201'].content['*/*'].schema['$ref']");
@@ -194,112 +214,113 @@ class MeetingCoreIntegrationTest {
     @Test void calendarRangeIncludesMeetingsAlreadyInProgress() {
         UUID id=scheduled();
         Instant from=Instant.now().plusSeconds(600),to=from.plusSeconds(600);
-        var page=service.list(project,actor,null,from,to,0,100,"startsAt,asc");
+        var page=service.list(actor,null,from,to,0,100,"startsAt,asc");
         assertTrue(page.content().stream().anyMatch(m->m.id().equals(id)),"A meeting spanning the range start belongs on the calendar");
-        assertTrue(service.list(project,actor,null,to.plusSeconds(7200),to.plusSeconds(7800),0,100,"startsAt,asc").content().isEmpty());
+        assertTrue(service.list(actor,null,to.plusSeconds(7200),to.plusSeconds(7800),0,100,"startsAt,asc").content().isEmpty());
     }
     @Test void chatMentionsPersistOnlyForLiveMeetingParticipantsAndDefaultEndDeletesContent() {
-        UUID id=scheduled(); service.start(project,id,actor); UUID author=participant(id);
-        var invitation=service.invite(project,id,actor,new InviteRequest(Instant.now().plusSeconds(3600),1));
+        UUID id=scheduled(); service.start(id,actor); UUID author=participant(id);
+        var invitation=service.invite(id,actor,new InviteRequest(Instant.now().plusSeconds(3600),1));
         var guest=service.guestSession(new GuestRequest(invitation.token(),"Guest"));
         db.update("UPDATE meeting_participants SET connected=true WHERE id=?",guest.participantId());
         when(media.listParticipants("pda-"+id)).thenReturn(List.of(
             new MeetingMediaPort.MediaParticipant("user-"+actor,"Member"),
             new MeetingMediaPort.MediaParticipant("guest-"+guest.participantId(),"Guest")));
         assertEquals("MEETING_INVALID_MENTIONS",assertThrows(MeetingException.class,
-            ()->service.chat(project,id,actor,new ChatRequest("Hello",Set.of(UUID.randomUUID())))).code());
+            ()->service.chat(id,actor,new ChatRequest("Hello",Set.of(UUID.randomUUID())))).code());
         assertEquals("MEETING_INVALID_MESSAGE",assertThrows(MeetingException.class,
-            ()->service.chat(project,id,actor,new ChatRequest("<script>example</script>",Set.of()))).code());
-        var message=service.chat(project,id,actor,new ChatRequest("Hello @Guest",Set.of(guest.participantId())));
+            ()->service.chat(id,actor,new ChatRequest("<script>example</script>",Set.of()))).code());
+        var message=service.chat(id,actor,new ChatRequest("Hello @Guest",Set.of(guest.participantId())));
         assertEquals(author,message.participantId());
         assertEquals(Set.of(guest.participantId()),message.mentionIds());
-        assertEquals(1,service.history(project,id,actor,0,50).totalElements());
+        assertEquals(1,service.history(id,actor,0,50).totalElements());
         assertEquals(1,db.queryForObject("SELECT count(*) FROM meeting_chat_mentions WHERE message_id=?",Integer.class,message.id()));
         verify(media).sendData(eq("pda-"+id),argThat(bytes->new String(bytes,java.nio.charset.StandardCharsets.UTF_8).contains(message.id().toString())));
-        service.end(project,id,actor);
+        service.end(id,actor);
         assertEquals(0,db.queryForObject("SELECT count(*) FROM meeting_chat_messages WHERE meeting_id=?",Integer.class,id));
         assertEquals(0,db.queryForObject("SELECT count(*) FROM meeting_chat_mentions WHERE message_id=?",Integer.class,message.id()));
     }
-    @Test void endingForEveryoneBelongsToTheCreatorNotToAnyProjectManager() {
-        UUID creator=user("USER"), otherManager=user("USER"), plain=user("USER");
-        addMember(creator,"TESTER"); addMember(otherManager,"PROJECT_MANAGER"); addMember(plain,"TESTER");
-        // Created by an ordinary member; `actor` is a project manager of the same project.
-        UUID id=service.create(project,creator,new Command("Owned meeting","",Instant.now().plusSeconds(60),Instant.now().plusSeconds(3660),"Europe/Istanbul",List.of(),Set.of())).id();
-        service.start(project,id,creator);
-        UUID target=participant(id);
-        for(UUID refused:List.of(actor,otherManager,plain)) {
-            var failure=assertThrows(MeetingException.class,()->moderation.end(project,id,refused));
-            assertEquals(403,failure.status()); assertEquals("MEETING_OWNER_REQUIRED",failure.code());
+    @Test void endingMutingAndEditingBelongToTheOrganizerAloneAndNoProjectRoleChangesThat() {
+        // `actor` organizes; `attendee` is invited; `projectManager` manages a project the organizer also belongs to but is not invited; `stranger` has nothing.
+        UUID attendee=user("USER"), projectManager=user("USER"), stranger=user("USER");
+        UUID project=UUID.randomUUID();
+        db.update("INSERT INTO projects(id,name,slug,status,priority,visibility,created_by,created_at,updated_at) VALUES (?,'Shared',?,'ACTIVE','MEDIUM','PRIVATE',?,now(),now())",project,project.toString(),projectManager);
+        for(UUID member:List.of(actor,projectManager)) {
+            UUID membership=UUID.randomUUID(); db.update("INSERT INTO project_memberships(id,project_id,user_id,joined_at) VALUES (?,?,?,now())",membership,project,member);
+            db.update("INSERT INTO project_membership_roles(membership_id,role) VALUES (?,?)",membership,member.equals(projectManager)?"PROJECT_MANAGER":"TESTER");
+        }
+        UUID id=scheduled(Set.of(attendee)); service.start(id,actor); UUID target=participant(id);
+        // An attendee is refused (403) on every organizer-only action; the project manager is not even a participant (404).
+        for(Runnable organizerOnly:List.<Runnable>of(()->moderation.end(id,attendee),()->service.mute(id,attendee,target),()->moderation.kick(id,attendee,target),
+                ()->service.invite(id,attendee,new InviteRequest(Instant.now().plusSeconds(3600),1)),()->service.listInvites(id,attendee,0,10),
+                ()->service.update(id,attendee,new Command("Hijack","",Instant.now().plusSeconds(60),Instant.now().plusSeconds(3660),"Europe/Istanbul",List.of(),Set.of())),
+                ()->service.cancel(id,attendee))) {
+            assertEquals(403,assertThrows(MeetingException.class,organizerOnly::run).status());
+        }
+        for(Runnable outsider:List.<Runnable>of(()->moderation.end(id,projectManager),()->service.mute(id,projectManager,target),()->moderation.kick(id,projectManager,target),
+                ()->service.cancel(id,projectManager),()->service.mute(id,stranger,target))) {
+            assertEquals(404,assertThrows(MeetingException.class,outsider::run).status());
         }
         assertEquals(Meeting.Status.OPEN,meetings.findById(id).orElseThrow().status);
         verify(media,never()).deleteRoom(anyString());
-        // Other moderation is unchanged: a manager still mutes; a plain member still cannot.
-        service.mute(project,id,actor,target); verify(media).muteParticipant("pda-"+id,"user-"+actor);
-        assertEquals("MEETING_MANAGER_REQUIRED",assertThrows(MeetingException.class,()->service.mute(project,id,creator,target)).code());
-        // The creator's own membership is still required.
-        db.update("DELETE FROM project_membership_roles WHERE membership_id IN (SELECT id FROM project_memberships WHERE user_id=?)",creator);
-        db.update("DELETE FROM project_memberships WHERE user_id=?",creator);
-        assertEquals(403,assertThrows(MeetingException.class,()->moderation.end(project,id,creator)).status());
-        assertEquals(Meeting.Status.OPEN,meetings.findById(id).orElseThrow().status);
-        addMember(creator,"TESTER");
-        // The creator ends it, without a manager role; afterwards nobody can join again.
-        assertEquals(Meeting.Status.ENDED,moderation.end(project,id,creator).status());
+        // The organizer mutes and ends, with no project role at all; afterwards nobody can join again.
+        service.mute(id,actor,target); verify(media).muteParticipant("pda-"+id,"user-"+actor);
+        assertEquals(Meeting.Status.ENDED,moderation.end(id,actor).status());
         assertEquals(Meeting.Status.ENDED,meetings.findById(id).orElseThrow().status);
-        assertEquals(409,assertThrows(MeetingException.class,()->service.join(project,id,actor)).status());
-        assertEquals(409,assertThrows(MeetingException.class,()->service.join(project,id,creator)).status());
+        assertEquals(409,assertThrows(MeetingException.class,()->service.join(id,attendee)).status());
+        assertEquals(409,assertThrows(MeetingException.class,()->service.join(id,actor)).status());
     }
     @Test void iconPersistsThroughCreateUpdateAndReadAndOnlyAllowlistedNamesAreStored() {
         Instant start=Instant.now().plusSeconds(3600);
-        UUID id=service.create(project,actor,new Command("Icon","",start,start.plusSeconds(3600),"Europe/Istanbul",List.of(),Set.of(),"presentation",null)).id();
-        assertEquals("presentation",service.detail(project,id,actor).icon());
+        UUID id=service.create(actor,new Command("Icon","",start,start.plusSeconds(3600),"Europe/Istanbul",List.of(),Set.of(),"presentation",null)).id();
+        assertEquals("presentation",service.detail(id,actor).icon());
         assertEquals("presentation",db.queryForObject("SELECT icon FROM meetings WHERE id=?",String.class,id));
-        service.update(project,id,actor,new Command("Icon","",start,start.plusSeconds(3600),"Europe/Istanbul",List.of(),Set.of(),"code",null));
-        assertEquals("code",service.detail(project,id,actor).icon());
-        service.update(project,id,actor,new Command("Renamed","",start,start.plusSeconds(3600),"Europe/Istanbul",List.of(),Set.of()));
-        assertEquals("code",service.detail(project,id,actor).icon()); // omitting the icon keeps it
-        assertEquals("video",service.detail(project,scheduled(),actor).icon()); // the default of a meeting created without one
-        assertEquals("MEETING_INVALID_ICON",assertThrows(MeetingException.class,()->service.update(project,id,actor,new Command("Icon","",start,start.plusSeconds(3600),"Europe/Istanbul",List.of(),Set.of(),"rocket",null))).code());
+        service.update(id,actor,new Command("Icon","",start,start.plusSeconds(3600),"Europe/Istanbul",List.of(),Set.of(),"code",null));
+        assertEquals("code",service.detail(id,actor).icon());
+        service.update(id,actor,new Command("Renamed","",start,start.plusSeconds(3600),"Europe/Istanbul",List.of(),Set.of()));
+        assertEquals("code",service.detail(id,actor).icon()); // omitting the icon keeps it
+        assertEquals("video",service.detail(scheduled(),actor).icon()); // the default of a meeting created without one
+        assertEquals("MEETING_INVALID_ICON",assertThrows(MeetingException.class,()->service.update(id,actor,new Command("Icon","",start,start.plusSeconds(3600),"Europe/Istanbul",List.of(),Set.of(),"rocket",null))).code());
         // The database refuses a name outside the allowlist even if the service were bypassed.
         assertThrows(org.springframework.dao.DataIntegrityViolationException.class,()->db.update("UPDATE meetings SET icon='rocket' WHERE id=?",id));
     }
     private Set<UUID> ids(UUID viewer,MeetingService.HiddenMode mode) {
-        var result=new HashSet<UUID>(); service.list(project,viewer,null,null,null,0,100,"startsAt,asc",mode).content().forEach(v->result.add(v.id())); return result;
+        var result=new HashSet<UUID>(); service.list(viewer,null,null,null,0,100,"startsAt,asc",mode).content().forEach(v->result.add(v.id())); return result;
     }
     @Test void clearingHistoryHidesOnlyMyFinishedAndCancelledMeetingsAndNobodyElses() {
-        UUID colleague=user("USER"); addMember(colleague,"TESTER"); UUID outsider=user("USER");
-        UUID ended=scheduled(); service.start(project,ended,actor); service.end(project,ended,actor);
-        UUID cancelled=scheduled(); service.cancel(project,cancelled,actor);
-        UUID upcoming=scheduled(); UUID live=scheduled(); service.start(project,live,actor);
+        UUID colleague=user("USER"); UUID outsider=user("USER");
+        UUID ended=scheduled(Set.of(colleague)); service.start(ended,actor); service.end(ended,actor);
+        UUID cancelled=scheduled(Set.of(colleague)); service.cancel(cancelled,actor);
+        UUID upcoming=scheduled(Set.of(colleague)); UUID live=scheduled(Set.of(colleague)); service.start(live,actor);
         assertEquals(Set.of(ended,cancelled,upcoming,live),ids(actor,MeetingService.HiddenMode.EXCLUDE));
         long audits=db.queryForObject("SELECT count(*) FROM meeting_audit",Long.class);
-        assertEquals(2,service.clearHistory(project,actor).count());
+        assertEquals(2,service.clearHistory(actor).count());
         // Only finished and cancelled meetings went; the planned and the live one stay.
         assertEquals(Set.of(upcoming,live),ids(actor,MeetingService.HiddenMode.EXCLUDE));
         assertEquals(Set.of(ended,cancelled),ids(actor,MeetingService.HiddenMode.ONLY));
         assertEquals(4,ids(actor,MeetingService.HiddenMode.INCLUDE).size());
-        assertTrue(service.list(project,actor,null,null,null,0,100,"startsAt,asc",MeetingService.HiddenMode.ONLY).content().stream().allMatch(MeetingDtos.View::hidden));
+        assertTrue(service.list(actor,null,null,null,0,100,"startsAt,asc",MeetingService.HiddenMode.ONLY).content().stream().allMatch(MeetingDtos.View::hidden));
         // A colleague sees everything and has nothing hidden; the meetings, their audit trail and their reminders were not touched.
-        assertEquals(4,ids(colleague,MeetingService.HiddenMode.EXCLUDE).size()); assertEquals(0,service.hiddenCount(project,colleague).count());
+        assertEquals(4,ids(colleague,MeetingService.HiddenMode.EXCLUDE).size()); assertEquals(0,service.hiddenCount(colleague).count());
         assertEquals(Meeting.Status.ENDED,meetings.findById(ended).orElseThrow().status); assertEquals(Meeting.Status.CANCELLED,meetings.findById(cancelled).orElseThrow().status);
         assertEquals(audits,db.queryForObject("SELECT count(*) FROM meeting_audit",Long.class));
-        assertEquals(2,service.hiddenCount(project,actor).count());
-        assertEquals(0,service.clearHistory(project,actor).count()); // clearing again changes nothing
-        assertEquals(403,assertThrows(MeetingException.class,()->service.clearHistory(project,outsider)).status());
-        assertEquals(403,assertThrows(MeetingException.class,()->service.hiddenCount(project,outsider)).status());
+        assertEquals(2,service.hiddenCount(actor).count());
+        assertEquals(0,service.clearHistory(actor).count()); // clearing again changes nothing
+        // Someone who attends none of them neither sees them nor clears anything.
+        assertEquals(Set.of(),ids(outsider,MeetingService.HiddenMode.INCLUDE)); assertEquals(0,service.clearHistory(outsider).count()); assertEquals(0,service.hiddenCount(outsider).count());
         // A meeting that finishes later is not hidden until the next clear; restoring brings the cleared ones back for this user only.
-        service.end(project,live,actor); assertTrue(ids(actor,MeetingService.HiddenMode.EXCLUDE).contains(live));
-        assertEquals(2,service.restoreHistory(project,actor).count());
-        assertEquals(Set.of(ended,cancelled,upcoming,live),ids(actor,MeetingService.HiddenMode.EXCLUDE)); assertEquals(0,service.hiddenCount(project,actor).count());
+        service.end(live,actor); assertTrue(ids(actor,MeetingService.HiddenMode.EXCLUDE).contains(live));
+        assertEquals(2,service.restoreHistory(actor).count());
+        assertEquals(Set.of(ended,cancelled,upcoming,live),ids(actor,MeetingService.HiddenMode.EXCLUDE)); assertEquals(0,service.hiddenCount(actor).count());
         // The calendar (no hidden filter) always sees everything.
-        service.clearHistory(project,actor);
-        assertEquals(4,service.list(project,actor,null,null,null,0,100,"startsAt,asc").content().size());
+        service.clearHistory(actor);
+        assertEquals(4,service.list(actor,null,null,null,0,100,"startsAt,asc").content().size());
     }
     // ---- V2.9.2: chat replies and reactions --------------------------------------------------------------------------------------
     /** A started meeting with the manager and one more member in the room (both known to the media server), returned as ids. */
     private record Room(UUID id,UUID first,UUID second,UUID secondUser) {}
     private Room roomOfTwo() {
-        UUID id=scheduled(); service.start(project,id,actor); UUID first=participant(id);
-        UUID other=user("USER"); addMember(other,"TESTER");
+        UUID other=user("USER"); UUID id=scheduled(Set.of(other)); service.start(id,actor); UUID first=participant(id);
         UUID second=UUID.randomUUID(); db.update("INSERT INTO meeting_participants(id,meeting_id,user_id,identity,display_name,revoked,connected) VALUES (?,?,?,?, 'Other',false,true)",second,id,other,"user-"+other);
         when(media.listParticipants("pda-"+id)).thenReturn(List.of(new MeetingMediaPort.MediaParticipant("user-"+actor,"Member"),new MeetingMediaPort.MediaParticipant("user-"+other,"Other")));
         return new Room(id,first,second,other);
@@ -308,31 +329,31 @@ class MeetingCoreIntegrationTest {
 
     @Test void aReplyIsARealStoredRelationInTheSameMeetingAndSurvivesReload() {
         Room room=roomOfTwo();
-        var original=service.chat(project,room.id(),actor,new ChatRequest("Is the backend finished?\nPlease answer",Set.of()));
+        var original=service.chat(room.id(),actor,new ChatRequest("Is the backend finished?\nPlease answer",Set.of()));
         assertNull(original.replyToMessageId()); assertNull(original.replyTo());
-        var reply=service.chat(project,room.id(),room.secondUser(),new ChatRequest("Yes, tests pass",Set.of(),original.id()));
+        var reply=service.chat(room.id(),room.secondUser(),new ChatRequest("Yes, tests pass",Set.of(),original.id()));
         assertEquals(original.id(),reply.replyToMessageId());
         assertEquals("Member",reply.replyTo().displayName()); assertEquals("Is the backend finished? Please answer",reply.replyTo().preview());
         assertEquals(original.id(),db.queryForObject("SELECT reply_to_message_id FROM meeting_chat_messages WHERE id=?",UUID.class,reply.id()));
         // Reload: the relation and the quote come back from the stored data, newest first.
-        var history=service.history(project,room.id(),actor,0,50).content();
+        var history=service.history(room.id(),actor,0,50).content();
         assertEquals(reply.id(),history.get(0).id()); assertEquals(original.id(),history.get(0).replyToMessageId()); assertEquals("Member",history.get(0).replyTo().displayName());
         assertNull(history.get(1).replyTo());
         // You may answer your own message.
         noRateLimit(room.id());
-        assertEquals(original.id(),service.chat(project,room.id(),actor,new ChatRequest("Adding to that",Set.of(),original.id())).replyToMessageId());
+        assertEquals(original.id(),service.chat(room.id(),actor,new ChatRequest("Adding to that",Set.of(),original.id())).replyToMessageId());
         // A long original is quoted shortly (and never splits an emoji).
         noRateLimit(room.id());
-        var longOne=service.chat(project,room.id(),actor,new ChatRequest("x".repeat(159)+"😀 more text",Set.of()));
+        var longOne=service.chat(room.id(),actor,new ChatRequest("x".repeat(159)+"😀 more text",Set.of()));
         noRateLimit(room.id());
-        var quote=service.chat(project,room.id(),room.secondUser(),new ChatRequest("re",Set.of(),longOne.id())).replyTo().preview();
+        var quote=service.chat(room.id(),room.secondUser(),new ChatRequest("re",Set.of(),longOne.id())).replyTo().preview();
         assertTrue(quote.length()<=161&&quote.endsWith("…")&&!Character.isHighSurrogate(quote.charAt(quote.length()-2)));
     }
     @Test void aReplyToAnotherMeetingsMessageOrAnUnknownOneIsRefusedByTheServiceAndByTheDatabase() {
         Room one=roomOfTwo(); Room other=roomOfTwo();
-        var foreign=service.chat(project,other.id(),actor,new ChatRequest("In the other meeting",Set.of()));
+        var foreign=service.chat(other.id(),actor,new ChatRequest("In the other meeting",Set.of()));
         for(UUID target:List.of(foreign.id(),UUID.randomUUID())) {
-            var failure=assertThrows(MeetingException.class,()->service.chat(project,one.id(),actor,new ChatRequest("Cross reply",Set.of(),target)));
+            var failure=assertThrows(MeetingException.class,()->service.chat(one.id(),actor,new ChatRequest("Cross reply",Set.of(),target)));
             assertEquals(404,failure.status()); assertEquals("MEETING_REPLY_TARGET_NOT_FOUND",failure.code());
         }
         assertEquals(0,db.queryForObject("SELECT count(*) FROM meeting_chat_messages WHERE meeting_id=?",Integer.class,one.id()));
@@ -345,84 +366,84 @@ class MeetingCoreIntegrationTest {
     }
     @Test void chatRetentionDeletesRepliesAndReactionsWithoutForeignKeyErrors() {
         Room room=roomOfTwo();
-        var original=service.chat(project,room.id(),actor,new ChatRequest("Original",Set.of()));
-        service.react(project,room.id(),room.secondUser(),original.id(),"👍");
-        var reply=service.chat(project,room.id(),room.secondUser(),new ChatRequest("Answer",Set.of(),original.id()));
-        service.react(project,room.id(),actor,reply.id(),"❤️");
-        service.end(project,room.id(),actor);   // default retention: the chat is deleted with the meeting
+        var original=service.chat(room.id(),actor,new ChatRequest("Original",Set.of()));
+        service.react(room.id(),room.secondUser(),original.id(),"👍");
+        var reply=service.chat(room.id(),room.secondUser(),new ChatRequest("Answer",Set.of(),original.id()));
+        service.react(room.id(),actor,reply.id(),"❤️");
+        service.end(room.id(),actor);   // default retention: the chat is deleted with the meeting
         assertEquals(0,db.queryForObject("SELECT count(*) FROM meeting_chat_messages WHERE meeting_id=?",Integer.class,room.id()));
         assertEquals(0,db.queryForObject("SELECT count(*) FROM meeting_chat_reactions WHERE message_id IN (?,?)",Integer.class,original.id(),reply.id()));
         // Deleting only the answered message clears the link, it does not delete the reply or leave a dangling id.
         Room second=roomOfTwo(); noRateLimit(second.id());
-        var a=service.chat(project,second.id(),actor,new ChatRequest("A",Set.of())); var b=service.chat(project,second.id(),second.secondUser(),new ChatRequest("B",Set.of(),a.id()));
+        var a=service.chat(second.id(),actor,new ChatRequest("A",Set.of())); var b=service.chat(second.id(),second.secondUser(),new ChatRequest("B",Set.of(),a.id()));
         db.update("DELETE FROM meeting_chat_messages WHERE id=?",a.id());
         assertNull(db.queryForObject("SELECT reply_to_message_id FROM meeting_chat_messages WHERE id=?",UUID.class,b.id()));
-        assertNull(service.history(project,second.id(),actor,0,50).content().getFirst().replyTo());
+        assertNull(service.history(second.id(),actor,0,50).content().getFirst().replyTo());
     }
     @Test void reactionsCountOncePerPersonAndEmojiAreIdempotentAndOnlyTheOwnerRemovesTheirs() {
         Room room=roomOfTwo();
-        var message=service.chat(project,room.id(),actor,new ChatRequest("Starting the meeting",Set.of()));
-        service.react(project,room.id(),actor,message.id(),"👍"); var again=service.react(project,room.id(),actor,message.id(),"👍");
+        var message=service.chat(room.id(),actor,new ChatRequest("Starting the meeting",Set.of()));
+        service.react(room.id(),actor,message.id(),"👍"); var again=service.react(room.id(),actor,message.id(),"👍");
         assertEquals(1,again.reactions().size()); assertEquals(1,again.reactions().getFirst().count()); assertTrue(again.reactions().getFirst().reactedByMe());
         // A second person on the same emoji: two; each sees their own reaction as theirs.
-        var both=service.react(project,room.id(),room.secondUser(),message.id(),"👍");
+        var both=service.react(room.id(),room.secondUser(),message.id(),"👍");
         assertEquals(2,both.reactions().getFirst().count()); assertTrue(both.reactions().getFirst().reactedByMe());
         assertEquals(List.of("Member","Other"),both.reactions().getFirst().reactors().stream().map(ReactorView::displayName).toList());
-        assertFalse(service.message(project,room.id(),actor,message.id()).reactions().isEmpty());
+        assertFalse(service.message(room.id(),actor,message.id()).reactions().isEmpty());
         // Another emoji stays separate.
-        var heart=service.react(project,room.id(),room.secondUser(),message.id(),"❤️");
+        var heart=service.react(room.id(),room.secondUser(),message.id(),"❤️");
         assertEquals(List.of("👍","❤️"),heart.reactions().stream().map(ReactionView::emoji).toList());
         // Removing is idempotent and only touches the caller's own row.
-        var removed=service.unreact(project,room.id(),room.secondUser(),message.id(),"👍");
+        var removed=service.unreact(room.id(),room.secondUser(),message.id(),"👍");
         assertEquals(1,removed.reactions().stream().filter(r->r.emoji().equals("👍")).findFirst().orElseThrow().count());
-        service.unreact(project,room.id(),room.secondUser(),message.id(),"👍");
-        var viewerIsFirst=service.message(project,room.id(),actor,message.id());
+        service.unreact(room.id(),room.secondUser(),message.id(),"👍");
+        var viewerIsFirst=service.message(room.id(),actor,message.id());
         assertTrue(viewerIsFirst.reactions().stream().filter(r->r.emoji().equals("👍")).findFirst().orElseThrow().reactedByMe());
         assertFalse(viewerIsFirst.reactions().stream().filter(r->r.emoji().equals("❤️")).findFirst().orElseThrow().reactedByMe());
         assertEquals(2,db.queryForObject("SELECT count(*) FROM meeting_chat_reactions WHERE message_id=?",Integer.class,message.id()));
         // Persisted, and the page the history returns carries them (one query for the whole page).
-        assertEquals(2,service.history(project,room.id(),actor,0,50).content().getFirst().reactions().size());
+        assertEquals(2,service.history(room.id(),actor,0,50).content().getFirst().reactions().size());
         verify(media,atLeastOnce()).sendData(eq("pda-"+room.id()),argThat(bytes->new String(bytes,java.nio.charset.StandardCharsets.UTF_8).contains("meeting.chat.reaction")));
     }
     @Test void reactionsRefuseBadEmojiForeignMessagesStrangersAndRunawayGrowth() {
         Room room=roomOfTwo(); Room other=roomOfTwo();
-        var message=service.chat(project,room.id(),actor,new ChatRequest("Hello",Set.of()));
-        var foreign=service.chat(project,other.id(),actor,new ChatRequest("Elsewhere",Set.of()));
+        var message=service.chat(room.id(),actor,new ChatRequest("Hello",Set.of()));
+        var foreign=service.chat(other.id(),actor,new ChatRequest("Elsewhere",Set.of()));
         for(String bad:new String[]{"","a","1","👍👍","<b>","👍a","\n👍","  "})
-            assertEquals("MEETING_INVALID_REACTION",assertThrows(MeetingException.class,()->service.react(project,room.id(),actor,message.id(),bad)).code(),"'"+bad+"'");
-        assertEquals("MEETING_MESSAGE_NOT_FOUND",assertThrows(MeetingException.class,()->service.react(project,room.id(),actor,foreign.id(),"👍")).code());
-        assertEquals("MEETING_MESSAGE_NOT_FOUND",assertThrows(MeetingException.class,()->service.react(project,room.id(),actor,UUID.randomUUID(),"👍")).code());
-        // Somebody who is not in the room (or not even a member) can neither react nor read the message.
+            assertEquals("MEETING_INVALID_REACTION",assertThrows(MeetingException.class,()->service.react(room.id(),actor,message.id(),bad)).code(),"'"+bad+"'");
+        assertEquals("MEETING_MESSAGE_NOT_FOUND",assertThrows(MeetingException.class,()->service.react(room.id(),actor,foreign.id(),"👍")).code());
+        assertEquals("MEETING_MESSAGE_NOT_FOUND",assertThrows(MeetingException.class,()->service.react(room.id(),actor,UUID.randomUUID(),"👍")).code());
+        // Somebody who is not in the room can neither react nor read the message, and somebody not even invited does not learn the meeting exists.
         UUID outsider=user("USER");
-        assertEquals("MEETING_FORBIDDEN",assertThrows(MeetingException.class,()->service.react(project,room.id(),outsider,message.id(),"👍")).code());
-        UUID memberNotInRoom=user("USER"); addMember(memberNotInRoom,"TESTER");
-        assertEquals("MEETING_PARTICIPANT_REQUIRED",assertThrows(MeetingException.class,()->service.react(project,room.id(),memberNotInRoom,message.id(),"👍")).code());
-        assertEquals("MEETING_PARTICIPANT_REQUIRED",assertThrows(MeetingException.class,()->service.message(project,room.id(),memberNotInRoom,message.id())).code());
+        assertEquals("MEETING_NOT_FOUND",assertThrows(MeetingException.class,()->service.react(room.id(),outsider,message.id(),"👍")).code());
+        UUID memberNotInRoom=user("USER"); db.update("INSERT INTO meeting_attendees(meeting_id,user_id) VALUES (?,?)",room.id(),memberNotInRoom);
+        assertEquals("MEETING_PARTICIPANT_REQUIRED",assertThrows(MeetingException.class,()->service.react(room.id(),memberNotInRoom,message.id(),"👍")).code());
+        assertEquals("MEETING_PARTICIPANT_REQUIRED",assertThrows(MeetingException.class,()->service.message(room.id(),memberNotInRoom,message.id())).code());
         // A person keeps to 12 emoji on one message.
         String[] emojis={"😀","😄","😂","🤣","😊","😍","🥳","😎","🤔","😮","😢","😭","😅"};
-        for(int i=0;i<12;i++) service.react(project,room.id(),actor,message.id(),emojis[i]);
-        assertEquals("MEETING_REACTION_LIMIT",assertThrows(MeetingException.class,()->service.react(project,room.id(),actor,message.id(),emojis[12])).code());
+        for(int i=0;i<12;i++) service.react(room.id(),actor,message.id(),emojis[i]);
+        assertEquals("MEETING_REACTION_LIMIT",assertThrows(MeetingException.class,()->service.react(room.id(),actor,message.id(),emojis[12])).code());
         // Nothing was written for the refused ones.
         assertEquals(12,db.queryForObject("SELECT count(*) FROM meeting_chat_reactions WHERE message_id=?",Integer.class,message.id()));
         assertEquals(0,db.queryForObject("SELECT count(*) FROM meeting_chat_reactions WHERE message_id=?",Integer.class,foreign.id()));
     }
     @Test void guestsReplyAndReactWithTheirOwnSessionIdentity() {
-        UUID id=scheduled(); service.start(project,id,actor); UUID member=participant(id);
-        var invitation=service.invite(project,id,actor,new InviteRequest(Instant.now().plusSeconds(3600),2));
+        UUID id=scheduled(); service.start(id,actor); UUID member=participant(id);
+        var invitation=service.invite(id,actor,new InviteRequest(Instant.now().plusSeconds(3600),2));
         var guest=service.guestSession(new GuestRequest(invitation.token(),"Guest"));
         db.update("UPDATE meeting_participants SET connected=true WHERE id=?",guest.participantId());
         when(media.listParticipants("pda-"+id)).thenReturn(List.of(new MeetingMediaPort.MediaParticipant("user-"+actor,"Member"),new MeetingMediaPort.MediaParticipant("guest-"+guest.participantId(),"Guest")));
-        var original=service.chat(project,id,actor,new ChatRequest("Hello guest",Set.of()));
+        var original=service.chat(id,actor,new ChatRequest("Hello guest",Set.of()));
         var reply=service.guestChat(id,guest.secret(),new ChatRequest("Hello member",Set.of(),original.id()));
         assertEquals(original.id(),reply.replyToMessageId());
         assertEquals(original.id(),service.guestHistory(id,guest.secret(),0,50).content().getLast().id());
         var reacted=service.guestReact(id,guest.secret(),original.id(),"👍");
         assertTrue(reacted.reactions().getFirst().reactedByMe());
-        assertFalse(service.message(project,id,actor,original.id()).reactions().getFirst().reactedByMe(),"the member did not react: the guest did");
+        assertFalse(service.message(id,actor,original.id()).reactions().getFirst().reactedByMe(),"the member did not react: the guest did");
         assertEquals(guest.participantId(),db.queryForObject("SELECT participant_id FROM meeting_chat_reactions WHERE message_id=?",UUID.class,original.id()));
         assertEquals(0,service.guestUnreact(id,guest.secret(),original.id(),"👍").reactions().size());
         // A guest secret of another meeting gets nothing.
-        UUID otherMeeting=scheduled(); service.start(project,otherMeeting,actor);
+        UUID otherMeeting=scheduled(); service.start(otherMeeting,actor);
         assertThrows(MeetingException.class,()->service.guestReact(otherMeeting,guest.secret(),original.id(),"👍"));
     }
     @Test void aMessageCanBeLocatedInTheNewestFirstHistoryPageAcrossPages() {
@@ -431,19 +452,16 @@ class MeetingCoreIntegrationTest {
             db.update("INSERT INTO meeting_chat_messages(id,meeting_id,participant_id,display_name,content,sent_at) VALUES (?,?,?,'Member',?,?)",id,room.id(),room.first(),"m"+i,java.sql.Timestamp.from(base.plusSeconds(i))); }
         // Oldest = last page; newest = first page; and the page it names really contains it, at every size.
         for(int size:new int[]{50,20,100}) for(UUID id:List.of(ids.getFirst(),ids.get(60),ids.getLast())) {
-            var where=service.locate(project,room.id(),actor,id,size);
-            assertEquals(id,where.messageId()); assertTrue(service.history(project,room.id(),actor,where.page(),size).content().stream().anyMatch(m->m.id().equals(id)),"size "+size);
+            var where=service.locate(room.id(),actor,id,size);
+            assertEquals(id,where.messageId()); assertTrue(service.history(room.id(),actor,where.page(),size).content().stream().anyMatch(m->m.id().equals(id)),"size "+size);
         }
-        assertEquals(2,service.locate(project,room.id(),actor,ids.getFirst(),50).page()); assertEquals(0,service.locate(project,room.id(),actor,ids.getLast(),50).page());
-        Room other=roomOfTwo(); var foreign=service.chat(project,other.id(),actor,new ChatRequest("Elsewhere",Set.of()));
-        assertEquals("MEETING_MESSAGE_NOT_FOUND",assertThrows(MeetingException.class,()->service.locate(project,room.id(),actor,foreign.id(),50)).code());
-        assertEquals("MEETING_INVALID_PAGE",assertThrows(MeetingException.class,()->service.locate(project,room.id(),actor,ids.getLast(),0)).code());
+        assertEquals(2,service.locate(room.id(),actor,ids.getFirst(),50).page()); assertEquals(0,service.locate(room.id(),actor,ids.getLast(),50).page());
+        Room other=roomOfTwo(); var foreign=service.chat(other.id(),actor,new ChatRequest("Elsewhere",Set.of()));
+        assertEquals("MEETING_MESSAGE_NOT_FOUND",assertThrows(MeetingException.class,()->service.locate(room.id(),actor,foreign.id(),50)).code());
+        assertEquals("MEETING_INVALID_PAGE",assertThrows(MeetingException.class,()->service.locate(room.id(),actor,ids.getLast(),0)).code());
     }
-    private void addMember(UUID user,String role) {
-        UUID membership=UUID.randomUUID(); db.update("INSERT INTO project_memberships(id,project_id,user_id,joined_at) VALUES (?,?,?,now())",membership,project,user);
-        db.update("INSERT INTO project_membership_roles(membership_id,role) VALUES (?,?)",membership,role);
-    }
-    private UUID scheduled() { return service.create(project,actor,new Command("Meeting test","",Instant.now().plusSeconds(60),Instant.now().plusSeconds(3660),"Europe/Istanbul",List.of("Agenda"),Set.of())).id(); }
+    private UUID scheduled() { return scheduled(Set.of()); }
+    private UUID scheduled(Set<UUID> attendees) { return service.create(actor,new Command("Meeting test","",Instant.now().plusSeconds(60),Instant.now().plusSeconds(3660),"Europe/Istanbul",List.of("Agenda"),attendees)).id(); }
     private UUID participant(UUID id) { UUID participant=UUID.randomUUID(); db.update("INSERT INTO meeting_participants(id,meeting_id,user_id,identity,display_name,revoked,connected) VALUES (?,?,?,?, 'Member',false,true)",participant,id,actor,"user-"+actor); return participant; }
     private UUID user(String role) { UUID id=UUID.randomUUID(); db.update("INSERT INTO users(id,email,nickname,account_status,email_verification_status,global_role,created_at,updated_at) VALUES (?,?,?,'ACTIVE','VERIFIED',?,now(),now())",id,id+"@example.test",id.toString().substring(0,20),role); return id; }
     private static void await(CountDownLatch start) { try { start.await(); } catch(InterruptedException e) { Thread.currentThread().interrupt(); throw new IllegalStateException(e); } }

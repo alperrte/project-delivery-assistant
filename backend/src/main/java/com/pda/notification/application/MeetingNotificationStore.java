@@ -13,8 +13,8 @@ import java.util.UUID;
 public class MeetingNotificationStore {
     private static final int BATCH_SIZE = 500;
     private static final String INSERT = "INSERT INTO notifications(id,recipient_user_id,type,title,message,is_read,created_at,"
-            + "actor_user_id,project_id,resource_type,resource_id,source_event_id) "
-            + "VALUES (?,?,?,?,?,false,?,?,?,'MEETING',?,?) "
+            + "actor_user_id,resource_type,resource_id,source_event_id) "
+            + "VALUES (?,?,?,?,?,false,?,?,'MEETING',?,?) "
             + "ON CONFLICT (source_event_id,recipient_user_id) WHERE source_event_id IS NOT NULL DO NOTHING";
     private final JdbcTemplate db;
     private final NotificationFactory factory;
@@ -25,7 +25,7 @@ public class MeetingNotificationStore {
         for (UUID recipient : event.recipientIds().stream().sorted().toList()) {
             var n = factory.meeting(recipient, event);
             batch.add(new Object[]{n.getId(), recipient, n.getType().name(), n.getTitle(), n.getMessage(),
-                    Timestamp.from(n.getCreatedAt()), event.actorId(), event.projectId(), event.meetingId(), event.eventId()});
+                    Timestamp.from(n.getCreatedAt()), event.actorId(), event.meetingId(), event.eventId()});
             if (batch.size() == BATCH_SIZE) { db.batchUpdate(INSERT, batch); batch.clear(); }
         }
         if (!batch.isEmpty()) db.batchUpdate(INSERT, batch);

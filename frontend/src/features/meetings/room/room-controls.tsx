@@ -1,5 +1,5 @@
 "use client";
-import { useId, type ReactNode } from "react";
+import { useId, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { Camera, CameraOff, LayoutGrid, Loader2, Mic, MicOff, MessageSquare, MonitorUp, MonitorX, MoreHorizontal, PhoneOff, Presentation, Settings2, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,13 @@ type ControlProps = {
   pressed?: boolean;
   /** The hardware is switched off (mic, camera): a warning tint plus a crossed icon, so the state never rests on colour alone. */
   off?: boolean;
+  /** Not usable at all (not in the call): really disabled. */
   disabled?: boolean;
+  /**
+   * Not usable for a moment (a camera or microphone is being switched): announced as unavailable but still focusable. A really disabled button loses the
+   * keyboard focus the moment it is pressed, so the person would be thrown back to the top of the page after every switch.
+   */
+  waiting?: boolean;
   busy?: boolean;
   /** Looks inactive but stays clickable, so a tap can explain why the feature is missing. */
   unavailable?: boolean;
@@ -28,16 +34,16 @@ type ControlProps = {
   className?: string;
 };
 
-function Control({ label, icon, onClick, pressed, off, disabled, busy, unavailable, badge = 0, description, className }: ControlProps) {
+function Control({ label, icon, onClick, pressed, off, disabled, waiting, busy, unavailable, badge = 0, description, className }: ControlProps) {
   const descriptionId = useId();
   return <Tooltip>
     <TooltipTrigger render={<Button
       variant="ghost"
       className={cn("relative size-11 shrink-0 rounded-xl bg-muted text-foreground hover:bg-muted/70 compact:size-auto compact:min-h-11 compact:min-w-0 compact:flex-1 compact:basis-0",
-        pressed && "bg-meeting text-meeting-foreground hover:bg-meeting-hover hover:text-meeting-foreground",
+        pressed && "bg-meeting text-meeting-foreground hover:bg-meeting-hover hover:text-meeting-foreground", waiting && "opacity-60",
         off && "bg-destructive/15 text-destructive hover:bg-destructive/25 hover:text-destructive", unavailable && "opacity-60", className)}
-      aria-label={label} aria-describedby={description ? descriptionId : undefined} aria-pressed={pressed} aria-busy={busy || undefined}
-      disabled={disabled} onClick={onClick}
+      aria-label={label} aria-describedby={description ? descriptionId : undefined} aria-pressed={pressed} aria-busy={busy || waiting || undefined} aria-disabled={waiting || undefined}
+      disabled={disabled} onClick={waiting ? undefined : onClick}
     >
       {busy ? <Loader2 size={20} className="animate-spin" aria-hidden="true" /> : icon}
       {badge > 0 && <span aria-hidden="true" className="absolute -top-1 -right-1 grid h-4 min-w-4 place-items-center rounded-full bg-meeting px-1 text-[10px] font-semibold leading-none text-meeting-foreground">{badge > 9 ? "9+" : badge}</span>}
@@ -80,17 +86,23 @@ type ControlsProps = {
 export function RoomControls(props: ControlsProps) {
   const t = useTranslations("meetings");
   const { active, mediaBusy, panel, sharing, screenSupported } = props;
+  // What the person just switched, said politely once it has happened: the button only changes its name and state, which a screen reader does not repeat.
+  const [seen, setSeen] = useState({ mic: props.mic, camera: props.camera, sharing, text: "" });
+  if (seen.mic !== props.mic || seen.camera !== props.camera || seen.sharing !== sharing) {
+    setSeen({ mic: props.mic, camera: props.camera, sharing, text: seen.mic !== props.mic ? t(props.mic ? "micIsOn" : "micIsOff") : seen.camera !== props.camera ? t(props.camera ? "cameraIsOn" : "cameraIsOff") : t(sharing ? "screenIsShared" : "screenStopped") });
+  }
   const screenLabel = !screenSupported ? t("screenShareUnavailable") : sharing ? t("screenShareStop") : t("screen");
   return <footer
     aria-label={t("controls")} data-room-controls
     className={cn("sticky bottom-3 z-10 mx-auto flex w-fit max-w-full flex-wrap items-center justify-center gap-2 rounded-2xl border bg-card p-2 shadow-lg compact:static compact:mx-0 compact:min-h-(--room-bar) compact:w-full compact:flex-nowrap compact:gap-1 compact:rounded-none compact:border-x-0 compact:border-b-0 compact:px-2 compact:py-2 compact:pb-[max(0.5rem,env(safe-area-inset-bottom))] compact:shadow-none", props.keyboard && "compact:hidden")}
   >
-    <Control label={t(props.mic ? "micOff" : "micOn")} icon={props.mic ? <Mic size={20} /> : <MicOff size={20} />} pressed={props.mic} off={!props.mic} disabled={!active || mediaBusy} onClick={props.onMic} />
-    <Control label={t(props.camera ? "cameraOff" : "cameraOn")} icon={props.camera ? <Camera size={20} /> : <CameraOff size={20} />} pressed={props.camera} off={!props.camera} disabled={!active || mediaBusy} onClick={props.onCamera} />
+    <span role="status" className="sr-only">{seen.text}</span>
+    <Control label={t(props.mic ? "micOff" : "micOn")} icon={props.mic ? <Mic size={20} /> : <MicOff size={20} />} pressed={props.mic} off={!props.mic} disabled={!active} waiting={mediaBusy} onClick={props.onMic} />
+    <Control label={t(props.camera ? "cameraOff" : "cameraOn")} icon={props.camera ? <Camera size={20} /> : <CameraOff size={20} />} pressed={props.camera} off={!props.camera} disabled={!active} waiting={mediaBusy} onClick={props.onCamera} />
     <Control label={screenLabel} icon={sharing ? <MonitorX size={20} /> : <MonitorUp size={20} />} pressed={sharing} busy={props.screenBusy} unavailable={!screenSupported} disabled={!active} onClick={props.onScreen} />
     <span aria-hidden="true" className="mx-1 h-6 w-px bg-border compact:hidden" />
-    <Control label={t("participants")} icon={<Users size={20} />} pressed={panel === "participants"} disabled={!active || mediaBusy} onClick={() => props.onPanel("participants")} className="compact:hidden" />
-    <Control label={t("chat")} description={props.unread > 0 ? t("unreadMessages", { count: props.unread }) : undefined} icon={<MessageSquare size={20} />} pressed={panel === "chat"} badge={props.unread} disabled={!active || mediaBusy} onClick={() => props.onPanel("chat")} />
+    <Control label={t("participants")} icon={<Users size={20} />} pressed={panel === "participants"} disabled={!active} waiting={mediaBusy} onClick={() => props.onPanel("participants")} className="compact:hidden" />
+    <Control label={t("chat")} description={props.unread > 0 ? t("unreadMessages", { count: props.unread }) : undefined} icon={<MessageSquare size={20} />} pressed={panel === "chat"} badge={props.unread} disabled={!active} waiting={mediaBusy} onClick={() => props.onPanel("chat")} />
     <Control label={t("devices")} icon={<Settings2 size={20} />} pressed={panel === "devices"} disabled={!active} onClick={() => props.onPanel("devices")} className="compact:hidden" />
     <DropdownMenu>
       <Tooltip><TooltipTrigger render={<DropdownMenuTrigger render={<Button variant="ghost" className="size-11 shrink-0 rounded-xl bg-muted compact:size-auto compact:min-h-11 compact:min-w-0 compact:flex-1 compact:basis-0" aria-label={t("more")} disabled={!active} />}><MoreHorizontal size={20} aria-hidden="true" /></DropdownMenuTrigger>} /><TooltipContent>{t("more")}</TooltipContent></Tooltip>

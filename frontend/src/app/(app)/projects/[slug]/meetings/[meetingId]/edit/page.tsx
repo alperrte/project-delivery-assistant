@@ -1,7 +1,10 @@
-import { MeetingDetail } from "@/features/meetings/meeting-detail";
-import { pageTitle } from "@/lib/seo/page-title";
-export const generateMetadata = () => pageTitle("meetingEdit");
-export default async function Page({ params }: { params: Promise<{ slug: string; meetingId: string }> }) {
-  const { slug, meetingId } = await params;
-  return <MeetingDetail key={meetingId} slug={slug} id={meetingId} edit />;
+import { redirect } from "next/navigation";
+import { getLocale } from "next-intl/server";
+import { localizeHref } from "@/i18n/routing";
+import type { Locale } from "@/i18n/config";
+
+/** Compatibility route: see the meeting detail redirect. */
+export default async function Page({ params }: { params: Promise<{ meetingId: string }> }) {
+  const { meetingId } = await params;
+  redirect(localizeHref(`/meetings/${encodeURIComponent(meetingId)}/edit`, await getLocale() as Locale));
 }

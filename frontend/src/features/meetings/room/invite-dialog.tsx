@@ -16,9 +16,9 @@ const HOURS = ["1", "24", "168"] as const;
 
 /**
  * Creates a guest invite for the running meeting with the same endpoint the detail page uses (so the same limits and the same
- * "only a link, never the secret on screen" rule apply) and copies the link. Only organizers and project managers get the trigger.
+ * "only a link, never the secret on screen" rule apply) and copies the link. Only the organizer gets the trigger.
  */
-export function InviteDialog({ projectId, meetingId, trigger }: { projectId: string; meetingId: string; trigger: ReactNode }) {
+export function InviteDialog({ meetingId, trigger }: { meetingId: string; trigger: ReactNode }) {
   const t = useTranslations("meetings"), locale = useLocale() as Locale;
   const [open, setOpen] = useState(false), [hours, setHours] = useState<(typeof HOURS)[number]>("24"), [maxUses, setMaxUses] = useState(1);
   const [busy, setBusy] = useState(false), [error, setError] = useState<unknown>(), [link, setLink] = useState<string>(), [copied, setCopied] = useState(false);
@@ -28,7 +28,7 @@ export function InviteDialog({ projectId, meetingId, trigger }: { projectId: str
     if (busy) return;
     setBusy(true); setError(undefined); setCopied(false);
     try {
-      const invite = await meetingsApi.invite(projectId, meetingId, { expiresAt: new Date(Date.now() + Number(hours) * 3600_000).toISOString(), maxUses });
+      const invite = await meetingsApi.invite(meetingId, { expiresAt: new Date(Date.now() + Number(hours) * 3600_000).toISOString(), maxUses });
       const url = `${window.location.origin}${localizeHref("/meeting-guest", locale)}#${encodeURIComponent(invite.token)}`;
       setLink(url);
       await navigator.clipboard.writeText(url).then(() => setCopied(true)).catch(() => {});

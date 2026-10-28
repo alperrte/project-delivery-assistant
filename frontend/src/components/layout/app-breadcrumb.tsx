@@ -32,13 +32,8 @@ export function AppBreadcrumb() {
   const isTeamDetailOrEdit = second === "teams" && teamId && teamId !== "new"
     && (rest.length === 1 || (rest.length === 2 && teamAction === "edit"));
   const isMemberInvite = second === "team-invitations" && rest.length === 1 && teamId === "new";
-  const isMeetingCreate = second === "meetings" && rest.length === 1 && teamId === "new";
-  const isMeetingsList = second === "meetings" && rest.length === 0;
-  // A meeting's detail page (not its calendar, create, edit or room pages) carries no trail: its header already names the project.
-  const isMeetingDetail = second === "meetings" && rest.length === 1 && teamId !== "new" && teamId !== "calendar";
-  // The call screen is a focused view of its own: its header already names the meeting.
-  const isMeetingRoom = second === "meetings" && rest.length === 2 && rest[1] === "room";
-  if (slug && (isTeamDetailOrEdit || isMemberInvite || isMeetingCreate || isMeetingsList || isMeetingDetail || isMeetingRoom)) return null;
+  // Meetings are global (/meetings/...): they have no section above them, so root "meetings" falls through to no trail at all.
+  if (slug && (isTeamDetailOrEdit || isMemberInvite)) return null;
 
   const projectCrumb: Crumb = {
     label: project.data?.name ?? <><span aria-hidden="true" className="inline-block h-3.5 w-24 animate-pulse rounded bg-muted align-middle" /><span className="sr-only">{common("loading")}</span></>,

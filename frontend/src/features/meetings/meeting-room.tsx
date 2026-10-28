@@ -12,7 +12,7 @@ import { localizeHref } from "@/i18n/routing";
 import type { Locale } from "@/i18n/config";
 import { cn } from "@/lib/utils";
 import { meetingsApi } from "./api";
-import { clockText, MeetingError, useMeetingProject, useNow } from "./shared";
+import { clockText, MeetingError, useMeetingAccount, useNow } from "./shared";
 import { deviceErrorKey, isInCallPhase, useOptionalMeetingSession, type SessionLive } from "./session/meeting-session";
 import { useMeetingSessionRuntime } from "./session/meeting-session-runtime";
 import { PreJoinCheck } from "./room/device-check";
@@ -33,34 +33,34 @@ function RoomClock({ openedAt, endsAt }: { openedAt: string | null; endsAt: stri
   const now = useNow(1000);
   const elapsed = Math.max(0, Math.floor((now - Date.parse(openedAt ?? new Date(now).toISOString())) / 1000));
   const remaining = Math.ceil((Date.parse(endsAt) - now) / 60000);
-  return <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs tabular-nums text-muted-foreground">
+  return <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs tabular-nums text-muted-foreground compact:flex-nowrap compact:overflow-hidden compact:whitespace-nowrap">
     <span className="inline-flex items-center gap-1"><Clock size={13} aria-hidden="true" />{t("elapsed", { time: clockText(elapsed) })}</span>
     <span>{t("plannedEnd", { time: new Intl.DateTimeFormat(locale, { timeStyle: "short" }).format(new Date(endsAt)) })}{remaining > 0 && ` · ${t("remainingShort", { minutes: remaining })}`}</span>
     {remaining <= 0 && <span role="status" className="text-warning">{t("overtime")}</span>}
   </div>;
 }
-export function ProjectMeetingRoom({ slug, id }: { slug: string; id: string }) {
-  const context = useMeetingProject(slug), t = useTranslations("meetings");
-  if (context.isError) return <MeetingError error={context.error} />;
-  if (!context.project || !context.user) return <p role="status">{t("loading")}</p>;
-  return <ProjectRoomGate key={`${context.user.id}:${context.project.id}:${id}`} slug={slug} id={id} projectId={context.project.id} userId={context.user.id} isManager={context.isManager} />;
+/** The call of a signed-in user. The room is reached by the meeting's own address; the selected project plays no part in it, so changing project never touches a call. */
+export function AccountMeetingRoom({ id }: { id: string }) {
+  const context = useMeetingAccount(), t = useTranslations("meetings");
+  if (!context.user) return <p role="status">{t("loading")}</p>;
+  return <AccountRoomGate key={`${context.user.id}:${id}`} id={id} userId={context.user.id} />;
 }
 
 /**
  * Shows this meeting's call from the workspace-level session, which keeps running when this page is left.
  * A different call that is still live blocks joining here (one call at a time) instead of being hung up.
  */
-function ProjectRoomGate({ slug, id, projectId, userId, isManager }: { slug: string; id: string; projectId: string; userId: string; isManager: boolean }) {
+function AccountRoomGate({ id, userId }: { id: string; userId: string }) {
   const t = useTranslations("meetings"), session = useOptionalMeetingSession();
   const store = session?.store, active = session?.target, activeLive = session?.live;
   const blocked = !!active && active.id !== id && !!activeLive && isInCallPhase(activeLive.phase);
-  const returnHref = `/projects/${slug}/meetings/${id}`;
+  const returnHref = `/meetings/${id}`;
   useEffect(() => {
     if (!store || blocked) return;
-    const result = store.attach({ id, projectId, slug, roomHref: `${returnHref}/room` });
+    const result = store.attach({ id, roomHref: `${returnHref}/room` });
     return () => { if (result === "ok") store.detach(); };
-  }, [store, blocked, id, projectId, slug, returnHref]);
-  if (!session) return <MeetingRoom id={id} projectId={projectId} userId={userId} isManager={isManager} returnHref={returnHref} />;
+  }, [store, blocked, id, returnHref]);
+  if (!session) return <MeetingRoom id={id} userId={userId} returnHref={returnHref} />;
   if (blocked && active && activeLive) return <section role="status" className="workspace-panel max-w-2xl space-y-4 p-6">
     <h1 className="text-lg font-semibold">{t("otherMeetingTitle")}</h1>
     <p className="text-sm leading-6 text-muted-foreground">{t("otherMeetingBody", { title: activeLive.meeting?.title ?? t("group") })}</p>
@@ -71,7 +71,7 @@ function ProjectRoomGate({ slug, id, projectId, userId, isManager }: { slug: str
   </section>;
   const live = active?.id === id ? activeLive : null;
   if (!live) return <p role="status">{t("loading")}</p>;
-  return <MeetingRoomView live={live} id={id} projectId={projectId} userId={userId} isManager={isManager} returnHref={returnHref} />;
+  return <MeetingRoomView live={live} id={id} userId={userId} returnHref={returnHref} />;
 }
 
 /**
@@ -86,13 +86,13 @@ function compactGrid(count: number): string {
   return "compact:grid-cols-2 compact:auto-rows-[minmax(9rem,1fr)] compact:landscape:grid-cols-3 compact:landscape:auto-rows-[minmax(8rem,1fr)] compact:overflow-y-auto";
 }
 
-/** A call owned by this page alone: guest rooms (outside the workspace) and the fallback without a session provider. */
-export function MeetingRoom({ id, projectId, userId, isManager = false, returnHref }: { id: string; projectId?: string; userId?: string; isManager?: boolean; returnHref?: string }) {
-  const { live, audio } = useMeetingSessionRuntime(id, projectId);
-  return <><MeetingRoomView live={live} id={id} projectId={projectId} userId={userId} isManager={isManager} returnHref={returnHref} />{audio}</>;
+/** A call owned by this page alone: guest rooms (no `userId`, outside the workspace) and the fallback without a session provider. */
+export function MeetingRoom({ id, userId, returnHref }: { id: string; userId?: string; returnHref?: string }) {
+  const { live, audio } = useMeetingSessionRuntime(id, !userId);
+  return <><MeetingRoomView live={live} id={id} userId={userId} returnHref={returnHref} />{audio}</>;
 }
 
-function MeetingRoomView({ live, id, projectId, userId, isManager = false, returnHref }: { live: SessionLive; id: string; projectId?: string; userId?: string; isManager?: boolean; returnHref?: string }) {
+function MeetingRoomView({ live, id, userId, returnHref }: { live: SessionLive; id: string; userId?: string; returnHref?: string }) {
   const t = useTranslations("meetings"), locale = useLocale();
   const compact = useMediaQuery(COMPACT_QUERY), root = useRef<HTMLDivElement>(null);
   // The side panel is open from the start where there is room for it (a wide window), like the reference; phones start with the stage alone.
@@ -134,11 +134,9 @@ function MeetingRoomView({ live, id, projectId, userId, isManager = false, retur
     if (consumeAutoJoin(id)) live.join();
   }, [live, id]);
   const lookup = new Map(live.participants.map(p => [p.identity, p]));
-  // Moderation (mute, remove) stays with project managers; ending the meeting for everyone is only for its creator, whatever their role.
-  const managerProjectId = isManager ? projectId : undefined;
-  const endProjectId = userId && live.meeting?.organizerId === userId ? projectId : undefined;
-  // Guest invites follow the detail page's rule: the organizer or a project manager.
-  const inviteProjectId = projectId && (isManager || endProjectId) ? projectId : undefined;
+  // Muting, removing people, ending for everyone and guest invitations all belong to the meeting's organizer, whatever project roles anyone holds
+  // (the server decides too; this only decides what is offered). A guest has no `userId`, so none of it is offered to them.
+  const organizer = Boolean(userId) && live.meeting?.organizerId === userId;
   const nameOf = (p: Participant) => lookup.get(p.identity)?.displayName ?? p.name ?? p.identity;
   const describe = (p: Participant) => ({
     name: nameOf(p), label: `${lookup.get(p.identity)?.displayName ?? p.name ?? t("member")}${p === room?.localParticipant ? ` (${t("you")})` : ""}`,
@@ -190,6 +188,17 @@ function MeetingRoomView({ live, id, projectId, userId, isManager = false, retur
       try { setDevices(await navigator.mediaDevices.enumerateDevices()); } catch (failure) { showDeviceError(failure); }
     }
   }
+  function closePanel() {
+    const label = panel ? t(panel) : t("more");
+    setPanel(null);
+    // Closing removes the focused field/button. Return to the visible opener;
+    // compact device controls live under More rather than a separate toolbar button.
+    requestAnimationFrame(() => {
+      const buttons = Array.from(root.current?.querySelectorAll<HTMLButtonElement>("button[aria-label]") ?? []);
+      const visible = (name: string) => buttons.find(button => button.getAttribute("aria-label") === name && !button.disabled && button.getClientRects().length > 0);
+      (visible(label) ?? visible(t("more")))?.focus({ preventScroll: true });
+    });
+  }
   async function copyLink() {
     if (!returnHref) return;
     try { await navigator.clipboard.writeText(`${window.location.origin}${localizeHref(returnHref, locale as Locale)}`); toast.success(t("linkCopied")); }
@@ -216,7 +225,7 @@ function MeetingRoomView({ live, id, projectId, userId, isManager = false, retur
   // One menu source for every card and row of the room: local volume and mute, focus and (managers only) the two moderation actions.
   const menuApi: ParticipantMenuApi = {
     volumes: live.volumes, muted: live.muted, setVolume: live.setVolume, setLocalMute: live.setLocalMute,
-    managerProjectId, meetingId: id, participantId: identity => lookup.get(identity)?.id, onNotice: setNotice, onFailure: live.setError,
+    canModerate: organizer, meetingId: id, participantId: identity => lookup.get(identity)?.id, onNotice: setNotice, onFailure: live.setError,
     focusedIdentity: pick?.kind === "camera" ? pick.identity : null,
     onFocus: compact ? undefined : identity => { if (identity) { setPick({ kind: "camera", identity }); setMode("focus"); } else setPick(null); },
   };
@@ -228,7 +237,7 @@ function MeetingRoomView({ live, id, projectId, userId, isManager = false, retur
     <header className={cn("flex flex-wrap items-center justify-between gap-3", inCall && "compact:h-[var(--room-top)] compact:shrink-0 compact:flex-nowrap compact:items-center compact:gap-2 compact:overflow-hidden compact:border-b compact:px-3 compact:pb-2 compact:pt-[max(0.5rem,env(safe-area-inset-top))]")}>
       <div className="flex min-w-0 items-center gap-3">
         {inCall && returnHref && <Tooltip><TooltipTrigger render={<Link href={returnHref} aria-label={t("minimize")} className={buttonVariants({ variant: "outline", className: "size-10 shrink-0 compact:size-9" })} />}><ChevronLeft size={18} aria-hidden="true" /></TooltipTrigger><TooltipContent>{t("minimize")}</TooltipContent></Tooltip>}
-        <div className="min-w-0 space-y-0.5">
+        <div className="min-w-0 space-y-0.5 compact:space-y-0">
           <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
             <h1 className="break-words text-xl font-semibold compact:truncate compact:text-base">{live.meeting?.title ?? t("group")}</h1>
             <p role="status" className={cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium compact:hidden", active ? "bg-success/15 text-success" : "bg-muted text-muted-foreground")}><span aria-hidden="true" className={cn("size-1.5 rounded-full bg-current", live.phase === "reconnecting" && "animate-pulse")} />{t(`phase.${live.phase}`)}</p>
@@ -239,8 +248,8 @@ function MeetingRoomView({ live, id, projectId, userId, isManager = false, retur
       </div>
       <div className="flex shrink-0 items-center gap-2">
         <p role="status" className={`hidden text-xs compact:block ${active ? "text-success" : "text-muted-foreground"}`}>{t(`phase.${live.phase}`)}</p>
-        {inCall && projectId && returnHref && <Button variant="outline" className="min-h-10 gap-2 compact:hidden" disabled={!active} onClick={() => void copyLink()}><Link2 size={16} aria-hidden="true" />{t("copyMeetingLink")}</Button>}
-        {inCall && endProjectId && <Button variant="destructive" className="min-h-10 gap-2 compact:hidden" disabled={!active} onClick={() => setEndOpen(true)}><PhoneOff size={16} aria-hidden="true" />{t("endForAll")}</Button>}
+        {inCall && userId && returnHref && <Button variant="outline" className="min-h-10 gap-2 compact:hidden" disabled={!active} onClick={() => void copyLink()}><Link2 size={16} aria-hidden="true" />{t("copyMeetingLink")}</Button>}
+        {inCall && organizer && <Button variant="destructive" className="min-h-10 gap-2 compact:hidden" disabled={!active} onClick={() => setEndOpen(true)}><PhoneOff size={16} aria-hidden="true" />{t("endForAll")}</Button>}
         {inCall && <Button variant={panel === "participants" ? "secondary" : "ghost"} className="hidden min-h-11 min-w-11 gap-1.5 compact:inline-flex" aria-label={t("participants")} aria-pressed={panel === "participants"} disabled={!active} onClick={() => void togglePanel("participants")}><Users size={18} aria-hidden="true" /><span className="tabular-nums">{people.length}</span></Button>}
       </div>
     </header>
@@ -265,7 +274,7 @@ function MeetingRoomView({ live, id, projectId, userId, isManager = false, retur
             </div>
             : <RoomStage people={people} shares={shares} monitor={monitor} mode={mode} onMode={setMode} pick={pick} onPick={setPick} describe={describe} screenLabel={name => t("sharedScreenOf", { name })} />}
         </section>
-        {panel && <aside aria-label={t(panel)} onKeyDown={event => { if (event.key === "Escape") setPanel(null); }}
+        {panel && <aside aria-label={t(panel)} onKeyDown={event => { if (event.key === "Escape") closePanel(); }}
           className="workspace-panel flex max-h-[70dvh] min-w-0 flex-col overflow-hidden p-4 lg:max-h-none lg:w-80 lg:shrink-0 xl:w-96 compact:fixed compact:inset-x-0 compact:top-[calc(var(--vvt,0px)+var(--room-top))] compact:z-30 compact:h-[calc(var(--vvh,100dvh)-var(--room-top)-var(--room-bar))] compact:max-h-none compact:rounded-none compact:border-0 compact:px-3 compact:pb-3 compact:pt-3">
           <div className="mb-3 flex items-center justify-between gap-2">
             {tabs
@@ -278,10 +287,10 @@ function MeetingRoomView({ live, id, projectId, userId, isManager = false, retur
                 </button>)}
               </div>
               : <h2 className="font-semibold">{t(panel)}</h2>}
-            <Button variant="ghost" className="min-h-11 min-w-11" aria-label={t("closePanel")} onClick={() => setPanel(null)}><X size={18} aria-hidden="true" /></Button>
+            <Button variant="ghost" className="min-h-11 min-w-11" aria-label={t("closePanel")} onClick={closePanel}><X size={18} aria-hidden="true" /></Button>
           </div>
           <div role={tabs ? "tabpanel" : undefined} id={tabs ? "room-tabpanel" : undefined} aria-labelledby={tabs ? `room-tab-${panel}` : undefined} className="flex min-h-0 flex-1 flex-col border-t pt-3">
-            {panel === "participants" && <ParticipantsPanel live={live} room={room} inviteProjectId={inviteProjectId} onCopyLink={projectId && returnHref ? () => void copyLink() : undefined} organizerId={live.meeting?.organizerId} meetingId={id} />}
+            {panel === "participants" && <ParticipantsPanel live={live} room={room} canInvite={organizer} onCopyLink={userId && returnHref ? () => void copyLink() : undefined} organizerId={live.meeting?.organizerId} meetingId={id} />}
             {panel === "chat" && <ChatPanel live={live} active={active} content={content} setContent={setContent} mentions={mentions} setMentions={setMentions} sending={sending} onSend={send} />}
             {panel === "devices" && <DevicesPanel room={room} devices={devices} onSwitch={(kind, deviceId) => void live.switchDevice(kind, deviceId).catch(showDeviceError)} capture={{ values: live.capture, support: captureSupport(), onChange: (key, enabled) => void live.setCapture(key, enabled).catch(showDeviceError) }} />}
           </div>
@@ -289,11 +298,11 @@ function MeetingRoomView({ live, id, projectId, userId, isManager = false, retur
       </div>
       <RoomControls active={active} mediaBusy={mediaBusy} mic={Boolean(room?.localParticipant.isMicrophoneEnabled)} camera={Boolean(room?.localParticipant.isCameraEnabled)}
         sharing={sharingSelf} screenBusy={screenBusy} screenSupported={canShareScreen()} panel={panel} unread={unread} keyboard={viewport.keyboard}
-        canEndForAll={Boolean(endProjectId)} grid={mode === "grid"} onGrid={() => setMode(previous => previous === "grid" ? "focus" : "grid")}
+        canEndForAll={organizer} grid={mode === "grid"} onGrid={() => setMode(previous => previous === "grid" ? "focus" : "grid")}
         onMic={() => void media("mic")} onCamera={() => void media("camera")} onScreen={() => void toggleScreen()} onPanel={next => void togglePanel(next)}
         onEndForAll={() => setEndOpen(true)} onLeave={async () => { live.leave(); }} />
-      {endProjectId && <ConfirmDialog open={endOpen} onOpenChange={setEndOpen} title={t("endTitle")} description={t("endConfirm")} confirmLabel={t("endConfirmLabel")} cancelLabel={t("endCancel")} destructive
-        onConfirm={async () => { await meetingsApi.action(endProjectId, id, "end"); live.leave(); }} />}
+      {organizer && <ConfirmDialog open={endOpen} onOpenChange={setEndOpen} title={t("endTitle")} description={t("endConfirm")} confirmLabel={t("endConfirmLabel")} cancelLabel={t("endCancel")} destructive
+        onConfirm={async () => { await meetingsApi.action(id, "end"); live.leave(); }} />}
     </>}
   </div></ParticipantMenuProvider>;
 }
