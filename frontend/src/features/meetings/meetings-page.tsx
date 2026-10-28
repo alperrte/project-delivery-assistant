@@ -97,42 +97,40 @@ export function MeetingsPage() {
   const canEdit = (meeting: Meeting) => context.user?.id === meeting.organizerId;
   const total = query.data?.content.length ?? 0, filtered = !!status || !!search.trim() || !!kind, restorable = hiddenQuery.data?.count ?? 0;
 
-  return <div className="min-w-0 space-y-5">
+  return <div className="min-w-0 space-y-5 [&>div:first-child_p]:max-w-none">
     <PageHeader title={t("myMeetings")} description={t("listDescription")}
       action={<Link href="/meetings/new" className={buttonVariants({ variant: "accent", className: "min-h-11 sm:min-h-10" })}><Plus size={16} aria-hidden="true" />{t("create")}</Link>} />
     <div className="space-y-3">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center">
+      <div data-meeting-toolbar className="grid grid-cols-1 items-center gap-2 min-[480px]:grid-cols-2 md:flex md:flex-wrap">
+        <div className="relative min-w-0 min-[480px]:col-span-2 md:w-[300px] md:shrink-0">
+          <Search size={16} aria-hidden="true" className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground" />
+          <Input type="search" value={search} maxLength={100} onChange={event => setSearch(event.target.value)} aria-label={t("searchMeetings")} placeholder={t("searchMeetings")} className="h-11 pl-9 text-base md:h-10 md:text-sm" />
+        </div>
         {/* One status dropdown at every width (the same shared Select; the filter lives in the URL). */}
         <Select value={status || ALL} items={statusOptions} modal={false} onValueChange={next => { if (typeof next === "string") choose(next as MeetingStatus | typeof ALL); }}>
-          <SelectTrigger aria-label={t("filter")} className="h-11 w-full text-base md:h-10 md:w-56 md:text-sm"><SelectValue /></SelectTrigger>
+          <SelectTrigger aria-label={t("filter")} className="w-full text-base data-[size=default]:h-11 md:w-auto md:text-sm md:data-[size=default]:h-10"><SelectValue /></SelectTrigger>
           <SelectContent alignItemWithTrigger={false} align="start" className="min-w-56">
             {statusOptions.map(option => <SelectItem key={option.value} value={option.value} className="min-h-11">{option.label}</SelectItem>)}
           </SelectContent>
         </Select>
-        <div className="relative min-w-0 flex-1">
-          <Search size={16} aria-hidden="true" className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground" />
-          <Input type="search" value={search} maxLength={100} onChange={event => setSearch(event.target.value)} aria-label={t("searchMeetings")} placeholder={t("searchMeetings")} className="h-11 pl-9 text-base md:h-10 md:text-sm" />
-        </div>
-        <div className="flex items-center gap-3">
-          <Link href="/calendar" className={buttonVariants({ variant: "outline", className: "min-h-11 flex-1 border-border-strong md:min-h-10 md:flex-none" })}><CalendarDays size={16} aria-hidden="true" />{tw("calendar")}</Link>
-          <Select value={sort} items={sortOptions} modal={false} onValueChange={next => { if (typeof next === "string") navigate({ sort: next === "upcoming" ? null : next, page: null }); }}>
-            <SelectTrigger aria-label={t("sortBy")} className="h-11 w-44 flex-1 md:h-10 md:flex-none"><SelectValue /></SelectTrigger>
-            <SelectContent alignItemWithTrigger={false} align="end">
-              {sortOptions.map(option => <SelectItem key={option.value} value={option.value} className="min-h-11">{option.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center" data-meeting-kind-filters>
         <Select value={kind || ALL} items={kindOptions} modal={false} onValueChange={next => { if (typeof next === "string") navigate({ type: next === ALL ? null : next, project: null, page: null }); }}>
-          <SelectTrigger aria-label={t("filterKind")} data-meeting-kind-filter className="h-11 w-full text-base sm:w-56 md:h-10 md:text-sm"><SelectValue /></SelectTrigger>
+          <SelectTrigger aria-label={t("filterKind")} data-meeting-kind-filter className="w-full text-base data-[size=default]:h-11 md:w-auto md:text-sm md:data-[size=default]:h-10"><SelectValue /></SelectTrigger>
           <SelectContent alignItemWithTrigger={false} align="start" className="min-w-56">{kindOptions.map(option => <SelectItem key={option.value} value={option.value} className="min-h-11">{option.label}</SelectItem>)}</SelectContent>
         </Select>
-        {kind === "project" && projects.length > 0 && <Select value={projectId || ALL} items={projectOptions} modal={false} onValueChange={next => { if (typeof next === "string") navigate({ project: next === ALL ? null : next, page: null }); }}>
+        <Link href="/calendar" className={buttonVariants({ variant: "outline", className: "h-11 border-border-strong md:h-10" })}><CalendarDays size={16} aria-hidden="true" />{tw("calendar")}</Link>
+        <Select value={sort} items={sortOptions} modal={false} onValueChange={next => { if (typeof next === "string") navigate({ sort: next === "upcoming" ? null : next, page: null }); }}>
+          <SelectTrigger aria-label={t("sortBy")} className="w-full text-base data-[size=default]:h-11 md:w-auto md:text-sm md:data-[size=default]:h-10"><SelectValue /></SelectTrigger>
+          <SelectContent alignItemWithTrigger={false} align="end">
+            {sortOptions.map(option => <SelectItem key={option.value} value={option.value} className="min-h-11">{option.label}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
+      {kind === "project" && projects.length > 0 && <div className="flex flex-col gap-2 sm:flex-row sm:items-center" data-meeting-kind-filters>
+        <Select value={projectId || ALL} items={projectOptions} modal={false} onValueChange={next => { if (typeof next === "string") navigate({ project: next === ALL ? null : next, page: null }); }}>
           <SelectTrigger aria-label={t("filterProject")} data-meeting-project-filter className="h-11 w-full text-base sm:w-64 md:h-10 md:text-sm"><SelectValue /></SelectTrigger>
           <SelectContent alignItemWithTrigger={false} align="start" className="min-w-56">{projectOptions.map(option => <SelectItem key={option.value} value={option.value} className="min-h-11">{option.label}</SelectItem>)}</SelectContent>
-        </Select>}
-      </div>
+        </Select>
+      </div>}
       {/* History: shown on request, clearable for this member only, and restorable. */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <label className="flex min-h-11 cursor-pointer items-center gap-2.5 text-sm md:min-h-9">

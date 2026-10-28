@@ -147,7 +147,7 @@ export function MeetingForm({ meeting, project: chosen }: { meeting?: Meeting; p
     <div data-meeting-kind-bar className="mb-5 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border bg-card px-4 py-2 text-sm">
       <MeetingKindBadge meeting={{ meetingType: kind }} />
       {project ? <ProjectChip project={project} /> : kind === "PROJECT" ? null : <span className="text-muted-foreground">{t("independentNote")}</span>}
-      {!meeting && <Link href={project ? "/meetings/new?type=project" : "/meetings/new"} className="ml-auto inline-flex min-h-11 items-center text-sm text-muted-foreground underline underline-offset-4">{t(project ? "changeProject" : "changeKind")}</Link>}
+      {!meeting && project && <Link href="/meetings/new?type=project" className="ml-auto inline-flex min-h-11 items-center text-sm text-muted-foreground underline underline-offset-4">{t("changeProject")}</Link>}
     </div>
     <form data-meeting-form noValidate onChange={() => setDirty(true)} onSubmit={submit} className="grid items-start gap-5 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
       <div className="min-w-0 space-y-5">

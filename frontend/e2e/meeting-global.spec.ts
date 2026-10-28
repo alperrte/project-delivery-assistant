@@ -389,8 +389,9 @@ test("create meeting: kind chooser, project picker and both forms; back navigati
     await expect(page.locator(`[data-meeting-project-choice="${other.id}"]`)).toHaveCount(0);
     await expect(page.locator(`[data-meeting-project-choice="${a.id}"]`)).toContainText(a.name);
     expect(await axeViolations(page), "axe: picker").toEqual([]);
-    await page.getByRole("link", { name: tr.changeKind }).click(); await expect(page).toHaveURL(new RegExp(`${localizeHref("/meetings/new", "tr")}$`));
-    await page.goBack(); await expect(page).toHaveURL(/[?]type=project$/);
+    await expect(page.getByRole("link", { name: tr.changeKind })).toHaveCount(0);
+    await page.goBack(); await expect(page).toHaveURL(new RegExp(`${localizeHref("/meetings/new", "tr")}$`));
+    await page.goForward(); await expect(page).toHaveURL(/[?]type=project$/);
     // A project of someone else (typed into the address) or one that does not exist is refused, not opened.
     for (const foreign of [other.id, UNKNOWN_PROJECT]) {
       await page.goto(localizeHref(`/meetings/new?type=project&project=${foreign}`, "tr"));
@@ -411,7 +412,8 @@ test("create meeting: kind chooser, project picker and both forms; back navigati
     await expect(page.locator("[data-meeting-kind-bar]")).toContainText(tr.kindIndependent); await expect(page.locator("[data-project-members]")).toHaveCount(0);
     await expect(page.getByRole("searchbox", { name: tr.searchPeople })).toBeVisible();
     expect(await axeViolations(page), "axe: independent form").toEqual([]);
-    await page.getByRole("link", { name: tr.changeKind }).click(); await expect(page.locator("[data-meeting-kind-choice]")).toHaveCount(2);
+    await expect(page.getByRole("link", { name: tr.changeKind })).toHaveCount(0);
+    await page.goBack(); await expect(page.locator("[data-meeting-kind-choice]")).toHaveCount(2);
     // ---- the chooser in the other two languages ---------------------------------------------------------------------------------------
     for (const [locale, dict] of [["en", en], ["de", de]] as const) {
       await page.goto(localizeHref("/meetings/new", locale));
