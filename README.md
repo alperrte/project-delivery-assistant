@@ -1,43 +1,31 @@
 <p align="center">
+  <a href="https://pd-assistant.com/"><strong>🌐 Canlı: pd-assistant.com</strong></a>
+</p>
+
+<p align="center">
   <strong>🇹🇷 Türkçe</strong> ·
   <a href="README_EN.md">🇬🇧 English</a>
 </p>
 
-> Toplantı backend genişletmesi: [API ve frontend devir sözleşmesi](docs/meeting-backend-handoff.md), [LiveKit kurulumu ve işletimi](docs/meeting-media-operations.md). Medya varsayılan kapalıdır; üretim kimlik bilgileri, DNS/TLS/TURN ve sonraki frontend entegrasyonu ayrıca hazırlanmalıdır.
+<p align="center">
+  <img src="docs/assets/readme/hero.tr.svg" alt="PDA: görev, sohbet, toplantı ve kod tek çalışma alanında" width="100%" />
+</p>
+
+<h1 align="center">
+  <img src="frontend/public/images/branding/pda-logo-512.png" alt="PDA — Project Delivery Assistant" width="260" />
+</h1>
 
 <p align="center">
-  <img src="assets/git_images/hero-banner.tr.png" alt="PDA - Project Delivery Assistant" width="100%" />
+  <strong>Öğrenciler ve küçük yazılım ekipleri için açık kaynak, self-hosted proje yönetim platformu.</strong><br />
+  Görev, sohbet, görüntülü toplantı ve GitHub takibi: dört ayrı aracın işi, tek çalışma alanında.
 </p>
 
 <p align="center">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/Lisans-Apache%202.0-111827?style=for-the-badge" alt="Apache License 2.0" /></a>
-  <img src="https://img.shields.io/badge/Sürüm-V1.0-16A34A?style=for-the-badge" alt="Sürüm V1.0" />
-  <img src="https://img.shields.io/badge/Mimari-Modular%20Monolith-0F172A?style=for-the-badge" alt="Modular Monolith" />
-  <img src="https://img.shields.io/badge/Self--Hosted-Evet-0369A1?style=for-the-badge" alt="Self Hosted" />
+  <a href="#-hızlı-başlangıç"><strong>🚀 Hızlı başlangıç</strong></a> ·
+  <a href="#-pda-neyi-farklı-yapar"><strong>✨ Farklarımız</strong></a> ·
+  <a href="#ekranlar"><strong>🖼️ Ekranlar</strong></a> ·
+  <a href="#-katkıda-bulunma"><strong>🤝 Katkı</strong></a>
 </p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/Java%2025-Spring%20Boot%204-111827?style=flat-square&logo=openjdk&logoColor=white" alt="Java Spring Boot" />
-  <img src="https://img.shields.io/badge/Next.js%2016-TypeScript-111827?style=flat-square&logo=nextdotjs&logoColor=white" alt="Next.js" />
-  <img src="https://img.shields.io/badge/PostgreSQL%2018-Database-336791?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL" />
-  <img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker" />
-</p>
-
-<h1 align="center">PDA — Project Delivery Assistant V1</h1>
-
-**PDA**, öğrenciler ve küçük yazılım ekipleri için geliştirilen **ücretsiz, açık kaynak ve self-hosted proje yönetim platformudur**.
-
-Ekibin işini planlamak, dağıtmak, takip etmek ve konuşmak için ayrı ayrı araçlara ihtiyaç duymazsınız. PDA, öğrencilerin ve küçük ekiplerin kolayca kurabileceği, anlayabileceği ve geliştirmeye katkı verebileceği sade bir yapıda, projenin tüm teslim sürecini tek yerde toplar.
-
-### Öne çıkan özellikler
-
-- **Basit ve gelişmiş görev yönetimi** ve esnek görev dağılımı
-- **GitHub repo takibi** (basit ve gelişmiş mod)
-- **Proje içi sohbet** ve kullanıcılar arası birebir iletişim
-- **Roller, ekipler, kriterler, issue ve test raporları**
-- **Güvenli ve self-hosted:** Kendi sunucunuzda, kendi SMTP hesabınızla çalışır
-
-Ayrıntılar için [V1 Özellikleri](#-v1-özellikleri) bölümüne bakın.
 
 <p align="center">
   <img src="docs/assets/pda-tour.gif" alt="PDA ekran turu: genel bakış, projeler, kriterler, görev listesi, pano ve takvim" width="100%" />
@@ -45,9 +33,100 @@ Ayrıntılar için [V1 Özellikleri](#-v1-özellikleri) bölümüne bakın.
 
 ---
 
+## 🧭 PDA Neyi Farklı Yapar?
+
+Çoğu ekip işini beş araca bölerek yürütür. Görev bir yerde, sohbet başka yerde, toplantı bir bağlantıda, kod bir başka sitede. İş yapmak yerine araçlar arasında dolaşılır. PDA bunların hepsini **tek çalışma alanında** toplar ve üstüne kendi sunucunuzda çalışma özgürlüğünü ekler.
+
+<p align="center">
+  <img src="docs/assets/readme/stack.tr.svg" alt="Görev takibi, mesajlaşma, görüntülü toplantı ve kod takibi araçları tek PDA çalışma alanında birleşir" width="100%" />
+</p>
+
+| | Dağınık araç yığını | PDA |
+|---|---|---|
+| **Görev, sohbet, toplantı, kod** | 4 ayrı uygulama, 4 abonelik, 4 giriş | Tek çalışma alanı, tek hesap |
+| **Dışarıdan katılımcı** | Karşı tarafın da hesap açması gerekir | Link at, misafir **hesapsız** katılsın |
+| **Görev detayı** | Ya çok sade ya çok karmaşık | **Basit** ya da **Gelişmiş**, sen seç |
+| **Kod takibi** | Ayrı bir sekme ve ayrı bildirim | Depo, görevin yanında; yeni commit ekibe bildirilir |
+| **Dosya paylaşımı** | Ayrı sohbet uygulamasında | Proje sohbetinde, doğrudan konuşmanın içinde |
+| **Maliyet ve veri** | Kullanıcı başı ücret, veri başkasında | Ücretsiz, açık kaynak, **verin sunucunda** |
+
+---
+
+### 🎥 Link at. Misafir hesapsız katılsın.
+
+Projeye bağlı ya da tamamen bağımsız toplantılar kurun. Ekip odaya girer; dışarıdan biri yalnızca bağlantıyla, hesap açmadan misafir olarak katılır.
+
+<p align="center">
+  <img src="docs/assets/readme/meeting.tr.svg" alt="Canlı bir proje toplantısı, bağımsız bir toplantı, kopyalanan misafir bağlantısı ve odaya hesapsız katılan bir misafir" width="100%" />
+</p>
+
+- Proje toplantısı ve bağımsız toplantı bir arada; yaklaşan ve canlı toplantılar tek listede.
+- Misafir bağlantısı toplantıya özeldir; misafirin yalnızca o odayla sınırlı bir oturumu olur.
+- Toplantı sohbeti, tepkiler ve e-posta hatırlatmaları.
+- Görüntülü medya (LiveKit) **isteğe bağlıdır ve varsayılan olarak kapalıdır**; kurulum için [Toplantı medyası](#-toplantı-medyası-livekit-opsiyonel) bölümüne bakın.
+
+### 💬 Proje sohbeti. Özel mesaj. Dosya da orada.
+
+Her projenin kendi grup sohbeti var. İstediğinizle birebir yazın, dosyayı doğrudan konuşmaya bırakın.
+
+<p align="center">
+  <img src="docs/assets/readme/chat.tr.svg" alt="Proje sohbetinde üç mesaj, bir PDF eki, bir tepki ve yazıyor göstergesi" width="100%" />
+</p>
+
+- Grup sohbeti ve aynı projedeki üyeler arasında birebir yazışma.
+- Yanıt, tepki ve **dosya ekleri**; yazıyor göstergesi.
+- Anlık bildirimler, hatırlatıcılar ve takvim.
+
+### 📋 Basit görev. Gelişmiş görev. Sen seç.
+
+Küçük işte başlık yeter. Büyük işte sorumlular, öncelik, tarih, tahmin ve alt görevler gelir. Hangi modun açık olacağını her proje için siz belirlersiniz.
+
+<p align="center">
+  <img src="docs/assets/readme/tasks.tr.svg" alt="Görev formu basit modda başlık ve açıklama, gelişmiş modda sorumlular, öncelik, bitiş, tahmin ve alt görevlerle açılır" width="100%" />
+</p>
+
+- **Basit:** başlık, açıklama, öncelik, durum ve atanan kişiler.
+- **Gelişmiş:** alt görev, etiket, tahmini süre ve puan, sprint.
+- Liste, sürükle-bırak Kanban panosu, sprint, havuz (backlog) ve takvim görünümleri; dosya ekleri.
+
+### 🐙 Kod, işin yanında.
+
+Herkese açık bir GitHub deposunu projeye bağlayın (salt okunur). Temel modda ana dalı izleyin; gelişmiş modda dalları ve birleştirilmemiş commit'leri görün. Yeni commit geldiğinde ekibin haberi olur.
+
+<p align="center">
+  <img src="docs/assets/readme/repo.tr.svg" alt="Temel modda ana daldaki son commit'ler, gelişmiş modda dallar ve birleştirilmemiş commit'ler; yeni commit bildirimi" width="100%" />
+</p>
+
+### 🏢 Organizasyonunu kur. Projeleri bir çatıda topla.
+
+Kulüp, ekip ya da şirket: kendi profili, logosu ve kapağıyla GitHub benzeri bir organizasyon yapısı.
+
+<p align="center">
+  <img src="docs/assets/readme/org.tr.svg" alt="Bir organizasyon profili ve altında üç proje kartı" width="100%" />
+</p>
+
+### 🔓 Kodu açık. Sunucun senin.
+
+Apache 2.0 lisanslı. Docker ile kendi sunucunuza kurun, verileriniz sizde kalsın. Kayıt e-postaları da **kendi SMTP hesabınızla** gider.
+
+<p align="center">
+  <img src="docs/assets/readme/terminal.tr.svg" alt="Repoyu klonla, .env dosyasını hazırla, Docker ile backend ve veritabanını, npm ile frontend'i başlat" width="100%" />
+</p>
+
+---
+
+<a id="ekranlar"></a>
+
 ## 🖼️ Ekran Görüntüleri
 
 <table>
+  <tr>
+    <td width="50%"><img src="docs/assets/screenshots/landing-light.png" alt="Karşılama sayfası, açık tema" /></td>
+    <td width="50%"><img src="docs/assets/screenshots/landing-dark.png" alt="Karşılama sayfası, koyu tema" /></td>
+  </tr>
+  <tr>
+    <td align="center" colspan="2"><sub>Karşılama sayfası · Light ve Dark</sub></td>
+  </tr>
   <tr>
     <td width="50%"><img src="docs/assets/screenshots/dashboard-light.png" alt="Genel bakış, açık tema" /></td>
     <td width="50%"><img src="docs/assets/screenshots/dashboard-dark.png" alt="Genel bakış, koyu tema" /></td>
@@ -70,13 +149,6 @@ Ayrıntılar için [V1 Özellikleri](#-v1-özellikleri) bölümüne bakın.
 <br />
 
 <table>
-  <tr>
-    <td width="50%"><img src="docs/assets/screenshots/landing-light.png" alt="Karşılama sayfası, açık tema" /></td>
-    <td width="50%"><img src="docs/assets/screenshots/landing-dark.png" alt="Karşılama sayfası, koyu tema" /></td>
-  </tr>
-  <tr>
-    <td align="center" colspan="2"><sub>Karşılama sayfası · Light ve Dark</sub></td>
-  </tr>
   <tr>
     <td width="50%"><img src="docs/assets/screenshots/project-overview-light.png" alt="Proje genel bakışı, açık tema" /></td>
     <td width="50%"><img src="docs/assets/screenshots/project-overview-dark.png" alt="Proje genel bakışı, koyu tema" /></td>
@@ -137,7 +209,7 @@ PDA bu süreci **tek yerde, açık kaynak ve kurulabilir** hale getirir.
 
 - **Açık kaynak:** Apache License 2.0
 - **Ücretsiz kullanım:** Ücretli bir servise bağımlı değildir; kendi altyapınızda çalışır
-- **Self-hosted:** Kendi altyapınızda çalıştırabilirsiniz
+- **Self-hosted:** Verileriniz sizin sunucunuzda kalır
 - **Öğrenci odaklı:** Gerçek yazılım ekiplerindeki rol ve görev akışlarını deneyimleyin
 - **Modüler ama sade:** Modular Monolith mimarisi; modüller net ayrılır, kurulum tek backend ile basit kalır
 - **Katkıya açık:** Issue ve Pull Request desteği
@@ -167,11 +239,22 @@ Herkese açık bir GitHub deposu projeye bağlanır (salt okunur).
 
 Yeni commit geldiğinde ekibe bildirim gider.
 
+### 🎥 Toplantılar
+
+- Projeye bağlı ya da bağımsız toplantılar; hesapsız **misafir katılımı**.
+- Toplantı sohbeti, tepkiler ve e-posta hatırlatmaları.
+- Görüntülü medya isteğe bağlıdır (LiveKit).
+
 ### 💬 İletişim
 
-- **Proje içi sohbet:** Her projenin grup sohbeti; yanıt ve tepki desteği.
+- **Proje içi sohbet:** Her projenin grup sohbeti; yanıt, tepki ve dosya eki desteği.
 - **Birebir yazışma:** Aynı projedeki üyeler arasında.
 - **Bildirimler, hatırlatıcılar ve takvim.**
+
+### 🏢 Organizasyonlar
+
+- GitHub benzeri organizasyon profili: logo, kapak, açıklama.
+- Organizasyona bağlı projeler, davet ve üyelik yönetimi.
 
 ### 🔐 Hesap ve altyapı
 
@@ -183,7 +266,7 @@ Yeni commit geldiğinde ekibe bildirim gider.
 
 ### 👥 Proje ve ekip
 
-- Organizasyon, davet ve üyelik yönetimi, squad / ekip yapısı.
+- Squad / ekip yapısı, davet ve üyelik yönetimi.
 - Proje bazlı roller (bir kullanıcı aynı projede birden fazla role sahip olabilir).
 - Teslim kriterleri ve tamamlanma yüzdesi, issue kayıtları, tester'lar için test raporları.
 
@@ -232,7 +315,7 @@ Bu yaklaşım ile:
 
 ```mermaid
 flowchart LR
-    user["Tarayıcı<br/>öğrenci · yönetici · geliştirici · tester · admin"]
+    user["Tarayıcı<br/>öğrenci · yönetici · geliştirici · tester · admin · misafir"]
 
     subgraph fe["Frontend · :3000"]
         next["Next.js 16 · React 19 · TypeScript<br/>App Router · next-intl · TanStack Query"]
@@ -240,7 +323,7 @@ flowchart LR
 
     subgraph be["Backend · :8080 · /api/v1"]
         sec["Güvenlik katmanı<br/>HttpOnly cookie JWT · CSRF · RBAC · rate limiting"]
-        mods["Spring Boot 4 · Java 25 · Spring Modulith<br/>auth · user · admin · project · squad · task · issue<br/>testreport · comment · chat · notification · reminder<br/>mail · contact · dashboard · search · activity · audit · analytics"]
+        mods["Spring Boot 4 · Java 25 · Spring Modulith<br/>auth · user · admin · project · squad · task · issue<br/>testreport · comment · chat · meeting · notification · reminder<br/>mail · contact · dashboard · search · activity · audit · analytics"]
         sec --> mods
     end
 
@@ -248,6 +331,7 @@ flowchart LR
     smtp["SMTP<br/>doğrulama ve bildirim e-postaları"]
     oauth["Google · GitHub<br/>OAuth ile giriş (opsiyonel)"]
     gh["GitHub API<br/>depo ve commit bilgisi"]
+    lk["LiveKit SFU<br/>toplantı medyası (opsiyonel)"]
 
     user -->|HTTPS| next
     next -->|"REST + WebSocket"| sec
@@ -255,6 +339,7 @@ flowchart LR
     mods -.-> smtp
     mods -.-> oauth
     mods -.-> gh
+    mods -.-> lk
 ```
 
 <p align="center">
@@ -271,6 +356,7 @@ PDA deploy edilebilir açık kaynak bir proje olduğu için güvenlik varsayıla
 - Access ve refresh tokenlar **HttpOnly cookie** içerisinde tutulur.
 - `localStorage` ve `sessionStorage` içerisinde auth token tutulmaz.
 - Cookie tabanlı auth nedeniyle CSRF koruması aktiftir.
+- Misafir toplantı oturumları yalnızca ilgili toplantıya özel çerezle sınırlıdır.
 - İki adımlı doğrulama sırları veritabanında şifreli saklanır.
 - E-postayla gönderilen kodlar ve bağlantılar HMAC ile hashlenir.
 - Production CORS explicit allowlist ile yönetilir.
@@ -391,14 +477,16 @@ EMAIL_VERIFICATION_HMAC_KEY=<openssl rand -base64 32>
 TOTP_ENCRYPTION_KEY=<baska bir openssl rand -base64 32>
 ```
 
-#### E-posta (Hostinger Email) nasıl ayarlanır?
+#### E-posta nasıl ayarlanır?
 
-1. `info@pd-assistant.com` posta kutusunun SMTP şifresini yalnız yerel `.env.dev` / `.env.prod` dosyasındaki `SMTP_PASSWORD` alanına girin; Git veya sohbet üzerinden paylaşmayın.
-2. Hostinger: `smtp.hostinger.com:465`, `SMTP_SSL=true`, `SMTP_STARTTLS=false`. Alternatif 587 için `SMTP_SSL=false`, `SMTP_STARTTLS=true` kullanın. TLS modları birlikte açılmaz.
-3. Hostinger panelinde gönderen/domain ve MX/SPF/DKIM/DMARC durumunu kontrol edin; ardından `MAIL_ENABLED=true` yapın. Etkin kopyayı `ops/env.ps1 use dev` ile eşitleyin; çalışan backend yeni ENV için yeniden oluşturulmalıdır.
-4. Kayıt ve iletişim mesajıyla gerçek teslimi ve alınan mesajdaki SPF/DKIM/DMARC sonuçlarını doğrulayın.
+Kayıt e-postaları kendi SMTP hesabınızla gönderilir (Hostinger, Gmail, Brevo vb.).
 
-`SMTP_FROM_ADDRESS` görünen göndereni seçer; SMTP kimlik doğrulama kullanıcısı sağlayıcıya göre farklı olabilir. Eski `MAIL_FROM`, yeni anahtar yoksa desteklenir. `MAIL_PROVIDER=brevo` Brevo SMTP rölesini aynı Spring Mail yolu üzerinden kullanır; ilgili hesabın gerçek SMTP host/login/SMTP anahtarı ayrıca girilir. Brevo HTTP API ve otomatik fallback yoktur. Ayrıntılar: [SMTP teslim kaydı](docs/compliation/2026-10-12-hostinger-corporate-mail.md).
+1. Sağlayıcınızdan SMTP bilgilerini alın ve `.env` içindeki `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM_ADDRESS` alanlarına yazın.
+2. Port `465` ise `SMTP_SSL=true`, `SMTP_STARTTLS=false`; port `587` ise tam tersi. İkisini birlikte açmayın.
+3. `MAIL_ENABLED=true` yapıp backend'i yeniden başlatın: `docker compose up -d`.
+4. Kayıt olmayı deneyin; doğrulama e-postası gelmelidir.
+
+> SMTP şifresini Git'e koymayın ve kimseyle paylaşmayın. Brevo kullanıyorsanız ayrıca `MAIL_PROVIDER=brevo` yazın.
 
 #### Opsiyonel ayarlar
 
@@ -407,6 +495,7 @@ TOTP_ENCRYPTION_KEY=<baska bir openssl rand -base64 32>
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google ile giriş. İkisi de boşsa kapalıdır, ikisi de doluysa açılır. Yönlendirme adresi: `http://localhost:8080/api/v1/auth/oauth2/callback/google` |
 | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | GitHub ile giriş. Yönlendirme adresi: `http://localhost:8080/api/v1/auth/oauth2/callback/github` |
 | `GITHUB_API_TOKEN` | Proje depo sayfası için. Boşsa tüm sunucu için saatte 60 istek yapılabilir; kapsamsız (scope'suz) bir token bunu saatte 5000'e çıkarır. Yalnızca sunucuda kullanılır. |
+| `ORGANIZATION_MEDIA_STORAGE_PATH` | Organizasyon logo ve kapak görsellerinin saklanacağı dizin. |
 | `TRUSTED_PROXY_CIDRS` | Yalnızca backend'in önüne gerçekten bir reverse proxy koyarsanız, onun adresini yazın. Aksi halde boş bırakın. |
 | `LOG_LEVEL` | Log seviyesi. |
 
@@ -438,6 +527,29 @@ docker compose down
 
 ---
 
+## 🎥 Toplantı Medyası (LiveKit, opsiyonel)
+
+Toplantı oluşturma, misafir bağlantısı, toplantı sohbeti ve hatırlatmalar LiveKit olmadan da çalışır. Görüntülü ve sesli medya için bir [LiveKit](https://livekit.io) SFU gerekir. Bu özellik **varsayılan olarak kapalıdır** (`MEETING_MEDIA_ENABLED=false`).
+
+Yerel geliştirmede LiveKit'i ek bir Compose dosyası ve profil ile ayağa kaldırabilirsiniz:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.meeting.yml --profile meeting up -d
+```
+
+`.env` içinde şu değişkenleri doldurun:
+
+| Değişken | Açıklama |
+|---|---|
+| `MEETING_MEDIA_ENABLED` | Medya entegrasyonunu açar; varsayılan `false`. |
+| `LIVEKIT_API_URL`, `LIVEKIT_WS_URL` | Backend'in LiveKit'e ulaştığı ve tarayıcıların bağlandığı adresler. |
+| `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET` | LiveKit anahtar çifti. |
+| `MEETING_EMPTY_GRACE`, `MEETING_RETAIN_CHAT`, `MEETING_MAX_PARTICIPANTS`, `MEETING_TOKEN_TTL` | Boş oda süresi, sohbetin saklanması, katılımcı sınırı ve katılım belirteci ömrü. |
+
+Üretimde ayrıca `MEDIA_ADDRESS`, `TURN_ADDRESS` ve `LIVEKIT_NODE_IP` değerlerini kendi alan adlarınıza ve sunucu IP'nize göre ayarlayın; DNS, TLS ve TURN hazırlığını ayrıca yapın. Üretim Compose dosyası: `docker-compose.meeting.prod.yml`.
+
+---
+
 ## 👑 İlk Admin Hesabı
 
 İlk admin hesabı `.env` üzerinden oluşturulur:
@@ -459,7 +571,7 @@ Akış:
 
 ## 🤝 Katkıda Bulunma
 
-PDA açık kaynak ve katkıya açık bir projedir.
+PDA açık kaynak ve katkıya açık bir projedir. Hata bildir, fikir öner, kod gönder.
 
 Katkı akışı:
 
@@ -474,11 +586,11 @@ Katkı akışı:
 
 ---
 
-## 👨‍💻 Projeyi Geliştirenler
+<h2 align="center">👨‍💻 Projeyi Geliştirenler</h2>
 
 <div align="center">
 
-<table>
+<table align="center">
   <tr>
     <td align="center" valign="top" width="50%">
       <br />
@@ -486,7 +598,7 @@ Katkı akışı:
       <h3>Alper Temiz</h3>
       <sub><code>Full Stack Developer</code></sub>
       <br /><br />
-      <table>
+      <table align="center">
         <tr><td>🐙 <a href="https://github.com/alperrte">github.com/alperrte</a></td></tr>
         <tr><td>💼 <a href="https://www.linkedin.com/in/alpertemizz/">linkedin.com/in/alpertemizz</a></td></tr>
         <tr><td>✉️ <a href="mailto:alpertemiz15@gmail.com">alpertemiz15@gmail.com</a></td></tr>
@@ -499,7 +611,7 @@ Katkı akışı:
       <h3>Hamza Taşbay</h3>
       <sub><code>Full Stack Developer</code></sub>
       <br /><br />
-      <table>
+      <table align="center">
         <tr><td>🐙 <a href="https://github.com/HmzT270">github.com/HmzT270</a></td></tr>
         <tr><td>💼 <a href="https://www.linkedin.com/in/hamza-tasbay">linkedin.com/in/hamza-tasbay</a></td></tr>
         <tr><td>✉️ <a href="mailto:tasbayh@gmail.com">tasbayh@gmail.com</a></td></tr>
@@ -510,16 +622,6 @@ Katkı akışı:
 </table>
 
 </div>
-
----
-
-<p align="center">
-  <img src="assets/genel_logo.jpeg" alt="PDA Project Delivery Assistant" width="520" />
-</p>
-
-<p align="center">
-  <strong>Öğrenciler ve küçük yazılım ekipleri için açık kaynak proje yönetimi.</strong>
-</p>
 
 ---
 

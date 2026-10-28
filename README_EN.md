@@ -1,41 +1,31 @@
 <p align="center">
+  <a href="https://pd-assistant.com/"><strong>🌐 Live: pd-assistant.com</strong></a>
+</p>
+
+<p align="center">
   <a href="README.md">🇹🇷 Türkçe</a> ·
   <strong>🇬🇧 English</strong>
 </p>
 
 <p align="center">
-  <img src="assets/git_images/hero-banner-eng.png" alt="PDA - Project Delivery Assistant" width="100%" />
+  <img src="docs/assets/readme/hero.en.svg" alt="PDA: tasks, chat, meetings and code in one workspace" width="100%" />
+</p>
+
+<h1 align="center">
+  <img src="frontend/public/images/branding/pda-logo-512.png" alt="PDA — Project Delivery Assistant" width="260" />
+</h1>
+
+<p align="center">
+  <strong>An open-source, self-hosted project management platform for students and small software teams.</strong><br />
+  Tasks, chat, video meetings and GitHub tracking: the work of four separate tools in one workspace.
 </p>
 
 <p align="center">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-111827?style=for-the-badge" alt="Apache License 2.0" /></a>
-  <img src="https://img.shields.io/badge/Version-V1.0-16A34A?style=for-the-badge" alt="Version V1.0" />
-  <img src="https://img.shields.io/badge/Architecture-Modular%20Monolith-0F172A?style=for-the-badge" alt="Modular Monolith" />
-  <img src="https://img.shields.io/badge/Self--Hosted-Yes-0369A1?style=for-the-badge" alt="Self Hosted" />
+  <a href="#-quick-start"><strong>🚀 Quick start</strong></a> ·
+  <a href="#-what-makes-pda-different"><strong>✨ What sets us apart</strong></a> ·
+  <a href="#screens"><strong>🖼️ Screens</strong></a> ·
+  <a href="#-contributing"><strong>🤝 Contribute</strong></a>
 </p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/Java%2025-Spring%20Boot%204-111827?style=flat-square&logo=openjdk&logoColor=white" alt="Java Spring Boot" />
-  <img src="https://img.shields.io/badge/Next.js%2016-TypeScript-111827?style=flat-square&logo=nextdotjs&logoColor=white" alt="Next.js" />
-  <img src="https://img.shields.io/badge/PostgreSQL%2018-Database-336791?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL" />
-  <img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker" />
-</p>
-
-<h1 align="center">PDA — Project Delivery Assistant V1</h1>
-
-**PDA** is a **free, open-source, self-hosted project management platform** built for students and small software teams.
-
-You don't need separate tools to plan, assign, track and talk about your team's work. PDA keeps the whole delivery process of a project in one place, in a simple structure that students and small teams can easily set up, understand and contribute to.
-
-### Key features
-
-- **Simple and advanced task management** with flexible task assignment
-- **GitHub repository tracking** (simple and advanced mode)
-- **In-project chat** and one-to-one communication between users
-- **Roles, squads, criteria, issues and test reports**
-- **Secure and self-hosted:** runs on your own server with your own SMTP account
-
-See the [V1 Features](#-v1-features) section for details.
 
 <p align="center">
   <img src="docs/assets/pda-tour.gif" alt="PDA tour: dashboard, projects, criteria, task list, board and calendar" width="100%" />
@@ -43,9 +33,100 @@ See the [V1 Features](#-v1-features) section for details.
 
 ---
 
+## 🧭 What Makes PDA Different?
+
+Most teams split their work across five tools. Tasks live in one place, chat in another, meetings behind a link, code on a different site. The team wanders between tools instead of doing the work. PDA brings all of it into **one workspace**, and adds the freedom to run it on your own server.
+
+<p align="center">
+  <img src="docs/assets/readme/stack.en.svg" alt="Task tracking, messaging, video meetings and code tracking merge into a single PDA workspace" width="100%" />
+</p>
+
+| | A scattered tool stack | PDA |
+|---|---|---|
+| **Tasks, chat, meetings, code** | 4 apps, 4 subscriptions, 4 logins | One workspace, one account |
+| **People from outside** | They need to create an account too | Send a link, guests join **without an account** |
+| **Task detail** | Either too bare or too complex | **Simple** or **Advanced**, your call |
+| **Code tracking** | A separate tab and separate alerts | The repo sits next to the work; the team hears about every new commit |
+| **File sharing** | In a separate chat app | In the project chat, right inside the conversation |
+| **Cost and data** | Per-seat pricing, data lives elsewhere | Free, open source, **your data on your server** |
+
+---
+
+### 🎥 Send a link. Guests join without an account.
+
+Start meetings tied to a project or fully standalone. The team enters the room, and anyone outside joins as a guest with just the link, no account needed.
+
+<p align="center">
+  <img src="docs/assets/readme/meeting.en.svg" alt="A live project meeting, a standalone meeting, a copied guest link and a guest joining the room without an account" width="100%" />
+</p>
+
+- Project meetings and standalone meetings side by side; upcoming and live meetings in one list.
+- The guest link is specific to one meeting; the guest only gets a session limited to that room.
+- Meeting chat, reactions and email reminders.
+- Video media (LiveKit) is **optional and disabled by default**; see [Meeting media](#-meeting-media-livekit-optional) for setup.
+
+### 💬 Project chat. Direct messages. Files too.
+
+Every project has its own group chat. Write one to one with anyone and drop files straight into the conversation.
+
+<p align="center">
+  <img src="docs/assets/readme/chat.en.svg" alt="Project chat with three messages, a PDF attachment, a reaction and a typing indicator" width="100%" />
+</p>
+
+- Group chat and one-to-one messages between members of the same project.
+- Replies, reactions and **file attachments**; a typing indicator.
+- Real-time notifications, reminders and a calendar.
+
+### 📋 Simple task. Advanced task. Your call.
+
+A title is enough for a small job. A big one brings assignees, priority, dates, estimates and subtasks. You choose which mode is enabled for each project.
+
+<p align="center">
+  <img src="docs/assets/readme/tasks.en.svg" alt="The task form opens with a title and description in simple mode, and adds assignees, priority, due date, estimate and subtasks in advanced mode" width="100%" />
+</p>
+
+- **Simple:** title, description, priority, status and assignees.
+- **Advanced:** subtasks, labels, time estimate and points, sprints.
+- List, drag-and-drop Kanban board, sprint, backlog and calendar views; file attachments.
+
+### 🐙 Code, next to the work.
+
+Connect a public GitHub repository to the project (read-only). Basic mode follows the main branch; advanced mode shows branches and unmerged commits. The team hears about every new commit.
+
+<p align="center">
+  <img src="docs/assets/readme/repo.en.svg" alt="Basic mode lists the latest commits on the main branch, advanced mode shows branches and unmerged commits, and a new commit notification appears" width="100%" />
+</p>
+
+### 🏢 Set up your organization. Keep projects under one roof.
+
+A club, a team or a company: a GitHub-like organization with its own profile, logo and cover.
+
+<p align="center">
+  <img src="docs/assets/readme/org.en.svg" alt="An organization profile with three project cards under it" width="100%" />
+</p>
+
+### 🔓 The code is open. The server is yours.
+
+Apache 2.0 licensed. Install it on your own server with Docker and keep your data. Sign-up emails go out through **your own SMTP account**.
+
+<p align="center">
+  <img src="docs/assets/readme/terminal.en.svg" alt="Clone the repo, prepare .env, start the backend and database with Docker and the frontend with npm" width="100%" />
+</p>
+
+---
+
+<a id="screens"></a>
+
 ## 🖼️ Screenshots
 
 <table>
+  <tr>
+    <td width="50%"><img src="docs/assets/screenshots/landing-light.png" alt="Landing page, light theme" /></td>
+    <td width="50%"><img src="docs/assets/screenshots/landing-dark.png" alt="Landing page, dark theme" /></td>
+  </tr>
+  <tr>
+    <td align="center" colspan="2"><sub>Landing page · Light and Dark</sub></td>
+  </tr>
   <tr>
     <td width="50%"><img src="docs/assets/screenshots/dashboard-light.png" alt="Dashboard, light theme" /></td>
     <td width="50%"><img src="docs/assets/screenshots/dashboard-dark.png" alt="Dashboard, dark theme" /></td>
@@ -68,13 +149,6 @@ See the [V1 Features](#-v1-features) section for details.
 <br />
 
 <table>
-  <tr>
-    <td width="50%"><img src="docs/assets/screenshots/landing-light.png" alt="Landing page, light theme" /></td>
-    <td width="50%"><img src="docs/assets/screenshots/landing-dark.png" alt="Landing page, dark theme" /></td>
-  </tr>
-  <tr>
-    <td align="center" colspan="2"><sub>Landing page · Light and Dark</sub></td>
-  </tr>
   <tr>
     <td width="50%"><img src="docs/assets/screenshots/project-overview-light.png" alt="Project overview, light theme" /></td>
     <td width="50%"><img src="docs/assets/screenshots/project-overview-dark.png" alt="Project overview, dark theme" /></td>
@@ -135,7 +209,7 @@ PDA brings this process together **in one place, open source and self-hostable**
 
 - **Open source:** Apache License 2.0
 - **Free to use:** Does not depend on any paid service; runs on your own infrastructure
-- **Self-hosted:** You can run it on your own infrastructure
+- **Self-hosted:** Your data stays on your own server
 - **Student focused:** Experience the roles and task flows of real software teams
 - **Modular but simple:** Modular Monolith architecture; modules are clearly separated, and setup stays simple with a single backend
 - **Open to contributions:** Issue and Pull Request support
@@ -165,11 +239,22 @@ A public GitHub repository is connected to the project (read-only).
 
 The team is notified when a new commit arrives.
 
+### 🎥 Meetings
+
+- Project-linked or standalone meetings; **guest join** without an account.
+- Meeting chat, reactions and email reminders.
+- Video media is optional (LiveKit).
+
 ### 💬 Communication
 
-- **In-project chat:** A group chat for every project, with replies and reactions.
+- **In-project chat:** A group chat for every project, with replies, reactions and file attachments.
 - **Direct messages:** Between members of the same project.
 - **Notifications, reminders and a calendar.**
+
+### 🏢 Organizations
+
+- A GitHub-like organization profile: logo, cover, description.
+- Organization-linked projects, invitation and membership management.
 
 ### 🔐 Account and infrastructure
 
@@ -181,7 +266,7 @@ The team is notified when a new commit arrives.
 
 ### 👥 Project and team
 
-- Organization, invitation and membership management, squad / team structure.
+- Squad / team structure, invitation and membership management.
 - Project-based roles (a user can hold more than one role in the same project).
 - Delivery criteria and completion percentage, issue records, test reports for testers.
 
@@ -230,7 +315,7 @@ With this approach:
 
 ```mermaid
 flowchart LR
-    user["Browser<br/>student · manager · developer · tester · admin"]
+    user["Browser<br/>student · manager · developer · tester · admin · guest"]
 
     subgraph fe["Frontend · :3000"]
         next["Next.js 16 · React 19 · TypeScript<br/>App Router · next-intl · TanStack Query"]
@@ -238,7 +323,7 @@ flowchart LR
 
     subgraph be["Backend · :8080 · /api/v1"]
         sec["Security layer<br/>HttpOnly cookie JWT · CSRF · RBAC · rate limiting"]
-        mods["Spring Boot 4 · Java 25 · Spring Modulith<br/>auth · user · admin · project · squad · task · issue<br/>testreport · comment · chat · notification · reminder<br/>mail · contact · dashboard · search · activity · audit · analytics"]
+        mods["Spring Boot 4 · Java 25 · Spring Modulith<br/>auth · user · admin · project · squad · task · issue<br/>testreport · comment · chat · meeting · notification · reminder<br/>mail · contact · dashboard · search · activity · audit · analytics"]
         sec --> mods
     end
 
@@ -246,6 +331,7 @@ flowchart LR
     smtp["SMTP<br/>verification and notification emails"]
     oauth["Google · GitHub<br/>OAuth login (optional)"]
     gh["GitHub API<br/>repository and commit data"]
+    lk["LiveKit SFU<br/>meeting media (optional)"]
 
     user -->|HTTPS| next
     next -->|"REST + WebSocket"| sec
@@ -253,6 +339,7 @@ flowchart LR
     mods -.-> smtp
     mods -.-> oauth
     mods -.-> gh
+    mods -.-> lk
 ```
 
 <p align="center">
@@ -269,6 +356,7 @@ Because PDA is an open-source project that can be deployed, security defaults ar
 - Access and refresh tokens are kept in **HttpOnly cookies**.
 - No auth tokens are stored in `localStorage` or `sessionStorage`.
 - CSRF protection is active because auth is cookie-based.
+- Guest meeting sessions are limited to a cookie scoped to that one meeting.
 - Two-factor authentication secrets are stored encrypted in the database.
 - Codes and links sent by email are hashed with HMAC.
 - Production CORS is managed with an explicit allowlist.
@@ -389,14 +477,16 @@ EMAIL_VERIFICATION_HMAC_KEY=<openssl rand -base64 32>
 TOTP_ENCRYPTION_KEY=<another openssl rand -base64 32>
 ```
 
-#### How to set up email (Hostinger Email)
+#### How to set up email
 
-1. Enter the `info@pd-assistant.com` mailbox password only in `SMTP_PASSWORD` in your local `.env.dev` / `.env.prod`. Never commit it or share it in chat.
-2. Hostinger uses `smtp.hostinger.com:465`, `SMTP_SSL=true`, `SMTP_STARTTLS=false`. For port 587 instead use `SMTP_SSL=false`, `SMTP_STARTTLS=true`; never enable both TLS modes.
-3. Verify the sender/domain and MX/SPF/DKIM/DMARC status in Hostinger, then set `MAIL_ENABLED=true`. Synchronize the active copy with `ops/env.ps1 use dev`; recreate the backend to load the new environment.
-4. Verify real registration/contact delivery and SPF/DKIM/DMARC results in received message headers.
+Sign-up emails are sent with your own SMTP account (Hostinger, Gmail, Brevo, etc.).
 
-`SMTP_FROM_ADDRESS` selects the visible sender; the provider's SMTP login may differ. Legacy `MAIL_FROM` remains supported when the new key is absent. `MAIL_PROVIDER=brevo` uses Brevo's SMTP relay through the same Spring Mail path; supply the actual account SMTP host/login/SMTP key. There is no Brevo HTTP API or automatic fallback. See the [SMTP handoff](docs/compliation/2026-10-12-hostinger-corporate-mail.md).
+1. Get the SMTP details from your provider and put them in `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD` and `SMTP_FROM_ADDRESS` in `.env`.
+2. For port `465` use `SMTP_SSL=true` and `SMTP_STARTTLS=false`; for port `587` do the opposite. Never enable both.
+3. Set `MAIL_ENABLED=true` and restart the backend: `docker compose up -d`.
+4. Try signing up; the verification email should arrive.
+
+> Never commit the SMTP password or share it with anyone. If you use Brevo, also set `MAIL_PROVIDER=brevo`.
 
 #### Optional settings
 
@@ -405,6 +495,7 @@ TOTP_ENCRYPTION_KEY=<another openssl rand -base64 32>
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google login. Disabled if both are empty, enabled if both are set. Redirect URI: `http://localhost:8080/api/v1/auth/oauth2/callback/google` |
 | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | GitHub login. Redirect URI: `http://localhost:8080/api/v1/auth/oauth2/callback/github` |
 | `GITHUB_API_TOKEN` | For the project repository page. If empty, the whole server can make 60 requests per hour; a token without scopes raises this to 5000 per hour. Used only on the server. |
+| `ORGANIZATION_MEDIA_STORAGE_PATH` | Directory where organization logo and cover images are stored. |
 | `TRUSTED_PROXY_CIDRS` | Only if you really put a reverse proxy in front of the backend, enter its address. Otherwise leave it empty. |
 | `LOG_LEVEL` | Log level. |
 
@@ -436,6 +527,29 @@ docker compose down
 
 ---
 
+## 🎥 Meeting Media (LiveKit, optional)
+
+Creating meetings, guest links, meeting chat and reminders work without LiveKit. Audio and video need a [LiveKit](https://livekit.io) SFU. This feature is **disabled by default** (`MEETING_MEDIA_ENABLED=false`).
+
+For local development you can bring LiveKit up with an extra Compose file and profile:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.meeting.yml --profile meeting up -d
+```
+
+Then fill in these variables in `.env`:
+
+| Variable | Description |
+|---|---|
+| `MEETING_MEDIA_ENABLED` | Turns on the media integration; default `false`. |
+| `LIVEKIT_API_URL`, `LIVEKIT_WS_URL` | The address the backend uses to reach LiveKit and the one browsers connect to. |
+| `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET` | The LiveKit key pair. |
+| `MEETING_EMPTY_GRACE`, `MEETING_RETAIN_CHAT`, `MEETING_MAX_PARTICIPANTS`, `MEETING_TOKEN_TTL` | Empty-room grace period, chat retention, participant limit and join token lifetime. |
+
+In production, also set `MEDIA_ADDRESS`, `TURN_ADDRESS` and `LIVEKIT_NODE_IP` to your own domains and server IP, and prepare DNS, TLS and TURN separately. The production Compose file is `docker-compose.meeting.prod.yml`.
+
+---
+
 ## 👑 First Admin Account
 
 The first admin account is created from `.env`:
@@ -457,7 +571,7 @@ Flow:
 
 ## 🤝 Contributing
 
-PDA is an open-source project and open to contributions.
+PDA is an open-source project and open to contributions. Report a bug, suggest an idea, send code.
 
 Contribution flow:
 
@@ -472,11 +586,11 @@ Contribution flow:
 
 ---
 
-## 👨‍💻 Developers
+<h2 align="center">👨‍💻 Developers</h2>
 
 <div align="center">
 
-<table>
+<table align="center">
   <tr>
     <td align="center" valign="top" width="50%">
       <br />
@@ -484,7 +598,7 @@ Contribution flow:
       <h3>Alper Temiz</h3>
       <sub><code>Full Stack Developer</code></sub>
       <br /><br />
-      <table>
+      <table align="center">
         <tr><td>🐙 <a href="https://github.com/alperrte">github.com/alperrte</a></td></tr>
         <tr><td>💼 <a href="https://www.linkedin.com/in/alpertemizz/">linkedin.com/in/alpertemizz</a></td></tr>
         <tr><td>✉️ <a href="mailto:alpertemiz15@gmail.com">alpertemiz15@gmail.com</a></td></tr>
@@ -497,7 +611,7 @@ Contribution flow:
       <h3>Hamza Taşbay</h3>
       <sub><code>Full Stack Developer</code></sub>
       <br /><br />
-      <table>
+      <table align="center">
         <tr><td>🐙 <a href="https://github.com/HmzT270">github.com/HmzT270</a></td></tr>
         <tr><td>💼 <a href="https://www.linkedin.com/in/hamza-tasbay">linkedin.com/in/hamza-tasbay</a></td></tr>
         <tr><td>✉️ <a href="mailto:tasbayh@gmail.com">tasbayh@gmail.com</a></td></tr>
@@ -508,16 +622,6 @@ Contribution flow:
 </table>
 
 </div>
-
----
-
-<p align="center">
-  <img src="assets/genel_logo.jpeg" alt="PDA Project Delivery Assistant" width="520" />
-</p>
-
-<p align="center">
-  <strong>Open-source project management for students and small software teams.</strong>
-</p>
 
 ---
 
