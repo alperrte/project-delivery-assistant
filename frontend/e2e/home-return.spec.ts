@@ -71,7 +71,8 @@ for (const scenario of [
     expect(probe.snapshots).toBe(0);
     expect(animation.opacity.some(value => value > 0.3 && value < 0.99)).toBe(true);
     expect(animation.opacity.at(-1)).toBeCloseTo(1);
-    await expect(page.getByRole("link", { name: "Giriş yap", exact: true }).first()).toBeEnabled();
+    // On a phone the sign-in link lives in the collapsed menu; its button is the reachable control.
+    await expect(scenario.mobile ? page.getByRole("button", { name: "Ana sayfa gezinmesi", exact: true }) : page.getByRole("link", { name: "Giriş yap", exact: true }).first()).toBeEnabled();
   });
 }
 
