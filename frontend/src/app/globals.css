@@ -68,6 +68,9 @@ html::-webkit-scrollbar-thumb:hover,
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
+  --color-cover-scrim: var(--cover-scrim);
+  --color-cover-foreground: var(--cover-foreground);
+  --color-cover-muted-foreground: var(--cover-muted-foreground);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
@@ -125,6 +128,10 @@ html::-webkit-scrollbar-thumb:hover,
   --foreground: #10131a;
   --card: #ffffff;
   --card-foreground: #10131a;
+  /* Text over user-uploaded covers needs a stable contrast pair in either theme. */
+  --cover-scrim: #090a0b;
+  --cover-foreground: #f4f5f6;
+  --cover-muted-foreground: #dce0e6;
   --popover: #ffffff;
   --popover-foreground: #10131a;
   --primary: #1b5fe0;
@@ -832,6 +839,9 @@ html[data-motion="off"] .auth-slogan::after { display: none; }
 
 /* EntityMark carries the shape; its explicit frame owns background, border and clipping.
    SQUARE leaves each surface's existing radius untouched, including initial/error fallbacks. */
+[data-logo-frame]:has(> [data-logo-shape] > img) {
+  background-color: transparent;
+}
 [data-logo-frame]:has(> [data-logo-shape="CIRCLE"]) {
   border-radius: 50%;
   overflow: hidden;

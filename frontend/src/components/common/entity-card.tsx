@@ -51,8 +51,8 @@ export function EntityCard({ tone = "neutral", banner, corner, mark, title, desc
         {banner && (
           <>
             <div aria-hidden="true" className="absolute inset-0">{banner}</div>
-            {/* A veil keeps the name and description readable on any picture. */}
-            <div aria-hidden="true" className="absolute inset-0 bg-background/50" />
+            {/* The image contrast must not flip to a white veil in the light theme. */}
+            <div aria-hidden="true" className="absolute inset-0 bg-cover-scrim/65" />
           </>
         )}
         <span data-logo-frame
@@ -61,9 +61,9 @@ export function EntityCard({ tone = "neutral", banner, corner, mark, title, desc
         >
           {mark}
         </span>
-        <h2 className="relative mt-3 truncate text-base font-semibold text-foreground" title={title}>{title}</h2>
-        <p className="relative mx-auto mt-1 line-clamp-2 min-h-10 max-w-[34ch] text-sm leading-5 text-muted-foreground">{description}</p>
-        {badge && <div className="relative mt-3 flex justify-center">{badge}</div>}
+        <h2 className={cn("relative mt-3 truncate text-base font-semibold", banner ? "text-cover-foreground" : "text-foreground")} title={title}>{title}</h2>
+        <p className={cn("relative mx-auto mt-1 line-clamp-2 min-h-10 max-w-[34ch] text-sm leading-5", banner ? "text-cover-muted-foreground" : "text-muted-foreground")}>{description}</p>
+        {badge && <div className={cn("relative mt-3 flex justify-center", banner && "mx-auto w-fit rounded-xl bg-card")}>{badge}</div>}
       </div>
       <div className="flex flex-1 flex-col gap-3 px-2 pt-3 pb-1">{children}</div>
     </article>
