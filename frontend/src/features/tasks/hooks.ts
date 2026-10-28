@@ -117,10 +117,28 @@ export function useTimeline(projectId: string, taskId: string, filter: TimelineF
   });
 }
 
-export function useMyTasks(params: MyTasksParams) {
+/** The mine endpoint has no text search. Fetch its complete filtered scope only while searching,
+ * then filter and page locally, so a match on a later server page is never hidden. */
+export function useMyTasks(params: MyTasksParams, search = "") {
+  const needle = search.trim().toLocaleLowerCase();
+  const searching = needle.length >= 2;
+  const { page = 0, size = 9, ...scope } = params;
   return useQuery({
-    queryKey: [...myTasksKey, "mine", params],
-    queryFn: () => myTasksApi.mine(params),
+    queryKey: [...myTasksKey, "mine", searching ? { ...scope, allForSearch: true } : params],
+    queryFn: async ({ signal }) => {
+      if (!searching) return myTasksApi.mine(params, signal);
+      const first = await myTasksApi.mine({ ...scope, page: 0, size: 100 }, signal);
+      const tasks = new Map(first.content.map(task => [task.id, task]));
+      for (let index = 1; index < first.totalPages; index++) {
+        const next = await myTasksApi.mine({ ...scope, page: index, size: 100 }, signal);
+        for (const task of next.content) tasks.set(task.id, task);
+      }
+      return { ...first, content: [...tasks.values()] };
+    },
+    select: searching ? (data) => {
+      const matches = data.content.filter(task => `${task.taskKey} ${task.title} ${task.description ?? ""}`.toLocaleLowerCase().includes(needle));
+      return { ...data, content: matches.slice(page * size, (page + 1) * size), page, size, totalElements: matches.length, totalPages: Math.ceil(matches.length / size) };
+    } : undefined,
     placeholderData: keepPreviousData,
   });
 }

@@ -33,7 +33,8 @@ export function AppBreadcrumb() {
     && (rest.length === 1 || (rest.length === 2 && teamAction === "edit"));
   const isMemberInvite = second === "team-invitations" && rest.length === 1 && teamId === "new";
   // Meetings are global (/meetings/...): they have no section above them, so root "meetings" falls through to no trail at all.
-  if (slug && (isTeamDetailOrEdit || isMemberInvite)) return null;
+  const isTaskCreate = second === "tasks" && rest.length === 1 && rest[0] === "new";
+  if (slug && (isTeamDetailOrEdit || isMemberInvite || isTaskCreate)) return null;
 
   const projectCrumb: Crumb = {
     label: project.data?.name ?? <><span aria-hidden="true" className="inline-block h-3.5 w-24 animate-pulse rounded bg-muted align-middle" /><span className="sr-only">{common("loading")}</span></>,

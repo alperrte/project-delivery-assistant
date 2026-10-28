@@ -25,7 +25,7 @@ import { useMyTaskCounts, useMyTasks } from "../hooks";
 import { activeMyFilterCount, MY_TABS, toMyTasksParams, useMyTaskFilters, type MyTab } from "../my-filters";
 import { taskPermissions } from "../permissions";
 import { TASK_STATUSES, type MyTaskCounts, type Task, type TaskStatus } from "../types";
-import { FilterButton, toggle } from "./task-filter-bar";
+import { FilterButton, SearchBox, toggle } from "./task-filter-bar";
 import { StatusDot } from "./task-badges";
 import { MyTaskCard } from "./my-task-card";
 import { MyTaskDialog } from "./my-task-dialog";
@@ -127,7 +127,7 @@ function BucketedList({ tasks, render }: { tasks: Task[]; render: (items: Task[]
 function TasksPanel({ tab, view, userId, onClear, filtered, onOpen }: { tab: MyTab; view: TaskView; userId: string; onClear: () => void; filtered: boolean; onOpen: OpenTask }) {
   const t = useTranslations("tasks.my");
   const { filters, update } = useMyTaskFilters();
-  const query = useMyTasks({ ...toMyTasksParams(filters), size: TASK_LIST_PAGE_SIZE });
+  const query = useMyTasks({ ...toMyTasksParams(filters), size: TASK_LIST_PAGE_SIZE }, filters.q);
   useEffect(() => {
     if (query.data && !query.isPlaceholderData && filters.page > 0 && filters.page >= query.data.totalPages) {
       update({ page: Math.max(0, query.data.totalPages - 1) });
@@ -237,6 +237,7 @@ export function MyTasksPage() {
       </Tabs>
 
       <div role="search" aria-label={t("filters.label")} className="mb-4 flex flex-wrap items-center gap-2">
+        <SearchBox value={filters.q} onCommit={(q) => update({ q })} className="sm:w-56" />
         <FilterButton label={projectName ?? t("filters.project")} count={filters.project ? 1 : 0} width="min-w-56">
           <DropdownMenuRadioGroup value={filters.project || "any"} onValueChange={(value) => update({ project: value === "any" ? "" : String(value) })}>
             <DropdownMenuRadioItem value="any">{t("filters.allProjects")}</DropdownMenuRadioItem>

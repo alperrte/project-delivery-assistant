@@ -49,9 +49,14 @@ export function FilterButton({ label, count, children, width = "min-w-48" }: { l
 }
 
 /** Types freely, and only commits to the URL once typing pauses, so the list is not refetched per keystroke. */
-function SearchBox({ value, onCommit }: { value: string; onCommit: (value: string) => void }) {
+export function SearchBox({ value, onCommit, className }: { value: string; onCommit: (value: string) => void; className?: string }) {
   const t = useTranslations("tasks.filters");
   const [draft, setDraft] = useState(value);
+  const [previousValue, setPreviousValue] = useState(value);
+  if (value !== previousValue) {
+    setPreviousValue(value);
+    setDraft(value);
+  }
   const timer = useRef<number | undefined>(undefined);
 
   useEffect(() => () => window.clearTimeout(timer.current), []);
@@ -65,7 +70,7 @@ function SearchBox({ value, onCommit }: { value: string; onCommit: (value: strin
   const short = draft.trim().length > 0 && draft.trim().length < MIN_SEARCH;
 
   return (
-    <div className="relative w-full sm:w-64">
+    <div className={cn("relative w-full sm:w-64", className)}>
       <MagnifyingGlass size={15} aria-hidden="true" className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-muted-foreground" />
       <Input
         type="search"

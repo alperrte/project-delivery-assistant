@@ -12,13 +12,14 @@ export type MyTaskFilters = {
   tab: MyTab;
   /** A project id; empty means every project. */
   project: string;
+  q: string;
   status: TaskStatus[];
   overdue: boolean;
   /** Zero based; the URL carries it one based. */
   page: number;
 };
 
-const DEFAULTS: MyTaskFilters = { tab: "open", project: "", status: [], overdue: false, page: 0 };
+const DEFAULTS: MyTaskFilters = { tab: "open", project: "", q: "", status: [], overdue: false, page: 0 };
 
 function parse(search: URLSearchParams): MyTaskFilters {
   const tab = search.get("tab");
@@ -26,6 +27,7 @@ function parse(search: URLSearchParams): MyTaskFilters {
   return {
     tab: (MY_TABS as readonly string[]).includes(tab ?? "") ? (tab as MyTab) : DEFAULTS.tab,
     project: search.get("project") ?? "",
+    q: (search.get("q") ?? "").slice(0, 100),
     status: (search.get("status") ?? "").split(",").filter((value): value is TaskStatus => (TASK_STATUSES as readonly string[]).includes(value)),
     overdue: search.get("overdue") === "1",
     page: Number.isFinite(page) && page > 1 ? page - 1 : 0,
@@ -36,6 +38,7 @@ function serialize(filters: MyTaskFilters): string {
   const search = new URLSearchParams();
   if (filters.tab !== DEFAULTS.tab) search.set("tab", filters.tab);
   if (filters.project) search.set("project", filters.project);
+  if (filters.q.trim()) search.set("q", filters.q.trim());
   if (filters.status.length) search.set("status", filters.status.join(","));
   if (filters.overdue) search.set("overdue", "1");
   if (filters.page > 0) search.set("page", String(filters.page + 1));
@@ -44,7 +47,7 @@ function serialize(filters: MyTaskFilters): string {
 
 /** Project, status and overdue narrow the list; the tab is a scope of its own. */
 export function activeMyFilterCount(filters: MyTaskFilters): number {
-  return (filters.project ? 1 : 0) + (filters.status.length ? 1 : 0) + (filters.overdue ? 1 : 0);
+  return (filters.project ? 1 : 0) + (filters.status.length ? 1 : 0) + (filters.overdue ? 1 : 0) + (filters.q.trim().length >= 2 ? 1 : 0);
 }
 
 /** The open tab is a worklist ordered by deadline; the others read best newest first. */
@@ -86,7 +89,7 @@ export function useMyTaskFilters() {
     [filters, key, pathname, router],
   );
 
-  const reset = useCallback(() => update({ project: "", status: [], overdue: false }), [update]);
+  const reset = useCallback(() => update({ project: "", q: "", status: [], overdue: false }), [update]);
 
   return { filters, update, reset };
 }
