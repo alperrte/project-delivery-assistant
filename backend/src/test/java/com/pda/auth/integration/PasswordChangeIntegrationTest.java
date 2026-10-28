@@ -29,7 +29,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.postgresql.PostgreSQLContainer;
+import com.pda.shared.testing.TestPostgres;
 
 /** Changing the password from the account settings: a mailed code first, then old and new password. */
 @SpringBootTest(classes = BackendApplication.class)
@@ -46,7 +46,7 @@ class PasswordChangeIntegrationTest {
     static { new SecureRandom().nextBytes(HMAC_KEY); }
 
     @Container
-    static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:17-alpine");
+    static TestPostgres postgres = new TestPostgres("postgres:17-alpine");
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {

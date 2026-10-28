@@ -37,13 +37,11 @@ Mimari, klasör düzeni veya kalıcı proje standardı değiştiğinde ilgili k�
 
 ---
 
-## Model orkestrasyonu
+## Tek ajan ile çalışma
 
-- Ana oturum (Opus): plan, mimari ve güvenlik kararları, skill/ADR yorumu.
-- Okuma ve arama işleri → `scout` subagent'ına devret (`.claude/agents/scout.md`, Haiku).
-- Plan modu dahil keşif için yerleşik `Explore` ajanını kullanma; ana oturumun modelini (Opus) devralır. `.claude/settings.json` içinde engellidir, yerine `scout` kullan.
-- Kod yazımı → plan onaylandıktan sonra `coder` subagent'ına devret (`.claude/agents/coder.md`, Sonnet); sonucu ana oturum gözden geçirir.
-- Küçük (tek satırlık) değişiklikleri devretmeden doğrudan yap.
+- Planlama, okuma, arama, kod yazımı ve doğrulama aynı ana oturumda yapılır.
+- Kullanıcı açıkça istemedikçe alt ajan başlatma veya işi başka bir ajana devretme.
+- Belirli bir model ya da alt ajan kullanımı zorunlu değildir.
 
 ---
 

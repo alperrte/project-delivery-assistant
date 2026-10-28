@@ -49,7 +49,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.postgresql.PostgreSQLContainer;
+import com.pda.shared.testing.TestPostgres;
 
 /** GitHub login with a configured (fake-credential) provider; GitHub itself is never contacted. */
 @SpringBootTest(classes = BackendApplication.class)
@@ -62,7 +62,7 @@ class GitHubOAuthIntegrationTest {
     static { new SecureRandom().nextBytes(JWT_KEY); }
 
     @Container
-    static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:17-alpine");
+    static TestPostgres postgres = new TestPostgres("postgres:17-alpine");
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {

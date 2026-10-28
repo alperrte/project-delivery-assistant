@@ -4,14 +4,14 @@ import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.postgresql.PostgreSQLContainer;
+import com.pda.shared.testing.TestPostgres;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import static org.junit.jupiter.api.Assertions.*;
 
 @Testcontainers(disabledWithoutDocker = true)
 class ProjectTypesMigrationTest {
-    @Container static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:18-alpine");
+    @Container static TestPostgres postgres = new TestPostgres("postgres:18-alpine");
 
     @Test
     void upgradePreservesEveryLegacyTypeAndEnforcesANonemptyUniqueEnumSet() throws Exception {

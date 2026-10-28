@@ -41,7 +41,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.postgresql.PostgreSQLContainer;
+import com.pda.shared.testing.TestPostgres;
 
 /** The public contact form through the real application, the real SMTP code path (GreenMail) and PostgreSQL. */
 @SpringBootTest(classes = BackendApplication.class)
@@ -61,7 +61,7 @@ class ContactApiIntegrationTest {
     static { GREEN_MAIL.start(); }
 
     @Container
-    static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:17-alpine");
+    static TestPostgres postgres = new TestPostgres("postgres:17-alpine");
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {

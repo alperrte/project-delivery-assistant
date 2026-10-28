@@ -15,7 +15,7 @@ import org.springframework.test.context.*;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.testcontainers.junit.jupiter.*;
-import org.testcontainers.postgresql.PostgreSQLContainer;
+import com.pda.shared.testing.TestPostgres;
 import java.security.SecureRandom;
 import java.time.*;
 import java.util.*;
@@ -29,7 +29,7 @@ import static com.pda.meeting.internal.MeetingDtos.*;
 @AutoConfigureMockMvc
 @Testcontainers @DirtiesContext(classMode=DirtiesContext.ClassMode.AFTER_CLASS)
 class MeetingCoreIntegrationTest {
-    @Container static PostgreSQLContainer postgres=new PostgreSQLContainer("postgres:18-alpine");
+    @Container static TestPostgres postgres=new TestPostgres("postgres:18-alpine");
     static final byte[] KEY=new byte[32]; static { new SecureRandom().nextBytes(KEY); }
     @DynamicPropertySource static void properties(DynamicPropertyRegistry r) {
         r.add("spring.datasource.url",postgres::getJdbcUrl); r.add("spring.datasource.username",postgres::getUsername);

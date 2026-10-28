@@ -3,13 +3,13 @@ package com.pda.migration;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.junit.jupiter.*;
-import org.testcontainers.postgresql.PostgreSQLContainer;
+import com.pda.shared.testing.TestPostgres;
 import java.sql.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 @Testcontainers
 class MeetingReminderMigrationTest {
-    @Container static PostgreSQLContainer postgres=new PostgreSQLContainer("postgres:18-alpine");
+    @Container static TestPostgres postgres=new TestPostgres("postgres:18-alpine");
     @Test void v54PreservesOldMeetingsAndEnforcesDeliveryIdentityAndState() throws Exception {
         Flyway.configure().dataSource(postgres.getJdbcUrl(),postgres.getUsername(),postgres.getPassword())
                 .locations("classpath:db/migration").target("53").load().migrate();

@@ -32,7 +32,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.postgresql.PostgreSQLContainer;
+import com.pda.shared.testing.TestPostgres;
 
 /**
  * Proves that tokens really run out and that a session really ends: the whole application runs on a clock the test
@@ -52,7 +52,7 @@ class SessionExpiryIntegrationTest {
     static { new SecureRandom().nextBytes(HMAC_KEY); }
 
     @Container
-    static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:17-alpine");
+    static TestPostgres postgres = new TestPostgres("postgres:17-alpine");
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {

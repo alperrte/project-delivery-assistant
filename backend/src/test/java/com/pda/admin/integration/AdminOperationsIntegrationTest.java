@@ -38,7 +38,7 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.postgresql.PostgreSQLContainer;
+import com.pda.shared.testing.TestPostgres;
 
 /**
  * The administrator endpoints added for the support inbox, the audit trail, the system status and the analytics
@@ -60,7 +60,7 @@ class AdminOperationsIntegrationTest {
     private static final ObjectMapper JSON = new ObjectMapper();
 
     @Container
-    static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:17-alpine");
+    static TestPostgres postgres = new TestPostgres("postgres:17-alpine");
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {

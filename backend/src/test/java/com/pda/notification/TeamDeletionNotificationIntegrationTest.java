@@ -23,7 +23,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.testcontainers.junit.jupiter.*;
-import org.testcontainers.postgresql.PostgreSQLContainer;
+import com.pda.shared.testing.TestPostgres;
 
 import java.security.SecureRandom;
 import java.time.Instant;
@@ -41,7 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Testcontainers
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class TeamDeletionNotificationIntegrationTest {
-    @Container static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:17-alpine");
+    @Container static TestPostgres postgres = new TestPostgres("postgres:17-alpine");
     static final byte[] JWT_KEY = new byte[32];
     static { new SecureRandom().nextBytes(JWT_KEY); }
     @DynamicPropertySource static void properties(DynamicPropertyRegistry r) {

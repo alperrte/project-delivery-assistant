@@ -65,18 +65,35 @@ The human developer remains responsible for:
 - releases,
 - repository security settings.
 
-Before every push, the repository's local pre-push quality gate must be run:
+### Local quality gates — backend service workflow approved 2026-10-24
+
+Before a backend-only feature-branch push, run the backend service gate for every changed service:
+
+```powershell
+.\pre-push\backend-tests.cmd -Service task-service
+# Multiple services: -Service task-service,meeting-service
+# Shared infrastructure, migrations, application/bootstrap or uncertain impact:
+.\pre-push\backend-tests.cmd -All
+```
+
+The gate includes repository/staged-secret checks, the selected services, their declared cross-module tests and the shared architecture/security baseline. Ownership and related coverage are in `pre-push/backend-test-suites.psd1`; usage is in `pre-push/BACKEND_TESTS.md`. Shared security-chain/auth configuration, shared contracts, build dependencies or database changes require the whole backend even when their files reside in one service. Shared/migration/architecture/backend selections automatically expand to all backend tests. A service selection is not proof of complete impact analysis.
+
+The scoped success result is `PDA BACKEND SELECTED CHECK PASSED`. Zero executed tests, unexpected skips, missing reports or failures are not passes. Results apply only to the current changes and must be rerun after changes. `-DryRun` and `-List` never establish a pass. This is a manual local workflow, not an installed Git hook or remote branch-protection setting.
+
+Frontend and mixed branches still require the existing full gate until a separate frontend workflow is implemented. Before integration into the main branch, release or deployment, the full repository gate remains mandatory for all branches:
 
 ```powershell
 .\pre-push\pre-push.cmd
 ```
 
-A push must not proceed unless the result is:
+At this full integration/release boundary, the required result is:
 
 ```text
 PDA PRE-PUSH CHECK PASSED
 Safe to git push.
 ```
+
+The legacy `Safe to git push` line identifies the full gate only; scoped backend runs never emit it. These checks do not authorize an agent to push, merge, release or deploy; the explicit authorization rules above remain in force. Backend test runs isolate application credentials and external services without modifying ENV files or the deployment ENV contract. Testcontainers databases and mail tests' local sinks remain authoritative.
 
 ---
 
@@ -1067,7 +1084,7 @@ For security-sensitive features, verify as applicable:
 - [ ] Sensitive values are absent from logs/errors.
 - [ ] Swagger examples contain no secrets.
 - [ ] Relevant security tests pass.
-- [ ] `.\pre-push\pre-push.cmd` passes before push.
+- [ ] The applicable local gate from section 2 passes for the current changes; full `.\pre-push\pre-push.cmd` passes before main-branch integration, release or deployment.
 
 ---
 

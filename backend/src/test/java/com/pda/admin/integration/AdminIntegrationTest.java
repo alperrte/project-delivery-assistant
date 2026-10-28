@@ -36,7 +36,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.postgresql.PostgreSQLContainer;
+import com.pda.shared.testing.TestPostgres;
 
 /** Admin bootstrap, the kept forced-password-change mechanism and the admin API security boundary. */
 @SpringBootTest(classes = BackendApplication.class)
@@ -56,7 +56,7 @@ class AdminIntegrationTest {
     private static final String NEW_PASSWORD = "Brand-New-Password-456";
 
     @Container
-    static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:17-alpine");
+    static TestPostgres postgres = new TestPostgres("postgres:17-alpine");
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {

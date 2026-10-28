@@ -31,6 +31,9 @@
     <spring-modulith.version>2.1.1</spring-modulith.version>
     <org.mapstruct.version>1.6.3</org.mapstruct.version>
     <greenmail.version>2.1.14</greenmail.version>
+    <pda.test.forks>2</pda.test.forks>
+    <maven.build.timestamp.format>yyyyMMdd-HHmmss-SSS</maven.build.timestamp.format>
+    <pda.test.runId>${maven.build.timestamp}</pda.test.runId>
     <!-- Security patch overrides of the Spring Boot 4.1.1 BOM (OSV advisories, 2026-10-02). Remove an override once the
          BOM itself ships a version at or above it. -->
     <tomcat.version>11.0.25</tomcat.version>
@@ -235,6 +238,19 @@
   <build>
     <plugins>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <forkCount>${pda.test.forks}</forkCount>
+          <reuseForks>true</reuseForks>
+          <!-- Parallel JVMs, with sequential JUnit execution inside each one. -->
+          <systemPropertyVariables>
+            <junit.jupiter.execution.parallel.enabled>false</junit.jupiter.execution.parallel.enabled>
+            <pda.organization.media.storage-path>${project.build.directory}/test-media/${pda.test.runId}/${surefire.forkNumber}</pda.organization.media.storage-path>
+          </systemPropertyVariables>
+        </configuration>
+      </plugin>
+      <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
       </plugin>
@@ -324,6 +340,23 @@
             <goals>
               <goal>prepare-agent</goal>
             </goals>
+            <configuration>
+              <destFile>${project.build.directory}/jacoco-${pda.test.runId}-${surefire.forkNumber}.exec</destFile>
+            </configuration>
+          </execution>
+          <execution>
+            <id>jacoco-merge-forks</id>
+            <phase>test</phase>
+            <goals><goal>merge</goal></goals>
+            <configuration>
+              <fileSets>
+                <fileSet>
+                  <directory>${project.build.directory}</directory>
+                  <includes><include>jacoco-${pda.test.runId}-*.exec</include></includes>
+                </fileSet>
+              </fileSets>
+              <destFile>${project.build.directory}/jacoco.exec</destFile>
+            </configuration>
           </execution>
           <execution>
             <id>jacoco-report</id>

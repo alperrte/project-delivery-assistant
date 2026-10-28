@@ -26,7 +26,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.postgresql.PostgreSQLContainer;
+import com.pda.shared.testing.TestPostgres;
 
 import java.security.SecureRandom;
 import java.time.Instant;
@@ -63,7 +63,7 @@ class ChatApiIntegrationTest {
     static { new SecureRandom().nextBytes(JWT_KEY); }
 
     @Container
-    static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:17-alpine");
+    static TestPostgres postgres = new TestPostgres("postgres:17-alpine");
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
@@ -76,6 +76,8 @@ class ChatApiIntegrationTest {
 
     @Autowired MockMvc mvc;
     @Autowired UserAccounts users;
+    @Autowired com.pda.user.UserSessions fixtureSessions;
+    @Autowired com.pda.auth.application.service.JwtTokens fixtureTokens;
     @Autowired ProjectMembershipService memberships;
     @Autowired ChatService chat;
     @Autowired com.pda.chat.application.service.ChatAttachmentService attachments;
@@ -1177,13 +1179,7 @@ class ChatApiIntegrationTest {
         String email = prefix + suffix + "@example.test";
         String password = UUID.randomUUID().toString();
         UUID id = users.registerLocal(email, "u" + suffix, password);
-        Cookie csrf = csrfCookie();
-        var login = mvc.perform(post("/api/v1/auth/login").cookie(csrf)
-                        .with(request -> { request.setRemoteAddr("test-" + suffix); return request; })
-                        .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\":\"" + email + "\",\"password\":\"" + password + "\"}"))
-                .andExpect(status().isOk()).andReturn().getResponse();
-        Cookie access = cookie(login.getHeaders(HttpHeaders.SET_COOKIE), "PDA_ACCESS");
+        Cookie access = com.pda.shared.testing.RegularSessionFactory.access(fixtureSessions, fixtureTokens, id);
         assertFalse(access.getValue().isBlank());
         return new Account(id, access);
     }

@@ -22,7 +22,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.postgresql.PostgreSQLContainer;
+import com.pda.shared.testing.TestPostgres;
 
 /**
  * V69 (support requests), V70 (audit events) and V71 (call-to-action clicks and client errors) on a database that already
@@ -43,7 +43,7 @@ class SupportAuditAnalyticsMigrationTest {
     }
 
     @Container
-    static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:17-alpine");
+    static TestPostgres postgres = new TestPostgres("postgres:17-alpine");
 
     private static void migrateTo(String version) {
         var configuration = Flyway.configure().dataSource(postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword())

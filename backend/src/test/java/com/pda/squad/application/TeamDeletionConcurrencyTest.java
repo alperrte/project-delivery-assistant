@@ -18,7 +18,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.transaction.event.TransactionalEventListener;
 import org.testcontainers.junit.jupiter.*;
-import org.testcontainers.postgresql.PostgreSQLContainer;
+import com.pda.shared.testing.TestPostgres;
 
 import javax.sql.DataSource;
 import java.security.SecureRandom;
@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @Import(TeamDeletionConcurrencyTest.Config.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class TeamDeletionConcurrencyTest {
-    @Container static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:17-alpine");
+    @Container static TestPostgres postgres = new TestPostgres("postgres:17-alpine");
     static final byte[] JWT_KEY = new byte[32];
     static { new SecureRandom().nextBytes(JWT_KEY); }
     @DynamicPropertySource static void properties(DynamicPropertyRegistry r) {

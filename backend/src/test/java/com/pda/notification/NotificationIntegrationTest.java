@@ -31,7 +31,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.postgresql.PostgreSQLContainer;
+import com.pda.shared.testing.TestPostgres;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.Base64;
@@ -48,7 +48,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class NotificationIntegrationTest {
     private static final byte[] JWT_KEY = new byte[32];
     static { new SecureRandom().nextBytes(JWT_KEY); }
-    @Container static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:17-alpine");
+    @Container static TestPostgres postgres = new TestPostgres("postgres:17-alpine");
     @DynamicPropertySource static void properties(DynamicPropertyRegistry registry) {
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
