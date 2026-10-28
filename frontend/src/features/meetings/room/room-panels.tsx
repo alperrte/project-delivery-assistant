@@ -247,11 +247,12 @@ export function ChatPanel({ live, active, content, setContent, mentions, setMent
       <label htmlFor="meeting-message" className="sr-only">{t("message")}</label>
       {/* 16px on phones: smaller text makes iOS Safari zoom the page when the field gets focus. */}
       <div className="relative">
-        {/* While a message is on its way the box is read-only, not disabled: a disabled field drops focus and the next message could not be typed at once. */}
+        {/* Keep the pending draft read-only and focused so success cannot erase new keystrokes.
+            Do not mark this focused textbox busy: delivery is announced by the existing status/error regions. */}
         <textarea ref={input} id="meeting-message" className="min-h-20 w-full resize-none rounded-lg border bg-background p-3 pr-12 text-sm focus-visible:outline-2 focus-visible:outline-ring compact:min-h-12 compact:text-base" maxLength={2000} value={content}
           onChange={event => { setContent(event.target.value); setCaret(event.target.selectionStart); }} onSelect={event => setCaret(event.currentTarget.selectionStart)} onKeyDown={keyDown}
           aria-autocomplete="list" aria-controls={suggestions.length ? "meeting-mention-list" : undefined} aria-activedescendant={activeIndex >= 0 ? optionId(suggestions[activeIndex].id) : undefined}
-          enterKeyHint={touch ? "enter" : "send"} placeholder={t("message")} disabled={!active} readOnly={sending} aria-busy={sending || undefined} />
+          enterKeyHint={touch ? "enter" : "send"} placeholder={t("message")} disabled={!active} readOnly={sending} />
         <div className="absolute right-1 bottom-1">
           {/* The chat's own emoji picker; the caret position and surrogate pairs are handled by `insertEmoji`. */}
           <EmojiPicker choices={COMPOSER_CHOICES} label={tc("emoji.action")} testId="meeting-chat-emoji" disabled={!active || sending} finalFocus={input}
