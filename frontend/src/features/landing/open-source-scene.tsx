@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { useTranslations } from "next-intl";
-import { ArrowUpRight, Minus, Square, Terminal, X } from "lucide-react";
-import { useReducedMotionPreference } from "@/lib/preferences/motion";
+import { Minus, Square, Terminal, X } from "lucide-react";
+import { GithubLogo } from "@phosphor-icons/react";
 import { REPOSITORY_URL } from "@/features/public-info/site-info";
 import { trackCta } from "@/features/analytics/cta";
 import { commandSequence } from "./command-sequence";
-import { advanceAnimationProgress, releaseCompletedAnimation } from "./animation-progress";
+import { advanceAnimationProgress } from "./animation-progress";
+import { Reveal } from "./reveal";
+import { useScrollScene } from "./use-landing-motion";
 import styles from "./landing.module.css";
 
 const TECHNOLOGIES = [
@@ -20,95 +22,73 @@ const TECHNOLOGIES = [
 export function OpenSourceScene() {
   const t = useTranslations("landing");
   const root = useRef<HTMLElement>(null);
-  const reduce = useReducedMotionPreference();
   const steps = commandSequence(t("envOutput"));
 
-  useEffect(() => {
-    const element = root.current;
-    if (!element || reduce) return;
-    let disposed = false;
-    let cleanup = () => {};
-    void Promise.all([import("gsap"), import("gsap/ScrollTrigger")]).then(([{ gsap }, { ScrollTrigger }]) => {
-      if (disposed) return;
-      gsap.registerPlugin(ScrollTrigger);
-      const media = gsap.matchMedia();
-      media.add({ active: "(min-height: 480px)", compact: "(max-width: 1023px), (max-height: 799px)" }, context => {
-        if (!context.conditions?.active) return;
-        const compact = context.conditions.compact;
-        const groups = Array.from(element.querySelectorAll<HTMLElement>("[data-command-group]"));
-        const commands = groups.map(group => group.querySelector<HTMLElement>("[data-command]")!);
-        const outputs = groups.map(group => group.querySelector<HTMLElement>("[data-output]")!);
-        const cursors = groups.map(group => group.querySelector<HTMLElement>("[data-cursor]")!);
-        const lengths = commands.map(node => (node.dataset.fullText ?? "").length);
-        // A command gets character time plus a short, readable output hold.
-        const durations = lengths.map(length => length + 24);
-        const total = durations.reduce((sum, length) => sum + length, 0);
-        const starts = durations.map((_, index) => durations.slice(0, index).reduce((sum, value) => sum + value, 0));
-        const facts = element.querySelectorAll<HTMLElement>("[data-fact]");
-        gsap.set(facts, { autoAlpha: 0, y: 16 });
-        const progress = { value: 0 };
-        element.dataset.choreographed = "true";
-        const render = () => {
-          const tick = gsap.utils.clamp(0, 1, progress.value / 0.72) * total;
-          const active = starts.reduce((current, start, i) => tick >= start ? i : current, 0);
-          groups.forEach((group, i) => {
-            group.hidden = i > active || i < active - (compact ? 1 : 2);
-            const length = Math.max(0, Math.min(lengths[i], Math.floor(tick - starts[i])));
-            const text = (commands[i].dataset.fullText ?? "").slice(0, length);
-            if (commands[i].textContent !== text) commands[i].textContent = text;
-            outputs[i].hidden = tick < starts[i] + lengths[i] + 3;
-            cursors[i].hidden = i !== active;
-          });
-          element.dataset.command = String(active);
-          element.dataset.ready = String(progress.value >= 0.72);
-        };
-        const timeline = gsap.timeline({ paused: true, defaults: { ease: "none" } });
-        timeline.to(progress, { value: 1, duration: 100, onUpdate: render }, 0)
-          .fromTo(element.querySelector("[data-cmd-window]"), { y: 12, opacity: 0 }, { y: 0, opacity: 1, duration: 4 }, 0);
-        if (compact) {
-          // On phones the facts take the terminal's place, keeping both readable at full width.
-          timeline.to(element.querySelector("[data-cmd-window]"), { autoAlpha: 0, y: -8, duration: 7 }, 74);
-        } else {
-          timeline.to(element.querySelector("[data-cmd-window]"), { scale: 0.74, xPercent: -29, duration: 10, ease: "power2.inOut" }, 74);
-        }
-        timeline.to(facts, { autoAlpha: 1, y: 0, stagger: compact ? 1 : 2, duration: 5 }, 83);
-        const update = (scrollProgress: number) => timeline.progress(advanceAnimationProgress("source", scrollProgress));
-        const trigger = ScrollTrigger.create({
-          id: "landing-source", trigger: element, start: "top top", end: "bottom bottom",
-          onUpdate: self => { update(self.progress); },
-          onRefresh: self => { update(self.progress); },
-        });
-        update(trigger.progress);
-        render();
-        ScrollTrigger.refresh();
-        const stopWatching = releaseCompletedAnimation("source", element, () => {
-          trigger.kill();
-          timeline.progress(1);
-          cursors.forEach(cursor => { cursor.hidden = true; });
-          requestAnimationFrame(() => { if (!disposed) ScrollTrigger.refresh(); });
-        });
-        return () => {
-          stopWatching();
-          delete element.dataset.choreographed;
-          delete element.dataset.completed;
-          delete element.dataset.command;
-          delete element.dataset.ready;
-          groups.forEach(group => { group.hidden = false; });
-          commands.forEach(node => { node.textContent = node.dataset.fullText ?? ""; });
-          outputs.forEach(output => { output.hidden = false; });
-          cursors.forEach(cursor => { cursor.hidden = true; });
-        };
-      }, element);
-      cleanup = () => media.revert();
-    }).catch(() => { /* Keep the readable transcript and technology facts when animation is unavailable. */ });
-    return () => { disposed = true; cleanup(); };
-  }, [reduce, t]);
+  // The typing is driven by scroll on large screens and plays once on entering below that. Without the scene the whole transcript stays visible.
+  useScrollScene(root, ({ gsap, ScrollTrigger, wide }, element) => {
+    const terminal = element.querySelector<HTMLElement>("[data-cmd-window]")!;
+    const groups = Array.from(element.querySelectorAll<HTMLElement>("[data-command-group]"));
+    const commands = groups.map(group => group.querySelector<HTMLElement>("[data-command]")!);
+    const outputs = groups.map(group => group.querySelector<HTMLElement>("[data-output]")!);
+    const cursors = groups.map(group => group.querySelector<HTMLElement>("[data-cursor]")!);
+    const lengths = commands.map(node => (node.dataset.fullText ?? "").length);
+    // A command gets character time plus a short, readable output hold.
+    const durations = lengths.map(length => length + 24);
+    const total = durations.reduce((sum, length) => sum + length, 0);
+    const starts = durations.map((_, index) => durations.slice(0, index).reduce((sum, value) => sum + value, 0));
+    const visible = wide ? 3 : 2;
+    const progress = { value: advanceAnimationProgress(0) };
+    const render = () => {
+      const tick = progress.value * total;
+      const active = progress.value >= 1 ? groups.length - 1 : starts.reduce((current, start, i) => tick >= start ? i : current, 0);
+      groups.forEach((group, i) => {
+        group.hidden = i > active || i < active - (visible - 1);
+        const length = Math.max(0, Math.min(lengths[i], Math.floor(tick - starts[i])));
+        const text = (commands[i].dataset.fullText ?? "").slice(0, length);
+        if (commands[i].textContent !== text) commands[i].textContent = text;
+        outputs[i].hidden = tick < starts[i] + lengths[i] + 3;
+        cursors[i].hidden = progress.value >= 1 || i !== active;
+      });
+      element.dataset.command = String(active);
+      element.dataset.ready = String(progress.value >= 1);
+    };
+    element.dataset.choreographed = "true";
+    render();
+    if (wide) {
+      const update = (self: { progress: number }) => { progress.value = advanceAnimationProgress(self.progress); render(); };
+      ScrollTrigger.create({ id: "landing-source", trigger: terminal, start: "top 75%", end: "top 20%", onUpdate: update, onRefresh: update });
+    } else if (progress.value < 1) {
+      const play = gsap.to(progress, { value: 1, duration: gsap.utils.clamp(4, 9, total / 30), ease: "none", paused: true, onUpdate: () => { advanceAnimationProgress(progress.value); render(); } });
+      ScrollTrigger.create({ trigger: terminal, start: "top 80%", once: true, onEnter: () => { play.play(); } });
+    }
+    return () => {
+      delete element.dataset.choreographed;
+      delete element.dataset.command;
+      delete element.dataset.ready;
+      groups.forEach(group => { group.hidden = false; });
+      commands.forEach(node => { node.textContent = node.dataset.fullText ?? ""; });
+      outputs.forEach(output => { output.hidden = false; });
+      cursors.forEach(cursor => { cursor.hidden = true; });
+    };
+  });
 
   return (
     <section id="open-source" ref={root} className={styles.openSource} aria-labelledby="source-heading">
-      <div className={styles.sourceViewport}>
-        <div className={styles.sourceIntro}><p className={styles.eyebrow}>{t("sourceLabel")}</p><h2 id="source-heading">{t("sourceTitle")}</h2><p>{t("sourceDescription")}</p></div>
-        <div className={styles.sourceStage}>
+      <div className={styles.sourceInner}>
+        <div className={styles.sourceText}>
+          <Reveal from="left">
+            <p className={styles.eyebrow}>{t("sourceLabel")}<span translate="no">Apache 2.0</span></p>
+            <h2 id="source-heading">{t("sourceTitle")}</h2>
+            <p className={styles.sourceDescription}>{t("sourceDescription")}</p>
+          </Reveal>
+          <ul className={styles.techList}>{TECHNOLOGIES.map(tech => <li key={tech.name}><span className={styles.techIcon} style={{ maskImage: "url(/images/tech/" + tech.asset + ".svg)", maskMode: tech.asset === "nextjs" ? "luminance" : "alpha" }} aria-hidden="true" /><div><strong translate="no">{tech.name}</strong><span>{t(tech.role)}</span></div></li>)}</ul>
+          <Reveal from="left" className={styles.contribute}>
+            <h3>{t("contributeTitle")}</h3>
+            <p>{t("contributeBody")}</p>
+            <a href={REPOSITORY_URL} onClick={() => trackCta("github_repo")} className={styles.ghost}><GithubLogo size={20} aria-hidden="true" />{t("contributeCta")}</a>
+          </Reveal>
+        </div>
+        <Reveal from="right" className={styles.sourceTerminal}>
           <figure className={styles.commandPrompt} data-cmd-window aria-label={t("terminalLabel")}>
             <div className={styles.cmdChrome}><span><Terminal size={16} aria-hidden="true" />Command Prompt</span><span className={styles.cmdControls} aria-hidden="true"><Minus size={15} /><Square size={12} /><X size={17} /></span></div>
             <div className={styles.cmdBody} aria-hidden="true"><p className={styles.cmdGreeting}>Microsoft Windows<br />(c) Microsoft Corporation.</p>
@@ -116,13 +96,7 @@ export function OpenSourceScene() {
             </div>
             <figcaption className="sr-only"><pre>{steps.map(step => step.prompt + ">" + step.command + "\n" + step.output.join("\n")).join("\n\n")}</pre></figcaption>
           </figure>
-          <div className={styles.sourceFacts}>
-            <div data-fact><p className={styles.factBrand} translate="no">PDA</p><p className={styles.factLicense}>{t("openSource")} <span>Apache 2.0</span></p></div>
-            <h3 data-fact>{t("sourceFact")}</h3>
-            <ul className={styles.techList}>{TECHNOLOGIES.map(tech => <li data-fact key={tech.name}><span className={styles.techIcon} style={{ maskImage: "url(/images/tech/" + tech.asset + ".svg)", maskMode: tech.asset === "nextjs" ? "luminance" : "alpha" }} aria-hidden="true" /><div><strong translate="no">{tech.name}</strong><span>{t(tech.role)}</span></div></li>)}</ul>
-            <a data-fact href={REPOSITORY_URL} onClick={() => trackCta("github_repo")} className={styles.sourceLink}>{t("source")}<ArrowUpRight size={18} aria-hidden="true" /></a>
-          </div>
-        </div>
+        </Reveal>
       </div>
     </section>
   );

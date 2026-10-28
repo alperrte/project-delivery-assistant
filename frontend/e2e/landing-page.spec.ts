@@ -1,156 +1,255 @@
 import { test, expect, type Page } from "@playwright/test";
-import path from "node:path";
 import type { ChatOverview } from "../src/features/chat/types";
+import tr from "../src/i18n/landing/tr.json";
+import en from "../src/i18n/landing/en.json";
+import de from "../src/i18n/landing/de.json";
 
-const captures = path.resolve("../tmp/landing-qa");
-async function scrollScene(page: Page, id: string, progress: number) {
-  await page.locator(id).evaluate((element, fraction) => {
-    const start = element.getBoundingClientRect().top + window.scrollY;
-    window.scrollTo(0, start + (element.getBoundingClientRect().height - innerHeight) * fraction);
-  }, progress);
-  await page.waitForTimeout(100);
+const SECTIONS = ["#stack-heading", "#meetings", "#chat", "#tasks", "#repository", "#organizations", "#open-source", "#join"];
+const DEMOS = 6;
+
+/** Walks the whole page so lazy demos mount and scroll scenes run; returns to the top. */
+async function tour(page: Page) {
+  const step = Math.round((page.viewportSize()?.height ?? 800) * .7);
+  const height = await page.evaluate(() => document.documentElement.scrollHeight);
+  for (let y = 0; y < height; y += step) {
+    await page.evaluate(top => window.scrollTo(0, top), y);
+    await page.waitForTimeout(90);
+  }
+  await page.waitForTimeout(300);
+  await page.evaluate(() => window.scrollTo(0, 0));
 }
+const mountedDemos = (page: Page) => page.locator("[data-demo] > .workspace-preview > *");
+const horizontalOverflow = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+const offscreenControls = (page: Page) => page.locator("header a:visible, header button:visible, main a:visible, main button:visible, footer a:visible").evaluateAll(elements => elements.filter(el => {
+  if (el.closest("[inert]")) return false;
+  const rect = el.getBoundingClientRect();
+  return rect.left < -1 || rect.right > innerWidth + 1;
+}).map(el => el.textContent));
 
-for (const [locale, heading] of [["tr", "Fikrinle başla."], ["en", "Start with your idea."], ["de", "Starte mit deiner Idee."]] as const) {
-  test("localized story, metadata and no backend requests: " + locale, async ({ page, context }) => {
-    const errors: string[] = [];
-    const requests: string[] = [];
+for (const [locale, copy] of [["tr", tr], ["en", en], ["de", de]] as const) {
+  test("localized sections, metadata and no backend requests: " + locale, async ({ page, context, baseURL }) => {
+    const errors: string[] = [], requests: string[] = [];
     page.on("pageerror", error => errors.push(error.message));
     page.on("request", request => { if (request.url().includes("/api/v1/")) requests.push(request.url()); });
-    await page.emulateMedia({ reducedMotion: "reduce" });
-    await page.addInitScript(() => localStorage.setItem("pda:motion", "off"));
-    await context.addCookies([{ name: "NEXT_LOCALE", value: locale, url: "http://localhost:3000" }]);
+    await context.addCookies([{ name: "NEXT_LOCALE", value: locale, url: baseURL! }]);
     expect((await page.goto("/"))?.status()).toBe(200);
-    await expect(page.locator("#landing-heading")).toContainText(heading);
-    await expect(page.locator("#landing-heading")).toHaveCount(1);
+    const heading = page.locator("#landing-heading");
+    await expect(heading).toHaveCount(1);
+    await expect(page.locator("h1")).toHaveCount(1);
+    await expect(heading).toContainText(copy.heroLine1);
+    await expect(heading).toContainText(copy.heroLine2);
+    for (const id of ["meetings", "chat", "tasks", "repository", "organizations"]) await expect(page.locator("#" + id + "-title")).toHaveText(copy[(id === "meetings" ? "meetingTitle" : id === "chat" ? "chatTitle" : id === "tasks" ? "taskTitle" : id === "repository" ? "repoTitle" : "orgTitle")]);
+    await expect(page.locator("#stack-heading")).toHaveText(copy.stackTitle);
+    await expect(page.locator("#final-heading")).toHaveText(copy.finalTitle);
     await expect(page.locator("footer")).toHaveCount(1);
-    await expect(page.locator("article[data-chapter]:visible")).toHaveCount(4);
-    await expect(page.locator(".workspace-preview")).toHaveCount(4);
-    await expect(page.locator('[data-pda-demo-stage="delivery"]')).toHaveAttribute("data-demo-status", "DONE");
-    await expect(page.locator("#product video, #product canvas, #product iframe")).toHaveCount(0);
+    await expect(page.locator("main video, main canvas, main iframe")).toHaveCount(0);
     await expect(page).toHaveTitle(/PDA/);
     await expect(page.locator('meta[name="description"]')).toHaveAttribute("content", /.+/);
     const canonical = await page.locator('link[rel="canonical"]').getAttribute("href");
     expect(new URL(canonical!).pathname).toBe(`/${locale}/${{ tr: "ana-sayfa", en: "home", de: "startseite" }[locale]}`);
     expect(new URL(canonical!).search).toBe("");
     await expect(page.locator("#open-source")).toContainText("docker compose up --build -d");
-    await expect(page.locator("#open-source")).toContainText("npm ci");
     await expect(page.locator("#open-source")).toContainText("npm run dev");
+    await tour(page);
+    await expect.poll(() => mountedDemos(page).count()).toBeGreaterThanOrEqual(DEMOS);
+    // Demos run on fixtures: scrolling past every one of them never reaches the API.
     expect(requests).toEqual([]);
     expect(errors).toEqual([]);
   });
 }
 
-for (const theme of ["light", "dark"]) {
-  test("desktop scroll choreography and CMD typing: " + theme, async ({ page }) => {
+test("every section exists in order and the sticky header marks the current one", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  const tops = await page.evaluate(ids => ids.map(id => document.querySelector(id)!.getBoundingClientRect().top + scrollY), SECTIONS);
+  expect([...tops].sort((a, b) => a - b)).toEqual(tops);
+  const features = page.locator('header a[href="#features"]');
+  const source = page.locator('header a[href="#open-source"]');
+  await features.click();
+  await expect(features).toHaveAttribute("aria-current", "location");
+  await source.click();
+  await expect(source).toHaveAttribute("aria-current", "location");
+  await expect(features).not.toHaveAttribute("aria-current", "location");
+  await expect(page.locator("header").first()).toHaveAttribute("data-scrolled", "true");
+});
+
+test("demos are inert fixtures with a text alternative", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const requests: string[] = [];
+  page.on("request", request => { if (request.url().includes("/api/v1/")) requests.push(request.url()); });
+  await page.goto("/");
+  await tour(page);
+  await expect(page.locator("[data-demo]")).toHaveCount(DEMOS);
+  await expect.poll(() => mountedDemos(page).count()).toBeGreaterThanOrEqual(DEMOS);
+  for (const demo of await page.locator("[data-demo]").all()) {
+    const surface = demo.locator("> .workspace-preview");
+    await expect(surface).toHaveAttribute("inert", "");
+    await expect(surface).toHaveAttribute("aria-hidden", "true");
+    await expect(demo.locator("figcaption.sr-only")).not.toBeEmpty();
+  }
+  // The preview is a real app shell only inside a demo; the landing page itself is never an app shell.
+  expect(await page.locator(".app-shell").evaluateAll(shells => shells.filter(shell => !shell.closest("[data-demo]")).length)).toBe(0);
+  await expect(page.locator("main").first()).not.toHaveClass(/app-shell/);
+  expect(requests).toEqual([]);
+});
+
+for (const [section, toggle, label] of [
+  ["#tasks", "taskModeAdvanced", "taskModeLabel"],
+  ["#repository", "repoModeAdvanced", "repoModeLabel"],
+] as const) {
+  test("keyboard toggles the " + section.slice(1) + " demo between its two modes", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
-    const errors: string[] = [];
-    page.on("pageerror", error => errors.push(error.message));
-    page.on("console", msg => { if (msg.type() === "error" || /hydration/i.test(msg.text())) errors.push(msg.text()); });
-    await page.addInitScript(value => localStorage.setItem("theme", value), theme);
     await page.goto("/");
-    await expect(page.locator("#product")).toHaveAttribute("data-choreographed", "true");
-    await expect(page.locator("#open-source")).toHaveAttribute("data-choreographed", "true");
-    await page.screenshot({ path: path.join(captures, theme + "-welcome.png") });
-    for (const [progress, name, chapter] of [[0.04, "project-typing", "project"], [0.12, "project-form", "project"], [0.21, "project-created", "project"], [0.37, "team", "team"], [0.51, "task-typing", "task"], [0.65, "task-assigned", "task"]] as const) {
-      await scrollScene(page, "#product", progress);
-      await expect(page.locator("#product")).toHaveAttribute("data-chapter", chapter);
-      await expect(page.locator("article[data-chapter]:visible")).toHaveCount(1);
-      await page.screenshot({ path: path.join(captures, theme + "-" + name + ".png") });
-    }
-    for (const [progress, status] of [[0.705, "TODO"], [0.76, "IN_PROGRESS"], [0.815, "IN_REVIEW"], [0.875, "TESTING"], [0.95, "DONE"]] as const) {
-      await scrollScene(page, "#product", progress);
-      await expect(page.locator("#product")).toHaveAttribute("data-task-status", status);
-    }
-    await scrollScene(page, "#product", 0.965);
-    await expect(page.locator("#product")).toHaveAttribute("data-chapter", "delivery");
-    await expect(page.locator('[data-pda-demo-stage="delivery"]')).toHaveAttribute("data-demo-status", "DONE");
-    await page.screenshot({ path: path.join(captures, theme + "-done.png") });
-    await scrollScene(page, "#product", 0.1);
-    // Scrolling still selects chapters; the demo's completed progress does not rewind.
-    await expect(page.locator("#product")).toHaveAttribute("data-chapter", "project");
-    await expect(page.locator("#product")).toHaveAttribute("data-task-status", "DONE");
-    for (const [progress, name] of [[0.005, "cmd-start"], [0.04, "cmd-typing"], [0.55, "cmd-docker"], [0.735, "cmd-ready"], [1, "tech-reveal"]] as const) {
-      await scrollScene(page, "#open-source", progress);
-      if (progress < 0.74) expect(await page.locator("[data-fact]").evaluateAll(elements => elements.every(el => getComputedStyle(el).visibility === "hidden"))).toBe(true);
-      await page.screenshot({ path: path.join(captures, theme + "-" + name + ".png") });
-    }
-    await expect(page.locator("#open-source")).toHaveAttribute("data-ready", "true");
-    await expect(page.locator("[data-command-group]:visible").last()).toContainText("npm run dev");
-    expect(await page.locator("[data-cmd-window]").evaluate(el => new DOMMatrix(getComputedStyle(el).transform).a)).toBeCloseTo(0.74, 2);
-    await expect(page.locator("#open-source a")).toBeVisible();
-    await page.locator("#join").scrollIntoViewIfNeeded();
-    await page.screenshot({ path: path.join(captures, theme + "-final.png") });
-    await page.locator("footer").scrollIntoViewIfNeeded();
-    await page.screenshot({ path: path.join(captures, theme + "-footer.png") });
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(1440);
-    // Theme-hidden/lazy demo images need not load. Rendered images must finish
-    // loading and decode successfully; poll rather than sampling the network once.
-    await expect.poll(() => page.locator("img:visible").evaluateAll((images: HTMLImageElement[]) => images.filter(img => !img.complete || img.naturalWidth === 0).map(img => img.src))).toEqual([]);
-    expect(errors).toEqual([]);
+    const group = page.locator(section).getByRole("group", { name: tr[label] });
+    const [first, second] = [group.getByRole("button").first(), group.getByRole("button", { name: tr[toggle], exact: true })];
+    await page.locator(section).scrollIntoViewIfNeeded();
+    const demo = page.locator(section + " [data-demo] > .workspace-preview");
+    await expect.poll(() => demo.evaluate(el => el.childElementCount)).toBeGreaterThan(0);
+    await expect(first).toHaveAttribute("aria-pressed", "true");
+    const before = await demo.innerText();
+    await second.focus();
+    await expect(second).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(second).toHaveAttribute("aria-pressed", "true");
+    await expect(first).toHaveAttribute("aria-pressed", "false");
+    await expect.poll(() => demo.innerText()).not.toBe(before);
+    await first.focus();
+    await page.keyboard.press("Space");
+    await expect(first).toHaveAttribute("aria-pressed", "true");
+    await expect.poll(() => demo.innerText()).toBe(before);
   });
 }
 
-for (const width of [320, 390, 768, 1280, 1440, 1920]) {
-  test("responsive layout and themes: " + width + "px", async ({ page }) => {
-    await page.setViewportSize({ width, height: 900 });
-    for (const theme of ["light", "dark"]) {
+test("the tool stack pins on large screens and flows normally on phones", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  await expect(page.locator("#stack-heading")).toBeVisible();
+  await expect(page.locator(".pin-spacer")).toHaveCount(1);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.reload();
+  await expect(page.locator("#stack-heading")).toBeVisible();
+  await expect(page.locator(".pin-spacer")).toHaveCount(0);
+  await page.setViewportSize({ width: 844, height: 390 });
+  await page.reload();
+  await expect(page.locator("#stack-heading")).toBeVisible();
+  await expect(page.locator(".pin-spacer")).toHaveCount(0);
+  expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
+});
+
+for (const width of [320, 390, 768, 1024, 1440]) {
+  for (const theme of ["light", "dark"]) {
+    test(`no horizontal overflow, every control on screen: ${width}px ${theme}`, async ({ page }) => {
+      await page.setViewportSize({ width, height: width < 700 ? 800 : 900 });
       await page.addInitScript(value => localStorage.setItem("theme", value), theme);
       await page.goto("/");
       await expect(page.locator("#landing-heading")).toBeVisible();
-      await expect(page.locator("#product")).toHaveAttribute("data-choreographed", "true");
-      for (const selector of ["#product", "#open-source", "#join", "footer"]) {
+      expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
+      expect(await offscreenControls(page)).toEqual([]);
+      for (const selector of SECTIONS) {
         await page.locator(selector).scrollIntoViewIfNeeded();
-        expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
-        if (selector === "#open-source") await scrollScene(page, selector, 1);
-        const escaped = await page.locator('header a:visible, header button:visible, main a:visible, footer a:visible').evaluateAll(elements => elements.filter(el => {
-          if (el.closest("[inert]")) return false;
-          const rect = el.getBoundingClientRect();
-          return rect.left < -1 || rect.right > innerWidth + 1;
-        }).map(el => el.textContent));
-        expect(escaped).toEqual([]);
+        await page.waitForTimeout(120);
+        expect(await horizontalOverflow(page), selector).toBeLessThanOrEqual(0);
       }
-      if (width === 390 || width === 768 || width === 1920) await page.screenshot({ path: path.join(captures, width + "-" + theme + ".png"), fullPage: width < 1024 });
-    }
-  });
+      await tour(page);
+      expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
+      expect(await offscreenControls(page)).toEqual([]);
+      // Touch targets: the primary actions stay comfortably large.
+      for (const link of await page.locator("main a[href='/tr/kayit']").all()) {
+        if (await link.isVisible()) expect((await link.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+      }
+    });
+  }
 }
 
-test("keyboard, chapter shortcuts and live animation preference changes", async ({ page }) => {
+test("German copy fits a 320px screen", async ({ page, context, baseURL }) => {
+  await context.addCookies([{ name: "NEXT_LOCALE", value: "de", url: baseURL! }]);
+  await page.setViewportSize({ width: 320, height: 640 });
+  await page.goto("/");
+  await tour(page);
+  expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
+  expect(await offscreenControls(page)).toEqual([]);
+});
+
+test("the moving extras line can be paused and resumed with the keyboard", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");
-  await expect(page.locator("#product")).toHaveAttribute("data-choreographed", "true");
+  const line = page.getByRole("region", { name: tr.marqueeLabel });
+  const track = line.locator("ul");
+  const playState = () => track.evaluate(el => getComputedStyle(el).animationPlayState);
+  await line.scrollIntoViewIfNeeded();
+  await page.mouse.move(0, 0);
+  await expect.poll(playState).toBe("running");
+  await line.getByRole("button", { name: tr.marqueePause }).focus();
+  await page.keyboard.press("Enter");
+  const play = line.getByRole("button", { name: tr.marqueePlay });
+  await expect(play).toHaveAttribute("aria-pressed", "true");
+  await play.blur();
+  await expect.poll(playState).toBe("paused");
+  await play.focus();
+  await page.keyboard.press("Space");
+  await expect(line.getByRole("button", { name: tr.marqueePause })).toHaveAttribute("aria-pressed", "false");
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+  await expect.poll(playState).toBe("running");
+});
+
+test("reduced motion shows the finished page without moving parts", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.addInitScript(() => localStorage.setItem("pda:motion", "off"));
+  await page.goto("/");
+  await expect(page.locator("html")).toHaveAttribute("data-motion", "off");
+  await expect(page.locator("#open-source")).not.toHaveAttribute("data-choreographed", "true");
+  await expect(page.locator(".pin-spacer")).toHaveCount(0);
+  const state = await page.evaluate(() => {
+    const running = (selector: string) => [...document.querySelectorAll(selector)].filter(el => getComputedStyle(el).animationName !== "none").length;
+    return {
+      reveals: [...document.querySelectorAll("[data-reveal]")].filter(el => getComputedStyle(el).opacity !== "1" || getComputedStyle(el).transform !== "none").length,
+      marquee: running("section[aria-label] ul[class] li, section[aria-label] ul[class]"),
+      words: running("#landing-heading span"),
+      commands: [...document.querySelectorAll("[data-command-group]")].filter(el => (el as HTMLElement).hidden).length,
+      tools: [...document.querySelectorAll("li[data-tool]")].filter(el => getComputedStyle(el).opacity !== "1").length,
+    };
+  });
+  expect(state).toEqual({ reveals: 0, marquee: 0, words: 0, commands: 0, tools: 0 });
+  await expect(page.locator("[data-command-group]").last()).toContainText("npm run dev");
+});
+
+test("live motion preference changes switch the scenes", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  await expect(page.locator("#open-source")).toHaveAttribute("data-choreographed", "true");
+  await expect(page.locator(".pin-spacer")).toHaveCount(1);
+  await page.evaluate(() => { localStorage.setItem("pda:motion", "off"); window.dispatchEvent(new Event("pda:preferences-changed")); });
+  await expect(page.locator("#open-source")).not.toHaveAttribute("data-choreographed", "true");
+  await expect(page.locator(".pin-spacer")).toHaveCount(0);
+  await page.evaluate(() => { localStorage.setItem("pda:motion", "on"); window.dispatchEvent(new Event("pda:preferences-changed")); });
+  await expect(page.locator("#open-source")).toHaveAttribute("data-choreographed", "true");
+});
+
+test("keyboard: skip link, focus rings and the footer reach every action", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
   await page.keyboard.press("Tab");
-  await expect(page.getByRole("link", { name: "İçeriğe geç", exact: true })).toBeFocused();
+  await expect(page.getByRole("link", { name: tr.skip, exact: true })).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(page.locator("#landing-main")).toBeFocused();
-  await page.locator('[data-chapter-link][href="#story-team"]').focus();
-  await page.keyboard.press("Enter");
-  await expect(page.locator("#product")).toHaveAttribute("data-chapter", "team");
-  await page.evaluate(() => {
-    localStorage.setItem("pda:motion", "off");
-    window.dispatchEvent(new Event("pda:preferences-changed"));
-  });
-  await expect(page.locator("#product")).not.toHaveAttribute("data-choreographed", "true");
-  await expect(page.locator("#open-source")).not.toHaveAttribute("data-choreographed", "true");
-  await expect(page.locator("article[data-chapter]:visible")).toHaveCount(4);
-  await expect(page.locator("[data-command-group]:visible")).toHaveCount(8);
-  expect(await page.locator("[data-cmd-window]").evaluate(el => getComputedStyle(el).transform)).toBe("none");
-  await page.screenshot({ path: path.join(captures, "reduced-motion.png"), fullPage: true });
-  await page.evaluate(() => {
-    localStorage.setItem("pda:motion", "on");
-    window.dispatchEvent(new Event("pda:preferences-changed"));
-  });
-  await expect(page.locator("#product")).toHaveAttribute("data-choreographed", "true");
-  await page.setViewportSize({ width: 390, height: 844 });
-  await expect(page.locator("#product")).toHaveAttribute("data-choreographed", "true");
-  await expect(page.locator("article[data-chapter]:visible")).toHaveCount(1);
+  const rings: string[] = [];
+  for (let i = 0; i < 14; i++) {
+    await page.keyboard.press("Tab");
+    rings.push(await page.evaluate(() => {
+      const el = document.activeElement as HTMLElement;
+      const css = getComputedStyle(el);
+      return el.closest("[inert]") ? "inert" : css.outlineStyle !== "none" || css.boxShadow !== "none" ? "" : (el.textContent ?? el.tagName).trim();
+    }));
+  }
+  expect(rings.filter(Boolean)).toEqual([]);
 });
 
 test("CTA and information links reach existing routes", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.addInitScript(() => localStorage.setItem("pda:motion", "off"));
   await page.goto("/");
-  await page.locator('main a[href="/tr/kayit"]').click();
+  await page.locator('main a[href="/tr/kayit"]').first().click();
   await expect(page).toHaveURL(/\/tr\/kayit$/);
   await page.goto("/");
   await page.locator('header a[href="/tr/giris"]').click();
@@ -160,14 +259,18 @@ test("CTA and information links reach existing routes", async ({ page }) => {
     await page.locator('footer a[href="' + target + '"]').click();
     await expect(page).toHaveURL(new RegExp(target + "$"));
   }
+  await page.goto("/");
+  // Hero, open-source and final CTA all point at the repository; none of them is styled as the primary action.
+  const repository = page.locator('main a[href="https://github.com/alperrte/project-delivery-assistant"]');
+  expect(await repository.count()).toBeGreaterThanOrEqual(3);
   for (const target of ["https://github.com/alperrte", "https://github.com/HmzT270", "https://github.com/alperrte/project-delivery-assistant"]) {
-    await page.goto("/");
     await expect(page.locator('footer a[href="' + target + '"]')).toHaveCount(1);
   }
 });
 
-test("session hint continues to the verified app shell", async ({ page, context }) => {
-  await context.addCookies([{ name: "PDA_SESSION", value: "1", url: "http://localhost:3000" }]);
+test("session hint continues to the verified app shell", async ({ page, context, baseURL }) => {
+  await context.addCookies([{ name: "PDA_SESSION", value: "1", url: baseURL! }]);
+  const origin = new URL(baseURL!).origin;
   // TEST-ONLY: a chat overview is not a generic paged response. Returning one
   // used to crash ChatProvider after the shell had briefly appeared.
   const overview: ChatOverview = { group: null, groups: [], directs: [], totalUnread: 0 };
@@ -176,7 +279,7 @@ test("session hint continues to the verified app shell", async ({ page, context 
     const body = pathname.endsWith("/auth/me")
       ? { id: "landing-test", nickname: "LandingTest", email: "landing@example.com", globalRole: "USER", mustChangePassword: false }
       : pathname.endsWith("/chat/conversations") ? overview : { content: [], totalElements: 0, totalPages: 0, counts: {} };
-    return route.fulfill({ status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "http://localhost:3000", "access-control-allow-credentials": "true" }, body: JSON.stringify(body) });
+    return route.fulfill({ status: 200, contentType: "application/json", headers: { "access-control-allow-origin": origin, "access-control-allow-credentials": "true" }, body: JSON.stringify(body) });
   });
   const chatLoaded = page.waitForResponse(response => new URL(response.url()).pathname.endsWith("/chat/conversations") && response.status() === 200);
   await page.goto("/");
@@ -186,14 +289,21 @@ test("session hint continues to the verified app shell", async ({ page, context 
   await expect(page.locator("footer")).toHaveCount(0);
 });
 
-test("complete story and CTA render without JavaScript", async ({ browser }) => {
-  const context = await browser.newContext({ javaScriptEnabled: false, locale: "tr-TR" });
+test("the page is complete and readable without JavaScript", async ({ browser, baseURL }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false, locale: "tr-TR", baseURL });
   const page = await context.newPage();
-  await page.goto("http://localhost:3000/");
-  await expect(page.locator("#landing-heading")).toContainText("Fikrinle başla.");
-  await expect(page.locator("article[data-chapter]:visible")).toHaveCount(4);
-  await expect(page.locator('main a[href="/tr/kayit"]')).toBeVisible();
-  await expect(page.locator("[data-command-group]:visible")).toHaveCount(8);
+  await page.goto("/");
+  await expect(page.locator("#landing-heading")).toContainText(tr.heroLine1);
+  await expect(page.locator('main a[href="/tr/kayit"]').first()).toBeVisible();
+  for (const [id, key] of [["meetings", "meetingTitle"], ["chat", "chatTitle"], ["tasks", "taskTitle"], ["repository", "repoTitle"], ["organizations", "orgTitle"]] as const) await expect(page.locator("#" + id + "-title")).toHaveText(tr[key]);
+  await expect(page.locator("#stack-heading")).toBeVisible();
+  await expect(page.locator("li[data-tool]")).toHaveCount(4);
+  for (const tool of await page.locator("li[data-tool]").all()) await expect(tool).toBeVisible();
+  const hidden = await page.evaluate(() => [...document.querySelectorAll("[data-reveal], [data-stack-resolve], [data-stack-core]")].filter(el => getComputedStyle(el).opacity === "0" || getComputedStyle(el).visibility === "hidden").length);
+  expect(hidden).toBe(0);
+  await expect(page.locator("[data-command-group]").last()).toContainText("npm run dev");
+  expect(await page.locator("[data-command-group]").evaluateAll(groups => groups.every(group => !(group as HTMLElement).hidden))).toBe(true);
+  for (const caption of await page.locator("[data-demo] figcaption").all()) await expect(caption).not.toBeEmpty();
   await context.close();
 });
 
@@ -202,14 +312,6 @@ test("homepage remains in sitemap and robots", async ({ request }) => {
   const robots = await request.get("/robots.txt");
   expect(await robots.text()).toContain("Allow: /");
   expect(await robots.text()).toContain("Disallow: /tr/genel-bakis");
-});
-
-test("short landscape viewport keeps the complete story in normal flow", async ({ page }) => {
-  await page.setViewportSize({ width: 844, height: 390 });
-  await page.goto("/");
-  await expect(page.locator("#product")).not.toHaveAttribute("data-choreographed", "true");
-  await expect(page.locator("article[data-chapter]:visible")).toHaveCount(4);
-  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(844);
 });
 
 test("mobile hamburger supports keyboard, nested controls, outside dismissal and desktop resizing", async ({ page }) => {
@@ -223,7 +325,6 @@ test("mobile hamburger supports keyboard, nested controls, outside dismissal and
   await toggle.focus();
   await page.keyboard.press("Enter");
   await expect(navigation).toBeVisible();
-  await page.screenshot({ path: path.join(captures, "mobile-hamburger.png") });
   await page.keyboard.press("Tab");
   await expect(navigation.getByRole("button", { name: "Dil", exact: true })).toBeFocused();
   await page.keyboard.press("Enter");
@@ -246,90 +347,31 @@ test("mobile hamburger supports keyboard, nested controls, outside dismissal and
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(navigation).not.toBeVisible();
   await toggle.click();
-  await navigation.getByRole("link", { name: "Giriş yap", exact: true }).click();
+  await navigation.getByRole("link", { name: tr.login, exact: true }).click();
   await expect(page).toHaveURL(/\/tr\/giris$/);
 });
 
-for (const [width, height] of [[320, 568], [390, 844], [768, 900], [1280, 720]]) {
-  test(`compact story types and completes without overflow: ${width}x${height}`, async ({ page }) => {
-    await page.setViewportSize({ width, height });
-    const errors: string[] = [], requests: string[] = [];
-    page.on("pageerror", error => errors.push(error.message));
-    page.on("request", request => { if (request.url().includes("/api/v1/")) requests.push(request.url()); });
-    await page.goto("/");
-    await expect(page.locator("#product")).toHaveAttribute("data-choreographed", "true");
-    await scrollScene(page, "#product", 0.025);
-    const name = page.locator('[data-pda-demo-stage="project"] #project-name');
-    await expect(name).toBeVisible();
-    const first = await name.inputValue();
-    await scrollScene(page, "#product", 0.07);
-    await expect.poll(() => name.inputValue()).not.toBe(first);
-    if (width < 1024) {
-      await expect.poll(async () => {
-        const input = await name.boundingBox();
-        const viewport = await page.locator('[data-pda-viewport="project"]').boundingBox();
-        return input!.y >= viewport!.y && input!.y + input!.height <= viewport!.y + viewport!.height;
-      }).toBe(true);
-    }
-    await page.screenshot({ path: path.join(captures, `${width}-${height}-project-typing.png`) });
-    for (const [fraction, chapter] of [[0.4, "team"], [0.51, "task"], [0.95, "delivery"]] as const) {
-      await scrollScene(page, "#product", fraction);
-      await expect(page.locator("#product")).toHaveAttribute("data-chapter", chapter);
-      const bounds = await page.locator("article[data-chapter]:visible").boundingBox();
-      expect(bounds!.y).toBeGreaterThanOrEqual(0);
-      expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(height + 1);
-      if (width < 768 && (chapter === "team" || chapter === "delivery")) {
-        const target = chapter === "team" ? page.locator('[data-pda-demo-stage="team"] main ul[aria-label] > li').last()
-          : page.locator('[data-pda-demo-stage="delivery"] [data-task-row]:visible').first();
-        await expect.poll(async () => {
-          const row = await target.boundingBox();
-          const viewport = await page.locator(`[data-pda-viewport="${chapter}"]`).boundingBox();
-          return !!row && row.y >= viewport!.y && row.y < viewport!.y + viewport!.height - 44;
-        }).toBe(true);
-      }
-      await page.screenshot({ path: path.join(captures, `${width}-${height}-${chapter}.png`) });
-    }
-    await scrollScene(page, "#open-source", 0.015);
-    await expect(page.locator("#open-source")).toHaveAttribute("data-choreographed", "true");
-    const command = page.locator("[data-command]").first();
-    const firstCommand = await command.textContent();
-    await scrollScene(page, "#open-source", 0.045);
-    await expect.poll(() => command.textContent()).not.toBe(firstCommand);
-    await page.screenshot({ path: path.join(captures, `${width}-${height}-cmd-typing.png`) });
-    await scrollScene(page, "#open-source", 0.7);
-    const activeCommand = page.locator("[data-command-group]:visible").last();
-    const terminal = await page.locator("[data-cmd-window]").boundingBox();
-    const activeBounds = await activeCommand.boundingBox();
-    expect(activeBounds!.y + activeBounds!.height).toBeLessThanOrEqual(terminal!.y + terminal!.height + 1);
-    await scrollScene(page, "#open-source", 1);
-    await expect(page.locator("#open-source a")).toBeVisible();
-    const bounds = await page.locator("#open-source a").boundingBox();
-    expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(height + 1);
-    await page.screenshot({ path: path.join(captures, `${width}-${height}-tech.png`) });
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
-    await page.locator("#join").scrollIntoViewIfNeeded();
-    await scrollScene(page, "#open-source", 0.9);
-    await expect(page.locator("#open-source")).toHaveAttribute("data-completed", "true");
-    await page.emulateMedia({ reducedMotion: "reduce" });
-    await expect(page.locator("#product")).not.toHaveAttribute("data-choreographed", "true");
-    await expect(page.locator("[data-command-group]:visible")).toHaveCount(8);
-    expect(requests).toEqual([]);
-    expect(errors).toEqual([]);
-  });
-}
+test("mobile menu anchors close the menu and land on their section", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  const toggle = page.locator('header button[aria-controls="landing-navigation"]');
+  await toggle.click();
+  await page.locator('#landing-navigation a[href="#open-source"]').click();
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  await expect(page.locator("#open-source")).toBeInViewport();
+});
 
 test("landing follows live changes to the global semantic palette", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.addInitScript(() => localStorage.setItem("pda:motion", "off"));
   await page.goto("/");
-  // The stored motion preference is applied after hydration; until then the CTA's colour transition (0.15s) still runs.
+  // The stored motion preference is applied after hydration; until then colour transitions still run.
   await expect(page.locator("html")).toHaveAttribute("data-motion", "off");
   await page.evaluate(() => {
     document.documentElement.style.setProperty("--background", "#f5ebdb");
     document.documentElement.style.setProperty("--foreground", "#302718");
-    document.documentElement.style.setProperty("--primary", "#34613d");
   });
   // Auto-waiting: a one-shot read right after setProperty can still see the first frame of the (0.01ms) transition.
   await expect(page.locator("#landing-main").locator("xpath=..")).toHaveCSS("background-color", "rgb(245, 235, 219)");
-  await expect(page.locator('main a[href="/tr/kayit"]')).toHaveCSS("background-color", "rgb(52, 97, 61)");
+  await expect(page.locator("#landing-heading")).toHaveCSS("color", "rgb(48, 39, 24)");
 });

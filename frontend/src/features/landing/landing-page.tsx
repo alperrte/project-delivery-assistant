@@ -3,7 +3,7 @@
 import Link from "@/i18n/navigation";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { ArrowDown, ArrowUpRight, Menu, X } from "lucide-react";
+import { ArrowUpRight, Menu, X } from "lucide-react";
 import { Logo } from "@/components/common/logo";
 import { consumeHomeReturn } from "@/components/common/home-link";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
@@ -13,9 +13,16 @@ import { TrackedLink } from "@/features/analytics/tracked-link";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useReducedMotionPreference } from "@/lib/preferences/motion";
-import { ProductStory } from "./product-story";
 import { OpenSourceScene } from "./open-source-scene";
+import { useRevealScene } from "./reveal";
+import { Hero } from "./sections/hero";
+import { ToolStack } from "./sections/tool-stack";
+import { ChatFeature, MeetingFeature, OrganizationFeature, RepositoryFeature, TaskFeature } from "./sections/features";
+import { Marquee } from "./sections/marquee";
+import { FinalCta } from "./sections/final-cta";
 import styles from "./landing.module.css";
+
+const SECTIONS = ["features", "open-source"] as const;
 
 export function LandingPage() {
   const t = useTranslations("landing");
@@ -24,8 +31,10 @@ export function LandingPage() {
   const header = useRef<HTMLElement>(null);
   const menuButton = useRef<HTMLButtonElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [section, setSection] = useState<(typeof SECTIONS)[number] | null>(null);
   const returnRequested = useRef<boolean | null>(null);
   const reduce = useReducedMotionPreference();
+  useRevealScene(root);
   useEffect(() => {
     const desktop = window.matchMedia("(min-width: 1024px)");
     const closeOnDesktop = () => { if (desktop.matches) setMenuOpen(false); };
@@ -50,6 +59,24 @@ export function LandingPage() {
       document.removeEventListener("keydown", escape);
     };
   }, [menuOpen]);
+  // The bar turns translucent once the page moves; a data attribute avoids re-rendering on every scroll.
+  useEffect(() => {
+    const update = () => { if (header.current) header.current.dataset.scrolled = String(window.scrollY > 8); };
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    return () => window.removeEventListener("scroll", update);
+  }, []);
+  // The anchor of the section crossing the middle of the screen is marked as the current location.
+  useEffect(() => {
+    if (!("IntersectionObserver" in window)) return;
+    const visible = new Set<string>();
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => { if (entry.isIntersecting) visible.add(entry.target.id); else visible.delete(entry.target.id); });
+      setSection(SECTIONS.find(id => visible.has(id)) ?? null);
+    }, { rootMargin: "-45% 0px -45% 0px" });
+    SECTIONS.forEach(id => { const element = document.getElementById(id); if (element) observer.observe(element); });
+    return () => observer.disconnect();
+  }, []);
   useLayoutEffect(() => {
     if (returnRequested.current === null) returnRequested.current = consumeHomeReturn();
     if (reduce) { returnRequested.current = false; return; }
@@ -65,7 +92,7 @@ export function LandingPage() {
   return (
     <div ref={root} className={styles.landing}>
       <a href="#landing-main" className={styles.skip}>{t("skip")}</a>
-      <header ref={header} className={styles.header}>
+      <header ref={header} className={styles.header} data-scrolled="false">
         <Link href="/" aria-label="PDA · Project Delivery Assistant" className={styles.logo}>
           <Logo variant="wordmark" compact plain size={110} />
         </Link>
@@ -77,6 +104,8 @@ export function LandingPage() {
             <LocaleSwitcher triggerClassName={cn("min-h-11", styles.languageTrigger)} />
             <ThemeToggle />
           </div>
+          <a href="#features" className={styles.headerLink} aria-current={section === "features" ? "location" : undefined}>{t("navFeatures")}</a>
+          <a href="#open-source" className={styles.headerLink} aria-current={section === "open-source" ? "location" : undefined}>{t("openSource")}</a>
           <Link href="/about" className={styles.headerLink}>{footer("about")}</Link>
           <Link href="/contact" className={styles.headerLink}>{footer("contact")}</Link>
           <TrackedLink ctaId="header_login" href="/login" className={styles.headerLink}>{t("login")}</TrackedLink>
@@ -84,24 +113,18 @@ export function LandingPage() {
         </nav>
       </header>
       <main id="landing-main" tabIndex={-1}>
-        <section className={styles.welcome} aria-labelledby="landing-heading">
-          <p className={styles.eyebrow}>{t("welcome")}</p>
-          <h1 id="landing-heading">{t("headlineFirst")}<br /><span>{t("headlineSecond")}</span></h1>
-          <p className={styles.welcomeDescription}>{t("description")}</p>
-          <a href="#product" className={styles.scrollHint}><span>{t("explore")}</span><ArrowDown size={18} aria-hidden="true" /></a>
-          <p className={styles.welcomeFootnote} translate="no">PROJECT DELIVERY ASSISTANT</p>
-        </section>
-        <ProductStory />
+        <Hero />
+        <ToolStack />
+        <div id="features">
+          <MeetingFeature />
+          <ChatFeature />
+          <TaskFeature />
+          <RepositoryFeature />
+          <OrganizationFeature />
+          <Marquee />
+        </div>
         <OpenSourceScene />
-        <section id="join" className={styles.final} aria-labelledby="final-heading">
-          <p className={styles.eyebrow}>{t("finalLabel")}</p>
-          <h2 id="final-heading">{t("finalFirst")}<br />{t("finalSecond")}<br /><span>{t("finalThird")}</span></h2>
-          <p>{t("finalDescription")}</p>
-          <div className={styles.actions}>
-            <TrackedLink ctaId="landing_register" href="/register" className={cn(buttonVariants(), "auth-cta text-(--auth-cta-ink) hover:brightness-110", styles.primary)}>{t("start")}<ArrowUpRight size={19} aria-hidden="true" /></TrackedLink>
-            <TrackedLink ctaId="landing_login" href="/login" className={styles.textLink}>{t("login")}<ArrowUpRight size={17} aria-hidden="true" /></TrackedLink>
-          </div>
-        </section>
+        <FinalCta />
       </main>
       <SiteFooter tone="auth" />
     </div>
