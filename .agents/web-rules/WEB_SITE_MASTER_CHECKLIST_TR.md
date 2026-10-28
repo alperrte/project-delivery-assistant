@@ -1,5 +1,21 @@
 # Web Sitesi Kesinlikle Olması Gerekenler — Master Checklist
 
+## Toplantı / görev / sürüm frontend düzeltmeleri — 2026-10-28 (sınırlı kapsam)
+
+Sürüm etiketi takip düzenlemesi: açık sidebar/mobil menü `PDA Version : v2.9.9`, dar sidebar `v2.9.9`; hedefli Türkçe Playwright 1/1 PASS, taşma yok. Aynı completion kaydı güncellendi.
+
+Yalnız etkilenen Dark Mode / Responsive / Keyboard Navigation / metin görünürlüğü / arama-sayfalama / Breadcrumb maddeleri gözden geçirildi. Toplantı aksiyonları ve seçili ikon ortak primary renklerini kullanır; oluşturma akışı liste başlangıcına hizalanır. Mini kartın geri dönüş aksiyonu tam genişlikte ayrı satırdadır; dar ve sürüklenmiş durumda TR/EN/DE yazısı okunur. Görevlerim araması sayfalar arası eşleşme, reload, temizleme, görev anahtarı ve proje/durum filtreleriyle doğrulandı; yeni görev breadcrumb'ı yok. Sidebar açık/daraltılmış/mobil ve landing footer sürümü `v2.9.9`. Hedefli Playwright koşularında 10 benzersiz senaryo PASS; görevler Türkçe, toplantı/sürüm TR/EN/DE; açık/koyu tema ve 320/390/1440 px kontrolleri. REST fixture'ları sentetik; mini testinde geçici yerel LiveKit gerçekti ve sonra kaldırıldı. TypeScript/diff kontrolü PASS. Kullanıcı isteğiyle pre-push ve backend testleri çalıştırılmadı; global kutular değiştirilmedi. Kayıt: `docs/compliation/2026-10-28-frontend-servis-duzeltmeleri.md`.
+
+## Şeffaf logo çerçevesi — 2026-10-28 (sınırlı kapsam)
+
+Dark Mode / Görsel fallback / Responsive kapsamı: yüklenmiş `EntityMark` görseli varken çerçeve arka planı şeffaf; görselsiz/hatalı kaynakta harf zemini korunur. Gerçek uygulamada sentetik şeffaf PNG ve API fixture'larıyla açık/koyu tema × yuvarlak/köşeli/eksik/404 logo = 8 senaryo, her biri 1440 ve 320 px'de doğrulandı. Sidebar, proje seçici ve kart çerçeveleri, şekil, menünün Escape ile kapanması ve taşmama PASS; görüntüler incelendi. Global kutular değiştirilmedi. Kayıt: `docs/compliation/2026-10-28-seffaf-logo-zemini.md`.
+
+Yeni proje önizlemesi ayrıca gerçek formda yerel şeffaf PNG logo ve açık kapak dosyaları seçilerek kontrol edildi: light/dark × square/circle × 1440/320 px = 8 PASS. Blob görsellerinde şeffaf logo zemini ve kapak üzerindeki açık metinler doğrulandı; proje/medya kaydı yapılmadı. Kullanıcı sorunlu görüntünün canlı siteden olduğunu belirtti; yerel düzeltmelerin production'a dağıtımı bu doğrulamanın kapsamında değildir. Kayıt: `docs/compliation/2026-10-28-proje-onizleme-tema-dogrulamasi.md`.
+
+## Proje / organizasyon kartı kapak kontrastı — 2026-10-28 (sınırlı kapsam)
+
+Dark Mode / Responsive / metin kontrastı kapsamı yalnız ortak `EntityCard` kapak alanıdır. Açık temada beyaza dönen örtü yerine tema bağımsız koyu örtü ve açık metin token'ları, etiketlerin altında opak kart zemini kullanılır. Gerçek uygulama sayfalarında sentetik API/görsellerle Chrome: proje + organizasyon × light/dark × 320/390/1440 px = 12 kontrol ve iki kapak-404 fallback kontrolü PASS. Kapaksız kart rengi, eşit başlık yüksekliği, yatay taşmama ve düzenleme bağlantısına klavye odağı doğrulandı; görüntüler incelendi. Açıklamanın tam beyaz görsel üzerindeki hesaplanan kontrastı 4,77:1; hedefli lint, TypeScript ve diff kontrolü PASS. Üretim verisi/backend ve tam pre-push doğrulaması değildir; global kutular değiştirilmedi. Kayıt: `docs/compliation/2026-10-28-kart-kapak-tema-kontrasti.md`.
+
 ## Global toplantılar — 2026-10-27 (sınırlı kapsam)
 
 Etkilenen Navigasyon / Form Validation / Loading-Empty-Error / Pagination maddeleri yalnız sidebar "Toplantılar" grubu, `/meetings/**` rotaları ve katılımcı arama paneli için gözden geçirildi; global kutular değiştirilmedi. Kod düzeyinde doğrulananlar: TypeScript, ESLint, `next build` (global rotalar üretiliyor), 7 servis gerektirmeyen mantık testi (`meeting-global-logic.spec.ts`: sidebar vurgusu, TR/EN/DE rota çözümü, eski proje rotaları, proje değişiminin toplantı sayfasına dokunmaması, kaynakta `projectId` yokluğu) ve 24 mevcut yönlendirme/rota-politikası testi. **Doğrulanmadı:** masaüstü/mobil sidebar ve katılımcı arama panelinin görsel/klavye/ekran okuyucu denetimi, 320–1440 px matrisi, axe taraması ve canlı LiveKit/PostgreSQL ile çalışan Playwright toplantı paketi (spec'ler yeni rotalara uyarlandı ama bu teslimde çalıştırılmadı). Kayıt: `docs/compliation/2026-10-27-global-meetings.md`.
