@@ -3,14 +3,14 @@ package com.pda.migration;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.junit.jupiter.*;
-import org.testcontainers.postgresql.PostgreSQLContainer;
+import com.pda.shared.testing.TestPostgres;
 import java.sql.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /** V55 on top of a real V54 database: old meetings and the V54 reminder queue survive untouched and keep working. */
 @Testcontainers
 class MeetingV55MigrationTest {
-    @Container static PostgreSQLContainer postgres=new PostgreSQLContainer("postgres:18-alpine");
+    @Container static TestPostgres postgres=new TestPostgres("postgres:18-alpine");
     @Test void v55KeepsOldMeetingsAndTheV54ReminderQueueAndAddsIconHistoryAndReasons() throws Exception {
         String url=postgres.getJdbcUrl(),name=postgres.getUsername(),password=postgres.getPassword();
         Flyway.configure().dataSource(url,name,password).locations("classpath:db/migration").target("54").load().migrate();

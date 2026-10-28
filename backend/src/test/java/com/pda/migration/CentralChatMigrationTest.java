@@ -3,13 +3,13 @@ import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.postgresql.PostgreSQLContainer;
+import com.pda.shared.testing.TestPostgres;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import static org.junit.jupiter.api.Assertions.*;
 @Testcontainers(disabledWithoutDocker=true)
 class CentralChatMigrationTest {
- @Container static PostgreSQLContainer postgres=new PostgreSQLContainer("postgres:18-alpine");
+ @Container static TestPostgres postgres=new TestPostgres("postgres:18-alpine");
  @Test void duplicateDmMergeKeepsIdsRepliesReactionsReadEvidenceAndSurvivesProjectDeletion() throws Exception {
   var baseline=Flyway.configure().dataSource(postgres.getJdbcUrl(),postgres.getUsername(),postgres.getPassword()).locations("classpath:db/migration").target("42").load();baseline.migrate();
   try(var db=DriverManager.getConnection(postgres.getJdbcUrl(),postgres.getUsername(),postgres.getPassword());var sql=db.createStatement()) {

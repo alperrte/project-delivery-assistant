@@ -14,7 +14,7 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.testcontainers.junit.jupiter.*;
-import org.testcontainers.postgresql.PostgreSQLContainer;
+import com.pda.shared.testing.TestPostgres;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.*;
@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @Testcontainers
 @DirtiesContext(classMode=DirtiesContext.ClassMode.AFTER_CLASS)
 class MeetingNotificationIntegrationTest {
-    @Container static PostgreSQLContainer postgres=new PostgreSQLContainer("postgres:17-alpine");
+    @Container static TestPostgres postgres=new TestPostgres("postgres:17-alpine");
     static final byte[] JWT_KEY=new byte[32]; static {new SecureRandom().nextBytes(JWT_KEY);}
     @DynamicPropertySource static void properties(DynamicPropertyRegistry r){
         r.add("spring.datasource.url",postgres::getJdbcUrl);r.add("spring.datasource.username",postgres::getUsername);

@@ -17,7 +17,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.AbstractMockHttpServletRequestBuilder;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.postgresql.PostgreSQLContainer;
+import com.pda.shared.testing.TestPostgres;
 
 import java.security.SecureRandom;
 import java.util.Base64;
@@ -38,11 +38,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Testcontainers(disabledWithoutDocker = true)
 abstract class TaskTestBase {
     private static final byte[] JWT_KEY = new byte[32];
-    static final PostgreSQLContainer postgres;
+    static final TestPostgres postgres;
 
     static {
         new SecureRandom().nextBytes(JWT_KEY);
-        postgres = new PostgreSQLContainer("postgres:17-alpine");
+        postgres = new TestPostgres("postgres:17-alpine");
         if (org.testcontainers.DockerClientFactory.instance().isDockerAvailable()) postgres.start();
     }
 

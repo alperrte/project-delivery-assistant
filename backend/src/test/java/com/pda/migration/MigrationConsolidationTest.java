@@ -16,7 +16,7 @@ import org.flywaydb.core.api.exception.FlywayValidateException;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.testcontainers.postgresql.PostgreSQLContainer;
+import com.pda.shared.testing.TestPostgres;
 
 /** Executes both histories on real PostgreSQL; the reference archive is independent of the rewritten SQL. */
 class MigrationConsolidationTest {
@@ -27,7 +27,7 @@ class MigrationConsolidationTest {
     @ValueSource(strings = {"postgres:17-alpine", "postgres:18-alpine"})
     void finalSchemaMatchesLegacyAndOldHistoryCannotBeSilentlyUpgraded(String image) throws Exception {
         String legacyLocation = LegacyMigrations.extractTo(legacyDirectory);
-        try (var postgres = new PostgreSQLContainer(image)) {
+        try (var postgres = new TestPostgres(image)) {
             postgres.start();
             Flyway legacy = flyway(postgres, "legacy", legacyLocation);
             Flyway consolidated = Flyway.configure().dataSource(postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword())
@@ -56,7 +56,7 @@ class MigrationConsolidationTest {
         }
     }
 
-    private static Flyway flyway(PostgreSQLContainer postgres, String schema, String location) {
+    private static Flyway flyway(TestPostgres postgres, String schema, String location) {
         return Flyway.configure().dataSource(postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword())
                 .schemas(schema).defaultSchema(schema).locations(location).load();
     }

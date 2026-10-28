@@ -1,5 +1,10 @@
 ﻿# Klasör yapısı kısa rehberi
 
+## Backend servis test menüsü — 2026-10-24
+
+Backend test hızlandırması: `backend/src/test/java/com/pda/shared/testing/TestPostgres` JVM/image başına geçici sunucu ve handle başına izole DB; `RepositoryTestBase` rollback yapan uyumlu yedi repository sınıfı için ortak context; `RegularSessionFactory` chat fixture'ları için gerçek normal oturum sağlar. Varsayılan Surefire iki JVM'dir (`-Forks 1` / Maven `-Dpda.test.forks=1` ile tek JVM). Medya ve coverage dosyaları koşum/fork bazında ayrılır. Üretim kodu, migration SQL'leri veya ENV sözleşmesi değişmez.
+
+`pre-push/backend-tests.cmd` ve `.ps1` backend-only servis menüsüdür; `backend-tests-lib.psm1` kaynak keşfi, kapsam, izole test ortamı ve rapor doğrulamasını; `backend-test-suites.psd1` paket sahipliği ve ilişkili testleri tutar. `pre-push/tests/backend-tests.tests.ps1` yalnız bu aracın hafif kontrolleridir. Servis seçimi ve güvenlik kapısı ayrımı `pre-push/BACKEND_TESTS.md` ve `SECURITY.md` bölüm 2'de açıklanır. Test sınıfları mevcut modül klasörlerinde kalır; çıktılar Git dışında `backend/target/scoped-test-results/<run-id>/` altında tutulur. Varsayılan ajan düzeni tek ana oturumdur (`AGENTS.md`).
 ## Global toplantılar — 2026-10-27
 
 - Backend: `backend/src/main/resources/db/migration/V57__global_meetings.sql`; `com.pda.meeting.internal` içinde `MeetingController` (`/api/v1/meetings`), `MeetingService` (erişim = organizatör/katılımcı, `searchPeople`), yeni `MeetingPeopleSearchLimiter`; `MeetingDeletionCleanup` yalnız eski oda tombstone'larını boşaltır. Testler: `meeting/internal/{GlobalMeetingApiIntegrationTest,MeetingCoreIntegrationTest,MeetingServiceTest}`, `migration/MeetingV57MigrationTest`. Hibrit (V58): `db/migration/V58__hybrid_meetings.sql`, `Meeting.Kind` (`projectId` doluluğundan türer), `MeetingDtos.ProjectRef`, `MeetingService.projectFor/projectRefs`; testler `migration/MeetingV58MigrationTest`, `meeting/internal/MeetingV57ReminderUpgradeIntegrationTest`.

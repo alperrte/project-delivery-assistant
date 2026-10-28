@@ -20,7 +20,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.*;
-import org.testcontainers.postgresql.PostgreSQLContainer;
+import com.pda.shared.testing.TestPostgres;
 import org.testcontainers.utility.DockerImageName;
 import java.net.*;
 import java.net.http.*;
@@ -38,7 +38,7 @@ import static com.pda.meeting.internal.MeetingDtos.*;
 @Import(MeetingReminderIntegrationTest.TestTime.class)
 @Testcontainers @DirtiesContext(classMode=DirtiesContext.ClassMode.AFTER_CLASS)
 class MeetingReminderIntegrationTest {
-    @Container static PostgreSQLContainer postgres=new PostgreSQLContainer("postgres:18-alpine");
+    @Container static TestPostgres postgres=new TestPostgres("postgres:18-alpine");
     @Container static GenericContainer<?> mailpit=new GenericContainer<>(DockerImageName.parse("axllent/mailpit:v1.31.4")).withExposedPorts(1025,8025);
     static final byte[] KEY=new byte[32]; static { new SecureRandom().nextBytes(KEY); }
     @DynamicPropertySource static void properties(DynamicPropertyRegistry r) {

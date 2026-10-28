@@ -1,8 +1,24 @@
 # PDA — Pre-Push Quality Gate
 
-Bu klasör, GitHub Actions kullanılmadan önce her `git push` öncesinde yerelde çalıştırılacak zorunlu kalite kontrollerini içerir.
+Bu klasör servis bazlı backend kontrolünü ve tam proje kalite kapısını içerir. Onaylı kuralın kaynağı `.agents/SECURITY.md` bölüm 2'dir.
 
-## Tek komut
+## Backend servis branch'leri
+
+Frontend değişmeyen servis branch'lerinde seçilen servisler, ilişkili testler ve ortak mimari/güvenlik kontrolleri bağımsız çalıştırılır:
+
+```powershell
+.\pre-push\backend-tests.cmd
+.\pre-push\backend-tests.cmd -Service task-service,meeting-service
+.\pre-push\backend-tests.cmd -All
+```
+
+İlk komut çoklu seçimli terminal menüsünü açar. `-List` kataloğu, `-DryRun -Service task-service` çalıştırılacak sınıfları gösterir; ikisi de test geçişi sayılmaz. Ayrıntılar: [BACKEND_TESTS.md](BACKEND_TESTS.md).
+
+Ortak auth/security-chain, veri modeli, migration, build bağımlılığı veya kapsamı belirsiz değişikliklerde tüm backend çalıştırılır. Shared/migration/architecture/backend seçimi otomatik genişler. Başarılı sonuç `PDA BACKEND SELECTED CHECK PASSED` ve o çalıştırmanın `result.json` raporudur; frontend veya tam proje başarısı anlamına gelmez.
+
+Frontend/mixed branch'leri için mevcut tam kapı devam eder. Ana dala birleştirme, release veya deployment öncesinde branch türünden bağımsız tam kapı zorunludur. Git hook, push veya uzak branch ayarı bu araç tarafından değiştirilmez.
+
+## Tam proje komutu
 
 Repository kökünde:
 
@@ -28,7 +44,7 @@ docker compose -f docker-compose.yml up -d --force-recreate backend
 
 Bu komut ENV dosyalarını değiştirmez; mevcut normal SMTP yapılandırmasını yeniden uygular. Test verisi veya Mailpit container'ı silinmez.
 
-## Her push öncesi zorunlu kontroller
+## Tam proje kapısındaki kontroller
 
 1. Repository / secret güvenliği
    - `.env` Git tarafından track edilmemeli veya staged olmamalı.
@@ -93,4 +109,4 @@ PDA PRE-PUSH CHECK PASSED
 Safe to git push.
 ```
 
-Bu mesaj görülmeden push yapılmamalıdır.
+Tam kapının zorunlu olduğu frontend/mixed branch veya entegrasyon/yayın adımlarında bu mesaj görülmeden ilerlenmez. Backend-only feature branch için yukarıdaki servis kapısı geçerlidir; kapsam değişirse kontrol tekrar çalıştırılır.

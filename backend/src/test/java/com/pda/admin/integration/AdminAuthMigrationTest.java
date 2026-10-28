@@ -19,7 +19,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.postgresql.PostgreSQLContainer;
+import com.pda.shared.testing.TestPostgres;
 
 /**
  * V67 and V68 on an existing database: sessions that predate the administrator sign-in carry no administrator mark, and
@@ -38,7 +38,7 @@ class AdminAuthMigrationTest {
     }
 
     @Container
-    static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:17-alpine");
+    static TestPostgres postgres = new TestPostgres("postgres:17-alpine");
 
     @Test
     void existingSessionsStayUnmarkedAndOnlyAdministratorsLoseTheForcedPasswordChange() throws Exception {
