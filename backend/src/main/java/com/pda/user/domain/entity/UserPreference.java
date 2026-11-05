@@ -1,5 +1,6 @@
 package com.pda.user.domain.entity;
 
+import com.pda.user.domain.ThemeColors;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -40,6 +41,21 @@ public class UserPreference {
     @Column(name = "navbar_mode", length = 16)
     private String navbarMode;
 
+    @Column(name = "theme_type", nullable = false, length = 8)
+    private String themeType = ThemeColors.DEFAULT.themeType();
+
+    @Column(name = "solid_color", nullable = false, length = 7)
+    private String solidColor = ThemeColors.DEFAULT.solidColor();
+
+    @Column(name = "gradient_start_color", nullable = false, length = 7)
+    private String gradientStartColor = ThemeColors.DEFAULT.gradientStartColor();
+
+    @Column(name = "gradient_end_color", nullable = false, length = 7)
+    private String gradientEndColor = ThemeColors.DEFAULT.gradientEndColor();
+
+    @Column(name = "gradient_angle", nullable = false)
+    private Integer gradientAngle = ThemeColors.DEFAULT.gradientAngle();
+
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
@@ -73,4 +89,18 @@ public class UserPreference {
     public String getNavbarMode() { return navbarMode; }
     public void setNavbarMode(String navbarMode) { this.navbarMode = Objects.requireNonNull(navbarMode); }
     public Instant getUpdatedAt() { return updatedAt; }
+
+    public ThemeColors getThemeColors() {
+        return new ThemeColors(themeType, solidColor, gradientStartColor, gradientEndColor, gradientAngle);
+    }
+
+    public void setThemeColors(ThemeColors colors, Instant at) {
+        Objects.requireNonNull(colors, "colors is required");
+        this.themeType = colors.themeType();
+        this.solidColor = colors.solidColor();
+        this.gradientStartColor = colors.gradientStartColor();
+        this.gradientEndColor = colors.gradientEndColor();
+        this.gradientAngle = colors.gradientAngle();
+        this.updatedAt = Objects.requireNonNull(at, "at is required");
+    }
 }

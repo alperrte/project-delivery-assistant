@@ -244,6 +244,14 @@ Because PDA uses cookie-based authentication:
 
 ## 11. API and Swagger Security
 
+### Solid/gradient color preferences — 2026-11-05 (phase 1 backend)
+
+Existing `GET|PUT /api/v1/users/me/preferences` returns `themeColors {themeType,solidColor,gradientStartColor,gradientEndColor,gradientAngle}`. PUT accepts an optional object: absent/null preserves saved colors; supplied means all five fields required. Only SOLID/GRADIENT, arbitrary opaque `#RGB`/`#RRGGBB` normalized to uppercase six-digit HEX, integer angle 0–360 inclusive. Existing `theme=system|light|dark` remains independent. GET is read-only and returns defaults even without a row: SOLID / #1B5FE0 / #1B5FE0 / #8B5CF6 / 135; legacy unset fields remain null.
+
+New exact authenticated `DELETE /api/v1/users/me/preferences/theme` resets only colors and returns 200 full preferences, preserving locale, appearance, motion, both transition flags and navbarMode. No body or target-user selector. All operations derive user ID solely from the authenticated principal. All return no-store; anonymous 401, missing CSRF on mutations 403, invalid PUT 400 generic ProblemDetail, foreign-user routes deny-by-default 403. Existing CSRF/CORS/cookie/session policy and ENV are unchanged. All preference writers use insert-if-absent + same-user row lock, including first-save/reset races. V60 adds five constrained columns to existing user_preferences; no new table or privilege.
+
+Safe PUT: `{"locale":"tr","theme":"system","motion":"on","themeTransition":true,"themeColors":{"themeType":"GRADIENT","solidColor":"#1B5FE0","gradientStartColor":"#001122","gradientEndColor":"#FFEEDD","gradientAngle":135}}`. Swagger only when already enabled: `/swagger-ui/index.html` or `/v3/api-docs`; normal cookie login, `GET /api/v1/auth/csrf`, `X-XSRF-TOKEN` on PUT/DELETE. Completion: `docs/compliation/2026-11-06-theme-phase1-backend.md`. Frontend and animation/audio remain separate approval-gated phases.
+
 ### Global meetings: user-owned, not project-owned — 2026-10-27
 
 Bu bölüm aşağıdaki "Meeting backend — approved security contract (2026-10-18)" içindeki proje üyeliği/`PROJECT_MANAGER` kurallarının ve "Meeting guest UI contract" içindeki project `/invites` yolunun yerini alır. Kullanıcı isteğiyle toplantılar projelerden ayrıldı: **toplantı erişimi yalnız o toplantının organizatörü veya katılımcısı olmakla** verilir; proje üyeliği, proje rolü, global ADMIN veya aktif proje hiçbir toplantı yetkisi vermez. Cookie kimlik doğrulaması, CSRF, CORS, guest cookie, LiveKit/webhook sözleşmeleri ve ENV değişmedi; yeni ENV, endpoint kimlik mekanizması veya CSRF istisnası yoktur.

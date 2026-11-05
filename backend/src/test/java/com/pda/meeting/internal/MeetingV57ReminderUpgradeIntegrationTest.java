@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * The real upgrade path end to end: a PostgreSQL database that is at V56 with a project-owned, scheduled meeting is started by the
- * application (Flyway applies V57 through V59 at start-up), and the real reminder worker then sends real SMTP mail to a real Mailpit. Former active
+ * application (Flyway applies every pending migration at start-up), and the real reminder worker then sends real SMTP mail to a real Mailpit. Former active
  * project members now attend and are reminded once; a member removed earlier and a stranger of the same project are not.
  */
 @SpringBootTest(classes = BackendApplication.class, properties = {"pda.meeting.enabled=true"})
@@ -65,6 +65,7 @@ class MeetingV57ReminderUpgradeIntegrationTest {
     @Autowired MeetingReminderStore store;
     @Autowired MeetingReminderDispatcher dispatcher;
     @Autowired JdbcTemplate db;
+    @Autowired Flyway flyway;
 
     @Test void upgradedMeetingRemindsFormerActiveMembersOnceAndNobodyElseThroughRealSmtp() throws Exception {
         // V57 ran when the application started: the former project members attend, the organizer is not duplicated.
@@ -85,7 +86,8 @@ class MeetingV57ReminderUpgradeIntegrationTest {
         // The meeting itself survived with its owner, independently of the retired project archive.
         assertEquals(OWNER, db.queryForObject("SELECT organizer_id FROM meetings WHERE id=?", UUID.class, MEETING));
         // V58 keeps the old meeting independent; V59 removes only the obsolete archive.
-        assertEquals(59, db.queryForObject("SELECT max(version::int) FROM flyway_schema_history WHERE success", Integer.class));
+        assertEquals(3, db.queryForObject("SELECT count(*) FROM flyway_schema_history WHERE success AND version IN ('57','58','59')", Integer.class));
+        assertEquals(0, flyway.info().pending().length, "application startup applied all pending migrations");
         assertNull(db.queryForObject("SELECT project_id FROM meetings WHERE id=?", UUID.class, MEETING));
         assertEquals(0, db.queryForObject("SELECT count(*) FROM information_schema.columns WHERE table_schema=current_schema() AND table_name='meetings' AND column_name='legacy_project_id'", Integer.class));
         assertFalse(body.contains("Legacy upgrade"), "the old project's name is not in the mail");
