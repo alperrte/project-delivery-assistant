@@ -1,5 +1,13 @@
 ﻿# Klasör yapısı kısa rehberi
 
+## Solid / Gradient tema backend — 2026-11-05
+
+- `backend/src/main/java/com/pda/user/domain/ThemeColors.java`: SOLID/GRADIENT, HEX normalizasyonu ve açı doğrulama.
+- Mevcut `user/api/UserPreferenceController`, `user/application/service/UserPreferenceService`, `user/domain/entity/UserPreference`, `user/infrastructure/repository/UserPreferenceRepository`: API/kalıcılık/sıfırlama ve kullanıcı satır kilidi.
+- `backend/src/main/resources/db/migration/V60__theme_color_preferences.sql`: additive kolonlar ve constraint'ler.
+- `user/domain/ThemeColorsTest`, mevcut `user/integration/UserPreferenceApiIntegrationTest`, `migration/ThemeColorPreferenceMigrationTest`: unit, API/kalıcılık/izolasyon/yarış ve V59→V60 testleri.
+- Frontend bu aşamada değişmez. Teslim: `docs/compliation/2026-11-06-theme-phase1-backend.md`.
+
 ## Backend servis test menüsü — 2026-10-24
 
 Backend test hızlandırması: `backend/src/test/java/com/pda/shared/testing/TestPostgres` JVM/image başına geçici sunucu ve handle başına izole DB; `RepositoryTestBase` rollback yapan uyumlu yedi repository sınıfı için ortak context; `RegularSessionFactory` chat fixture'ları için gerçek normal oturum sağlar. Varsayılan Surefire iki JVM'dir (`-Forks 1` / Maven `-Dpda.test.forks=1` ile tek JVM). Medya ve coverage dosyaları koşum/fork bazında ayrılır. Üretim kodu, migration SQL'leri veya ENV sözleşmesi değişmez.

@@ -2,6 +2,8 @@ package com.pda.user.integration;
 
 import com.pda.BackendApplication;
 import com.pda.user.UserAccounts;
+import com.pda.user.application.service.UserPreferenceService;
+import com.pda.user.domain.ThemeColors;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -23,6 +26,9 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -51,10 +57,185 @@ class UserPreferenceApiIntegrationTest {
         registry.add("spring.datasource.password", postgres::getPassword);
         registry.add("FRONTEND_URL", () -> "http://localhost:3000");
         registry.add("JWT_SECRET", () -> Base64.getEncoder().encodeToString(JWT_KEY));
+        // Test-only: verify the published OpenAPI contract without changing any ENV file.
+        registry.add("API_DOCS_ENABLED", () -> "true");
     }
 
     @Autowired MockMvc mvc;
     @Autowired UserAccounts users;
+    @Autowired JdbcTemplate jdbc;
+    @Autowired UserPreferenceService preferenceService;
+
+    @Test
+    void openApiDescribesColorSettingsAndTheScopedResetOperation() throws Exception {
+        mvc.perform(get("/v3/api-docs")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.paths['/api/v1/users/me/preferences'].get").exists())
+                .andExpect(jsonPath("$.paths['/api/v1/users/me/preferences'].put").exists())
+                .andExpect(jsonPath("$.paths['/api/v1/users/me/preferences/theme'].delete.summary").value("Reset my theme colors"))
+                .andExpect(jsonPath("$.paths['/api/v1/users/me/preferences'].put.responses['400']").exists())
+                .andExpect(jsonPath("$.paths['/api/v1/users/me/preferences/theme'].delete.responses['403']").exists())
+                .andExpect(jsonPath("$.components.schemas.PreferencesRequest.properties.themeColors").exists())
+                .andExpect(jsonPath("$.components.schemas.ThemeColorsRequest.properties.gradientAngle.minimum").value(0))
+                .andExpect(jsonPath("$.components.schemas.ThemeColorsRequest.properties.gradientAngle.maximum").value(360));
+    }
+
+    private static final String COLORS = """
+            {"themeType":"GRADIENT","solidColor":"#abc","gradientStartColor":"#001122",\
+            "gradientEndColor":"#ffeedd","gradientAngle":360}
+            """.strip();
+
+    private static String colorBody(String colors) {
+        return "{\"locale\":\"de\",\"theme\":\"dark\",\"motion\":\"off\",\"themeTransition\":false,"
+                + "\"languageTransition\":false,\"navbarMode\":\"auto-hide\",\"themeColors\":" + colors + "}";
+    }
+
+    @Test
+    void themeColorsDefaultWithoutWritingAndPersistAcrossSessionsAndLegacySaves() throws Exception {
+        Cookie csrf = csrfCookie();
+        String suffix = UUID.randomUUID().toString().replace("-", "");
+        String email = "colors" + suffix + "@example.test";
+        String password = UUID.randomUUID().toString();
+        UUID userId = users.registerLocal(email, "c" + suffix.substring(0, 16), password);
+        Cookie owner = signIn(email, password);
+        mvc.perform(get(PATH).cookie(owner)).andExpect(status().isOk())
+                .andExpect(header().string("Cache-Control", "no-store"))
+                .andExpect(jsonPath("$.themeColors.themeType").value("SOLID"))
+                .andExpect(jsonPath("$.themeColors.solidColor").value("#1B5FE0"))
+                .andExpect(jsonPath("$.themeColors.gradientAngle").value(135));
+        assertEquals(0, jdbc.queryForObject("select count(*) from user_preferences where user_id=?", Integer.class, userId));
+        mvc.perform(put(PATH).cookie(csrf, owner).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content(colorBody(COLORS)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.themeColors.themeType").value("GRADIENT"))
+                .andExpect(jsonPath("$.themeColors.solidColor").value("#AABBCC"))
+                .andExpect(jsonPath("$.themeColors.gradientStartColor").value("#001122"))
+                .andExpect(jsonPath("$.themeColors.gradientEndColor").value("#FFEEDD"))
+                .andExpect(jsonPath("$.themeColors.gradientAngle").value(360));
+        assertEquals("#AABBCC", jdbc.queryForObject("select solid_color from user_preferences where user_id=?", String.class, userId));
+        Cookie nextSession = signIn(email, password);
+        mvc.perform(get(PATH).cookie(nextSession)).andExpect(jsonPath("$.themeColors.gradientEndColor").value("#FFEEDD"));
+
+        for (String legacyBody : new String[]{body("tr", "light", "on", "true"), colorBody("null")}) {
+            mvc.perform(put(PATH).cookie(csrf, owner).header("X-XSRF-TOKEN", csrf.getValue())
+                            .contentType(MediaType.APPLICATION_JSON).content(legacyBody))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.themeColors.themeType").value("GRADIENT"))
+                    .andExpect(jsonPath("$.themeColors.solidColor").value("#AABBCC"));
+        }
+        for (String appearance : new String[]{"light", "dark", "system"}) {
+            mvc.perform(put(PATH).cookie(csrf, owner).header("X-XSRF-TOKEN", csrf.getValue())
+                            .contentType(MediaType.APPLICATION_JSON).content(colorBody(COLORS.replace("GRADIENT", "SOLID"))
+                                    .replace("\"theme\":\"dark\"", "\"theme\":\"" + appearance + "\"")))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.theme").value(appearance))
+                    .andExpect(jsonPath("$.themeColors.themeType").value("SOLID"));
+        }
+    }
+
+    @Test
+    void resettingColorsIsIdempotentAndPreservesEveryOtherPreferenceAndOtherUsers() throws Exception {
+        Cookie csrf = csrfCookie();
+        Cookie owner = login("resetcolors");
+        Cookie other = login("othercolors");
+        for (Cookie user : new Cookie[]{owner, other}) {
+            mvc.perform(put(PATH).cookie(csrf, user).header("X-XSRF-TOKEN", csrf.getValue())
+                    .contentType(MediaType.APPLICATION_JSON).content(colorBody(COLORS))).andExpect(status().isOk());
+        }
+        for (int i = 0; i < 2; i++) {
+            mvc.perform(delete(PATH + "/theme").cookie(csrf, owner).header("X-XSRF-TOKEN", csrf.getValue()))
+                    .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "no-store"))
+                    .andExpect(jsonPath("$.themeColors.themeType").value("SOLID"))
+                    .andExpect(jsonPath("$.themeColors.solidColor").value("#1B5FE0"))
+                    .andExpect(jsonPath("$.themeColors.gradientStartColor").value("#1B5FE0"))
+                    .andExpect(jsonPath("$.themeColors.gradientEndColor").value("#8B5CF6"))
+                    .andExpect(jsonPath("$.themeColors.gradientAngle").value(135))
+                    .andExpect(jsonPath("$.locale").value("de")).andExpect(jsonPath("$.theme").value("dark"))
+                    .andExpect(jsonPath("$.motion").value("off")).andExpect(jsonPath("$.themeTransition").value(false))
+                    .andExpect(jsonPath("$.languageTransition").value(false)).andExpect(jsonPath("$.navbarMode").value("auto-hide"));
+        }
+        mvc.perform(get(PATH).cookie(other)).andExpect(jsonPath("$.themeColors.themeType").value("GRADIENT"));
+        Cookie neverSaved = login("defaultcolors");
+        mvc.perform(delete(PATH + "/theme").cookie(csrf, neverSaved).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.locale").doesNotExist())
+                .andExpect(jsonPath("$.theme").doesNotExist()).andExpect(jsonPath("$.motion").doesNotExist())
+                .andExpect(jsonPath("$.themeColors.solidColor").value("#1B5FE0"));
+    }
+
+    @Test
+    void invalidColorsAndAnglesAreAtomicSafeBadRequests() throws Exception {
+        Cookie csrf = csrfCookie();
+        Cookie user = login("invalidcolors");
+        mvc.perform(put(PATH).cookie(csrf, user).header("X-XSRF-TOKEN", csrf.getValue())
+                .contentType(MediaType.APPLICATION_JSON).content(colorBody(COLORS))).andExpect(status().isOk());
+        for (String invalid : new String[]{COLORS.replace("GRADIENT", "ANIMATED"), COLORS.replace("\"GRADIENT\"", "0"),
+                COLORS.replace("#abc", "red"), COLORS.replace("#abc", "#12345678"),
+                COLORS.replace("#001122", "#xyz"), COLORS.replace("#ffeedd", "url(example.test)"),
+                COLORS.replace("360", "-1"), COLORS.replace("360", "361"), COLORS.replace("360", "12.5"),
+                COLORS.replace("360", "null"), COLORS.replace("\"#abc\"", "null"), "{}"}) {
+            mvc.perform(put(PATH).cookie(csrf, user).header("X-XSRF-TOKEN", csrf.getValue())
+                            .contentType(MediaType.APPLICATION_JSON).content(colorBody(invalid).replace("\"de\"", "\"en\"")))
+                    .andExpect(status().isBadRequest()).andExpect(header().string("Cache-Control", "no-store"))
+                    .andExpect(jsonPath("$.detail").value("Invalid request"));
+        }
+        mvc.perform(get(PATH).cookie(user)).andExpect(jsonPath("$.locale").value("de"))
+                .andExpect(jsonPath("$.themeColors.gradientAngle").value(360));
+        mvc.perform(put(PATH).cookie(csrf, user).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content(colorBody(COLORS.replace("360", "0"))))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.themeColors.gradientAngle").value(0));
+    }
+
+    @Test
+    void themeReadsWritesAndResetRequireSessionCsrfAndAnOwnRoute() throws Exception {
+        Cookie csrf = csrfCookie();
+        Cookie user = login("securecolors");
+        mvc.perform(get(PATH)).andExpect(status().isUnauthorized());
+        mvc.perform(put(PATH).cookie(csrf).header("X-XSRF-TOKEN", csrf.getValue())
+                .contentType(MediaType.APPLICATION_JSON).content(colorBody(COLORS))).andExpect(status().isUnauthorized());
+        mvc.perform(delete(PATH + "/theme").cookie(csrf).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(put(PATH).cookie(user).contentType(MediaType.APPLICATION_JSON).content(colorBody(COLORS)))
+                .andExpect(status().isForbidden());
+        mvc.perform(delete(PATH + "/theme").cookie(user)).andExpect(status().isForbidden());
+        String foreign = "/api/v1/users/" + UUID.randomUUID() + "/preferences";
+        mvc.perform(get(foreign).cookie(user)).andExpect(status().isForbidden());
+        mvc.perform(put(foreign).cookie(csrf, user).header("X-XSRF-TOKEN", csrf.getValue())
+                .contentType(MediaType.APPLICATION_JSON).content(colorBody(COLORS))).andExpect(status().isForbidden());
+        mvc.perform(delete(foreign + "/theme").cookie(csrf, user).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isForbidden());
+        mvc.perform(get(PATH).cookie(user)).andExpect(jsonPath("$.themeColors.themeType").value("SOLID"));
+    }
+
+    @Test
+    void simultaneousFirstSaveAndColorResetPreserveUnrelatedDefaults() throws Exception {
+        for (int i = 0; i < 4; i++) {
+            String suffix = UUID.randomUUID().toString().replace("-", "");
+            UUID userId = users.registerLocal("race" + suffix + "@example.test", "r" + suffix.substring(0, 16), UUID.randomUUID().toString());
+            var ready = new java.util.concurrent.CountDownLatch(2);
+            var start = new java.util.concurrent.CountDownLatch(1);
+            try (var executor = java.util.concurrent.Executors.newFixedThreadPool(2)) {
+                var save = executor.submit(() -> {
+                    ready.countDown();
+                    start.await();
+                    return preferenceService.save(userId, "en", "light", "off", false, false, "always-visible");
+                });
+                var reset = executor.submit(() -> {
+                    ready.countDown();
+                    start.await();
+                    return preferenceService.resetThemeColors(userId);
+                });
+                org.junit.jupiter.api.Assertions.assertTrue(ready.await(5, java.util.concurrent.TimeUnit.SECONDS));
+                start.countDown();
+                save.get(15, java.util.concurrent.TimeUnit.SECONDS);
+                reset.get(15, java.util.concurrent.TimeUnit.SECONDS);
+            }
+            var saved = preferenceService.get(userId);
+            assertEquals("en", saved.locale());
+            assertEquals("light", saved.theme());
+            assertEquals("off", saved.motion());
+            assertEquals(false, saved.themeTransition());
+            assertEquals(false, saved.languageTransition());
+            assertEquals("always-visible", saved.navbarMode());
+            assertEquals(ThemeColors.DEFAULT, saved.themeColors());
+            assertEquals(1, jdbc.queryForObject("select count(*) from user_preferences where user_id=?", Integer.class, userId));
+        }
+    }
 
     private static String body(String locale, String theme, String motion, String themeTransition) {
         return "{\"locale\":\"" + locale + "\",\"theme\":\"" + theme + "\",\"motion\":\"" + motion

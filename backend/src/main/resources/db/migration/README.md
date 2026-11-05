@@ -1,5 +1,11 @@
 # Consolidated fresh-install history
 
+## V60 — solid / gradient theme colors (2026-11-05)
+
+`V60__theme_color_preferences.sql` adds five NOT NULL columns to existing account-owned `user_preferences`: `theme_type` (SOLID/GRADIENT), three canonical opaque #RRGGBB colors and `gradient_angle` (integer 0–360), with CHECK constraints. Defaults: SOLID / #1B5FE0 / #1B5FE0 / #8B5CF6 / 135. Existing interface choices and updated_at are untouched. No new table/index, destructive transform or ENV. Fresh startup and V59→V60 upgrade are covered in isolated PostgreSQL 17/18 databases, including SQL constraints and user-FK cascade.
+
+Apply through normal Flyway startup on a compatible consolidated-history database; do not edit or repair earlier history. Take the normal operator backup before production migration. No production or local application database is migrated by this delivery. On application rollback keep the additive columns and saved colors; old writers omit them and database defaults handle old inserts. Removing columns discards choices and is unnecessary. Next feature version: V61. API/verification/manual review: `docs/compliation/2026-11-06-theme-phase1-backend.md`.
+
 The 2026-10-11 consolidation is authorized for disposable development/test databases only. Its 40 baseline SQL files create the same 55 application tables as the previous 59-file history. At the user's explicit request, baseline versions are contiguous V1–V40; table creation order and SQL contents are preserved. Feature migrations append to that baseline; the next migration must be V43.
 The 2026-10-11 consolidation is authorized for disposable development/test databases only. Its 40 baseline SQL files create the same 55 application tables as the previous 59-file history. At the user's explicit request, baseline versions are contiguous V1–V40; table creation order and SQL contents are preserved. Feature migrations append to that baseline; the next migration must be V49.
 The 2026-10-11 consolidation is authorized for disposable development/test databases only. Its 40 baseline SQL files create the same 55 application tables as the previous 59-file history. At the user's explicit request, baseline versions are contiguous V1–V40; table creation order and SQL contents are preserved. Feature migrations append to that baseline; the next migration must be V48.

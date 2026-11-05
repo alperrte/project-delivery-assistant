@@ -1,6 +1,7 @@
 package com.pda.user.application.service;
 
 import com.pda.user.domain.entity.UserPreference;
+import com.pda.user.domain.ThemeColors;
 import com.pda.user.infrastructure.repository.UserPreferenceRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,9 +21,9 @@ public class UserPreferenceService {
     public static final Set<String> MOTIONS = Set.of("system", "on", "off");
     public static final Set<String> NAVBAR_MODES = Set.of("always-visible", "auto-hide");
 
-    /** Nullable fields mean the user has not chosen yet. */
+    /** Legacy nullable fields mean not chosen yet; themeColors always contains the saved values or safe defaults. */
     public record Preferences(String locale, String theme, String motion, Boolean themeTransition,
-                              Boolean languageTransition, String navbarMode) {
+                              Boolean languageTransition, String navbarMode, ThemeColors themeColors) {
     }
 
     private final UserPreferenceRepository preferences;
@@ -37,7 +38,8 @@ public class UserPreferenceService {
     public Preferences get(UUID userId) {
         Objects.requireNonNull(userId, "userId is required");
         Optional<UserPreference> saved = preferences.findById(userId);
-        return saved.map(UserPreferenceService::view).orElseGet(() -> new Preferences(null, null, null, null, null, null));
+        return saved.map(UserPreferenceService::view)
+                .orElseGet(() -> new Preferences(null, null, null, null, null, null, ThemeColors.DEFAULT));
     }
 
     @Transactional
@@ -48,27 +50,46 @@ public class UserPreferenceService {
     @Transactional
     public Preferences save(UUID userId, String locale, String theme, String motion, boolean themeTransition,
                             Boolean languageTransition, String navbarMode) {
+        return save(userId, locale, theme, motion, themeTransition, languageTransition, navbarMode, null);
+    }
+
+    @Transactional
+    public Preferences save(UUID userId, String locale, String theme, String motion, boolean themeTransition,
+                            Boolean languageTransition, String navbarMode, ThemeColors themeColors) {
         Objects.requireNonNull(userId, "userId is required");
-        if (!LOCALES.contains(locale) || !THEMES.contains(theme) || !MOTIONS.contains(motion)
+        if (locale == null || theme == null || motion == null
+                || !LOCALES.contains(locale) || !THEMES.contains(theme) || !MOTIONS.contains(motion)
                 || (navbarMode != null && !NAVBAR_MODES.contains(navbarMode))) {
             throw new IllegalArgumentException("Unsupported preference value");
         }
-        UserPreference preference = preferences.findById(userId).orElse(null);
+        UserPreference preference = lock(userId);
         boolean langTransition = languageTransition != null
                 ? languageTransition
-                : (preference != null && preference.getLanguageTransition() != null ? preference.getLanguageTransition() : true);
-        if (preference == null) {
-            preference = UserPreference.of(userId, locale, theme, motion, themeTransition, langTransition, clock.instant());
-        } else {
-            preference.replace(locale, theme, motion, themeTransition, langTransition, clock.instant());
-        }
+                : (preference.getLanguageTransition() != null ? preference.getLanguageTransition() : true);
+        preference.replace(locale, theme, motion, themeTransition, langTransition, clock.instant());
         // Old clients must not reset a choice saved by a newer client.
         if (navbarMode != null) preference.setNavbarMode(navbarMode);
+        if (themeColors != null) preference.setThemeColors(themeColors, clock.instant());
         return view(preferences.save(preference));
+    }
+
+    /** Resets color settings only; appearance, language and motion remain exactly as saved. */
+    @Transactional
+    public Preferences resetThemeColors(UUID userId) {
+        Objects.requireNonNull(userId, "userId is required");
+        UserPreference preference = lock(userId);
+        preference.setThemeColors(ThemeColors.DEFAULT, clock.instant());
+        return view(preferences.save(preference));
+    }
+
+    private UserPreference lock(UUID userId) {
+        preferences.ensureExists(userId, clock.instant());
+        return preferences.lockByUserId(userId);
     }
 
     private static Preferences view(UserPreference preference) {
         return new Preferences(preference.getLocale(), preference.getTheme(), preference.getMotion(),
-                preference.getThemeTransition(), preference.getLanguageTransition(), preference.getNavbarMode());
+                preference.getThemeTransition(), preference.getLanguageTransition(), preference.getNavbarMode(),
+                preference.getThemeColors());
     }
 }
