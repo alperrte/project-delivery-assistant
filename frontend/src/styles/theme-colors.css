@@ -1,4 +1,8 @@
 /* Shared semantic accent tokens; account colors never repaint status/destructive surfaces. */
+html:is([data-user-theme="solid"], [data-user-theme="gradient"]):has(.app-shell) {
+  --workspace-scrollbar-thumb: var(--primary);
+  --workspace-scrollbar-hover: color-mix(in oklab, var(--primary) 80%, var(--foreground));
+}
 html[data-user-theme]:has(.app-shell) {
   --primary: var(--user-light-primary);
   --primary-hover: var(--user-light-primary-hover);
@@ -6,6 +10,10 @@ html[data-user-theme]:has(.app-shell) {
   --ring: var(--user-light-ring);
   --theme-action-paint: var(--user-light-theme-action-paint);
   --theme-action-foreground: var(--user-light-theme-action-foreground);
+  --theme-accent-start: var(--user-light-theme-accent-start);
+  --theme-accent-end: var(--user-light-theme-accent-end);
+  --theme-accent-paint: var(--user-light-theme-accent-paint);
+  --theme-soft-paint: var(--user-light-theme-soft-paint);
 }
 html.dark[data-user-theme]:has(.app-shell) {
   --primary: var(--user-dark-primary);
@@ -14,9 +22,12 @@ html.dark[data-user-theme]:has(.app-shell) {
   --ring: var(--user-dark-ring);
   --theme-action-paint: var(--user-dark-theme-action-paint);
   --theme-action-foreground: var(--user-dark-theme-action-foreground);
+  --theme-accent-start: var(--user-dark-theme-accent-start);
+  --theme-accent-end: var(--user-dark-theme-accent-end);
+  --theme-accent-paint: var(--user-dark-theme-accent-paint);
+  --theme-soft-paint: var(--user-dark-theme-soft-paint);
 }
-html[data-user-theme]:has(.app-shell) :is(.theme-primary-action, .workspace-primary-action),
-.theme-color-preview [data-theme-action] {
+html[data-user-theme]:has(.app-shell) :is(.theme-primary-action, .workspace-primary-action) {
   background-image: var(--theme-action-paint);
   color: var(--theme-action-foreground);
   border-color: var(--primary);
@@ -25,29 +36,38 @@ html[data-user-theme]:has(.app-shell) .theme-primary-action:hover {
   background-color: var(--primary);
   filter: brightness(.94);
 }
-.theme-color-preview {
-  --background: #ffffff;
-  --foreground: #090a0b;
-  --muted-foreground: #525866;
-  --border: #e5e7eb;
-  background: var(--background);
-  color: var(--foreground);
-}
-.theme-color-preview[data-preview-dark="true"] {
-  --background: #18191b;
-  --foreground: #f4f5f6;
-  --muted-foreground: #a1a1aa;
-  --border: #45474a;
-}
 .theme-native-picker::-webkit-color-swatch-wrapper { padding: 0; }
 .theme-native-picker::-webkit-color-swatch { border: 0; border-radius: 3px; }
 .theme-native-picker::-moz-color-swatch { border: 0; border-radius: 3px; }
+.theme-volume-value { appearance: textfield; }
+.theme-volume-value::-webkit-inner-spin-button, .theme-volume-value::-webkit-outer-spin-button { appearance: none; margin: 0; }
+.theme-volume-slider { appearance: none; background: transparent; }
+.theme-volume-slider::-webkit-slider-runnable-track {
+  height: 4px; border-radius: 999px;
+  background: linear-gradient(to right, var(--primary) var(--theme-volume-progress), var(--border) var(--theme-volume-progress));
+}
+.theme-volume-slider::-moz-range-track {
+  height: 4px; border-radius: 999px;
+  background: linear-gradient(to right, var(--primary) var(--theme-volume-progress), var(--border) var(--theme-volume-progress));
+}
+.theme-volume-slider::-webkit-slider-thumb {
+  appearance: none; width: 14px; height: 14px; margin-top: -5px; border-radius: 50%;
+  background: var(--primary); border: 2px solid var(--background); box-shadow: 0 0 0 1px var(--primary);
+}
+.theme-volume-slider::-moz-range-thumb {
+  width: 12px; height: 12px; border-radius: 50%; background: var(--primary); border: 2px solid var(--background);
+}
+.theme-volume-slider:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; border-radius: 4px; }
+@media (forced-colors: active) {
+  .theme-volume-slider { appearance: auto; }
+  .theme-volume-slider::-webkit-slider-runnable-track { background: CanvasText; }
+  .theme-volume-slider::-moz-range-track { background: CanvasText; }
+  .theme-volume-slider::-webkit-slider-thumb { background: Highlight; border-color: Canvas; box-shadow: none; }
+  .theme-volume-slider::-moz-range-thumb { background: Highlight; border-color: Canvas; }
+}
 [data-theme-color-editor] :is(button, input) {
   scroll-margin-top: calc(var(--workspace-header-reserve) + 1rem);
   scroll-margin-bottom: 8rem;
-}
-@media (forced-colors: active) {
-  .theme-color-preview [data-theme-action] { border: 1px solid ButtonText; }
 }
 
 .app-shell { position: relative; isolation: isolate; }
@@ -60,11 +80,59 @@ html[data-user-theme]:has(.app-shell) .theme-primary-action:hover {
 [data-preset="THUNDERSTORM"] { background: linear-gradient(145deg, rgb(95 111 153 / .14), transparent 75%); }
 [data-preset="SNOW"] { background: linear-gradient(145deg, rgb(151 189 212 / .12), transparent 75%); }
 [data-preset="WATER"] { background: linear-gradient(165deg, transparent 10%, rgb(54 150 183 / .12)); }
-.theme-session-controls { position: sticky; top: calc(var(--workspace-header-reserve) + .5rem); z-index: 30; width: fit-content; margin: .5rem 0 1rem auto; max-width: 100%; }
-html[data-user-theme="animated"] .app-shell main > :not([data-theme-effects]):not([data-theme-controls]) { position: relative; background-color: var(--background); }
-html[data-user-theme="animated"] .app-shell main :is(input, button, a, [tabindex]) { scroll-margin-top: calc(var(--workspace-header-reserve) + 5rem); }
+.theme-session-controls { position: absolute; top: .5rem; right: .5rem; z-index: 50; width: fit-content; max-width: calc(100% - 1rem); }
+@media (pointer: coarse) { .theme-session-control { width: 44px; height: 44px; } }
+@media (max-width: 1023px) {
+  .app-shell:has([data-theme-controls]) { --workspace-header-reserve: 7.5rem; }
+  .app-shell:has([data-theme-controls]) .workspace-header-position { top: 3rem; }
+}
+/* Keep page wrappers above the scene without painting a rectangle over the backdrop. */
+html[data-user-theme="animated"] .app-shell main > :not([data-theme-effects]):not([data-theme-controls]) { position: relative; }
+html[data-user-theme="animated"] .app-shell main :is(input, button, a, [tabindex]) { scroll-margin-top: calc(var(--workspace-header-reserve) + 1rem); }
 @media (min-width: 1024px) { .workspace-theme-effects { left: var(--workspace-sidebar-width); } }
 @media (forced-colors: active) {
   .workspace-theme-effects, .theme-scene { display: none; }
   .theme-preset-art { color: CanvasText; }
+}
+
+/* Gradients belong to accent marks, never the workspace/sidebar surfaces or status colors. */
+html[data-user-theme="gradient"]:has(.app-shell) .app-shell [aria-current="page"]::before { background-image: var(--theme-accent-paint); }
+html[data-user-theme="gradient"]:has(.app-shell) label:has([data-slot="radio-group-item"][data-checked]) { background-image: var(--theme-soft-paint); }
+html[data-user-theme="gradient"]:has(.app-shell) :is(.bg-primary, [data-slot="radio-group-item"][data-checked], [data-slot="checkbox"][data-checked]) {
+  background-image: var(--theme-action-paint);
+  color: var(--theme-action-foreground);
+}
+html[data-user-theme="gradient"]:has(.app-shell) [data-slot="radio-group-item"][data-checked] .bg-primary-foreground { background-color: var(--theme-action-foreground); }
+html[data-user-theme="gradient"]:has(.app-shell) .text-primary:not(svg):not(:has(svg)) {
+  background-image: var(--theme-accent-paint);
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+html[data-user-theme="gradient"]:has(.app-shell) :is(svg.text-primary, .text-primary svg) { fill: url(#workspace-theme-accent); }
+html[data-user-theme="gradient"]:has(.app-shell) :is(svg.text-primary, .text-primary svg)[fill="none"] { fill: none; stroke: url(#workspace-theme-accent); }
+html[data-user-theme="gradient"]:has(.app-shell) input[type="range"] { appearance: none; background: transparent; }
+html[data-user-theme="gradient"]:has(.app-shell) input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px; border-radius: 999px; background: var(--theme-accent-paint);
+}
+html[data-user-theme="gradient"]:has(.app-shell) input[type="range"]::-webkit-slider-thumb {
+  appearance: none; width: 14px; height: 14px; margin-top: -5px; border-radius: 50%;
+  background: var(--primary); border: 2px solid var(--background); box-shadow: 0 0 0 1px var(--primary);
+}
+html[data-user-theme="gradient"]:has(.app-shell) input[type="range"]::-moz-range-track {
+  height: 4px; border-radius: 999px; background: var(--theme-accent-paint);
+}
+/* Firefox/native-color scrollbars use the two-color blended primary fallback. */
+@supports selector(::-webkit-scrollbar) {
+  html[data-user-theme="gradient"]:has(.app-shell),
+  html[data-user-theme="gradient"]:has(.app-shell) [data-workspace-scroll] { scrollbar-color: auto; scrollbar-width: auto; }
+  html[data-user-theme="gradient"]:has(.app-shell)::-webkit-scrollbar-thumb,
+  html[data-user-theme="gradient"]:has(.app-shell) [data-workspace-scroll]::-webkit-scrollbar-thumb {
+    background-image: var(--theme-accent-paint);
+  }
+}
+@media (forced-colors: active) {
+  html[data-user-theme="gradient"]:has(.app-shell) .text-primary:not(svg):not(:has(svg)) { background-image: none; -webkit-text-fill-color: currentColor; }
+  html[data-user-theme="gradient"]:has(.app-shell) :is(svg.text-primary, .text-primary svg) { fill: currentColor; }
+  html[data-user-theme="gradient"]:has(.app-shell) :is(svg.text-primary, .text-primary svg)[fill="none"] { fill: none; stroke: currentColor; }
+  html[data-user-theme="gradient"]:has(.app-shell) input[type="range"] { appearance: auto; }
 }

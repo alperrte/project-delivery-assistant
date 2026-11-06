@@ -1,18 +1,14 @@
 "use client";
 
-import { useId, type CSSProperties } from "react";
+import { useId } from "react";
 import { useTranslations } from "next-intl";
-import { useTheme } from "next-themes";
 import { SettingsSection } from "@/components/common/settings-section";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { OptionGroup } from "./option-group";
-import { DEFAULT_THEME_COLORS, normalizeHex, normalizeThemeColors, themePalette, themeSwatch, type ThemeColors } from "../theme-colors";
+import { normalizeHex, type ThemeColors } from "../theme-colors";
 import type { ThemeAnimation } from "../theme-animation";
 import { AnimatedThemeEditor } from "./animated-theme-editor";
-
-const PRESETS = ["#1B5FE0", "#C8323A", "#147A52", "#6D4FD0", "#C45B12", "#EBCB22", "#C0307A", "#52607A"];
-const GRADIENTS = [["#1B5FE0", "#8B5CF6"], ["#C8323A", "#090A0B"], ["#EA580C", "#DB2777"], ["#147A52", "#0B7A85"]];
 
 /** Native platform color dialog includes hue, tone and visual spectrum; HEX remains fully keyboard editable. */
 function ColorField({ label, name, value, onChange }: { label: string; name: string; value: string; onChange: (value: string) => void }) {
@@ -34,16 +30,13 @@ function ColorField({ label, name, value, onChange }: { label: string; name: str
   </div>;
 }
 
-export function ThemeColorsSection({ value, fallback, appearance, onChange, onReset, resetting, animation, onAnimationChange }: {
-  value: ThemeColors; fallback: ThemeColors; appearance: "system" | "light" | "dark";
+export function ThemeColorsSection({ value, fallback, onChange, onReset, resetting, animation, onAnimationChange }: {
+  value: ThemeColors; fallback: ThemeColors;
   onChange: (value: ThemeColors) => void; onReset: () => void; resetting: boolean;
   animation: ThemeAnimation; onAnimationChange: (value: ThemeAnimation) => void;
 }) {
   const t = useTranslations("preferences.colors");
-  const { systemTheme } = useTheme();
   const id = useId();
-  const safe = normalizeThemeColors(value) ?? normalizeThemeColors(fallback) ?? DEFAULT_THEME_COLORS;
-  const dark = appearance === "dark" || (appearance === "system" && systemTheme === "dark");
   const angleValid = Number.isInteger(value.gradientAngle) && value.gradientAngle >= 0 && value.gradientAngle <= 360;
   return <SettingsSection title={t("title")} description={t("description")}>
     <div className="space-y-6" data-theme-color-editor>
@@ -56,23 +49,6 @@ export function ThemeColorsSection({ value, fallback, appearance, onChange, onRe
           gradientAngle: angleValid ? value.gradientAngle : fallback.gradientAngle,
         })} />
       {value.themeType === "ANIMATED" ? <AnimatedThemeEditor value={animation} onChange={onAnimationChange} /> : <>
-      <div>
-        <p className="mb-2 text-sm font-medium">{t("presets")}</p>
-        <div className="flex flex-wrap gap-2" role="group" aria-label={t("presets")}>
-          {value.themeType === "SOLID" ? PRESETS.map((color, index) => <button key={color} type="button"
-            aria-label={t(`presetNames.${index}`)} aria-pressed={normalizeHex(value.solidColor) === color}
-            onClick={() => onChange({ ...value, solidColor: color })}
-            className="flex size-11 items-center justify-center rounded-md border border-input aria-pressed:outline aria-pressed:outline-2 aria-pressed:outline-offset-2 aria-pressed:outline-ring">
-            <span className="size-6 rounded-sm border border-black/15" style={{ background: color }} />
-          </button>) : GRADIENTS.map(([start, end], index) => <button key={start} type="button"
-            aria-label={t(`gradientNames.${index}`)}
-            aria-pressed={normalizeHex(value.gradientStartColor) === start && normalizeHex(value.gradientEndColor) === end}
-            onClick={() => onChange({ ...value, gradientStartColor: start, gradientEndColor: end })}
-            className="flex h-11 w-16 items-center justify-center rounded-md border border-input aria-pressed:outline aria-pressed:outline-2 aria-pressed:outline-offset-2 aria-pressed:outline-ring">
-            <span className="h-6 w-11 rounded-sm border border-black/15" style={{ background: `linear-gradient(135deg, ${start}, ${end})` }} />
-          </button>)}
-        </div>
-      </div>
       {value.themeType === "SOLID" ? <ColorField name="solidColor" label={t("solidColor")} value={value.solidColor} onChange={solidColor => onChange({ ...value, solidColor })} /> :
         <div className="grid gap-4 sm:grid-cols-2">
           <ColorField name="gradientStartColor" label={t("start")} value={value.gradientStartColor} onChange={gradientStartColor => onChange({ ...value, gradientStartColor })} />
@@ -87,33 +63,8 @@ export function ThemeColorsSection({ value, fallback, appearance, onChange, onRe
         </div>
         <input type="range" name="gradientAngleSlider" min={0} max={360} step={1} value={angleValid ? value.gradientAngle : 135} aria-label={t("angleSlider")}
           className="h-11 w-full accent-primary" onChange={e => onChange({ ...value, gradientAngle: Number(e.target.value) })} />
-        <div className="flex flex-wrap gap-2">
-          {([90, 180, 135] as const).map((angle, index) => <Button key={angle} type="button" variant="outline" className="min-h-11"
-            aria-pressed={value.gradientAngle === angle} onClick={() => onChange({ ...value, gradientAngle: angle })}>{t(`directions.${index}`)}</Button>)}
-        </div>
         {!angleValid && <p id={`${id}-angle-error`} role="status" className="text-xs text-destructive">{t("invalidAngle")}</p>}
       </div>}
-      <div className="space-y-2">
-        <p className="text-sm font-medium">{t("preview")}</p>
-        <div data-theme-preview data-preview-dark={dark} className="theme-color-preview overflow-hidden rounded-lg border"
-          style={themePalette(safe, dark) as CSSProperties}>
-          <div className="h-12 border-b" style={{ background: themeSwatch(safe) }} aria-hidden="true" />
-          <div className="flex gap-4 p-4">
-            <div aria-hidden="true" className="hidden w-16 shrink-0 space-y-3 border-r pr-4 sm:block">
-              <div className="h-2 rounded bg-primary" /><div className="h-2 rounded bg-muted-foreground/25" /><div className="h-2 rounded bg-muted-foreground/25" />
-            </div>
-            <div className="min-w-0 flex-1 space-y-3">
-              <p className="text-sm font-semibold">{t("sampleTitle")}</p>
-              <p className="text-sm text-muted-foreground">{t("sampleText")}</p>
-              <div className="flex flex-wrap items-center gap-3 text-sm">
-                <span data-theme-action className="rounded-md bg-primary px-3 py-2 font-medium text-primary-foreground">{t("sampleAction")}</span>
-                <span className="text-primary underline underline-offset-4">{t("sampleLink")}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <p className="text-xs leading-5 text-muted-foreground">{t("previewHint")}</p>
-      </div>
       </>}
       <Button type="button" variant="outline" className="min-h-11 w-full whitespace-normal sm:w-auto" disabled={resetting} onClick={onReset}>
         {resetting ? t("resetting") : t("reset")}

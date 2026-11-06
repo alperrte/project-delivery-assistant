@@ -1,17 +1,16 @@
 "use client";
 
-import { useId } from "react";
+import { useId, type CSSProperties } from "react";
 import { useTranslations } from "next-intl";
+import { SpeakerLow, SpeakerHigh } from "@phosphor-icons/react";
 import { Input } from "@/components/ui/input";
 import { useReducedMotionPreference } from "@/lib/preferences/motion";
 import { ANIMATION_PRESETS, type ThemeAnimation } from "../theme-animation";
-import { ThemeScene } from "../effects/theme-scene";
-import { usePageVisible } from "../effects/theme-effects";
 
 export function AnimatedThemeEditor({ value, onChange }: { value: ThemeAnimation; onChange: (value: ThemeAnimation) => void }) {
   const t = useTranslations("preferences.animation");
   const id = useId();
-  const reduced = useReducedMotionPreference(), visible = usePageVisible();
+  const reduced = useReducedMotionPreference();
   const validVolume = Number.isInteger(value.soundVolume) && value.soundVolume >= 0 && value.soundVolume <= 100;
   return <div className="space-y-5" data-animation-editor>
     <fieldset>
@@ -34,27 +33,34 @@ export function AnimatedThemeEditor({ value, onChange }: { value: ThemeAnimation
         </label>)}
       </div>
     </fieldset>
-    <div className="relative h-40 overflow-hidden rounded-lg border bg-background" aria-label={t("preview")} role="img">
-      <ThemeScene preset={value.animation} running={value.animationEnabled && !reduced && visible} preview />
-      <span className="absolute bottom-3 left-3 rounded bg-background/95 px-2 py-1 text-xs text-foreground">{t("previewSilent")}</span>
-    </div>
     {reduced && <p className="text-xs leading-5 text-muted-foreground">{t("reduced")}</p>}
-    <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm">
-      <input type="checkbox" name="animationEnabled" className="size-4 accent-primary" checked={value.animationEnabled} onChange={e => onChange({ ...value, animationEnabled: e.target.checked })} />{t("animationEnabled")}
+    <div className="grid grid-cols-2 gap-x-4" data-animation-toggles>
+    <label className="flex min-h-11 cursor-pointer items-start gap-2 py-2.5 text-sm leading-5">
+      <input type="checkbox" name="animationEnabled" className="mt-0.5 size-4 shrink-0 accent-primary" checked={value.animationEnabled} onChange={e => onChange({ ...value, animationEnabled: e.target.checked })} />{t("animationEnabled")}
     </label>
-    <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm">
-      <input type="checkbox" name="soundEnabled" className="size-4 accent-primary" checked={value.soundEnabled} onChange={e => onChange({ ...value, soundEnabled: e.target.checked })} />{t("soundEnabled")}
+    <label className="flex min-h-11 cursor-pointer items-start gap-2 py-2.5 text-sm leading-5">
+      <input type="checkbox" name="soundEnabled" className="mt-0.5 size-4 shrink-0 accent-primary" checked={value.soundEnabled} onChange={e => onChange({ ...value, soundEnabled: e.target.checked })} />{t("soundEnabled")}
     </label>
-    <p className="text-xs leading-5 text-muted-foreground">{t("soundHint")}</p>
-    <div className="space-y-2">
+    </div>
+    <div className="space-y-1 border-t pt-4" data-theme-volume>
       <div className="flex items-center justify-between gap-3">
         <label htmlFor={`${id}-volume`} className="text-sm font-medium">{t("volume")}</label>
-        <Input id={`${id}-volume`} name="soundVolume" autoComplete="off" inputMode="numeric" type="number" min={0} max={100} step={1} value={Number.isFinite(value.soundVolume) ? value.soundVolume : ""} className="h-11 w-24"
+        <div className="flex items-center gap-0.5 text-sm text-muted-foreground">
+        <Input id={`${id}-volume`} name="soundVolume" autoComplete="off" inputMode="numeric" type="number" min={0} max={100} step={1} value={Number.isFinite(value.soundVolume) ? value.soundVolume : ""} className="theme-volume-value h-9 w-14 border-transparent bg-transparent px-1 text-right font-medium text-foreground tabular-nums shadow-none"
           aria-invalid={!validVolume} aria-describedby={!validVolume ? `${id}-volume-error` : undefined}
           onChange={e => onChange({ ...value, soundVolume: e.target.value === "" ? NaN : Number(e.target.value) })} />
+          <span aria-hidden="true">%</span>
+        </div>
       </div>
-      <input type="range" name="soundVolumeSlider" min={0} max={100} step={1} value={validVolume ? value.soundVolume : 50} aria-label={t("volumeSlider")} className="h-11 w-full accent-primary" onChange={e => onChange({ ...value, soundVolume: Number(e.target.value) })} />
+      <div className="flex min-w-0 items-center gap-3">
+        <SpeakerLow className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+        <input type="range" name="soundVolumeSlider" min={0} max={100} step={1} value={validVolume ? value.soundVolume : 50} aria-label={t("volumeSlider")}
+          className="theme-volume-slider h-11 w-full min-w-0 flex-1 accent-primary" style={{ "--theme-volume-progress": `${validVolume ? value.soundVolume : 50}%` } as CSSProperties}
+          onChange={e => onChange({ ...value, soundVolume: Number(e.target.value) })} />
+        <SpeakerHigh className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+      </div>
       {!validVolume && <p id={`${id}-volume-error`} role="status" className="text-xs text-destructive">{t("invalidVolume")}</p>}
+      <p className="text-xs leading-5 text-muted-foreground">{t("soundHint")}</p>
     </div>
   </div>;
 }

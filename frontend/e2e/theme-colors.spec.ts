@@ -35,13 +35,12 @@ test("failed initial load offers retry without rendering writable fallback prefe
   await expect(page.locator("[data-theme-color-editor]")).toBeVisible();
 });
 
-test("System preview follows the device before save and applied colors follow subsequent device changes", async ({ page }) => {
+test("System appearance applies on save and follows subsequent device changes", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "dark" });
   await fixture(page); // Stored light appearance overrides the device until Save.
   await page.goto("/tr/ayarlar");
   await expect(page.locator("html")).not.toHaveClass(/dark/);
   await page.getByRole("radiogroup", { name: "Tema", exact: true }).getByRole("radio", { name: "Sistem", exact: true }).click();
-  await expect(page.locator("[data-theme-preview]")).toHaveAttribute("data-preview-dark", "true");
   await expect(page.locator("html")).not.toHaveClass(/dark/);
   await page.getByLabel("Tema rengi", { exact: true }).fill("#ffffff");
   await page.getByRole("button", { name: "Kaydet", exact: true }).click();
@@ -51,15 +50,17 @@ test("System preview follows the device before save and applied colors follow su
   await expect(page.locator("html")).not.toHaveClass(/dark/);
   const lightPrimary = await page.locator("html").evaluate(el => getComputedStyle(el).getPropertyValue("--primary"));
   expect(lightPrimary).not.toBe(darkPrimary);
-  await expect(page.locator("[data-theme-preview]")).toHaveAttribute("data-preview-dark", "false");
 });
 
-test("Solid and Gradient drafts preview, validate, save, reload, discard and reset without losing other choices", async ({ page }) => {
+test("Solid and Gradient drafts validate, save, reload, discard and reset without losing other choices", async ({ page }) => {
   const api = await fixture(page);
   await page.goto("/tr/ayarlar");
   const root = page.locator("html"), editor = page.locator("[data-theme-color-editor]");
   const save = page.getByRole("button", { name: "Kaydet", exact: true });
   await expect(editor).toBeVisible();
+  await expect(page.locator("fieldset > section").last().locator("[data-theme-color-editor]")).toHaveCount(1);
+  await expect(page.locator("[data-theme-preview]")).toHaveCount(0);
+  await expect(page.getByRole("group", { name: tr.preferences.colors.presets, exact: true })).toHaveCount(0);
   await page.getByLabel("Tema rengi", { exact: true }).fill("#abc");
   expect(api.saved().themeColors.solidColor).toBe("#1B5FE0");
   await expect(root).toHaveAttribute("data-user-theme", "solid");
@@ -72,7 +73,6 @@ test("Solid and Gradient drafts preview, validate, save, reload, discard and res
   await page.getByLabel("Birinci renk", { exact: true }).fill("#102030");
   await page.getByLabel("İkinci renk", { exact: true }).fill("#ffeedd");
   await page.getByLabel("Gradyan açısı (°)", { exact: true }).fill("360");
-  await expect(page.locator("[data-theme-preview] > div").first()).toHaveCSS("background-image", /360deg/);
   await expect(root).toHaveAttribute("data-user-theme", "solid");
   await page.getByLabel("İkinci renk", { exact: true }).fill("bad-color");
   await expect(save).toBeDisabled();
@@ -80,7 +80,7 @@ test("Solid and Gradient drafts preview, validate, save, reload, discard and res
   await page.getByLabel("İkinci renk", { exact: true }).fill("#ffeedd");
   await page.getByLabel("Gradyan açısı (°)", { exact: true }).fill("361");
   await expect(save).toBeDisabled();
-  await page.getByRole("button", { name: "Yatay", exact: true }).click();
+  await page.locator('input[name="gradientAngle"]').fill("90");
   await save.click();
   await expect(root).toHaveAttribute("data-user-theme", "gradient");
   expect(api.saved().themeColors.gradientAngle).toBe(90);

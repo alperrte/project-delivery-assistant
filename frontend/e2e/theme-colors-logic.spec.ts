@@ -1,6 +1,22 @@
 import { test, expect } from "@playwright/test";
 import { DEFAULT_THEME_COLORS, normalizeThemeColors, normalizeHex, contrast, themePalette, sameThemeColors } from "../src/features/settings/theme-colors";
 
+test("both gradient colors affect native fallback and all sampled accent tones retain contrast", () => {
+  for (const dark of [false, true]) {
+    const first = themePalette({ ...DEFAULT_THEME_COLORS, themeType: "GRADIENT", gradientEndColor: "#00CC44" }, dark);
+    const second = themePalette({ ...DEFAULT_THEME_COLORS, themeType: "GRADIENT", gradientEndColor: "#E03060" }, dark);
+    expect(first["--primary"]).not.toBe(second["--primary"]);
+    for (const [start, end] of [["#FF0000", "#00FF00"], ["#000000", "#FFFFFF"], ["#FFFF00", "#0000FF"], ["#1B5FE0", "#8B5CF6"]]) {
+      const p = themePalette({ ...DEFAULT_THEME_COLORS, themeType: "GRADIENT", gradientStartColor: start, gradientEndColor: end }, dark);
+      const a = p["--theme-accent-start"], b = p["--theme-accent-end"];
+      for (let i = 0; i <= 100; i++) {
+        const mixed = `#${[1, 3, 5].map(offset => Math.round(parseInt(a.slice(offset, offset + 2), 16) * (1 - i / 100) + parseInt(b.slice(offset, offset + 2), 16) * i / 100).toString(16).padStart(2, "0")).join("")}`;
+        expect(contrast(mixed, dark ? "#18191B" : "#FFFFFF")).toBeGreaterThanOrEqual(4.5);
+      }
+    }
+  }
+});
+
 test("normalizes arbitrary HEX and rejects incomplete, injectable and out-of-range values", () => {
   expect(normalizeHex("#abc")).toBe("#AABBCC");
   for (const bad of ["red", "#abcd", "#12345678", "#123;url(x)", " #abc"]) expect(normalizeHex(bad)).toBeUndefined();
