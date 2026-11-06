@@ -1,5 +1,9 @@
 # Web Sitesi Kesinlikle Olması Gerekenler — Master Checklist
 
+## Solid / Gradient tema tercihleri — 2026-11-06 (sınırlı kapsam)
+
+Yalnız etkilenen Dark Mode / Responsive / Keyboard Navigation / Focus State / Form Validation / Loading-Error State ve kontrast yüzeyleri gözden geçirildi. Ayarlar'da native palet + HEX, Solid/Gradient, iki renk, 0–360 açı, yerel önizleme, Kaydet/Vazgeç ve bağımsız renk sıfırlama vardır. Kontrast için UI tonları türetilir; ham renkler korunur, semantik durum paleti değişmez. TR/EN/DE × light/dark, 320/390/768/1440 px taşma, klavye/range, reduced-motion ve altı scoped axe kontrolü geçti; görüntüler incelendi. Son yerel production build üzerinde 14/14 tema testi (2 saf, 11 API-fixture'lı UI, 1 gerçek API/PostgreSQL) ve ayrıca development'ta 4/4 mevcut hareket tercihi regresyonu geçti. Gerçek test cookie/CSRF/DB kalıcılığı, yeni tarayıcı, iki hesap izolasyonu, sayfalar arası ortak aksiyonlar, sıfırlama ve çıkış temizliğini doğrular; kayıt hazırlığı yalnız görev etiketli geçici PostgreSQL'de TEST-ONLY'dir. Lint/type/build/bundle/diff temiz. Backend/ENV/bağımlılık değiştirilmedi; yeni browser storage anahtarı yok. Bu kanıt global kutuları tamamlanmış saydırmaz; gerçek telefon/OS renk penceresi, screen reader ve diğer tarayıcılar manuel kalır. Pre-push/deployment çalıştırılmadı. Ayrıntı: `docs/compliation/2026-11-06-theme-phase1-frontend.md`.
+
 ## Toplantı / görev / sürüm frontend düzeltmeleri — 2026-10-28 (sınırlı kapsam)
 
 Sürüm etiketi takip düzenlemesi: açık sidebar/mobil menü `PDA Version : v2.9.9`, dar sidebar `v2.9.9`; hedefli Türkçe Playwright 1/1 PASS, taşma yok. Aynı completion kaydı güncellendi.

@@ -1,5 +1,14 @@
 ﻿# Klasör yapısı kısa rehberi
 
+## Solid / Gradient tema frontend — 2026-11-06
+
+- `frontend/src/features/settings/theme-colors.ts`: typed sözleşme, HEX, kontrast ve kök token uygulama/temizleme.
+- `frontend/src/features/settings/components/theme-colors-section.tsx`: native palet/HEX, hazır renkler, iki renk/açı ve önizleme.
+- Mevcut `settings/api.ts`, `session-preferences.ts`, `components/settings-page.tsx`: hesap GET/PUT/DELETE, actor guard, taslak ve oturum yaşam döngüsü.
+- `frontend/src/styles/theme-colors.css`, `app/globals.css`, `components/ui/button.tsx`: ortak token/gradient aksiyonları; `i18n/messages/{tr,en,de}.json` yeni metinler.
+- `frontend/e2e/theme-colors{,-logic,-real}.spec.ts`, `playwright.theme.config.ts`: bağımsız UI, saf renk ve isteğe bağlı izole gerçek API/PostgreSQL kontrolleri.
+- Teslim: `docs/compliation/2026-11-06-theme-phase1-frontend.md`.
+
 ## Solid / Gradient tema backend — 2026-11-05
 
 - `backend/src/main/java/com/pda/user/domain/ThemeColors.java`: SOLID/GRADIENT, HEX normalizasyonu ve açı doğrulama.

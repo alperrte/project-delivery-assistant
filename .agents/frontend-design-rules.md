@@ -1,5 +1,11 @@
 # Frontend tasarım kuralları
 
+## Hesap tema renkleri — 2026-11-06 (Faz 1 Frontend)
+
+Ayarlar içinde `ThemeColorsSection` mevcut SettingsSection/OptionGroup düzenini kullanır: Solid/Gradient, hızlı seçimler, native tam renk paleti + HEX, iki bağımsız renk, 0–360 açı, yerel canlı önizleme. Kaydet taslağı uygular, Vazgeç geri alır. Renk sıfırlama mevcut DELETE API'siyle hemen kaydedilir; diğer kaydedilmiş tercihler ve sayfadaki ilgisiz taslaklar korunur. TR/EN/DE metinleri `preferences.colors` altındadır.
+
+`features/settings/theme-colors.ts` ham #RGB/#RRGGBB renklerini doğrular ve kanonikleştirir; kaydedilen renkler değiştirilmez. Arayüz primary/foreground/ring tonları light/dark yüzeylerde kontrast için türetilir. Gradyan birincil aksiyonlarda, her iki uçta beyaz yazıya uygun türetilmiş tonlarla kullanılır. `styles/theme-colors.css` yalnız hesap teması + AppShell varken token'ları değiştirir; public/auth sayfalar ve success/warning/destructive/label anlamları korunur. Ortak Button default varyantının `theme-primary-action` sınıfı `buttonVariants()` ile üretilen bağlantıları ve portal içindeki butonları da kapsar. Önizleme ham renk şeridini ve okunabilir aksiyon tonlarını birlikte gösterir. Renkler localStorage/sessionStorage'a yazılmaz; çıkış/unmount/hesap değişiminde kök değişkenler temizlenir. Sistem önizlemesi cihazın systemTheme değerini izler. Kanıt: `docs/compliation/2026-11-06-theme-phase1-frontend.md`.
+
 ## Frontend düzeltmeleri ve ortak sürüm — 2026-10-28
 
 Toplantı birincil aksiyonları diğer çalışma alanı sayfalarıyla aynı `Button variant="default"` / `buttonVariants({ variant: "default" })` standardını ve `primary` token'larını kullanır. Seçili toplantı ikonu da `bg-primary text-primary-foreground` alır. Bilgilendirici meeting rozet/ikon token'ları ve destructive aksiyonlar kendi semantiğini korur. Toplantı tür seçimi, proje seçimi ve form adımları `PageContainer width="wide"` ile liste sayfalarının içerik başlangıcına hizalanır.

@@ -1,0 +1,51 @@
+/* Shared semantic accent tokens; account colors never repaint status/destructive surfaces. */
+html[data-user-theme]:has(.app-shell) {
+  --primary: var(--user-light-primary);
+  --primary-hover: var(--user-light-primary-hover);
+  --primary-foreground: var(--user-light-primary-foreground);
+  --ring: var(--user-light-ring);
+  --theme-action-paint: var(--user-light-theme-action-paint);
+  --theme-action-foreground: var(--user-light-theme-action-foreground);
+}
+html.dark[data-user-theme]:has(.app-shell) {
+  --primary: var(--user-dark-primary);
+  --primary-hover: var(--user-dark-primary-hover);
+  --primary-foreground: var(--user-dark-primary-foreground);
+  --ring: var(--user-dark-ring);
+  --theme-action-paint: var(--user-dark-theme-action-paint);
+  --theme-action-foreground: var(--user-dark-theme-action-foreground);
+}
+html[data-user-theme]:has(.app-shell) :is(.theme-primary-action, .workspace-primary-action),
+.theme-color-preview [data-theme-action] {
+  background-image: var(--theme-action-paint);
+  color: var(--theme-action-foreground);
+  border-color: var(--primary);
+}
+html[data-user-theme]:has(.app-shell) .theme-primary-action:hover {
+  background-color: var(--primary);
+  filter: brightness(.94);
+}
+.theme-color-preview {
+  --background: #ffffff;
+  --foreground: #090a0b;
+  --muted-foreground: #525866;
+  --border: #e5e7eb;
+  background: var(--background);
+  color: var(--foreground);
+}
+.theme-color-preview[data-preview-dark="true"] {
+  --background: #18191b;
+  --foreground: #f4f5f6;
+  --muted-foreground: #a1a1aa;
+  --border: #45474a;
+}
+.theme-native-picker::-webkit-color-swatch-wrapper { padding: 0; }
+.theme-native-picker::-webkit-color-swatch { border: 0; border-radius: 3px; }
+.theme-native-picker::-moz-color-swatch { border: 0; border-radius: 3px; }
+[data-theme-color-editor] :is(button, input) {
+  scroll-margin-top: calc(var(--workspace-header-reserve) + 1rem);
+  scroll-margin-bottom: 8rem;
+}
+@media (forced-colors: active) {
+  .theme-color-preview [data-theme-action] { border: 1px solid ButtonText; }
+}

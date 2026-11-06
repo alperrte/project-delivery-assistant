@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "../styles/shadcn-compat.css";
+@import "../styles/theme-colors.css";
 
 @custom-variant dark (&:is(.dark *));
 /* Phone-sized meeting layouts: narrow screens, and phones held sideways (wide but only a few hundred pixels tall). */
