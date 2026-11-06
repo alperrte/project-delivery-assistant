@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>4.1.1</version>
+    <version>4.1.2</version>
     <relativePath/>
     <!-- lookup parent from repository -->
   </parent>
@@ -28,9 +28,9 @@
   </scm>
   <properties>
     <java.version>25</java.version>
-    <spring-modulith.version>2.1.1</spring-modulith.version>
+    <spring-modulith.version>2.1.2</spring-modulith.version>
     <org.mapstruct.version>1.6.3</org.mapstruct.version>
-    <greenmail.version>2.1.14</greenmail.version>
+    <greenmail.version>2.1.15</greenmail.version>
     <pda.test.forks>2</pda.test.forks>
     <maven.build.timestamp.format>yyyyMMdd-HHmmss-SSS</maven.build.timestamp.format>
     <pda.test.runId>${maven.build.timestamp}</pda.test.runId>
@@ -122,7 +122,7 @@
     <dependency>
       <groupId>org.springdoc</groupId>
       <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-      <version>3.1.1</version>
+      <version>3.2.0</version>
     </dependency>
     <dependency>
       <groupId>org.springframework.modulith</groupId>
@@ -334,7 +334,7 @@
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.8.15</version>
+        <version>0.8.16</version>
         <executions>
           <execution>
             <goals>
