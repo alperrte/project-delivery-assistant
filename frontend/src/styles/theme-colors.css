@@ -143,8 +143,16 @@ html[data-user-theme="gradient"]:has(.app-shell) input[type="range"]::-moz-range
 
 /* Full color surfaces apply only when the animated-background checkbox is OFF. */
 @media (forced-colors: none) {
-  /* Sidebar follows the account palette even while the main background is animated. */
-  html[data-user-theme][data-user-background="animated"]:has(.app-shell) :is(.app-shell > aside, .workspace-navigation-drawer) {
+  /* Navigation and workspace side panels share the account palette with animation enabled. */
+  html[data-user-theme][data-user-background="animated"]:has(.app-shell) :is(.app-shell > aside, .workspace-navigation-drawer, .app-shell [data-workspace-side-panel]) {
+    --primary: var(--user-light-theme-panel-primary);
+    --primary-hover: var(--user-light-theme-panel-primary-hover);
+    --primary-foreground: var(--user-light-theme-panel-primary-foreground);
+    --ring: var(--user-light-theme-panel-ring);
+    --theme-accent-start: var(--user-light-theme-panel-theme-accent-start);
+    --theme-accent-end: var(--user-light-theme-panel-theme-accent-end);
+    --theme-accent-paint: var(--user-light-theme-panel-theme-accent-paint);
+    --theme-action-foreground: var(--user-light-theme-panel-theme-action-foreground);
     --surface-2: var(--user-light-theme-surface-sidebar);
     --muted: var(--user-light-theme-surface-hover);
     --accent: var(--user-light-theme-surface-hover);
@@ -153,7 +161,15 @@ html[data-user-theme="gradient"]:has(.app-shell) input[type="range"]::-moz-range
     background-color: var(--surface-2);
     background-image: var(--user-light-theme-sidebar-paint);
   }
-  html.dark[data-user-theme][data-user-background="animated"]:has(.app-shell) :is(.app-shell > aside, .workspace-navigation-drawer) {
+  html.dark[data-user-theme][data-user-background="animated"]:has(.app-shell) :is(.app-shell > aside, .workspace-navigation-drawer, .app-shell [data-workspace-side-panel]) {
+    --primary: var(--user-dark-theme-panel-primary);
+    --primary-hover: var(--user-dark-theme-panel-primary-hover);
+    --primary-foreground: var(--user-dark-theme-panel-primary-foreground);
+    --ring: var(--user-dark-theme-panel-ring);
+    --theme-accent-start: var(--user-dark-theme-panel-theme-accent-start);
+    --theme-accent-end: var(--user-dark-theme-panel-theme-accent-end);
+    --theme-accent-paint: var(--user-dark-theme-panel-theme-accent-paint);
+    --theme-action-foreground: var(--user-dark-theme-panel-theme-action-foreground);
     --surface-2: var(--user-dark-theme-surface-sidebar);
     --muted: var(--user-dark-theme-surface-hover);
     --accent: var(--user-dark-theme-surface-hover);
@@ -162,7 +178,7 @@ html[data-user-theme="gradient"]:has(.app-shell) input[type="range"]::-moz-range
     background-color: var(--surface-2);
     background-image: var(--user-dark-theme-sidebar-paint);
   }
-  html[data-user-theme][data-user-background="animated"]:has(.app-shell) :is(.app-shell > aside, .workspace-navigation-drawer) :is(.hover\:bg-muted:hover, .hover\:bg-accent:hover, [aria-current="page"]) { background-image: var(--theme-hover-paint); }
+  html[data-user-theme][data-user-background="animated"]:has(.app-shell) :is(.app-shell > aside, .workspace-navigation-drawer, .app-shell [data-workspace-side-panel]) :is(.hover\:bg-muted:hover, .hover\:bg-accent:hover, [aria-current="page"]) { background-image: var(--theme-hover-paint); }
   html[data-user-theme]:not([data-user-background="animated"]):has(.app-shell) {
     --background: var(--user-light-theme-surface-background);
     --surface-2: var(--user-light-theme-surface-sidebar);
@@ -196,6 +212,6 @@ html[data-user-theme="gradient"]:has(.app-shell) input[type="range"]::-moz-range
     --theme-hover-paint: var(--user-dark-theme-hover-paint);
   }
   html[data-user-theme]:not([data-user-background="animated"]):has(.app-shell) .app-shell { background-image: var(--theme-workspace-paint); background-attachment: fixed; }
-  html[data-user-theme]:not([data-user-background="animated"]):has(.app-shell) .app-shell > aside { background-image: var(--theme-sidebar-paint); }
+  html[data-user-theme]:not([data-user-background="animated"]):has(.app-shell) :is(.app-shell > aside, .app-shell [data-workspace-side-panel]) { background-image: var(--theme-sidebar-paint); }
   html[data-user-theme]:not([data-user-background="animated"]):has(.app-shell) :is(.hover\:bg-muted:hover, .hover\:bg-accent:hover, [aria-current="page"], [data-slot="dropdown-menu-item"][data-highlighted], [data-slot="select-item"][data-highlighted]) { background-image: var(--theme-hover-paint); }
 }

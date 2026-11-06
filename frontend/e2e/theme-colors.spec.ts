@@ -98,6 +98,20 @@ for (const dark of [false, true]) for (const gradient of [false, true]) test(`${
   await page.screenshot({ path: `../.local/theme-surfaces/animated-sidebar-mobile-${gradient ? "gradient" : "solid"}-${dark ? "dark" : "light"}.png` });
   await page.keyboard.press("Escape");
   await expect(drawer).not.toBeVisible();
+  await page.goto("/tr/genel-bakis");
+  const panel = page.locator("[data-workspace-side-panel]");
+  await expect(panel).toBeVisible();
+  for (const width of [1440, 390]) {
+    await page.setViewportSize({ width, height: 960 });
+    await expect.poll(() => panel.evaluate(e => ({ color: getComputedStyle(e).backgroundColor, paint: getComputedStyle(e).backgroundImage }))).toEqual({ color: colored.sidebarColor, paint: colored.sidebarPaint });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await panel.screenshot({ path: `../.local/theme-surfaces/workspace-panel-${gradient ? "gradient" : "solid"}-${dark ? "dark" : "light"}-${width}.png` });
+  }
+  await panel.locator("a").first().hover();
+  expect(await panel.locator("a").first().evaluate(e => getComputedStyle(e).backgroundImage.includes("linear-gradient"))).toBe(gradient);
+  expect((await new AxeBuilder({ page }).include("[data-workspace-side-panel]").analyze()).violations).toEqual([]);
+  await page.goto("/tr/ayarlar");
+  await expect(background).toBeChecked();
   await expect(page.locator("[data-theme-effects]")).toHaveCount(1);
   await background.uncheck(); await commit();
   expect(await surfaces()).toEqual(colored);

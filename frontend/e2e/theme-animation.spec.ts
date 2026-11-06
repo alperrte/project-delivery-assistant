@@ -263,6 +263,47 @@ test("workspace canvas stays bounded at 30fps and stops drawing while paused", a
   const stopped = await count(); await page.waitForTimeout(150); expect(await count()).toBe(stopped);
 });
 
+for (const preset of ANIMATION_PRESETS) test(`${preset}: pause freezes visible pixels, resume keeps the canvas and paused resize retains the image`, async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.assign(window, { sceneCanvasResets: 0 });
+    const width = Object.getOwnPropertyDescriptor(HTMLCanvasElement.prototype, "width")!;
+    Object.defineProperty(HTMLCanvasElement.prototype, "width", { ...width, set(value: number) {
+      if (this.parentElement?.closest("[data-theme-effects]")) (window as typeof window & { sceneCanvasResets: number }).sceneCanvasResets++;
+      width.set!.call(this, value);
+    } });
+  });
+  await fixture(page, "tr", true, true); await page.goto("/tr/ayarlar");
+  await expect(scene(page)).toHaveAttribute("data-running", "true");
+  if (preset !== DEFAULT_THEME_ANIMATION.animation) { await choose(page, preset); await save(page).click(); }
+  await expect(scene(page)).toHaveAttribute("data-preset", preset);
+  const canvas = scene(page).locator("canvas");
+  const pixels = () => canvas.evaluate(c => (c as HTMLCanvasElement).toDataURL());
+  const visiblePixels = () => canvas.evaluate(c => {
+    const sample = document.createElement("canvas"); sample.width = sample.height = 32;
+    const ctx = sample.getContext("2d")!; ctx.drawImage(c as HTMLCanvasElement, 0, 0, 32, 32);
+    return ctx.getImageData(0, 0, 32, 32).data.some((value, i) => i % 4 === 3 && value > 0);
+  });
+  await expect.poll(visiblePixels).toBe(true);
+  await page.getByRole("button", { name: t.pause, exact: true }).click();
+  await expect(scene(page)).toHaveAttribute("data-running", "false");
+  await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+  expect(await visiblePixels()).toBe(true);
+  const frozen = await pixels();
+  const resets = await page.evaluate(() => (window as typeof window & { sceneCanvasResets: number }).sceneCanvasResets);
+  await page.waitForTimeout(250); expect(await pixels()).toBe(frozen);
+  await page.getByRole("button", { name: t.resume, exact: true }).click();
+  await expect(scene(page)).toHaveAttribute("data-running", "true");
+  await expect.poll(pixels).not.toBe(frozen);
+  expect(await page.evaluate(() => (window as typeof window & { sceneCanvasResets: number }).sceneCanvasResets)).toBe(resets);
+  await page.getByRole("button", { name: t.pause, exact: true }).click();
+  await expect(scene(page)).toHaveAttribute("data-running", "false");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect.poll(() => canvas.evaluate(c => (c as HTMLCanvasElement).width)).toBe(390);
+  await expect.poll(visiblePixels).toBe(true);
+  const resized = await pixels();
+  await page.waitForTimeout(250); expect(await pixels()).toBe(resized);
+});
+
 for (const [locale, messages] of [["tr", tr], ["en", en], ["de", de]] as const) test(`${locale} mobile/dark: accessible cards and keyboard controls without overflow`, async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await fixture(page, locale, true, true);
