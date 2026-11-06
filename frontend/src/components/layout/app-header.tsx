@@ -118,7 +118,7 @@ export function AppHeader({
                     src={user?.id && user.profilePhotoVersion != null ? profilePhotoUrl(user.id, user.profilePhotoVersion) : null}
                     className="size-7 bg-primary text-[11px] text-primary-foreground ring-0"
                   />
-                  <span className="hidden truncate sm:block" title={user?.nickname}>{user?.nickname}</span>
+                  <span className="hidden truncate xl:block" title={user?.nickname}>{user?.nickname}</span>
                   <CaretDown size={13} aria-hidden="true" className="max-sm:hidden" />
                   <span className="sr-only">{tw("account")}</span>
                 </Button>

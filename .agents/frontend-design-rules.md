@@ -1,5 +1,11 @@
 # Frontend tasarım kuralları
 
+## Navbar arama metni — 2026-11-06
+
+Navbar aramasında görünen placeholder kısa yerelleştirilmiş Ara… / Search… / Suche… metnidir; sayfa/proje/organizasyon kapsamı aria-describedby ile korunur. Boş input clear düğmesine yer ayırmaz. Kullanıcı adı 1280 px ve üstünde gösterilir; daha dar header avatar ve erişilebilir hesap menüsü adını koruyarak arama alanına yer bırakır.
+
+Kayıt: `docs/compliation/2026-11-06-navbar-search-placeholder.md`.
+
 ## Koşullu renkli yüzeyler — 2026-11-06
 
 Takip kararı — animasyon açıkken de sidebar seçilen tek renk/gradyan ile renklendirilir; sidebar hover/seçim ve muted metin tokenları yerel olarak uyarlanır. Ana zemin/kartlar nötr ve animasyonlu kalır. Değişiklik yalnız masaüstü sidebar ve portal mobil gezinme menüsü kapsamındadır; public/forced-colors kapsamı korunur. Dört Solid/Gradient × light/dark senaryosunda masaüstü/mobil görünüm, hover, Escape ve scoped Axe kontrolleri PASS. Kayıt: `docs/compliation/2026-11-06-animated-sidebar-colors.md`.

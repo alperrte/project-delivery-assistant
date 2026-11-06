@@ -1,5 +1,11 @@
 # Web Sitesi Kesinlikle Olması Gerekenler — Master Checklist
 
+## Navbar arama metni — 2026-11-06
+
+Navbar placeholder takip düzeltmesi: TR/EN/DE × 640/768/1024/1440/1920 px, uzun hesap adı ve bildirim sayacıyla fontlar yüklendikten sonra 15 metin-genişlik ölçümü PASS. Mevcut mobil arama/popup/focus testi 1/1 PASS; hedefli ESLint, TypeScript ve diff temiz. Yalnız responsive/erişilebilir ad-açıklama/keyboard etkisi incelendi; global kutular değiştirilmedi.
+
+Kayıt: `docs/compliation/2026-11-06-navbar-search-placeholder.md`.
+
 ## Koşullu renkli yüzeyler — 2026-11-06
 
 Takip kararı — animasyon açıkken de sidebar seçilen tek renk/gradyan ile renklendirilir; sidebar hover/seçim ve muted metin tokenları yerel olarak uyarlanır. Ana zemin/kartlar nötr ve animasyonlu kalır. Değişiklik yalnız masaüstü sidebar ve portal mobil gezinme menüsü kapsamındadır; public/forced-colors kapsamı korunur. Dört Solid/Gradient × light/dark senaryosunda masaüstü/mobil görünüm, hover, Escape ve scoped Axe kontrolleri PASS. Kayıt: `docs/compliation/2026-11-06-animated-sidebar-colors.md`.
