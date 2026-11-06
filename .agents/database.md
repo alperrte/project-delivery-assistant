@@ -1,5 +1,9 @@
 # Veritabanı ve kalıcılık
 
+## V61 Animasyonlu tema tercihleri — 2026-11-06
+
+`V61__animated_theme_preferences.sql`, user_preferences theme_type CHECK'ine ANIMATED ekler ve dört NOT NULL/default kolonu açar: animation_preset VARCHAR(16), theme_sound_enabled BOOLEAN, theme_sound_volume INTEGER, theme_animation_enabled BOOLEAN. Varsayılan THUNDERSTORM/false/50/true. CHECK yalnız THUNDERSTORM/RAIN/SNOW/WATER ve 0–100 ses düzeyine izin verir. Mevcut renk, görünüm, locale/motion/geçiş/navbar ve updated_at değerleri değiştirilmez; yeni tablo/index yoktur. V60→V61, PostgreSQL 18'de eski Solid/Gradient snapshot'ı ve constraint'lerle; fresh latest şema PostgreSQL 17'de API ile doğrulanır. ANIMATED kayıtlarını okuyamayan eski backend'e veri uyarlaması olmadan dönülmemelidir; kolonları/drop history'yi silmek geri dönüş değildir. Next: V62. Sözleşme ve sonuç: `docs/compliation/2026-11-06-theme-phase2-backend.md`.
+
 ## V60 Solid / Gradient renk tercihleri — 2026-11-05
 
 `V60__theme_color_preferences.sql`, kullanıcı FK/cascade yapısına sahip mevcut `user_preferences` tablosuna beş NOT NULL/default/CHECK kolonu ekler: `theme_type` (SOLID/GRADIENT), `solid_color`, `gradient_start_color`, `gradient_end_color` (VARCHAR(7), kanonik büyük harfli #RRGGBB), `gradient_angle` (INTEGER, 0–360). Varsayılanlar SOLID / #1B5FE0 / #1B5FE0 / #8B5CF6 / 135. Eski locale/theme/motion/geçiş/navbar/updated_at değerleri korunur; yeni tablo/indeks yok. Uygulama #RGB girişlerini genişletir. Tüm tercih yazımları ilk kaydetme dahil insert-if-absent + aynı kullanıcı satırı kilidiyle sıralanır. Geri dönüşte kolon/veri silinmez. Yeni sürüm V61. Doğrulama: migration README ve `docs/compliation/2026-11-06-theme-phase1-backend.md`.

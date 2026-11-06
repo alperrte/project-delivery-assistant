@@ -1,5 +1,13 @@
 ﻿# Klasör yapısı kısa rehberi
 
+## Animasyonlu tema backend — 2026-11-06
+
+- `backend/src/main/java/com/pda/user/domain/ThemeAnimation.java`: dört preset, sessiz varsayılan ve ses düzeyi doğrulama.
+- Mevcut ThemeColors, UserPreference entity, UserPreferenceService ve UserPreferenceController: ANIMATED türü, opsiyonel themeAnimation ve mevcut reset genişletmesi.
+- `backend/src/main/resources/db/migration/V61__animated_theme_preferences.sql`: additive dört kolon ve CHECK genişletmesi.
+- `user/domain/ThemeAnimationTest`, mevcut ThemeColorsTest/UserPreferenceApiIntegrationTest ve `migration/AnimatedThemePreferenceMigrationTest`: unit, cookie/API, kalıcılık, eski istemci ve V60→V61 kanıtı.
+- Frontend değiştirilmez; teslim: `docs/compliation/2026-11-06-theme-phase2-backend.md`.
+
 ## Solid / Gradient tema frontend — 2026-11-06
 
 - `frontend/src/features/settings/theme-colors.ts`: typed sözleşme, HEX, kontrast ve kök token uygulama/temizleme.

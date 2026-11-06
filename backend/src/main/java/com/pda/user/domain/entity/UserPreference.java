@@ -1,6 +1,7 @@
 package com.pda.user.domain.entity;
 
 import com.pda.user.domain.ThemeColors;
+import com.pda.user.domain.ThemeAnimation;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -56,6 +57,18 @@ public class UserPreference {
     @Column(name = "gradient_angle", nullable = false)
     private Integer gradientAngle = ThemeColors.DEFAULT.gradientAngle();
 
+    @Column(name = "animation_preset", nullable = false, length = 16)
+    private String animationPreset = ThemeAnimation.DEFAULT.animation();
+
+    @Column(name = "theme_sound_enabled", nullable = false)
+    private boolean themeSoundEnabled = ThemeAnimation.DEFAULT.soundEnabled();
+
+    @Column(name = "theme_sound_volume", nullable = false)
+    private Integer themeSoundVolume = ThemeAnimation.DEFAULT.soundVolume();
+
+    @Column(name = "theme_animation_enabled", nullable = false)
+    private boolean themeAnimationEnabled = ThemeAnimation.DEFAULT.animationEnabled();
+
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
@@ -101,6 +114,19 @@ public class UserPreference {
         this.gradientStartColor = colors.gradientStartColor();
         this.gradientEndColor = colors.gradientEndColor();
         this.gradientAngle = colors.gradientAngle();
+        this.updatedAt = Objects.requireNonNull(at, "at is required");
+    }
+
+    public ThemeAnimation getThemeAnimation() {
+        return new ThemeAnimation(animationPreset, themeSoundEnabled, themeSoundVolume, themeAnimationEnabled);
+    }
+
+    public void setThemeAnimation(ThemeAnimation animation, Instant at) {
+        Objects.requireNonNull(animation, "animation is required");
+        this.animationPreset = animation.animation();
+        this.themeSoundEnabled = animation.soundEnabled();
+        this.themeSoundVolume = animation.soundVolume();
+        this.themeAnimationEnabled = animation.animationEnabled();
         this.updatedAt = Objects.requireNonNull(at, "at is required");
     }
 }

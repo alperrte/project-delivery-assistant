@@ -4,6 +4,7 @@ import com.pda.BackendApplication;
 import com.pda.user.UserAccounts;
 import com.pda.user.application.service.UserPreferenceService;
 import com.pda.user.domain.ThemeColors;
+import com.pda.user.domain.ThemeAnimation;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,10 +72,13 @@ class UserPreferenceApiIntegrationTest {
         mvc.perform(get("/v3/api-docs")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.paths['/api/v1/users/me/preferences'].get").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/users/me/preferences'].put").exists())
-                .andExpect(jsonPath("$.paths['/api/v1/users/me/preferences/theme'].delete.summary").value("Reset my theme colors"))
+                .andExpect(jsonPath("$.paths['/api/v1/users/me/preferences/theme'].delete.summary").value("Reset my theme"))
                 .andExpect(jsonPath("$.paths['/api/v1/users/me/preferences'].put.responses['400']").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/users/me/preferences/theme'].delete.responses['403']").exists())
                 .andExpect(jsonPath("$.components.schemas.PreferencesRequest.properties.themeColors").exists())
+                .andExpect(jsonPath("$.components.schemas.PreferencesRequest.properties.themeAnimation").exists())
+                .andExpect(jsonPath("$.components.schemas.ThemeAnimationRequest.properties.soundVolume.minimum").value(0))
+                .andExpect(jsonPath("$.components.schemas.ThemeAnimationRequest.properties.soundVolume.maximum").value(100))
                 .andExpect(jsonPath("$.components.schemas.ThemeColorsRequest.properties.gradientAngle.minimum").value(0))
                 .andExpect(jsonPath("$.components.schemas.ThemeColorsRequest.properties.gradientAngle.maximum").value(360));
     }
@@ -87,6 +91,127 @@ class UserPreferenceApiIntegrationTest {
     private static String colorBody(String colors) {
         return "{\"locale\":\"de\",\"theme\":\"dark\",\"motion\":\"off\",\"themeTransition\":false,"
                 + "\"languageTransition\":false,\"navbarMode\":\"auto-hide\",\"themeColors\":" + colors + "}";
+    }
+
+    private static final String ANIMATION = """
+            {"animation":"RAIN","soundEnabled":true,"soundVolume":100,"animationEnabled":false}
+            """.strip();
+
+    private static String withAnimation(String base, String animation) {
+        return base.substring(0, base.length() - 1) + ",\"themeAnimation\":" + animation + "}";
+    }
+
+    @Test
+    void animatedPresetsTogglesAndVolumePersistAndBelongOnlyToTheCaller() throws Exception {
+        Cookie csrf = csrfCookie();
+        String suffix = UUID.randomUUID().toString().replace("-", "");
+        String email = "animated" + suffix + "@example.test";
+        String password = UUID.randomUUID().toString();
+        UUID userId = users.registerLocal(email, "a" + suffix.substring(0, 16), password);
+        Cookie owner = signIn(email, password);
+        Cookie other = login("otheranimation");
+        mvc.perform(get(PATH).cookie(owner)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.themeAnimation.animation").value("THUNDERSTORM"))
+                .andExpect(jsonPath("$.themeAnimation.soundEnabled").value(false))
+                .andExpect(jsonPath("$.themeAnimation.soundVolume").value(50))
+                .andExpect(jsonPath("$.themeAnimation.animationEnabled").value(true));
+        assertEquals(0, jdbc.queryForObject("select count(*) from user_preferences where user_id=?", Integer.class, userId));
+        mvc.perform(put(PATH).cookie(csrf, owner).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content(colorBody(COLORS.replace("GRADIENT", "ANIMATED"))))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.themeColors.themeType").value("ANIMATED"))
+                .andExpect(jsonPath("$.themeAnimation.animation").value("THUNDERSTORM"))
+                .andExpect(jsonPath("$.themeAnimation.soundEnabled").value(false));
+        for (String preset : new String[]{"THUNDERSTORM", "RAIN", "SNOW", "WATER"}) {
+            for (boolean sound : new boolean[]{true, false}) {
+                int volume = sound ? 100 : 0;
+                String animation = "{\"animation\":\"" + preset + "\",\"soundEnabled\":" + sound
+                        + ",\"soundVolume\":" + volume + ",\"animationEnabled\":" + !sound + "}";
+                mvc.perform(put(PATH).cookie(csrf, owner).header("X-XSRF-TOKEN", csrf.getValue())
+                                .contentType(MediaType.APPLICATION_JSON).content(withAnimation(colorBody(COLORS.replace("GRADIENT", "ANIMATED")), animation)))
+                        .andExpect(status().isOk()).andExpect(jsonPath("$.themeColors.themeType").value("ANIMATED"))
+                        .andExpect(jsonPath("$.themeColors.solidColor").value("#AABBCC"))
+                        .andExpect(jsonPath("$.themeAnimation.animation").value(preset))
+                        .andExpect(jsonPath("$.themeAnimation.soundEnabled").value(sound))
+                        .andExpect(jsonPath("$.themeAnimation.soundVolume").value(volume))
+                        .andExpect(jsonPath("$.themeAnimation.animationEnabled").value(!sound));
+            }
+        }
+        assertEquals("WATER", jdbc.queryForObject("select animation_preset from user_preferences where user_id=?", String.class, userId));
+        mvc.perform(get(PATH).cookie(signIn(email, password))).andExpect(jsonPath("$.themeAnimation.animation").value("WATER"))
+                .andExpect(jsonPath("$.themeAnimation.soundEnabled").value(false)).andExpect(jsonPath("$.themeAnimation.soundVolume").value(0));
+        mvc.perform(get(PATH).cookie(other)).andExpect(jsonPath("$.themeColors.themeType").value("SOLID"))
+                .andExpect(jsonPath("$.themeAnimation.animation").value("THUNDERSTORM"));
+    }
+
+    @Test
+    void animationAndColorUpdatesAreIndependentAndLegacyClientsPreserveTheNewPreferences() throws Exception {
+        Cookie csrf = csrfCookie();
+        Cookie owner = login("legacyanimation");
+        mvc.perform(put(PATH).cookie(csrf, owner).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content(withAnimation(colorBody(COLORS), ANIMATION)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.themeColors.themeType").value("GRADIENT"));
+        // Independently update the effect without touching stored color values.
+        mvc.perform(put(PATH).cookie(csrf, owner).header("X-XSRF-TOKEN", csrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content(withAnimation(body("tr", "light", "on", "true"), ANIMATION.replace("RAIN", "SNOW"))))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.themeColors.gradientEndColor").value("#FFEEDD"))
+                .andExpect(jsonPath("$.themeAnimation.animation").value("SNOW"));
+        for (String legacy : new String[]{body("en", "system", "off", "false"), colorBody(COLORS.replace("GRADIENT", "SOLID")),
+                withAnimation(colorBody(COLORS), "null")}) {
+            mvc.perform(put(PATH).cookie(csrf, owner).header("X-XSRF-TOKEN", csrf.getValue())
+                            .contentType(MediaType.APPLICATION_JSON).content(legacy))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.themeAnimation.animation").value("SNOW"))
+                    .andExpect(jsonPath("$.themeAnimation.soundEnabled").value(true))
+                    .andExpect(jsonPath("$.themeAnimation.soundVolume").value(100))
+                    .andExpect(jsonPath("$.themeAnimation.animationEnabled").value(false));
+        }
+    }
+
+    @Test
+    void invalidAnimationPayloadIsAnAtomicBadRequestAndDoesNotResetSavedColors() throws Exception {
+        Cookie csrf = csrfCookie();
+        Cookie owner = login("badanimation");
+        mvc.perform(put(PATH).cookie(csrf, owner).header("X-XSRF-TOKEN", csrf.getValue())
+                .contentType(MediaType.APPLICATION_JSON).content(withAnimation(colorBody(COLORS), ANIMATION)))
+                .andExpect(status().isOk());
+        for (String invalid : new String[]{ANIMATION.replace("RAIN", "FOG"), ANIMATION.replace("RAIN", "rain"),
+                ANIMATION.replace("\"RAIN\"", "0"), ANIMATION.replace("\"RAIN\"", "null"), ANIMATION.replace("100", "-1"),
+                ANIMATION.replace("100", "101"), ANIMATION.replace("100", "50.5"), ANIMATION.replace("100", "null"),
+                ANIMATION.replace("true", "null"), ANIMATION.replace("false", "null"), "{}"}) {
+            mvc.perform(put(PATH).cookie(csrf, owner).header("X-XSRF-TOKEN", csrf.getValue())
+                            .contentType(MediaType.APPLICATION_JSON).content(withAnimation(colorBody(COLORS.replace("#abc", "#fff")), invalid)))
+                    .andExpect(status().isBadRequest()).andExpect(header().string("Cache-Control", "no-store"))
+                    .andExpect(jsonPath("$.detail").value("Invalid request"));
+        }
+        mvc.perform(get(PATH).cookie(owner)).andExpect(jsonPath("$.themeColors.solidColor").value("#AABBCC"))
+                .andExpect(jsonPath("$.themeAnimation.animation").value("RAIN"))
+                .andExpect(jsonPath("$.themeAnimation.soundVolume").value(100));
+        mvc.perform(put(PATH).cookie(owner).contentType(MediaType.APPLICATION_JSON).content(withAnimation(colorBody(COLORS), ANIMATION)))
+                .andExpect(status().isForbidden());
+        mvc.perform(put(PATH).cookie(csrf).header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
+                .content(withAnimation(colorBody(COLORS), ANIMATION))).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void themeResetRestoresSilentAnimationDefaultsAndColorsButPreservesUnrelatedSettingsAndOtherUsers() throws Exception {
+        Cookie csrf = csrfCookie();
+        Cookie owner = login("resetanimation");
+        Cookie other = login("keepanimation");
+        for (Cookie user : new Cookie[]{owner, other}) mvc.perform(put(PATH).cookie(csrf, user).header("X-XSRF-TOKEN", csrf.getValue())
+                .contentType(MediaType.APPLICATION_JSON).content(withAnimation(colorBody(COLORS.replace("GRADIENT", "ANIMATED")), ANIMATION)))
+                .andExpect(status().isOk());
+        for (int i = 0; i < 2; i++) mvc.perform(delete(PATH + "/theme").cookie(csrf, owner).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.themeColors.themeType").value("SOLID"))
+                .andExpect(jsonPath("$.themeColors.gradientEndColor").value("#8B5CF6"))
+                .andExpect(jsonPath("$.themeAnimation.animation").value("THUNDERSTORM"))
+                .andExpect(jsonPath("$.themeAnimation.soundEnabled").value(false))
+                .andExpect(jsonPath("$.themeAnimation.soundVolume").value(50))
+                .andExpect(jsonPath("$.themeAnimation.animationEnabled").value(true))
+                .andExpect(jsonPath("$.theme").value("dark")).andExpect(jsonPath("$.locale").value("de"))
+                .andExpect(jsonPath("$.motion").value("off")).andExpect(jsonPath("$.themeTransition").value(false))
+                .andExpect(jsonPath("$.languageTransition").value(false)).andExpect(jsonPath("$.navbarMode").value("auto-hide"));
+        mvc.perform(get(PATH).cookie(other)).andExpect(jsonPath("$.themeColors.themeType").value("ANIMATED"))
+                .andExpect(jsonPath("$.themeAnimation.animation").value("RAIN"))
+                .andExpect(jsonPath("$.themeAnimation.soundEnabled").value(true));
     }
 
     @Test
@@ -164,7 +289,7 @@ class UserPreferenceApiIntegrationTest {
         Cookie user = login("invalidcolors");
         mvc.perform(put(PATH).cookie(csrf, user).header("X-XSRF-TOKEN", csrf.getValue())
                 .contentType(MediaType.APPLICATION_JSON).content(colorBody(COLORS))).andExpect(status().isOk());
-        for (String invalid : new String[]{COLORS.replace("GRADIENT", "ANIMATED"), COLORS.replace("\"GRADIENT\"", "0"),
+        for (String invalid : new String[]{COLORS.replace("GRADIENT", "VIDEO"), COLORS.replace("\"GRADIENT\"", "0"),
                 COLORS.replace("#abc", "red"), COLORS.replace("#abc", "#12345678"),
                 COLORS.replace("#001122", "#xyz"), COLORS.replace("#ffeedd", "url(example.test)"),
                 COLORS.replace("360", "-1"), COLORS.replace("360", "361"), COLORS.replace("360", "12.5"),
@@ -218,7 +343,7 @@ class UserPreferenceApiIntegrationTest {
                 var reset = executor.submit(() -> {
                     ready.countDown();
                     start.await();
-                    return preferenceService.resetThemeColors(userId);
+                    return preferenceService.resetTheme(userId);
                 });
                 org.junit.jupiter.api.Assertions.assertTrue(ready.await(5, java.util.concurrent.TimeUnit.SECONDS));
                 start.countDown();
@@ -233,6 +358,7 @@ class UserPreferenceApiIntegrationTest {
             assertEquals(false, saved.languageTransition());
             assertEquals("always-visible", saved.navbarMode());
             assertEquals(ThemeColors.DEFAULT, saved.themeColors());
+            assertEquals(ThemeAnimation.DEFAULT, saved.themeAnimation());
             assertEquals(1, jdbc.queryForObject("select count(*) from user_preferences where user_id=?", Integer.class, userId));
         }
     }

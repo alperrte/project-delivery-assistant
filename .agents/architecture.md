@@ -2,6 +2,10 @@
 
 V59 şema güncellemesi (2026-10-27): aşağıdaki V58 açıklamasındaki `legacy_project_id` arşivi V59 ile kaldırılır. Aktif `project_id`, hibrit tür ve erişim modeli değişmez. Production V58/V59 öncesi yedek + izole restore ön koşulu: `backend/src/main/resources/db/migration/README.md` V59.
 
+## Animasyonlu tema backend — 2026-11-06 (Faz 2 Backend)
+
+Mevcut User tercih modelinde themeColors.themeType ANIMATED ile genişler. Ayrı `user.domain.ThemeAnimation` değer nesnesi dört preset, bağımsız ses/hareket boolean'ları ve 0–100 ses düzeyini doğrular; aynı user_preferences satırında V61'in dört kolonu tutulur. GET/PUT'a opsiyonel themeAnimation eklenir; nesne eksik/null ise korunur, mevcut DELETE tüm tema ayarlarını sıfırlar. Satır kilidi/actor/CSRF/oturum sınırları değişmez. Backend renderer/audio player/medya servisi/gerçek zamanlı kanal veya yeni bağımlılık eklemez. Efekt ve ses yalnız ANIMATED + ilgili kullanıcı/tarayıcı izinleriyle frontend'de uygulanacaktır; eski Solid/Gradient istemcilerinin yeni nesneyi atlaması kayıtlı tercihleri silmez. Faz 2 frontend henüz onaylanmamıştır. Kayıt: `docs/compliation/2026-11-06-theme-phase2-backend.md`.
+
 ## Solid / Gradient tema arayüzü — 2026-11-06 (Faz 1 Frontend)
 
 Mevcut Settings GET/PUT/DELETE sözleşmesi `features/settings/api.ts` üzerinden kullanılır. `theme-colors.ts` doğrulama/kontrast/token türetme, `components/theme-colors-section.tsx` yerel taslak önizleme sahibidir. AppShell'in mevcut `useApplySavedPreferences` hook'u hesap query'sinden root değişkenlerini uygular; light/dark token çiftleri CSS'te seçilir, public/auth etkilenmez. Çıkış/unmount/hesap sınırında root temizlenir; mutation sonuçları güncel session actor'ına karşı denetlenir. Hesap query'si 30 sn staleTime + sekmeye dönüşte yenilemeyle diğer cihazdaki renkleri alabilir; açık taslak yenilemeyle sıfırlanmaz. Renkler tarayıcı depolamasına yazılmaz. Yeni backend/modül/endpoint/ENV/bağımlılık yoktur. Animasyon/ses Faz 2 onayını bekler. Teslim: `docs/compliation/2026-11-06-theme-phase1-frontend.md`.
