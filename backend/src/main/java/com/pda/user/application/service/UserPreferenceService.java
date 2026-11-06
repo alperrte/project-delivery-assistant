@@ -2,6 +2,7 @@ package com.pda.user.application.service;
 
 import com.pda.user.domain.entity.UserPreference;
 import com.pda.user.domain.ThemeColors;
+import com.pda.user.domain.ThemeAnimation;
 import com.pda.user.infrastructure.repository.UserPreferenceRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,7 +24,7 @@ public class UserPreferenceService {
 
     /** Legacy nullable fields mean not chosen yet; themeColors always contains the saved values or safe defaults. */
     public record Preferences(String locale, String theme, String motion, Boolean themeTransition,
-                              Boolean languageTransition, String navbarMode, ThemeColors themeColors) {
+                              Boolean languageTransition, String navbarMode, ThemeColors themeColors, ThemeAnimation themeAnimation) {
     }
 
     private final UserPreferenceRepository preferences;
@@ -39,7 +40,7 @@ public class UserPreferenceService {
         Objects.requireNonNull(userId, "userId is required");
         Optional<UserPreference> saved = preferences.findById(userId);
         return saved.map(UserPreferenceService::view)
-                .orElseGet(() -> new Preferences(null, null, null, null, null, null, ThemeColors.DEFAULT));
+                .orElseGet(() -> new Preferences(null, null, null, null, null, null, ThemeColors.DEFAULT, ThemeAnimation.DEFAULT));
     }
 
     @Transactional
@@ -56,6 +57,12 @@ public class UserPreferenceService {
     @Transactional
     public Preferences save(UUID userId, String locale, String theme, String motion, boolean themeTransition,
                             Boolean languageTransition, String navbarMode, ThemeColors themeColors) {
+        return save(userId, locale, theme, motion, themeTransition, languageTransition, navbarMode, themeColors, null);
+    }
+
+    @Transactional
+    public Preferences save(UUID userId, String locale, String theme, String motion, boolean themeTransition,
+                            Boolean languageTransition, String navbarMode, ThemeColors themeColors, ThemeAnimation themeAnimation) {
         Objects.requireNonNull(userId, "userId is required");
         if (locale == null || theme == null || motion == null
                 || !LOCALES.contains(locale) || !THEMES.contains(theme) || !MOTIONS.contains(motion)
@@ -70,15 +77,17 @@ public class UserPreferenceService {
         // Old clients must not reset a choice saved by a newer client.
         if (navbarMode != null) preference.setNavbarMode(navbarMode);
         if (themeColors != null) preference.setThemeColors(themeColors, clock.instant());
+        if (themeAnimation != null) preference.setThemeAnimation(themeAnimation, clock.instant());
         return view(preferences.save(preference));
     }
 
-    /** Resets color settings only; appearance, language and motion remain exactly as saved. */
+    /** Resets color and animation settings only; other interface preferences remain exactly as saved. */
     @Transactional
-    public Preferences resetThemeColors(UUID userId) {
+    public Preferences resetTheme(UUID userId) {
         Objects.requireNonNull(userId, "userId is required");
         UserPreference preference = lock(userId);
         preference.setThemeColors(ThemeColors.DEFAULT, clock.instant());
+        preference.setThemeAnimation(ThemeAnimation.DEFAULT, clock.instant());
         return view(preferences.save(preference));
     }
 
@@ -90,6 +99,6 @@ public class UserPreferenceService {
     private static Preferences view(UserPreference preference) {
         return new Preferences(preference.getLocale(), preference.getTheme(), preference.getMotion(),
                 preference.getThemeTransition(), preference.getLanguageTransition(), preference.getNavbarMode(),
-                preference.getThemeColors());
+                preference.getThemeColors(), preference.getThemeAnimation());
     }
 }

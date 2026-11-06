@@ -9,7 +9,7 @@ public record ThemeColors(String themeType, String solidColor, String gradientSt
     public static final ThemeColors DEFAULT = new ThemeColors("SOLID", "#1B5FE0", "#1B5FE0", "#8B5CF6", 135);
 
     public ThemeColors {
-        if (!"SOLID".equals(themeType) && !"GRADIENT".equals(themeType)) {
+        if (!"SOLID".equals(themeType) && !"GRADIENT".equals(themeType) && !"ANIMATED".equals(themeType)) {
             throw new IllegalArgumentException("Unsupported theme type");
         }
         solidColor = normalize(solidColor);

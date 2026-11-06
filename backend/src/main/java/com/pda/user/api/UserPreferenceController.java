@@ -3,6 +3,7 @@ package com.pda.user.api;
 import com.pda.user.UserAccounts;
 import com.pda.user.application.service.UserPreferenceService;
 import com.pda.user.domain.ThemeColors;
+import com.pda.user.domain.ThemeAnimation;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -50,14 +51,15 @@ public class UserPreferenceController {
             @NotNull Boolean themeTransition,
             Boolean languageTransition,
             @Pattern(regexp = "always-visible|auto-hide") String navbarMode,
-            @Valid ThemeColorsRequest themeColors) {
+            @Valid ThemeColorsRequest themeColors,
+            @Valid ThemeAnimationRequest themeAnimation) {
     }
 
     @Schema(description = "Complete opaque sRGB color settings. All five fields are required when themeColors is supplied. "
             + "#RGB and #RRGGBB are accepted and returned as uppercase #RRGGBB. Independent of light/dark/system.")
     public record ThemeColorsRequest(
-            @NotNull @Pattern(regexp = "SOLID|GRADIENT")
-            @Schema(example = "SOLID", allowableValues = {"SOLID", "GRADIENT"}) String themeType,
+            @NotNull @Pattern(regexp = "SOLID|GRADIENT|ANIMATED")
+            @Schema(example = "SOLID", allowableValues = {"SOLID", "GRADIENT", "ANIMATED"}) String themeType,
             @NotNull @Pattern(regexp = ThemeColors.HEX_PATTERN) @Schema(example = "#1B5FE0") String solidColor,
             @NotNull @Pattern(regexp = ThemeColors.HEX_PATTERN) @Schema(example = "#1B5FE0") String gradientStartColor,
             @NotNull @Pattern(regexp = ThemeColors.HEX_PATTERN) @Schema(example = "#8B5CF6") String gradientEndColor,
@@ -68,11 +70,27 @@ public class UserPreferenceController {
         }
     }
 
+    @Schema(description = "Complete theme animation preferences. Omitted/null object preserves the saved values. "
+            + "Defaults: THUNDERSTORM, sound off, volume 50, animation enabled. "
+            + "Stored preferences do not start playback. Only render/play for ANIMATED; client must honor reduced motion and audio consent.")
+    public record ThemeAnimationRequest(
+            @NotNull @Pattern(regexp = "THUNDERSTORM|RAIN|SNOW|WATER")
+            @Schema(example = "RAIN", allowableValues = {"THUNDERSTORM", "RAIN", "SNOW", "WATER"}) String animation,
+            @NotNull @Schema(example = "false") Boolean soundEnabled,
+            @NotNull @Min(0) @Max(100) @Digits(integer = 3, fraction = 0)
+            @Schema(type = "integer", example = "50") BigDecimal soundVolume,
+            @NotNull @Schema(example = "true") Boolean animationEnabled) {
+        ThemeAnimation preferences() {
+            return new ThemeAnimation(animation, soundEnabled, soundVolume.intValueExact(), animationEnabled);
+        }
+    }
+
     @GetMapping
     @Operation(summary = "Get my saved interface defaults",
             description = "Language, theme, animation, theme-transition, language-transition and navbar choices saved on the Settings page; a field "
                     + "is absent until the user has saved. themeColors always has safe defaults (SOLID, #1B5FE0, "
-                    + "#1B5FE0, #8B5CF6, 135). Own principal only; requires a valid access cookie (401 otherwise).")
+                    + "#1B5FE0, #8B5CF6, 135). themeAnimation always returns saved/default preferences: THUNDERSTORM, false, 50, true. "
+                    + "Own principal only; requires a valid access cookie (401 otherwise).")
     public ResponseEntity<UserPreferenceService.Preferences> get(
             @AuthenticationPrincipal UserAccounts.AuthenticatedUser principal) {
         return ResponseEntity.ok().header("Cache-Control", "no-store").body(preferences.get(principal.id()));
@@ -84,7 +102,10 @@ public class UserPreferenceController {
     @Operation(summary = "Save my interface defaults",
             description = "Replaces interface defaults. Omitted/null navbarMode or languageTransition preserves the previous choice "
                     + "for older clients. Omitted/null themeColors also preserves saved colors. When supplied all five color fields "
-                    + "are required; arbitrary opaque HEX colors and angles 0–360 are accepted. Only SOLID/GRADIENT. "
+                    + "are required; arbitrary opaque HEX colors and angles 0–360 are accepted. Types: SOLID/GRADIENT/ANIMATED. "
+                    + "themeAnimation is optional; omitted/null preserves it, supplied requires all four fields. "
+                    + "Only THUNDERSTORM/RAIN/SNOW/WATER, integer volume 0–100. Sound defaults off. "
+                    + "Color settings and animation preferences may be saved independently; playback is a client responsibility. "
                     + "200 saved preferences, 400 invalid input, 401 no session, 403 missing CSRF. Actor is the principal.")
     public ResponseEntity<UserPreferenceService.Preferences> save(
             @AuthenticationPrincipal UserAccounts.AuthenticatedUser principal,
@@ -92,16 +113,18 @@ public class UserPreferenceController {
         return ResponseEntity.ok().header("Cache-Control", "no-store").body(preferences.save(principal.id(),
                 request.locale(), request.theme(), request.motion(), request.themeTransition(),
                 request.languageTransition(), request.navbarMode(),
-                request.themeColors() == null ? null : request.themeColors().colors()));
+                request.themeColors() == null ? null : request.themeColors().colors(),
+                request.themeAnimation() == null ? null : request.themeAnimation().preferences()));
     }
 
     @DeleteMapping("/theme")
-    @Operation(summary = "Reset my theme colors",
-            description = "Resets only themeColors to SOLID / #1B5FE0 / #1B5FE0 / #8B5CF6 / 135. "
+    @Operation(summary = "Reset my theme",
+            description = "Resets themeColors to SOLID / #1B5FE0 / #1B5FE0 / #8B5CF6 / 135 and "
+                    + "themeAnimation to THUNDERSTORM / sound off / volume 50 / animation enabled. "
                     + "Preserves light/dark/system, locale, motion, transitions and navbar. No body or user id. "
                     + "Returns 200 full preferences; 401 no session, 403 missing CSRF. Own principal only.")
     public ResponseEntity<UserPreferenceService.Preferences> resetTheme(
             @AuthenticationPrincipal UserAccounts.AuthenticatedUser principal) {
-        return ResponseEntity.ok().header("Cache-Control", "no-store").body(preferences.resetThemeColors(principal.id()));
+        return ResponseEntity.ok().header("Cache-Control", "no-store").body(preferences.resetTheme(principal.id()));
     }
 }

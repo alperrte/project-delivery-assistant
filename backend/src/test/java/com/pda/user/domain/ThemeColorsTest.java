@@ -46,8 +46,8 @@ class ThemeColorsTest {
 
     @ParameterizedTest
     @NullSource
-    @ValueSource(strings = {"", "solid", "ANIMATED", "RAIN", "0"})
-    void supportsOnlyPhaseOneTypes(String type) {
+    @ValueSource(strings = {"", "solid", "VIDEO", "RAIN", "0"})
+    void rejectsUnsupportedThemeTypes(String type) {
         assertThrows(IllegalArgumentException.class, () -> new ThemeColors(type, "#000", "#000", "#fff", 135));
     }
 

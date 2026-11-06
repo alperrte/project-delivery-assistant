@@ -1,5 +1,11 @@
 # Consolidated fresh-install history
 
+## V61 — animated theme preferences (2026-11-06)
+
+`V61__animated_theme_preferences.sql` widens the existing theme_type CHECK to SOLID/GRADIENT/ANIMATED and adds animation_preset (THUNDERSTORM/RAIN/SNOW/WATER), theme_sound_enabled, theme_sound_volume (integer 0–100) and theme_animation_enabled to user_preferences. All are NOT NULL with defaults THUNDERSTORM / false / 50 / true. Existing color values, interface preferences and updated_at are unchanged; no new table/index/extension. The V60→V61 upgrade and constraints are tested on PostgreSQL 18; latest fresh startup/API persistence use PostgreSQL 17. Earlier SQL histories remain immutable. Next version: V62.
+
+Use the ordinary backed-up Flyway deployment procedure. This delivery does not migrate a local application or production database. Keep additive columns/data on rollback; do not remove Flyway history. An old backend that accepts only SOLID/GRADIENT cannot read an ANIMATED row: downgrade requires an explicit reviewed compatibility/data decision or a compatible build, not a blind binary rollback. The phase 1 UI also lacks ANIMATED; expose it only with the matching phase 2 frontend. No rendering/audio/ENV infrastructure is added. API/verification/manual review: `docs/compliation/2026-11-06-theme-phase2-backend.md`.
+
 ## V60 — solid / gradient theme colors (2026-11-05)
 
 `V60__theme_color_preferences.sql` adds five NOT NULL columns to existing account-owned `user_preferences`: `theme_type` (SOLID/GRADIENT), three canonical opaque #RRGGBB colors and `gradient_angle` (integer 0–360), with CHECK constraints. Defaults: SOLID / #1B5FE0 / #1B5FE0 / #8B5CF6 / 135. Existing interface choices and updated_at are untouched. No new table/index, destructive transform or ENV. Fresh startup and V59→V60 upgrade are covered in isolated PostgreSQL 17/18 databases, including SQL constraints and user-FK cascade.
