@@ -189,6 +189,7 @@ export function GlobalSearch({ className, onNavigate, keyboardShortcut = true }:
         )}
       >
         <MagnifyingGlass size={16} aria-hidden="true" className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-muted-foreground" />
+        <span id={`${listboxId}-scope`} className="sr-only">{t("searchPlaceholder")}</span>
         <Input
           role="combobox"
           aria-expanded={open}
@@ -196,13 +197,14 @@ export function GlobalSearch({ className, onNavigate, keyboardShortcut = true }:
           aria-activedescendant={activeItem?.id}
           aria-autocomplete="list"
           aria-label={t("search")}
+          aria-describedby={`${listboxId}-scope`}
           autoComplete="off"
-          placeholder={t("searchPlaceholder")}
+          placeholder={`${t("search")}…`}
           value={query}
           onChange={(event) => updateQuery(event.target.value)}
           onFocus={() => setFocused(true)}
           onKeyDown={onKeyDown}
-          className="h-9 w-full max-w-sm pr-7 pl-8 max-sm:pr-12"
+          className={cn("h-9 w-full max-w-sm pl-8 max-sm:pr-12", query ? "pr-7" : "pr-2.5")}
         />
         {query && (
           <button

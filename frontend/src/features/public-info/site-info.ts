@@ -3,7 +3,7 @@ export const CONTACT_HREF = "/contact";
 export const CONTACT_EMAIL = "info@pd-assistant.com";
 export const REPOSITORY_URL = "https://github.com/alperrte/project-delivery-assistant";
 /** Shared release label for the public footer and workspace sidebar; independent of package/API versions. */
-export const APP_VERSION = "2.9.9";
+export const APP_VERSION = "3";
 export const CONTRIBUTORS = [
   {
     name: "Alper Temiz",
