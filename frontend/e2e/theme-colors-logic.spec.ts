@@ -1,5 +1,18 @@
 import { test, expect } from "@playwright/test";
-import { DEFAULT_THEME_COLORS, normalizeThemeColors, normalizeHex, contrast, themePalette, sameThemeColors } from "../src/features/settings/theme-colors";
+import { DEFAULT_THEME_COLORS, normalizeThemeColors, normalizeHex, contrast, themePalette, sameThemeColors, combineThemeType, hasAnimatedBackground, isGradientTheme } from "../src/features/settings/theme-colors";
+
+test("color and background choices round-trip all four account types without altering their palette", () => {
+  for (const color of ["SOLID", "GRADIENT"] as const) for (const animated of [false, true]) {
+    const type = combineThemeType(color, animated);
+    expect(hasAnimatedBackground(type)).toBe(animated);
+    expect(isGradientTheme(type)).toBe(color === "GRADIENT");
+    const stored = { ...DEFAULT_THEME_COLORS, themeType: type };
+    expect(normalizeThemeColors(stored)).toEqual(stored);
+    for (const dark of [false, true]) expect(themePalette(stored, dark)).toEqual(themePalette({ ...stored, themeType: color }, dark));
+  }
+  expect(combineThemeType("SOLID", true)).toBe("ANIMATED"); // Legacy account preferences keep their meaning.
+  expect(combineThemeType("GRADIENT", true)).toBe("ANIMATED_GRADIENT");
+});
 
 test("both gradient colors affect native fallback and all sampled accent tones retain contrast", () => {
   for (const dark of [false, true]) {

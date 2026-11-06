@@ -1570,7 +1570,7 @@
   "preferences": {
     "colors": {
       "title": "Tema ayarları",
-      "description": "Çalışma alanını tek renk, gradyan veya animasyonlu temayla kişiselleştirin. Açık, koyu ve sistem görünümüyle birlikte çalışır.",
+      "description": "Vurgu renklerini seçin; dilerseniz animasyonlu bir arka planla birlikte kullanın. Açık, koyu ve sistem görünümüyle birlikte çalışır.",
       "type": "Tema türü",
       "solid": "Tek renk",
       "gradient": "Gradyan",
@@ -1616,7 +1616,9 @@
       "resetDone": "Tema varsayılana sıfırlandı.",
       "loadError": "Tercihler yüklenemedi. Tekrar deneyin.",
       "retry": "Tekrar dene",
-      "animated": "Animasyonlu"
+      "animated": "Animasyonlu",
+      "animatedBackground": "Animasyonlu arka plan",
+      "animatedBackgroundHint": "Tek renk veya gradyan seçiminizle birlikte kullanabilirsiniz. Değişiklikler kaydedince uygulanır."
     },
     "title": "Ayarlar",
     "description": "Burada kaydettikleriniz hesabınızın varsayılanı olur ve her girişinizde uygulanır. Üst çubuktaki dil ve tema düğmeleri yalnızca o anki oturum için geçicidir.",
@@ -1701,13 +1703,15 @@
         "THUNDERSTORM": "Gök gürültülü fırtına",
         "RAIN": "Yağmur",
         "SNOW": "Kar",
-        "WATER": "Su"
+        "WATER": "Su",
+        "FIRE": "Alev"
       },
       "descriptions": {
-        "THUNDERSTORM": "Yağmur, seyrek şimşek ve derin gök gürültüsü.",
-        "RAIN": "Farklı hızlarda yağmur ve yumuşak damla sesi.",
-        "SNOW": "Yavaş kar taneleri ve hafif kış rüzgârı.",
-        "WATER": "Sakin dalgalar ve su kabarcıkları."
+        "THUNDERSTORM": "Derinlikli yağmur, seyrek şimşekler ve onlara eşlik eden gök gürültüsü.",
+        "RAIN": "Farklı derinliklerde damlalar, ince sıçramalar ve doğal yağmur sesi.",
+        "SNOW": "Yavaşça süzülen kar taneleri ve yumuşak rüzgâr.",
+        "WATER": "Işık yansımalarıyla yükselen baloncuklar ve doğal su sesleri.",
+        "FIRE": "Sıcak alev katmanları, yükselen kıvılcımlar ve odun çıtırtısı."
       },
       "animationEnabled": "Animasyon açık",
       "soundEnabled": "Tema sesi açık",

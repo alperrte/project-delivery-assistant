@@ -1,5 +1,11 @@
 # Consolidated fresh-install history
 
+## V63 — fire theme preset (2026-11-06)
+
+`V63__fire_theme_preset.sql` extends only `ck_preferences_animation_preset` with FIRE. Existing row values, timestamps, defaults, color types and other constraints remain unchanged. The V62→V63 upgrade compares the complete preference snapshot, accepts all five presets and rejects invalid/null values on PostgreSQL 18. Earlier migrations are immutable. Next version: V64.
+
+Apply with normal Flyway startup after the standard database/media backup. The matching domain/API/frontend must recognize FIRE before exposing it. Keep the extended constraint and history on rollback; once FIRE preferences exist, use a compatible rollback binary or an explicitly reviewed data adaptation. Do not silently overwrite preferences, narrow the CHECK or repair history. No new table/column/index/ENV. Verification and manual acceptance: `docs/compliation/2026-11-06-cinematic-theme-effects.md`.
+
 ## V62 — combined color accents and animated backgrounds (2026-11-06)
 
 `V62__combined_theme_preferences.sql` widens theme_type from VARCHAR(8) to VARCHAR(24) and extends its CHECK with ANIMATED_GRADIENT (17 characters). SOLID/GRADIENT have no animated background; existing ANIMATED retains solid accents with animation; the new value enables gradient accents with animation. All existing row values/timestamps, defaults and other constraints are preserved; no new table/column/index or ENV. Old SQL histories remain unchanged. Next version: V63.

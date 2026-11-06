@@ -75,8 +75,8 @@ public class UserPreferenceController {
             + "Defaults: THUNDERSTORM, sound off, volume 50, animation enabled. "
             + "Stored preferences do not start playback. Only render/play for ANIMATED or ANIMATED_GRADIENT; client must honor reduced motion and audio consent.")
     public record ThemeAnimationRequest(
-            @NotNull @Pattern(regexp = "THUNDERSTORM|RAIN|SNOW|WATER")
-            @Schema(example = "RAIN", allowableValues = {"THUNDERSTORM", "RAIN", "SNOW", "WATER"}) String animation,
+            @NotNull @Pattern(regexp = "THUNDERSTORM|RAIN|SNOW|WATER|FIRE")
+            @Schema(example = "RAIN", allowableValues = {"THUNDERSTORM", "RAIN", "SNOW", "WATER", "FIRE"}) String animation,
             @NotNull @Schema(example = "false") Boolean soundEnabled,
             @NotNull @Min(0) @Max(100) @Digits(integer = 3, fraction = 0)
             @Schema(type = "integer", example = "50") BigDecimal soundVolume,
@@ -105,7 +105,7 @@ public class UserPreferenceController {
                     + "for older clients. Omitted/null themeColors also preserves saved colors. When supplied all five color fields "
                     + "are required; arbitrary opaque HEX colors and angles 0–360 are accepted. Types: SOLID/GRADIENT/ANIMATED/ANIMATED_GRADIENT. "
                     + "themeAnimation is optional; omitted/null preserves it, supplied requires all four fields. "
-                    + "Only THUNDERSTORM/RAIN/SNOW/WATER, integer volume 0–100. Sound defaults off. "
+                    + "Only THUNDERSTORM/RAIN/SNOW/WATER/FIRE, integer volume 0–100. Sound defaults off. "
                     + "Color settings and animation preferences may be saved independently; playback is a client responsibility. "
                     + "200 saved preferences, 400 invalid input, 401 no session, 403 missing CSRF. Actor is the principal.")
     public ResponseEntity<UserPreferenceService.Preferences> save(

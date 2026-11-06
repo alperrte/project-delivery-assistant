@@ -19,7 +19,7 @@ export function AnimatedThemeEditor({ value, onChange }: { value: ThemeAnimation
         {ANIMATION_PRESETS.map(preset => <label key={preset} className="relative cursor-pointer overflow-hidden rounded-lg border border-input p-3 hover:border-primary/50 has-[:checked]:border-primary has-[:checked]:ring-1 has-[:checked]:ring-primary has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-4 has-[:focus-visible]:outline-ring">
           <div className="theme-preset-art mb-3 h-16 rounded" data-preset={preset} aria-hidden="true">
             <svg viewBox="0 0 200 64" className="size-full" fill="none" stroke="currentColor" strokeWidth="1.5">
-              {preset === "WATER" ? [20, 32, 44].map(y => <path key={y} d={`M15 ${y} Q40 ${y - 12} 65 ${y} T115 ${y} T165 ${y} T215 ${y}`} />) : preset === "SNOW" ? [30, 65, 105, 145, 175].map((x, i) => <circle key={x} cx={x} cy={14 + i % 3 * 17} r={2 + i % 2} fill="currentColor" stroke="none" />) : <>
+              {preset === "FIRE" ? <><path d="M82 56C65 36 90 26 88 9c19 12 12 27 19 29 7-9 9-16 8-21 22 24 21 43-4 44" /><path d="M92 58c-7-12 5-20 8-28 0 13 19 22 8 31" /><path d="m58 28 2-5m81 13 2-6m-20-18 1-5" /></> : preset === "WATER" ? [35, 72, 113, 151, 178].map((x, i) => <g key={x}><circle cx={x} cy={19 + i % 3 * 13} r={4 + i % 3 * 3} /><path d={`M${x - 3} ${17 + i % 3 * 13}q1-3 4-3`} /></g>) : preset === "SNOW" ? [30, 65, 105, 145, 175].map((x, i) => <circle key={x} cx={x} cy={14 + i % 3 * 17} r={2 + i % 2} fill="currentColor" stroke="none" />) : <>
                 {[35, 65, 95, 125, 155, 180].map((x, i) => <path key={x} d={`M${x} ${12 + i % 3 * 8} l-7 22`} />)}
                 {preset === "THUNDERSTORM" && <path d="M120 6 108 28h11l-17 29 7-22H98z" />}
               </>}

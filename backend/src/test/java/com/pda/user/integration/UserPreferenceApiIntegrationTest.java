@@ -171,7 +171,7 @@ class UserPreferenceApiIntegrationTest {
                 .andExpect(status().isOk()).andExpect(jsonPath("$.themeColors.themeType").value("ANIMATED"))
                 .andExpect(jsonPath("$.themeAnimation.animation").value("THUNDERSTORM"))
                 .andExpect(jsonPath("$.themeAnimation.soundEnabled").value(false));
-        for (String preset : new String[]{"THUNDERSTORM", "RAIN", "SNOW", "WATER"}) {
+        for (String preset : new String[]{"THUNDERSTORM", "RAIN", "SNOW", "WATER", "FIRE"}) {
             for (boolean sound : new boolean[]{true, false}) {
                 int volume = sound ? 100 : 0;
                 String animation = "{\"animation\":\"" + preset + "\",\"soundEnabled\":" + sound
@@ -186,8 +186,8 @@ class UserPreferenceApiIntegrationTest {
                         .andExpect(jsonPath("$.themeAnimation.animationEnabled").value(!sound));
             }
         }
-        assertEquals("WATER", jdbc.queryForObject("select animation_preset from user_preferences where user_id=?", String.class, userId));
-        mvc.perform(get(PATH).cookie(signIn(email, password))).andExpect(jsonPath("$.themeAnimation.animation").value("WATER"))
+        assertEquals("FIRE", jdbc.queryForObject("select animation_preset from user_preferences where user_id=?", String.class, userId));
+        mvc.perform(get(PATH).cookie(signIn(email, password))).andExpect(jsonPath("$.themeAnimation.animation").value("FIRE"))
                 .andExpect(jsonPath("$.themeAnimation.soundEnabled").value(false)).andExpect(jsonPath("$.themeAnimation.soundVolume").value(0));
         mvc.perform(get(PATH).cookie(other)).andExpect(jsonPath("$.themeColors.themeType").value("SOLID"))
                 .andExpect(jsonPath("$.themeAnimation.animation").value("THUNDERSTORM"));

@@ -244,6 +244,12 @@ Because PDA uses cookie-based authentication:
 
 ## 11. API and Swagger Security
 
+### Fire preset and recorded theme ambience — 2026-11-06
+
+The existing own-account GET/PUT `/api/v1/users/me/preferences` now accepts/returns `themeAnimation.animation=FIRE` alongside THUNDERSTORM/RAIN/SNOW/WATER. V63 extends only the PostgreSQL preset CHECK; existing values, defaults, timestamps, object preservation and reset are unchanged. No endpoint, ENV, auth, cookie, CSRF, CORS or permission change. Invalid preset remains 400; anonymous 401, missing mutation CSRF 403; all preference responses no-store. The four-field object and both independent color modes remain required/validated as before. Safe animation object: `{"animation":"FIRE","soundEnabled":false,"soundVolume":50,"animationEnabled":true}`. Swagger `/swagger-ui/index.html` or `/v3/api-docs` with the existing docs flag; normal sign-in, GET `/api/v1/auth/csrf`, X-XSRF-TOKEN for PUT/DELETE.
+
+Client rendering uses a bounded local Canvas and same-origin CC0 recordings under `/audio/ambience/`; no external audio service or user-uploaded URL. Only explicit sound-control activation creates/resumes AudioContext and starts downloads. Stop/preset changes fence asynchronous decode results; hidden tab, background off and logout abort requests and close playback. Lightning and recorded thunder share one event, with a distance delay; reduced motion suppresses visual lightning. Existing semantic surfaces/accents and principal-only storage are preserved. Compatible frontend/backend must ship together before FIRE is exposed. Evidence and manual checks: `docs/compliation/2026-11-06-cinematic-theme-effects.md`.
+
 ### Combined color and animated background preferences — 2026-11-06
 
 The existing cookie/CSRF-protected GET/PUT `/api/v1/users/me/preferences` now accepts/returns `themeColors.themeType=ANIMATED_GRADIENT` for gradient accents with an animated background. Existing `ANIMATED` means solid accents with an animated background; SOLID/GRADIENT have no animated background. The five color fields and four `themeAnimation` fields, defaults, validation, principal-only ownership, row locking, missing/null object preservation, no-store responses and scoped DELETE reset are unchanged. New type is validated both in the domain/API and PostgreSQL CHECK. V62 widens `theme_type` from VARCHAR(8) to VARCHAR(24) and extends the allowlist without modifying saved values or timestamps. No new endpoint, ENV, permission, cookie, CSRF or CORS exception.

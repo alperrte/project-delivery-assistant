@@ -4,7 +4,7 @@ import java.util.Set;
 
 /** Account-owned preferences only. Rendering, reduced motion and audio playback belong to the client. */
 public record ThemeAnimation(String animation, boolean soundEnabled, Integer soundVolume, boolean animationEnabled) {
-    public static final Set<String> ANIMATIONS = Set.of("THUNDERSTORM", "RAIN", "SNOW", "WATER");
+    public static final Set<String> ANIMATIONS = Set.of("THUNDERSTORM", "RAIN", "SNOW", "WATER", "FIRE");
     public static final ThemeAnimation DEFAULT = new ThemeAnimation("THUNDERSTORM", false, 50, true);
 
     public ThemeAnimation {

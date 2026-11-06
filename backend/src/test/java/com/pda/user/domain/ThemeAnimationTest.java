@@ -17,8 +17,8 @@ class ThemeAnimationTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"THUNDERSTORM", "RAIN", "SNOW", "WATER"})
-    void supportsExactlyTheFourPresetsWithIndependentSoundAndAnimationToggles(String preset) {
+    @ValueSource(strings = {"THUNDERSTORM", "RAIN", "SNOW", "WATER", "FIRE"})
+    void supportsAllFivePresetsWithIndependentSoundAndAnimationToggles(String preset) {
         for (int volume : new int[]{0, 50, 100}) for (boolean sound : new boolean[]{false, true}) {
             var preference = new ThemeAnimation(preset, sound, volume, !sound);
             assertEquals(preset, preference.animation());

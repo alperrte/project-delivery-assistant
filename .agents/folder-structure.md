@@ -1,4 +1,15 @@
-﻿# Klasör yapısı kısa rehberi
+# Klasör yapısı kısa rehberi
+
+## Detaylı sahneler ve Alev — 2026-11-06
+
+frontend/src/features/settings/effects/weather-scene.ts sahne geometrisi, sprite ve akışkan alev alanını; theme-scene.tsx yalnız Canvas/RAF/ResizeObserver yaşam döngüsünü yönetir. frontend/public/audio/ambience/ beş yerel WAV, kaynak/lisans README ve hash/işleme manifestini içerir. backend migration V63 ve FireThemePreferenceMigrationTest yeni FIRE preset sınırını doğrular.
+
+## Birlikte renk ve animasyon frontend — 2026-11-06
+
+- Mevcut `frontend/src/features/settings/theme-colors.ts`: dört tür normalizasyonu, iki seçimin eşlenmesi, bağımsız DOM durumları ve ortak palet.
+- `components/theme-colors-section.tsx`: iki renk modu + bağımsız arka plan checkbox'ı; `effects/theme-effects.tsx`: eşzamanlı gradient SVG/Canvas/ses sahipliği.
+- Mevcut tema CSS'i ve TR/EN/DE metinleri; renk/animasyon/gerçek API E2E testleri güncellendi.
+- Teslim: `docs/compliation/2026-11-06-combined-theme-frontend.md`.
 
 ## Birlikte renk ve animasyon backend — 2026-11-06
 

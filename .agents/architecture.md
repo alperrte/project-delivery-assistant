@@ -1,6 +1,14 @@
-﻿# Mimari kısa özet
+# Mimari kısa özet
+
+## Detaylı sahneler ve Alev — 2026-11-06
+
+Tema sahneleri artık weather-scene.ts içinde katmanlı yağmur/sıçrama, dallanan seyrek şimşek, derinlikli kar, ışık yansımalı baloncuklar ve yoğunluk alanıyla çizilen kıvılcımlı Alev içerir. Tek 30 FPS Canvas, 1/1.5 DPR ve sınırlı parçacık sayısı korunur. AmbientAudio yalnız açık etkileşimle yerel CC0 kayıtlarını yükler; preset değişiminde istek/decode yarışlarını fence eder ve en çok iki buffer tutar. FIRE domain/API/V63 CHECK ile kalıcıdır; yeni endpoint/ENV yoktur.
 
 V59 şema güncellemesi (2026-10-27): aşağıdaki V58 açıklamasındaki `legacy_project_id` arşivi V59 ile kaldırılır. Aktif `project_id`, hibrit tür ve erişim modeli değişmez. Production V58/V59 öncesi yedek + izole restore ön koşulu: `backend/src/main/resources/db/migration/README.md` V59.
+
+## Birlikte renk ve animasyon tercihi — 2026-11-06 (Frontend)
+
+`theme-colors.ts` dört backend türünü iki bağımsız seçime eşler: SOLID/GRADIENT vurgu modu ve animasyonlu arka plan seçimi. Legacy ANIMATED tek renk + arka plan olarak korunur; ANIMATED_GRADIENT hem gradient paint tanımını hem sahne/ses sahibini üretir. Root `data-user-theme` yalnız solid/gradient, ayrı `data-user-background` animated durumunu taşır; çıkışta ikisi temizlenir. Böylece palette/scrollbar/SVG ve Canvas aynı anda çalışır. Settings taslağı/kayıt/reset mevcut actor-scope query ile sürer, renk değişikliği arka planı veya çalan sesi yeniden başlatmaz. Backend kaynak/ENV/depolama sözleşmesi değişmez. Teslim: `docs/compliation/2026-11-06-combined-theme-frontend.md`.
 
 ## Birlikte renk ve animasyon tercihi — 2026-11-06 (Backend)
 

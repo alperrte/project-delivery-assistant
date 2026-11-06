@@ -1546,7 +1546,7 @@
   "preferences": {
     "colors": {
       "title": "Theme settings",
-      "description": "Personalize your workspace with a solid color, gradient or animated theme. Works with light, dark and system appearance.",
+      "description": "Choose your accent colors and optionally combine them with an animated background. Works with light, dark and system appearance.",
       "type": "Theme type",
       "solid": "Solid",
       "gradient": "Gradient",
@@ -1592,7 +1592,9 @@
       "resetDone": "Theme reset to defaults.",
       "loadError": "Preferences could not be loaded. Please try again.",
       "retry": "Try again",
-      "animated": "Animated"
+      "animated": "Animated",
+      "animatedBackground": "Animated background",
+      "animatedBackgroundHint": "Use alongside your solid color or gradient. Changes apply after saving."
     },
     "title": "Settings",
     "description": "What you save here becomes your account's default and applies every time you sign in. The language and theme switches in the top bar only last for the current session.",
@@ -1677,13 +1679,15 @@
         "THUNDERSTORM": "Thunderstorm",
         "RAIN": "Rain",
         "SNOW": "Snow",
-        "WATER": "Water"
+        "WATER": "Water",
+        "FIRE": "Fire"
       },
       "descriptions": {
-        "THUNDERSTORM": "Rain, occasional lightning and deep thunder.",
-        "RAIN": "Varied rainfall with soft drops.",
-        "SNOW": "Slow snowflakes with a gentle winter wind.",
-        "WATER": "Calm waves with bubbling water."
+        "THUNDERSTORM": "Layered rainfall, occasional lightning and its accompanying thunder.",
+        "RAIN": "Rain at different depths, delicate splashes and recorded rainfall.",
+        "SNOW": "Gently drifting snowflakes and soft wind.",
+        "WATER": "Rising bubbles, refracted light and recorded bubbling water.",
+        "FIRE": "Warm layered flames, drifting embers and crackling wood."
       },
       "animationEnabled": "Animation enabled",
       "soundEnabled": "Theme sound enabled",

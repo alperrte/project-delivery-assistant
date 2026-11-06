@@ -6,6 +6,7 @@ import { Play, Pause, SpeakerHigh, SpeakerSlash, CircleNotch } from "@phosphor-i
 import { Button } from "@/components/ui/button";
 import { useReducedMotionPreference } from "@/lib/preferences/motion";
 import { useSavedPreferences } from "../session-preferences";
+import { hasAnimatedBackground, isGradientTheme } from "../theme-colors";
 import { AmbientAudio } from "./ambient-audio";
 import { ThemeScene } from "./theme-scene";
 
@@ -25,7 +26,7 @@ export function ThemeEffects({ userId }: { userId: string | undefined }) {
   const [paused, setPaused] = useState(false);
   const reduced = useReducedMotionPreference();
   const visible = usePageVisible();
-  const active = !!userId && data?.themeColors.themeType === "ANIMATED";
+  const active = !!userId && hasAnimatedBackground(data?.themeColors.themeType);
   const animation = data?.themeAnimation;
   const allowed = active && !!animation?.soundEnabled && visible;
   const running = !!animation?.animationEnabled && !reduced && !paused && visible;
@@ -43,24 +44,25 @@ export function ThemeEffects({ userId }: { userId: string | undefined }) {
     return () => clearTimeout(timer);
   }, [allowed, running, state, animation?.animation, audio]);
 
-  if (userId && data?.themeColors.themeType === "GRADIENT") return <svg aria-hidden="true" width="0" height="0" className="absolute pointer-events-none">
+  const gradientDefinition = userId && data && isGradientTheme(data.themeColors.themeType) ? <svg data-theme-paint aria-hidden="true" width="0" height="0" className="absolute pointer-events-none">
     <defs><linearGradient id="workspace-theme-accent" x1="0" y1="0.5" x2="1" y2="0.5" gradientTransform={`rotate(${data.themeColors.gradientAngle - 90} .5 .5)`}>
       <stop offset="0%" stopColor="var(--theme-accent-start)" /><stop offset="100%" stopColor="var(--theme-accent-end)" />
     </linearGradient></defs>
-  </svg>;
-  if (!active || !animation) return null;
+  </svg> : null;
+  if (!active || !animation) return gradientDefinition;
   return <>
+    {gradientDefinition}
     <div className="workspace-theme-effects" data-theme-effects>
       <ThemeScene preset={animation.animation} running={running} onLightning={audio.thunder} />
     </div>
     {(animation.soundEnabled || (animation.animationEnabled && !reduced)) && <div data-theme-controls className="theme-session-controls flex flex-wrap items-center gap-1" aria-label={t("controls")} role="group">
-      {animation.animationEnabled && !reduced && <Button type="button" variant="ghost" size="icon" className="theme-session-control size-8 border-0 bg-transparent p-0 hover:bg-transparent" aria-label={paused ? t("resume") : t("pause")} title={paused ? t("resume") : t("pause")} aria-pressed={paused} onClick={() => setPaused(!paused)}>
+      {animation.animationEnabled && !reduced && <Button type="button" variant="ghost" size="icon" className="theme-session-control size-8 border-0 bg-transparent p-0 hover:bg-transparent dark:hover:bg-transparent" aria-label={paused ? t("resume") : t("pause")} title={paused ? t("resume") : t("pause")} aria-pressed={paused} onClick={() => setPaused(!paused)}>
         {paused ? <Pause className="size-3.5" aria-hidden="true" /> : <Play className="size-3.5" aria-hidden="true" />}
       </Button>}
-      {animation.soundEnabled && <Button type="button" variant="ghost" size="icon" className="theme-session-control size-8 border-0 bg-transparent p-0 hover:bg-transparent" disabled={state === "starting"}
-        aria-label={state === "playing" ? t("stopSound") : t("startSound")} title={state === "playing" ? t("stopSound") : t("startSound")}
+      {animation.soundEnabled && <Button type="button" variant="ghost" size="icon" className="theme-session-control size-8 border-0 bg-transparent p-0 hover:bg-transparent dark:hover:bg-transparent"
+        aria-label={state === "playing" || state === "starting" ? t("stopSound") : t("startSound")} title={state === "playing" || state === "starting" ? t("stopSound") : t("startSound")}
         aria-pressed={state === "playing"} aria-busy={state === "starting"}
-        onClick={() => { if (state === "playing") audio.stop(); else void audio.play(animation.animation, animation.soundVolume); }}>
+        onClick={() => { if (state === "playing" || state === "starting") audio.stop(); else void audio.play(animation.animation, animation.soundVolume); }}>
         {state === "starting" ? <CircleNotch className="size-3.5 animate-spin motion-reduce:animate-none" aria-hidden="true" />
           : state === "playing" ? <SpeakerHigh className="size-3.5" aria-hidden="true" /> : <SpeakerSlash className="size-3.5" aria-hidden="true" />}
       </Button>}

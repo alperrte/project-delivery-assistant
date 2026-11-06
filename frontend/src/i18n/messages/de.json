@@ -1570,7 +1570,7 @@
   "preferences": {
     "colors": {
       "title": "Theme-Einstellungen",
-      "description": "Gestalten Sie Ihren Arbeitsbereich mit einer Farbe, einem Verlauf oder einem animierten Design. Funktioniert mit heller, dunkler und Systemdarstellung.",
+      "description": "Wählen Sie Akzentfarben und kombinieren Sie diese bei Bedarf mit einem animierten Hintergrund. Funktioniert mit heller, dunkler und Systemdarstellung.",
       "type": "Theme-Typ",
       "solid": "Einfarbig",
       "gradient": "Farbverlauf",
@@ -1616,7 +1616,9 @@
       "resetDone": "Design zurückgesetzt.",
       "loadError": "Einstellungen konnten nicht geladen werden. Bitte versuchen Sie es erneut.",
       "retry": "Erneut versuchen",
-      "animated": "Animiert"
+      "animated": "Animiert",
+      "animatedBackground": "Animierter Hintergrund",
+      "animatedBackgroundHint": "Zusammen mit einer Farbe oder einem Verlauf verwenden. Änderungen werden nach dem Speichern angewendet."
     },
     "title": "Einstellungen",
     "description": "Was Sie hier speichern, wird zum Standard Ihres Kontos und gilt bei jeder Anmeldung. Die Sprach- und Design-Schalter in der oberen Leiste gelten nur für die aktuelle Sitzung.",
@@ -1701,13 +1703,15 @@
         "THUNDERSTORM": "Gewitter",
         "RAIN": "Regen",
         "SNOW": "Schnee",
-        "WATER": "Wasser"
+        "WATER": "Wasser",
+        "FIRE": "Feuer"
       },
       "descriptions": {
-        "THUNDERSTORM": "Regen, vereinzelte Blitze und tiefer Donner.",
-        "RAIN": "Abwechslungsreicher Regen mit sanften Tropfen.",
-        "SNOW": "Langsame Schneeflocken mit sanftem Winterwind.",
-        "WATER": "Ruhige Wellen mit Wasserblasen."
+        "THUNDERSTORM": "Vielschichtiger Regen, gelegentliche Blitze und passender Donner.",
+        "RAIN": "Regen in verschiedenen Tiefen, feine Spritzer und natürliche Regengeräusche.",
+        "SNOW": "Sanft schwebende Schneeflocken und leiser Wind.",
+        "WATER": "Aufsteigende Blasen, Lichtreflexe und natürliche Wassergeräusche.",
+        "FIRE": "Warme Flammen, aufsteigende Funken und knisterndes Holz."
       },
       "animationEnabled": "Animation aktiviert",
       "soundEnabled": "Designklang aktiviert",
