@@ -1,5 +1,13 @@
 # Mimari kısa özet
 
+## Animasyonu kareyi koruyarak duraklatma — 2026-11-06
+
+ThemeScene sahne/ResizeObserver ömrünü preset ve callback sahibine bağlar; running değişimi yalnız RAF kontrolünü durdurur/başlatır. Duraklatmada Canvas veya parçacık/zaman durumu temizlenmez; devam ederken delta saati sıfırlanır ve aynı sahne sürer. Duraklatılmış viewport boyutlandırmasında son bitmap ölçeklenerek korunur; gerçek boyut değişiminde yeni geometri hazırlanır. Baştan hareket kapalı/reduced motion durumunda tek statik başlangıç karesi çizilir, sürekli döngü yoktur. Preset değişimi ve unmount normal kaynak temizliğini yapar. Ses başlatma/temizleme kuralları değişmez. Kayıt: `docs/compliation/2026-11-06-theme-pause-frame.md`.
+
+## Sağ çalışma alanı paneli — 2026-11-06
+
+Dashboard sağ paneli `data-workspace-side-panel` ile aynı sidebar paletine katılır; animasyon açıkken de tek renk/gradyan ve hover yüzeyleri uygulanır. Animasyon kapalı gradyanda iki renk bu panelde de görünür. Renkli yan paneller primary/ring/gradient vurgu tonlarını kendi zeminlerinde kontrast için türetir; ana animasyonlu alanın vurgusu ve nötr kartları korunur. Tokenlar mevcut hesap apply/clear akışına dahildir. Hedefli 5 palet + 4 UI senaryosu PASS; sağ panel desktop/mobile, hover ve scoped Axe ile doğrulandı. Global checklist kutuları değiştirilmedi. Kayıt: `docs/compliation/2026-11-06-workspace-panel-theme.md`.
+
 ## Koşullu renkli yüzeyler — 2026-11-06
 
 Takip kararı — animasyon açıkken de sidebar seçilen tek renk/gradyan ile renklendirilir; sidebar hover/seçim ve muted metin tokenları yerel olarak uyarlanır. Ana zemin/kartlar nötr ve animasyonlu kalır. Değişiklik yalnız masaüstü sidebar ve portal mobil gezinme menüsü kapsamındadır; public/forced-colors kapsamı korunur. Dört Solid/Gradient × light/dark senaryosunda masaüstü/mobil görünüm, hover, Escape ve scoped Axe kontrolleri PASS. Kayıt: `docs/compliation/2026-11-06-animated-sidebar-colors.md`.

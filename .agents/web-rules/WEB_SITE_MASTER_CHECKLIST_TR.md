@@ -1,5 +1,13 @@
 # Web Sitesi Kesinlikle Olması Gerekenler — Master Checklist
 
+## Duraklatılmış animasyon karesi — 2026-11-06
+
+Canvas duraklatmada son görünür kareyi korur; RAF durur, normal devam ettirmede bitmap/sahne sıfırlanmaz. Duraklatılmış yeniden boyutlandırmada görüntü korunur. Beş preset için görünür piksel, sabit frame, yeniden başlatmama ve mobile resize regresyonları eklendi. Hedefli 7/7 ve son production tema paketi 49/49 PASS (6 saf, 43 API-fixture UI); reduced motion, ses/şimşek, actor cleanup ve renkli yan panel kontrolleri de geçti. Type/hedefli lint/build/bundle/diff temiz, Settings 493.4/505 KB gzip. Yalnız motion/pause/render cleanup maddeleri gözden geçirildi; global kutular değiştirilmedi. Kayıt: `docs/compliation/2026-11-06-theme-pause-frame.md`.
+
+## Sağ çalışma alanı paneli — 2026-11-06
+
+Dashboard sağ paneli `data-workspace-side-panel` ile aynı sidebar paletine katılır; animasyon açıkken de tek renk/gradyan ve hover yüzeyleri uygulanır. Animasyon kapalı gradyanda iki renk bu panelde de görünür. Renkli yan paneller primary/ring/gradient vurgu tonlarını kendi zeminlerinde kontrast için türetir; ana animasyonlu alanın vurgusu ve nötr kartları korunur. Tokenlar mevcut hesap apply/clear akışına dahildir. Hedefli 5 palet + 4 UI senaryosu PASS; sağ panel desktop/mobile, hover ve scoped Axe ile doğrulandı. Global checklist kutuları değiştirilmedi. Kayıt: `docs/compliation/2026-11-06-workspace-panel-theme.md`.
+
 ## Navbar arama metni — 2026-11-06
 
 Navbar placeholder takip düzeltmesi: TR/EN/DE × 640/768/1024/1440/1920 px, uzun hesap adı ve bildirim sayacıyla fontlar yüklendikten sonra 15 metin-genişlik ölçümü PASS. Mevcut mobil arama/popup/focus testi 1/1 PASS; hedefli ESLint, TypeScript ve diff temiz. Yalnız responsive/erişilebilir ad-açıklama/keyboard etkisi incelendi; global kutular değiştirilmedi.

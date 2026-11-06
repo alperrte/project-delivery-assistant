@@ -101,10 +101,7 @@ function workspaceSurfaces(colors: ThemeColors, dark: boolean) {
   } };
 }
 
-export function themePalette(colors: ThemeColors, dark: boolean): Record<string, string> {
-  const surface = dark ? "#18191B" : "#FFFFFF";
-  const workspace = workspaceSurfaces(colors, dark);
-  const accentSurfaces = hasAnimatedBackground(colors.themeType) ? [surface] : workspace.surfaces;
+function accentPalette(colors: ThemeColors, dark: boolean, accentSurfaces: string[]): Record<string, string> {
   let start = accessible(isGradientTheme(colors.themeType) ? colors.gradientStartColor : colors.solidColor, accentSurfaces);
   let end = accessible(isGradientTheme(colors.themeType) ? colors.gradientEndColor : colors.solidColor, accentSurfaces);
   if (isGradientTheme(colors.themeType) && dark) {
@@ -123,11 +120,22 @@ export function themePalette(colors: ThemeColors, dark: boolean): Record<string,
   const paint = isGradientTheme(colors.themeType)
     ? `linear-gradient(${colors.gradientAngle}deg, ${accessible(colors.gradientStartColor, "#FFFFFF")}, ${accessible(colors.gradientEndColor, "#FFFFFF")})`
     : "none";
-  return { ...workspace.variables, "--primary": primary, "--primary-hover": primary, "--primary-foreground": foreground, "--ring": isGradientTheme(colors.themeType) ? end : primary,
+  return { "--primary": primary, "--primary-hover": primary, "--primary-foreground": foreground, "--ring": isGradientTheme(colors.themeType) ? end : primary,
     "--theme-accent-start": start, "--theme-accent-end": end,
     "--theme-accent-paint": isGradientTheme(colors.themeType) ? `linear-gradient(${colors.gradientAngle}deg in srgb, ${start}, ${end})` : "none",
     "--theme-soft-paint": isGradientTheme(colors.themeType) ? `linear-gradient(${colors.gradientAngle}deg, ${start}14, ${end}14)` : "none",
     "--theme-action-paint": paint, "--theme-action-foreground": isGradientTheme(colors.themeType) ? "#FFFFFF" : foreground };
+}
+
+export function themePalette(colors: ThemeColors, dark: boolean): Record<string, string> {
+  const workspace = workspaceSurfaces(colors, dark);
+  const animated = hasAnimatedBackground(colors.themeType);
+  const accent = accentPalette(colors, dark, animated ? [dark ? "#18191B" : "#FFFFFF"] : workspace.surfaces);
+  // Colored side panels need their own contrast-safe accents; the animated main area keeps its original palette.
+  const panel = animated ? accentPalette(colors, dark, workspace.surfaces) : accent;
+  const panelVariables = Object.fromEntries(["primary", "primary-hover", "primary-foreground", "ring", "theme-accent-start", "theme-accent-end", "theme-accent-paint", "theme-action-foreground"]
+    .map(key => [`--theme-panel-${key}`, panel[`--${key}`]]));
+  return { ...workspace.variables, ...accent, ...panelVariables };
 }
 
 export function themeSwatch(colors: ThemeColors) {
