@@ -2,6 +2,10 @@
 
 V59 şema güncellemesi (2026-10-27): aşağıdaki V58 açıklamasındaki `legacy_project_id` arşivi V59 ile kaldırılır. Aktif `project_id`, hibrit tür ve erişim modeli değişmez. Production V58/V59 öncesi yedek + izole restore ön koşulu: `backend/src/main/resources/db/migration/README.md` V59.
 
+## Solid / Gradient tema arayüzü — 2026-11-06 (Faz 1 Frontend)
+
+Mevcut Settings GET/PUT/DELETE sözleşmesi `features/settings/api.ts` üzerinden kullanılır. `theme-colors.ts` doğrulama/kontrast/token türetme, `components/theme-colors-section.tsx` yerel taslak önizleme sahibidir. AppShell'in mevcut `useApplySavedPreferences` hook'u hesap query'sinden root değişkenlerini uygular; light/dark token çiftleri CSS'te seçilir, public/auth etkilenmez. Çıkış/unmount/hesap sınırında root temizlenir; mutation sonuçları güncel session actor'ına karşı denetlenir. Hesap query'si 30 sn staleTime + sekmeye dönüşte yenilemeyle diğer cihazdaki renkleri alabilir; açık taslak yenilemeyle sıfırlanmaz. Renkler tarayıcı depolamasına yazılmaz. Yeni backend/modül/endpoint/ENV/bağımlılık yoktur. Animasyon/ses Faz 2 onayını bekler. Teslim: `docs/compliation/2026-11-06-theme-phase1-frontend.md`.
+
 ## Solid / Gradient tema renkleri — 2026-11-05 (Faz 1 Backend)
 
 Tema renkleri mevcut User modülüne ve `user_preferences` tablosuna aittir; ayrı modül/servis/medya altyapısı yoktur. `user.domain.ThemeColors` doğrulanan ve kanonikleştirilen değer nesnesidir. Preferences GET/PUT opsiyonel `themeColors` ile genişler; DELETE `…/preferences/theme` yalnız renkleri sıfırlar. Light/Dark/System bağımsız kalır. Tüm tercih yazımları insert-if-absent + kullanıcı satır kilidiyle korunur; eski istemcinin eksik/null renk nesnesi kayıtlı renkleri bozmaz. V60 additive kolon/constraint ekler. Frontend ve animasyonlu temalar sonraki kullanıcı onayına bağlı ayrı aşamalardır. Sözleşme: `SECURITY.md` §11; teslim: `docs/compliation/2026-11-06-theme-phase1-backend.md`.

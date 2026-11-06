@@ -9,6 +9,7 @@ import { locales, type Locale } from "@/i18n/config";
 import { switchLocale } from "@/i18n/routing";
 import { setMotionPreference, setThemeTransitionPreference, setLanguageTransitionPreference } from "@/lib/preferences/motion";
 import { preferencesApi, savedPreferencesKey, type ThemeChoice } from "./api";
+import { applyWorkspaceTheme, clearWorkspaceTheme } from "./theme-colors";
 
 /**
  * Two layers of interface choices:
@@ -53,7 +54,8 @@ export function useSavedPreferences(userId: string | undefined) {
     queryKey: savedPreferencesKey(userId),
     queryFn: ({ signal }) => preferencesApi.get(signal),
     enabled: !!userId,
-    staleTime: Number.POSITIVE_INFINITY,
+    staleTime: 30_000,
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -69,6 +71,12 @@ export function useApplySavedPreferences(userId: string | undefined) {
   const saved = useSavedPreferences(userId);
   const { theme, setTheme } = useTheme();
   const locale = useLocale() as Locale;
+
+  useEffect(() => {
+    if (userId && saved.data?.themeColors) applyWorkspaceTheme(saved.data.themeColors);
+    else clearWorkspaceTheme();
+    return clearWorkspaceTheme;
+  }, [userId, saved.data?.themeColors]);
 
   useEffect(() => {
     if (!userId || !saved.data) return;
@@ -93,6 +101,7 @@ export function useRestoreSessionBaseline() {
   // Always rewrites the language cookie instead of comparing with the language on screen: this runs from long-lived
   // listeners, where "the language on screen" can be stale, and writing the same value again is harmless.
   return function restore() {
+    clearWorkspaceTheme();
     const baseline = readBaseline();
     clearBaseline();
     if (!baseline) return;

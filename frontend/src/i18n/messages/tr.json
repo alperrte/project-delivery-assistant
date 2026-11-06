@@ -1568,6 +1568,23 @@
     }
   },
   "preferences": {
+    "colors": {
+      "title": "Tema ayarları",
+      "description": "Tek renk veya iki renkli gradyanla çalışma alanını kişiselleştirin. Açık, koyu ve sistem görünümüyle birlikte çalışır.",
+      "type": "Tema türü", "solid": "Tek renk", "gradient": "Gradyan", "presets": "Hızlı seçim",
+      "solidColor": "Tema rengi", "start": "Birinci renk", "end": "İkinci renk",
+      "picker": "{label} için renk seçici", "hexHint": "#RGB veya #RRGGBB. Renk kutusuyla tüm tonları seçebilirsiniz.",
+      "invalidHex": "Geçerli bir HEX kodu girin: #ABC veya #AABBCC.",
+      "angle": "Gradyan açısı (°)", "angleSlider": "Gradyan açısı kaydırıcısı", "invalidAngle": "0–360 arasında bir tam sayı girin.",
+      "directions": { "0": "Yatay", "1": "Dikey", "2": "Çapraz" },
+      "presetNames": { "0": "Mavi", "1": "Kırmızı", "2": "Yeşil", "3": "Mor", "4": "Turuncu", "5": "Sarı", "6": "Pembe", "7": "Gri" },
+      "gradientNames": { "0": "Mavi ve mor", "1": "Kırmızı ve siyah", "2": "Turuncu ve pembe", "3": "Yeşil ve turkuaz" },
+      "preview": "Canlı önizleme", "sampleTitle": "Çalışma alanınız", "sampleText": "Görevleriniz ve projeleriniz, sizin renklerinizle.",
+      "sampleAction": "Yeni görev", "sampleLink": "Projeyi görüntüle",
+      "previewHint": "Önizleme taslağı gösterir. Kaydet ile uygulayın, Vazgeç ile geri alın. Seçtiğiniz renkler korunur; arayüz tonları okunabilirlik için uyarlanır.",
+      "reset": "Tema renklerini varsayılana sıfırla", "resetting": "Sıfırlanıyor…", "resetDone": "Tema renkleri sıfırlandı. Diğer tercihleriniz korundu.",
+      "loadError": "Tercihler yüklenemedi. Tekrar deneyin.", "retry": "Tekrar dene"
+    },
     "title": "Ayarlar",
     "description": "Burada kaydettikleriniz hesabınızın varsayılanı olur ve her girişinizde uygulanır. Üst çubuktaki dil ve tema düğmeleri yalnızca o anki oturum için geçicidir.",
     "save": {
