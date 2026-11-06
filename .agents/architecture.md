@@ -2,6 +2,10 @@
 
 V59 şema güncellemesi (2026-10-27): aşağıdaki V58 açıklamasındaki `legacy_project_id` arşivi V59 ile kaldırılır. Aktif `project_id`, hibrit tür ve erişim modeli değişmez. Production V58/V59 öncesi yedek + izole restore ön koşulu: `backend/src/main/resources/db/migration/README.md` V59.
 
+## Tema vurgu ve kontrol düzenlemesi — 2026-11-06
+
+`themePalette` gradyanın iki ucu için açık/koyu erişilebilir accent token'ları ve paint üretir; koyu yüzeylerde ara tonlar da kontrast için örneklenir. Native tek-renk fallback iki uçtan türetilir. CSS aksiyon, metin/ikon, seçim, range, navigasyon işareti ve destekleyen scrollbar yüzeylerine gradyan uygular; sayfa/sidebar yüzeyleri ve semantik durum paleti değişmez. `ThemeEffects` GRADIENT'te hesap kapsamlı SVG paint tanımı, ANIMATED'te efekt/kontrol sahibidir. Geçici kontroller sayfanın en sağ üstünde absolute konumdadır, scroll takip etmez. Editörde Canvas önizlemesi kaldırılmıştır; kartlar, yan yana checkbox'lar ve yüzde/range alanı vardır. API/ENV/depolama sözleşmesi değişmez. Teslim: `docs/compliation/2026-11-06-theme-accent-refinement.md`.
+
 ## Animasyonlu tema arayüzü — 2026-11-06 (Faz 2 Frontend)
 
 `features/settings/theme-animation.ts` hesap sözleşmesini doğrular. Mevcut Settings taslağı renk ve animasyon nesnelerini birlikte kaydeder; reset ikisini temizler, ilgisiz taslağı korur. AppShell ana içeriğindeki actor-keyed `ThemeEffects` aynı hesap query'sini kullanır; public/contained demo efekt çalıştırmaz. Canvas sahnesi en çok 30 FPS, 24/32/72 parçacık ve 1–1.5 DPR kullanır. Reduced motion/global hareket kapalı, geçici duraklatma veya gizli sekmede RAF temizlenir; statik zemin kalır. İçerik opak yüzeylerde okunur, efekt pointer-events almaz.

@@ -1,6 +1,24 @@
 # Frontend tasarım kuralları
 
+## Tema vurgu ve kontrol düzenlemesi — 2026-11-06
+
+Bu takip kararı önceki sticky/44 px ikon/ilk renk scrollbar/animasyon önizleme notlarını günceller. Geçici tema kontrolleri en sağ üstte 8 px inset ile absolute konumlanır; sayfa kaydırıldığında takip etmez. Kutu, border, zemin ve gölge yoktur; görünen ikon 14 px, masaüstü hedef 32 px, coarse pointer hedef 44 px'dir. Dar ekranlarda navbar ayrı alanda kalır; ikonlarla çakışmaz. Erişilebilir eylem adları, title ve toggle davranışı devam eder.
+
+Gradyan yalnız aksiyonlarda kalmaz: primary dolgu, seçili radio/checkbox, seçim satırı tint'i, navigasyon işareti, primary metin ve SVG, range izi ve WebKit scrollbar thumb iki renk kullanır. Koyu temada ara ton kontrastı da korunur. Native tek-renk isteyen alanlar iki uçtan türetilen karışımı, odak rengi ikinci ucu kullanır. Sayfa/sidebar yüzeyleri ve semantik status renkleri değiştirilmez. Forced-colors fallback'leri korunur.
+
+Animasyon editöründeki büyük Canvas önizleme kaldırılmıştır; dört statik tema kartı korunur. Animasyon/ses checkbox'ları aynı iki sütunlu satırdadır. Ses seviyesi ince doluluk izi, küçük thumb, ses ikonları ve düzenlenebilir yüzdeyle sunulur; native range klavye ve 0–100 doğrulaması sürer. Kayıt: `docs/compliation/2026-11-06-theme-accent-refinement.md`.
+
+## Tema ayarları sadeleştirmesi — 2026-11-06
+
+Scrollbar takip düzenlemesi: Solid/Gradient hesap temasında viewport ve `data-workspace-scroll` alanları `--primary` rengini kullanır; hover rengi aynı vurgu ile foreground karışımıdır. Gradyanda ilk renkten türetilen erişilebilir vurgu tonu kullanılır; native scrollbar'a gradyan zorlanmaz. Public/auth yüzeyler mevcut label-blue varsayılanına döner, forced-colors fallback korunur. Arka plan/sidebar yüzey renkleri değişmez. Kayıt: `docs/compliation/2026-11-06-theme-scrollbar-colors.md`.
+
+Kullanıcının son kararıyla Solid/Gradient yalnız mevcut vurgu/aksiyon renklerini değiştirir; arka plan/sidebar yüzeylerini renklendirmez. Ayarlar'daki Tema ayarları bölümü tüm tercih bölümlerinden sonra, Kaydet/Vazgeç çubuğundan önce gelir. Hızlı renk/gradyan seçimleri, hazır açı kısayolları ve renk paleti önizlemesi kaldırılmıştır; native renk seçici + HEX ve gradyan sayı/range alanları korunur. Animasyonlu tema kartları ve sessiz animasyon önizlemesi devam eder. Bu karar aşağıdaki Faz 1'in eski hızlı seçim/renk önizlemesi açıklamasının yerini alır. Kayıt: `docs/compliation/2026-11-06-theme-settings-simplification.md`.
+
 ## Animasyonlu hesap temaları — 2026-11-06 (Faz 2 Frontend)
+
+Geçici tema kontrol çubuğu artık metin yerine 44×44 px ikon düğmeleri kullanır. Kullanıcı isteğine göre hareket çalışırken Play, duraklatıldığında Pause mevcut durumu gösterir; erişilebilir ad/title ise yapılacak eylemi (duraklat/sürdür) belirtir. Ses çalarken SpeakerHigh, sessizken SpeakerSlash gösterilir; başlatılırken spinner/disabled/aria-busy kullanılır. İkonlar aria-hidden, düğmeler TR/EN/DE aria-label/title ve aria-pressed taşır. Ses için açık kullanıcı etkileşimi kuralı değişmez. Kayıt: `docs/compliation/2026-11-06-theme-icon-controls.md`.
+
+2026-11-06 arka plan sürekliliği düzeltmesi: AppShell `main` altındaki sayfa kapsayıcıları şeffaf kalır; yalnız katman sırası için `position: relative` uygulanır. Tüm sayfaya `background-color: var(--background)` vermek animasyonun üzerinde siyah/beyaz dikdörtgen üretir ve kullanılmaz. Kart, form, dialog ve kontrol çubuğunun kendi semantik yüzeyleri korunur; efektler bunların arkasında kalır. Kanıt: `docs/compliation/2026-11-06-theme-background-continuity.md`.
 
 Mevcut tema editöründe üçüncü kategori Animasyonlu'dur: Gök gürültülü fırtına, Yağmur, Kar, Su. İki sütunlu kartların tamamı etiketli native radio hedefidir; statik SVG işaretleri ve tek seçili Canvas önizlemesi kullanılır. Önizleme her zaman sessizdir. Ses açık/kapalı, 0–100 seviye ve animasyon açık/kapalı hesap taslağına aittir; Kaydet/Vazgeç ve tüm tema reset'i mevcut akışı izler. Metinler `preferences.animation` altında TR/EN/DE'dir.
 

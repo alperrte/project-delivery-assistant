@@ -37,14 +37,15 @@ test("animation contract rejects incomplete, injected, nonboolean and noninteger
   for (const soundVolume of [0, 100]) expect(normalizeThemeAnimation({ ...DEFAULT_THEME_ANIMATION, soundVolume })?.soundVolume).toBe(soundVolume);
 });
 
-test("four local previews, valid controls, save/reload/discard and complete reset", async ({ page }) => {
+test("four presets without preview, valid controls, save/reload/discard and complete reset", async ({ page }) => {
   const api = await fixture(page);
   await page.goto("/tr/ayarlar");
   await page.getByRole("radio", { name: tr.preferences.colors.animated, exact: true }).click();
   await expect(page.locator("[data-animation-editor] input[type=radio]")).toHaveCount(4);
   for (const preset of ANIMATION_PRESETS) {
     await choose(page, preset);
-    await expect(page.locator("[data-animation-editor] .theme-scene")).toHaveAttribute("data-preset", preset);
+    await expect(page.getByRole("radio", { name: t.names[preset], exact: true })).toBeChecked();
+    await expect(page.locator("[data-animation-editor] canvas")).toHaveCount(0);
     await expect(page.locator("[data-theme-effects]")).toHaveCount(0);
   }
   await page.getByLabel(t.volume, { exact: true }).fill("101");
@@ -109,7 +110,7 @@ test("reduced motion, explicit animation off and session pause use static fallba
   await expect(scene(page)).toHaveAttribute("data-running", "true");
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(scene(page)).toHaveAttribute("data-running", "false");
-  await expect(page.locator("[data-animation-editor] .theme-scene")).toHaveAttribute("data-running", "false");
+  await expect(page.locator("[data-animation-editor] canvas")).toHaveCount(0);
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.getByLabel(t.animationEnabled, { exact: true }).uncheck(); await save(page).click();
   await expect(scene(page)).toHaveAttribute("data-running", "false");
@@ -120,7 +121,7 @@ test("reduced motion, explicit animation off and session pause use static fallba
   await page.getByRole("radiogroup", { name: tr.preferences.motion.ui.label, exact: true }).getByRole("radio", { name: tr.preferences.motion.ui.off, exact: true }).click();
   await save(page).click();
   await expect(scene(page)).toHaveAttribute("data-running", "false");
-  await expect(page.locator("[data-animation-editor] .theme-scene")).toHaveAttribute("data-running", "false");
+  await expect(page.locator("[data-animation-editor] canvas")).toHaveCount(0);
 });
 
 test("unavailable audio is retryable and never breaks settings", async ({ page }) => {
@@ -194,7 +195,7 @@ for (const [locale, messages] of [["tr", tr], ["en", en], ["de", de]] as const) 
   await page.goto(`/${locale}/${locale === "tr" ? "ayarlar" : locale === "de" ? "einstellungen" : "settings"}`);
   for (const preset of ANIMATION_PRESETS) {
     await page.getByRole("radio", { name: messages.preferences.animation.names[preset], exact: true }).check();
-    await expect(page.locator("[data-animation-editor] .theme-scene")).toHaveAttribute("data-preset", preset);
+    await expect(page.getByRole("radio", { name: messages.preferences.animation.names[preset], exact: true })).toBeChecked();
   }
   const violations = await new AxeBuilder({ page }).include("[data-theme-color-editor]").include("[data-theme-controls]").analyze();
   expect(violations.violations).toEqual([]);

@@ -58,13 +58,29 @@ function accessible(color: string, surface: string) {
 }
 
 export function themePalette(colors: ThemeColors, dark: boolean): Record<string, string> {
-  const primary = accessible(colors.themeType === "GRADIENT" ? colors.gradientStartColor : colors.solidColor, dark ? "#18191B" : "#FFFFFF");
+  const surface = dark ? "#18191B" : "#FFFFFF";
+  let start = accessible(colors.themeType === "GRADIENT" ? colors.gradientStartColor : colors.solidColor, surface);
+  let end = accessible(colors.themeType === "GRADIENT" ? colors.gradientEndColor : colors.solidColor, surface);
+  if (colors.themeType === "GRADIENT" && dark) {
+    // Light endpoints can have a darker midpoint. Protect the whole sRGB interpolation too.
+    const from = rgb(start), to = rgb(end);
+    for (let step = 0; step <= 100; step++) {
+      start = hex(from.map(c => c + (255 - c) * step / 100));
+      end = hex(to.map(c => c + (255 - c) * step / 100));
+      if (Array.from({ length: 21 }, (_, i) => hex(rgb(start).map((c, j) => c + (rgb(end)[j] - c) * i / 20))).every(c => contrast(c, surface) >= 4.7)) break;
+    }
+  }
+  // Native controls need a solid color: derive it from BOTH gradient endpoints.
+  const primary = colors.themeType === "GRADIENT" ? accessible(hex(rgb(start).map((c, i) => (c + rgb(end)[i]) / 2)), surface) : start;
   const foreground = contrast(primary, "#FFFFFF") >= 4.5 ? "#FFFFFF" : "#000000";
   // Both endpoints have >=4.6:1 against white; sRGB interpolation cannot exceed their maximum luminance.
   const paint = colors.themeType === "GRADIENT"
     ? `linear-gradient(${colors.gradientAngle}deg, ${accessible(colors.gradientStartColor, "#FFFFFF")}, ${accessible(colors.gradientEndColor, "#FFFFFF")})`
     : "none";
-  return { "--primary": primary, "--primary-hover": primary, "--primary-foreground": foreground, "--ring": primary,
+  return { "--primary": primary, "--primary-hover": primary, "--primary-foreground": foreground, "--ring": colors.themeType === "GRADIENT" ? end : primary,
+    "--theme-accent-start": start, "--theme-accent-end": end,
+    "--theme-accent-paint": colors.themeType === "GRADIENT" ? `linear-gradient(${colors.gradientAngle}deg in srgb, ${start}, ${end})` : "none",
+    "--theme-soft-paint": colors.themeType === "GRADIENT" ? `linear-gradient(${colors.gradientAngle}deg, ${start}14, ${end}14)` : "none",
     "--theme-action-paint": paint, "--theme-action-foreground": colors.themeType === "GRADIENT" ? "#FFFFFF" : foreground };
 }
 

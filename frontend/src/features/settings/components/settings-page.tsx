@@ -128,9 +128,6 @@ function SettingsEditor() {
           <fieldset disabled={busy} className="min-w-0">
           <LanguageSection value={current.locale} onChange={(next) => setDraft({ ...current, locale: next })} />
           <AppearanceSection value={current.theme} onChange={(next) => setDraft({ ...current, theme: next })} />
-          <ThemeColorsSection value={current.themeColors} fallback={initial.themeColors} appearance={current.theme}
-            animation={current.themeAnimation} onAnimationChange={themeAnimation => setDraft({ ...current, themeAnimation })}
-            onChange={themeColors => setDraft({ ...current, themeColors })} onReset={() => reset.mutate()} resetting={reset.isPending} />
           <NavigationSection value={current.navbarMode} onChange={(next) => setDraft({ ...current, navbarMode: next })} />
           <MotionSection
             motion={current.motion}
@@ -140,6 +137,9 @@ function SettingsEditor() {
             onThemeTransitionChange={(next) => setDraft({ ...current, themeTransition: next })}
             onLanguageTransitionChange={(next) => setDraft({ ...current, languageTransition: next })}
           />
+          <ThemeColorsSection value={current.themeColors} fallback={initial.themeColors}
+            animation={current.themeAnimation} onAnimationChange={themeAnimation => setDraft({ ...current, themeAnimation })}
+            onChange={themeColors => setDraft({ ...current, themeColors })} onReset={() => reset.mutate()} resetting={reset.isPending} />
           </fieldset>
 
           <div data-sticky-actions className="sticky bottom-0 z-20 -mx-4 -mb-6 mt-10 sm:-mb-8 border-t bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:-mx-8 sm:px-8">

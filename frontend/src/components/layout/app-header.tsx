@@ -62,7 +62,7 @@ export function AppHeader({
   const { ref, hidden, reveal } = useAutoHide<HTMLElement>(!contained, mobileMenuOpen, saved.data?.navbarMode);
 
   return (
-    <div className="pointer-events-none fixed inset-x-3 top-0 z-40 sm:inset-x-auto sm:left-1/2 sm:w-[min(calc(100vw-1.5rem),620px)] sm:-translate-x-1/2 lg:w-[620px] xl:w-[700px] 2xl:w-[760px]">
+    <div className="workspace-header-position pointer-events-none fixed inset-x-3 top-0 z-40 sm:inset-x-auto sm:left-1/2 sm:w-[min(calc(100vw-1.5rem),620px)] sm:-translate-x-1/2 lg:w-[620px] xl:w-[700px] 2xl:w-[760px]">
       <button
         type="button"
         aria-label={tw("showNavigation")}
