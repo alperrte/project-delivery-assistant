@@ -4,7 +4,7 @@ import { DEFAULT_THEME_COLORS, normalizeThemeColors, normalizeHex, contrast, the
 test("normalizes arbitrary HEX and rejects incomplete, injectable and out-of-range values", () => {
   expect(normalizeHex("#abc")).toBe("#AABBCC");
   for (const bad of ["red", "#abcd", "#12345678", "#123;url(x)", " #abc"]) expect(normalizeHex(bad)).toBeUndefined();
-  for (const value of [null, {}, { ...DEFAULT_THEME_COLORS, themeType: "ANIMATED" },
+  for (const value of [null, {}, { ...DEFAULT_THEME_COLORS, themeType: "UNKNOWN" },
     { ...DEFAULT_THEME_COLORS, gradientAngle: -1 }, { ...DEFAULT_THEME_COLORS, gradientAngle: 361 },
     { ...DEFAULT_THEME_COLORS, gradientAngle: 12.5 }, { ...DEFAULT_THEME_COLORS, solidColor: "url(x)" }]) {
     expect(normalizeThemeColors(value)).toBeUndefined();

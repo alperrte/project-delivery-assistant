@@ -33,10 +33,11 @@ import { NavigationSection } from "./navigation-section";
 import { useNavbarAutoHideEnabled } from "@/components/layout/use-auto-hide";
 import { DEFAULT_THEME_COLORS, normalizeThemeColors, sameThemeColors } from "../theme-colors";
 import { ThemeColorsSection } from "./theme-colors-section";
+import { DEFAULT_THEME_ANIMATION, normalizeThemeAnimation, sameThemeAnimation } from "../theme-animation";
 
 const same = (a: PreferencesDraft, b: PreferencesDraft) =>
   a.locale === b.locale && a.theme === b.theme && a.motion === b.motion && a.themeTransition === b.themeTransition
-  && a.languageTransition === b.languageTransition && a.navbarMode === b.navbarMode && sameThemeColors(a.themeColors, b.themeColors);
+  && a.languageTransition === b.languageTransition && a.navbarMode === b.navbarMode && sameThemeColors(a.themeColors, b.themeColors) && sameThemeAnimation(a.themeAnimation, b.themeAnimation);
 
 /**
  * Interface defaults are edited as a draft; only the local color preview changes before Save.
@@ -67,6 +68,7 @@ function SettingsEditor() {
   const autoHide = useNavbarAutoHideEnabled(stored?.navbarMode);
   const initial: PreferencesDraft = {
     themeColors: stored?.themeColors ?? DEFAULT_THEME_COLORS,
+    themeAnimation: stored?.themeAnimation ?? DEFAULT_THEME_ANIMATION,
     locale: stored?.locale ?? locale,
     theme: stored?.theme ?? ((theme === "light" || theme === "dark" ? theme : "system") as ThemeChoice),
     motion: stored?.motion ?? motion,
@@ -102,13 +104,14 @@ function SettingsEditor() {
     onSuccess: result => {
       if (!isCurrentActor()) return;
       queryClient.setQueryData(savedPreferencesKey(actorId), result);
-      setDraft(previous => previous ? { ...previous, themeColors: result.themeColors } : null);
+      setDraft(previous => previous ? { ...previous, themeColors: result.themeColors, themeAnimation: result.themeAnimation } : null);
       toast.success(t("colors.resetDone"));
     },
     onError: err => { if (isCurrentActor()) toast.error(te(errorKey(err))); },
   });
   const busy = save.isPending || reset.isPending;
   const validColors = normalizeThemeColors(current.themeColors);
+  const validAnimation = normalizeThemeAnimation(current.themeAnimation);
 
   return (
     <PageContainer width="form">
@@ -126,6 +129,7 @@ function SettingsEditor() {
           <LanguageSection value={current.locale} onChange={(next) => setDraft({ ...current, locale: next })} />
           <AppearanceSection value={current.theme} onChange={(next) => setDraft({ ...current, theme: next })} />
           <ThemeColorsSection value={current.themeColors} fallback={initial.themeColors} appearance={current.theme}
+            animation={current.themeAnimation} onAnimationChange={themeAnimation => setDraft({ ...current, themeAnimation })}
             onChange={themeColors => setDraft({ ...current, themeColors })} onReset={() => reset.mutate()} resetting={reset.isPending} />
           <NavigationSection value={current.navbarMode} onChange={(next) => setDraft({ ...current, navbarMode: next })} />
           <MotionSection
@@ -145,7 +149,7 @@ function SettingsEditor() {
                 <Button type="button" variant="ghost" disabled={!dirty || busy} onClick={() => setDraft(null)}>
                   {t("save.discard")}
                 </Button>
-                <Button type="button" disabled={!dirty || busy || !validColors} onClick={() => { if (validColors) save.mutate({ ...current, themeColors: validColors }); }}>
+                <Button type="button" disabled={!dirty || busy || !validColors || !validAnimation} onClick={() => { if (validColors && validAnimation) save.mutate({ ...current, themeColors: validColors, themeAnimation: validAnimation }); }}>
                   {save.isPending && <CircleNotch size={16} className="animate-spin" aria-hidden="true" />}
                   {t("save.save")}
                 </Button>

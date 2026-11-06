@@ -49,3 +49,22 @@ html[data-user-theme]:has(.app-shell) .theme-primary-action:hover {
 @media (forced-colors: active) {
   .theme-color-preview [data-theme-action] { border: 1px solid ButtonText; }
 }
+
+.app-shell { position: relative; isolation: isolate; }
+.app-shell > aside { z-index: 1; }
+.workspace-shell-content { position: relative; z-index: 1; }
+.workspace-theme-effects { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.theme-scene { position: absolute; inset: 0; pointer-events: none; }
+.theme-scene, .theme-preset-art { background: linear-gradient(145deg, rgb(97 141 178 / .06), transparent 65%); }
+.theme-preset-art { color: #65849e; }
+[data-preset="THUNDERSTORM"] { background: linear-gradient(145deg, rgb(95 111 153 / .14), transparent 75%); }
+[data-preset="SNOW"] { background: linear-gradient(145deg, rgb(151 189 212 / .12), transparent 75%); }
+[data-preset="WATER"] { background: linear-gradient(165deg, transparent 10%, rgb(54 150 183 / .12)); }
+.theme-session-controls { position: sticky; top: calc(var(--workspace-header-reserve) + .5rem); z-index: 30; width: fit-content; margin: .5rem 0 1rem auto; max-width: 100%; }
+html[data-user-theme="animated"] .app-shell main > :not([data-theme-effects]):not([data-theme-controls]) { position: relative; background-color: var(--background); }
+html[data-user-theme="animated"] .app-shell main :is(input, button, a, [tabindex]) { scroll-margin-top: calc(var(--workspace-header-reserve) + 5rem); }
+@media (min-width: 1024px) { .workspace-theme-effects { left: var(--workspace-sidebar-width); } }
+@media (forced-colors: active) {
+  .workspace-theme-effects, .theme-scene { display: none; }
+  .theme-preset-art { color: CanvasText; }
+}

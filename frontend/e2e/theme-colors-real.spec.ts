@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { api, login, revealWorkspaceHeader } from "./helpers";
 import { REJECTED_STATE } from "./consent-state";
 import { DEFAULT_THEME_COLORS } from "../src/features/settings/theme-colors";
+import { DEFAULT_THEME_ANIMATION } from "../src/features/settings/theme-animation";
 import tr from "../src/i18n/messages/tr.json";
 
 const CONTAINER = "pda-theme-frontend-qa-postgres";
@@ -13,6 +14,60 @@ function sql(query: string) {
   if (label !== "theme-phase1-frontend") throw new Error("Not the disposable theme QA database");
   return execFileSync("docker", ["exec", CONTAINER, "psql", "-U", "postgres", "-d", "pda_theme_qa", "-qAtc", query], { encoding: "utf8" }).trim();
 }
+
+test("real animated preferences: database, new device, other account, audio logout cleanup and full reset", async ({ page, browser }) => {
+  test.setTimeout(90_000);
+  const t = tr.preferences.animation;
+  const prefix = randomUUID().replaceAll("-", "");
+  const users = [0, 1].map(index => ({ id: randomUUID(), email: `animation-${prefix}-${index}@example.test`,
+    nickname: `anim${prefix.slice(0, 12)}${index}`, password: `QaTheme2!${prefix}` }));
+  sql("CREATE EXTENSION IF NOT EXISTS pgcrypto");
+  for (const user of users) sql(`INSERT INTO users(id,email,nickname,password_hash,account_status,email_verification_status,global_role,created_at,updated_at) VALUES('${user.id}','${user.email}','${user.nickname}',crypt('${user.password}',gen_salt('bf',10)),'ACTIVE','VERIFIED','USER',now(),now())`);
+  await page.addInitScript(() => {
+    const contexts: AudioContext[] = [], Base = window.AudioContext;
+    window.AudioContext = class extends Base { constructor() { super(); contexts.push(this); } };
+    Object.assign(window, { animationAudioContexts: contexts });
+  });
+  const device = await browser.newContext({ baseURL: process.env.E2E_BASE_URL ?? "http://localhost:3000", storageState: REJECTED_STATE });
+  const other = await browser.newContext({ baseURL: process.env.E2E_BASE_URL ?? "http://localhost:3000", storageState: REJECTED_STATE });
+  try {
+    await login(page, users[0].email, users[0].password);
+    await page.goto("/tr/ayarlar");
+    await page.getByRole("radio", { name: tr.preferences.colors.animated, exact: true }).click();
+    await page.getByRole("radio", { name: t.names.RAIN, exact: true }).check();
+    await page.getByLabel(t.soundEnabled, { exact: true }).check();
+    await page.getByLabel(t.volume, { exact: true }).fill("73");
+    await page.getByLabel(t.animationEnabled, { exact: true }).uncheck();
+    await page.getByRole("button", { name: tr.preferences.save.save, exact: true }).click();
+    await expect(page.locator("[data-theme-effects] .theme-scene")).toHaveAttribute("data-running", "false");
+    const stored = JSON.parse(sql(`SELECT row_to_json(p) FROM user_preferences p WHERE user_id='${users[0].id}'`));
+    expect([stored.theme_type, stored.animation_preset, stored.theme_sound_enabled, stored.theme_sound_volume, stored.theme_animation_enabled]).toEqual(["ANIMATED", "RAIN", true, 73, false]);
+    const expected = { animation: "RAIN", soundEnabled: true, soundVolume: 73, animationEnabled: false };
+    expect(((await api(page, "GET", "/users/me/preferences")).json as { themeAnimation: unknown }).themeAnimation).toEqual(expected);
+    const devicePage = await device.newPage();
+    await login(devicePage, users[0].email, users[0].password); await devicePage.goto("/tr/ayarlar");
+    await expect(devicePage.getByLabel(t.volume, { exact: true })).toHaveValue("73");
+    await expect(devicePage.getByLabel(t.animationEnabled, { exact: true })).not.toBeChecked();
+    await expect(devicePage.getByRole("button", { name: t.startSound, exact: true })).toBeVisible();
+    const otherPage = await other.newPage();
+    await login(otherPage, users[1].email, users[1].password); await otherPage.goto("/tr/ayarlar");
+    await expect(otherPage.locator("[data-theme-effects]")).toHaveCount(0);
+    expect(((await api(otherPage, "GET", "/users/me/preferences")).json as { themeAnimation: unknown }).themeAnimation).toEqual(DEFAULT_THEME_ANIMATION);
+    await page.bringToFront();
+    await page.getByRole("button", { name: t.startSound, exact: true }).click();
+    await expect(page.getByRole("button", { name: t.stopSound, exact: true })).toBeVisible();
+    await revealWorkspaceHeader(page);
+    await page.getByRole("button", { name: /Hesap menüsü/ }).click();
+    await page.getByRole("menuitem", { name: "Çıkış yap", exact: true }).click();
+    await expect(page.locator("[data-theme-effects]")).toHaveCount(0);
+    await expect.poll(() => page.evaluate(() => (window as typeof window & { animationAudioContexts: AudioContext[] }).animationAudioContexts.map(c => c.state))).toEqual(["closed"]);
+    await login(page, users[1].email, users[1].password);
+    await expect(page.locator("[data-theme-effects]")).toHaveCount(0);
+    await devicePage.getByRole("button", { name: tr.preferences.colors.reset, exact: true }).click();
+    await expect(devicePage.locator("[data-theme-effects]")).toHaveCount(0);
+    expect(((await api(devicePage, "GET", "/users/me/preferences")).json as { themeAnimation: unknown }).themeAnimation).toEqual(DEFAULT_THEME_ANIMATION);
+  } finally { await device.close(); await other.close(); }
+});
 
 test("real cookie API/PostgreSQL: apply, independent colors, new device, account isolation, reset and logout cleanup", async ({ page, browser }) => {
   test.setTimeout(90_000);

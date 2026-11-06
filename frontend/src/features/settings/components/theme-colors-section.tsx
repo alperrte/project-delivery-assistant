@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { OptionGroup } from "./option-group";
 import { DEFAULT_THEME_COLORS, normalizeHex, normalizeThemeColors, themePalette, themeSwatch, type ThemeColors } from "../theme-colors";
+import type { ThemeAnimation } from "../theme-animation";
+import { AnimatedThemeEditor } from "./animated-theme-editor";
 
 const PRESETS = ["#1B5FE0", "#C8323A", "#147A52", "#6D4FD0", "#C45B12", "#EBCB22", "#C0307A", "#52607A"];
 const GRADIENTS = [["#1B5FE0", "#8B5CF6"], ["#C8323A", "#090A0B"], ["#EA580C", "#DB2777"], ["#147A52", "#0B7A85"]];
@@ -32,9 +34,10 @@ function ColorField({ label, name, value, onChange }: { label: string; name: str
   </div>;
 }
 
-export function ThemeColorsSection({ value, fallback, appearance, onChange, onReset, resetting }: {
+export function ThemeColorsSection({ value, fallback, appearance, onChange, onReset, resetting, animation, onAnimationChange }: {
   value: ThemeColors; fallback: ThemeColors; appearance: "system" | "light" | "dark";
   onChange: (value: ThemeColors) => void; onReset: () => void; resetting: boolean;
+  animation: ThemeAnimation; onAnimationChange: (value: ThemeAnimation) => void;
 }) {
   const t = useTranslations("preferences.colors");
   const { systemTheme } = useTheme();
@@ -45,13 +48,14 @@ export function ThemeColorsSection({ value, fallback, appearance, onChange, onRe
   return <SettingsSection title={t("title")} description={t("description")}>
     <div className="space-y-6" data-theme-color-editor>
       <OptionGroup name="theme-colors" label={t("type")} value={value.themeType}
-        options={[{ value: "SOLID", label: t("solid") }, { value: "GRADIENT", label: t("gradient") }]}
+        options={[{ value: "SOLID", label: t("solid") }, { value: "GRADIENT", label: t("gradient") }, { value: "ANIMATED", label: t("animated") }]}
         onChange={themeType => onChange({ ...value, themeType,
           solidColor: normalizeHex(value.solidColor) ?? fallback.solidColor,
           gradientStartColor: normalizeHex(value.gradientStartColor) ?? fallback.gradientStartColor,
           gradientEndColor: normalizeHex(value.gradientEndColor) ?? fallback.gradientEndColor,
           gradientAngle: angleValid ? value.gradientAngle : fallback.gradientAngle,
         })} />
+      {value.themeType === "ANIMATED" ? <AnimatedThemeEditor value={animation} onChange={onAnimationChange} /> : <>
       <div>
         <p className="mb-2 text-sm font-medium">{t("presets")}</p>
         <div className="flex flex-wrap gap-2" role="group" aria-label={t("presets")}>
@@ -110,6 +114,7 @@ export function ThemeColorsSection({ value, fallback, appearance, onChange, onRe
         </div>
         <p className="text-xs leading-5 text-muted-foreground">{t("previewHint")}</p>
       </div>
+      </>}
       <Button type="button" variant="outline" className="min-h-11 w-full whitespace-normal sm:w-auto" disabled={resetting} onClick={onReset}>
         {resetting ? t("resetting") : t("reset")}
       </Button>
