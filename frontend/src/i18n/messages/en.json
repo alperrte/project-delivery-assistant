@@ -1546,20 +1546,53 @@
   "preferences": {
     "colors": {
       "title": "Theme settings",
-      "description": "Personalize your workspace with a solid color or a two-color gradient. Works with light, dark and system appearance.",
-      "type": "Theme type", "solid": "Solid", "gradient": "Gradient", "presets": "Quick picks",
-      "solidColor": "Theme color", "start": "First color", "end": "Second color",
-      "picker": "Color picker for {label}", "hexHint": "#RGB or #RRGGBB. Open the color swatch to choose any shade.",
+      "description": "Personalize your workspace with a solid color, gradient or animated theme. Works with light, dark and system appearance.",
+      "type": "Theme type",
+      "solid": "Solid",
+      "gradient": "Gradient",
+      "presets": "Quick picks",
+      "solidColor": "Theme color",
+      "start": "First color",
+      "end": "Second color",
+      "picker": "Color picker for {label}",
+      "hexHint": "#RGB or #RRGGBB. Open the color swatch to choose any shade.",
       "invalidHex": "Enter a valid HEX code: #ABC or #AABBCC.",
-      "angle": "Gradient angle (°)", "angleSlider": "Gradient angle slider", "invalidAngle": "Enter a whole number between 0 and 360.",
-      "directions": { "0": "Horizontal", "1": "Vertical", "2": "Diagonal" },
-      "presetNames": { "0": "Blue", "1": "Red", "2": "Green", "3": "Purple", "4": "Orange", "5": "Yellow", "6": "Pink", "7": "Gray" },
-      "gradientNames": { "0": "Blue and purple", "1": "Red and black", "2": "Orange and pink", "3": "Green and teal" },
-      "preview": "Live preview", "sampleTitle": "Your workspace", "sampleText": "Your tasks and projects, in your colors.",
-      "sampleAction": "New task", "sampleLink": "View project",
+      "angle": "Gradient angle (°)",
+      "angleSlider": "Gradient angle slider",
+      "invalidAngle": "Enter a whole number between 0 and 360.",
+      "directions": {
+        "0": "Horizontal",
+        "1": "Vertical",
+        "2": "Diagonal"
+      },
+      "presetNames": {
+        "0": "Blue",
+        "1": "Red",
+        "2": "Green",
+        "3": "Purple",
+        "4": "Orange",
+        "5": "Yellow",
+        "6": "Pink",
+        "7": "Gray"
+      },
+      "gradientNames": {
+        "0": "Blue and purple",
+        "1": "Red and black",
+        "2": "Orange and pink",
+        "3": "Green and teal"
+      },
+      "preview": "Live preview",
+      "sampleTitle": "Your workspace",
+      "sampleText": "Your tasks and projects, in your colors.",
+      "sampleAction": "New task",
+      "sampleLink": "View project",
       "previewHint": "Preview your draft. Save to apply, or Discard to undo. Your chosen colors are preserved; interface tones adapt for readability.",
-      "reset": "Reset theme colors to default", "resetting": "Resetting…", "resetDone": "Theme colors reset. Your other preferences are unchanged.",
-      "loadError": "Preferences could not be loaded. Please try again.", "retry": "Try again"
+      "reset": "Reset theme to defaults",
+      "resetting": "Resetting…",
+      "resetDone": "Theme reset to defaults.",
+      "loadError": "Preferences could not be loaded. Please try again.",
+      "retry": "Try again",
+      "animated": "Animated"
     },
     "title": "Settings",
     "description": "What you save here becomes your account's default and applies every time you sign in. The language and theme switches in the top bar only last for the current session.",
@@ -1635,6 +1668,36 @@
         "off": "Off",
         "blocked": "Interface animations are off, so the language changes instantly."
       }
+    },
+    "animation": {
+      "presets": "Animated themes",
+      "preview": "Animation preview",
+      "previewSilent": "Silent preview",
+      "names": {
+        "THUNDERSTORM": "Thunderstorm",
+        "RAIN": "Rain",
+        "SNOW": "Snow",
+        "WATER": "Water"
+      },
+      "descriptions": {
+        "THUNDERSTORM": "Rain, occasional lightning and deep thunder.",
+        "RAIN": "Varied rainfall with soft drops.",
+        "SNOW": "Slow snowflakes with a gentle winter wind.",
+        "WATER": "Calm waves with bubbling water."
+      },
+      "animationEnabled": "Animation enabled",
+      "soundEnabled": "Theme sound enabled",
+      "soundHint": "After saving, press “Start sound” in the workspace. Sound never starts automatically on page load and stops when the tab is hidden.",
+      "volume": "Volume (%)",
+      "volumeSlider": "Volume slider",
+      "invalidVolume": "Enter a whole number from 0 to 100.",
+      "reduced": "Your motion preference uses a static view.",
+      "controls": "Temporary theme controls",
+      "pause": "Pause motion",
+      "resume": "Resume motion",
+      "startSound": "Start sound",
+      "stopSound": "Stop sound",
+      "blocked": "Sound could not start. Try again."
     }
   },
   "account": {

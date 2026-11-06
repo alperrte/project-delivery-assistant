@@ -42,6 +42,7 @@ import { clearPrivateAdmin } from "@/features/admin/query-keys";
 import { clearPrivateAuth } from "@/features/auth/query-keys";
 import { ADMIN_ENTRY_PATH, matchPath } from "@/i18n/routing";
 import { useApplySavedPreferences, useRestoreSessionBaseline } from "@/features/settings/session-preferences";
+import { ThemeEffects } from "@/features/settings/effects/theme-effects";
 
 import { useIncomingInvitationCount } from "@/features/invitations/hooks";
 import { PendingInvitationBadge } from "@/features/invitations/components/pending-invitation-badge";
@@ -329,9 +330,12 @@ export function AppShellView({ children, pathname, user, collapsed = false, onLo
           </div>
         </DialogContent>
       </Dialog>
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="workspace-shell-content flex min-w-0 flex-1 flex-col">
         <AppHeader contained={contained} user={user} mobileMenuOpen={menuOpen} onOpenMobileMenu={() => setMenuOpen(true)} onLogout={onLogout} />
-        <main id={contained ? undefined : "main-content"} style={contained ? { height: "var(--demo-height)", overflowY: "auto" } : undefined} tabIndex={-1} className={cn("w-full min-w-0 flex-1 pt-(--workspace-header-reserve)", pathname === "/dashboard" ? "" : "mx-auto max-w-[1560px] px-4 pb-6 sm:px-8 sm:pb-8")}>{children}</main>
+        <main id={contained ? undefined : "main-content"} style={contained ? { height: "var(--demo-height)", overflowY: "auto" } : undefined} tabIndex={-1} className={cn("w-full min-w-0 flex-1 pt-(--workspace-header-reserve)", pathname === "/dashboard" ? "" : "mx-auto max-w-[1560px] px-4 pb-6 sm:px-8 sm:pb-8")}>
+          {!contained && <ThemeEffects key={user?.id ?? "none"} userId={user?.id} />}
+          {children}
+        </main>
         {!contained && <OfflineNotice />}
       </div>
       {overlay}

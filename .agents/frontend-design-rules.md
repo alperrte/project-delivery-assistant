@@ -1,5 +1,11 @@
 # Frontend tasarım kuralları
 
+## Animasyonlu hesap temaları — 2026-11-06 (Faz 2 Frontend)
+
+Mevcut tema editöründe üçüncü kategori Animasyonlu'dur: Gök gürültülü fırtına, Yağmur, Kar, Su. İki sütunlu kartların tamamı etiketli native radio hedefidir; statik SVG işaretleri ve tek seçili Canvas önizlemesi kullanılır. Önizleme her zaman sessizdir. Ses açık/kapalı, 0–100 seviye ve animasyon açık/kapalı hesap taslağına aittir; Kaydet/Vazgeç ve tüm tema reset'i mevcut akışı izler. Metinler `preferences.animation` altında TR/EN/DE'dir.
+
+Çalışma alanında efektler yalnız opak içerik yüzeylerinin arkasında/gövdedeki boşluklarda görünür; public/auth ve contained landing demo çalıştırmaz. Tek sahne, sınırlı parçacık/DPR ve 30 FPS kullanılır; çoklu canlı kart, React frame-state veya tüm ekranı aydınlatan strobe eklenmez. Şimşek küçük, düşük opaklıklı ve seyrektir. Global hareket kapalı/OS reduced-motion/animasyon kapalı durumunda statik zemin; gizli sekmede render durur. Efekt pointer-events almaz. Geçici ses/hareket araç çubuğu header altında sticky'dir; tema alanlarının odak scroll payı toolbar'ı kapsar. Kalıcı seçeneklerle geçici başlat/durdur ayrı davranır: ses ancak düğme etkileşimiyle başlar ve gizli sekmeden/reload'dan sonra yeniden düğme ister. Tarayıcı ses sağlayamıyorsa tekrar deneme metni gösterilir. Yeni font/UI kütüphanesi/medya isteği/storage anahtarı yoktur.
+
 ## Hesap tema renkleri — 2026-11-06 (Faz 1 Frontend)
 
 Ayarlar içinde `ThemeColorsSection` mevcut SettingsSection/OptionGroup düzenini kullanır: Solid/Gradient, hızlı seçimler, native tam renk paleti + HEX, iki bağımsız renk, 0–360 açı, yerel canlı önizleme. Kaydet taslağı uygular, Vazgeç geri alır. Renk sıfırlama mevcut DELETE API'siyle hemen kaydedilir; diğer kaydedilmiş tercihler ve sayfadaki ilgisiz taslaklar korunur. TR/EN/DE metinleri `preferences.colors` altındadır.

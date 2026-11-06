@@ -1,6 +1,6 @@
 /** Account preference contract from phase 1. No browser storage: the account API owns persistence. */
 export type ThemeColors = {
-  themeType: "SOLID" | "GRADIENT";
+  themeType: "SOLID" | "GRADIENT" | "ANIMATED";
   solidColor: string;
   gradientStartColor: string;
   gradientEndColor: string;
@@ -20,7 +20,7 @@ export function normalizeHex(value: string): string | undefined {
 export function normalizeThemeColors(value: unknown): ThemeColors | undefined {
   if (!value || typeof value !== "object") return;
   const v = value as Record<string, unknown>;
-  if (v.themeType !== "SOLID" && v.themeType !== "GRADIENT") return;
+  if (v.themeType !== "SOLID" && v.themeType !== "GRADIENT" && v.themeType !== "ANIMATED") return;
   if (typeof v.gradientAngle !== "number" || !Number.isInteger(v.gradientAngle) || v.gradientAngle < 0 || v.gradientAngle > 360) return;
   const colors = [v.solidColor, v.gradientStartColor, v.gradientEndColor].map(c => typeof c === "string" ? normalizeHex(c) : undefined);
   if (colors.some(c => !c)) return;
@@ -58,7 +58,7 @@ function accessible(color: string, surface: string) {
 }
 
 export function themePalette(colors: ThemeColors, dark: boolean): Record<string, string> {
-  const primary = accessible(colors.themeType === "SOLID" ? colors.solidColor : colors.gradientStartColor, dark ? "#18191B" : "#FFFFFF");
+  const primary = accessible(colors.themeType === "GRADIENT" ? colors.gradientStartColor : colors.solidColor, dark ? "#18191B" : "#FFFFFF");
   const foreground = contrast(primary, "#FFFFFF") >= 4.5 ? "#FFFFFF" : "#000000";
   // Both endpoints have >=4.6:1 against white; sRGB interpolation cannot exceed their maximum luminance.
   const paint = colors.themeType === "GRADIENT"
@@ -69,7 +69,7 @@ export function themePalette(colors: ThemeColors, dark: boolean): Record<string,
 }
 
 export function themeSwatch(colors: ThemeColors) {
-  return colors.themeType === "SOLID" ? colors.solidColor
+  return colors.themeType !== "GRADIENT" ? colors.solidColor
     : `linear-gradient(${colors.gradientAngle}deg, ${colors.gradientStartColor}, ${colors.gradientEndColor})`;
 }
 

@@ -1570,20 +1570,53 @@
   "preferences": {
     "colors": {
       "title": "Theme-Einstellungen",
-      "description": "Gestalten Sie Ihren Arbeitsbereich mit einer Farbe oder einem zweifarbigen Verlauf. Funktioniert mit heller, dunkler und Systemdarstellung.",
-      "type": "Theme-Typ", "solid": "Einfarbig", "gradient": "Farbverlauf", "presets": "Schnellauswahl",
-      "solidColor": "Theme-Farbe", "start": "Erste Farbe", "end": "Zweite Farbe",
-      "picker": "Farbauswahl für {label}", "hexHint": "#RGB oder #RRGGBB. Öffnen Sie das Farbfeld für alle Farbtöne.",
+      "description": "Gestalten Sie Ihren Arbeitsbereich mit einer Farbe, einem Verlauf oder einem animierten Design. Funktioniert mit heller, dunkler und Systemdarstellung.",
+      "type": "Theme-Typ",
+      "solid": "Einfarbig",
+      "gradient": "Farbverlauf",
+      "presets": "Schnellauswahl",
+      "solidColor": "Theme-Farbe",
+      "start": "Erste Farbe",
+      "end": "Zweite Farbe",
+      "picker": "Farbauswahl für {label}",
+      "hexHint": "#RGB oder #RRGGBB. Öffnen Sie das Farbfeld für alle Farbtöne.",
       "invalidHex": "Geben Sie einen gültigen HEX-Code ein: #ABC oder #AABBCC.",
-      "angle": "Verlaufswinkel (°)", "angleSlider": "Regler für den Verlaufswinkel", "invalidAngle": "Geben Sie eine ganze Zahl zwischen 0 und 360 ein.",
-      "directions": { "0": "Horizontal", "1": "Vertikal", "2": "Diagonal" },
-      "presetNames": { "0": "Blau", "1": "Rot", "2": "Grün", "3": "Lila", "4": "Orange", "5": "Gelb", "6": "Rosa", "7": "Grau" },
-      "gradientNames": { "0": "Blau und Lila", "1": "Rot und Schwarz", "2": "Orange und Rosa", "3": "Grün und Türkis" },
-      "preview": "Live-Vorschau", "sampleTitle": "Ihr Arbeitsbereich", "sampleText": "Ihre Aufgaben und Projekte in Ihren Farben.",
-      "sampleAction": "Neue Aufgabe", "sampleLink": "Projekt anzeigen",
+      "angle": "Verlaufswinkel (°)",
+      "angleSlider": "Regler für den Verlaufswinkel",
+      "invalidAngle": "Geben Sie eine ganze Zahl zwischen 0 und 360 ein.",
+      "directions": {
+        "0": "Horizontal",
+        "1": "Vertikal",
+        "2": "Diagonal"
+      },
+      "presetNames": {
+        "0": "Blau",
+        "1": "Rot",
+        "2": "Grün",
+        "3": "Lila",
+        "4": "Orange",
+        "5": "Gelb",
+        "6": "Rosa",
+        "7": "Grau"
+      },
+      "gradientNames": {
+        "0": "Blau und Lila",
+        "1": "Rot und Schwarz",
+        "2": "Orange und Rosa",
+        "3": "Grün und Türkis"
+      },
+      "preview": "Live-Vorschau",
+      "sampleTitle": "Ihr Arbeitsbereich",
+      "sampleText": "Ihre Aufgaben und Projekte in Ihren Farben.",
+      "sampleAction": "Neue Aufgabe",
+      "sampleLink": "Projekt anzeigen",
       "previewHint": "Die Vorschau zeigt Ihren Entwurf. Speichern wendet ihn an, Verwerfen macht ihn rückgängig. Ihre Farben bleiben gespeichert; Oberflächentöne werden für die Lesbarkeit angepasst.",
-      "reset": "Theme-Farben auf Standard zurücksetzen", "resetting": "Wird zurückgesetzt…", "resetDone": "Theme-Farben zurückgesetzt. Andere Einstellungen bleiben erhalten.",
-      "loadError": "Einstellungen konnten nicht geladen werden. Bitte versuchen Sie es erneut.", "retry": "Erneut versuchen"
+      "reset": "Design zurücksetzen",
+      "resetting": "Wird zurückgesetzt…",
+      "resetDone": "Design zurückgesetzt.",
+      "loadError": "Einstellungen konnten nicht geladen werden. Bitte versuchen Sie es erneut.",
+      "retry": "Erneut versuchen",
+      "animated": "Animiert"
     },
     "title": "Einstellungen",
     "description": "Was Sie hier speichern, wird zum Standard Ihres Kontos und gilt bei jeder Anmeldung. Die Sprach- und Design-Schalter in der oberen Leiste gelten nur für die aktuelle Sitzung.",
@@ -1659,6 +1692,36 @@
         "off": "Aus",
         "blocked": "Die Oberflächenanimationen sind aus, daher wechselt die Sprache sofort."
       }
+    },
+    "animation": {
+      "presets": "Animierte Designs",
+      "preview": "Animationsvorschau",
+      "previewSilent": "Lautlose Vorschau",
+      "names": {
+        "THUNDERSTORM": "Gewitter",
+        "RAIN": "Regen",
+        "SNOW": "Schnee",
+        "WATER": "Wasser"
+      },
+      "descriptions": {
+        "THUNDERSTORM": "Regen, vereinzelte Blitze und tiefer Donner.",
+        "RAIN": "Abwechslungsreicher Regen mit sanften Tropfen.",
+        "SNOW": "Langsame Schneeflocken mit sanftem Winterwind.",
+        "WATER": "Ruhige Wellen mit Wasserblasen."
+      },
+      "animationEnabled": "Animation aktiviert",
+      "soundEnabled": "Designklang aktiviert",
+      "soundHint": "Nach dem Speichern „Klang starten“ im Arbeitsbereich drücken. Der Klang startet beim Laden niemals automatisch und stoppt, wenn der Tab ausgeblendet wird.",
+      "volume": "Lautstärke (%)",
+      "volumeSlider": "Lautstärkeregler",
+      "invalidVolume": "Eine ganze Zahl von 0 bis 100 eingeben.",
+      "reduced": "Ihre Bewegungseinstellung verwendet eine statische Ansicht.",
+      "controls": "Temporäre Designsteuerung",
+      "pause": "Bewegung pausieren",
+      "resume": "Bewegung fortsetzen",
+      "startSound": "Klang starten",
+      "stopSound": "Klang stoppen",
+      "blocked": "Klang konnte nicht starten. Erneut versuchen."
     }
   },
   "account": {

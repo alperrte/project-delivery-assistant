@@ -1,5 +1,14 @@
 ﻿# Klasör yapısı kısa rehberi
 
+## Animasyonlu tema frontend — 2026-11-06
+
+- `frontend/src/features/settings/theme-animation.ts`: dört preset, sessiz varsayılan, tam nesne ve 0–100 tamsayı doğrulama.
+- `components/animated-theme-editor.tsx`: erişilebilir kartlar, sessiz canlı önizleme, kalıcı ses/hareket/seviye alanları.
+- `effects/theme-scene.tsx`: kaynak ömrü sınırlandırılmış Canvas sahnesi; `effects/ambient-audio.ts`: yalnız gesture ile başlayan özgün prosedürel sesler; `effects/theme-effects.tsx`: actor/visibility/motion sahibi ve geçici kontroller.
+- Mevcut Settings API/draft/reset, AppShell, theme-colors ve CSS, TR/EN/DE metinleri genişler.
+- `frontend/e2e/theme-animation.spec.ts`, ortak `theme-fixture.ts`, mevcut renk/gerçek API testleri ve `playwright.theme.config.ts`: UI/Web Audio/gerçek cookie API ve izole PostgreSQL doğrulaması.
+- Teslim: `docs/compliation/2026-11-06-theme-phase2-frontend.md`.
+
 ## Animasyonlu tema backend — 2026-11-06
 
 - `backend/src/main/java/com/pda/user/domain/ThemeAnimation.java`: dört preset, sessiz varsayılan ve ses düzeyi doğrulama.
