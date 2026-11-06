@@ -14,19 +14,102 @@ const scene = (page: Page) => page.locator("[data-theme-effects] .theme-scene");
 
 async function observeAudio(page: Page) {
   await page.addInitScript(() => {
-    const contexts: AudioContext[] = [], filters: BiquadFilterNode[] = [], gains: GainNode[] = [];
+    const contexts: AudioContext[] = [], filters: BiquadFilterNode[] = [], gains: GainNode[] = [], sources: AudioBufferSourceNode[] = [];
     const Base = window.AudioContext;
     window.AudioContext = class extends Base {
       constructor() { super(); contexts.push(this); }
+      createBufferSource() { const node = super.createBufferSource(); sources.push(node); return node; }
       createBiquadFilter() { const node = super.createBiquadFilter(); filters.push(node); return node; }
       createGain() { const node = super.createGain(); gains.push(node); return node; }
     };
-    Object.assign(window, { audioProbe: { contexts, filters, gains } });
+    Object.assign(window, { audioProbe: { contexts, filters, gains, sources } });
   });
 }
 const audio = (page: Page) => page.evaluate(() => {
-  const probe = (window as typeof window & { audioProbe: { contexts: AudioContext[]; filters: BiquadFilterNode[]; gains: GainNode[] } }).audioProbe;
-  return { states: probe.contexts.map(c => c.state), frequencies: probe.filters.map(f => f.frequency.value), gains: probe.gains.map(g => g.gain.value) };
+  const probe = (window as typeof window & { audioProbe: { contexts: AudioContext[]; filters: BiquadFilterNode[]; gains: GainNode[]; sources: AudioBufferSourceNode[] } }).audioProbe;
+  return { states: probe.contexts.map(c => c.state), frequencies: probe.filters.map(f => f.frequency.value), gains: probe.gains.map(g => g.gain.value), recordings: probe.sources.map(s => ({ duration: s.buffer?.duration ?? 0, loop: s.loop })) };
+});
+
+test("independent solid/gradient and background drafts persist together without restarting active sound", async ({ page }) => {
+  await observeAudio(page);
+  const api = await fixture(page);
+  await page.goto("/tr/ayarlar");
+  const background = page.getByLabel(tr.preferences.colors.animatedBackground, { exact: true });
+  await expect(page.getByRole("radiogroup", { name: tr.preferences.colors.type }).getByRole("radio")).toHaveCount(2);
+  await background.check();
+  await choose(page, "SNOW");
+  await page.getByLabel(tr.preferences.colors.solidColor, { exact: true }).fill("#C8323A");
+  await page.getByLabel(t.soundEnabled, { exact: true }).check();
+  await save(page).click();
+  await expect(page.locator("html")).toHaveAttribute("data-user-theme", "solid");
+  await expect(page.locator("html")).toHaveAttribute("data-user-background", "animated");
+  await expect(scene(page)).toHaveAttribute("data-preset", "SNOW");
+  await page.getByRole("button", { name: t.startSound, exact: true }).click();
+  await expect.poll(async () => (await audio(page)).states).toEqual(["running"]);
+  await page.getByRole("radio", { name: tr.preferences.colors.gradient, exact: true }).click();
+  await page.getByLabel(tr.preferences.colors.start, { exact: true }).fill("#1B5FE0");
+  await page.getByLabel(tr.preferences.colors.end, { exact: true }).fill("#147A52");
+  await expect(background).toBeChecked();
+  await expect(page.locator("html")).toHaveAttribute("data-user-theme", "solid"); // Unsaved draft.
+  await save(page).click();
+  await expect(page.locator("html")).toHaveAttribute("data-user-theme", "gradient");
+  await expect(scene(page)).toHaveAttribute("data-preset", "SNOW");
+  await expect(page.locator("#workspace-theme-accent")).toHaveCount(1);
+  expect(api.saved().themeColors.themeType).toBe("ANIMATED_GRADIENT");
+  expect((await audio(page)).states).toEqual(["running"]);
+  await page.getByRole("radio", { name: tr.preferences.colors.solid, exact: true }).click();
+  await expect(page.getByLabel(tr.preferences.colors.solidColor, { exact: true })).toHaveValue("#C8323A");
+  await save(page).click();
+  await expect(page.locator("html")).toHaveAttribute("data-user-theme", "solid");
+  await expect(scene(page)).toHaveCount(1);
+  expect((await audio(page)).states).toEqual(["running"]);
+  await page.getByRole("radio", { name: tr.preferences.colors.gradient, exact: true }).click();
+  await expect(page.getByLabel(tr.preferences.colors.end, { exact: true })).toHaveValue("#147A52");
+  await save(page).click();
+  await expect(page.locator("html")).toHaveAttribute("data-user-theme", "gradient");
+  await page.reload();
+  await expect(background).toBeChecked();
+  await expect(scene(page)).toHaveAttribute("data-preset", "SNOW");
+  await expect(page.getByRole("button", { name: t.startSound, exact: true })).toBeVisible();
+  expect((await audio(page)).states).toEqual([]);
+  await background.uncheck();
+  await page.getByRole("button", { name: tr.preferences.save.discard, exact: true }).click();
+  await expect(background).toBeChecked();
+  await page.getByRole("button", { name: t.startSound, exact: true }).click();
+  await expect.poll(async () => (await audio(page)).states).toEqual(["running"]);
+  await background.uncheck(); await save(page).click();
+  await expect(page.locator("html")).not.toHaveAttribute("data-user-background");
+  await expect(page.locator("html")).toHaveAttribute("data-user-theme", "gradient");
+  await expect(scene(page)).toHaveCount(0);
+  await expect.poll(async () => (await audio(page)).states).toEqual(["closed"]);
+  expect(api.saved().themeAnimation.animation).toBe("SNOW");
+  expect(api.saved().themeColors.themeType).toBe("GRADIENT");
+  await page.getByRole("button", { name: tr.preferences.colors.reset, exact: true }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-user-theme", "solid");
+  expect(api.saved().themeAnimation).toEqual(DEFAULT_THEME_ANIMATION);
+});
+
+for (const [locale, messages] of [["tr", tr], ["en", en], ["de", de]] as const) for (const dark of [false, true]) test(`${locale} combined gradient/background ${dark ? "dark" : "light"}: responsive and accessible`, async ({ page }) => {
+  const api = await fixture(page, locale, dark, true); // Existing ANIMATED accounts become solid + background.
+  await page.goto(`/${locale}/${locale === "tr" ? "ayarlar" : locale === "de" ? "einstellungen" : "settings"}`);
+  const colors = messages.preferences.colors;
+  await expect(page.getByRole("radio", { name: colors.solid, exact: true })).toBeChecked();
+  await expect(page.getByLabel(colors.animatedBackground, { exact: true })).toBeChecked();
+  await page.getByRole("radio", { name: colors.gradient, exact: true }).click();
+  await page.getByRole("button", { name: messages.preferences.save.save, exact: true }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-user-theme", "gradient");
+  await expect(page.locator("html")).toHaveAttribute("data-user-background", "animated");
+  expect(api.saved().themeColors.themeType).toBe("ANIMATED_GRADIENT");
+  for (const width of [1440, 768, 390, 320]) {
+    await page.setViewportSize({ width, height: 960 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await expect(page.getByLabel(colors.end, { exact: true })).toBeVisible();
+  }
+  expect((await new AxeBuilder({ page }).include("[data-theme-color-editor]").include("[data-theme-controls]").analyze()).violations).toEqual([]);
+  if (locale === "tr") {
+    mkdirSync("../.local/theme-combined-frontend", { recursive: true });
+    await page.locator("[data-theme-color-editor]").screenshot({ path: `../.local/theme-combined-frontend/editor-${dark ? "dark" : "light"}.png` });
+  }
 });
 
 test("animation contract rejects incomplete, injected, nonboolean and noninteger values", () => {
@@ -37,17 +120,18 @@ test("animation contract rejects incomplete, injected, nonboolean and noninteger
   for (const soundVolume of [0, 100]) expect(normalizeThemeAnimation({ ...DEFAULT_THEME_ANIMATION, soundVolume })?.soundVolume).toBe(soundVolume);
 });
 
-test("four presets without preview, valid controls, save/reload/discard and complete reset", async ({ page }) => {
+test("five presets without preview, valid controls, save/reload/discard and complete reset", async ({ page }) => {
   const api = await fixture(page);
   await page.goto("/tr/ayarlar");
-  await page.getByRole("radio", { name: tr.preferences.colors.animated, exact: true }).click();
-  await expect(page.locator("[data-animation-editor] input[type=radio]")).toHaveCount(4);
+  await page.getByLabel(tr.preferences.colors.animatedBackground, { exact: true }).check();
+  await expect(page.locator("[data-animation-editor] input[type=radio]")).toHaveCount(5);
   for (const preset of ANIMATION_PRESETS) {
     await choose(page, preset);
     await expect(page.getByRole("radio", { name: t.names[preset], exact: true })).toBeChecked();
     await expect(page.locator("[data-animation-editor] canvas")).toHaveCount(0);
     await expect(page.locator("[data-theme-effects]")).toHaveCount(0);
   }
+  await choose(page, "WATER");
   await page.getByLabel(t.volume, { exact: true }).fill("101");
   await expect(save(page)).toBeDisabled();
   await expect(page.getByText(t.invalidVolume)).toBeVisible();
@@ -66,7 +150,7 @@ test("four presets without preview, valid controls, save/reload/discard and comp
   expect(api.saved().themeAnimation).toEqual(DEFAULT_THEME_ANIMATION);
 });
 
-test("gesture-owned real Web Audio: distinct presets, volume, tab stop, no reload autoplay and solid cleanup", async ({ page }) => {
+test("gesture-owned real Web Audio: distinct presets, volume, tab stop, no reload autoplay and background cleanup", async ({ page }) => {
   await observeAudio(page);
   await fixture(page, "tr", false, true);
   await page.goto("/tr/ayarlar");
@@ -76,13 +160,16 @@ test("gesture-owned real Web Audio: distinct presets, volume, tab stop, no reloa
   expect((await audio(page)).states).toEqual([]);
   await page.getByRole("button", { name: t.startSound, exact: true }).click();
   await expect(page.getByRole("button", { name: t.stopSound, exact: true })).toBeVisible();
-  for (const [preset, frequency] of [["RAIN", 6500], ["SNOW", 420], ["WATER", 650], ["THUNDERSTORM", 2600]] as const) {
+  for (const preset of ["RAIN", "SNOW", "WATER", "THUNDERSTORM", "FIRE"] as const) {
+    const previous = (await audio(page)).recordings.length;
     await choose(page, preset); await save(page).click();
-    await expect.poll(async () => (await audio(page)).frequencies.at(-1)).toBe(frequency);
+    await expect(page.getByRole("button", { name: t.stopSound, exact: true })).toBeVisible();
+    await expect.poll(async () => (await audio(page)).recordings.length).toBeGreaterThan(previous);
+    expect((await audio(page)).recordings.at(-1)?.duration).toBeGreaterThan(10);
     expect((await audio(page)).states).toEqual(["running"]);
   }
   await page.getByLabel(t.volume, { exact: true }).fill("100"); await save(page).click();
-  await expect.poll(async () => (await audio(page)).gains[0]).toBeCloseTo(.14, 3);
+  await expect.poll(async () => (await audio(page)).gains[0]).toBeCloseTo(.45, 3);
   await page.evaluate(() => { Object.defineProperty(document, "visibilityState", { configurable: true, value: "hidden" }); document.dispatchEvent(new Event("visibilitychange")); });
   await expect.poll(async () => (await audio(page)).states).toEqual(["closed"]);
   await expect(scene(page)).toHaveAttribute("data-running", "false");
@@ -95,7 +182,7 @@ test("gesture-owned real Web Audio: distinct presets, volume, tab stop, no reloa
   await expect(page.getByRole("button", { name: t.startSound, exact: true })).toBeVisible();
   expect((await audio(page)).states).toEqual([]);
   await page.getByRole("button", { name: t.startSound, exact: true }).click();
-  await page.getByRole("radio", { name: tr.preferences.colors.solid, exact: true }).click(); await save(page).click();
+  await page.getByLabel(tr.preferences.colors.animatedBackground, { exact: true }).uncheck(); await save(page).click();
   await expect.poll(async () => (await audio(page)).states).toEqual(["closed"]);
   await expect(page.locator("[data-theme-effects]")).toHaveCount(0);
 });
@@ -147,9 +234,9 @@ test("thunder remains available with visual motion off and pending sounds are cl
   await expect(scene(page)).toHaveAttribute("data-running", "false");
   await page.clock.install();
   await page.getByRole("button", { name: t.startSound, exact: true }).click();
-  await expect(page.getByRole("button", { name: t.stopSound, exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: t.stopSound, exact: true })).toHaveAttribute("aria-busy", "false");
   await page.clock.runFor(18_000);
-  expect((await audio(page)).frequencies).toContain(140);
+  expect((await audio(page)).recordings.some(s => !s.loop && s.duration > 1)).toBe(true);
   await page.getByRole("button", { name: t.stopSound, exact: true }).click();
   const stopped = await audio(page);
   await page.clock.runFor(40_000);
@@ -189,7 +276,7 @@ for (const [locale, messages] of [["tr", tr], ["en", en], ["de", de]] as const) 
   if (locale === "tr") { mkdirSync("../.local/theme-phase2-frontend", { recursive: true }); await page.screenshot({ path: "../.local/theme-phase2-frontend/mobile-dark.png" }); }
 });
 
-for (const [locale, messages] of [["tr", tr], ["en", en], ["de", de]] as const) test(`${locale} desktop/light: controls, accessibility and all four presets`, async ({ page }) => {
+for (const [locale, messages] of [["tr", tr], ["en", en], ["de", de]] as const) test(`${locale} desktop/light: controls, accessibility and all five presets`, async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 960 });
   await fixture(page, locale, false, true);
   await page.goto(`/${locale}/${locale === "tr" ? "ayarlar" : locale === "de" ? "einstellungen" : "settings"}`);
@@ -201,4 +288,100 @@ for (const [locale, messages] of [["tr", tr], ["en", en], ["de", de]] as const) 
   expect(violations.violations).toEqual([]);
   await page.getByText(messages.preferences.animation.presets, { exact: true }).scrollIntoViewIfNeeded();
   if (locale === "tr") await page.screenshot({ path: "../.local/theme-phase2-frontend/desktop-light.png" });
+});
+
+
+test("recorded audio loads only on play, failed downloads retry and loading can be cancelled", async ({ page }) => {
+  await observeAudio(page); await fixture(page, "tr", true, true);
+  const requests: string[] = [];
+  page.on("request", r => { if (r.url().includes("/audio/ambience/")) requests.push(r.url()); });
+  await page.goto("/tr/ayarlar");
+  await choose(page, "FIRE"); await page.getByLabel(t.soundEnabled, { exact: true }).check(); await save(page).click();
+  expect(requests).toEqual([]);
+  await page.route("**/audio/ambience/fire.wav", route => route.fulfill({ status: 503, body: "unavailable" }));
+  await page.getByRole("button", { name: t.startSound, exact: true }).click();
+  await expect(page.getByText(t.blocked, { exact: true })).toBeVisible();
+  expect((await audio(page)).states).toEqual(["closed"]);
+  await page.unroute("**/audio/ambience/fire.wav");
+  await page.getByRole("button", { name: t.startSound, exact: true }).click();
+  await expect.poll(async () => (await audio(page)).recordings.length).toBe(1);
+  await expect(page.getByRole("button", { name: t.stopSound, exact: true })).toBeVisible();
+  await page.getByRole("button", { name: t.stopSound, exact: true }).click();
+  let release!: () => void;
+  const pending = new Promise<void>(resolve => { release = resolve; });
+  await page.route("**/audio/ambience/fire.wav", async route => {
+    await pending;
+    await route.continue().catch(() => {});
+  });
+  await page.getByRole("button", { name: t.startSound, exact: true }).click();
+  await expect(page.getByRole("button", { name: t.stopSound, exact: true })).toHaveAttribute("aria-busy", "true");
+  await page.getByRole("button", { name: t.stopSound, exact: true }).click();
+  release();
+  await expect.poll(async () => (await audio(page)).states).toEqual(["closed", "closed", "closed"]);
+  await expect(page.getByRole("button", { name: t.startSound, exact: true })).toHaveAttribute("aria-busy", "false");
+  expect((await audio(page)).recordings).toHaveLength(1);
+});
+
+test("a visible lightning strike schedules recorded thunder from the same scene event", async ({ page }) => {
+  await observeAudio(page);
+  await page.addInitScript(() => {
+    Object.assign(window, { lightningStrokes: 0 });
+    const stroke = CanvasRenderingContext2D.prototype.stroke;
+    CanvasRenderingContext2D.prototype.stroke = function (path?: Path2D) {
+      if (String(this.strokeStyle).startsWith("rgba(167, 190, 219,"))
+        (window as typeof window & { lightningStrokes: number }).lightningStrokes++;
+      if (path) stroke.call(this, path);
+      else Reflect.apply(stroke, this, []);
+    };
+  });
+  await fixture(page, "tr", true, true); await page.goto("/tr/ayarlar");
+  await page.getByLabel(t.soundEnabled, { exact: true }).check(); await save(page).click();
+  await page.goto("/tr/gorevlerim");
+  await expect(scene(page)).toHaveAttribute("data-running", "true");
+  await page.getByRole("button", { name: t.startSound, exact: true }).click();
+  await expect(page.getByRole("button", { name: t.stopSound, exact: true })).toHaveAttribute("aria-busy", "false");
+  // Let initial layout/ResizeObserver settle before replacing the animation clock.
+  await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+  await page.clock.install();
+  await page.clock.runFor(10_000);
+  expect((await audio(page)).recordings.filter(s => !s.loop)).toHaveLength(0);
+  for (let i = 0; i < 100; i++) {
+    await page.clock.runFor(250);
+    if ((await audio(page)).recordings.some(s => !s.loop)) break;
+  }
+  expect((await audio(page)).recordings.filter(s => !s.loop)).toHaveLength(1);
+  expect(await page.evaluate(() => (window as typeof window & { lightningStrokes: number }).lightningStrokes)).toBeGreaterThan(0);
+  await page.screenshot({ path: "../.local/theme-cinematic/lightning-dark.png" });
+  await page.getByRole("button", { name: t.stopSound, exact: true }).click();
+  await expect.poll(async () => (await audio(page)).states).toEqual(["closed"]);
+});
+
+for (const dark of [false, true]) test(`all five detailed scenes render and animate without covering content: ${dark ? "dark" : "light"}`, async ({ page }) => {
+  const errors: string[] = [];
+  page.on("pageerror", e => errors.push(e.message));
+  await fixture(page, "tr", dark, true); await page.goto("/tr/ayarlar");
+  await choose(page, "FIRE"); await save(page).click();
+  await page.goto("/tr/gorevlerim");
+  // Preferences fixture is retained across navigation; the canvas is decorative and never takes input.
+  await expect(scene(page)).toHaveAttribute("data-preset", "FIRE");
+  mkdirSync("../.local/theme-cinematic", { recursive: true });
+  for (const width of [1440, 390]) {
+    await page.setViewportSize({ width, height: 960 });
+    await page.goto("/tr/ayarlar");
+    for (const preset of ["RAIN", "SNOW", "WATER", "THUNDERSTORM", "FIRE"] as const) {
+      await choose(page, preset); await save(page).click();
+      await page.goto("/tr/gorevlerim");
+      await expect(scene(page)).toHaveAttribute("data-preset", preset);
+      await page.waitForTimeout(600);
+      const canvas = scene(page).locator("canvas");
+      const first = await canvas.evaluate(c => (c as HTMLCanvasElement).toDataURL());
+      await page.waitForTimeout(200);
+      expect(await canvas.evaluate(c => (c as HTMLCanvasElement).toDataURL())).not.toBe(first);
+      expect(await scene(page).evaluate(e => getComputedStyle(e).pointerEvents)).toBe("none");
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+      await page.screenshot({ path: `../.local/theme-cinematic/${preset}-${dark ? "dark" : "light"}-${width}.png` });
+      await page.goto("/tr/ayarlar");
+    }
+  }
+  expect(errors).toEqual([]);
 });

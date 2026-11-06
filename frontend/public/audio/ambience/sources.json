@@ -1,0 +1,81 @@
+{
+  "license": "CC0-1.0",
+  "processing": "Public HQ previews decoded to 24kHz PCM16; bounded excerpt (thunder 13.5-25.5s, rain 20-44s), conservative RMS/peak normalization; loop seam crossfade 650ms (thunder one-shot has edge fades).",
+  "recordings": [
+    {
+      "name": "rain",
+      "author": "hargissssound",
+      "source": "https://freesound.org/people/hargissssound/sounds/321647/",
+      "preview": "https://cdn.freesound.org/previews/321/321647_387219-hq.mp3",
+      "license": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "bytes": 2241644,
+      "duration": 23.35,
+      "channels": 2,
+      "sampleRate": 24000,
+      "rms": 0.09620926501102545,
+      "peak": 0.85,
+      "sourceSha256": "01d540448ed8cce559e3ebc067ea0c75439800436d126ba3c22bffe8622a5df5",
+      "sha256": "85e022cf5d3ddd27aceb96ff42a49d2033c40afc688971500ea757e8ad2aac9e"
+    },
+    {
+      "name": "wind",
+      "author": "craigsmith",
+      "source": "https://freesound.org/people/craigsmith/sounds/438857/",
+      "preview": "https://cdn.freesound.org/previews/438/438857_2524442-hq.mp3",
+      "license": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "bytes": 1120844,
+      "duration": 23.35,
+      "channels": 1,
+      "sampleRate": 24000,
+      "rms": 0.10115983477841393,
+      "peak": 0.85,
+      "sourceSha256": "2c8464438ebe5265807382de2c89b061e7bd3aa3d8a5dfd6d79efa320cc596f3",
+      "sha256": "d4461f8d3a6579bd8fc042bce1ab3328f78dd61b2af97af5c77ec845d29e36ed"
+    },
+    {
+      "name": "thunder",
+      "author": "olliehahn12",
+      "source": "https://freesound.org/people/olliehahn12/sounds/346277/",
+      "preview": "https://cdn.freesound.org/previews/346/346277_3820822-hq.mp3",
+      "license": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "bytes": 1152044,
+      "duration": 12,
+      "channels": 2,
+      "sampleRate": 24000,
+      "rms": 0.09706825190243812,
+      "peak": 0.85,
+      "sourceSha256": "1ce8b0e925b5253139a9eb79d344be41a654aba80fe1db36e0483ada57c7a873",
+      "sha256": "72c8ba592c05a5be9bad2d6a2a39cb6db4cdb48429afb3fefe604995d9a6fb92"
+    },
+    {
+      "name": "water",
+      "author": "kijjaz",
+      "source": "https://freesound.org/people/kijjaz/sounds/16740/",
+      "preview": "https://cdn.freesound.org/previews/16/16740_26950-hq.mp3",
+      "license": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "bytes": 1751044,
+      "duration": 18.239583333333332,
+      "channels": 2,
+      "sampleRate": 24000,
+      "rms": 0.04912745184260374,
+      "peak": 0.85,
+      "sourceSha256": "de4f25bf4a75a2bd992432da5138307d0f9348ad539c588238186b83853d1bba",
+      "sha256": "bf444335b8426d979f6cb1b7da97a07e899dd1b73ec547bd457520ad043d24bc"
+    },
+    {
+      "name": "fire",
+      "author": "Nox_Sound",
+      "source": "https://freesound.org/people/Nox_Sound/sounds/558967/",
+      "preview": "https://cdn.freesound.org/previews/558/558967_9250976-hq.mp3",
+      "license": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "bytes": 1159296,
+      "duration": 12.075541666666666,
+      "channels": 2,
+      "sampleRate": 24000,
+      "rms": 0.14,
+      "peak": 0.6944951615432383,
+      "sourceSha256": "62ee6ffe5dbfa1f8a5bd50cd7cb5d28c7953659e1234847fd47bd0e33c4d7889",
+      "sha256": "c7578021f53df309b3acab7cc98f8a515f01d0af9604a1147faf522aba8665cd"
+    }
+  ]
+}

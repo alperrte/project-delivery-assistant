@@ -1,4 +1,4 @@
-export const ANIMATION_PRESETS = ["THUNDERSTORM", "RAIN", "SNOW", "WATER"] as const;
+export const ANIMATION_PRESETS = ["THUNDERSTORM", "RAIN", "SNOW", "WATER", "FIRE"] as const;
 export type AnimationPreset = typeof ANIMATION_PRESETS[number];
 export type ThemeAnimation = { animation: AnimationPreset; soundEnabled: boolean; soundVolume: number; animationEnabled: boolean };
 export const DEFAULT_THEME_ANIMATION: ThemeAnimation = { animation: "THUNDERSTORM", soundEnabled: false, soundVolume: 50, animationEnabled: true };

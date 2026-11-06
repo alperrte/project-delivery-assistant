@@ -6,7 +6,7 @@ import { SettingsSection } from "@/components/common/settings-section";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { OptionGroup } from "./option-group";
-import { normalizeHex, type ThemeColors } from "../theme-colors";
+import { combineThemeType, hasAnimatedBackground, isGradientTheme, normalizeHex, type ThemeColors } from "../theme-colors";
 import type { ThemeAnimation } from "../theme-animation";
 import { AnimatedThemeEditor } from "./animated-theme-editor";
 
@@ -38,23 +38,24 @@ export function ThemeColorsSection({ value, fallback, onChange, onReset, resetti
   const t = useTranslations("preferences.colors");
   const id = useId();
   const angleValid = Number.isInteger(value.gradientAngle) && value.gradientAngle >= 0 && value.gradientAngle <= 360;
+  const animated = hasAnimatedBackground(value.themeType);
+  const colorMode = isGradientTheme(value.themeType) ? "GRADIENT" : "SOLID";
   return <SettingsSection title={t("title")} description={t("description")}>
     <div className="space-y-6" data-theme-color-editor>
-      <OptionGroup name="theme-colors" label={t("type")} value={value.themeType}
-        options={[{ value: "SOLID", label: t("solid") }, { value: "GRADIENT", label: t("gradient") }, { value: "ANIMATED", label: t("animated") }]}
-        onChange={themeType => onChange({ ...value, themeType,
+      <OptionGroup name="theme-colors" label={t("type")} value={colorMode}
+        options={[{ value: "SOLID", label: t("solid") }, { value: "GRADIENT", label: t("gradient") }]}
+        onChange={mode => onChange({ ...value, themeType: combineThemeType(mode, animated),
           solidColor: normalizeHex(value.solidColor) ?? fallback.solidColor,
           gradientStartColor: normalizeHex(value.gradientStartColor) ?? fallback.gradientStartColor,
           gradientEndColor: normalizeHex(value.gradientEndColor) ?? fallback.gradientEndColor,
           gradientAngle: angleValid ? value.gradientAngle : fallback.gradientAngle,
         })} />
-      {value.themeType === "ANIMATED" ? <AnimatedThemeEditor value={animation} onChange={onAnimationChange} /> : <>
-      {value.themeType === "SOLID" ? <ColorField name="solidColor" label={t("solidColor")} value={value.solidColor} onChange={solidColor => onChange({ ...value, solidColor })} /> :
+      {colorMode === "SOLID" ? <ColorField name="solidColor" label={t("solidColor")} value={value.solidColor} onChange={solidColor => onChange({ ...value, solidColor })} /> :
         <div className="grid gap-4 sm:grid-cols-2">
           <ColorField name="gradientStartColor" label={t("start")} value={value.gradientStartColor} onChange={gradientStartColor => onChange({ ...value, gradientStartColor })} />
           <ColorField name="gradientEndColor" label={t("end")} value={value.gradientEndColor} onChange={gradientEndColor => onChange({ ...value, gradientEndColor })} />
         </div>}
-      {value.themeType === "GRADIENT" && <div className="space-y-3">
+      {colorMode === "GRADIENT" && <div className="space-y-3">
         <div className="flex items-center justify-between gap-3">
           <label htmlFor={`${id}-angle`} className="text-sm font-medium">{t("angle")}</label>
           <Input id={`${id}-angle`} name="gradientAngle" autoComplete="off" type="number" min={0} max={360} step={1} value={Number.isFinite(value.gradientAngle) ? value.gradientAngle : ""}
@@ -65,7 +66,15 @@ export function ThemeColorsSection({ value, fallback, onChange, onReset, resetti
           className="h-11 w-full accent-primary" onChange={e => onChange({ ...value, gradientAngle: Number(e.target.value) })} />
         {!angleValid && <p id={`${id}-angle-error`} role="status" className="text-xs text-destructive">{t("invalidAngle")}</p>}
       </div>}
-      </>}
+      <div className="space-y-1 border-t pt-4">
+        <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm font-medium">
+          <input type="checkbox" name="animatedBackground" className="size-4 shrink-0 accent-primary" checked={animated}
+            onChange={e => onChange({ ...value, themeType: combineThemeType(colorMode, e.target.checked) })} />
+          {t("animatedBackground")}
+        </label>
+        <p className="text-xs leading-5 text-muted-foreground">{t("animatedBackgroundHint")}</p>
+      </div>
+      {animated && <AnimatedThemeEditor value={animation} onChange={onAnimationChange} />}
       <Button type="button" variant="outline" className="min-h-11 w-full whitespace-normal sm:w-auto" disabled={resetting} onClick={onReset}>
         {resetting ? t("resetting") : t("reset")}
       </Button>

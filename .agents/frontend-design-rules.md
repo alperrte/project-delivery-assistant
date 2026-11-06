@@ -1,5 +1,15 @@
 # Frontend tasarım kuralları
 
+## Detaylı sahneler ve Alev — 2026-11-06
+
+Beş statik preset kartı vardır; Su kartı dalga yerine baloncukları, Alev kartı alev/kıvılcımları temsil eder. Büyük/canlı önizleme yoktur; iki toggle yan yana kalır. Efektler içerik yüzeylerinin arkasındadır. Fire düşük çözünürlüklü advected yoğunluk alanı ve kıvılcım, yağmur optik damla sprite ve sıçrama, su baloncuk sprite ve yumuşak ışık kullanır. Seyrek şimşek yalnız yerel bulut parlamasıdır. Ses yüklenirken ikon iptal edilebilir; hata sonrası tekrar denenir. Gizli sekme/reduced motion/global motion off görsel döngüyü durdurur; kayıtlar autoplay yapmaz.
+
+## Bağımsız vurgu ve arka plan seçimi — 2026-11-06
+
+Tema türü radio grubu artık yalnız Tek renk / Gradyan içerir; renk alanları her iki durumda da görünür. Altındaki ayrı Animasyonlu arka plan checkbox'ı seçilince dört kart ve mevcut ses/hareket/seviye alanları açılır. Büyük önizleme ve hızlı seçimler geri getirilmez. Renk modu değişince arka plan seçimi ve diğer renk/animasyon değerleri korunur; Kaydet'e kadar global durum değişmez. Geçici sağ üst ikon düzeni aynıdır.
+
+Hesap değerleri SOLID, GRADIENT, ANIMATED (tek renk + arka plan), ANIMATED_GRADIENT olarak eşlenir. DOM'da vurgu `data-user-theme=solid|gradient`, arka plan `data-user-background=animated` ile bağımsızdır. Gradyan SVG paint tanımı akış dışında kalır; Canvas ile birlikte fazladan satır/zemin üretmez. Arka plan kapatıldığında renk vurgusu kalır ve ses kaynakları kapanır. Sekme/reload ses başlatmaz; eski ANIMATED kayıtları aynı görünümü korur. Kayıt: `docs/compliation/2026-11-06-combined-theme-frontend.md`.
+
 ## Tema vurgu ve kontrol düzenlemesi — 2026-11-06
 
 Bu takip kararı önceki sticky/44 px ikon/ilk renk scrollbar/animasyon önizleme notlarını günceller. Geçici tema kontrolleri en sağ üstte 8 px inset ile absolute konumlanır; sayfa kaydırıldığında takip etmez. Kutu, border, zemin ve gölge yoktur; görünen ikon 14 px, masaüstü hedef 32 px, coarse pointer hedef 44 px'dir. Dar ekranlarda navbar ayrı alanda kalır; ikonlarla çakışmaz. Erişilebilir eylem adları, title ve toggle davranışı devam eder.

@@ -1,5 +1,9 @@
 # Veritabanı ve kalıcılık
 
+## Detaylı sahneler ve Alev — 2026-11-06
+
+V63__fire_theme_preset.sql yalnız ck_preferences_animation_preset CHECK allowlist değerlerine FIRE ekler. Eski migration checksum, tüm kayıt/değer/timestamp/default/diğer kısıtlar korunur. V62→V63 snapshot korunması ve beş geçerli/bozuk preset gerçek PostgreSQL 18 testindedir. Yeni kolon/tablo/index/ENV yoktur. Geri dönüşte FIRE okuyabilen uyumlu binary gerekir; history veya kullanıcı seçimini sessizce silme.
+
 ## V62 Birlikte gradyan ve animasyon — 2026-11-06
 
 `V62__combined_theme_preferences.sql` theme_type kolonunu VARCHAR(8)→VARCHAR(24) genişletir ve CHECK'e 17 karakterli ANIMATED_GRADIENT ekler. Mevcut SOLID/GRADIENT/ANIMATED değerleri, renk/animasyon/ses tercihleri ve updated_at korunur; yeni kolon/tablo/index yoktur. Entity uzunluğu aynı sözleşmeye uyar. Eski migration dosyaları değiştirilmez. Normal yedek ve Flyway startup yolu kullanılır; uygulama geri alınırken birleşik türü okuyabilen uyumlu build gerekir, kayıt/history silinmez. Uygulama/production DB bu teslimde değiştirilmedi; testler izole Testcontainers üzerindedir. Sonraki sürüm V63. Kayıt: `docs/compliation/2026-11-06-combined-theme-backend.md`.

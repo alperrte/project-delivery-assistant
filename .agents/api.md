@@ -1,5 +1,9 @@
 # API rehberi
 
+## Detaylı sahneler ve Alev — 2026-11-06
+
+Mevcut preferences GET/PUT animasyon allowlist artık THUNDERSTORM/RAIN/SNOW/WATER/FIRE değerlerini kabul eder. Dört alan, 0–100 tam sayı ses seviyesi, iki boolean, varsayılanlar ve hesap izolasyonu/reset değişmez. Yeni endpoint/ENV veya güvenlik istisnası yoktur. Domain, DTO/Swagger ve V63 CHECK birlikte genişletildi. Sözleşme SECURITY §11 Fire preset; teslim docs/compliation/2026-11-06-cinematic-theme-effects.md.
+
 ## Birlikte renk ve animasyon tercihi — 2026-11-06 (Backend)
 
 Mevcut preferences GET/PUT renk türü artık dört durumu taşır: SOLID (tek renk), GRADIENT (gradyan), ANIMATED (tek renk + animasyon), ANIMATED_GRADIENT (gradyan + animasyon). Yeni endpoint/alan yoktur; beş renk ve dört animasyon alanı, eksik/null nesne koruma, temel tercihler, reset ve güvenlik akışı değişmez. Yeni birleşik tür domain/API/DB'de doğrulanır. Frontend sonraki aşamada iki bağımsız seçimden bu türü üretmelidir; eski ANIMATED tercihi değişmeden okunur. Sözleşme, örnek JSON ve Swagger: SECURITY §11 "Combined color and animated background preferences". Teslim: `docs/compliation/2026-11-06-combined-theme-backend.md`.

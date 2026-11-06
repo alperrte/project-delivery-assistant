@@ -1,11 +1,23 @@
 /** Account preference contract from phase 1. No browser storage: the account API owns persistence. */
 export type ThemeColors = {
-  themeType: "SOLID" | "GRADIENT" | "ANIMATED";
+  themeType: "SOLID" | "GRADIENT" | "ANIMATED" | "ANIMATED_GRADIENT";
   solidColor: string;
   gradientStartColor: string;
   gradientEndColor: string;
   gradientAngle: number;
 };
+
+export function hasAnimatedBackground(type: ThemeColors["themeType"] | undefined) {
+  return type === "ANIMATED" || type === "ANIMATED_GRADIENT";
+}
+
+export function isGradientTheme(type: ThemeColors["themeType"] | undefined) {
+  return type === "GRADIENT" || type === "ANIMATED_GRADIENT";
+}
+
+export function combineThemeType(color: "SOLID" | "GRADIENT", animated: boolean): ThemeColors["themeType"] {
+  return animated ? (color === "GRADIENT" ? "ANIMATED_GRADIENT" : "ANIMATED") : color;
+}
 
 export const DEFAULT_THEME_COLORS: ThemeColors = {
   themeType: "SOLID", solidColor: "#1B5FE0", gradientStartColor: "#1B5FE0", gradientEndColor: "#8B5CF6", gradientAngle: 135,
@@ -20,7 +32,7 @@ export function normalizeHex(value: string): string | undefined {
 export function normalizeThemeColors(value: unknown): ThemeColors | undefined {
   if (!value || typeof value !== "object") return;
   const v = value as Record<string, unknown>;
-  if (v.themeType !== "SOLID" && v.themeType !== "GRADIENT" && v.themeType !== "ANIMATED") return;
+  if (v.themeType !== "SOLID" && v.themeType !== "GRADIENT" && v.themeType !== "ANIMATED" && v.themeType !== "ANIMATED_GRADIENT") return;
   if (typeof v.gradientAngle !== "number" || !Number.isInteger(v.gradientAngle) || v.gradientAngle < 0 || v.gradientAngle > 360) return;
   const colors = [v.solidColor, v.gradientStartColor, v.gradientEndColor].map(c => typeof c === "string" ? normalizeHex(c) : undefined);
   if (colors.some(c => !c)) return;
@@ -59,9 +71,9 @@ function accessible(color: string, surface: string) {
 
 export function themePalette(colors: ThemeColors, dark: boolean): Record<string, string> {
   const surface = dark ? "#18191B" : "#FFFFFF";
-  let start = accessible(colors.themeType === "GRADIENT" ? colors.gradientStartColor : colors.solidColor, surface);
-  let end = accessible(colors.themeType === "GRADIENT" ? colors.gradientEndColor : colors.solidColor, surface);
-  if (colors.themeType === "GRADIENT" && dark) {
+  let start = accessible(isGradientTheme(colors.themeType) ? colors.gradientStartColor : colors.solidColor, surface);
+  let end = accessible(isGradientTheme(colors.themeType) ? colors.gradientEndColor : colors.solidColor, surface);
+  if (isGradientTheme(colors.themeType) && dark) {
     // Light endpoints can have a darker midpoint. Protect the whole sRGB interpolation too.
     const from = rgb(start), to = rgb(end);
     for (let step = 0; step <= 100; step++) {
@@ -71,26 +83,27 @@ export function themePalette(colors: ThemeColors, dark: boolean): Record<string,
     }
   }
   // Native controls need a solid color: derive it from BOTH gradient endpoints.
-  const primary = colors.themeType === "GRADIENT" ? accessible(hex(rgb(start).map((c, i) => (c + rgb(end)[i]) / 2)), surface) : start;
+  const primary = isGradientTheme(colors.themeType) ? accessible(hex(rgb(start).map((c, i) => (c + rgb(end)[i]) / 2)), surface) : start;
   const foreground = contrast(primary, "#FFFFFF") >= 4.5 ? "#FFFFFF" : "#000000";
   // Both endpoints have >=4.6:1 against white; sRGB interpolation cannot exceed their maximum luminance.
-  const paint = colors.themeType === "GRADIENT"
+  const paint = isGradientTheme(colors.themeType)
     ? `linear-gradient(${colors.gradientAngle}deg, ${accessible(colors.gradientStartColor, "#FFFFFF")}, ${accessible(colors.gradientEndColor, "#FFFFFF")})`
     : "none";
-  return { "--primary": primary, "--primary-hover": primary, "--primary-foreground": foreground, "--ring": colors.themeType === "GRADIENT" ? end : primary,
+  return { "--primary": primary, "--primary-hover": primary, "--primary-foreground": foreground, "--ring": isGradientTheme(colors.themeType) ? end : primary,
     "--theme-accent-start": start, "--theme-accent-end": end,
-    "--theme-accent-paint": colors.themeType === "GRADIENT" ? `linear-gradient(${colors.gradientAngle}deg in srgb, ${start}, ${end})` : "none",
-    "--theme-soft-paint": colors.themeType === "GRADIENT" ? `linear-gradient(${colors.gradientAngle}deg, ${start}14, ${end}14)` : "none",
-    "--theme-action-paint": paint, "--theme-action-foreground": colors.themeType === "GRADIENT" ? "#FFFFFF" : foreground };
+    "--theme-accent-paint": isGradientTheme(colors.themeType) ? `linear-gradient(${colors.gradientAngle}deg in srgb, ${start}, ${end})` : "none",
+    "--theme-soft-paint": isGradientTheme(colors.themeType) ? `linear-gradient(${colors.gradientAngle}deg, ${start}14, ${end}14)` : "none",
+    "--theme-action-paint": paint, "--theme-action-foreground": isGradientTheme(colors.themeType) ? "#FFFFFF" : foreground };
 }
 
 export function themeSwatch(colors: ThemeColors) {
-  return colors.themeType !== "GRADIENT" ? colors.solidColor
+  return !isGradientTheme(colors.themeType) ? colors.solidColor
     : `linear-gradient(${colors.gradientAngle}deg, ${colors.gradientStartColor}, ${colors.gradientEndColor})`;
 }
 
 export function clearWorkspaceTheme() {
   document.documentElement.removeAttribute("data-user-theme");
+  document.documentElement.removeAttribute("data-user-background");
   for (const mode of ["light", "dark"]) for (const key of Object.keys(themePalette(DEFAULT_THEME_COLORS, false))) {
     document.documentElement.style.removeProperty(`--user-${mode}-${key.slice(2)}`);
   }
@@ -102,5 +115,7 @@ export function applyWorkspaceTheme(colors: ThemeColors) {
   for (const [mode, dark] of [["light", false], ["dark", true]] as const) {
     for (const [key, value] of Object.entries(themePalette(safe, dark))) document.documentElement.style.setProperty(`--user-${mode}-${key.slice(2)}`, value);
   }
-  document.documentElement.setAttribute("data-user-theme", safe.themeType.toLowerCase());
+  document.documentElement.setAttribute("data-user-theme", isGradientTheme(safe.themeType) ? "gradient" : "solid");
+  if (hasAnimatedBackground(safe.themeType)) document.documentElement.setAttribute("data-user-background", "animated");
+  else document.documentElement.removeAttribute("data-user-background");
 }

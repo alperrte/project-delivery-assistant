@@ -87,8 +87,8 @@ html[data-user-theme]:has(.app-shell) .theme-primary-action:hover {
   .app-shell:has([data-theme-controls]) .workspace-header-position { top: 3rem; }
 }
 /* Keep page wrappers above the scene without painting a rectangle over the backdrop. */
-html[data-user-theme="animated"] .app-shell main > :not([data-theme-effects]):not([data-theme-controls]) { position: relative; }
-html[data-user-theme="animated"] .app-shell main :is(input, button, a, [tabindex]) { scroll-margin-top: calc(var(--workspace-header-reserve) + 1rem); }
+html[data-user-background="animated"] .app-shell main > :not([data-theme-effects]):not([data-theme-controls]):not([data-theme-paint]) { position: relative; }
+html[data-user-background="animated"] .app-shell main :is(input, button, a, [tabindex]) { scroll-margin-top: calc(var(--workspace-header-reserve) + 1rem); }
 @media (min-width: 1024px) { .workspace-theme-effects { left: var(--workspace-sidebar-width); } }
 @media (forced-colors: active) {
   .workspace-theme-effects, .theme-scene { display: none; }
@@ -136,3 +136,7 @@ html[data-user-theme="gradient"]:has(.app-shell) input[type="range"]::-moz-range
   html[data-user-theme="gradient"]:has(.app-shell) :is(svg.text-primary, .text-primary svg)[fill="none"] { fill: none; stroke: currentColor; }
   html[data-user-theme="gradient"]:has(.app-shell) input[type="range"] { appearance: auto; }
 }
+
+/* Fire remains a decorative scene; shell surfaces keep their appearance tokens. */
+.theme-scene[data-preset="FIRE"], .theme-preset-art[data-preset="FIRE"] { background: linear-gradient(15deg, rgb(167 70 32 / .08), transparent 65%); }
+.theme-preset-art[data-preset="FIRE"] { color: #bd8054; }
