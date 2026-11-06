@@ -1570,7 +1570,7 @@
   "preferences": {
     "colors": {
       "title": "Tema ayarları",
-      "description": "Vurgu renklerini seçin; dilerseniz animasyonlu bir arka planla birlikte kullanın. Açık, koyu ve sistem görünümüyle birlikte çalışır.",
+      "description": "Tek renk veya gradyanla çalışma alanını kişiselleştirin. Animasyonlu arka plan açıkken renkler kenar çubuğuna ve vurgu bileşenlerine uygulanır.",
       "type": "Tema türü",
       "solid": "Tek renk",
       "gradient": "Gradyan",
@@ -1618,7 +1618,8 @@
       "retry": "Tekrar dene",
       "animated": "Animasyonlu",
       "animatedBackground": "Animasyonlu arka plan",
-      "animatedBackgroundHint": "Tek renk veya gradyan seçiminizle birlikte kullanabilirsiniz. Değişiklikler kaydedince uygulanır."
+      "animatedBackgroundHint": "Arka plan animasyonlu kalır; seçtiğiniz renkler kenar çubuğuna, butonlara, kaydırma çubuklarına ve diğer vurgu bileşenlerine uygulanır. Değişiklikler kaydedince uygulanır.",
+      "staticBackgroundHint": "Seçtiğiniz renkler arka planı, kenar çubuğunu ve hover yüzeylerini de renklendirir. Açık veya koyu görünüme göre okunaklı tonlar kullanılır. Değişiklikler kaydedince uygulanır."
     },
     "title": "Ayarlar",
     "description": "Burada kaydettikleriniz hesabınızın varsayılanı olur ve her girişinizde uygulanır. Üst çubuktaki dil ve tema düğmeleri yalnızca o anki oturum için geçicidir.",

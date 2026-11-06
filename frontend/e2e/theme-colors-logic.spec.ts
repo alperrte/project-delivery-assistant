@@ -1,17 +1,32 @@
 import { test, expect } from "@playwright/test";
 import { DEFAULT_THEME_COLORS, normalizeThemeColors, normalizeHex, contrast, themePalette, sameThemeColors, combineThemeType, hasAnimatedBackground, isGradientTheme } from "../src/features/settings/theme-colors";
 
-test("color and background choices round-trip all four account types without altering their palette", () => {
+test("color and background choices round-trip all four account types and share their surface source colors", () => {
   for (const color of ["SOLID", "GRADIENT"] as const) for (const animated of [false, true]) {
     const type = combineThemeType(color, animated);
     expect(hasAnimatedBackground(type)).toBe(animated);
     expect(isGradientTheme(type)).toBe(color === "GRADIENT");
     const stored = { ...DEFAULT_THEME_COLORS, themeType: type };
     expect(normalizeThemeColors(stored)).toEqual(stored);
-    for (const dark of [false, true]) expect(themePalette(stored, dark)).toEqual(themePalette({ ...stored, themeType: color }, dark));
+    for (const dark of [false, true]) {
+      const palette = themePalette(stored, dark), staticPalette = themePalette({ ...stored, themeType: color }, dark);
+      for (const key of Object.keys(palette).filter(k => k.startsWith("--theme-surface-") || ["--theme-workspace-paint", "--theme-sidebar-paint", "--theme-hover-paint"].includes(k))) expect(palette[key]).toBe(staticPalette[key]);
+    }
   }
   expect(combineThemeType("SOLID", true)).toBe("ANIMATED"); // Legacy account preferences keep their meaning.
   expect(combineThemeType("GRADIENT", true)).toBe("ANIMATED_GRADIENT");
+});
+
+test("static surface endpoints and gradient interiors retain readable primary and muted text for extreme colors", () => {
+  for (const dark of [false, true]) for (const start of ["#000000", "#FFFFFF", "#FF0000", "#00FF00", "#0000FF"]) for (const end of ["#000000", "#FFFFFF", "#FF0000", "#00FF00", "#0000FF"]) {
+    const palette = themePalette({ ...DEFAULT_THEME_COLORS, themeType: "GRADIENT", gradientStartColor: start, gradientEndColor: end }, dark);
+    const backgrounds = [palette["--theme-surface-card"]];
+    for (const key of ["--theme-workspace-paint", "--theme-sidebar-paint", "--theme-hover-paint"]) {
+      const [a, b] = palette[key].match(/#[0-9A-F]{6}/g)!;
+      for (let i = 0; i <= 20; i++) backgrounds.push(`#${[1, 3, 5].map(offset => Math.round(parseInt(a.slice(offset, offset + 2), 16) * (1 - i / 20) + parseInt(b.slice(offset, offset + 2), 16) * i / 20).toString(16).padStart(2, "0")).join("")}`);
+    }
+    for (const background of backgrounds) for (const key of ["--primary", "--ring", "--theme-surface-muted-foreground"]) expect(contrast(palette[key], background)).toBeGreaterThanOrEqual(4.5);
+  }
 });
 
 test("both gradient colors affect native fallback and all sampled accent tones retain contrast", () => {

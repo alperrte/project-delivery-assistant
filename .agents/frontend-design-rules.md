@@ -1,5 +1,13 @@
 # Frontend tasarım kuralları
 
+## Koşullu renkli yüzeyler — 2026-11-06
+
+Takip kararı — animasyon açıkken de sidebar seçilen tek renk/gradyan ile renklendirilir; sidebar hover/seçim ve muted metin tokenları yerel olarak uyarlanır. Ana zemin/kartlar nötr ve animasyonlu kalır. Değişiklik yalnız masaüstü sidebar ve portal mobil gezinme menüsü kapsamındadır; public/forced-colors kapsamı korunur. Dört Solid/Gradient × light/dark senaryosunda masaüstü/mobil görünüm, hover, Escape ve scoped Axe kontrolleri PASS. Kayıt: `docs/compliation/2026-11-06-animated-sidebar-colors.md`.
+
+Son kullanıcı kararına göre animasyonlu arka plan kapalıyken tek renk/gradyan workspace, sidebar, kart/popover, hover/seçim ve border yüzeylerine de uygulanır. Ham seçim korunur; açık/koyu görünüm için farklı yoğunlukta tonlar türetilir. Gradyan zemin/sidebar/hover paint iki ucu ve açıyı kullanır; native tek renk fallback iki uçtan gelir. Primary/ring/muted metin kontrastı yeni yüzeylerde kontrol edilir. Animasyon checkbox açıkken eski nötr yüzeyler ve vurgu bileşenleri aynen kalır; ses/Canvas akışı değişmez. Public/auth/forced-colors kapsam dışında, semantik success/warning/destructive renkleri değişmez. Ayarlar yardımcı metni taslaktaki durumu açıklar, görünüm yalnız Kaydet sonrası değişir. Önceki tüm yüzeyleri nötr tutma kararı bu koşullu kararla güncellenmiştir.
+
+Teslim: `docs/compliation/2026-11-06-conditional-theme-surfaces.md`.
+
 ## Detaylı sahneler ve Alev — 2026-11-06
 
 Beş statik preset kartı vardır; Su kartı dalga yerine baloncukları, Alev kartı alev/kıvılcımları temsil eder. Büyük/canlı önizleme yoktur; iki toggle yan yana kalır. Efektler içerik yüzeylerinin arkasındadır. Fire düşük çözünürlüklü advected yoğunluk alanı ve kıvılcım, yağmur optik damla sprite ve sıçrama, su baloncuk sprite ve yumuşak ışık kullanır. Seyrek şimşek yalnız yerel bulut parlamasıdır. Ses yüklenirken ikon iptal edilebilir; hata sonrası tekrar denenir. Gizli sekme/reduced motion/global motion off görsel döngüyü durdurur; kayıtlar autoplay yapmaz.

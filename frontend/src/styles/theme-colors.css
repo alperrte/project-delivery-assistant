@@ -95,7 +95,7 @@ html[data-user-background="animated"] .app-shell main :is(input, button, a, [tab
   .theme-preset-art { color: CanvasText; }
 }
 
-/* Gradients belong to accent marks, never the workspace/sidebar surfaces or status colors. */
+/* Accent gradients remain available with either static or animated backgrounds. */
 html[data-user-theme="gradient"]:has(.app-shell) .app-shell [aria-current="page"]::before { background-image: var(--theme-accent-paint); }
 html[data-user-theme="gradient"]:has(.app-shell) label:has([data-slot="radio-group-item"][data-checked]) { background-image: var(--theme-soft-paint); }
 html[data-user-theme="gradient"]:has(.app-shell) :is(.bg-primary, [data-slot="radio-group-item"][data-checked], [data-slot="checkbox"][data-checked]) {
@@ -140,3 +140,62 @@ html[data-user-theme="gradient"]:has(.app-shell) input[type="range"]::-moz-range
 /* Fire remains a decorative scene; shell surfaces keep their appearance tokens. */
 .theme-scene[data-preset="FIRE"], .theme-preset-art[data-preset="FIRE"] { background: linear-gradient(15deg, rgb(167 70 32 / .08), transparent 65%); }
 .theme-preset-art[data-preset="FIRE"] { color: #bd8054; }
+
+/* Full color surfaces apply only when the animated-background checkbox is OFF. */
+@media (forced-colors: none) {
+  /* Sidebar follows the account palette even while the main background is animated. */
+  html[data-user-theme][data-user-background="animated"]:has(.app-shell) :is(.app-shell > aside, .workspace-navigation-drawer) {
+    --surface-2: var(--user-light-theme-surface-sidebar);
+    --muted: var(--user-light-theme-surface-hover);
+    --accent: var(--user-light-theme-surface-hover);
+    --muted-foreground: var(--user-light-theme-surface-muted-foreground);
+    --theme-hover-paint: var(--user-light-theme-hover-paint);
+    background-color: var(--surface-2);
+    background-image: var(--user-light-theme-sidebar-paint);
+  }
+  html.dark[data-user-theme][data-user-background="animated"]:has(.app-shell) :is(.app-shell > aside, .workspace-navigation-drawer) {
+    --surface-2: var(--user-dark-theme-surface-sidebar);
+    --muted: var(--user-dark-theme-surface-hover);
+    --accent: var(--user-dark-theme-surface-hover);
+    --muted-foreground: var(--user-dark-theme-surface-muted-foreground);
+    --theme-hover-paint: var(--user-dark-theme-hover-paint);
+    background-color: var(--surface-2);
+    background-image: var(--user-dark-theme-sidebar-paint);
+  }
+  html[data-user-theme][data-user-background="animated"]:has(.app-shell) :is(.app-shell > aside, .workspace-navigation-drawer) :is(.hover\:bg-muted:hover, .hover\:bg-accent:hover, [aria-current="page"]) { background-image: var(--theme-hover-paint); }
+  html[data-user-theme]:not([data-user-background="animated"]):has(.app-shell) {
+    --background: var(--user-light-theme-surface-background);
+    --surface-2: var(--user-light-theme-surface-sidebar);
+    --card: var(--user-light-theme-surface-card);
+    --popover: var(--user-light-theme-surface-card);
+    --secondary: var(--user-light-theme-surface-hover);
+    --muted: var(--user-light-theme-surface-hover);
+    --accent: var(--user-light-theme-surface-hover);
+    --border: var(--user-light-theme-surface-border);
+    --border-strong: var(--user-light-theme-surface-input);
+    --input: var(--user-light-theme-surface-input);
+    --muted-foreground: var(--user-light-theme-surface-muted-foreground);
+    --theme-workspace-paint: var(--user-light-theme-workspace-paint);
+    --theme-sidebar-paint: var(--user-light-theme-sidebar-paint);
+    --theme-hover-paint: var(--user-light-theme-hover-paint);
+  }
+  html.dark[data-user-theme]:not([data-user-background="animated"]):has(.app-shell) {
+    --background: var(--user-dark-theme-surface-background);
+    --surface-2: var(--user-dark-theme-surface-sidebar);
+    --card: var(--user-dark-theme-surface-card);
+    --popover: var(--user-dark-theme-surface-card);
+    --secondary: var(--user-dark-theme-surface-hover);
+    --muted: var(--user-dark-theme-surface-hover);
+    --accent: var(--user-dark-theme-surface-hover);
+    --border: var(--user-dark-theme-surface-border);
+    --border-strong: var(--user-dark-theme-surface-input);
+    --input: var(--user-dark-theme-surface-input);
+    --muted-foreground: var(--user-dark-theme-surface-muted-foreground);
+    --theme-workspace-paint: var(--user-dark-theme-workspace-paint);
+    --theme-sidebar-paint: var(--user-dark-theme-sidebar-paint);
+    --theme-hover-paint: var(--user-dark-theme-hover-paint);
+  }
+  html[data-user-theme]:not([data-user-background="animated"]):has(.app-shell) .app-shell { background-image: var(--theme-workspace-paint); background-attachment: fixed; }
+  html[data-user-theme]:not([data-user-background="animated"]):has(.app-shell) .app-shell > aside { background-image: var(--theme-sidebar-paint); }
+  html[data-user-theme]:not([data-user-background="animated"]):has(.app-shell) :is(.hover\:bg-muted:hover, .hover\:bg-accent:hover, [aria-current="page"], [data-slot="dropdown-menu-item"][data-highlighted], [data-slot="select-item"][data-highlighted]) { background-image: var(--theme-hover-paint); }
+}
