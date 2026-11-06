@@ -1570,7 +1570,7 @@
   "preferences": {
     "colors": {
       "title": "Theme-Einstellungen",
-      "description": "Wählen Sie Akzentfarben und kombinieren Sie diese bei Bedarf mit einem animierten Hintergrund. Funktioniert mit heller, dunkler und Systemdarstellung.",
+      "description": "Gestalten Sie den Arbeitsbereich mit einer Farbe oder einem Verlauf. Bei animiertem Hintergrund werden die Seitenleiste und Akzente eingefärbt.",
       "type": "Theme-Typ",
       "solid": "Einfarbig",
       "gradient": "Farbverlauf",
@@ -1618,7 +1618,8 @@
       "retry": "Erneut versuchen",
       "animated": "Animiert",
       "animatedBackground": "Animierter Hintergrund",
-      "animatedBackgroundHint": "Zusammen mit einer Farbe oder einem Verlauf verwenden. Änderungen werden nach dem Speichern angewendet."
+      "animatedBackgroundHint": "Der Hintergrund bleibt animiert; Ihre Farben gelten für die Seitenleiste, Schaltflächen, Scrollleisten und andere Akzente. Änderungen gelten nach dem Speichern.",
+      "staticBackgroundHint": "Ihre Farben tönen auch Hintergrund, Seitenleiste und Hover-Flächen. Lesbare Farbtöne passen sich der hellen oder dunklen Darstellung an. Änderungen gelten nach dem Speichern."
     },
     "title": "Einstellungen",
     "description": "Was Sie hier speichern, wird zum Standard Ihres Kontos und gilt bei jeder Anmeldung. Die Sprach- und Design-Schalter in der oberen Leiste gelten nur für die aktuelle Sitzung.",

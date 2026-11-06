@@ -72,7 +72,7 @@ export function ThemeColorsSection({ value, fallback, onChange, onReset, resetti
             onChange={e => onChange({ ...value, themeType: combineThemeType(colorMode, e.target.checked) })} />
           {t("animatedBackground")}
         </label>
-        <p className="text-xs leading-5 text-muted-foreground">{t("animatedBackgroundHint")}</p>
+        <p className="text-xs leading-5 text-muted-foreground" aria-live="polite">{t(animated ? "animatedBackgroundHint" : "staticBackgroundHint")}</p>
       </div>
       {animated && <AnimatedThemeEditor value={animation} onChange={onAnimationChange} />}
       <Button type="button" variant="outline" className="min-h-11 w-full whitespace-normal sm:w-auto" disabled={resetting} onClick={onReset}>

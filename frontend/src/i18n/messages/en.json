@@ -1546,7 +1546,7 @@
   "preferences": {
     "colors": {
       "title": "Theme settings",
-      "description": "Choose your accent colors and optionally combine them with an animated background. Works with light, dark and system appearance.",
+      "description": "Personalize your workspace with a solid color or gradient. With an animated background, colors apply to the sidebar and accent components.",
       "type": "Theme type",
       "solid": "Solid",
       "gradient": "Gradient",
@@ -1594,7 +1594,8 @@
       "retry": "Try again",
       "animated": "Animated",
       "animatedBackground": "Animated background",
-      "animatedBackgroundHint": "Use alongside your solid color or gradient. Changes apply after saving."
+      "animatedBackgroundHint": "The background stays animated; your colors apply to the sidebar, buttons, scrollbars and other accent components. Changes apply after saving.",
+      "staticBackgroundHint": "Your colors also tint the background, sidebar and hover surfaces. Readable tones adapt to light or dark appearance. Changes apply after saving."
     },
     "title": "Settings",
     "description": "What you save here becomes your account's default and applies every time you sign in. The language and theme switches in the top bar only last for the current session.",

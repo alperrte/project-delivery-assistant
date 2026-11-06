@@ -1,5 +1,13 @@
 # Mimari kısa özet
 
+## Koşullu renkli yüzeyler — 2026-11-06
+
+Takip kararı — animasyon açıkken de sidebar seçilen tek renk/gradyan ile renklendirilir; sidebar hover/seçim ve muted metin tokenları yerel olarak uyarlanır. Ana zemin/kartlar nötr ve animasyonlu kalır. Değişiklik yalnız masaüstü sidebar ve portal mobil gezinme menüsü kapsamındadır; public/forced-colors kapsamı korunur. Dört Solid/Gradient × light/dark senaryosunda masaüstü/mobil görünüm, hover, Escape ve scoped Axe kontrolleri PASS. Kayıt: `docs/compliation/2026-11-06-animated-sidebar-colors.md`.
+
+Animasyonlu arka plan checkbox kapalıysa SOLID/GRADIENT tercihleri artık vurgu yanında görünüm tabanlı arka plan, sidebar, kart/popover, hover ve border tokenlarını da üretir. Gradyanın iki ham ucundan ayrı zemin/sidebar/hover paint oluşturulur; düz renk gereken alanlar iki uçtan karışır. Yeni yüzeylerde primary/ring/muted metin kontrastı uçlar ve ara tonlarda korunur. ANIMATED/ANIMATED_GRADIENT eski nötr yüzey + mevcut vurgu + Canvas/ses davranışını korur; karar yalnız checkboxa bağlıdır, reduced motion veya geçici pause renkli statik moda geçirmez. Mevcut hesap sözleşmesi ve cleanup genişletilen tokenları taşır; yeni API/ENV/storage yoktur. Bu karar önceki genel “sidebar/yüzeyler değişmez” notunu yalnız animasyon kapalı durum için günceller.
+
+Teslim: `docs/compliation/2026-11-06-conditional-theme-surfaces.md`.
+
 ## Detaylı sahneler ve Alev — 2026-11-06
 
 Tema sahneleri artık weather-scene.ts içinde katmanlı yağmur/sıçrama, dallanan seyrek şimşek, derinlikli kar, ışık yansımalı baloncuklar ve yoğunluk alanıyla çizilen kıvılcımlı Alev içerir. Tek 30 FPS Canvas, 1/1.5 DPR ve sınırlı parçacık sayısı korunur. AmbientAudio yalnız açık etkileşimle yerel CC0 kayıtlarını yükler; preset değişiminde istek/decode yarışlarını fence eder ve en çok iki buffer tutar. FIRE domain/API/V63 CHECK ile kalıcıdır; yeni endpoint/ENV yoktur.

@@ -1,5 +1,13 @@
 # Web Sitesi Kesinlikle Olması Gerekenler — Master Checklist
 
+## Koşullu renkli yüzeyler — 2026-11-06
+
+Takip kararı — animasyon açıkken de sidebar seçilen tek renk/gradyan ile renklendirilir; sidebar hover/seçim ve muted metin tokenları yerel olarak uyarlanır. Ana zemin/kartlar nötr ve animasyonlu kalır. Değişiklik yalnız masaüstü sidebar ve portal mobil gezinme menüsü kapsamındadır; public/forced-colors kapsamı korunur. Dört Solid/Gradient × light/dark senaryosunda masaüstü/mobil görünüm, hover, Escape ve scoped Axe kontrolleri PASS. Kayıt: `docs/compliation/2026-11-06-animated-sidebar-colors.md`.
+
+Koşullu tema yüzeyleri: animasyon checkbox kapalıyken tek renk/gradyan zemin/sidebar/hover/kart/popover tokenları; açıkken önceki nötr yüzey + vurgu + animasyon. Son yerel production tema paketi 44/44 PASS (6 saf, 38 API-fixture UI), yeni dört Solid/Gradient × light/dark durumunda kayıt/taslak, ikinci gradyan ucu, hover, statik↔animasyon geçişi, reload, public cleanup ve forced-colors doğrulandı. 1440/390 px sekiz görünüm incelendi; TR/EN/DE ve 320/390/768/1440 px mevcut tema kontrolleri, klavye ve scoped Axe geçti. Aşırı renk çiftlerinde gradient ara tonları da kontrast kontrolündedir. Type/lint/build/bundle/diff temiz; Settings 493.1/505 KB gzip. Backend/API/ENV/storage değişmedi, gerçek API/DB testleri bu frontend tesliminde tekrar çalıştırılmadı. Yalnız etkilenen tema, kontrast, responsive, keyboard/focus ve form maddeleri gözden geçirildi; global kutular değiştirilmedi.
+
+Teslim: `docs/compliation/2026-11-06-conditional-theme-surfaces.md`.
+
 Detaylı sahne/Alev takip teslimi: beş preset, gerçek yerel CC0 kayıtlar, şimşek ile aynı olaydan kayıtlı gök gürültüsü, baloncuklar ve akışkan alev/kıvılcım eklendi. Son izole production tema paketi 41/41 PASS (5 saf, 34 API-fixture UI, 2 gerçek cookie API/PostgreSQL); beş sahne × light/dark × desktop/mobile görüntüsü ve şimşek incelendi. Hareketi durdurma/reduced motion, sesin açık etkileşimle başlaması, indirme hatası/iptali, hesap/sekme kaynak temizliği ve ilgili responsive/keyboard/Axe kontrolleri geçti. Tam backend 1241 testte 0 hata/1 beklenen skip; V63 mevcut tercihler korunarak FIRE ekler. Type/lint/build/bundle/diff temiz, Settings yaklaşık 492.7/505 KB gzip. Ek eski motion paketinde Ayarlar 4/4 PASS; mevcut landing #product seçicisine bağlı iki test başarısız, bu teslimde public landing değiştirilmedi. Seslerin işitsel kabulü/fiziksel mobil/diğer tarayıcılar manuel kalır. Yalnız etkilenen medya/motion/form/responsive/performance maddeleri gözden geçirildi; global checklist kutuları değiştirilmedi. Kayıt: `docs/compliation/2026-11-06-cinematic-theme-effects.md`.
 ## Animasyonlu tema tercihleri — 2026-11-06 (sınırlı kapsam)
 
