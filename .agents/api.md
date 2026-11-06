@@ -1,5 +1,9 @@
 # API rehberi
 
+## Birlikte renk ve animasyon tercihi — 2026-11-06 (Backend)
+
+Mevcut preferences GET/PUT renk türü artık dört durumu taşır: SOLID (tek renk), GRADIENT (gradyan), ANIMATED (tek renk + animasyon), ANIMATED_GRADIENT (gradyan + animasyon). Yeni endpoint/alan yoktur; beş renk ve dört animasyon alanı, eksik/null nesne koruma, temel tercihler, reset ve güvenlik akışı değişmez. Yeni birleşik tür domain/API/DB'de doğrulanır. Frontend sonraki aşamada iki bağımsız seçimden bu türü üretmelidir; eski ANIMATED tercihi değişmeden okunur. Sözleşme, örnek JSON ve Swagger: SECURITY §11 "Combined color and animated background preferences". Teslim: `docs/compliation/2026-11-06-combined-theme-backend.md`.
+
 ## Animasyon / ses tema tercihleri — 2026-11-06 (Faz 2 Backend)
 
 Önceki renk sözleşmesini genişletir: themeColors.themeType artık SOLID/GRADIENT/ANIMATED kabul eder. Mevcut GET/PUT `/api/v1/users/me/preferences` yeni `themeAnimation {animation,soundEnabled,soundVolume,animationEnabled}` nesnesini taşır; PUT eksik/null nesneleri bağımsız korur. Verilen animasyon nesnesinde dört alan zorunlu: THUNDERSTORM/RAIN/SNOW/WATER, iki boolean ve tam sayı 0–100. Varsayılan THUNDERSTORM/false/50/true; renkler ve light/dark/system bağımsızdır. Mevcut DELETE `…/preferences/theme` hem renkleri hem animasyon/ses tercihlerini sıfırlar; diğer tercihlere dokunmaz. GET/PUT/DELETE 200 no-store, oturumsuz 401, CSRF'siz mutasyon 403, geçersiz PUT 400. Yeni endpoint veya auth/ENV değişikliği yoktur. Tam güvenli JSON ve Swagger: SECURITY §11 "Animated theme preferences". İstemci ANIMATED dışındayken oynatmaz; saklı ses/hareket isteği autoplay yetkisi değildir. Faz 2 frontend ayrı onay bekler. Kayıt: `docs/compliation/2026-11-06-theme-phase2-backend.md`.

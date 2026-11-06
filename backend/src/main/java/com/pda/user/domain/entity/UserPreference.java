@@ -42,7 +42,7 @@ public class UserPreference {
     @Column(name = "navbar_mode", length = 16)
     private String navbarMode;
 
-    @Column(name = "theme_type", nullable = false, length = 8)
+    @Column(name = "theme_type", nullable = false, length = 24)
     private String themeType = ThemeColors.DEFAULT.themeType();
 
     @Column(name = "solid_color", nullable = false, length = 7)

@@ -77,6 +77,7 @@ class UserPreferenceApiIntegrationTest {
                 .andExpect(jsonPath("$.paths['/api/v1/users/me/preferences/theme'].delete.responses['403']").exists())
                 .andExpect(jsonPath("$.components.schemas.PreferencesRequest.properties.themeColors").exists())
                 .andExpect(jsonPath("$.components.schemas.PreferencesRequest.properties.themeAnimation").exists())
+                .andExpect(jsonPath("$.components.schemas.ThemeColorsRequest.properties.themeType.enum", org.hamcrest.Matchers.hasItem("ANIMATED_GRADIENT")))
                 .andExpect(jsonPath("$.components.schemas.ThemeAnimationRequest.properties.soundVolume.minimum").value(0))
                 .andExpect(jsonPath("$.components.schemas.ThemeAnimationRequest.properties.soundVolume.maximum").value(100))
                 .andExpect(jsonPath("$.components.schemas.ThemeColorsRequest.properties.gradientAngle.minimum").value(0))
@@ -99,6 +100,55 @@ class UserPreferenceApiIntegrationTest {
 
     private static String withAnimation(String base, String animation) {
         return base.substring(0, base.length() - 1) + ",\"themeAnimation\":" + animation + "}";
+    }
+
+    @Test
+    void combinedAccentsAndAnimationPersistAcrossSessionsWithoutWeakeningOwnershipOrValidation() throws Exception {
+        Cookie csrf = csrfCookie();
+        String suffix = UUID.randomUUID().toString().replace("-", "");
+        String email = "combined" + suffix + "@example.test", password = UUID.randomUUID().toString();
+        UUID ownerId = users.registerLocal(email, "c" + suffix.substring(0, 16), password);
+        Cookie owner = signIn(email, password), other = login("othercombined");
+        String combined = COLORS.replace("GRADIENT", "ANIMATED_GRADIENT");
+        String payload = withAnimation(colorBody(combined), ANIMATION);
+        mvc.perform(put(PATH).cookie(owner).contentType(MediaType.APPLICATION_JSON).content(payload))
+                .andExpect(status().isForbidden());
+        mvc.perform(put(PATH).cookie(csrf).header("X-XSRF-TOKEN", csrf.getValue())
+                .contentType(MediaType.APPLICATION_JSON).content(payload)).andExpect(status().isUnauthorized());
+        for (String type : new String[]{"ANIMATED", "ANIMATED_GRADIENT", "SOLID", "GRADIENT", "ANIMATED_GRADIENT"}) {
+            mvc.perform(put(PATH).cookie(csrf, owner).header("X-XSRF-TOKEN", csrf.getValue())
+                            .contentType(MediaType.APPLICATION_JSON).content(withAnimation(colorBody(COLORS.replace("GRADIENT", type)), ANIMATION)))
+                    .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "no-store"))
+                    .andExpect(jsonPath("$.themeColors.themeType").value(type))
+                    .andExpect(jsonPath("$.themeColors.solidColor").value("#AABBCC"))
+                    .andExpect(jsonPath("$.themeColors.gradientStartColor").value("#001122"))
+                    .andExpect(jsonPath("$.themeColors.gradientEndColor").value("#FFEEDD"))
+                    .andExpect(jsonPath("$.themeAnimation.animation").value("RAIN"))
+                    .andExpect(jsonPath("$.themeAnimation.soundEnabled").value(true));
+        }
+        assertEquals("ANIMATED_GRADIENT", jdbc.queryForObject("select theme_type from user_preferences where user_id=?", String.class, ownerId));
+        mvc.perform(get(PATH).cookie(signIn(email, password)))
+                .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "no-store"))
+                .andExpect(jsonPath("$.themeColors.themeType").value("ANIMATED_GRADIENT"))
+                .andExpect(jsonPath("$.themeAnimation.soundVolume").value(100));
+        for (String legacy : new String[]{body("en", "dark", "off", "false"), withAnimation(body("en", "dark", "off", "false"), "null")}) {
+            mvc.perform(put(PATH).cookie(csrf, owner).header("X-XSRF-TOKEN", csrf.getValue())
+                            .contentType(MediaType.APPLICATION_JSON).content(legacy))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.themeColors.themeType").value("ANIMATED_GRADIENT"))
+                    .andExpect(jsonPath("$.themeAnimation.animation").value("RAIN"));
+        }
+        for (String invalid : new String[]{payload.replace("ANIMATED_GRADIENT", "ANIMATED_GRADIENT_EXTRA"),
+                payload.replace("ANIMATED_GRADIENT", "animated_gradient"), payload.replace("#abc", "bad")}) {
+            mvc.perform(put(PATH).cookie(csrf, owner).header("X-XSRF-TOKEN", csrf.getValue())
+                            .contentType(MediaType.APPLICATION_JSON).content(invalid)).andExpect(status().isBadRequest());
+        }
+        mvc.perform(get(PATH).cookie(owner)).andExpect(jsonPath("$.themeColors.themeType").value("ANIMATED_GRADIENT"));
+        mvc.perform(get(PATH).cookie(other)).andExpect(jsonPath("$.themeColors.themeType").value("SOLID"))
+                .andExpect(jsonPath("$.themeAnimation.soundEnabled").value(false));
+        mvc.perform(delete(PATH + "/theme").cookie(csrf, owner).header("X-XSRF-TOKEN", csrf.getValue()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.themeColors.themeType").value("SOLID"))
+                .andExpect(jsonPath("$.themeAnimation.soundEnabled").value(false))
+                .andExpect(jsonPath("$.locale").value("en"));
     }
 
     @Test

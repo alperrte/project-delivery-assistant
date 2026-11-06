@@ -1,5 +1,12 @@
 ﻿# Klasör yapısı kısa rehberi
 
+## Birlikte renk ve animasyon backend — 2026-11-06
+
+- Mevcut `user/domain/ThemeColors.java`, `user/domain/entity/UserPreference.java` ve `user/api/UserPreferenceController.java`: ANIMATED_GRADIENT doğrulama/Swagger ve kolon uzunluğu.
+- `backend/src/main/resources/db/migration/V62__combined_theme_preferences.sql`: kayıpsız kolon/CHECK genişletmesi.
+- `user/domain/ThemeColorsTest`, `user/integration/UserPreferenceApiIntegrationTest`, yeni `migration/CombinedThemePreferenceMigrationTest`: dört durum, cookie/API kalıcılığı/güvenlik ve V61→V62 veri koruma.
+- Frontend değiştirilmez. Kayıt: `docs/compliation/2026-11-06-combined-theme-backend.md`.
+
 ## Animasyonlu tema frontend — 2026-11-06
 
 - `frontend/src/features/settings/theme-animation.ts`: dört preset, sessiz varsayılan, tam nesne ve 0–100 tamsayı doğrulama.

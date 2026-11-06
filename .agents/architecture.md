@@ -2,6 +2,10 @@
 
 V59 şema güncellemesi (2026-10-27): aşağıdaki V58 açıklamasındaki `legacy_project_id` arşivi V59 ile kaldırılır. Aktif `project_id`, hibrit tür ve erişim modeli değişmez. Production V58/V59 öncesi yedek + izole restore ön koşulu: `backend/src/main/resources/db/migration/README.md` V59.
 
+## Birlikte renk ve animasyon tercihi — 2026-11-06 (Backend)
+
+Mevcut User tercihi sözleşmesinde ANIMATED tek renk + arka plan anlamını korur; ANIMATED_GRADIENT yeni gradyan + animasyon birleşimidir. Böylece yeni tablo/servis/alan olmadan iki renk modu × animasyon açık/kapalı saklanır. Domain, DTO allowlist'i ve V62 CHECK/kolon uzunluğu birlikte genişler; eski kayıtlar aynıdır. Preferences service/actor kilidi, nesne bazlı güncelleme ve reset akışı değişmez. Frontend'de bağımsız renk/arka plan seçimleri bu dört değere eşlenecektir; bu backend teslimi frontend'i değiştirmez. Sözleşme: SECURITY §11; kayıt: `docs/compliation/2026-11-06-combined-theme-backend.md`.
+
 ## Tema vurgu ve kontrol düzenlemesi — 2026-11-06
 
 `themePalette` gradyanın iki ucu için açık/koyu erişilebilir accent token'ları ve paint üretir; koyu yüzeylerde ara tonlar da kontrast için örneklenir. Native tek-renk fallback iki uçtan türetilir. CSS aksiyon, metin/ikon, seçim, range, navigasyon işareti ve destekleyen scrollbar yüzeylerine gradyan uygular; sayfa/sidebar yüzeyleri ve semantik durum paleti değişmez. `ThemeEffects` GRADIENT'te hesap kapsamlı SVG paint tanımı, ANIMATED'te efekt/kontrol sahibidir. Geçici kontroller sayfanın en sağ üstünde absolute konumdadır, scroll takip etmez. Editörde Canvas önizlemesi kaldırılmıştır; kartlar, yan yana checkbox'lar ve yüzde/range alanı vardır. API/ENV/depolama sözleşmesi değişmez. Teslim: `docs/compliation/2026-11-06-theme-accent-refinement.md`.

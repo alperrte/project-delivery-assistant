@@ -1,5 +1,11 @@
 # Consolidated fresh-install history
 
+## V62 — combined color accents and animated backgrounds (2026-11-06)
+
+`V62__combined_theme_preferences.sql` widens theme_type from VARCHAR(8) to VARCHAR(24) and extends its CHECK with ANIMATED_GRADIENT (17 characters). SOLID/GRADIENT have no animated background; existing ANIMATED retains solid accents with animation; the new value enables gradient accents with animation. All existing row values/timestamps, defaults and other constraints are preserved; no new table/column/index or ENV. Old SQL histories remain unchanged. Next version: V63.
+
+Use normal Flyway startup on a compatible database after the standard operator backup. This backend delivery migrates only disposable Testcontainers databases, not the application or production database. Keep the expanded column and history on rollback. Once combined records exist, use a compatible rollback binary or an explicitly reviewed data adaptation; an old domain/DTO cannot read the new value. Do not drop/rewrite history or narrow the column blindly. Coordinate the frontend release: it must recognize the new value and map independent accent/background controls before users can select it. Contract and acceptance: `docs/compliation/2026-11-06-combined-theme-backend.md`.
+
 ## V61 — animated theme preferences (2026-11-06)
 
 `V61__animated_theme_preferences.sql` widens the existing theme_type CHECK to SOLID/GRADIENT/ANIMATED and adds animation_preset (THUNDERSTORM/RAIN/SNOW/WATER), theme_sound_enabled, theme_sound_volume (integer 0–100) and theme_animation_enabled to user_preferences. All are NOT NULL with defaults THUNDERSTORM / false / 50 / true. Existing color values, interface preferences and updated_at are unchanged; no new table/index/extension. The V60→V61 upgrade and constraints are tested on PostgreSQL 18; latest fresh startup/API persistence use PostgreSQL 17. Earlier SQL histories remain immutable. Next version: V62.

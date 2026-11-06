@@ -10,6 +10,15 @@ import java.util.Random;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ThemeColorsTest {
+    @ParameterizedTest
+    @ValueSource(strings = {"SOLID", "GRADIENT", "ANIMATED", "ANIMATED_GRADIENT"})
+    void acceptsBothColorModesWithOrWithoutAnimatedBackground(String type) {
+        var preference = new ThemeColors(type, "#abc", "#123", "#def", 270);
+        assertEquals(type, preference.themeType());
+        assertEquals("#AABBCC", preference.solidColor());
+        assertEquals("#112233", preference.gradientStartColor());
+        assertEquals("#DDEEFF", preference.gradientEndColor());
+    }
     @Test
     void acceptsArbitraryColorsAndExpandsShortHexWithoutChangingTheTone() {
         assertEquals("#AABBCC", colors("#abc", 0).solidColor());
@@ -46,7 +55,7 @@ class ThemeColorsTest {
 
     @ParameterizedTest
     @NullSource
-    @ValueSource(strings = {"", "solid", "VIDEO", "RAIN", "0"})
+    @ValueSource(strings = {"", "solid", "VIDEO", "RAIN", "0", "animated_gradient", "GRADIENT_ANIMATED", "ANIMATED_GRADIENT_EXTRA"})
     void rejectsUnsupportedThemeTypes(String type) {
         assertThrows(IllegalArgumentException.class, () -> new ThemeColors(type, "#000", "#000", "#fff", 135));
     }

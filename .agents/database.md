@@ -1,5 +1,9 @@
 # Veritabanı ve kalıcılık
 
+## V62 Birlikte gradyan ve animasyon — 2026-11-06
+
+`V62__combined_theme_preferences.sql` theme_type kolonunu VARCHAR(8)→VARCHAR(24) genişletir ve CHECK'e 17 karakterli ANIMATED_GRADIENT ekler. Mevcut SOLID/GRADIENT/ANIMATED değerleri, renk/animasyon/ses tercihleri ve updated_at korunur; yeni kolon/tablo/index yoktur. Entity uzunluğu aynı sözleşmeye uyar. Eski migration dosyaları değiştirilmez. Normal yedek ve Flyway startup yolu kullanılır; uygulama geri alınırken birleşik türü okuyabilen uyumlu build gerekir, kayıt/history silinmez. Uygulama/production DB bu teslimde değiştirilmedi; testler izole Testcontainers üzerindedir. Sonraki sürüm V63. Kayıt: `docs/compliation/2026-11-06-combined-theme-backend.md`.
+
 ## V61 Animasyonlu tema tercihleri — 2026-11-06
 
 `V61__animated_theme_preferences.sql`, user_preferences theme_type CHECK'ine ANIMATED ekler ve dört NOT NULL/default kolonu açar: animation_preset VARCHAR(16), theme_sound_enabled BOOLEAN, theme_sound_volume INTEGER, theme_animation_enabled BOOLEAN. Varsayılan THUNDERSTORM/false/50/true. CHECK yalnız THUNDERSTORM/RAIN/SNOW/WATER ve 0–100 ses düzeyine izin verir. Mevcut renk, görünüm, locale/motion/geçiş/navbar ve updated_at değerleri değiştirilmez; yeni tablo/index yoktur. V60→V61, PostgreSQL 18'de eski Solid/Gradient snapshot'ı ve constraint'lerle; fresh latest şema PostgreSQL 17'de API ile doğrulanır. ANIMATED kayıtlarını okuyamayan eski backend'e veri uyarlaması olmadan dönülmemelidir; kolonları/drop history'yi silmek geri dönüş değildir. Next: V62. Sözleşme ve sonuç: `docs/compliation/2026-11-06-theme-phase2-backend.md`.
